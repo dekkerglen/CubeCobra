@@ -104,7 +104,7 @@ app.use('/cube', cubes);
 app.use('/user', users);
 
 // Start server
-app.listen(3000, function()
+app.listen(80, function()
 {
-  console.log('server started on port 3000...');
+  console.log('server started on port 80...');
 });
