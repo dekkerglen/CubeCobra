@@ -1,0 +1,25 @@
+user email confirmation
+user password stipulations (length at least)
+usernames and emails should user .toLowerCase()
+usernames and emails must be unique
+add currently logged in as
+
+let query = {
+    username: req.body.username
+};
+
+User.find(query)
+   .then(user =>  {
+         if(user) {         // a user is already present
+             // send error message
+         } else {
+            // no previous user present with this username
+            return User.save(userObj);
+         }
+   })
+   .then(user => {
+       // save success response
+   })
+   .catch(error => { 
+      // error in save method
+   });

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es6",
+    "charset": "utf-8",
+    "lib": [
+      "es6"
+    ],
+    "pretty": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "outDir": "./build"
+  },
+  "include": [
+    "**/*.d.ts",
+    "**/*.spec.ts"
+  ],
+  "exclude": [ "node_modules", "coverage" ]
+}

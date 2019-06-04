@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1= cube.title
+  h5 Written by #{author}
+  p= cube.body
+  if user
+    if user.id == cube.author
+      hr
+      a.btn.btn-primary(href='/cube/edit/'+cube._id) Edit
+      a.btn.btn-danger.delete-cube(href='#', data-id=cube._id) Delete

@@ -1,0 +1,24 @@
+{
+  "name": "cubepro",
+  "version": "1.0.0",
+  "description": "Cube management app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "author": "Gwen Dekker",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "connect-flash": "^0.1.1",
+    "express": "^4.17.1",
+    "express-messages": "^1.0.1",
+    "express-session": "^1.16.1",
+    "express-validator": "^5.3.1",
+    "mongoose": "^5.5.12",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "pug": "^2.0.3"
+  }
+}

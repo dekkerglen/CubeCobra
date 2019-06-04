@@ -1,0 +1,42 @@
+doctype html
+html
+  head
+    title cubepro
+    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+    link(rel='stylesheet' href='/css/stylesheet.css')
+  body
+    nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
+      .container
+        a.navbar-brand(href='/') Cube Management App
+        button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
+          span.navbar-toggler-icon
+        ul.navbar-nav.mr-auto
+          li.nav-item
+            a.nav-link(href='/') Home
+          if user
+            li.nav-item
+              a.nav-link(href='/cube/add') Add
+        ul.navbar-nav.navbar-right
+          if user
+            li 
+              a.nav-link(href='/user/logout') Logout
+          else
+            li.nav-item
+              a.nav-link(href='/user/register') Register
+            li.nav-item
+              a.nav-link(href='/user/login') Login
+    .container
+      br
+      != messages('message', locals)
+      if errors
+        each error, i in errors
+          div(class="alert alert-danger") #{error.msg}
+      
+      block content
+      br
+      hr
+      footer
+        p Copyright &copy; 2019      
+    script(src='/bower_components/jquery/dist/jquery.js')
+    script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
+    script(src='/js/main.js')
