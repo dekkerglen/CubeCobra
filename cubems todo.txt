@@ -1,8 +1,5 @@
-user email confirmation
-user password stipulations (length at least)
-usernames and emails should user .toLowerCase()
-usernames and emails must be unique
-add currently logged in as
+change password
+add https
 
 let query = {
     username: req.body.username
@@ -20,6 +17,6 @@ User.find(query)
    .then(user => {
        // save success response
    })
-   .catch(error => { 
+   .catch(error => {
       // error in save method
    });

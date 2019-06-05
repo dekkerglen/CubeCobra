@@ -1,30 +1,48 @@
 doctype html
 html
   head
-    title cubepro
+    title MTG Cube Nexus
     link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
     link(rel='stylesheet' href='/css/stylesheet.css')
   body
     nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
       .container
-        a.navbar-brand(href='/') Cube Management App
+        a.navbar-brand(href='/') MTG Cube Nexus
         button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
           span.navbar-toggler-icon
         ul.navbar-nav.mr-auto
           li.nav-item
-            a.nav-link(href='/') Home
-          if user
-            li.nav-item
-              a.nav-link(href='/cube/add') Add
+            a.nav-link(href='/') Home            
+          li.nav-item.dropdown
+            a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+              |  Browse
+            .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+              if user
+                a.dropdown-item(href='#') Your Cubes
+              a.dropdown-item(href='#') Search
+              a.dropdown-item(href='#') Featured
+          li.nav-item.dropdown
+            a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+              |  About
+            .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+              a.dropdown-item(href='#') Contact
+              a.dropdown-item(href='#') Dev Blog
+              a.dropdown-item(href='#') FAQ
         ul.navbar-nav.navbar-right
           if user
-            li 
-              a.nav-link(href='/user/logout') Logout
+            li.nav-item.dropdown
+              a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+                |  #{user.username}  
+              .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+                a.dropdown-item(href='#') Your Cubes
+                a.dropdown-item(href='/user/account') Account
+                a.dropdown-item(href='/user/logout') Logout
+              
           else
             li.nav-item
               a.nav-link(href='/user/register') Register
             li.nav-item
-              a.nav-link(href='/user/login') Login
+              a.nav-link(data-toggle='modal', data-target='#loginModal') Login
     .container
       br
       != messages('message', locals)
@@ -40,3 +58,24 @@ html
     script(src='/bower_components/jquery/dist/jquery.js')
     script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
     script(src='/js/main.js')
+    
+// Login modal
+#loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
+  .modal-dialog(role='document')
+    .modal-content
+      form(method='POST', action='/user/login')
+        .modal-header
+          h5#loginModalLabel.modal-title Login
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body
+            .form-group
+              label.col-form-label Username:
+              input.form-control(name='username', type='text')
+            .form-group
+              label.col-form-label Password:
+              input#inputPassword3.form-control(name='password', type='password')
+            br
+        .modal-footer
+          input.btn.btn-primary(type='submit',value='Login')
+          button.btn.btn-secondary(type='button', data-dismiss='modal') Close

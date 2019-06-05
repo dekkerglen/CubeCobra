@@ -1,0 +1,17 @@
+extends user
+
+block information
+  a content
+
+block changepassword
+  form(method='POST', action='/user/resetpassword')
+    .form-group.row
+      label.col-sm-4.col-form-label Old password:
+      input#inputPassword1.form-control.form-control.col-sm-8(name='password', type='password')
+    .form-group.row
+      label.col-sm-4.col-form-label New Password:
+      input#inputPassword2.form-control.form-control.col-sm-8(name='password2', type='password')
+    .form-group.row
+      label.col-sm-4.col-form-label Confirm New Password:
+      input#inputPassword3.form-control.form-control.col-sm-8(name='password3', type='password')
+    input.btn.btn-primary(type='submit',value='Change Password')

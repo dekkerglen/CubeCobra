@@ -21,6 +21,11 @@ const UserSchema = mongoose.Schema({
   {
     type: String,
     required: true
+  },
+  confirmed:
+  {
+    type: String,
+    required: true
   }
 });
 

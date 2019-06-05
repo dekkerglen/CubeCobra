@@ -2,12 +2,13 @@ extends layout
 
 block content
   h1 Login
+  br
   form(method='POST', action='/user/login')
-    #form-group
-      label Username:
-      input.form-control(name='username', type='text')
-    #form-group
-      label Password:
-      input.form-control(name='password', type='password')
+    .form-group.row
+      label.col-sm-2.col-form-label Username:
+      input.form-control.col-sm-10(name='username', type='text')
+    .form-group.row
+      label.col-sm-2.col-form-label Password:
+      input#inputPassword3.form-control.col-sm-10(name='password', type='password')
     br
-    input.btn.btn-primary(type='submit',value='Submit')
+    input.btn.btn-primary(type='submit',value='Login')

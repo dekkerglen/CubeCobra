@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  h2 My Account
+  .row
+    .col-3
+      #v-pills-tab.nav.flex-column.nav-pills(role='tablist', aria-orientation='vertical')
+        if selected=="info"
+          a#v-pills-info-tab.nav-link.active(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='true') Information
+        else
+          a#v-pills-info-tab.nav-link(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='false') Information
+        if selected=="changepw"
+          a#v-pills-pwreset-tab.nav-link.active(data-toggle='pill', href='#v-pills-pwreset', role='tab', aria-controls='v-pills-pwreset', aria-selected='true') Change Password
+        else
+          a#v-pills-pwreset-tab.nav-link(data-toggle='pill', href='#v-pills-pwreset', role='tab', aria-controls='v-pills-pwreset', aria-selected='false') Change Password
+          
+    .col-9
+      #v-pills-tabContent.tab-content
+        if selected=="info"
+          #v-pills-info.tab-pane.fade.show.active(role='tabpanel', aria-labelledby='v-pills-info-tab')
+            block information
+        else
+          #v-pills-info.tab-pane.fade(role='tabpanel', aria-labelledby='v-pills-info-tab')          
+            block information
+        if selected=="changepw"
+          #v-pills-pwreset.tab-pane.fade.show.active(role='tabpanel', aria-labelledby='v-pills-pwreset-tab') 
+            block changepassword
+        else
+          #v-pills-pwreset.tab-pane.fade(role='tabpanel', aria-labelledby='v-pills-pwreset-tab') 
+            block changepassword
+          
