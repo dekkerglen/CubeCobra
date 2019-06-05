@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  h1 Login
+  h2 Login
   br
   form(method='POST', action='/user/login')
     .form-group.row
@@ -10,5 +10,9 @@ block content
     .form-group.row
       label.col-sm-2.col-form-label Password:
       input#inputPassword3.form-control.col-sm-10(name='password', type='password')
+    .row
+      .col-sm-2
+      .col-sm-10
+        a(href='/user/lostpassword') Forgot password?
     br
     input.btn.btn-primary(type='submit',value='Login')

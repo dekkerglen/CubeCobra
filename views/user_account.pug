@@ -1,7 +1,21 @@
-extends user
+extends user_base
 
 block information
-  a content
+  .container
+    dl.row
+      dt.col-sm-3 Name
+      dd.col-sm-9 #{user.name}
+      dt.col-sm-3 Username
+      dd.col-sm-9 #{user.username}
+      dt.col-sm-3 Email
+      dd.col-sm-9 #{user.email}
+      dt.col-sm-3 About
+      dd.col-sm-9 #{name}
+        form(method='POST', action='/user/updatebio')
+          #form-group
+            textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about
+          br
+          input.btn.btn-primary(type='submit',value='Update')
 
 block changepassword
   form(method='POST', action='/user/resetpassword')
@@ -15,3 +29,13 @@ block changepassword
       label.col-sm-4.col-form-label Confirm New Password:
       input#inputPassword3.form-control.form-control.col-sm-8(name='password3', type='password')
     input.btn.btn-primary(type='submit',value='Change Password')
+
+block changeemail
+  form(method='POST', action='/user/updateemail')
+    .form-group.row
+      label.col-sm-4.col-form-label New Email:
+      input#inputEmail3.form-control.col-sm-8(name='email', type='text')
+    .form-group.row
+      label.col-sm-4.col-form-label Password:
+      input#inputPassword2.form-control.form-control.col-sm-8(name='password', type='password')
+    input.btn.btn-primary(type='submit',value='Update')
