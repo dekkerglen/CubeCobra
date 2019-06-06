@@ -105,13 +105,9 @@ let users =  require('./routes/users_routes');
 app.use('/cube', cubes);
 app.use('/user', users);
 
-var options = {
-  key: fs.readFileSync(path.join(__dirname,'cert','client-key.pem')),
-  cert: fs.readFileSync(path.join(__dirname,'cert','client-cert.pem'))
-};
 
 // Start server
-https.createServer(options, app).listen(443, function()
+http.createServer(app).listen(5000, function()
 {
-  console.log('server started on port 443...');
+  console.log('server started on port 5000...');
 });
