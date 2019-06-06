@@ -39,3 +39,18 @@ block changeemail
       label.col-sm-4.col-form-label Password:
       input#inputPassword2.form-control.form-control.col-sm-8(name='password', type='password')
     input.btn.btn-primary(type='submit',value='Update')
+      
+block yourcubes
+  if cube
+    ul.list-group
+      each cube, i in cubes
+        li.list-group-item
+          a(href="/cube/view/"+cube._id)= cube.title
+  else
+    p You have no cubes! Create one with the form below!
+  br
+  form(method='POST', action='/cube/add')
+    li.list-group-itemform.form-inline
+      .form-group.mx-sm-3.mb-2
+        input#inputPassword2.form-control(type='text',name='name' placeholder='Cube Name')
+      button.btn.btn-primary.mb-2(type='submit') Create Cube

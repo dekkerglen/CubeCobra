@@ -2,12 +2,13 @@ doctype html
 html
   head
     title MTG Cube Nexus
-    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
     link(rel='stylesheet' href='/css/stylesheet.css')
+    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
   body
     nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
       .container
-        a.navbar-brand(href='/') MTG Cube Nexus
+        a(href='/')
+          img(src="/content/banner_small.png" alt="MTG Cube Nexus")
         button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
           span.navbar-toggler-icon
         ul.navbar-nav.mr-auto
@@ -28,14 +29,19 @@ html
               a.dropdown-item(href='#') Contact
               a.dropdown-item(href='#') Dev Blog
               a.dropdown-item(href='#') FAQ
+          if user
+            li.nav-item
+              a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
         ul.navbar-nav.navbar-right
           if user
             li.nav-item.dropdown
               a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
                 |  #{user.username}  
               .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-                a.dropdown-item(href='#') Your Cubes
-                a.dropdown-item(href='/user/account') Account
+                a.dropdown-item(href='/user/account/yourcubes') Your Cubes
+                a.dropdown-item(href='/user/account') Account Information
+                a.dropdown-item(href='/user/account/changepassword') Change Password
+                a.dropdown-item(href='/user/account/updateemail') Update Email
                 a.dropdown-item(href='/user/logout') Logout
               
           else
@@ -79,4 +85,23 @@ html
             br
         .modal-footer
           input.btn.btn-primary(type='submit',value='Login')
+          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+// Add cube modal
+#cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
+  .modal-dialog(role='document')
+    .modal-content
+      form(method='POST', action='/cube/add')
+        .modal-header
+          h5#loginModalLabel.modal-title Create New Cube
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body
+            .form-group
+              label.col-form-label Cube Name:
+              input.form-control(name='name', type='text')
+
+            br
+        .modal-footer
+          input.btn.btn-primary(type='submit',value='Create')
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close

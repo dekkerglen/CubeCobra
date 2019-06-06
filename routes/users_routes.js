@@ -32,7 +32,7 @@ router.post('/lostpassword', function(req, res)
   }
   else
   {
-    PasswordReset.deleteOne({ email: req.body.email}, function (err)
+    PasswordReset.deleteOne({ email: req.body.email.toLowerCase()}, function (err)
     {
       let passwordReset = new PasswordReset();
       passwordReset.expires = addMinutes(Date.now(),15);
@@ -169,9 +169,9 @@ router.get('/register', function(req, res)
 //Register process
 router.post('/register', function(req, res)
 {
-  const name = req.body.name.toLowerCase();
+  const name = req.body.name;
   const email = req.body.email.toLowerCase();
-  const username = req.body.username.toLowerCase();
+  const username = req.body.username;
   const password = req.body.password;
   const password2 = req.body.password2;
 
@@ -371,6 +371,26 @@ router.get('/logout', function(req, res)
   req.logout();
   req.flash('success', 'You have been logged out');
   res.redirect('/');
+});
+
+//account page
+router.get('/account/yourcubes', ensureAuth, function(req, res)
+{
+  User.findById(req.user._id, function (err, user)
+  {
+    user_limited=
+    {
+      username:user.username,
+      email:user.email,
+      name:user.name,
+      about:user.about
+    }
+    res.render('user_account',
+    {
+      selected:'cube',
+      user:user_limited
+    });
+  });
 });
 
 //account page

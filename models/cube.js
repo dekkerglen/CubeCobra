@@ -3,21 +3,19 @@ let mongoose = require('mongoose');
 // Cube schema
 let cubeSchema = mongoose.Schema(
   {
-    title:
+    name:
     {
       type: String,
       required: true
     },
-    author:
+    owner:
     {
       type: String,
       required: true
     },
-    body:
-    {
-      type:String,
-      required:true
-    }
+    cards: [String],
+    decks: [String],
+    articles: [String]
   }
 );
 

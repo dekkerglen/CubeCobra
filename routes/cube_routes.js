@@ -5,37 +5,28 @@ const router = express.Router();
 let Cube = require('../models/cube');
 let User = require('../models/user');
 
-// Add route
-router.get('/add',ensureAuth, function(req, res)
-{
-  res.render('add_cube',
-  {
-    title:'Add'
-  })
-});
 
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res,next)
 {
-  req.checkBody('title', 'Title is required').notEmpty();
-  //req.checkBody('author', 'Author is required').notEmpty();
-  req.checkBody('body', 'Body is required').notEmpty();
+  req.checkBody('name', 'Name is required').notEmpty();
 
   //handle error checks
   let errors = req.validationErrors();
 
   if(errors)
   {
-    res.render('add_cube', {
-      title:'Add',
+    res.render('/user/account/yourcubes', {
       errors:errors
     });
   }
   else {
     let cube = new Cube();
-    cube.title = req.body.title;
-    cube.author = req.user._id;
-    cube.body = req.body.body;
+    cube.name = req.body.name;
+    cube.owner = req.user._id;
+    cube.cards = [];
+    cube.decks = [];
+    cube.articles = [];
 
     cube.save(function(err)
     {
@@ -57,7 +48,7 @@ router.get('/view/:id',function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
-    User.findById(cube.author, function(err, user)
+    User.findById(cube.owner, function(err, user)
     {
       if(err)
       {
@@ -72,7 +63,7 @@ router.get('/view/:id',function(req, res)
         res.render('view_cube',
         {
           cube:cube,
-          author: user.username
+          owner: user.username
         });
       }
     });

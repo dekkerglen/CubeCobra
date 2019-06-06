@@ -1,11 +1,10 @@
 extends layout
 
 block content
-  h1= cube.title
-  h5 Written by #{author}
-  p= cube.body
+  h1= cube.name
+  h5 Written by #{owner}
   if user
-    if user.id == cube.author
+    if user.id == cube.owner
       hr
       a.btn.btn-primary(href='/cube/edit/'+cube._id) Edit
       a.btn.btn-danger.delete-cube(href='#', data-id=cube._id) Delete

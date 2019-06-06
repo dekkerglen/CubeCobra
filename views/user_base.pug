@@ -5,10 +5,14 @@ block content
   .row
     .col-3
       #v-pills-tab.nav.flex-column.nav-pills(role='tablist', aria-orientation='vertical')
-        if selected=="info"
-          a#v-pills-info-tab.nav-link.active(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='true') Information
+        if selected=="cube"
+          a#v-pills-cube-tab.nav-link.active(data-toggle='pill', href='#v-pills-cube', role='tab', aria-controls='v-pills-cube', aria-selected='true') Your Cubes
         else
-          a#v-pills-info-tab.nav-link(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='false') Information
+          a#v-pills-cube-tab.nav-link(data-toggle='pill', href='#v-pills-cube', role='tab', aria-controls='v-pills-cube', aria-selected='false') Your Cubes
+        if selected=="info"
+          a#v-pills-info-tab.nav-link.active(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='true') Account Information
+        else
+          a#v-pills-info-tab.nav-link(data-toggle='pill', href='#v-pills-info', role='tab', aria-controls='v-pills-info', aria-selected='false') Account Information
         if selected=="changepw"
           a#v-pills-pwreset-tab.nav-link.active(data-toggle='pill', href='#v-pills-pwreset', role='tab', aria-controls='v-pills-pwreset', aria-selected='true') Change Password
         else
@@ -20,6 +24,12 @@ block content
           
     .col-9
       #v-pills-tabContent.tab-content
+        if selected=="cube"
+          #v-pills-cube.tab-pane.fade.show.active(role='tabpanel', aria-labelledby='v-pills-cube-tab')
+            block yourcubes
+        else
+          #v-pills-cube.tab-pane.fade(role='tabpanel', aria-labelledby='v-pills-cube-tab')          
+            block yourcubes
         if selected=="info"
           #v-pills-info.tab-pane.fade.show.active(role='tabpanel', aria-labelledby='v-pills-info-tab')
             block information
