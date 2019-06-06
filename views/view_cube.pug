@@ -1,8 +1,23 @@
 extends layout
 
 block content
-  h1= cube.name
-  h5 Written by #{owner}
+  nav(aria-label='breadcrumb')
+    ol.breadcrumb
+      li.breadcrumb-item
+        a(href='#') #{owner}
+      li.breadcrumb-item.active(aria-current='page')= cube.name
+      
+
+  ul.nav.nav-tabs.nav-fill.nav-justified
+      li.nav-item
+        a.nav-link.active(href='#') Blog
+      li.nav-item
+        a.nav-link(href='#') List
+      li.nav-item
+        a.nav-link(href='#') Playtest
+      li.nav-item
+        a.nav-link(href='#') Analysis
+
   if user
     if user.id == cube.owner
       hr
