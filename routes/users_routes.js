@@ -57,10 +57,10 @@ router.post('/lostpassword', function(req, res)
           });
 
           var mail = {
-              from: "MTG Cube Nexus <cubemanagementapp@gmail.com>",
+              from: "Cube Cobra Team <cubecobrateam@gmail.com>",
               to: passwordReset.email,
               subject: "Password Reset",
-              html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"localhost/user/passwordreset/" +
+              html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"http://cubecobra.com/user/passwordreset/" +
                 passwordReset._id + "\">here</a>.<br> Your recovery code is: " + passwordReset.code  +
                 "<br> This link expires in 15 minutes." +
                 "<br> If you did not request a password reset, ignore this email."
@@ -255,11 +255,11 @@ router.post('/register', function(req, res)
                       });
 
                       var mail = {
-                          from: "MTG Cube Nexus <cubemanagementapp@gmail.com>",
+                          from: "Cube Cobra Team <cubecobrateam@gmail.com>",
                           to: email,
                           subject: "Confirm Account",
                           html: "Hi " + newUser.name +
-                            ",</br> Thanks for joining! To confirm your email, click <a href=\"localhost/user/register/confirm/" +
+                            ",</br> Thanks for joining! To confirm your email, click <a href=\"http://cubecobra.com/user/register/confirm/" +
                             newUser._id + "\">here</a>."
                       }
 

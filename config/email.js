@@ -1,5 +1,5 @@
 module.exports =
 {
-  username:'cubemanagementapp@gmail.com',
+  username:'cubecobrateam@gmail.com',
   password:'c6z9veV3CEbx6bX'
 }
