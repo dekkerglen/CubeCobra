@@ -7,7 +7,7 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
 const config = require('./config/database');
-const https = require('https');
+const http = require('http');
 var fs = require('fs');
 
 // Connect db
