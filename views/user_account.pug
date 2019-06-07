@@ -3,14 +3,12 @@ extends user_base
 block information
   .container
     dl.row
-      dt.col-sm-3 Name
-      dd.col-sm-9 #{user.name}
       dt.col-sm-3 Username
       dd.col-sm-9 #{user.username}
       dt.col-sm-3 Email
       dd.col-sm-9 #{user.email}
       dt.col-sm-3 About
-      dd.col-sm-9 #{name}
+      dd.col-sm-9
         form(method='POST', action='/user/updatebio')
           #form-group
             textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about

@@ -104,60 +104,74 @@ router.get('/passwordreset/:id', function(req, res)
 
 router.post('/lostpasswordreset', function(req, res)
 {
-  console.log(req.body.email);
-  console.log(req.body.code);
-  PasswordReset.findOne({code:req.body.code,email:req.body.email}, function(err, passwordreset)
+  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
+  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
+  let errors = req.validationErrors();
+
+  if(errors)
   {
-    if(!passwordreset)
+    res.render('passwordreset',
     {
-      req.flash('danger', 'Incorrect email and recovery code combination.');
-      res.render('passwordreset');
-    }
-    else
+      errors: errors
+    })
+  }
+  else
+  {
+    console.log(req.body.email);
+    console.log(req.body.code);
+    PasswordReset.findOne({code:req.body.code,email:req.body.email}, function(err, passwordreset)
     {
-      User.findOne({email:req.body.email}, function (err, user)
+      if(!passwordreset)
       {
-        if(user)
+        req.flash('danger', 'Incorrect email and recovery code combination.');
+        res.render('passwordreset');
+      }
+      else
+      {
+        User.findOne({email:req.body.email}, function (err, user)
         {
-          if(req.body.password2 != req.body.password)
+          if(user)
           {
-            req.flash('danger', 'New passwords don\'t match');
-            res.render('passwordreset');
-          }
-          else
-          {
-            bcrypt.genSalt(10, function(err, salt)
+            if(req.body.password2 != req.body.password)
             {
-              bcrypt.hash(req.body.password2, salt, function(err, hash)
+              req.flash('danger', 'New passwords don\'t match');
+              res.render('passwordreset');
+            }
+            else
+            {
+              bcrypt.genSalt(10, function(err, salt)
               {
-                if(err)
+                bcrypt.hash(req.body.password2, salt, function(err, hash)
                 {
-                  console.log(err);
-                }
-                else
-                {
-                  user.password = hash;
-                  user.save(function(err)
+                  if(err)
                   {
-                    if(err)
+                    console.log(err);
+                  }
+                  else
+                  {
+                    user.password = hash;
+                    user.save(function(err)
                     {
-                      console.log(err)
-                      return;
-                    }
-                    else
-                    {
-                      req.flash('success', 'Password updated succesfully');
-                      return res.redirect('/user/login');
-                    }
-                  });
-                }
+                      if(err)
+                      {
+                        console.log(err)
+                        return;
+                      }
+                      else
+                      {
+                        req.flash('success', 'Password updated succesfully');
+                        return res.redirect('/user/login');
+                      }
+                    });
+                  }
+                });
               });
-            });
+            }
           }
-        }
-      });
-    }
-  });
+        });
+      }
+    });
+  }
 });
 
 //Register form
@@ -169,32 +183,36 @@ router.get('/register', function(req, res)
 //Register process
 router.post('/register', function(req, res)
 {
-  const name = req.body.name;
   const email = req.body.email.toLowerCase();
   const username = req.body.username;
   const password = req.body.password;
   const password2 = req.body.password2;
 
-  req.checkBody('name', 'Name is required').notEmpty();
+  let attempt = {
+    email : email,
+    username: username
+  }
+
   req.checkBody('email', 'Email is required').notEmpty();
   req.checkBody('email', 'Email is not valid').isEmail();
   req.checkBody('username', 'Username is required').notEmpty();
   req.checkBody('password', 'Password is required').notEmpty();
   req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
-  req.checkBody('name', 'Name must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
   req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
-  req.checkBody('username', 'Username must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
-  req.checkBody('password', 'Password must be between 8 and 32 characters.').isLength({ min: 8, max:32 });
-
+  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({ min: 5, max:24 });
+  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
+  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
+  req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
   if(errors)
   {
     res.render('register',
     {
-      errors: errors
-    })
+      errors: errors,
+      attempt: attempt
+    });
   }
   else
   {
@@ -203,7 +221,10 @@ router.post('/register', function(req, res)
       if(user)
       {
         req.flash('danger','Username already taken.');
-        res.redirect('/user/register');
+          res.render('register',
+          {
+            attempt: attempt
+          });
       }
       else
       {
@@ -213,12 +234,14 @@ router.post('/register', function(req, res)
           if(user)
           {
             req.flash('danger','Email already associated with an existing account.');
-            res.redirect('/user/register');
+            res.render('register',
+            {
+              attempt: attempt
+            });
           }
           else
           {
             let newUser = new User({
-              name:name,
               email:email,
               username:username,
               password:password,
@@ -258,7 +281,7 @@ router.post('/register', function(req, res)
                           from: "Cube Cobra Team <cubecobrateam@gmail.com>",
                           to: email,
                           subject: "Confirm Account",
-                          html: "Hi " + newUser.name +
+                          html: "Hi " + newUser.username +
                             ",</br> Thanks for joining! To confirm your email, click <a href=\"http://cubecobra.com/user/register/confirm/" +
                             newUser._id + "\">here</a>."
                       }
@@ -382,7 +405,6 @@ router.get('/account/yourcubes', ensureAuth, function(req, res)
     {
       username:user.username,
       email:user.email,
-      name:user.name,
       about:user.about
     }
     res.render('user_account',
@@ -402,7 +424,6 @@ router.get('/account', ensureAuth, function(req, res)
     {
       username:user.username,
       email:user.email,
-      name:user.name,
       about:user.about
     }
     res.render('user_account',
@@ -415,13 +436,13 @@ router.get('/account', ensureAuth, function(req, res)
 
 //account page, password reset
 router.get('/account/changepassword', ensureAuth, function(req, res)
-{  User.findById(req.user._id, function (err, user)
+{
+  User.findById(req.user._id, function (err, user)
   {
     user_limited=
     {
       username:user.username,
       email:user.email,
-      name:user.name,
       about:user.about
     }
     res.render('user_account',
@@ -434,13 +455,13 @@ router.get('/account/changepassword', ensureAuth, function(req, res)
 
 //account page, password reset
 router.get('/account/updateemail', ensureAuth, function(req, res)
-{  User.findById(req.user._id, function (err, user)
+{
+  User.findById(req.user._id, function (err, user)
   {
     user_limited=
     {
       username:user.username,
       email:user.email,
-      name:user.name,
       about:user.about
     }
     res.render('user_account',
@@ -453,58 +474,84 @@ router.get('/account/updateemail', ensureAuth, function(req, res)
 
 router.post('/resetpassword', ensureAuth, function(req,res,next)
 {
-  User.findById(req.user._id, function (err, user)
+  req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
+  req.checkBody('password2', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
+
+  let errors = req.validationErrors();
+
+  if(errors)
   {
-    if(user)
+    User.findById(req.user._id, function (err, user)
     {
-      bcrypt.compare(req.body.password, user.password, function(err, isMatch)
+      user_limited=
       {
-        if(!isMatch)
+        username:user.username,
+        email:user.email,
+        about:user.about
+      }
+      res.render('user_account',
+      {
+        selected:'changepw',
+        user:user_limited,
+        errors: errors
+      });
+    });
+  }
+  else
+  {
+    User.findById(req.user._id, function (err, user)
+    {
+      if(user)
+      {
+        bcrypt.compare(req.body.password, user.password, function(err, isMatch)
         {
-          req.flash('danger', 'Password is incorrect');
-          return res.redirect('/user/account/changepassword');
-        }
-        else
-        {
-          if(req.body.password2 != req.body.password3)
+          if(!isMatch)
           {
-            req.flash('danger', 'New passwords don\'t match');
+            req.flash('danger', 'Password is incorrect');
             return res.redirect('/user/account/changepassword');
           }
           else
           {
-            bcrypt.genSalt(10, function(err, salt)
+            if(req.body.password2 != req.body.password3)
             {
-              bcrypt.hash(req.body.password2, salt, function(err, hash)
+              req.flash('danger', 'New passwords don\'t match');
+              return res.redirect('/user/account/changepassword');
+            }
+            else
+            {
+              bcrypt.genSalt(10, function(err, salt)
               {
-                if(err)
+                bcrypt.hash(req.body.password2, salt, function(err, hash)
                 {
-                  console.log(err);
-                }
-                else
-                {
-                  user.password = hash;
-                  user.save(function(err)
+                  if(err)
                   {
-                    if(err)
+                    console.log(err);
+                  }
+                  else
+                  {
+                    user.password = hash;
+                    user.save(function(err)
                     {
-                      console.log(err)
-                      return;
-                    }
-                    else
-                    {
-                      req.flash('success', 'Password updated succesfully');
-                      return res.redirect('/user/account/changepassword');
-                    }
-                  });
-                }
+                      if(err)
+                      {
+                        console.log(err)
+                        return;
+                      }
+                      else
+                      {
+                        req.flash('success', 'Password updated succesfully');
+                        return res.redirect('/user/account/changepassword');
+                      }
+                    });
+                  }
+                });
               });
-            });
+            }
           }
-        }
-      });
-    }
-  });
+        });
+      }
+    });
+  }
 });
 
 router.post('/updatebio',ensureAuth, function(req,res,next)

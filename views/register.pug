@@ -4,15 +4,20 @@ block content
   h1 Register
   br
   form(method='POST', action='/user/register')
-    .form-group.row
-      label.col-sm-2.col-form-label Name:
-      input.form-control.form-control.col-sm-10(name='name', type='text')
-    .form-group.row
-      label.col-sm-2.col-form-label Email:
-      input#inputEmail3.form-control.col-sm-10(name='email', type='text')
-    .form-group.row
-      label.col-sm-2.col-form-label Username:
-      input.form-control.form-control.col-sm-10(name='username', type='text')
+    if attempt
+      .form-group.row
+        label.col-sm-2.col-form-label Email:
+        input#inputEmail3.form-control.col-sm-10(name='email', type='text', value=attempt.email)
+      .form-group.row
+        label.col-sm-2.col-form-label Username:
+        input.form-control.form-control.col-sm-10(name='username', type='text', value=attempt.username)
+    else
+      .form-group.row
+        label.col-sm-2.col-form-label Email:
+        input#inputEmail3.form-control.col-sm-10(name='email', type='text')
+      .form-group.row
+        label.col-sm-2.col-form-label Username:
+        input.form-control.form-control.col-sm-10(name='username', type='text')
     .form-group.row
       label.col-sm-2.col-form-label Password:
       input#inputPassword3.form-control.form-control.col-sm-10(name='password', type='password')

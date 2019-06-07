@@ -85,7 +85,7 @@ router.get('/edit/:id',ensureAuth,function(req, res,next)
       res.render('edit_cube',
       {
         cube:cube,
-        author: user.name
+        author: user.username
       });
     });
   });
