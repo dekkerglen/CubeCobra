@@ -19,23 +19,23 @@ block changepassword
   form(method='POST', action='/user/resetpassword')
     .form-group.row
       label.col-sm-4.col-form-label Old password:
-      input#inputPassword1.form-control.form-control.col-sm-8(name='password', type='password')
+      input#password.form-control.form-control.col-sm-8(name='password', type='password')
     .form-group.row
       label.col-sm-4.col-form-label New Password:
-      input#inputPassword2.form-control.form-control.col-sm-8(name='password2', type='password')
+      input#newPassword.form-control.form-control.col-sm-8(name='password2', type='password')
     .form-group.row
       label.col-sm-4.col-form-label Confirm New Password:
-      input#inputPassword3.form-control.form-control.col-sm-8(name='password3', type='password')
+      input#confirmPassword.form-control.form-control.col-sm-8(name='password3', type='password')
     input.btn.btn-primary(type='submit',value='Change Password')
 
 block changeemail
   form(method='POST', action='/user/updateemail')
     .form-group.row
       label.col-sm-4.col-form-label New Email:
-      input#inputEmail3.form-control.col-sm-8(name='email', type='text')
+      input#email.form-control.col-sm-8(name='email', type='text')
     .form-group.row
       label.col-sm-4.col-form-label Password:
-      input#inputPassword2.form-control.form-control.col-sm-8(name='password', type='password')
+      input#password.form-control.form-control.col-sm-8(name='password', type='password')
     input.btn.btn-primary(type='submit',value='Update')
       
 block yourcubes
@@ -50,5 +50,5 @@ block yourcubes
   form(method='POST', action='/cube/add')
     li.list-group-itemform.form-inline
       .form-group.mx-sm-3.mb-2
-        input#inputPassword2.form-control(type='text',name='name' placeholder='Cube Name')
+        input.form-control(type='text',name='name' placeholder='Cube Name')
       button.btn.btn-primary.mb-2(type='submit') Create Cube

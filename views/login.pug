@@ -5,14 +5,14 @@ block content
   br
   form(method='POST', action='/user/login')
     .form-group.row
-      label.col-sm-2.col-form-label Username:
-      input.form-control.col-sm-10(name='username', type='text')
+      label.col-sm-3.col-form-label Username or Email Address:
+      input#email.form-control.col-sm-9(name='username', type='text')
     .form-group.row
-      label.col-sm-2.col-form-label Password:
-      input#inputPassword3.form-control.col-sm-10(name='password', type='password')
+      label.col-sm-3.col-form-label Password:
+      input#password.form-control.col-sm-9(name='password', type='password')
     .row
-      .col-sm-2
-      .col-sm-10
+      .col-sm-3
+      .col-sm-9
         a(href='/user/lostpassword') Forgot password?
     br
     input.btn.btn-primary(type='submit',value='Login')

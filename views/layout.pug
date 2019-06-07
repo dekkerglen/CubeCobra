@@ -76,11 +76,11 @@ html
             span(aria-hidden='true') ×
         .modal-body
             .form-group
-              label.col-form-label Username:
-              input.form-control(name='username', type='text')
+              label.col-form-label Username or Email Address:
+              input#username.form-control(name='username', type='text')
             .form-group
               label.col-form-label Password:
-              input#inputPassword3.form-control(name='password', type='password')
+              input#password.form-control(name='password', type='password')
             a(href='/user/lostpassword') Forgot password?
             br
         .modal-footer

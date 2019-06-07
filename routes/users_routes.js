@@ -216,7 +216,7 @@ router.post('/register', function(req, res)
   }
   else
   {
-    User.findOne({ username: req.body.username.toLowerCase() }, function (err, user)
+    User.findOne({ username_lower: req.body.username.toLowerCase() }, function (err, user)
     {
       if(user)
       {
@@ -244,6 +244,7 @@ router.post('/register', function(req, res)
             let newUser = new User({
               email:email,
               username:username,
+              username_lower:username.toLowerCase(),
               password:password,
               confirm:'false'
             });
@@ -359,33 +360,64 @@ router.get('/login', function(req, res)
 //Login post
 router.post('/login', function(req, res, next)
 {
-  User.findOne({ username: req.body.username.toLowerCase() }, function (err, user)
+  if(req.body.username.includes('@'))
   {
-    req.body.username = req.body.username.toLowerCase();
-    req.body.password = req.body.password.toLowerCase();
-    if (err || !user)
+    //find by email
+    User.findOne({ email: req.body.username }, function (err, user)
     {
-      req.flash('danger','No user found');
-      return res.redirect('/user/login');
-    }
-    else
-    {
-      if(user.confirmed == 'true')
+      if(!user)
       {
-        passport.authenticate('local',
-        {
-            successRedirect:'/',
-            failureRedirect:'/user/Login',
-            failureFlash:true
-        })(req, res, next);
-      }
-      else
-      {
-        req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
+        req.flash('danger', 'Incorrect username or email address.');
         res.redirect('/user/login');
       }
-    }
-  });
+      else {
+        req.body.username = user.username
+        if(user.confirmed == 'true')
+        {
+          passport.authenticate('local',
+          {
+              successRedirect:'/',
+              failureRedirect:'/user/Login',
+              failureFlash:true
+          })(req, res, next);
+        }
+        else
+        {
+          req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
+          res.redirect('/user/login');
+        }
+      }
+    });
+  }
+  else
+  {
+    req.body.username = req.body.username.toLowerCase();
+    //find by username
+    User.findOne({ username_lower: req.body.username }, function (err, user)
+    {
+      if(!user)
+      {
+        req.flash('danger', 'Incorrect username or email address.');
+        res.redirect('/user/login');
+      }
+      else {
+        if(user.confirmed == 'true')
+        {
+          passport.authenticate('local',
+          {
+              successRedirect:'/',
+              failureRedirect:'/user/Login',
+              failureFlash:true
+          })(req, res, next);
+        }
+        else
+        {
+          req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
+          res.redirect('/user/login');
+        }
+      }
+    });
+  }
 })
 
 //logout

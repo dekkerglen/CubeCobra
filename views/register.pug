@@ -7,21 +7,21 @@ block content
     if attempt
       .form-group.row
         label.col-sm-2.col-form-label Email:
-        input#inputEmail3.form-control.col-sm-10(name='email', type='text', value=attempt.email)
+        input#email.form-control.col-sm-10(name='email', type='text', value=attempt.email)
       .form-group.row
-        label.col-sm-2.col-form-label Username:
+        label#username.col-sm-2.col-form-label Username:
         input.form-control.form-control.col-sm-10(name='username', type='text', value=attempt.username)
     else
       .form-group.row
         label.col-sm-2.col-form-label Email:
-        input#inputEmail3.form-control.col-sm-10(name='email', type='text')
+        input#email.form-control.col-sm-10(name='email', type='text')
       .form-group.row
         label.col-sm-2.col-form-label Username:
-        input.form-control.form-control.col-sm-10(name='username', type='text')
+        input#username.form-control.form-control.col-sm-10(name='username', type='text')
     .form-group.row
       label.col-sm-2.col-form-label Password:
-      input#inputPassword3.form-control.form-control.col-sm-10(name='password', type='password')
+      input#password.form-control.form-control.col-sm-10(name='password', type='password')
     .form-group.row
       label.col-sm-2.col-form-label Confirm Password:
-      input#inputPassword3.form-control.form-control.col-sm-10(name='password2', type='password')
+      input#confirmPassword.form-control.form-control.col-sm-10(name='password2', type='password')
     input.btn.btn-primary(type='submit',value='Register')
