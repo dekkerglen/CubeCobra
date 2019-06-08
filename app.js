@@ -1,6 +1,4 @@
 
-
-
 const express = require('express');
 const path = require('path');
 const mongoose =  require('mongoose');
@@ -11,7 +9,7 @@ const session = require('express-session');
 const passport = require('passport');
 const config = require('./config/database');
 const http = require('http');
-var fs = require('fs');
+const fs = require('fs');
 
 // Connect db
 mongoose.connect(config.database);
@@ -43,6 +41,7 @@ app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname,'public')));
+
 
 // Express session middleware
 app.use(session({
