@@ -66,11 +66,11 @@ router.post('/lostpassword', function(req, res)
                 "<br> If you did not request a password reset, ignore this email."
           }
 
-          smtpTransport.sendMail(mail, function(error, response){
-              if(error){
-                  console.log(error);
-              }else{
-                  console.log("Message sent");
+          smtpTransport.sendMail(mail, function(err, response)
+          {
+              if(err)
+              {
+                  console.log(err);
               }
 
               smtpTransport.close();
@@ -91,12 +91,11 @@ router.get('/passwordreset/:id', function(req, res)
   {
     if(!passwordreset || (Date.now() > passwordreset.expires))
     {
-      console.log('Expired');
       req.flash('danger', 'Password recovery link expired');
       res.redirect('/');
     }
-    else {
-      console.log('Not expired');
+    else
+    {
       res.render('passwordreset');
     }
   });
@@ -117,8 +116,6 @@ router.post('/lostpasswordreset', function(req, res)
   }
   else
   {
-    console.log(req.body.email);
-    console.log(req.body.code);
     PasswordReset.findOne({code:req.body.code,email:req.body.email}, function(err, passwordreset)
     {
       if(!passwordreset)
@@ -287,11 +284,11 @@ router.post('/register', function(req, res)
                             newUser._id + "\">here</a>."
                       }
 
-                      smtpTransport.sendMail(mail, function(error, response){
-                          if(error){
+                      smtpTransport.sendMail(mail, function(error, response)
+                      {
+                          if(error)
+                          {
                               console.log(error);
-                          }else{
-                              console.log("Message sent");
                           }
 
                           smtpTransport.close();

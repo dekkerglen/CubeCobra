@@ -47,7 +47,9 @@ function addCard(card,callback)
       console.log(x + ' - adding: ' + card.name);
       let newcard = new Card();
       newcard.id = card.id;
+      newcard.full_name = card.name + ' [' + card.set + '-'+ card.collector_number + ']';
       newcard.name = card.name;
+      newcard.name_lower = card.name.toLowerCase();
       if(card.card_faces && card.card_faces[0].image_uris)
       {
         newcard.image_small = card.card_faces[0].image_uris.image_small;

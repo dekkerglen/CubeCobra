@@ -1,5 +1,10 @@
 doctype html
 html
+  style.
+    .dropdown-menu a:focus{
+    background-color: #28A745;
+    color: white
+    }
   head
     title MTG Cube Nexus
     link(rel='stylesheet' href='/css/stylesheet.css')
@@ -84,7 +89,7 @@ html
             a(href='/user/lostpassword') Forgot password?
             br
         .modal-footer
-          input.btn.btn-primary(type='submit',value='Login')
+          input.btn.btn-success(type='submit',value='Login')
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
 // Add cube modal
@@ -103,5 +108,5 @@ html
 
             br
         .modal-footer
-          input.btn.btn-primary(type='submit',value='Create')
+          input.btn.btn-success(type='submit',value='Create')
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close

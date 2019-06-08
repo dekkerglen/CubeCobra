@@ -105,8 +105,10 @@ app.get('/', function(req, res)
 //Route files
 let cubes =  require('./routes/cube_routes');
 let users =  require('./routes/users_routes');
+let api =  require('./routes/api');
 app.use('/cube', cubes);
 app.use('/user', users);
+app.use('/api', api);
 
 
 // Start server

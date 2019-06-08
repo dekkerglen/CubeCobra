@@ -1,0 +1,84 @@
+extends layout
+
+block content
+  h5
+    nav(aria-label='breadcrumb')
+      ol.breadcrumb
+        li.breadcrumb-item
+          a(href='#') #{owner}
+        li.breadcrumb-item.active(aria-current='page')= cube.name
+      
+
+  ul.nav.nav-tabs.nav-fill.nav-justified
+      li.nav-item
+        a.nav-link(href='/cube/blog/'+cube._id) Blog
+      li.nav-item
+        a.nav-link.active(href='/cube/list/'+cube._id) List
+      li.nav-item
+        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
+      li.nav-item
+        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+        
+  if user
+    if user.id == cube.owner
+      .pos-f-t
+        nav.navbar.navbar-expand-lg.navbar-light.bg-light
+          .collapse.navbar-collapse
+            ul.navbar-nav
+              li.nav-item
+                a.nav-link(href='#', data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation") Add/Remove Cards
+              li.nav-item.dropdown
+                a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
+                .dropdown-menu(aria-labelledby='bulkdropdown')
+                  a.dropdown-item(href='#', data-toggle='modal', data-target='#exampleModalScrollable') Paste Text
+                  a.dropdown-item(href='#') Upload File
+              li.nav-item.dropdown
+                a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
+                .dropdown-menu(aria-labelledby='exportdropdown')
+                  a.dropdown-item(href='#') Plain Text (.txt)
+                  a.dropdown-item(href='#') Comma Separated (.csv)
+                  a.dropdown-item(href='#') MTGSalvation (.txt)
+                    br
+        #navbarToggleExternalContent.collapse
+          .container.bg-light
+            .row
+              .col
+                  form(autocomplete='off').form-inline
+                    .form-group.mb-2.autocomplete
+                      input.form-control#myInput(style='width: 300px', type='text', name='myCountry', placeholder='Cards to Add')
+                    button.btn.btn-success.mx-sm-1.mb-2(type='button') Just Add
+                    button.btn.btn-success.mb-2(type='button') Suggest Cuts
+              .col
+                form.form-inline
+                  .form-group.mb-2.autocomplete
+                    input.form-control#myInput2(style='width: 300px', type='text', placeholder='Card to Remove')
+                  button.btn.btn-success.mx-sm-1.mb-2(type='button') Remove / Replace
+      input#cubeID(type='hidden', name='cubeID', value=cube._id)
+      script(src='/js/autocomplete.js')
+  br
+  .container
+    ul.list-group
+      each card, i in cards
+        li.list-group-item
+          a= card.name
+      if cards.length == 0
+        a This cube is empty! 
+
+  // Modal
+  #exampleModalScrollable.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalScrollableTitle', aria-hidden='true')
+    .modal-dialog.modal-dialog-scrollable(role='document')
+      .modal-content
+        form(method='POST', action='/cube/bulkupload/'+cube._id)
+          .modal-header
+            h5#exampleModalScrollableTitle.modal-title Bulk Upload - Paste Text
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true') ×
+          .modal-body
+              textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
+          .modal-footer
+            #bulkspinner.collapse.spinner-border.text-success(role='status')
+              span.sr-only Loading...
+            button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
+            button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+            
+            

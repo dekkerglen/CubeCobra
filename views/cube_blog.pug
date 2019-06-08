@@ -11,16 +11,17 @@ block content
 
   ul.nav.nav-tabs.nav-fill.nav-justified
       li.nav-item
-        a.nav-link.active(href='#') Blog
+        a.nav-link.active(href='/cube/blog/'+cube._id) Blog
       li.nav-item
-        a.nav-link(href='#') List
+        a.nav-link(href='/cube/list/'+cube._id) List
       li.nav-item
-        a.nav-link(href='#') Playtest
+        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
       li.nav-item
-        a.nav-link(href='#') Analysis
+        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+
 
   if user
     if user.id == cube.owner
       hr
-      a.btn.btn-primary(href='/cube/edit/'+cube._id) Edit
+      a.btn.btn-success(href='/cube/edit/'+cube._id) Edit
       a.btn.btn-danger.delete-cube(href='#', data-id=cube._id) Delete

@@ -13,7 +13,7 @@ block information
           #form-group
             textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about
           br
-          input.btn.btn-primary(type='submit',value='Update')
+          input.btn.btn-success(type='submit',value='Update')
 
 block changepassword
   form(method='POST', action='/user/resetpassword')
@@ -26,7 +26,7 @@ block changepassword
     .form-group.row
       label.col-sm-4.col-form-label Confirm New Password:
       input#confirmPassword.form-control.form-control.col-sm-8(name='password3', type='password')
-    input.btn.btn-primary(type='submit',value='Change Password')
+    input.btn.btn-success(type='submit',value='Change Password')
 
 block changeemail
   form(method='POST', action='/user/updateemail')
@@ -36,7 +36,7 @@ block changeemail
     .form-group.row
       label.col-sm-4.col-form-label Password:
       input#password.form-control.form-control.col-sm-8(name='password', type='password')
-    input.btn.btn-primary(type='submit',value='Update')
+    input.btn.btn-success(type='submit',value='Update')
       
 block yourcubes
   if cube
@@ -51,4 +51,4 @@ block yourcubes
     li.list-group-itemform.form-inline
       .form-group.mx-sm-3.mb-2
         input.form-control(type='text',name='name' placeholder='Cube Name')
-      button.btn.btn-primary.mb-2(type='submit') Create Cube
+      button.btn.btn-success.mb-2(type='submit') Create Cube
