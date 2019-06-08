@@ -42,7 +42,7 @@ router.post('/add',ensureAuth, function(req,res,next)
       else
       {
         req.flash('success', 'Cube Added');
-        res.redirect('/cube/view/'+cube._id);
+        res.redirect('/cube/list/'+cube._id);
       }
     });
   }
@@ -51,7 +51,7 @@ router.post('/add',ensureAuth, function(req,res,next)
 // GEt view cube Route
 router.get('/view/:id',function(req, res)
 {
-  res.redirect('/cube/blog/'+req.params.id);
+  res.redirect('/cube/list/'+req.params.id);
 });
 
 router.get('/blog/:id', function(req, res)
@@ -176,7 +176,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
       if(cube.owner != req.user._id)
       {
         req.flash('danger','Not Authorized');
-        res.redirect('/cube/view/'+req.params.id);
+        res.redirect('/cube/list/'+req.params.id);
       }
       else
       {
@@ -184,7 +184,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
         if(!cards)
         {
           req.flash('danger', 'No Cards Detected');
-          res.redirect('/cube/view/'+req.params.id);
+          res.redirect('/cube/list/'+req.params.id);
         }
         else
         {
@@ -215,7 +215,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
               else
               {
                 req.flash('success', 'Cube Updated');
-                res.redirect('/cube/view/'+req.params.id);
+                res.redirect('/cube/list/'+req.params.id);
               }
             });
           }).catch(function(err)
