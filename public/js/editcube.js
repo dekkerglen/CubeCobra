@@ -63,6 +63,7 @@ function updateCollapse()
   var val = "";
   changes.forEach(function(change, index)
   {
+    val += "<a style='color:red;font-weight: bold;text-decoration: underline;' href=#>x</a> ";
     if(change.add)
     {
       val += '<span class="badge badge-success">+</span> ' + change.add;
@@ -73,9 +74,9 @@ function updateCollapse()
     }
     else if(change.replace)
     {
-      val += change.replace[0] +' <span class="badge badge-primary">→</span> ' + change.replace[1];
+      val += '<span class="badge badge-primary">→</span> ' + change.replace[0]  + ' > ' + change.replace[1];
     }
-      val += " <a style='color:red;font-weight: bold;' href=#>x</a><br>";
+    val += "<br>"
   });
 
   changelist.innerHTML = val;
