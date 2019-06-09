@@ -52,14 +52,14 @@ function addCard(card,callback)
       newcard.name_lower = card.name.toLowerCase();
       if(card.card_faces && card.card_faces[0].image_uris)
       {
-        newcard.image_small = card.card_faces[0].image_uris.image_small;
-        newcard.image_normal = card.card_faces[0].image_uris.image_normal;
+        newcard.image_small = card.card_faces[0].image_uris.small;
+        newcard.image_normal = card.card_faces[0].image_uris.normal;
         newcard.art_crop = card.card_faces[0].image_uris.art_crop;
       }
       else
       {
-        newcard.image_small = card.image_uris.image_small;
-        newcard.image_normal = card.image_uris.image_normal;
+        newcard.image_small = card.image_uris.small;
+        newcard.image_normal = card.image_uris.normal;
         newcard.art_crop = card.image_uris.art_crop;
       }
       newcard.cmc = card.cmc;

@@ -88,13 +88,55 @@ router.get('/list/:id', function(req, res)
     {
       User.findById(cube.owner, function(err, user)
       {
+        var sorted_cards =
+        {
+          white: [],
+          blue: [],
+          red: [],
+          green: [],
+          black: [],
+          multi: [],
+          colorless: []
+        };
+        cards.forEach(function(card, index)
+        {
+          if(card.colors.length == 0)
+          {
+            sorted_cards.colorless.push(card);
+          }
+          else if(card.colors.length > 1)
+          {
+            sorted_cards.multi.push(card);
+          }
+          else {
+            switch(card.colors[0])
+            {
+              case "W":
+                sorted_cards.white.push(card);
+                break;
+              case "U":
+                sorted_cards.blue.push(card);
+                break;
+              case "B":
+                sorted_cards.black.push(card);
+                break;
+              case "R":
+                sorted_cards.red.push(card);
+                break;
+              case "G":
+                sorted_cards.green.push(card);
+                break;
+            }
+          }
+        });
+        console.log(sorted_cards);
         if(err)
         {
           res.render('cube_list',
           {
             cube:cube,
             author: 'unknown',
-            cards:cards
+            cards:sorted_cards
           });
         }
         else
@@ -103,7 +145,7 @@ router.get('/list/:id', function(req, res)
           {
             cube:cube,
             owner: user.username,
-            cards:cards
+            cards:sorted_cards
           });
         }
       });

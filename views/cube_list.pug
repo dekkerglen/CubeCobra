@@ -1,6 +1,74 @@
 extends layout
 
-block content
+block content  
+  style(type='text/css').
+    @media (min-width: 768px){
+    .seven-cols .col-md-1,
+    .seven-cols .col-sm-1,
+    .seven-cols .col-lg-1  {
+    width: 100%;
+    *width: 100%;
+    }
+    }
+    @media (min-width: 992px) {
+    .seven-cols .col-md-1,
+    .seven-cols .col-sm-1,
+    .seven-cols .col-lg-1 {
+    width: 14.285714285714285714285714285714%;
+    *width: 14.285714285714285714285714285714%;
+    max-width: 14.285714285714285714285714285714% !important;
+    flex:none !important;
+    }
+    }
+    @media (min-width: 1200px) {
+    .seven-cols .col-md-1,
+    .seven-cols .col-sm-1,
+    .seven-cols .col-lg-1 {
+    width: 14.285714285714285714285714285714%;
+    *width: 14.285714285714285714285714285714%;
+    max-width: 14.285714285714285714285714285714% !important;
+    flex:none !important;
+    }
+    }
+    .list-group-item {
+    padding: 3px 3px
+    }
+    ul.list-group {
+    padding: 3px 0px
+    }
+    .list-group,
+    .list-group-item{
+    display:block;
+    }
+    .col-md-1{
+    padding:3px
+    } 
+    #thumbwrap {
+    margin:75px auto;
+    width:252px; height:252px;
+    }
+    .thumb {
+    position:relative;
+    }
+    .thumb img { 
+    border:1px solid #000;
+    vertical-align:bottom;
+    }
+    .thumb:hover {
+    border:0; /* IE6 needs this to show large image */
+    z-index:1;
+    }
+    .thumb span { 
+    float:left; /* must be floated for same cross browser position of larger image */
+    position:absolute;
+    visibility:hidden;
+    }
+    .thumb:hover span { 
+    visibility:visible;
+    top:5px; left:100px; 
+    }
+    		
+
   h5
     nav(aria-label='breadcrumb')
       ol.breadcrumb
@@ -45,7 +113,7 @@ block content
               .col
                   form(autocomplete='off').form-inline
                     .form-group.mb-2.autocomplete
-                      input.form-control#myInput(style='width: 300px', type='text', name='myCountry', placeholder='Cards to Add')
+                      input.form-control#myInput(style='width: 300px', type='text', name='myCountry', placeholder='Card to Add')
                     button.btn.btn-success.mx-sm-1.mb-2(type='button') Just Add
                     button.btn.btn-success.mb-2(type='button') Suggest Cuts
               .col
@@ -53,16 +121,74 @@ block content
                   .form-group.mb-2.autocomplete
                     input.form-control#myInput2(style='width: 300px', type='text', placeholder='Card to Remove')
                   button.btn.btn-success.mx-sm-1.mb-2(type='button') Remove / Replace
+            .row
+              .col
+                form(method='POST', action='/cube/edit/'+cube._id)
+                  #form-group
+                    label Changelist:
+                    textarea.form-control(name='body')=cube.body
+                  br
+                  input.btn.mr-sm-2.btn-success(type='submit',value='Save Changes')
+                  input.btn.mr-sm-2.btn-danger(type='button', value='Discard')
+                br
+              .col
+                br
       input#cubeID(type='hidden', name='cubeID', value=cube._id)
       script(src='/js/autocomplete.js')
+
   br
   .container
-    ul.list-group
-      each card, i in cards
-        li.list-group-item
-          a= card.name
-      if cards.length == 0
-        a This cube is empty! 
+    .row.seven-cols
+      .col-md-1   
+        list-group
+          each card, i in cards.white
+            a.thumb
+              li.list-group-item(style='background-color: #FFFAE8;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.blue
+            a.thumb
+              li.list-group-item(style='background-color: #B7E1FF;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.black
+            a.thumb
+              li.list-group-item(style='background-color: #C2A7C9;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.red
+            a.thumb
+              li.list-group-item(style='background-color: #DB878D;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.green
+            a.thumb
+              li.list-group-item(style='background-color: #9ED3A4;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.colorless
+            a.thumb
+              li.list-group-item(style='background-color: #CCCCCC;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+      .col-md-1
+        ul.list-group
+          each card, i in cards.multi
+            a.thumb
+              li.list-group-item(style='background-color: #FFEC99;')= card.name
+              span
+                img(src=card.image_normal, alt='', width="250", height="350")
+
 
   // Modal
   #exampleModalScrollable.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalScrollableTitle', aria-hidden='true')
@@ -80,5 +206,5 @@ block content
               span.sr-only Loading...
             button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
             button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-            
+
             

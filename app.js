@@ -100,6 +100,27 @@ app.get('/', function(req, res)
     });
   });
 });
+app.get('/search', function(req, res)
+{
+  res.render('search', {});
+});
+
+app.get('/browse', function(req, res)
+{
+  res.render('browse', {});
+});
+app.get('/faq', function(req, res)
+{
+  res.render('faq', {});
+});
+app.get('/blog', function(req, res)
+{
+  res.render('blog', {});
+});
+app.get('/contact', function(req, res)
+{
+  res.render('contact', {});
+});
 
 //Route files
 let cubes =  require('./routes/cube_routes');

@@ -2,14 +2,15 @@
 window.onload = async () => {
   //load the card names
   var cubeID=document.getElementById("cubeID").value;
-  const response = await fetch('https://cubecobra.com/api/cardnames');
-  const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
-  //const response = await fetch('http://localhost:5000/api/cardnames');
-  //const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
+  //const response = await fetch('https://cubecobra.com/api/cardnames');
+  //const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
+  const response = await fetch('http://localhost:5000/api/cardnames');
+  const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
   const myJson2 = await response2.json();
   var cubenames = myJson2.cardnames;
+  console.log(cubenames);
 
   function autocomplete(inp, arr) {
     /*the autocomplete function takes two arguments,

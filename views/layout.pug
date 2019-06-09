@@ -25,16 +25,16 @@ html
               |  Browse
             .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
               if user
-                a.dropdown-item(href='#') Your Cubes
-              a.dropdown-item(href='#') Search
-              a.dropdown-item(href='#') Featured
+                a.dropdown-item(href='/browse') Your Cubes
+              a.dropdown-item(href='/search') Search
+              a.dropdown-item(href='/browse') Featured
           li.nav-item.dropdown
             a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
               |  About
             .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-              a.dropdown-item(href='#') Contact
-              a.dropdown-item(href='#') Dev Blog
-              a.dropdown-item(href='#') FAQ
+              a.dropdown-item(href='/contact') Contact
+              a.dropdown-item(href='/blog') Dev Blog
+              a.dropdown-item(href='/faq') FAQ
           if user
             li.nav-item
               a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
