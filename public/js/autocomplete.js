@@ -10,7 +10,6 @@ window.onload = async () => {
   var cardnames = myJson.cardnames;
   const myJson2 = await response2.json();
   var cubenames = myJson2.cardnames;
-  console.log(cubenames);
 
   function autocomplete(inp, arr) {
     /*the autocomplete function takes two arguments,
@@ -285,6 +284,6 @@ window.onload = async () => {
     });
   }
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  autocomplete(document.getElementById("myInput"), cardnames);
-  autocomplete(document.getElementById("myInput2"), cubenames);
+  autocomplete(document.getElementById("addInput"), cardnames);
+  autocomplete(document.getElementById("removeInput"), cubenames);
 }

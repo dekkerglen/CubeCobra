@@ -31,7 +31,6 @@ router.post('/add',ensureAuth, function(req,res,next)
     cube.cards = [];
     cube.decks = [];
     cube.articles = [];
-    console.log(cube);
 
     cube.save(function(err)
     {
@@ -129,7 +128,6 @@ router.get('/list/:id', function(req, res)
             }
           }
         });
-        console.log(sorted_cards);
         if(err)
         {
           res.render('cube_list',
@@ -243,11 +241,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
               {
                 cube.cards.push(item._id);
               }
-              else {
-                console.log('No item found');
-              }
             });
-            console.log('Cube has: ' + cube.cards.length + ' cards');
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)

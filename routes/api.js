@@ -82,15 +82,12 @@ router.get('/cubecardnames/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
-    console.log(cube.cards);
     cards_ids = [];
     cube.cards.forEach(function (item, index) {
       cards_ids.push(item);
     });
-    console.log(cards_ids);
     Card.find({'_id': { $in:cards_ids}}, function(err, cards)
     {
-      console.log(cards);
       var result = turnToTree(cards);
       res.status(200).send({
         success:'true',

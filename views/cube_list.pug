@@ -68,15 +68,15 @@ block content
     top:5px; left:100px; 
     }
     		
-
+  //breadcrumb title
   h5
     nav(aria-label='breadcrumb')
       ol.breadcrumb
         li.breadcrumb-item
           a(href='#') #{owner}
         li.breadcrumb-item.active(aria-current='page')= cube.name
-      
-
+        
+  // tabbed cube nav    
   ul.nav.nav-tabs.nav-fill.nav-justified
       li.nav-item
         a.nav-link.active(href='/cube/list/'+cube._id) List
@@ -86,7 +86,8 @@ block content
         a.nav-link(href='/cube/analysis/'+cube._id) Analysis
       li.nav-item
         a.nav-link(href='/cube/blog/'+cube._id) Blog
-        
+
+  //edit controls
   if user
     if user.id == cube.owner
       .pos-f-t
@@ -94,7 +95,7 @@ block content
           .collapse.navbar-collapse
             ul.navbar-nav
               li.nav-item
-                a.nav-link(href='#', data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation") Add/Remove Cards
+                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove Cards
               li.nav-item.dropdown
                 a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
                 .dropdown-menu(aria-labelledby='bulkdropdown')
@@ -107,35 +108,36 @@ block content
                   a.dropdown-item(href='#') Comma Separated (.csv)
                   a.dropdown-item(href='#') MTGSalvation (.txt)
                     br
-        #navbarToggleExternalContent.collapse
+        #navedit.collapse
           .container.bg-light
             .row
               .col
                   form(autocomplete='off').form-inline
                     .form-group.mb-2.autocomplete
-                      input.form-control#myInput(style='width: 300px', type='text', name='myCountry', placeholder='Card to Add')
-                    button.btn.btn-success.mx-sm-1.mb-2(type='button') Just Add
-                    button.btn.btn-success.mb-2(type='button') Suggest Cuts
+                      input.form-control#addInput(style='width: 350px', type='text', name='myCountry', placeholder='Card to Add')
+                    button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
               .col
                 form.form-inline
                   .form-group.mb-2.autocomplete
-                    input.form-control#myInput2(style='width: 300px', type='text', placeholder='Card to Remove')
-                  button.btn.btn-success.mx-sm-1.mb-2(type='button') Remove / Replace
-            .row
+                    input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
+                  button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
+            .row.collapse.editForm
               .col
-                form(method='POST', action='/cube/edit/'+cube._id)
-                  #form-group
-                    label Changelist:
-                    textarea.form-control(name='body')=cube.body
+                form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+                  label Changelist:
+                  p#changelist(name='body', rows='10')=cube.body
                   br
-                  input.btn.mr-sm-2.btn-success(type='submit',value='Save Changes')
-                  input.btn.mr-sm-2.btn-danger(type='button', value='Discard')
+                  input#changelistFormBody(type='hidden', name='body')
+                  input.btn.mr-sm-2.btn-success#saveChangesButton(value='Save Changes')
+                  input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
                 br
               .col
                 br
       input#cubeID(type='hidden', name='cubeID', value=cube._id)
       script(src='/js/autocomplete.js')
+      script(src='/js/editcube.js')
 
+  //Cube list
   br
   .container
     .row.seven-cols
@@ -189,8 +191,7 @@ block content
               span
                 img(src=card.image_normal, alt='', width="250", height="350")
 
-
-  // Modal
+  // Paste bulk Modal
   #exampleModalScrollable.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalScrollableTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')
       .modal-content
