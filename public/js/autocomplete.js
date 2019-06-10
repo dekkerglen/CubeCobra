@@ -2,10 +2,10 @@
 window.onload = async () => {
   //load the card names
   var cubeID=document.getElementById("cubeID").value;
-  const response = await fetch('https://cubecobra.com/api/cardnames');
-  const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
-  //const response = await fetch('http://localhost:5000/api/cardnames');
-  //const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
+  //const response = await fetch('https://cubecobra.com/api/cardnames');
+  //const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
+  const response = await fetch('http://localhost:5000/api/cardnames');
+  const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
   const myJson2 = await response2.json();
@@ -38,11 +38,11 @@ window.onload = async () => {
           b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
           b.innerHTML += matches[i].substr(val.length);
           /*insert a input field that will hold the current array item's value:*/
-          b.innerHTML += "<input type='hidden' value='" + matches[i] + "'>";
+          b.innerHTML += "<input type='hidden' value='" + matches[i].replace("'","%27") + "'>";
           /*execute a function when someone clicks on the item value (DIV element):*/
           b.addEventListener("click", function(e) {
               /*insert the value for the autocomplete text field:*/
-              inp.value = this.getElementsByTagName("input")[0].value;
+              inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
               /*close the list of autocompleted values,
               (or any other open lists of autocompleted values:*/
               closeAllLists();

@@ -97,6 +97,25 @@ router.get('/cubecardnames/:id', function(req, res)
   });
 });
 
+router.get('/getcard/:name', function(req, res)
+{
+  Card.findOne({'name_lower':req.params.name.toLowerCase()}, function(err, card) {
+    if(err || !card)
+    {
+      res.status(200).send({
+        success:'true'
+      });
+    }
+    else
+    {
+      res.status(200).send({
+        success:'true',
+        card:card
+      });
+    }
+  });
+});
+
 function ensureAuth(req, res, next)
 {
   if(req.isAuthenticated())

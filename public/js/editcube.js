@@ -17,10 +17,15 @@ function justAddButtonClick() {
   var val = addInput.value;
   if(val.length > 0)
   {
-    addInput.value = "";
-    changes.push({add:val})
+    fetch('http://localhost:5000/api/getcard/'+val)
+      .then(response => response.json())
+      .then(function(json)
+    {
+      addInput.value = "";
+      changes.push({add:json.card})
+      updateCollapse();
+    });
   }
-  updateCollapse();
 }
 
 function removeButtonClick() {
@@ -66,7 +71,8 @@ function updateCollapse()
     val += "<a style='color:red;font-weight: bold;text-decoration: underline;' href=#>x</a> ";
     if(change.add)
     {
-      val += '<span class="badge badge-success">+</span> ' + change.add;
+      val += '<span class="badge badge-success">+</span> ';
+      val += '<a href="" class="thumb">' + change.add.name + '<span><img src="' + change.add.image_normal + '" alt="" width="250" height="350"/></span></a>';
     }
     else if(change.remove)
     {
