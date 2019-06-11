@@ -19,7 +19,10 @@ function justAddButtonClick() {
   var val = addInput.value.replace('//','-slash-');
   if(val.length > 0)
   {
+
+    //#cubecobralocalhost
     fetch('https://cubecobra.com/api/getcard/'+val)
+    //fetch('http://localhost:5000/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -42,7 +45,9 @@ function removeButtonClick() {
   var val = removeInput.value;
   if(val.length > 0)
   {
+    //#cubecobralocalhost
     fetch('https://cubecobra.com/api/getcardfromcube/'+cubeID+';'+val)
+    //fetch('http://localhost:5000/api/getcardfromcube/'+cubeID+';'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -51,7 +56,9 @@ function removeButtonClick() {
         if(addInput.value.length > 0)
         {
           var val2 = addInput.value;
+          //#cubecobralocalhost
           fetch('https://cubecobra.com/api/getcard/'+val2)
+          //fetch('http://localhost:5000/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
           {

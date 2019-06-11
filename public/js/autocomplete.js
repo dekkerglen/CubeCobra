@@ -4,11 +4,15 @@ window.onload = async () => {
   if(document.getElementById("removeInput"))
   {
     var cubeID=document.getElementById("cubeID").value;
+    // #cubecobralocalhost
     const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
+    //const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
     const myJson2 = await response2.json();
     var cubenames = myJson2.cardnames;
   }
-  const response = await fetch('https://cubecobra.com:5000/api/cardnames');
+  // #cubecobralocalhost
+  const response = await fetch('https://cubecobra.com/api/cardnames');
+  //const response = await fetch('http://localhost:5000/api/cardnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
 

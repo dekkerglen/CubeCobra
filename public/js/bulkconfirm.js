@@ -13,7 +13,9 @@ function justAddButtonClick() {
   var val = addInput.value;
   if(val.length > 0)
   {
+    //#cubecobralocalhost
     fetch('https://cubecobra.com/api/getcard/'+val)
+    //fetch('http://localhost:5000/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {
