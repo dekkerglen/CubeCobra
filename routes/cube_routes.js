@@ -94,7 +94,6 @@ router.get('/list/:id', function(req, res)
           multi: [],
           colorless: []
         };
-        console.log(cards);
         cards.forEach(function(card, index)
         {
           if(card.colors.length == 0)
@@ -244,7 +243,6 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
               }
               else
               {
-                console.log("Could not find " + cards[index])
                 missing += cards[index] +'\n';
               }
             });
