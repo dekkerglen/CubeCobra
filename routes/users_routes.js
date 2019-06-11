@@ -60,7 +60,7 @@ router.post('/lostpassword', function(req, res)
               from: "Cube Cobra Team <cubecobrateam@gmail.com>",
               to: passwordReset.email,
               subject: "Password Reset",
-              html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"http://cubecobra.com/user/passwordreset/" +
+              html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"https://cubecobra.com/user/passwordreset/" +
                 passwordReset._id + "\">here</a>.<br> Your recovery code is: " + passwordReset.code  +
                 "<br> This link expires in 15 minutes." +
                 "<br> If you did not request a password reset, ignore this email."
@@ -280,7 +280,7 @@ router.post('/register', function(req, res)
                           to: email,
                           subject: "Confirm Account",
                           html: "Hi " + newUser.username +
-                            ",</br> Thanks for joining! To confirm your email, click <a href=\"http://cubecobra.com/user/register/confirm/" +
+                            ",</br> Thanks for joining! To confirm your email, click <a href=\"https://cubecobra.com/user/register/confirm/" +
                             newUser._id + "\">here</a>."
                       }
 

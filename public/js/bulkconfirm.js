@@ -13,7 +13,7 @@ function justAddButtonClick() {
   var val = addInput.value;
   if(val.length > 0)
   {
-    fetch('http://cubecobra.com/api/getcard/'+val)
+    fetch('https://cubecobra.com/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {
