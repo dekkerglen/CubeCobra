@@ -1,22 +1,16 @@
 var justAddButton = document.getElementById("justAddButton");
-var removeButton = document.getElementById("removeButton");
 var addInput = document.getElementById("addInput");
-var removeInput = document.getElementById("removeInput");
 var changelist = document.getElementById("changelist");
 var saveChangesButton = document.getElementById("saveChangesButton");
-var discardAllButton = document.getElementById("discardAllButton");
 var changelistFormBody = document.getElementById("changelistFormBody");
 
 justAddButton.addEventListener("click", justAddButtonClick);
-removeButton.addEventListener("click", removeButtonClick);
-discardAllButton.addEventListener("click", discardAllButtonClick);
 saveChangesButton.addEventListener("click", saveChangesButtonClick);
 
-var cubeID=document.getElementById("cubeID").value;
 var changes = [];
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('//','-slash-');
+  var val = addInput.value;
   if(val.length > 0)
   {
     fetch('http://localhost:5000/api/getcard/'+val)
@@ -29,53 +23,6 @@ function justAddButtonClick() {
         changes.push({add:json.card})
         updateCollapse();
         $('.warnings').collapse("hide");
-      }
-      else
-      {
-        $('.warnings').collapse("show");
-      }
-    });
-  }
-}
-
-function removeButtonClick() {
-  var val = removeInput.value;
-  if(val.length > 0)
-  {
-    fetch('http://localhost:5000/api/getcardfromcube/'+cubeID+';'+val)
-      .then(response => response.json())
-      .then(function(json)
-    {
-      if(json.card)
-      {
-        if(addInput.value.length > 0)
-        {
-          var val2 = addInput.value;
-          fetch('http://localhost:5000/api/getcard/'+val2)
-            .then(response2 => response2.json())
-            .then(function(json2)
-          {
-            if(json2.card)
-            {
-              addInput.value = "";
-              removeInput.value = "";
-              changes.push({replace:[json.card,json2.card]})
-              updateCollapse();
-              $('.warnings').collapse("hide");
-            }
-            else
-            {
-              $('.warnings').collapse("show");
-            }
-          });
-        }
-        else
-        {
-          removeInput.value = "";
-          changes.push({remove:json.card})
-          updateCollapse();
-          $('.warnings').collapse("hide");
-        }
       }
       else
       {
@@ -102,15 +49,6 @@ function saveChangesButtonClick()
     if(change.add)
     {
       changelistFormBody.value += '+' + change.add._id;
-    }
-    else if(change.remove)
-    {
-      changelistFormBody.value += '-' + change.remove._id;
-    }
-    else if(change.replace)
-    {
-      changelistFormBody.value += '-' + change.replace[0]._id + ';';
-      changelistFormBody.value += '+' + change.replace[1]._id;
     }
   });
   document.getElementById("changelistForm").submit();
@@ -144,14 +82,6 @@ function updateCollapse()
 
   changelist.innerHTML = val;
 
-  if(changelist.innerHTML.length > 0)
-  {
-    $('.editForm').collapse("show");
-  }
-  else {
-    $('.editForm').collapse("hide")
-  }
-
   autocard_init_class('dynamic-autocard');
   changes.forEach(function(change, index)
   {
@@ -163,3 +93,21 @@ function updateCollapse()
     });
   });
 }
+
+function init_bulkconfirm()
+{
+  var addedhidden = document.getElementById('addedcardshidden');
+  var added = JSON.parse(addedhidden.value);
+  added.forEach(function(add, index)
+  {
+    changes.push({add:add})
+  });
+  updateCollapse();
+}
+var prev_handler = window.onload;
+window.onload = function () {
+    if (prev_handler) {
+        prev_handler();
+    }
+    init_bulkconfirm();
+};

@@ -42,30 +42,10 @@ block content
     }
     .col-md-1{
     padding:3px
-    } 
-    #thumbwrap {
-    margin:75px auto;
-    width:252px; height:252px;
-    }
-    .thumb {
-    position:relative;
-    }
-    .thumb img { 
-    border:1px solid #000;
-    vertical-align:bottom;
-    }
-    .thumb:hover {
-    border:0; /* IE6 needs this to show large image */
-    z-index:1;
-    }
-    .thumb span { 
-    float:left; /* must be floated for same cross browser position of larger image */
-    position:absolute;
-    visibility:hidden;
-    }
-    .thumb:hover span { 
-    visibility:visible;
-    top:5px; left:100px; 
+    }     
+    .editarea {
+    overflow: auto;
+    max-height: 200px;
     }
     		
   //breadcrumb title
@@ -110,6 +90,9 @@ block content
                     br
         #navedit.collapse
           .container.bg-light
+            .row.collapse.warnings
+              .col
+                .alert.alert-danger(role='alert') Invalid input: card not recognized.
             .row
               .col
                   form(autocomplete='off').form-inline
@@ -125,17 +108,20 @@ block content
               .col
                 form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
                   label Changelist:
-                  p#changelist(name='body', rows='10')=cube.body
+                  .editarea
+                    p.editlist#changelist
                   br
                   input#changelistFormBody(type='hidden', name='body')
-                  input.btn.mr-sm-2.btn-success#saveChangesButton(value='Save Changes')
+                  input#changelistBlog(type='hidden', name='blog')
+                  input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
                   input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
                 br
               .col
                 br
-      input#cubeID(type='hidden', name='cubeID', value=cube._id)
+      input#cubeID(type='hidden', name='cubeID', value=cube._id)        
       script(src='/js/autocomplete.js')
-      script(src='/js/editcube.js')
+      script(src='/js/editcube.js')        
+          
 
   //Cube list
   br
@@ -144,52 +130,40 @@ block content
       .col-md-1   
         ul.list-group
           each card, i in cards.white
-            a.thumb
-              li.list-group-item(style='background-color: #FFFAE8;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #FFFAE8;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.blue
-            a.thumb
-              li.list-group-item(style='background-color: #B7E1FF;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #B7E1FF;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.black
-            a.thumb
-              li.list-group-item(style='background-color: #C2A7C9;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #C2A7C9;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.red
-            a.thumb
-              li.list-group-item(style='background-color: #DB878D;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #DB878D;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.green
-            a.thumb
-              li.list-group-item(style='background-color: #9ED3A4;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #9ED3A4;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.colorless
-            a.thumb
-              li.list-group-item(style='background-color: #CCCCCC;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #CCCCCC;')
+              a= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.multi
-            a.thumb
-              li.list-group-item(style='background-color: #FFEC99;')= card.name
-              span
-                img(src=card.image_normal, alt='', width="250", height="350")
+            li.list-group-item.autocard(card=card.image_normal style='background-color: #FFEC99;')
+              a= card.name
+
+                  
 
   // Paste bulk Modal
   #exampleModalScrollable.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalScrollableTitle', aria-hidden='true')

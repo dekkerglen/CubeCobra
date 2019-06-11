@@ -7,9 +7,6 @@ let Card = require('../models/card');
 let Cube = require('../models/cube');
 let User = require('../models/user');
 
-
-
-
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res,next)
 {
@@ -97,6 +94,7 @@ router.get('/list/:id', function(req, res)
           multi: [],
           colorless: []
         };
+        console.log(cards);
         cards.forEach(function(card, index)
         {
           if(card.colors.length == 0)
@@ -228,11 +226,13 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
         }
         else
         {
-          queries = [];
+          var queries = [];
           cards.forEach(function(item, index)
           {
             queries.push(Card.findOne({name_lower:item.toLowerCase()}));
           });
+          var missing = "";
+          var added = [];
           Promise.all(queries).then( (results) =>
           {
             results.forEach(function(item, index)
@@ -240,31 +240,107 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
               if(item)
               {
                 cube.cards.push(item._id);
-              }
-            });
-            Cube.updateOne({_id:cube._id}, cube, function(err)
-            {
-              if(err)
-              {
-                console.log(err);
+                added.push(item);
               }
               else
               {
-                req.flash('success', 'Cube Updated');
-                res.redirect('/cube/list/'+req.params.id);
+                console.log("Could not find " + cards[index])
+                missing += cards[index] +'\n';
               }
             });
+            if(missing.length > 0)
+            {
+              res.render('bulk_upload',
+              {
+                missing:missing,
+                added:JSON.stringify(added),
+                cube:cube
+              });
+            }
+            else
+            {
+              Cube.updateOne({_id:cube._id}, cube, function(err)
+              {
+                if(err)
+                {
+                  console.log(err);
+                }
+                else
+                {
+                  req.flash('success', 'All cards successfully added.');
+                  res.redirect('/cube/list/'+req.params.id);
+                }
+              });
+            }
           }).catch(function(err)
           {
             console.log(err);
           });
         }
-        /*
-        Card.find({'name': { $in:cards}}, function(err, cards)
+      }
+    }
+  });
+});
+
+
+// Edit Submit POST Route
+router.post('/edit/:id',ensureAuth, function(req,res,next)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(err)
+    {
+      req.flash('danger', 'Server Error');
+      res.redirect('/cube/list/'+req.params.id);
+    }
+    else if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/cube/list/'+req.params.id);
+    }
+    else
+    {
+      var edits = req.body.body.split(';');
+      var fail_remove = [];
+      var adds = [];
+      var removes = [];
+      console.log(edits);
+      edits.forEach(function(edit, index)
+      {
+        if(edit.charAt(0) == '+')
         {
-          cards.forEach(function (item, index)
+          //add id
+          cube.cards.push(edit.substring(1));
+        }
+        else
+        {
+          //remove id
+          if(cube.cards.includes(edit.substring(1)))
           {
-            cube.cards.push(item._id);
+            var index = cube.cards.indexOf(edit.substring(1));
+            if (index !== -1) {
+                cube.cards.splice(index, 1);
+            }
+          }
+          else
+          {
+            fail_remove.push(edit.substring(1));
+          }
+        }
+      });
+
+      if(fail_remove.length > 0)
+      {
+        Card.find({'_id': { $in:fail_remove}}, function(err, fails)
+        {
+          var errors = ""
+          fails.forEach(function(fail, index)
+          {
+            if(index != 0)
+            {
+              errors += ", ";
+            }
+            errors += fail.name;
           });
           Cube.updateOne({_id:cube._id}, cube, function(err)
           {
@@ -274,60 +350,32 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
             }
             else
             {
+              req.flash('warning', 'Cube Updated With Errors, could not remove the following cards: ' + errors);
+              res.redirect('/cube/list/'+req.params.id);
             }
           });
         });
-        */
+      }
+      else
+      {
+        Cube.updateOne({_id:cube._id}, cube, function(err)
+        {
+          if(err)
+          {
+            console.log(err);
+          }
+          else
+          {
+            req.flash('success', 'Cube Updated');
+            res.redirect('/cube/list/'+req.params.id);
+          }
+        });
       }
     }
   });
 });
+
 /*
-// Get edit cube Route
-router.get('/edit/:id',ensureAuth,function(req, res,next)
-{
-  Cube.findById(req.params.id, function(err, cube)
-  {
-    if(cube.author != req.user._id)
-    {
-      req.flash('danger','Not Authorized');
-      return res.redirect('/');
-    }
-    User.findById(cube.author, function(err, user)
-    {
-      res.render('edit_cube',
-      {
-        cube:cube,
-        author: user.username
-      });
-    });
-  });
-});
-
-// Edit Submit POST Route
-router.post('/edit/:id',ensureAuth, function(req,res,next)
-{
-  let cube = {};
-  cube.title = req.body.title;
-  cube.author = req.user._id;
-  cube.body = req.body.body;
-
-  let query = {_id:req.params.id};
-
-  Cube.updateOne(query, cube, function(err)
-  {
-    if(err)
-    {
-      console.log(err);
-    }
-    else
-    {
-      req.flash('success', 'Cube Updated');
-      res.redirect('/cube/view/'+req.params.id);
-    }
-  });
-});
-
 router.delete('/remove/:id',ensureAuth, function(req, res)
 {
   if(!req.user._id)

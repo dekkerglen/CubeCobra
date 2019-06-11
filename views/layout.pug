@@ -10,6 +10,7 @@ html
     title Cube Cobra
     link(rel='stylesheet' href='/css/stylesheet.css')
     link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+    #autocard_popup(style='position:absolute;z-index: 1;')
   body
     nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
       .container
@@ -69,7 +70,9 @@ html
         p Copyright &copy; 2019      
     script(src='/bower_components/jquery/dist/jquery.js')
     script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
+    script(src='/bower_components/bootstrap/dist/js/bootstrap.bundle.min.js')  
     script(src='/js/main.js')
+    script(src='/js/autocard.js')
     
 // Login modal
 #loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')

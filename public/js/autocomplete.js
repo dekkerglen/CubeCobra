@@ -1,15 +1,18 @@
 
 window.onload = async () => {
   //load the card names
-  var cubeID=document.getElementById("cubeID").value;
+  if(document.getElementById("removeInput"))
+  {
+    var cubeID=document.getElementById("cubeID").value;
+    const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
+    const myJson2 = await response2.json();
+    var cubenames = myJson2.cardnames;
+  }
   //const response = await fetch('https://cubecobra.com/api/cardnames');
   //const response2 = await fetch('https://cubecobra.com/api/cubecardnames/'+cubeID);
   const response = await fetch('http://localhost:5000/api/cardnames');
-  const response2 = await fetch('http://localhost:5000/api/cubecardnames/'+cubeID);
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
-  const myJson2 = await response2.json();
-  var cubenames = myJson2.cardnames;
 
   function autocomplete(inp, arr) {
     /*the autocomplete function takes two arguments,
@@ -283,7 +286,11 @@ window.onload = async () => {
         closeAllLists(e.target);
     });
   }
+
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
   autocomplete(document.getElementById("addInput"), cardnames);
-  autocomplete(document.getElementById("removeInput"), cubenames);
+  if(document.getElementById("removeInput"))
+  {
+    autocomplete(document.getElementById("removeInput"), cubenames);
+  }
 }

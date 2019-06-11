@@ -3,7 +3,7 @@ let mongoose = require('mongoose');
 // Cube schema
 let cardSchema = mongoose.Schema(
   {
-    id:String,
+    _id:String,
     name:String,
     name_lower:String,
     full_name:String,

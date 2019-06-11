@@ -26,11 +26,61 @@ var saveAllCards = function(arr)
     {
         saveAllCards(arr);
     }
-    else {
-      console.log('done.' );
-      process.exit();
+    else
+    {
+      var cardtree = turnToTree(arr);
+
+      fs.writeFile('private/cardtree.json', JSON.stringify(cardtree), 'utf8', function (err) {
+          if (err) {
+              console.log("An error occured while writing JSON Object to File.");
+              return console.log(err);
+          }
+
+          console.log("JSON tree has been saved.");
+
+          console.log('done.' );
+          process.exit();
+      });
     }
   });
+}
+function add_word(obj, word)
+{
+  if(word.length <= 0)
+  {
+    return;
+  }
+  else if(word.length == 1)
+  {
+    if(!obj[word.charAt(0)])
+    {
+      obj[word.charAt(0)] = {'$':{}};
+    }
+    else
+    {
+      obj[word.charAt(0)]['$']={};
+    }
+  }
+  else
+  {
+    character = word.charAt(0);
+    word = word.substr(1, word.length)
+    if(!obj[character])
+    {
+      obj[character] = {};
+    }
+    add_word(obj[character], word)
+  }
+}
+function turnToTree(arr)
+{
+  var res = {};
+  arr.forEach(function (item, index)
+  {
+    //add_word(cardnames, card);
+    add_word(res, item.name);
+  });
+  return res;
 }
 
 function addCard(card,callback)
@@ -44,9 +94,13 @@ function addCard(card,callback)
     }
     else
     {
+      if(card.name.includes('/') && card.layout!='split')
+      {
+        card.name = card.name.substring(0,card.name.indexOf('/')).trim();
+      }
       console.log(x + ' - adding: ' + card.name);
       let newcard = new Card();
-      newcard.id = card.id;
+      newcard._id = card.id;
       newcard.full_name = card.name + ' [' + card.set + '-'+ card.collector_number + ']';
       newcard.name = card.name;
       newcard.name_lower = card.name.toLowerCase();
@@ -65,7 +119,15 @@ function addCard(card,callback)
       newcard.cmc = card.cmc;
       newcard.type = card.type_line;
       newcard.colors = [];
-      newcard.colors = newcard.colors.concat(card.colors);
+
+      if(card.colors)
+      {
+        newcard.colors = newcard.colors.concat(card.colors);
+      }
+      else if(!card.colors && card.card_faces[0].colors)
+      {
+        newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
+      }
 
       newcard.save(function(err)
       {

@@ -61,9 +61,8 @@ function turnToTree(arr)
 
 
 //var contents = fs.readFileSync('private/names.json');
-var contents = fs.readFileSync('private/cards.json');
-var cards = JSON.parse(contents);
-var cardtree = turnToTree(cards);
+var contents = fs.readFileSync('private/cardtree.json');
+var cardtree = JSON.parse(contents);
 
 //var contents = fs.readFileSync(dir);
 // Define to JSON type
@@ -97,8 +96,34 @@ router.get('/cubecardnames/:id', function(req, res)
   });
 });
 
+
+router.get('/getcardfromcube/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  var cube = split[0];
+  var cardname = split[1];
+  Cube.findById(cube, function(err, cube)
+  {
+    Card.find({'_id': { $in:cube.cards}}, function(err, cards)
+    {
+      cards.forEach(function(card, index)
+      {
+        if(card.name_lower == cardname.toLowerCase())
+        {
+          res.status(200).send({
+            success:'true',
+            card:card
+          });
+          return;
+        }
+      });
+    });
+  });
+});
+
 router.get('/getcard/:name', function(req, res)
 {
+  req.params.name = req.params.name.replace('-slash-','//');
   Card.findOne({'name_lower':req.params.name.toLowerCase()}, function(err, card) {
     if(err || !card)
     {
