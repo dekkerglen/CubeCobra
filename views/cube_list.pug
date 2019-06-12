@@ -79,8 +79,8 @@ block content
               li.nav-item.dropdown
                 a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
                 .dropdown-menu(aria-labelledby='bulkdropdown')
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#exampleModalScrollable') Paste Text
-                  a.dropdown-item(href='#') Upload File
+                  a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
+                  a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
               li.nav-item.dropdown
                 a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
                 .dropdown-menu(aria-labelledby='exportdropdown')
@@ -166,12 +166,12 @@ block content
                   
 
   // Paste bulk Modal
-  #exampleModalScrollable.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalScrollableTitle', aria-hidden='true')
+  #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')
       .modal-content
         form(method='POST', action='/cube/bulkupload/'+cube._id)
           .modal-header
-            h5#exampleModalScrollableTitle.modal-title Bulk Upload - Paste Text
+            h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
             button.close(type='button', data-dismiss='modal', aria-label='Close')
               span(aria-hidden='true') ×
           .modal-body
@@ -181,5 +181,25 @@ block content
               span.sr-only Loading...
             button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
             button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-
             
+  // upload bulk Modal
+  #uploadBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadBulkModalTitle', aria-hidden='true')
+    .modal-dialog.modal-dialog-scrollable(role='document')
+      .modal-content
+        form(method='POST', action='/cube/bulkupload/'+cube._id)
+          .modal-header
+            h5#uploadBulkModalTitle.modal-title Bulk Upload - Upload File
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true') ×
+          .modal-body
+            .custom-file
+              input#customFile.custom-file-input(type='file' onchange="$('#upload-file-info').html(this.files[0].name)")
+              label#upload-file-info.custom-file-label(for='customFile') Choose file
+
+          .modal-footer
+            #uploadspinner.collapse.spinner-border.text-success(role='status')
+              span.sr-only Loading...
+            button.btn.btn-success(data-toggle='collapse', href='#uploadspinner') Upload
+            button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+              

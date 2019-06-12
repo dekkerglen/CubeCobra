@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var justAddButton = document.getElementById("justAddButton");
 var addInput = document.getElementById("addInput");
@@ -17,7 +17,7 @@ function justAddButtonClick() {
   var val = addInput.value;
   if(val.length > 0)
   {
-    fetch(baseURL+'/api/getcard/'+val)
+    fetch(baseURL+'/cube/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {

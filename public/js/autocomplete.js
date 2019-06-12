@@ -1,17 +1,17 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 window.onload = async () => {
   //load the card names
   if(document.getElementById("removeInput"))
   {
     var cubeID=document.getElementById("cubeID").value;
-    const response2 = await fetch(baseURL+'/api/cubecardnames/'+cubeID);
+    const response2 = await fetch(baseURL+'/cube/api/cubecardnames/'+cubeID);
     const myJson2 = await response2.json();
     var cubenames = myJson2.cardnames;
   }
-  const response = await fetch(baseURL+'/api/cardnames');
+  const response = await fetch(baseURL+'/cube/api/cardnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
 
@@ -102,7 +102,7 @@ window.onload = async () => {
         character = current.charAt(0);
         var sub = current.substr(1, current.length)
 
-        //please don't try to understand why this works, I barely do
+        //please don't try to understand why this works
         if((character.toUpperCase() != character.toLowerCase())&& (names[character.toUpperCase()] && names[character.toLowerCase()]))
         {
           if(names[character.toUpperCase()][sub.charAt(0)])

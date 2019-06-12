@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var justAddButton = document.getElementById("justAddButton");
 var removeButton = document.getElementById("removeButton");
@@ -23,7 +23,7 @@ function justAddButtonClick() {
   var val = addInput.value.replace('//','-slash-');
   if(val.length > 0)
   {
-    fetch(baseURL+'/api/getcard/'+val)
+    fetch(baseURL+'/cube/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -43,10 +43,10 @@ function justAddButtonClick() {
 }
 
 function removeButtonClick() {
-  var val = removeInput.value;
+  var val = removeInput.value.replace('//','-slash-');
   if(val.length > 0)
   {
-    fetch(baseURL+'/api/getcardfromcube/'+cubeID+';'+val)
+    fetch(baseURL+'/cube/api/getcardfromcube/'+cubeID+';'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -54,8 +54,8 @@ function removeButtonClick() {
       {
         if(addInput.value.length > 0)
         {
-          var val2 = addInput.value;
-          fetch(baseURL+'/api/getcard/'+val2)
+          var val2 = addInput.value.replace('//','-slash-');
+          fetch(baseURL+'/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
           {
@@ -129,17 +129,17 @@ function updateCollapse()
     val += "<a style='color:red;font-weight: bold;text-decoration: underline;' id='clickx" + index+ "' href=#>x</a> ";
     if(change.add)
     {
-      val += '<span class="badge badge-success">+</span> ';
+      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
       val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '">' + change.add.name + '</a>';
     }
     else if(change.remove)
     {
-      val += '<span class="badge badge-danger">–</span> ';
+      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
       val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '">' + change.remove.name + '</a>';
     }
     else if(change.replace)
     {
-      val += '<span class="badge badge-primary">→</span> ';
+      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
       val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
       val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
     }
