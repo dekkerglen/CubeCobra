@@ -1,53 +1,6 @@
 extends layout
 
-block content  
-  style(type='text/css').
-    @media (min-width: 768px){
-    .seven-cols .col-md-1,
-    .seven-cols .col-sm-1,
-    .seven-cols .col-lg-1  {
-    width: 100%;
-    *width: 100%;
-    }
-    }
-    @media (min-width: 992px) {
-    .seven-cols .col-md-1,
-    .seven-cols .col-sm-1,
-    .seven-cols .col-lg-1 {
-    width: 14.285714285714285714285714285714%;
-    *width: 14.285714285714285714285714285714%;
-    max-width: 14.285714285714285714285714285714% !important;
-    flex:none !important;
-    }
-    }
-    @media (min-width: 1200px) {
-    .seven-cols .col-md-1,
-    .seven-cols .col-sm-1,
-    .seven-cols .col-lg-1 {
-    width: 14.285714285714285714285714285714%;
-    *width: 14.285714285714285714285714285714%;
-    max-width: 14.285714285714285714285714285714% !important;
-    flex:none !important;
-    }
-    }
-    .list-group-item {
-    padding: 3px 3px
-    }
-    ul.list-group {
-    padding: 3px 0px
-    }
-    .list-group,
-    .list-group-item{
-    display:block;
-    }
-    .col-md-1{
-    padding:3px
-    }     
-    .editarea {
-    overflow: auto;
-    max-height: 200px;
-    }
-    		
+block content          
   //breadcrumb title
   h5
     nav(aria-label='breadcrumb')
@@ -126,42 +79,47 @@ block content
   //Cube list
   br
   .container
-    .row.seven-cols
+    .row.eight-cols
       .col-md-1   
         ul.list-group
           each card, i in cards.white
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #FFFAE8;')
-              a= card.name
+            li.list-group-item.autocard.white(card=card.image_normal)
+              a.card-list-item= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.blue
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #B7E1FF;')
-              a= card.name
+            li.list-group-item.autocard.blue(card=card.image_normal)
+              a.card-list-item= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.black
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #C2A7C9;')
-              a= card.name
+            li.list-group-item.autocard.black(card=card.image_normal)
+              a.card-list-item= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.red
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #DB878D;')
-              a= card.name
+            li.list-group-item.autocard.red(card=card.image_normal)
+              a.card-list-item= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.green
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #9ED3A4;')
-              a= card.name
-      .col-md-1
-        ul.list-group
-          each card, i in cards.colorless
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #CCCCCC;')
-              a= card.name
+            li.list-group-item.autocard.green(card=card.image_normal)
+              a.card-list-item= card.name
       .col-md-1
         ul.list-group
           each card, i in cards.multi
-            li.list-group-item.autocard(card=card.image_normal style='background-color: #FFEC99;')
-              a= card.name
+            li.list-group-item.autocard.multi(card=card.image_normal)
+              a.card-list-item= card.name
+      .col-md-1
+        ul.list-group
+          each card, i in cards.colorless
+            li.list-group-item.autocard.colorless(card=card.image_normal)
+              a.card-list-item= card.name
+      .col-md-1
+        ul.list-group
+          each card, i in cards.lands
+            li.list-group-item.autocard.lands(card=card.image_normal)
+              a.card-list-item= card.name
 
                   
 
@@ -186,20 +144,17 @@ block content
   #uploadBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadBulkModalTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')
       .modal-content
-        form(method='POST', action='/cube/bulkupload/'+cube._id)
-          .modal-header
-            h5#uploadBulkModalTitle.modal-title Bulk Upload - Upload File
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .modal-body
-            .custom-file
-              input#customFile.custom-file-input(type='file' onchange="$('#upload-file-info').html(this.files[0].name)")
-              label#upload-file-info.custom-file-label(for='customFile') Choose file
+        .modal-header
+          h5#uploadBulkModalTitle.modal-title Bulk Upload - Upload File
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body  
+          form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube.id, method='post', enctype='multipart/form-data')
+            input#customFile.custom-file-input(style='padding:10px' type='file' name='document' onchange="$('#upload-file-info').html(this.files[0].name)")
+            label#upload-file-info.custom-file-label(for='customFile') Choose file
 
-          .modal-footer
-            #uploadspinner.collapse.spinner-border.text-success(role='status')
-              span.sr-only Loading...
-            button.btn.btn-success(data-toggle='collapse', href='#uploadspinner') Upload
-            button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+        .modal-footer
+          button.btn.btn-success(type='submit' form='uploadFileForm') Upload
+          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
               

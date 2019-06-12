@@ -55,3 +55,121 @@
     background-color: red;
     background-image: none;
 }
+
+  @media (min-width: 768px){
+  .eight-cols .col-md-1,
+  .eight-cols .col-sm-1,
+  .eight-cols .col-lg-1  {
+  width: 100%;
+  *width: 100%;
+  }
+  }
+  @media (min-width: 992px) {
+  .eight-cols .col-md-1,
+  .eight-cols .col-sm-1,
+  .eight-cols .col-lg-1 {
+  width: 12.5%;
+  *width: 12.5%;
+  max-width: 12.5% !important;
+  flex:none !important;
+  }
+  }
+  @media (min-width: 1200px) {
+  .eight-cols .col-md-1,
+  .eight-cols .col-sm-1,
+  .eight-cols .col-lg-1 {
+  width: 12.5%;
+  *width: 12.5%;
+  max-width: 12.5% !important;
+  flex:none !important;
+  }
+  }
+  .list-group-item {
+  padding: 1px 2px
+  }
+  ul.list-group {
+  padding: 0px 0px
+  }
+  .list-group,
+  .list-group-item{
+  display:block;
+  }
+  .col-md-1{
+  padding:3px
+  }
+  .editarea {
+  overflow: auto;
+  max-height: 200px;
+  }
+  .card-list-item
+  {
+  font-size: 12px;
+  }
+  li.list-group-item.autocard.white:not(:hover)
+  {
+  background-color: #FFFAE8;
+  }
+  li.list-group-item.autocard.white:hover
+  {
+  background-color: #FFFDF9;
+  }
+  li.list-group-item.autocard.blue:not(:hover)
+  {
+  background-color: #B7E1FF;
+  }
+  li.list-group-item.autocard.blue:hover
+  {
+  background-color: #DBF0FF;
+  }
+  li.list-group-item.autocard.black:not(:hover)
+  {
+  background-color: #C2A7C9;
+  }
+  li.list-group-item.autocard.black:hover
+  {
+  background-color: #E0C2E8;
+  }
+  li.list-group-item.autocard.red:not(:hover)
+  {
+  background-color: #DB878D;
+  }
+  li.list-group-item.autocard.red:hover
+  {
+  background-color: #E89DA3;
+  }
+  li.list-group-item.autocard.green:not(:hover)
+  {
+  background-color: #9ED3A4;
+  }
+  li.list-group-item.autocard.green:hover
+  {
+  background-color: #B5E5BA;
+  }
+  li.list-group-item.autocard.multi:not(:hover)
+  {
+  background-color: #FFEC99;
+  }
+  li.list-group-item.autocard.multi:hover
+  {
+  background-color: #FFF4CC;
+  }
+  li.list-group-item.autocard.colorless:not(:hover)
+  {
+  background-color: #CCCCCC;
+  }
+  li.list-group-item.autocard.colorless:hover
+  {
+  background-color: #E5E5E5;
+  }
+  li.list-group-item.autocard.lands:not(:hover)
+  {
+  background-color: #FFBE99;
+  }
+  li.list-group-item.autocard.lands:hover
+  {
+  background-color: #FFDDCC;
+  }
+  .dropdown-menu a:focus{
+  background-color: #28A745;
+  color: white
+  }

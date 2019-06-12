@@ -11,6 +11,7 @@ var schedule = require('node-schedule');
 const http = require('http');
 const fs = require('fs');
 const https = require('https');
+var fileUpload  = require('express-fileupload');
 
 // Connect db
 mongoose.connect(config.database);
@@ -32,6 +33,9 @@ const app = express();
 // Bring in models
 let Cube = require('./models/cube')
 
+//upload file middleware
+app.use(fileUpload());
+
 // Body parser middleware
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
@@ -42,6 +46,8 @@ app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname,'public')));
+
+
 
 
 // Express session middleware

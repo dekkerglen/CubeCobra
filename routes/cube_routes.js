@@ -1,6 +1,7 @@
 const express = require('express');
 let mongoose = require('mongoose');
 const fs = require('fs');
+
 const router = express.Router();
 
 // Bring in models
@@ -90,12 +91,17 @@ router.get('/list/:id', function(req, res)
         green: [],
         black: [],
         multi: [],
-        colorless: []
+        colorless: [],
+        lands: []
       };
       cube.cards.forEach(function(card_id, index)
       {
         var card = carddict[card_id];
-        if(card.colors.length == 0)
+        if(card.type.toLowerCase().includes('land'))
+        {
+          sorted_cards.lands.push(card);
+        }
+        else if(card.colors.length == 0)
         {
           sorted_cards.colorless.push(card);
         }
@@ -124,6 +130,22 @@ router.get('/list/:id', function(req, res)
           }
         }
       });
+      sort_fn = function(a,b){
+        if(a.cmc == b.cmc)
+        {
+          return  ( ( a.name == b.name ) ? 0 : ( ( a.name > b.name ) ? 1 : -1 ) );
+        }
+        else {
+          return a.cmc-b.cmc;
+        }
+      };
+      sorted_cards.white.sort(sort_fn);
+      sorted_cards.blue.sort(sort_fn);
+      sorted_cards.black.sort(sort_fn);
+      sorted_cards.red.sort(sort_fn);
+      sorted_cards.green.sort(sort_fn);
+      sorted_cards.colorless.sort(sort_fn);
+      sorted_cards.multi.sort(sort_fn);
       if(err)
       {
         res.render('cube_list',
@@ -215,58 +237,89 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
       }
       else
       {
-        cards = req.body.body.match(/[^\r\n]+/g);
-        if(!cards)
-        {
-          req.flash('danger', 'No Cards Detected');
-          res.redirect('/cube/list/'+req.params.id);
-        }
-        else
-        {
-          var missing = "";
-          var added = [];
-          cards.forEach(function(item, index)
-          {
-            var currentId =nameToId[item.toLowerCase()];
-            if(currentId)
-            {
-              cube.cards.push(currentId);
-              added.push(carddict[currentId]);
-            }
-            else
-            {
-              missing += item +'\n';
-            }
-          });
-          if(missing.length > 0)
-          {
-            res.render('bulk_upload',
-            {
-              missing:missing,
-              added:JSON.stringify(added),
-              cube:cube
-            });
-          }
-          else
-          {
-            Cube.updateOne({_id:cube._id}, cube, function(err)
-            {
-              if(err)
-              {
-                console.log(err);
-              }
-              else
-              {
-                req.flash('success', 'All cards successfully added.');
-                res.redirect('/cube/list/'+req.params.id);
-              }
-            });
-          }
-        }
+        bulkUpload(req,res,req.body.body,cube);
       }
     }
   });
 });
+
+router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
+{
+  if(!req.files)
+  {
+    req.flash('danger','Please attach a file');
+    res.redirect('/cube/list/'+req.params.id);
+  }
+  else
+  {
+    items = req.files.document.data.toString('utf8'); // the uploaded file object
+
+    Cube.findById(req.params.id, function(err,cube)
+    {
+      if(cube.owner != req.user._id)
+      {
+        req.flash('danger','Not Authorized');
+        res.redirect('/cube/list/'+req.params.id);
+      }
+      else
+      {
+        bulkUpload(req,res,items,cube);
+      }
+    });
+  }
+});
+
+function bulkUpload(req, res, list, cube)
+{
+  cards = list.match(/[^\r\n]+/g);
+  if(!cards)
+  {
+    req.flash('danger', 'No Cards Detected');
+    res.redirect('/cube/list/'+req.params.id);
+  }
+  else
+  {
+    var missing = "";
+    var added = [];
+    cards.forEach(function(item, index)
+    {
+      var currentId =nameToId[item.toLowerCase()];
+      if(currentId)
+      {
+        cube.cards.push(currentId);
+        added.push(carddict[currentId]);
+      }
+      else
+      {
+        missing += item +'\n';
+      }
+    });
+    if(missing.length > 0)
+    {
+      res.render('bulk_upload',
+      {
+        missing:missing,
+        added:JSON.stringify(added),
+        cube:cube
+      });
+    }
+    else
+    {
+      Cube.updateOne({_id:cube._id}, cube, function(err)
+      {
+        if(err)
+        {
+          console.log(err);
+        }
+        else
+        {
+          req.flash('success', 'All cards successfully added.');
+          res.redirect('/cube/list/'+req.params.id);
+        }
+      });
+    }
+  }
+}
 
 // Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res,next)
@@ -431,6 +484,7 @@ router.get('/api/getcard/:name', function(req, res)
     });
   }
 });
+
 /*
 router.delete('/remove/:id',ensureAuth, function(req, res)
 {
