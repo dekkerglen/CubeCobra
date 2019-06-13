@@ -392,6 +392,7 @@ router.get('/download/plaintext/:id', function(req, res)
     }
   });
 });
+
 router.get('/download/csv/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -580,8 +581,9 @@ router.get('/api/getcardfromcube/:id', function(req, res)
 
 router.get('/api/getcard/:name', function(req, res)
 {
-  req.params.name = req.params.name.replace('-slash-','//').toLowerCase();
-  var card = carddict[nameToId[req.params.name]][0];
+  req.params.name = req.params.name.replace('-slash-','//').toLowerCase().trim();
+  console.log(req.params.name);
+  var card = carddict[nameToId[req.params.name][0]];
   if(!card)
   {
     res.status(200).send({
