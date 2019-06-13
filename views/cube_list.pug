@@ -37,9 +37,9 @@ block content
               li.nav-item.dropdown
                 a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
                 .dropdown-menu(aria-labelledby='exportdropdown')
-                  a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Plain Text (.txt)
-                  a.dropdown-item(href='#') Comma Separated (.csv)
-                  a.dropdown-item(href='#') MTGSalvation (.txt)
+                  a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
+                  a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
+                  a.dropdown-item(href='/cube/download/cubecobra/'+cube.id) Cube Cobra Readable (.txt)
                     br
         #navedit.collapse
           .container.bg-light

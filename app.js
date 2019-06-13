@@ -146,26 +146,31 @@ app.get('*', function(req, res){
 var dict = {};
 var names = [];
 var nameToId = {};
+
+function updateCardbase()
+{
+    dict = {};
+    names = [];
+    nameToId = {};
+
+    var file = fs.createWriteStream('private/cards.json');
+    var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
+    {
+      let stream = response.pipe(file);
+      stream.on('finish', function()
+      {
+        var contents = fs.readFileSync('private/cards.json');
+        // Define to JSON type
+        var cards = JSON.parse(contents);
+        saveAllCards(cards);
+        console.log("Finished cardbase update...");
+      });
+    });
+}
+
 schedule.scheduleJob('0 0 * * *', function(){
   console.log("Starting midnight cardbase update...");
-
-  dict = {};
-  names = [];
-  nameToId = {};
-
-  var file = fs.createWriteStream('private/cards.json');
-  var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
-  {
-    let stream = response.pipe(file);
-    stream.on('finish', function()
-    {
-      var contents = fs.readFileSync('private/cards.json');
-      // Define to JSON type
-      var cards = JSON.parse(contents);
-      saveAllCards(cards);
-      console.log("Finished cardbase update...");
-    });
-  });
+  updateCardbase();
 });
 
 function saveAllCards(arr)
@@ -177,8 +182,9 @@ function saveAllCards(arr)
     //only add if it doesn't exist, this makes the default the newest edition
     if(!nameToId[card.name.toLowerCase()])
     {
-      nameToId[card.name.toLowerCase()]=card._id;
+      nameToId[card.name.toLowerCase()]=[];
     }
+    nameToId[card.name.toLowerCase()].push(card._id);
     binaryInsert(card.name.toLowerCase(), names);
   });
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function (err)

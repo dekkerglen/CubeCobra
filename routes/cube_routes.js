@@ -291,11 +291,29 @@ function bulkUpload(req, res, list, cube)
     var added = [];
     cards.forEach(function(item, index)
     {
-      var currentId =nameToId[item.toLowerCase()];
-      if(currentId)
+      var currentId =nameToId[item.toLowerCase().trim()];
+      if(currentId && currentId[0])
       {
-        cube.cards.push(currentId);
-        added.push(carddict[currentId]);
+        cube.cards.push(currentId[0]);
+        added.push(carddict[currentId[0]]);
+      }
+      else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
+      {
+        var found = false;
+        var possibilities = nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()];
+        possibilities.forEach(function(possible, ind)
+        {
+          if(!found && carddict[possible].full_name.toLowerCase() == item.toLowerCase().trim())
+          {
+            cube.cards.push(carddict[possible]);
+            added.push(carddict[possible]);
+            found = true;
+          }
+        });
+        if(!found)
+        {
+          missing += item +'\n';
+        }
       }
       else
       {
@@ -329,6 +347,29 @@ function bulkUpload(req, res, list, cube)
   }
 }
 
+router.get('/download/cubecobra/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      cube.cards.forEach(function(card_id, index)
+      {
+        res.write(carddict[card_id].full_name + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
+
 router.get('/download/plaintext/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -346,6 +387,46 @@ router.get('/download/plaintext/:id', function(req, res)
       cube.cards.forEach(function(card_id, index)
       {
         res.write(carddict[card_id].name + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
+router.get('/download/csv/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.csv');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      res.write('Name,CMC,Type,Color(s),Set');
+      res.write('\r\n');
+      cube.cards.forEach(function(card_id, index)
+      {
+        res.write('"' + carddict[card_id].name + '",');
+        res.write(carddict[card_id].cmc + ',');
+        res.write(carddict[card_id].type.replace(' — ',' - ').replace(' — ',' - ') + ',');
+        if(carddict[card_id].colors.length == 0)
+        {
+          res.write('C');
+        }
+        else {
+          carddict[card_id].colors.forEach(function(color, ind)
+          {
+            res.write(color)
+          });
+        }
+        res.write(',')
+        var tmp = carddict[card_id].full_name.substring(carddict[card_id].full_name.indexOf('[')+1,carddict[card_id].full_name.indexOf(']'));
+        res.write(tmp.substring(0,tmp.indexOf('-')));
+        res.write('\r\n');
       });
       res.end();
     }
@@ -500,7 +581,7 @@ router.get('/api/getcardfromcube/:id', function(req, res)
 router.get('/api/getcard/:name', function(req, res)
 {
   req.params.name = req.params.name.replace('-slash-','//').toLowerCase();
-  var card = carddict[nameToId[req.params.name]];
+  var card = carddict[nameToId[req.params.name]][0];
   if(!card)
   {
     res.status(200).send({
@@ -669,21 +750,21 @@ fs.readFile('private/nameToId.json', 'utf8', function(err, contents) {
 fs.watchFile('private/cardtree.json', (curr, prev) => {
   console.log('File Changed: cardtree');
   fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
-      nameToId = JSON.parse(contents);
+      cardtree = JSON.parse(contents);
       console.log("cardtree updated");
   });
 });
 fs.watchFile('private/names.json', (curr, prev) => {
   console.log('File Changed: names');
   fs.readFile('private/names.json', 'utf8', function(err, contents) {
-      nameToId = JSON.parse(contents);
+      cardnames = JSON.parse(contents);
       console.log("names updated");
   });
 });
 fs.watchFile('private/carddict.json', (curr, prev) => {
   console.log('File Changed: carddict');
   fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-      nameToId = JSON.parse(contents);
+      carddict = JSON.parse(contents);
       console.log("carddict updated");
   });
 });
