@@ -81,90 +81,98 @@ router.get('/list/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
-    User.findById(cube.owner, function(err, user)
+    if(!cube)
     {
-      var sorted_cards =
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
       {
-        white: [],
-        blue: [],
-        red: [],
-        green: [],
-        black: [],
-        multi: [],
-        colorless: [],
-        lands: []
-      };
-      cube.cards.forEach(function(card_id, index)
-      {
-        var card = carddict[card_id];
-        if(card.type.toLowerCase().includes('land'))
+        var sorted_cards =
         {
-          sorted_cards.lands.push(card);
-        }
-        else if(card.colors.length == 0)
+          white: [],
+          blue: [],
+          red: [],
+          green: [],
+          black: [],
+          multi: [],
+          colorless: [],
+          lands: []
+        };
+        cube.cards.forEach(function(card_id, index)
         {
-          sorted_cards.colorless.push(card);
-        }
-        else if(card.colors.length > 1)
-        {
-          sorted_cards.multi.push(card);
-        }
-        else {
-          switch(card.colors[0])
+          var card = carddict[card_id];
+          if(card.type.toLowerCase().includes('land'))
           {
-            case "W":
-              sorted_cards.white.push(card);
-              break;
-            case "U":
-              sorted_cards.blue.push(card);
-              break;
-            case "B":
-              sorted_cards.black.push(card);
-              break;
-            case "R":
-              sorted_cards.red.push(card);
-              break;
-            case "G":
-              sorted_cards.green.push(card);
-              break;
+            sorted_cards.lands.push(card);
           }
+          else if(card.colors.length == 0)
+          {
+            sorted_cards.colorless.push(card);
+          }
+          else if(card.colors.length > 1)
+          {
+            sorted_cards.multi.push(card);
+          }
+          else {
+            switch(card.colors[0])
+            {
+              case "W":
+                sorted_cards.white.push(card);
+                break;
+              case "U":
+                sorted_cards.blue.push(card);
+                break;
+              case "B":
+                sorted_cards.black.push(card);
+                break;
+              case "R":
+                sorted_cards.red.push(card);
+                break;
+              case "G":
+                sorted_cards.green.push(card);
+                break;
+            }
+          }
+        });
+        sort_fn = function(a,b){
+          if(a.cmc == b.cmc)
+          {
+            return  ( ( a.name == b.name ) ? 0 : ( ( a.name > b.name ) ? 1 : -1 ) );
+          }
+          else {
+            return a.cmc-b.cmc;
+          }
+        };
+        sorted_cards.white.sort(sort_fn);
+        sorted_cards.blue.sort(sort_fn);
+        sorted_cards.black.sort(sort_fn);
+        sorted_cards.red.sort(sort_fn);
+        sorted_cards.green.sort(sort_fn);
+        sorted_cards.colorless.sort(sort_fn);
+        sorted_cards.multi.sort(sort_fn);
+        if(err)
+        {
+          res.render('cube_list',
+          {
+            cube:cube,
+            author: 'unknown',
+            cards:sorted_cards
+          });
+        }
+        else
+        {
+          res.render('cube_list',
+          {
+            cube:cube,
+            owner: user.username,
+            cards:sorted_cards
+          });
         }
       });
-      sort_fn = function(a,b){
-        if(a.cmc == b.cmc)
-        {
-          return  ( ( a.name == b.name ) ? 0 : ( ( a.name > b.name ) ? 1 : -1 ) );
-        }
-        else {
-          return a.cmc-b.cmc;
-        }
-      };
-      sorted_cards.white.sort(sort_fn);
-      sorted_cards.blue.sort(sort_fn);
-      sorted_cards.black.sort(sort_fn);
-      sorted_cards.red.sort(sort_fn);
-      sorted_cards.green.sort(sort_fn);
-      sorted_cards.colorless.sort(sort_fn);
-      sorted_cards.multi.sort(sort_fn);
-      if(err)
-      {
-        res.render('cube_list',
-        {
-          cube:cube,
-          author: 'unknown',
-          cards:sorted_cards
-        });
-      }
-      else
-      {
-        res.render('cube_list',
-        {
-          cube:cube,
-          owner: user.username,
-          cards:sorted_cards
-        });
-      }
-    });
+    }
   });
 });
 
@@ -320,6 +328,29 @@ function bulkUpload(req, res, list, cube)
     }
   }
 }
+
+router.get('/download/plaintext/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      cube.cards.forEach(function(card_id, index)
+      {
+        res.write(carddict[card_id].name + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
 
 // Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res,next)

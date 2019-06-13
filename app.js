@@ -128,6 +128,10 @@ app.get('/contact', function(req, res)
 {
   res.render('contact', {});
 });
+app.get('/404', function(req, res)
+{
+  res.render('404', {});
+});
 
 //Route files
 let cubes =  require('./routes/cube_routes');
@@ -135,6 +139,9 @@ let users =  require('./routes/users_routes');
 app.use('/cube', cubes);
 app.use('/user', users);
 
+app.get('*', function(req, res){
+  res.redirect('/404');
+});
 
 var dict = {};
 var names = [];
