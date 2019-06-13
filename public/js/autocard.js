@@ -40,10 +40,30 @@ function autocard_show_card(imagename){
 		if(window.event){e = window.event;}
         el = document.getElementById("autocard_popup");
         parentPos = getElementPosition(el.parentElement.parentElement);
-		document.getElementById("autocard_popup").style.left = (5+e.clientX+self.pageXOffset-parentPos.left) + "px";
-		document.getElementById("autocard_popup").style.top = (5+e.clientY+self.pageYOffset-parentPos.top) + "px";
+
+	  var leftPixelSpace = e.clientX;
+	  var rightPixelSpace = window.innerWidth - leftPixelSpace;
+	  var topPixelSpace = e.clientY;
+	  var bottomPixelSpace = window.innerHeight - topPixelSpace;
+		if(rightPixelSpace > 250)
+		{
+			//display on right
+			document.getElementById("autocard_popup").style.left = (5+e.clientX+self.pageXOffset-parentPos.left) + "px";
+		}
+		else
+		{
+			document.getElementById("autocard_popup").style.left = (-230+e.clientX+self.pageXOffset-parentPos.left) + "px";
+		}
+		if(bottomPixelSpace>340)
+		{
+			document.getElementById("autocard_popup").style.top = (5+e.clientY+self.pageYOffset-parentPos.top) + "px";
+		}
+		else
+		{
+			document.getElementById("autocard_popup").style.top = (-320+e.clientY+self.pageYOffset-parentPos.top) + "px";
+		}
 	}
-	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=200px height=285>';
+	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=315>';
 }
 
 function autocard_hide_card(){

@@ -7,6 +7,7 @@ const router = express.Router();
 // Bring in models
 let Cube = require('../models/cube');
 let User = require('../models/user');
+let Draft = require('../models/draft');
 
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res,next)
@@ -182,7 +183,7 @@ router.get('/playtest/:id', function(req, res)
   {
     User.findById(cube.owner, function(err, user)
     {
-      if(err)
+      if(!user || err)
       {
         res.render('cube_playtest',
         {
@@ -393,7 +394,7 @@ router.get('/download/plaintext/:id', function(req, res)
   });
 });
 
-router.get('/download/csv/:id', function(req, res)
+router.get('/startdraft/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
@@ -404,32 +405,190 @@ router.get('/download/csv/:id', function(req, res)
     }
     else
     {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.csv');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      res.write('Name,CMC,Type,Color(s),Set');
-      res.write('\r\n');
-      cube.cards.forEach(function(card_id, index)
+      //setup draft conditions
+      cards = cube.cards;
+      var cardpool = shuffle(cards.slice());
+
+      var draft = new Draft();
+      draft.picks = [];
+      draft.packs = [];
+      draft.activepacks = [];
+      draft.cube = cube._id;
+      for(i = 0; i < 8; i++)
       {
-        res.write('"' + carddict[card_id].name + '",');
-        res.write(carddict[card_id].cmc + ',');
-        res.write(carddict[card_id].type.replace(' — ',' - ').replace(' — ',' - ') + ',');
-        if(carddict[card_id].colors.length == 0)
+        draft.picks.push([]);
+        draft.packs.push([]);
+        for(j = 0; j < 2; j++)
         {
-          res.write('C');
-        }
-        else {
-          carddict[card_id].colors.forEach(function(color, ind)
+          draft.packs[i].push([]);
+          for(k = 0; k < 15; k++)
           {
-            res.write(color)
+            draft.packs[i][j].push(0);
+            draft.packs[i][j][k] = cardpool.pop();
+          }
+        }
+        draft.activepacks.push([]);
+        for(k = 0; k < 15; k++)
+        {
+          draft.activepacks[i].push(0);
+          draft.activepacks[i][k] = cardpool.pop();
+        }
+      }
+
+      //console.log(draft);
+      draft.save(function(err)
+      {
+        if(err)
+        {
+          console.log(err);
+        }
+        else
+        {
+          res.redirect('/cube/draft/'+draft._id);
+        }
+      });
+    }
+  });
+});
+
+router.get('/draft/pick/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  draftid = split[0];
+  pick = split[1];
+  Draft.findById(draftid, function(err, draft)
+  {
+    if(!draft)
+    {
+      req.flash('danger', 'Draft not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      if(!draft.activepacks[0].includes(pick))
+      {
+        req.flash('danger', 'Invalid Pick');
+        res.redirect('/cube/draft/'+req.params.id);
+      }
+      else
+      {
+        draft.picks[0].push(pick);
+        var activecards_id = draft.activepacks[0];
+        for( var i = 0; i < draft.activepacks[0].length; i++)
+        {
+           if ( draft.activepacks[0][i] === pick)
+           {
+             draft.activepacks[0].splice(i, 1);
+           }
+        }
+
+        //make bots take a pick out of active activepacks
+        for(i = 1; i < 8; i++)
+        {
+          draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
+        }
+
+        if(draft.activepacks[0].length <= 0)
+        {
+          if(draft.packs[0].length > 0)
+          {
+            //open new packs
+            for(i = 0; i < 8; i++)
+            {
+              draft.activepacks[i] = draft.packs[i].pop();
+            }
+          }
+          else
+          {
+              //draft is over
+          }
+        }
+        else
+        {
+          //rotate active packs
+          draft.activepacks.unshift(draft.activepacks.pop());
+        }
+
+        Draft.updateOne({_id:draft._id}, draft, function(err)
+        {
+          if(err)
+          {
+            console.log(err);
+          }
+          else
+          {
+            res.redirect('/cube/draft/'+draftid);
+          }
+        });
+      }
+    }
+  });
+});
+
+router.get('/draft/:id', function(req, res)
+{
+  Draft.findById(req.params.id, function(err, draft)
+  {
+    if(!draft)
+    {
+      req.flash('danger', 'Draft not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      var picks_id = draft.picks[0];
+      var activecards_id = draft.activepacks[0];
+      var picks = [];
+      var activecards = [];
+      var pickNumber = 16 - draft.activepacks[0].length;
+      var packNumber = 3 - draft.packs[0].length;
+      var title = 'Pack ' + packNumber + ', Pick ' + pickNumber;
+      picks_id.forEach(function(id, index)
+      {
+        picks.push(carddict[id]);
+      });
+      activecards_id.forEach(function(id, index)
+      {
+        activecards.push(carddict[id]);
+      });
+      Cube.findById(draft.cube, function(err, cube)
+      {
+        if(!cube)
+        {
+          req.flash('danger', 'Cube not found');
+          res.redirect('/404/'+req.params.id);
+        }
+        else
+        {
+          User.findById(cube.owner, function(err, user)
+          {
+            if(!user || err)
+            {
+              res.render('cube_draft',
+              {
+                title:title,
+                draftid:draft._id,
+                cube:cube,
+                picks:picks,
+                owner: 'Unkown',
+                activecards:activecards
+              });
+            }
+            else
+            {
+              res.render('cube_draft',
+              {
+                title:title,
+                draftid:draft._id,
+                cube:cube,
+                picks:picks,
+                owner: user.username,
+                activecards:activecards
+              });
+            }
           });
         }
-        res.write(',')
-        var tmp = carddict[card_id].full_name.substring(carddict[card_id].full_name.indexOf('[')+1,carddict[card_id].full_name.indexOf(']'));
-        res.write(tmp.substring(0,tmp.indexOf('-')));
-        res.write('\r\n');
       });
-      res.end();
     }
   });
 });
@@ -646,12 +805,31 @@ function ensureAuth(req, res, next)
 }
 //utility function
 function arrayRemove(arr, value) {
-
    return arr.filter(function(ele){
        return ele != value;
    });
-
 }
+
+function shuffle(array)
+{
+	var currentIndex = array.length;
+	var temporaryValue, randomIndex;
+
+	// While there remain elements to shuffle...
+	while (0 !== currentIndex) {
+		// Pick a remaining element...
+		randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex -= 1;
+
+		// And swap it with the current element.
+		temporaryValue = array[currentIndex];
+		array[currentIndex] = array[randomIndex];
+		array[randomIndex] = temporaryValue;
+	}
+
+	return array;
+
+};
 //cube autocomplete functions
 function add_word(obj, word)
 {

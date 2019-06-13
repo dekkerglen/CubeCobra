@@ -339,6 +339,40 @@ function convertCard(card)
   {
     newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
   }
+  if(newcard.type.toLowerCase().includes('land'))
+  {
+    newcard.colorcategory = 'l';
+  }
+  else if(newcard.colors.length == 0)
+  {
+    newcard.colorcategory = 'c';
+  }
+  else if(newcard.colors.length >  1)
+  {
+    newcard.colorcategory = 'm';
+  }
+  else if(newcard.colors.length ==  1)
+  {
+    switch(newcard.colors[0])
+    {
+      case "W":
+        newcard.colorcategory = 'w';
+        break;
+      case "U":
+        newcard.colorcategory = 'u';
+        break;
+      case "B":
+        newcard.colorcategory = 'b';
+        break;
+      case "R":
+        newcard.colorcategory = 'r';
+        break;
+      case "G":
+        newcard.colorcategory = 'g';
+        break;
+    }
+  }
+
   return newcard;
 }
 
