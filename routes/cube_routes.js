@@ -479,7 +479,7 @@ router.get('/api/getcardfromcube/:id', function(req, res)
     var found = false;
     cube.cards.forEach(function(card, index)
     {
-      if(carddict[card].name_lower == cardname)
+      if(!found && carddict[card].name_lower == cardname)
       {
         res.status(200).send({
           success:'true',
