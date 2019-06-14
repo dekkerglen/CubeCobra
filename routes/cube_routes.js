@@ -186,7 +186,7 @@ router.get('/playtest/:id', function(req, res)
     {
       Deck.find( { _id: { $in : cube.decks } }, function(err, decks)
       {
-        decklinks = decks.splice(decks.length-10, decks.length).reverse();
+        decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
         if(!user || err)
         {
           res.render('cube_playtest',
