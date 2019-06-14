@@ -415,11 +415,29 @@ router.post('/startdraft/:id', function(req, res)
       //setup draft conditions
       cards = cube.cards;
       var cardpool = shuffle(cards.slice());
-
       var draft = new Draft();
       draft.numPacks = req.body.packs;
       draft.numCards = req.body.cards;
       draft.numSeats = req.body.seats;
+
+      var botcolors = Math.ceil((draft.numSeats-1)*2/5);
+      var draftbots = [];
+      var colors = [];
+      for(i = 0; i < botcolors; i++)
+      {
+        colors.push('W');
+        colors.push('U');
+        colors.push('B');
+        colors.push('R');
+        colors.push('G');
+      }
+      shuffle(colors);
+      for(i = 0; i < draft.numSeats-1; i++)
+      {
+        var colorcombo= [colors.pop(), colors.pop()];
+        draftbots.push(colorcombo);
+      }
+      draft.bots = draftbots;
       var totalCards = draft.numPacks * draft.numCards * draft.numSeats;
       if(cube.cards.length < totalCards)
       {
@@ -504,7 +522,45 @@ router.get('/draft/pick/:id', function(req, res)
         //make bots take a pick out of active activepacks
         for(i = 1; i < draft.numSeats; i++)
         {
-          draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
+          var bot = draft.bots[i-1];
+          var taken = false;
+          //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
+          //try to take card with both colors
+          shuffle(draft.activepacks[i]);
+          for(j = 0; j < draft.activepacks[i].length; j++)
+          {
+            if(!taken)
+            {
+              if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+              {
+                pick = draft.activepacks[i].splice(j,1);
+                draft.picks[i].push(pick[0]);
+                taken = true;
+              }
+            }
+          }
+          //try to take card with one color, or C
+          for(j = 0; j < draft.activepacks[i].length; j++)
+          {
+            if(!taken)
+            {
+              if(carddict[draft.activepacks[i][j]].colors.length <= 1)
+              {
+                if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1])|| carddict[draft.activepacks[i][j]].colors.length == 0)
+                {
+                  pick = draft.activepacks[i].splice(j,1);
+                  draft.picks[i].push(pick[0]);
+                  taken = true;
+                }
+              }
+            }
+          }
+          //take a random card
+          if(!taken)
+          {
+            pick = draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
+            draft.picks[i].push(pick[0]);
+          }
         }
 
         if(draft.activepacks[0].length <= 0)
@@ -540,13 +596,14 @@ router.get('/draft/pick/:id', function(req, res)
             {
               //create deck, save it, redirect to it
               var deck = new Deck();
-              deck.cards = draft.picks[0];
+              deck.cards = draft.picks;
               if(req.user)
               {
                 deck.owner = req.user._id;
               }
               deck.cube = draft.cube;
               deck.date = Date.now();
+              deck.bots = draft.bots;
               Cube.findById(draft.cube,function(err, cube)
               {
                 User.findById(deck.owner, function(err, user)
@@ -844,17 +901,40 @@ router.get('/deck/:id', function(req, res)
             {
               owner_name = owner.username;
             }
-            sorted_cards = [];
-            deck.cards.forEach(function(card, index)
+            var player_deck = [];
+            var bot_decks = []
+            deck.cards[0].forEach(function(card, index)
             {
-              sorted_cards.push(carddict[card]);
+              player_deck.push(carddict[card]);
             });
+            for(i = 1; i < deck.cards.length; i++)
+            {
+              var bot_deck = [];
+              deck.cards[i].forEach(function(card, index)
+              {
+                if(!carddict[card])
+                {
+                  console.log("Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
+                }
+                else {
+                  bot_deck.push(carddict[card]);
+                }
+              });
+              bot_decks.push(bot_deck);
+            }
+            var bot_names = [];
+            for(i=0; i < deck.bots.length; i++)
+            {
+              bot_names.push("Seat " + (i+2) + ": " + deck.bots[i][0] + ", " + deck.bots[i][1]);
+            }
             return res.render('cube_deck',
             {
               cube:cube,
               owner: owner_name,
               drafter:drafter_name,
-              cards:sorted_cards
+              cards:player_deck,
+              bot_decks:bot_decks,
+              bots:bot_names
             });
           });
         });

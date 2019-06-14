@@ -3,11 +3,12 @@ let mongoose = require('mongoose');
 // Cube schema
 let deckSchema = mongoose.Schema(
   {
-    cards:[],
+    cards:[[]],
     owner:String,
     cube:String,
     date:Date,
-    name:String
+    name:String,
+    bots:[[]]
   }
 );
 

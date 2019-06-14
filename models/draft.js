@@ -9,7 +9,8 @@ let draftSchema = mongoose.Schema(
     cube:String,
     numPacks:Number,
     numCards:Number,
-    numSeats:Number
+    numSeats:Number,
+    bots:[[]]
   }
 );
 
