@@ -15,11 +15,7 @@ let cubeSchema = mongoose.Schema(
     },
     cards: [String],
     decks: [String],
-    articles: [String],
-    drafts:[{
-      user:String,
-      draftid:String
-    }]
+    articles: [String]
   }
 );
 

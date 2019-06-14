@@ -192,7 +192,7 @@ function saveAllCards(arr)
       if (err)
       {
           console.log("An error occured while writing names.json");
-          return console.log(err);
+          console.log(err);
       }
       var cardtree = turnToTree(names);
 
@@ -201,21 +201,21 @@ function saveAllCards(arr)
           if (err)
           {
               console.log("An error occured while writing cardtree.json");
-              return console.log(err);
+              console.log(err);
           }
           fs.writeFile('private/carddict.json', JSON.stringify(dict), 'utf8', function (err)
           {
               if (err)
               {
                   console.log("An error occured while writing carddict.json");
-                  return console.log(err);
+                  console.log(err);
               }
               fs.writeFile('private/nameToId.json', JSON.stringify(nameToId), 'utf8', function (err)
               {
                   if (err)
                   {
                       console.log("An error occured while writing nametToId.json");
-                      return console.log(err);
+                      console.log(err);
                   }
 
                   console.log("All JSON files saved.");
@@ -331,13 +331,13 @@ function convertCard(card)
   newcard.type = card.type_line;
   newcard.colors = [];
 
-  if(card.colors)
+  if(card.color_identity)
   {
-    newcard.colors = newcard.colors.concat(card.colors);
+    newcard.colors = newcard.colors.concat(card.color_identity);
   }
-  else if(!card.colors && card.card_faces[0].colors)
+  else if(!card.color_identity && card.card_faces[0].color_identity)
   {
-    newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
+    newcard.colors = newcard.colors.concat(card.card_faces[0].color_identity);
   }
   if(newcard.type.toLowerCase().includes('land'))
   {

@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  h5
+    nav(aria-label='breadcrumb')
+      ol.breadcrumb
+        li.breadcrumb-item
+          a(href='#') #{owner}
+        li.breadcrumb-item.active(aria-current='page')= cube.name
+
+
+  ul.nav.nav-tabs.nav-fill.nav-justified
+      li.nav-item
+        a.nav-link(href='/cube/list/'+cube._id) List
+      li.nav-item
+        a.nav-link.active(href='/cube/playtest/'+cube._id) Playtest
+      li.nav-item
+        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+      li.nav-item
+        a.nav-link(href='/cube/blog/'+cube._id) Blog
+  .container
+    br  
+    h4 Drafted by #{drafter}
+    br  
+    .row
+      each card, i in cards
+        a.autocard(card=card.image_normal)
+          img( src=card.image_normal, width='150', height='210')
