@@ -9,6 +9,7 @@ let Cube = require('../models/cube');
 let Deck = require('../models/deck');
 let User = require('../models/user');
 let Draft = require('../models/draft');
+let CardRating = require('../models/cardrating');
 
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res,next)
@@ -508,146 +509,166 @@ router.get('/draft/pick/:id', function(req, res)
       }
       else
       {
-        var draftover = false;
-        draft.picks[0].push(pick);
-        var activecards_id = draft.activepacks[0];
-        for( var i = 0; i < draft.activepacks[0].length; i++)
+        //add pick cardvalue
+        CardRating.findById(pick, function(err, cardrating)
         {
-           if ( draft.activepacks[0][i] === pick)
-           {
-             draft.activepacks[0].splice(i, 1);
-           }
-        }
-
-        //make bots take a pick out of active activepacks
-        for(i = 1; i < draft.numSeats; i++)
-        {
-          var bot = draft.bots[i-1];
-          var taken = false;
-          //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
-          //try to take card with both colors
-          shuffle(draft.activepacks[i]);
-          for(j = 0; j < draft.activepacks[i].length; j++)
+          var rating = (draft.numCards - draft.activepacks[0].length + 1)/draft.numCards;
+          if(cardrating)
           {
-            if(!taken)
-            {
-              if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
-              {
-                pick = draft.activepacks[i].splice(j,1);
-                draft.picks[i].push(pick[0]);
-                taken = true;
-              }
-            }
-          }
-          //try to take card with one color, or C
-          for(j = 0; j < draft.activepacks[i].length; j++)
-          {
-            if(!taken)
-            {
-              if(carddict[draft.activepacks[i][j]].colors.length <= 1)
-              {
-                if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1])|| carddict[draft.activepacks[i][j]].colors.length == 0)
-                {
-                  pick = draft.activepacks[i].splice(j,1);
-                  draft.picks[i].push(pick[0]);
-                  taken = true;
-                }
-              }
-            }
-          }
-          //take a random card
-          if(!taken)
-          {
-            pick = draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
-            draft.picks[i].push(pick[0]);
-          }
-        }
-
-        if(draft.activepacks[0].length <= 0)
-        {
-          if(draft.packs[0].length > 0)
-          {
-            //open new packs
-            for(i = 0; i < draft.numSeats; i++)
-            {
-              draft.activepacks[i] = draft.packs[i].pop();
-            }
+            cardrating.value = cardrating.value * (cardrating.picks/(cardrating.picks+1)) + rating * (1/(cardrating.picks+1));
+            cardrating.picks += 1;
           }
           else
           {
-            //draft is over
-            draftover = true;
+            cardrating = new CardRating();
+            cardrating.value = rating;
+            cardrating.picks = 1;
           }
-        }
-        else
-        {
-          //rotate active packs
-          draft.activepacks.unshift(draft.activepacks.pop());
-        }
-        if(draftover)
-        {
-          Draft.updateOne({_id:draft._id}, draft, function(err)
+          console.log("Updated pick rating to: " + cardrating.value);
+          cardrating.save(function(err)
           {
-            if(err)
+            var draftover = false;
+            draft.picks[0].push(pick);
+            var activecards_id = draft.activepacks[0];
+            for( var i = 0; i < draft.activepacks[0].length; i++)
             {
-              console.log(err);
+               if ( draft.activepacks[0][i] === pick)
+               {
+                 draft.activepacks[0].splice(i, 1);
+               }
+            }
+
+            //make bots take a pick out of active activepacks
+            for(i = 1; i < draft.numSeats; i++)
+            {
+              var bot = draft.bots[i-1];
+              var taken = false;
+              //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
+              //try to take card with both colors
+              shuffle(draft.activepacks[i]);
+              for(j = 0; j < draft.activepacks[i].length; j++)
+              {
+                if(!taken)
+                {
+                  if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                  {
+                    pick = draft.activepacks[i].splice(j,1);
+                    draft.picks[i].push(pick[0]);
+                    taken = true;
+                  }
+                }
+              }
+              //try to take card with one color, or C
+              for(j = 0; j < draft.activepacks[i].length; j++)
+              {
+                if(!taken)
+                {
+                  if(carddict[draft.activepacks[i][j]].colors.length <= 1)
+                  {
+                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1])|| carddict[draft.activepacks[i][j]].colors.length == 0)
+                    {
+                      pick = draft.activepacks[i].splice(j,1);
+                      draft.picks[i].push(pick[0]);
+                      taken = true;
+                    }
+                  }
+                }
+              }
+              //take a random card
+              if(!taken)
+              {
+                pick = draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
+                draft.picks[i].push(pick[0]);
+              }
+            }
+
+            if(draft.activepacks[0].length <= 0)
+            {
+              if(draft.packs[0].length > 0)
+              {
+                //open new packs
+                for(i = 0; i < draft.numSeats; i++)
+                {
+                  draft.activepacks[i] = draft.packs[i].pop();
+                }
+              }
+              else
+              {
+                //draft is over
+                draftover = true;
+              }
             }
             else
             {
-              //create deck, save it, redirect to it
-              var deck = new Deck();
-              deck.cards = draft.picks;
-              if(req.user)
+              //rotate active packs
+              draft.activepacks.unshift(draft.activepacks.pop());
+            }
+            if(draftover)
+            {
+              Draft.updateOne({_id:draft._id}, draft, function(err)
               {
-                deck.owner = req.user._id;
-              }
-              deck.cube = draft.cube;
-              deck.date = Date.now();
-              deck.bots = draft.bots;
-              Cube.findById(draft.cube,function(err, cube)
-              {
-                User.findById(deck.owner, function(err, user)
+                if(err)
                 {
-                  var owner = "Anonymous";
-                  if(user)
+                  console.log(err);
+                }
+                else
+                {
+                  //create deck, save it, redirect to it
+                  var deck = new Deck();
+                  deck.cards = draft.picks;
+                  if(req.user)
                   {
-                    owner = user.username;
+                    deck.owner = req.user._id;
                   }
-                  deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
-                  cube.decks.push(deck._id);
-                  cube.save(function(err)
+                  deck.cube = draft.cube;
+                  deck.date = Date.now();
+                  deck.bots = draft.bots;
+                  Cube.findById(draft.cube,function(err, cube)
                   {
-                    deck.save(function(err)
+                    User.findById(deck.owner, function(err, user)
                     {
-                      if(err)
+                      var owner = "Anonymous";
+                      if(user)
                       {
-                        console.log(err);
+                        owner = user.username;
                       }
-                      else
+                      deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
+                      cube.decks.push(deck._id);
+                      cube.save(function(err)
                       {
-                        return res.redirect('/cube/deck/'+deck._id);
-                      }
+                        deck.save(function(err)
+                        {
+                          if(err)
+                          {
+                            console.log(err);
+                          }
+                          else
+                          {
+                            return res.redirect('/cube/deck/'+deck._id);
+                          }
+                        });
+                      });
                     });
                   });
-                });
+                }
+              });
+            }
+            else
+            {
+              Draft.updateOne({_id:draft._id}, draft, function(err)
+              {
+                if(err)
+                {
+                  console.log(err);
+                }
+                else
+                {
+                  res.redirect('/cube/draft/'+draftid);
+                }
               });
             }
           });
-        }
-        else
-        {
-          Draft.updateOne({_id:draft._id}, draft, function(err)
-          {
-            if(err)
-            {
-              console.log(err);
-            }
-            else
-            {
-              res.redirect('/cube/draft/'+draftid);
-            }
-          });
-        }
+        });
       }
     }
   });
