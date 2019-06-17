@@ -113,8 +113,8 @@ function saveChangesButtonClick()
     }
     else if(change.replace)
     {
-      changelistFormBody.value += '-' + change.replace[0]._id + ';';
-      changelistFormBody.value += '+' + change.replace[1]._id;
+      changelistFormBody.value += '/' + change.replace[0]._id + '>';
+      changelistFormBody.value += change.replace[1]._id;
     }
   });
   document.getElementById("changelistForm").submit();

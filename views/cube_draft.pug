@@ -5,7 +5,7 @@ block content
     nav(aria-label='breadcrumb')
       ol.breadcrumb
         li.breadcrumb-item
-          a(href='#') #{owner}
+          a(href='#' style='color: #218937;') #{owner}
         li.breadcrumb-item.active(aria-current='page')= cube.name
 
 
@@ -27,7 +27,7 @@ block content
       .col-9
         each card, i in activecards
           a.autocard(card=card.image_normal, href='/cube/draft/pick/'+draftid+';'+card._id)
-            img( src=card.image_normal, width='150', height='210')
+            img( src=card.image_normal, width='150', height='210' alt=card.name)
       .col        
         ul.list-group
           each card, i in picks

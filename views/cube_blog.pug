@@ -5,7 +5,7 @@ block content
     nav(aria-label='breadcrumb')
       ol.breadcrumb
         li.breadcrumb-item
-          a(href='#') #{owner}
+          a(href='#' style='color: #218937;') #{owner}
         li.breadcrumb-item.active(aria-current='page')= cube.name
       
 
@@ -18,14 +18,56 @@ block content
         a.nav-link(href='/cube/analysis/'+cube._id) Analysis
       li.nav-item
         a.nav-link.active(href='/cube/blog/'+cube._id) Blog
-  .container  
+  .container
     br
-    .row
-      .col
-      .col
-        h4 Page Under Construction
+    if pages      
+      hr
+      nav(aria-label='pagination')
+        ul.pagination
+          each page, i in pages
+            if page.active
+              li.page-item.active(aria-current='page')
+                a.page-link(href=page.url)=page.content
+                  span.sr-only (current)
+            else
+              li.page-item
+                a.page-link(href=page.url)=page.content
+      hr
+    if user
+      if user.id == cube.owner
+        .card(style='padding:10px')
+          h5 Create New Blog Post
+          form(method='POST', action='/cube/blog/post/'+cube._id)
+            #form-group
+              label Title:
+              input.form-control(maxlength='200' name='title', type='text')
+            #form-group
+              label Body:
+              textarea.form-control(maxlength='20000' name='body')
+            br
+            input.btn.btn-success(type='submit',value='Submit')
         br
-        img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427" alt="Surprise! nothing is here right now.")
-      .col
-
-  
+    if posts
+      each post, i in posts
+        .card
+          .card-body
+            h5.card-title=post.title
+            h6.card-subtitle.mb-2.text-muted=post.date
+            if post.body
+              p.card-text=post.body
+            if post.html
+              p.card-text !{post.html}
+        br
+      if pages      
+        hr
+        nav(aria-label='pagination')
+          ul.pagination
+            each page, i in pages
+              if page.active
+                li.page-item.active(aria-current='page')
+                  a.page-link(href=page.url)=page.content
+                    span.sr-only (current)
+              else
+                li.page-item
+                  a.page-link(href=page.url)=page.content
+        hr

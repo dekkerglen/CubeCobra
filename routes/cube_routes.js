@@ -7,6 +7,7 @@ const router = express.Router();
 // Bring in models
 let Cube = require('../models/cube');
 let Deck = require('../models/deck');
+let Blog = require('../models/blog');
 let User = require('../models/user');
 let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
@@ -49,33 +50,124 @@ router.post('/add',ensureAuth, function(req,res,next)
 });
 
 // GEt view cube Route
-router.get('/view/:id',function(req, res)
+router.get('/view/:id', function(req, res)
 {
   res.redirect('/cube/list/'+req.params.id);
 });
 
-router.get('/blog/:id', function(req, res)
+
+router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
+    if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
+      {
+        var blogpost = new Blog();
+        blogpost.title=req.body.title;
+        blogpost.body=req.body.body;
+        blogpost.owner=user._id;
+        blogpost.date=Date.now();
+        blogpost.cube=cube._id;
+
+        //console.log(draft);
+        blogpost.save(function(err)
+        {
+          if(err)
+          {
+            console.log(err);
+          }
+          else
+          {
+            req.flash('success', 'Blog post successful');
+            res.redirect('/cube/blog/'+cube._id);
+          }
+        });
+      });
+    }
+  });
+});
+
+router.get('/blog/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  var cube_id = split[0];
+  Cube.findById(cube_id, function(err, cube)
+  {
     User.findById(cube.owner, function(err, user)
     {
-      if(err)
+      Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
       {
-        res.render('cube_blog',
+        if(blogs.length > 0)
         {
-          cube:cube,
-          author: 'unknown'
-        });
-      }
-      else
-      {
-        res.render('cube_blog',
+          blogs.reverse();
+          if(blogs.length > 10)
+          {
+            var page = parseInt(split[1]);
+            if(!page)
+            {
+              page = 0;
+            }
+            pages= [];
+            for(i = 0; i < blogs.length/10; i++)
+            {
+              if(page==i)
+              {
+                pages.push({
+                  url:'/cube/blog/'+cube._id+';'+i,
+                  content:(i+1),
+                  active:true
+                });
+              }
+              else
+              {
+                pages.push({
+                  url:'/cube/blog/'+cube._id+';'+i,
+                  content:(i+1)
+                });
+              }
+            }
+            blog_page = [];
+            for(i = 0; i < 10; i++)
+            {
+              if(blogs[i+page*10])
+              {
+                blog_page.push(blogs[i+page*10]);
+              }
+            }
+            res.render('cube_blog',
+            {
+              cube:cube,
+              owner: user.username,
+              posts:blog_page,
+              pages:pages
+            });
+          }
+          else
+          {
+            res.render('cube_blog',
+            {
+              cube:cube,
+              owner: user.username,
+              posts:blogs
+            });
+          }
+        }
+        else
         {
-          cube:cube,
-          owner: user.username
-        });
-      }
+          res.render('cube_blog',
+          {
+            cube:cube,
+            owner: user.username
+          });
+        }
+      });
     });
   });
 });
@@ -728,8 +820,7 @@ router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
   }
 });
 
-function bulkUpload(req, res, list, cube)
-{
+function bulkUpload(req, res, list, cube){
   cards = list.match(/[^\r\n]+/g);
   if(!cards)
   {
@@ -1229,14 +1320,17 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       var fail_remove = [];
       var adds = [];
       var removes = [];
+      var changelog = "";
       edits.forEach(function(edit, index)
       {
         if(edit.charAt(0) == '+')
         {
           //add id
           cube.cards.push(edit.substring(1));
+          changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+          changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' + carddict[edit.substring(1)].name + '</a>';
         }
-        else
+        else if(edit.charAt(0) == '-')
         {
           //remove id
           if(cube.cards.includes(edit.substring(1)))
@@ -1245,56 +1339,97 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             if (index !== -1) {
                 cube.cards.splice(index, 1);
             }
+
+            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' +carddict[edit.substring(1)].name + '</a>';
           }
           else
           {
             fail_remove.push(edit.substring(1));
           }
         }
-      });
-
-      if(fail_remove.length > 0)
-      {
-        Card.find({'_id': { $in:fail_remove}}, function(err, fails)
+        else if(edit.charAt(0) == '/')
         {
-          var errors = ""
-          fails.forEach(function(fail, index)
+          var tmp_split = edit.substring(1).split('>');
+          cube.cards.push(tmp_split[1]);
+          if(cube.cards.includes(tmp_split[0]))
           {
-            if(index != 0)
-            {
-              errors += ", ";
+            var index = cube.cards.indexOf(tmp_split[0]);
+            if (index !== -1) {
+                cube.cards.splice(index, 1);
             }
-            errors += fail.name;
-          });
-          Cube.updateOne({_id:cube._id}, cube, function(err)
-          {
-            if(err)
-            {
-              console.log(err);
-            }
-            else
-            {
-              req.flash('warning', 'Cube Updated With Errors, could not remove the following cards: ' + errors);
-              res.redirect('/cube/list/'+req.params.id);
-            }
-          });
-        });
-      }
-      else
-      {
-        Cube.updateOne({_id:cube._id}, cube, function(err)
-        {
-          if(err)
-          {
-            console.log(err);
+            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[0]].image_normal + '">' + carddict[tmp_split[0]].name + '</a> > ';
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
           }
           else
           {
-            req.flash('success', 'Cube Updated');
-            res.redirect('/cube/list/'+req.params.id);
+            fail_remove.push(tmp_split[0]);
+            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
           }
-        });
-      }
+        }
+        changelog += '<br>';
+      });
+
+
+      var blogpost = new Blog();
+      blogpost.title='Cube Updated - Automatic Post'
+      blogpost.html=changelog;
+      blogpost.owner=cube.owner;
+      blogpost.date=Date.now();
+      blogpost.cube=cube._id;
+
+      //console.log(draft);
+      blogpost.save(function(err)
+      {
+        if(err)
+        {
+          console.log(err);
+        }
+        else
+        {
+          if(fail_remove.length > 0)
+          {
+            var errors = ""
+            fail_remove.forEach(function(fail, index)
+            {
+              if(index != 0)
+              {
+                errors += ", ";
+              }
+              errors += carddict[fail].name;
+            });
+            Cube.updateOne({_id:cube._id}, cube, function(err)
+            {
+              if(err)
+              {
+                console.log(err);
+              }
+              else
+              {
+                req.flash('warning', 'Cube Updated With Errors, could not remove the following cards: ' + errors);
+                res.redirect('/cube/list/'+req.params.id);
+              }
+            });
+          }
+          else
+          {
+            Cube.updateOne({_id:cube._id}, cube, function(err)
+            {
+              if(err)
+              {
+                console.log(err);
+              }
+              else
+              {
+                req.flash('success', 'Cube Updated');
+                res.redirect('/cube/list/'+req.params.id);
+              }
+            });
+          }
+        }
+      });
     }
   });
 });
