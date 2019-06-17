@@ -214,7 +214,7 @@ function saveAllCards(arr)
               {
                   if (err)
                   {
-                      console.log("An error occured while writing nametToId.json");
+                      console.log("An error occured while writing nameToId.json");
                       console.log(err);
                   }
 

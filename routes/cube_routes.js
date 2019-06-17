@@ -211,18 +211,457 @@ router.get('/playtest/:id', function(req, res)
   });
 });
 
+function GetTypeByColor(cards) {
+  var TypeByColor = {
+    Creatures:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Enchantments:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Lands:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Planeswalkers:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Instants:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Sorceries:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Artifacts:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
+    Total:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0}
+  };
+  cards.forEach(function(card_id, index)
+  {
+    var card = carddict[card_id];
+    var type = {};
+    if(card.type.toLowerCase().includes('creature'))
+    {
+      type = TypeByColor['Creatures'];
+    }
+    else if(card.type.toLowerCase().includes('enchantment'))
+    {
+      type = TypeByColor['Enchantments'];
+    }
+    else if(card.type.toLowerCase().includes('land'))
+    {
+      type = TypeByColor['Lands'];
+    }
+    else if(card.type.toLowerCase().includes('planeswalker'))
+    {
+      type = TypeByColor['Planeswalkers'];
+    }
+    else if(card.type.toLowerCase().includes('instant'))
+    {
+      type = TypeByColor['Instants'];
+    }
+    else if(card.type.toLowerCase().includes('sorcery'))
+    {
+      type = TypeByColor['Sorceries'];
+    }
+    else if(card.type.toLowerCase().includes('artifact'))
+    {
+      type = TypeByColor['Artifacts'];
+    }
+
+    if(card.colorcategory=='l')
+    {
+      if(card.colors.length == 0)
+      {
+        type['Colorless'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Colorless'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+      }
+      else if(card.colors.length > 1)
+      {
+        type['Multi'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Multi'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+      }
+      else
+      {
+        switch(card.colors[0])
+        {
+          case 'W':
+          type['White'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['White'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
+          case 'U':
+          type['Blue'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['Blue'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
+          case 'B':
+          type['Black'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['Black'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
+          case 'R':
+          type['Red'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['Red'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
+          case 'G':
+          type['Green'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['Green'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
+        }
+      }
+    }
+    else
+    {
+      switch(card.colorcategory)
+      {
+        case 'w':
+        type['White'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['White'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'u':
+        type['Blue'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Blue'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'b':
+        type['Black'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Black'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'r':
+        type['Red'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Red'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'g':
+        type['Green'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Green'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'm':
+        type['Multi'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Multi'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+        case 'c':
+        type['Colorless'] += 1;
+        type['Total'] += 1;
+        TypeByColor['Total']['Colorless'] += 1;
+        TypeByColor['Total']['Total'] += 1;
+        break;
+      }
+    }
+  });
+  return TypeByColor;
+}
+
+function GetColorCounts(cards) {
+  var ColorCounts = {
+    White:0,
+    Blue:0,
+    Black:0,
+    Red:0,
+    Green:0,
+    Azorius:0,
+    Dimir:0,
+    Rakdos:0,
+    Gruul:0,
+    Selesnya:0,
+    Orzhov:0,
+    Izzet:0,
+    Golgari:0,
+    Boros:0,
+    Simic:0,
+    Jund:0,
+    Bant:0,
+    Grixis:0,
+    Naya:0,
+    Esper:0,
+    Jeskai:0,
+    Mardu:0,
+    Sultai:0,
+    Temur:0,
+    Abzan:0,
+    NonWhite:0,
+    NonBlue:0,
+    NonBlack:0,
+    NonRed:0,
+    NonGreen:0,
+    FiveColor:0
+  };
+  cards.forEach(function(card_id, index)
+  {
+    var card = carddict[card_id];
+    if(card.colors.length === 2)
+    {
+      if(card.colors.includes('W') && card.colors.includes('U'))
+      {
+        ColorCounts.Azorius += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(card.colors.includes('B') && card.colors.includes('U'))
+      {
+        ColorCounts.Dimir += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(card.colors.includes('B') && card.colors.includes('R'))
+      {
+        ColorCounts.Rakdos += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('R'))
+      {
+        ColorCounts.Gruul += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.White += 1;
+      }
+      else if(card.colors.includes('W') && card.colors.includes('G'))
+      {
+        ColorCounts.Selesnya += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.White += 1;
+      }
+      else if(card.colors.includes('W') && card.colors.includes('B'))
+      {
+        ColorCounts.Orzhov += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Black += 1;
+      }
+      else if(card.colors.includes('R') && card.colors.includes('U'))
+      {
+        ColorCounts.Izzet += 1;
+        ColorCounts.Red += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('B'))
+      {
+        ColorCounts.Golgari += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+      }
+      else if(card.colors.includes('W') && card.colors.includes('R'))
+      {
+        ColorCounts.Boros += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Red += 1;
+      }
+       else if(card.colors.includes('G') && card.colors.includes('U'))
+      {
+        ColorCounts.Simic += 1
+        ColorCounts.Green += 1;
+        ColorCounts.Blue += 1;
+      }
+    }
+    else if(card.colors.length == 3)
+    {
+      if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('R'))
+      {
+        ColorCounts.Jund += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('W'))
+      {
+        ColorCounts.Bant += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(card.colors.includes('U') && card.colors.includes('B') && card.colors.includes('R'))
+      {
+        ColorCounts.Grixis += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('W') && card.colors.includes('R'))
+      {
+        ColorCounts.Naya += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('U') && card.colors.includes('B') && card.colors.includes('W'))
+      {
+        ColorCounts.Esper += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.White += 1;
+      }
+      else if(card.colors.includes('W') && card.colors.includes('U') && card.colors.includes('R'))
+      {
+        ColorCounts.Jeskai += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('W') && card.colors.includes('B') && card.colors.includes('R'))
+      {
+        ColorCounts.Mardu += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('U'))
+      {
+        ColorCounts.Sultai += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('R'))
+      {
+        ColorCounts.Temur += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('W'))
+      {
+        ColorCounts.Abzan += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.White += 1;
+      }
+    }
+    else if(card.colors.length == 4)
+    {
+      if(!card.colors.includes('W'))
+      {
+        ColorCounts.NonWhite += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(!card.colors.includes('U'))
+      {
+        ColorCounts.NonBlue += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(!card.colors.includes('B'))
+      {
+        ColorCounts.NonBlack += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Red += 1;
+      }
+      else if(!card.colors.includes('R'))
+      {
+        ColorCounts.NonRed += 1;
+        ColorCounts.Green += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Blue += 1;
+      }
+      else if(!card.colors.includes('G'))
+      {
+        ColorCounts.NonGreen += 1;
+        ColorCounts.Black += 1;
+        ColorCounts.White += 1;
+        ColorCounts.Blue += 1;
+        ColorCounts.Red += 1;
+      }
+    }
+    else if(card.colors.length == 5)
+    {
+      ColorCounts.FiveColor += 1;
+      ColorCounts.Green += 1;
+      ColorCounts.Black += 1;
+      ColorCounts.White += 1;
+      ColorCounts.Blue += 1;
+      ColorCounts.Red += 1;
+    }
+  });
+  return ColorCounts;
+}
+
+function GetCurve(cards) {
+  var curve = {
+    white: [0,0,0,0,0,0,0,0,0,0],
+    blue:[0,0,0,0,0,0,0,0,0,0],
+    black:[0,0,0,0,0,0,0,0,0,0],
+    red:[0,0,0,0,0,0,0,0,0,0],
+    green:[0,0,0,0,0,0,0,0,0,0],
+    colorless:[0,0,0,0,0,0,0,0,0,0],
+    multi:[0,0,0,0,0,0,0,0,0,0],
+    total:[0,0,0,0,0,0,0,0,0,0]
+  }
+
+  cards.forEach(function(card_id, index)
+  {
+    card = carddict[card_id];
+    var category;
+    switch(card.colorcategory)
+    {
+      case 'w':
+      category = curve.white;
+      break;
+      case 'u':
+      category = curve.blue;
+      break;
+      case 'b':
+      category = curve.black;
+      break;
+      case 'r':
+      category = curve.red;
+      break;
+      case 'g':
+      category = curve.green;
+      break;
+      case 'c':
+      category = curve.colorless;
+      break;
+      case 'm':
+      category = curve.multi;
+      break;
+    }
+    if(category)
+    {
+      if(card.cmc >= 9)
+      {
+        category[9] += 1;
+        curve.total[9] += 1;
+      }
+      else
+      {
+        category[Math.floor(card.cmc)] += 1;
+        curve.total[Math.floor(card.cmc)] += 1;
+      }
+    }
+  });
+  return curve;
+}
+
 router.get('/analysis/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
     User.findById(cube.owner, function(err, user)
     {
+
       if(err)
       {
         res.render('cube_analysis',
         {
           cube:cube,
-          author: 'unknown'
+          author: 'unknown',
+          TypeByColor:GetTypeByColor(cube.cards),
+          MulticoloredCounts:GetColorCounts(cube.cards),
+          curve:JSON.stringify(GetCurve(cube.cards))
         });
       }
       else
@@ -230,7 +669,10 @@ router.get('/analysis/:id', function(req, res)
         res.render('cube_analysis',
         {
           cube:cube,
-          owner: user.username
+          owner: user.username,
+          TypeByColor:GetTypeByColor(cube.cards),
+          MulticoloredCounts:GetColorCounts(cube.cards),
+          curve:JSON.stringify(GetCurve(cube.cards))
         });
       }
     });
@@ -544,33 +986,49 @@ router.get('/draft/pick/:id', function(req, res)
               var bot = draft.bots[i-1];
               var taken = false;
               //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
-              //try to take card with both colors
+              //try to take card with exactly our two colors
               shuffle(draft.activepacks[i]);
               for(j = 0; j < draft.activepacks[i].length; j++)
               {
                 if(!taken)
                 {
-                  if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                  if(carddict[draft.activepacks[i][j]].colors.length == 2)
                   {
-                    pick = draft.activepacks[i].splice(j,1);
-                    draft.picks[i].push(pick[0]);
-                    taken = true;
-                  }
-                }
-              }
-              //try to take card with one color, or C
-              for(j = 0; j < draft.activepacks[i].length; j++)
-              {
-                if(!taken)
-                {
-                  if(carddict[draft.activepacks[i][j]].colors.length <= 1)
-                  {
-                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1])|| carddict[draft.activepacks[i][j]].colors.length == 0)
+                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
                     {
                       pick = draft.activepacks[i].splice(j,1);
                       draft.picks[i].push(pick[0]);
                       taken = true;
                     }
+                  }
+                }
+              }
+              //try to take card with one color
+              for(j = 0; j < draft.activepacks[i].length; j++)
+              {
+                if(!taken)
+                {
+                  if(carddict[draft.activepacks[i][j]].colors.length == 1)
+                  {
+                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                    {
+                      pick = draft.activepacks[i].splice(j,1);
+                      draft.picks[i].push(pick[0]);
+                      taken = true;
+                    }
+                  }
+                }
+              }
+              //try to take card that contains one of our colors, or is colorless
+              for(j = 0; j < draft.activepacks[i].length; j++)
+              {
+                if(!taken)
+                {
+                  if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                  {
+                    pick = draft.activepacks[i].splice(j,1);
+                    draft.picks[i].push(pick[0]);
+                    taken = true;
                   }
                 }
               }
