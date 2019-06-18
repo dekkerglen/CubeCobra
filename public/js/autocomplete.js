@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 window.onload = async () => {
   //load the card names
@@ -15,7 +15,7 @@ window.onload = async () => {
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
 
-  function autocomplete(inp, arr) {
+  function autocomplete(inp, arr, submit_button) {
     /*the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values:*/
     var currentFocus;
@@ -70,12 +70,25 @@ window.onload = async () => {
           currentFocus--;
           /*and and make the current item more visible:*/
           addActive(x);
-        } else if (e.keyCode == 13) {
+        } else if (e.keyCode == 9) {
+          /*If the tab key is pressed, prevent the form from being submitted,*/
+          if (currentFocus > -1) {
+            /*and simulate a click on the "active" item:*/
+            e.preventDefault();
+            if (x) x[currentFocus].click();
+          }
+        }else if (e.keyCode == 13) {
           /*If the ENTER key is pressed, prevent the form from being submitted,*/
           e.preventDefault();
           if (currentFocus > -1) {
             /*and simulate a click on the "active" item:*/
             if (x) x[currentFocus].click();
+            temp_button = document.getElementById("justAddButton");
+            if(submit_button)
+            {
+              submit_button.click();
+              inp.focus();
+            }
           }
         }
     });
@@ -289,9 +302,9 @@ window.onload = async () => {
   }
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  autocomplete(document.getElementById("addInput"), cardnames);
+  autocomplete(document.getElementById("addInput"), cardnames,document.getElementById("justAddButton"));
   if(document.getElementById("removeInput"))
   {
-    autocomplete(document.getElementById("removeInput"), cubenames);
+    autocomplete(document.getElementById("removeInput"), cubenames,document.getElementById("removeButton"));
   }
 }

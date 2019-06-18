@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var justAddButton = document.getElementById("justAddButton");
 var removeButton = document.getElementById("removeButton");
@@ -18,6 +18,19 @@ saveChangesButton.addEventListener("click", saveChangesButtonClick);
 
 var cubeID=document.getElementById("cubeID").value;
 var changes = [];
+
+addInput.addEventListener("keyup", function(event) {
+  if (event.keyCode === 13 && addInput.value.length == 0) {
+    event.preventDefault();
+    justAddButton.click();
+  }
+});
+removeInput.addEventListener("keyup", function(event) {
+  if (event.keyCode === 13 && removeInput.value.length == 0) {
+    event.preventDefault();
+    removeButton.click();
+  }
+});
 
 function justAddButtonClick() {
   var val = addInput.value.replace('//','-slash-');
