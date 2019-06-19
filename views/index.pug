@@ -2,6 +2,19 @@ extends layout
 
 block content
   ul.list-group
-    each cube, i in cubes
-      li.list-group-item
-        a(href="/cube/view/"+cube._id)= cube.name
+    each cube_row, i in cube_rows
+      .row        
+        each cube, j in cube_row
+          .col-md-3
+            .card
+              .card-header
+                h5=cube.name
+                em
+                  a Designed by #{cube.owner_name}  
+              a(href='/cube/overview/'+cube._id)
+                img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+              em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+              a.btn.btn-success(href='/cube/overview/'+cube._id) View
+
+
+      br

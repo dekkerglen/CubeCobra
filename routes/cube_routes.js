@@ -15,40 +15,38 @@ let CardRating = require('../models/cardrating');
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res,next)
 {
-  req.checkBody('name', 'Name is required').notEmpty();
-
-  //handle error checks
-  let errors = req.validationErrors();
-
-  if(errors)
+  if(req.body.name.length < 5)
   {
-    res.render('/user/account/yourcubes', {
-      errors:errors
-    });
+    req.flash('danger', 'Cube name should be at least 5 characters long.');
+    res.redirect('/user/account/yourcubes');
   }
   else {
-    let cube = new Cube();
-    cube.name = req.body.name;
-    cube.owner = req.user._id;
-    cube.cards = [];
-    cube.decks = [];
-    cube.articles = [];
-    cube.image_uri = carddict[nameToId['doubling cube'][0]].art_crop;
-    cube.image_name = carddict[nameToId['doubling cube'][0]].full_name;
-    cube.image_artist = carddict[nameToId['doubling cube'][0]].artist;
-    cube.description = "This is a brand new cube!";
-
-    cube.save(function(err)
+    User.findById(req.user._id, function(err, user)
     {
-      if(err)
+      let cube = new Cube();
+      cube.name = req.body.name;
+      cube.owner = req.user._id;
+      cube.cards = [];
+      cube.decks = [];
+      cube.articles = [];
+      cube.image_uri = carddict[nameToId['doubling cube'][0]].art_crop;
+      cube.image_name = carddict[nameToId['doubling cube'][0]].full_name;
+      cube.image_artist = carddict[nameToId['doubling cube'][0]].artist;
+      cube.description = "This is a brand new cube!";
+      cube.owner_name = user.username;
+
+      cube.save(function(err)
       {
-        console.log(err);
-      }
-      else
-      {
-        req.flash('success', 'Cube Added');
-        res.redirect('/cube/overview/'+cube._id);
-      }
+        if(err)
+        {
+          console.log(err);
+        }
+        else
+        {
+          req.flash('success', 'Cube Added');
+          res.redirect('/cube/overview/'+cube._id);
+        }
+      });
     });
   }
 });
