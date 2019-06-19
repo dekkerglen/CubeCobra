@@ -12,6 +12,8 @@ block content
   // tabbed cube nav    
   ul.nav.nav-tabs.nav-fill.nav-justified
       li.nav-item
+        a.nav-link(href='/cube/overview/'+cube._id) Overview
+      li.nav-item
         a.nav-link.active(href='/cube/list/'+cube._id) List
       li.nav-item
         a.nav-link(href='/cube/playtest/'+cube._id) Playtest
@@ -50,7 +52,7 @@ block content
               .col
                 form(autocomplete='off').form-inline
                   .form-group.mb-2.autocomplete
-                    input.form-control#addInput(style='width: 350px', type='text', name='myCountry', placeholder='Card to Add')
+                    input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
                   button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
               .col
                 form.form-inline

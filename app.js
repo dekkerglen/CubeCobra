@@ -146,12 +146,16 @@ app.get('*', function(req, res){
 var dict = {};
 var names = [];
 var nameToId = {};
+var full_names = [];
+var imagedict = {};
 
 function updateCardbase()
 {
     dict = {};
     names = [];
+    full_names = [];
     nameToId = {};
+    imagedict={};
 
     var file = fs.createWriteStream('private/cards.json');
     var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
@@ -179,6 +183,11 @@ function saveAllCards(arr)
   {
     card = convertCard(card);
     dict[card._id]=card;
+    imagedict[card.full_name.toLowerCase()]=
+    {
+      uri: card.art_crop,
+      artist: card.artist
+    }
     //only add if it doesn't exist, this makes the default the newest edition
     if(!nameToId[card.name.toLowerCase()])
     {
@@ -186,6 +195,7 @@ function saveAllCards(arr)
     }
     nameToId[card.name.toLowerCase()].push(card._id);
     binaryInsert(card.name.toLowerCase(), names);
+    binaryInsert(card.full_name.toLowerCase(), full_names);
   });
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function (err)
   {
@@ -218,7 +228,25 @@ function saveAllCards(arr)
                       console.log(err);
                   }
 
-                  console.log("All JSON files saved.");
+                  fs.writeFile('private/full_names.json', JSON.stringify(turnToTree(full_names)), 'utf8', function (err)
+                  {
+                      if (err)
+                      {
+                          console.log("An error occured while writing full_names.json");
+                          console.log(err);
+                      }
+
+                      fs.writeFile('private/imagedict.json', JSON.stringify(imagedict), 'utf8', function (err)
+                      {
+                          if (err)
+                          {
+                              console.log("An error occured while writing imagedict.json");
+                              console.log(err);
+                          }
+
+                          console.log("All JSON files saved.");
+                      });
+                  });
               });
           });
       });
@@ -315,6 +343,7 @@ function convertCard(card)
   newcard.full_name = card.name + ' [' + card.set + '-'+ card.collector_number + ']';
   newcard.name = card.name;
   newcard.name_lower = card.name.toLowerCase();
+  newcard.artist = card.artist;
   if(card.card_faces && card.card_faces[0].image_uris)
   {
     newcard.image_small = card.card_faces[0].image_uris.small;
@@ -328,16 +357,23 @@ function convertCard(card)
     newcard.art_crop = card.image_uris.art_crop;
   }
   newcard.cmc = card.cmc;
-  newcard.type = card.type_line;
+  if(card.type_line.includes('//'))
+  {
+    newcard.type = card.type_line.substring(0,card.type_line.indexOf('/'));
+  }
+  else
+  {
+    newcard.type = card.type_line;
+  }
   newcard.colors = [];
 
-  if(card.color_identity)
+  if(!card.card_faces)
   {
     newcard.colors = newcard.colors.concat(card.color_identity);
   }
-  else if(!card.color_identity && card.card_faces[0].color_identity)
+  else if(card.card_faces[0].colors)
   {
-    newcard.colors = newcard.colors.concat(card.card_faces[0].color_identity);
+    newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
   }
   if(newcard.type.toLowerCase().includes('land'))
   {

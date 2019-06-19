@@ -33,6 +33,10 @@ router.post('/add',ensureAuth, function(req,res,next)
     cube.cards = [];
     cube.decks = [];
     cube.articles = [];
+    cube.image_uri = carddict[nameToId['doubling cube'][0]].art_crop;
+    cube.image_name = carddict[nameToId['doubling cube'][0]].full_name;
+    cube.image_artist = carddict[nameToId['doubling cube'][0]].artist;
+    cube.description = "This is a brand new cube!";
 
     cube.save(function(err)
     {
@@ -43,7 +47,7 @@ router.post('/add',ensureAuth, function(req,res,next)
       else
       {
         req.flash('success', 'Cube Added');
-        res.redirect('/cube/list/'+cube._id);
+        res.redirect('/cube/overview/'+cube._id);
       }
     });
   }
@@ -52,9 +56,8 @@ router.post('/add',ensureAuth, function(req,res,next)
 // GEt view cube Route
 router.get('/view/:id', function(req, res)
 {
-  res.redirect('/cube/list/'+req.params.id);
+  res.redirect('/cube/overview/'+req.params.id);
 });
-
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
@@ -91,6 +94,43 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
         });
       });
     }
+  });
+});
+
+router.get('/overview/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  var cube_id = split[0];
+  Cube.findById(cube_id, function(err, cube)
+  {
+    User.findById(cube.owner, function(err, user)
+    {
+      Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+      {
+        if(blogs.length > 0)
+        {
+          blogs.reverse();
+        }
+        if(!user)
+        {
+          res.render('cube_overview',
+          {
+            cube:cube,
+            author: 'unknown',
+            post:blogs[0]
+          });
+        }
+        else
+        {
+          res.render('cube_overview',
+          {
+            cube:cube,
+            owner: user.username,
+            post:blogs[0]
+          });
+        }
+      });
+    });
   });
 });
 
@@ -1300,6 +1340,62 @@ router.get('/draft/:id', function(req, res)
 });
 
 // Edit Submit POST Route
+router.post('/editoverview/:id',ensureAuth, function(req,res,next)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(err)
+    {
+      req.flash('danger', 'Server Error');
+      res.redirect('/cube/overview/'+req.params.id);
+    }
+    else if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/cube/overview/'+req.params.id);
+    }
+    else
+    {
+      var image = imagedict[req.body.imagename];
+      var description = req.body.description;
+      var name = req.body.name;
+
+      if(!image)
+      {
+        req.flash('danger', 'Invalid image selection. Please choose from the list.');
+        res.redirect('/cube/overview/'+req.params.id);
+      }
+      else if(name.length < 5)
+      {
+        req.flash('danger', 'Cube name should be at least 5 characters long.');
+        res.redirect('/cube/overview/'+req.params.id);
+      }
+      else
+      {
+        cube.image_uri = image.uri;
+        cube.image_artist = image.artist;
+        cube.image_name = req.body.imagename;
+        cube.description = description;
+        cube.name = name;
+        cube.save(function(err)
+        {
+          if(err)
+          {
+            req.flash('danger', 'Server Error');
+            res.redirect('/cube/overview/'+req.params.id);
+          }
+          else {
+
+              req.flash('success', 'Cube updated successfully.');
+              res.redirect('/cube/overview/'+req.params.id);
+          }
+        });
+      }
+    }
+  });
+});
+
+// Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res,next)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -1440,6 +1536,22 @@ router.get('/api/cardnames', function(req, res)
   res.status(200).send({
     success:'true',
     cardnames:cardtree
+  });
+});
+
+router.get('/api/imagedict', function(req, res)
+{
+  res.status(200).send({
+    success:'true',
+    dict:imagedict
+  });
+});
+
+router.get('/api/fullnames', function(req, res)
+{
+  res.status(200).send({
+    success:'true',
+    cardnames:full_names
   });
 });
 
@@ -1727,7 +1839,9 @@ function binaryInsert(value, array, startVal, endVal)
 
 //read files
 var cardtree = {};
+var imagedict = {};
 var cardnames = [];
+var full_names = [];
 var carddict = {};
 var nameToId = {};
 fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
@@ -1745,6 +1859,21 @@ fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
 fs.readFile('private/nameToId.json', 'utf8', function(err, contents) {
     nameToId = JSON.parse(contents);
     console.log("nameToId loaded");
+});
+fs.readFile('private/full_names.json', 'utf8', function(err, contents) {
+    full_names = JSON.parse(contents);
+    console.log("full_names loaded");
+});
+fs.readFile('private/imagedict.json', 'utf8', function(err, contents) {
+    imagedict = JSON.parse(contents);
+    console.log("imagedict loaded");
+});
+fs.watchFile('private/imagedict.json', (curr, prev) => {
+  console.log('File Changed: imagedict');
+  fs.readFile('private/imagedict.json', 'utf8', function(err, contents) {
+      imagedict = JSON.parse(contents);
+      console.log("imagedict updated");
+  });
 });
 fs.watchFile('private/cardtree.json', (curr, prev) => {
   console.log('File Changed: cardtree');
@@ -1772,6 +1901,13 @@ fs.watchFile('private/nameToId.json', (curr, prev) => {
   fs.readFile('private/nameToId.json', 'utf8', function(err, contents) {
       nameToId = JSON.parse(contents);
       console.log("nameToId updated");
+  });
+});
+fs.watchFile('private/full_names.json', (curr, prev) => {
+  console.log('File Changed: full_names');
+  fs.readFile('private/full_names.json', 'utf8', function(err, contents) {
+      full_names = JSON.parse(contents);
+      console.log("full_names updated");
   });
 });
 

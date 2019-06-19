@@ -15,7 +15,10 @@ let cubeSchema = mongoose.Schema(
     },
     cards: [String],
     decks: [String],
-    articles: [String]
+    description:String,
+    image_uri:String,
+    image_artist:String,
+    image_name:String
   }
 );
 
