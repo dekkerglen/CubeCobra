@@ -101,34 +101,42 @@ router.get('/overview/:id', function(req, res)
   var cube_id = split[0];
   Cube.findById(cube_id, function(err, cube)
   {
-    User.findById(cube.owner, function(err, user)
+    if(!cube)
     {
-      Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
       {
-        if(blogs.length > 0)
+        Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
-          blogs.reverse();
-        }
-        if(!user)
-        {
-          res.render('cube_overview',
+          if(blogs.length > 0)
           {
-            cube:cube,
-            author: 'unknown',
-            post:blogs[0]
-          });
-        }
-        else
-        {
-          res.render('cube_overview',
+            blogs.reverse();
+          }
+          if(!user)
           {
-            cube:cube,
-            owner: user.username,
-            post:blogs[0]
-          });
-        }
+            res.render('cube_overview',
+            {
+              cube:cube,
+              author: 'unknown',
+              post:blogs[0]
+            });
+          }
+          else
+          {
+            res.render('cube_overview',
+            {
+              cube:cube,
+              owner: user.username,
+              post:blogs[0]
+            });
+          }
+        });
       });
-    });
+    }
   });
 });
 
@@ -138,75 +146,83 @@ router.get('/blog/:id', function(req, res)
   var cube_id = split[0];
   Cube.findById(cube_id, function(err, cube)
   {
-    User.findById(cube.owner, function(err, user)
+    if(!cube)
     {
-      Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
       {
-        if(blogs.length > 0)
+        Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
-          blogs.reverse();
-          if(blogs.length > 10)
+          if(blogs.length > 0)
           {
-            var page = parseInt(split[1]);
-            if(!page)
+            blogs.reverse();
+            if(blogs.length > 10)
             {
-              page = 0;
-            }
-            pages= [];
-            for(i = 0; i < blogs.length/10; i++)
-            {
-              if(page==i)
+              var page = parseInt(split[1]);
+              if(!page)
               {
-                pages.push({
-                  url:'/cube/blog/'+cube._id+';'+i,
-                  content:(i+1),
-                  active:true
-                });
+                page = 0;
               }
-              else
+              pages= [];
+              for(i = 0; i < blogs.length/10; i++)
               {
-                pages.push({
-                  url:'/cube/blog/'+cube._id+';'+i,
-                  content:(i+1)
-                });
+                if(page==i)
+                {
+                  pages.push({
+                    url:'/cube/blog/'+cube._id+';'+i,
+                    content:(i+1),
+                    active:true
+                  });
+                }
+                else
+                {
+                  pages.push({
+                    url:'/cube/blog/'+cube._id+';'+i,
+                    content:(i+1)
+                  });
+                }
               }
-            }
-            blog_page = [];
-            for(i = 0; i < 10; i++)
-            {
-              if(blogs[i+page*10])
+              blog_page = [];
+              for(i = 0; i < 10; i++)
               {
-                blog_page.push(blogs[i+page*10]);
+                if(blogs[i+page*10])
+                {
+                  blog_page.push(blogs[i+page*10]);
+                }
               }
+              res.render('cube_blog',
+              {
+                cube:cube,
+                owner: user.username,
+                posts:blog_page,
+                pages:pages
+              });
             }
-            res.render('cube_blog',
+            else
             {
-              cube:cube,
-              owner: user.username,
-              posts:blog_page,
-              pages:pages
-            });
+              res.render('cube_blog',
+              {
+                cube:cube,
+                owner: user.username,
+                posts:blogs
+              });
+            }
           }
           else
           {
             res.render('cube_blog',
             {
               cube:cube,
-              owner: user.username,
-              posts:blogs
+              owner: user.username
             });
           }
-        }
-        else
-        {
-          res.render('cube_blog',
-          {
-            cube:cube,
-            owner: user.username
-          });
-        }
+        });
       });
-    });
+    }
   });
 });
 
@@ -313,31 +329,39 @@ router.get('/playtest/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
-    User.findById(cube.owner, function(err, user)
+    if(!cube)
     {
-      Deck.find( { _id: { $in : cube.decks } }, function(err, decks)
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
       {
-        decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
-        if(!user || err)
+        Deck.find( { _id: { $in : cube.decks } }, function(err, decks)
         {
-          res.render('cube_playtest',
+          decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
+          if(!user || err)
           {
-            cube:cube,
-            author: 'unknown',
-            decks:decklinks
-          });
-        }
-        else
-        {
-          res.render('cube_playtest',
+            res.render('cube_playtest',
+            {
+              cube:cube,
+              author: 'unknown',
+              decks:decklinks
+            });
+          }
+          else
           {
-            cube:cube,
-            owner: user.username,
-            decks:decklinks
-          });
-        }
+            res.render('cube_playtest',
+            {
+              cube:cube,
+              owner: user.username,
+              decks:decklinks
+            });
+          }
+        });
       });
-    });
+    }
   });
 });
 
@@ -780,32 +804,40 @@ router.get('/analysis/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
-    User.findById(cube.owner, function(err, user)
+    if(!cube)
     {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      User.findById(cube.owner, function(err, user)
+      {
 
-      if(err)
-      {
-        res.render('cube_analysis',
+        if(err)
         {
-          cube:cube,
-          author: 'unknown',
-          TypeByColor:GetTypeByColor(cube.cards),
-          MulticoloredCounts:GetColorCounts(cube.cards),
-          curve:JSON.stringify(GetCurve(cube.cards))
-        });
-      }
-      else
-      {
-        res.render('cube_analysis',
+          res.render('cube_analysis',
+          {
+            cube:cube,
+            author: 'unknown',
+            TypeByColor:GetTypeByColor(cube.cards),
+            MulticoloredCounts:GetColorCounts(cube.cards),
+            curve:JSON.stringify(GetCurve(cube.cards))
+          });
+        }
+        else
         {
-          cube:cube,
-          owner: user.username,
-          TypeByColor:GetTypeByColor(cube.cards),
-          MulticoloredCounts:GetColorCounts(cube.cards),
-          curve:JSON.stringify(GetCurve(cube.cards))
-        });
-      }
-    });
+          res.render('cube_analysis',
+          {
+            cube:cube,
+            owner: user.username,
+            TypeByColor:GetTypeByColor(cube.cards),
+            MulticoloredCounts:GetColorCounts(cube.cards),
+            curve:JSON.stringify(GetCurve(cube.cards))
+          });
+        }
+      });
+    }
   });
 });
 
@@ -1119,7 +1151,8 @@ router.get('/draft/pick/:id', function(req, res)
               shuffle(draft.activepacks[i]);
               for(j = 0; j < draft.activepacks[i].length; j++)
               {
-                if(!taken)
+                //only do this if you aren't monocolor
+                if(!taken && bot[0] != bot[1])
                 {
                   if(carddict[draft.activepacks[i][j]].colors.length == 2)
                   {
@@ -1687,9 +1720,9 @@ router.get('/api/getcard/:name', function(req, res)
   }
 });
 
-/*
 router.delete('/remove/:id',ensureAuth, function(req, res)
 {
+  console.log(req);
   if(!req.user._id)
   {
     res.status(500).send();
@@ -1699,7 +1732,7 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
 
   Cube.findById(req.params.id, function(err, cube)
   {
-    if(err || (cube.author != req.user._id))
+    if(err || (cube.owner != req.user._id))
     {
       res.status(500).send();
     }
@@ -1717,7 +1750,6 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
     }
   });
 });
-*/
 
 // Access Control
 function ensureAuth(req, res, next)

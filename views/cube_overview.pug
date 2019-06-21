@@ -5,7 +5,7 @@ block content
     nav(aria-label='breadcrumb')
       ol.breadcrumb
         li.breadcrumb-item
-          a(href='#' style='color: #218937;') #{owner}
+          a(href='/user/view/'+owner style='color: #218937;') #{owner}
         li.breadcrumb-item.active(aria-current='page')= cube.name
 
 
@@ -25,15 +25,18 @@ block content
     .row
       .col-md-4
         .card(style='margin: 4px;')
-          img.card-img-top(src=cube.image_uri style='width: 100%;height: 240px;')
+          img.card-img-top(src=cube.image_uri style='width: 100%;height:auto;')
           em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
           .card-body
             h3=cube.name
             em
-              h6 Designed by #{owner}  
+              h6 Designed by 
+                a(href='/user/view/'+owner) #{owner}  
           if user
             if user.id == cube.owner
               button.btn.btn-success(data-toggle='modal', data-target='#overviewModal') Edit Overview
+              p
+              button.btn.btn-danger(data-toggle='modal', data-target='#deleteModal') Delete Cube
       .col
         .card(style='margin: 4px;')
           .card-body
@@ -53,7 +56,6 @@ block content
                 p.card-text !{post.html}
         br
           
-  script(src='/js/image_autocomplete.js')
   // edit overview modal
   #overviewModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
     .modal-dialog(role='document')
@@ -79,3 +81,17 @@ block content
           .modal-footer
             input.btn.btn-success(type='submit',value='Save')
             button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+            
+  #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+    .modal-dialog(role='document')
+      .modal-content
+        .modal-header
+          h5.modal-title Confirm Delete
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body                
+              P Are you sure you wish to delete this cube? This action cannot be undone.
+        .modal-footer
+          input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube._id)
+          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+  script(src='/js/image_autocomplete.js')

@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  h5
+    nav(aria-label='breadcrumb')
+      ol.breadcrumb
+        li.breadcrumb-item
+          a(href='#' style='color: #218937;') #{user_limited.username}
+  if user_limited.about
+    .card
+      .card-body
+        h5 About:
+        p=user_limited.about
+        if user
+          if user.id == user_limited.id
+          a.btn.btn-success(href='/user/account') Update
+    br
+  .row
+    each cube, i in cubes
+      .col-lg-3.col-md-6.col-sm-12.col-xs-12
+        .card
+          .card-header
+            h5=cube.name
+          a(href='/cube/overview/'+cube._id)
+            img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+          em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+          a.btn.btn-success(href='/cube/overview/'+cube._id) View
+        br

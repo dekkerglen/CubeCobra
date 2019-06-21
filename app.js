@@ -101,19 +101,10 @@ app.get('/', function(req, res)
 {
   Cube.find({}, function(err, cubes)
   {
-    cube_rows = [];
-    cubes.forEach(function(cube, index)
-    {
-      if(index%4==0)
-      {
-        cube_rows.push([]);
-      }
-      cube_rows[cube_rows.length-1].push(cube);
-    });
     res.render('index',
     {
       title:'Home',
-      cube_rows: cube_rows
+      cubes: cubes
     });
   });
 });

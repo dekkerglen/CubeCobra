@@ -1,20 +1,17 @@
 extends layout
 
 block content
-  ul.list-group
-    each cube_row, i in cube_rows
-      .row        
-        each cube, j in cube_row
-          .col-md-3
-            .card
-              .card-header
-                h5=cube.name
-                em
-                  a Designed by #{cube.owner_name}  
-              a(href='/cube/overview/'+cube._id)
-                img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-              em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
-              a.btn.btn-success(href='/cube/overview/'+cube._id) View
-
-
-      br
+  .row
+    each cube, i in cubes
+      .col-lg-3.col-md-4.col-sm-6.col-xs-12
+        .card
+          .card-header
+            h5=cube.name
+            em
+              a Designed by 
+              a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+          a(href='/cube/overview/'+cube._id)
+            img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+          em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+          a.btn.btn-success(href='/cube/overview/'+cube._id) View
+        br

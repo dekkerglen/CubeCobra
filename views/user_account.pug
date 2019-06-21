@@ -39,16 +39,25 @@ block changeemail
     input.btn.btn-success(type='submit',value='Update')
       
 block yourcubes
-  if cube
-    ul.list-group
-      each cube, i in cubes
-        li.list-group-item
-          a(href="/cube/view/"+cube._id)= cube.title
-  else
-    p You have no cubes! Create one with the form below!
-  br
   form(method='POST', action='/cube/add')
     li.list-group-itemform.form-inline
       .form-group.mx-sm-3.mb-2
         input.form-control(type='text',name='name' placeholder='Cube Name')
-      button.btn.btn-success.mb-2(type='submit') Create Cube
+      button.btn.btn-success.mb-2(type='submit') Create New Cube
+  br
+  if cubes
+    ul.list-group
+    .row
+      each cube, i in cubes
+          .col-lg-4.col-md-4.col-sm-12.col-xs-12
+            .card
+              .card-header
+                h5=cube.name
+              a(href='/cube/overview/'+cube._id)
+                img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+              em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+              a.btn.btn-success(href='/cube/overview/'+cube._id) View
+            br
+  else
+    p You have no cubes! Create one with the form below!
+  br

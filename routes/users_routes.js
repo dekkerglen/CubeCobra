@@ -9,6 +9,7 @@ const fs = require('fs')
 // Bring in models
 let User = require('../models/user')
 let PasswordReset = require('../models/passwordreset')
+let Cube = require('../models/cube')
 
 //Lost password form
 router.get('/lostpassword', function(req, res)
@@ -425,21 +426,65 @@ router.get('/logout', function(req, res)
   res.redirect('/');
 });
 
+router.get('/view/:id', function(req, res)
+{
+  User.findById(req.params.id, function (err, user)
+  {
+    if(!user)
+    {
+      User.findOne({username_lower:req.params.id.toLowerCase()}, function (err, user2)
+      {
+        if(!user2)
+        {
+          req.flash('danger', 'User not found');
+          res.redirect('/404/'+req.params.id);
+        }
+        else
+        {
+          res.redirect('/user/view/'+user2._id);
+        }
+      });
+    }
+    else
+    {
+      Cube.find({owner:user._id}, function(err, cubes)
+      {
+        user_limited=
+        {
+          username:user.username,
+          email:user.email,
+          about:user.about,
+          userid:user._id
+        }
+        res.render('user_view',
+        {
+          user_limited:user_limited,
+          cubes:cubes
+        });
+      });
+    }
+  });
+});
+
 //account page
 router.get('/account/yourcubes', ensureAuth, function(req, res)
 {
   User.findById(req.user._id, function (err, user)
   {
-    user_limited=
+    Cube.find({owner:user._id}, function(err, cubes)
     {
-      username:user.username,
-      email:user.email,
-      about:user.about
-    }
-    res.render('user_account',
-    {
-      selected:'cube',
-      user:user_limited
+      user_limited=
+      {
+        username:user.username,
+        email:user.email,
+        about:user.about
+      }
+      res.render('user_account',
+      {
+        selected:'cube',
+        user:user_limited,
+        cubes:cubes
+      });
     });
   });
 });
@@ -661,5 +706,6 @@ function ensureAuth(req, res, next) {
 function addMinutes(date, minutes) {
     return new Date(new Date(date).getTime() + minutes*60000);
 }
+
 
 module.exports = router;
