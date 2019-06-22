@@ -129,6 +129,18 @@ app.get('/contact', function(req, res)
 {
   res.render('contact', {});
 });
+app.get('/tos', function(req, res)
+{
+  res.render('tos', {});
+});
+app.get('/privacy', function(req, res)
+{
+  res.render('privacy_policy', {});
+});
+app.get('/cookies', function(req, res)
+{
+  res.render('cookies', {});
+});
 app.get('/404', function(req, res)
 {
   res.render('404', {});
