@@ -384,17 +384,17 @@ function convertCard(card)
   if(!card.card_faces)
   {
     newcard.colors = newcard.colors.concat(card.color_identity);
-    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).split('}{').reverse();
+    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).toLowerCase().split('}{').reverse();
   }
   else if(card.layout =='split')
   {
     newcard.colors = newcard.colors.concat(card.color_identity);
-    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).replace(' // ','{split}').split('}{').reverse();
+    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).replace(' // ','{split}').toLowerCase().split('}{').reverse();
   }
   else
   {
     newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
-    newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1,card.card_faces[0].mana_cost.length-2).split('}{').reverse();
+    newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1,card.card_faces[0].mana_cost.length-2).toLowerCase().split('}{').reverse();
   }
   if(newcard.parsed_cost)
   {
