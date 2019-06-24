@@ -295,7 +295,7 @@ router.post('/register', function(req, res)
                           smtpTransport.close();
                       });
 
-                      req.flash('success','Please check your email for confirmation link.');
+                      req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
                       res.redirect('/user/login');
                     }
                   });

@@ -33,6 +33,8 @@ const app = express();
 // Bring in models
 let Cube = require('./models/cube')
 let User = require('./models/user')
+let Blog = require('./models/blog')
+let Deck = require('./models/deck')
 
 //upload file middleware
 app.use(fileUpload());
@@ -99,9 +101,25 @@ app.get('*', function(req, res, next)
 // Home route
 app.get('/', function(req, res)
 {
-  res.render('index',
+  Cube.find().sort({'date_updated': -1}).limit(12).exec(function(err, recents)
   {
-    title:'Home'
+    Cube.find().sort({'numDecks': -1}).limit(12).exec(function(err, drafted)
+    {
+      Blog.find({dev:'true'}).sort({'date': -1}).exec(function(err, blog)
+      {
+        Deck.find().sort({'date': -1}).limit(10).exec(function(err, decks)
+        {
+          decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
+          res.render('index',
+          {
+            devblog:blog[0],
+            recents:recents,
+            drafted:drafted,
+            decks:decklinks
+          });
+        });
+      });
+    });
   });
 });
 

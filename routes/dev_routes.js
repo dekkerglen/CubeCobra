@@ -10,7 +10,7 @@ const fs = require('fs')
 let User = require('../models/user')
 let Blog = require('../models/blog')
 
-var adminname = 'GlenDekker';
+var adminname = 'Dekkaru';
 
 router.get('/blog',function(req,res)
 {
@@ -117,7 +117,14 @@ router.post('/blogpost',ensureAuth, function(req, res)
     {
         var blogpost = new Blog();
         blogpost.title=req.body.title;
-        blogpost.body=req.body.body;
+        if(req.body.html && req.body.html.length > 0)
+        {
+          blogpost.html=req.body.html;
+        }
+        else
+        {
+          blogpost.body=req.body.body;
+        }
         blogpost.owner=user._id;
         blogpost.date=Date.now();
         blogpost.dev='true';

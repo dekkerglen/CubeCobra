@@ -15,9 +15,26 @@ $(document).ready(function()
       }
     });
   })
-  $('[data-toggle="tooltip"]').tooltip({    
+  $('[data-toggle="tooltip"]').tooltip({
     animated: 'fade',
     placement: 'bottom',
     html: true
   });
 });
+
+function toggleRecent() {
+  var x = document.getElementById("recentMore");
+  if (x.innerHTML === "View More...") {
+    x.innerHTML = "Hide";
+  } else {
+    x.innerHTML = "View More...";
+  }
+}
+function toggleDraft() {
+  var x = document.getElementById("draftMore");
+  if (x.innerHTML === "View More...") {
+    x.innerHTML = "Hide";
+  } else {
+    x.innerHTML = "View More...";
+  }
+}

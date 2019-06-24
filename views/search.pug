@@ -40,9 +40,12 @@ block content
                 em
                   a Designed by 
                   a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+                  p Updated: 
+                    a #{cube.updated_string}
               a(href='/cube/overview/'+cube._id)
                 img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
               em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+              
               a.btn.btn-success(href='/cube/overview/'+cube._id) View
             br
               

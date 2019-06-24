@@ -40,6 +40,7 @@ router.post('/add',ensureAuth, function(req,res,next)
           cube.description = "This is a brand new cube!";
           cube.owner_name = user.username;
           cube.date_updated = Date.now();
+          cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
           cube.save(function(err)
           {
@@ -94,6 +95,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
       else
       {
         cube.date_updated = Date.now();
+        cube.updated_string = cube.date_updated.toLocaleString("en-US");
         cube.save(function(err)
         {
           User.findById(cube.owner, function(err, user)
@@ -924,6 +926,7 @@ router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
 function bulkUpload(req, res, list, cube){
   cards = list.match(/[^\r\n]+/g);
   cube.date_updated = Date.now();
+  cube.updated_string = cube.date_updated.toLocaleString("en-US");
   if(!cards)
   {
     req.flash('danger', 'No Cards Detected');
@@ -942,7 +945,7 @@ function bulkUpload(req, res, list, cube){
         cube.cards.push(currentId[0]);
         added.push(carddict[currentId[0]]);
         changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-        changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a>';
+        changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
       }
       else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
       {
@@ -1292,27 +1295,40 @@ router.get('/draft/pick/:id', function(req, res)
                   deck.bots = draft.bots;
                   Cube.findById(draft.cube,function(err, cube)
                   {
-                    User.findById(deck.owner, function(err, user)
+                    if(!cube.decks)
                     {
-                      var owner = "Anonymous";
-                      if(user)
+                      cube.decks = [];
+                    }
+                    cube.decks.push(deck._id);
+                    if(!cube.numDecks)
+                    {
+                      cube.numDecks = 0;
+                    }
+                    cube.numDecks += 1;
+                    cube.save(function(err)
+                    {
+                      User.findById(deck.owner, function(err, user)
                       {
-                        owner = user.username;
-                      }
-                      deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
-                      cube.decks.push(deck._id);
-                      cube.save(function(err)
-                      {
-                        deck.save(function(err)
+                        var owner = "Anonymous";
+                        if(user)
                         {
-                          if(err)
+                          owner = user.username;
+                        }
+                        deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
+                        cube.decks.push(deck._id);
+                        cube.save(function(err)
+                        {
+                          deck.save(function(err)
                           {
-                            console.log(err);
-                          }
-                          else
-                          {
-                            return res.redirect('/cube/deck/'+deck._id);
-                          }
+                            if(err)
+                            {
+                              console.log(err);
+                            }
+                            else
+                            {
+                              return res.redirect('/cube/deck/'+deck._id);
+                            }
+                          });
                         });
                       });
                     });
@@ -1456,6 +1472,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
         cube.description = description;
         cube.name = name;
         cube.date_updated = Date.now();
+        cube.updated_string = cube.date_updated.toLocaleString("en-US");
         cube.save(function(err)
         {
           if(err)
@@ -1480,6 +1497,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
   Cube.findById(req.params.id, function(err, cube)
   {
     cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString("en-US");
     if(err)
     {
       req.flash('danger', 'Server Error');
@@ -1773,7 +1791,8 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
 {
   if(!req.user._id)
   {
-    res.status(500).send();
+    req.flash('danger', 'Not Authorized');
+    res.redirect('/'+req.params.id);
   }
 
   let query = {_id:req.params.id};
@@ -1782,7 +1801,8 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
   {
     if(err || (cube.owner != req.user._id))
     {
-      res.status(500).send();
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
     }
     else
     {
