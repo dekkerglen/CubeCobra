@@ -21,7 +21,20 @@ block content
       li.nav-item
         a.nav-link.active(href='/cube/blog/'+cube._id) Blog
   .container
-    br
+    if user
+      br
+      if user.id == cube.owner
+        .card(style='padding:10px')
+          h5 Create New Blog Post
+          form(method='POST', action='/cube/blog/post/'+cube._id)
+            #form-group
+              label Title:
+              input.form-control(maxlength='200' name='title', type='text')
+            #form-group
+              label Body:
+              textarea.form-control(maxlength='20000' name='body')
+            br
+            input.btn.btn-success(type='submit',value='Submit')      
     if pages      
       hr
       nav(aria-label='pagination')
@@ -35,20 +48,6 @@ block content
               li.page-item
                 a.page-link(href=page.url)=page.content
       hr
-    if user
-      if user.id == cube.owner
-        .card(style='padding:10px')
-          h5 Create New Blog Post
-          form(method='POST', action='/cube/blog/post/'+cube._id)
-            #form-group
-              label Title:
-              input.form-control(maxlength='200' name='title', type='text')
-            #form-group
-              label Body:
-              textarea.form-control(maxlength='20000' name='body')
-            br
-            input.btn.btn-success(type='submit',value='Submit')
-        br
     if posts
       each post, i in posts
         .card

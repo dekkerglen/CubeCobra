@@ -8,7 +8,8 @@ let blogSchema = mongoose.Schema(
     owner:String,
     date:Date,
     cube:String,
-    html:String
+    html:String,
+    dev:String
   }
 );
 

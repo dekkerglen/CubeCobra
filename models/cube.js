@@ -19,7 +19,8 @@ let cubeSchema = mongoose.Schema(
     image_uri:String,
     image_artist:String,
     image_name:String,
-    owner_name:String
+    owner_name:String,
+    date_updated:Date
   }
 );
 

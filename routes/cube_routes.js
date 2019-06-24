@@ -20,31 +20,44 @@ router.post('/add',ensureAuth, function(req,res,next)
     req.flash('danger', 'Cube name should be at least 5 characters long.');
     res.redirect('/user/account/yourcubes');
   }
-  else {
+  else
+  {
     User.findById(req.user._id, function(err, user)
     {
-      let cube = new Cube();
-      cube.name = req.body.name;
-      cube.owner = req.user._id;
-      cube.cards = [];
-      cube.decks = [];
-      cube.articles = [];
-      cube.image_uri = carddict[nameToId['doubling cube'][0]].art_crop;
-      cube.image_name = carddict[nameToId['doubling cube'][0]].full_name;
-      cube.image_artist = carddict[nameToId['doubling cube'][0]].artist;
-      cube.description = "This is a brand new cube!";
-      cube.owner_name = user.username;
-
-      cube.save(function(err)
+      Cube.find({owner:user._id}, function(err, cubes)
       {
-        if(err)
+        if(cubes.length < 24)
         {
-          console.log(err);
+          let cube = new Cube();
+          cube.name = req.body.name;
+          cube.owner = req.user._id;
+          cube.cards = [];
+          cube.decks = [];
+          cube.articles = [];
+          cube.image_uri = carddict[nameToId['doubling cube'][0]].art_crop;
+          cube.image_name = carddict[nameToId['doubling cube'][0]].full_name;
+          cube.image_artist = carddict[nameToId['doubling cube'][0]].artist;
+          cube.description = "This is a brand new cube!";
+          cube.owner_name = user.username;
+          cube.date_updated = Date.now();
+
+          cube.save(function(err)
+          {
+            if(err)
+            {
+              console.log(err);
+            }
+            else
+            {
+              req.flash('success', 'Cube Added');
+              res.redirect('/cube/overview/'+cube._id);
+            }
+          });
         }
         else
         {
-          req.flash('success', 'Cube Added');
-          res.redirect('/cube/overview/'+cube._id);
+          req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
+          res.redirect('/user/account/yourcubes');
         }
       });
     });
@@ -59,40 +72,58 @@ router.get('/view/:id', function(req, res)
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
-  Cube.findById(req.params.id, function(err, cube)
+  if(req.body.title.length < 5 || req.body.title.length > 100)
   {
-    if(!cube)
+    req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
+    res.redirect('/cube/blog/'+req.params.id);
+  }
+  else if(req.body.body.length <= 10)
+  {
+    req.flash('danger', 'Blog body length must be greater than 10 characters.');
+    res.redirect('/cube/blog/'+req.params.id);
+  }
+  else
+  {
+    Cube.findById(req.params.id, function(err, cube)
     {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/404/'+req.params.id);
-    }
-    else
-    {
-      User.findById(cube.owner, function(err, user)
+      if(!cube)
       {
-        var blogpost = new Blog();
-        blogpost.title=req.body.title;
-        blogpost.body=req.body.body;
-        blogpost.owner=user._id;
-        blogpost.date=Date.now();
-        blogpost.cube=cube._id;
-
-        //console.log(draft);
-        blogpost.save(function(err)
+        req.flash('danger', 'Cube not found');
+        res.redirect('/404/'+req.params.id);
+      }
+      else
+      {
+        cube.date_updated = Date.now();
+        cube.save(function(err)
         {
-          if(err)
+          User.findById(cube.owner, function(err, user)
           {
-            console.log(err);
-          }
-          else
-          {
-            req.flash('success', 'Blog post successful');
-            res.redirect('/cube/blog/'+cube._id);
-          }
+            var blogpost = new Blog();
+            blogpost.title=req.body.title;
+            blogpost.body=req.body.body;
+            blogpost.owner=user._id;
+            blogpost.date=Date.now();
+            blogpost.cube=cube._id;
+            blogpost.dev='false';
+
+            //console.log(draft);
+            blogpost.save(function(err)
+            {
+              if(err)
+              {
+                console.log(err);
+              }
+              else
+              {
+                req.flash('success', 'Blog post successful');
+                res.redirect('/cube/blog/'+cube._id);
+              }
+            });
+          });
         });
-      });
-    }
-  });
+      }
+    });
+  }
 });
 
 router.get('/overview/:id', function(req, res)
@@ -157,6 +188,7 @@ router.get('/blog/:id', function(req, res)
       {
         Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
+          var pages = [];
           if(blogs.length > 0)
           {
             blogs.reverse();
@@ -167,7 +199,6 @@ router.get('/blog/:id', function(req, res)
               {
                 page = 0;
               }
-              pages= [];
               for(i = 0; i < blogs.length/10; i++)
               {
                 if(page==i)
@@ -892,6 +923,7 @@ router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
 
 function bulkUpload(req, res, list, cube){
   cards = list.match(/[^\r\n]+/g);
+  cube.date_updated = Date.now();
   if(!cards)
   {
     req.flash('danger', 'No Cards Detected');
@@ -901,6 +933,7 @@ function bulkUpload(req, res, list, cube){
   {
     var missing = "";
     var added = [];
+    var changelog = "";
     cards.forEach(function(item, index)
     {
       var currentId =nameToId[item.toLowerCase().trim()];
@@ -908,6 +941,8 @@ function bulkUpload(req, res, list, cube){
       {
         cube.cards.push(currentId[0]);
         added.push(carddict[currentId[0]]);
+        changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+        changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a>';
       }
       else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
       {
@@ -932,30 +967,43 @@ function bulkUpload(req, res, list, cube){
         missing += item +'\n';
       }
     });
-    if(missing.length > 0)
+
+    var blogpost = new Blog();
+    blogpost.title='Cube Updated - Automatic Post'
+    blogpost.html=changelog;
+    blogpost.owner=cube.owner;
+    blogpost.date=Date.now();
+    blogpost.cube=cube._id;
+    blogpost.dev='false';
+
+    //console.log(draft);
+    blogpost.save(function(err)
     {
-      res.render('bulk_upload',
+      if(missing.length > 0)
       {
-        missing:missing,
-        added:JSON.stringify(added),
-        cube:cube
-      });
-    }
-    else
-    {
-      Cube.updateOne({_id:cube._id}, cube, function(err)
+        res.render('bulk_upload',
+        {
+          missing:missing,
+          added:JSON.stringify(added),
+          cube:cube
+        });
+      }
+      else
       {
-        if(err)
+        Cube.updateOne({_id:cube._id}, cube, function(err)
         {
-          console.log(err);
-        }
-        else
-        {
-          req.flash('success', 'All cards successfully added.');
-          res.redirect('/cube/list/'+req.params.id);
-        }
-      });
-    }
+          if(err)
+          {
+            console.log(err);
+          }
+          else
+          {
+            req.flash('success', 'All cards successfully added.');
+            res.redirect('/cube/list/'+req.params.id);
+          }
+        });
+      }
+    });
   }
 }
 
@@ -1127,7 +1175,6 @@ router.get('/draft/pick/:id', function(req, res)
             cardrating.value = rating;
             cardrating.picks = 1;
           }
-          console.log("Updated pick rating to: " + cardrating.value);
           cardrating.save(function(err)
           {
             var draftover = false;
@@ -1408,6 +1455,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
         cube.image_name = req.body.imagename;
         cube.description = description;
         cube.name = name;
+        cube.date_updated = Date.now();
         cube.save(function(err)
         {
           if(err)
@@ -1431,6 +1479,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
+    cube.date_updated = Date.now();
     if(err)
     {
       req.flash('danger', 'Server Error');
@@ -1506,6 +1555,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       blogpost.owner=cube.owner;
       blogpost.date=Date.now();
       blogpost.cube=cube._id;
+      blogpost.dev='false';
 
       //console.log(draft);
       blogpost.save(function(err)
@@ -1703,7 +1753,6 @@ router.get('/deck/:id', function(req, res)
 router.get('/api/getcard/:name', function(req, res)
 {
   req.params.name = req.params.name.replace('-slash-','//').toLowerCase().trim();
-  console.log(req.params.name);
   var card = carddict[nameToId[req.params.name][0]];
   if(!card)
   {
@@ -1722,7 +1771,6 @@ router.get('/api/getcard/:name', function(req, res)
 
 router.delete('/remove/:id',ensureAuth, function(req, res)
 {
-  console.log(req);
   if(!req.user._id)
   {
     res.status(500).send();
@@ -1791,6 +1839,7 @@ function shuffle(array)
 	return array;
 
 };
+
 //cube autocomplete functions
 function add_word(obj, word)
 {
@@ -1820,6 +1869,7 @@ function add_word(obj, word)
     add_word(obj[character], word)
   }
 }
+
 function turnToTree(arr)
 {
   var res = {};
@@ -1830,6 +1880,7 @@ function turnToTree(arr)
   });
   return res;
 }
+
 function binaryInsert(value, array, startVal, endVal)
 {
 	var length = array.length;

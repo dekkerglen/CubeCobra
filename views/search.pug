@@ -1,14 +1,61 @@
 extends layout
 
 block content
-  .container  
-    br
-    .row
-      .col
-      .col
-        h4 Page Under Construction
-        br
-        img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427" alt="Surprise! nothing is here right now.")
-      .col
-
+  h4 Search Results
+  h6
+    a(href='/advanced_search') Advanced Search
+  if terms  
+    h4 
+      each term, i in terms
+        a  
+        span.badge.badge-success #{term}
+  if results
+    p
+      em #{numresults} results
+  if pages      
+    hr
+    nav(aria-label='pagination')
+      ul.pagination
+        each page, i in pages
+          if page.active
+            li.page-item.active(aria-current='page')
+              a.page-link(href=page.url)=page.content
+                span.sr-only (current)
+          else
+            li.page-item
+              a.page-link(href=page.url)=page.content
+  hr
   
+  if results
+    if results.length == 0
+      p
+        em No Results Found
+    else
+      .row
+        each cube, i in results
+          .col-lg-3.col-md-4.col-sm-6.col-xs-12
+            .card
+              .card-header
+                h5=cube.name
+                em
+                  a Designed by 
+                  a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+              a(href='/cube/overview/'+cube._id)
+                img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+              em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+              a.btn.btn-success(href='/cube/overview/'+cube._id) View
+            br
+              
+  if pages      
+    hr
+    nav(aria-label='pagination')
+      ul.pagination
+        each page, i in pages
+          if page.active
+            li.page-item.active(aria-current='page')
+              a.page-link(href=page.url)=page.content
+                span.sr-only (current)
+          else
+            li.page-item
+              a.page-link(href=page.url)=page.content
+    hr

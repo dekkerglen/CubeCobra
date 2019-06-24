@@ -16,28 +16,23 @@ html
           img(src="/content/banner_small.png" alt="Cube Cobra: a site for Magic: the Gathering Cubing")
         button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
           span.navbar-toggler-icon
-        ul.navbar-nav.mr-auto
-          li.nav-item
-            a.nav-link(href='/') Home            
-          li.nav-item.dropdown
-            a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
-              |  Browse
-            .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-              if user
-                a.dropdown-item(href='/browse') Your Cubes
-              a.dropdown-item(href='/search') Search
-              a.dropdown-item(href='/browse') Featured
+        ul.navbar-nav.mr-auto         
+          form(method='POST', action='/search').form-inline
+            .input-group
+              input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
+              .input-group-append
+                button.btn.btn-success.my-2.my-sm-0(type='submit') Search
+
+        ul.navbar-nav.navbar-right
           li.nav-item.dropdown
             a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
               |  About
             .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
               a.dropdown-item(href='/contact') Contact
-              a.dropdown-item(href='/blog') Dev Blog
-              a.dropdown-item(href='/faq') FAQ
+              a.dropdown-item(href='/dev/blog') Dev Blog
           if user
             li.nav-item
               a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
-        ul.navbar-nav.navbar-right
           if user
             li.nav-item.dropdown
               a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')

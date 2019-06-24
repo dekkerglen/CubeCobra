@@ -99,31 +99,149 @@ app.get('*', function(req, res, next)
 // Home route
 app.get('/', function(req, res)
 {
-  Cube.find({}, function(err, cubes)
+  res.render('index',
   {
-    res.render('index',
-    {
-      title:'Home',
-      cubes: cubes
-    });
+    title:'Home'
   });
 });
-app.get('/search', function(req, res)
+
+
+//format: {search};{search};{search}:{page}
+//list like:
+//{property}{symbol}{value};
+//properties:
+//name, owner
+//symbols:
+//=,~(contains)
+
+app.get('/advanced_search', function(req, res)
 {
-  res.render('search', {});
+  res.render('advanced_search');
+});
+
+app.post('/advanced_search', function(req, res)
+{
+  var url = '/search/';
+  if(req.body.name && req.body.name.length > 0)
+  {
+    url += 'name' + req.body.nameType + req.body.name + ';';
+  }
+  if(req.body.owner && req.body.owner.length > 0)
+  {
+    url += 'owner' + req.body.ownerType + req.body.owner + ';';
+  }
+  res.redirect(url)
+});
+
+app.post('/search', function(req, res)
+{
+  if(!req.body.search || req.body.search.length == 0)
+  {
+    req.flash('danger', 'No Search Parameters');
+    res.redirect('/advanced_search');
+  }
+  else
+  {
+    var query = req.body.search;
+    if(query.includes(';'))
+    {
+      res.redirect('/search/'+query)
+    }
+    else
+    {
+      res.redirect('/search/name~'+query);
+    }
+  }
+});
+
+
+app.get('/search/:id', function(req, res)
+{
+  var raw_split = req.params.id.split(':');
+  var raw_queries = raw_split[0].split(';');
+  var page = parseInt(raw_split[1]);
+  var query = {};
+  var terms = [];
+  raw_queries.forEach(function(val, index)
+  {
+    if(val.includes('='))
+    {
+      var split = val.split('=');
+      query[split[0]] = split[1];
+      terms.push(split[0].replace('owner_name','owner') + ' is exactly ' + split[1]);
+    }
+    else if(val.includes('~'))
+    {
+      var split = val.split('~');
+      query[split[0]] = {
+        "$regex":split[1],
+        "$options":"i"
+      };
+      terms.push(split[0].replace('owner_name','owner') + ' contains ' + split[1]);
+    }
+  });
+
+
+  Cube.find(query).sort({'date_updated':-1}).exec(function(err, cubes)
+  {
+    var pages = [];
+    if(cubes.length > 12)
+    {
+      if(!page)
+      {
+        page = 0;
+      }
+      for(i = 0; i < cubes.length/12; i++)
+      {
+        if(page==i)
+        {
+          pages.push({
+            url:raw_split[0]+':'+i,
+            content:(i+1),
+            active:true
+          });
+        }
+        else
+        {
+          pages.push({
+            url:raw_split[0]+':'+i,
+            content:(i+1)
+          });
+        }
+      }
+      cube_page = [];
+      for(i = 0; i < 12; i++)
+      {
+        if(cubes[i+page*12])
+        {
+          cube_page.push(cubes[i+page*12]);
+        }
+      }
+      res.render('search',
+      {
+        results: cube_page,
+        search:req.params.id,
+        terms:terms,
+        pages:pages,
+        numresults:cubes.length
+      });
+    }
+    else
+    {
+      res.render('search',
+      {
+        results: cubes,
+        search:req.params.id,
+        terms:terms,
+        numresults:cubes.length
+      });
+    }
+  });
 });
 
 app.get('/browse', function(req, res)
 {
   res.render('browse', {});
-});
-app.get('/faq', function(req, res)
-{
-  res.render('faq', {});
-});
-app.get('/blog', function(req, res)
-{
-  res.render('blog', {});
 });
 app.get('/contact', function(req, res)
 {
@@ -149,8 +267,10 @@ app.get('/404', function(req, res)
 //Route files
 let cubes =  require('./routes/cube_routes');
 let users =  require('./routes/users_routes');
+let devs =  require('./routes/dev_routes');
 app.use('/cube', cubes);
 app.use('/user', users);
+app.use('/dev', devs);
 
 app.get('*', function(req, res){
   res.redirect('/404');
@@ -184,7 +304,6 @@ function updateCardbase()
       });
     });
 }
-updateCardbase();
 
 schedule.scheduleJob('0 0 * * *', function(){
   console.log("Starting midnight cardbase update...");
