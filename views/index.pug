@@ -91,11 +91,11 @@ block content
       .card
         .card-body
           h4.card-title Devblog
-          p
-            a(href='/dev/blog') See more...
           h5.card-title=devblog.title
           h6.card-subtitle.mb-2.text-muted=devblog.date
           if devblog.body
             p.card-text=devblog.body
           if devblog.html
             p.card-text !{devblog.html}
+          p
+            a(href='/dev/blog') See more...

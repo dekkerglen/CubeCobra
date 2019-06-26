@@ -99,6 +99,8 @@ html
               label.col-form-label Password:
               input#password.form-control(name='password', type='password')
             a(href='/user/lostpassword') Forgot password?
+            if loginCallback
+              input(type='hidden', name='loginCallback', value=loginCallback)     
             br
         .modal-footer
           input.btn.btn-success(type='submit',value='Login')

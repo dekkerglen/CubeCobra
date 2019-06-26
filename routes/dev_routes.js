@@ -33,6 +33,12 @@ router.get('/blog/:id', function(req, res)
     }
     Blog.find({dev:'true'}).sort('date').exec(function(err, blogs)
     {
+      blogs.forEach(function(item, index){
+        if(!item.date_formatted)
+        {
+          item.date_formatted = item.date.toLocaleString("en-US");
+        }
+      });
       var pages = [];
       blogs.reverse();
       if(blogs.length > 10)
@@ -75,7 +81,8 @@ router.get('/blog/:id', function(req, res)
           {
             blogs:blog_page,
             pages:pages,
-            admin:'true'
+            admin:'true',
+            loginCallback:'/dev/blog/'+req.params.id
           });
         }
         else
@@ -83,7 +90,8 @@ router.get('/blog/:id', function(req, res)
           res.render('blog',
           {
             blogs:blog_page,
-            pages:pages
+            pages:pages,
+            loginCallback:'/dev/blog/'+req.params.id
           });
         }
       }
@@ -94,14 +102,16 @@ router.get('/blog/:id', function(req, res)
           res.render('blog',
           {
             blogs:blogs,
-            admin:'true'
+            admin:'true',
+            loginCallback:'/dev/blog/'+req.params.id
           });
         }
         else
         {
           res.render('blog',
           {
-            blogs:blogs
+            blogs:blogs,
+            loginCallback:'/dev/blog/'+req.params.id
           });
         }
       }
@@ -128,6 +138,7 @@ router.post('/blogpost',ensureAuth, function(req, res)
         blogpost.owner=user._id;
         blogpost.date=Date.now();
         blogpost.dev='true';
+        blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
         //console.log(draft);
         blogpost.save(function(err)

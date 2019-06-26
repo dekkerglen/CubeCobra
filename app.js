@@ -109,7 +109,7 @@ app.get('/', function(req, res)
       {
         Deck.find().sort({'date': -1}).limit(10).exec(function(err, decks)
         {
-          decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
+          decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
           res.render('index',
           {
             devblog:blog[0],
@@ -134,7 +134,10 @@ app.get('/', function(req, res)
 
 app.get('/advanced_search', function(req, res)
 {
-  res.render('advanced_search');
+  res.render('advanced_search',
+  {
+    loginCallback:'/advanced_search'
+  });
 });
 
 app.post('/advanced_search', function(req, res)
@@ -241,7 +244,8 @@ app.get('/search/:id', function(req, res)
         search:req.params.id,
         terms:terms,
         pages:pages,
-        numresults:cubes.length
+        numresults:cubes.length,
+        loginCallback:'/search/'+req.params.id
       });
     }
     else
@@ -251,31 +255,40 @@ app.get('/search/:id', function(req, res)
         results: cubes,
         search:req.params.id,
         terms:terms,
-        numresults:cubes.length
+        numresults:cubes.length,
+        loginCallback:'/search/'+req.params.id
       });
     }
   });
 });
 
-app.get('/browse', function(req, res)
-{
-  res.render('browse', {});
-});
 app.get('/contact', function(req, res)
 {
-  res.render('contact', {});
+  res.render('contact',
+  {
+    loginCallback:'/contact'
+  });
 });
 app.get('/tos', function(req, res)
 {
-  res.render('tos', {});
+  res.render('tos',
+  {
+      loginCallback:'/tos'
+  });
 });
 app.get('/privacy', function(req, res)
 {
-  res.render('privacy_policy', {});
+  res.render('privacy_policy',
+  {
+      loginCallback:'/privacy'
+  });
 });
 app.get('/cookies', function(req, res)
 {
-  res.render('cookies', {});
+  res.render('cookies',
+  {
+      loginCallback:'/cookies'
+  });
 });
 app.get('/404', function(req, res)
 {

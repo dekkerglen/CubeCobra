@@ -372,9 +372,14 @@ router.post('/login', function(req, res, next)
         req.body.username = user.username
         if(user.confirmed == 'true')
         {
+           var redirect = '/';
+           if(req.body.loginCallback)
+           {
+             redirect = req.body.loginCallback;
+           }
           passport.authenticate('local',
           {
-              successRedirect:'/',
+              successRedirect:redirect,
               failureRedirect:'/user/Login',
               failureFlash:true
           })(req, res, next);
@@ -401,9 +406,14 @@ router.post('/login', function(req, res, next)
       else {
         if(user.confirmed == 'true')
         {
+           var redirect = '/';
+           if(req.body.loginCallback)
+           {
+             redirect = req.body.loginCallback;
+           }
           passport.authenticate('local',
           {
-              successRedirect:'/',
+              successRedirect:redirect,
               failureRedirect:'/user/Login',
               failureFlash:true
           })(req, res, next);
@@ -459,7 +469,8 @@ router.get('/view/:id', function(req, res)
         res.render('user_view',
         {
           user_limited:user_limited,
-          cubes:cubes
+          cubes:cubes,
+          loginCallback:'/user/view/'+req.params.id
         });
       });
     }
@@ -483,7 +494,8 @@ router.get('/account/yourcubes', ensureAuth, function(req, res)
       {
         selected:'cube',
         user:user_limited,
-        cubes:cubes
+        cubes:cubes,
+        loginCallback:'/account/yourcubes'
       });
     });
   });
@@ -503,7 +515,8 @@ router.get('/account', ensureAuth, function(req, res)
     res.render('user_account',
     {
       selected:'info',
-      user:user_limited
+      user:user_limited,
+      loginCallback:'/user/account'
     });
   });
 });
@@ -522,7 +535,8 @@ router.get('/account/changepassword', ensureAuth, function(req, res)
     res.render('user_account',
     {
       selected:'changepw',
-      user:user_limited
+      user:user_limited,
+      loginCallback:'/user/account/changepassword'
     });
   });
 });
@@ -541,7 +555,8 @@ router.get('/account/updateemail', ensureAuth, function(req, res)
     res.render('user_account',
     {
       selected:'changeemail',
-      user:user_limited
+      user:user_limited,
+      loginCallback:'/user/updateemail'
     });
   });
 });
@@ -567,7 +582,8 @@ router.post('/resetpassword', ensureAuth, function(req,res,next)
       {
         selected:'changepw',
         user:user_limited,
-        errors: errors
+        errors: errors,
+        loginCallback:'/user/account/changepassword'
       });
     });
   }

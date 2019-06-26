@@ -107,6 +107,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
             blogpost.date=Date.now();
             blogpost.cube=cube._id;
             blogpost.dev='false';
+            blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
             //console.log(draft);
             blogpost.save(function(err)
@@ -145,6 +146,12 @@ router.get('/overview/:id', function(req, res)
       {
         Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
+          blogs.forEach(function(item, index){
+            if(!item.date_formatted)
+            {
+              item.date_formatted = item.date.toLocaleString("en-US");
+            }
+          });
           if(blogs.length > 0)
           {
             blogs.reverse();
@@ -155,7 +162,8 @@ router.get('/overview/:id', function(req, res)
             {
               cube:cube,
               author: 'unknown',
-              post:blogs[0]
+              post:blogs[0],
+              loginCallback:'/cube/overview/'+req.params.id
             });
           }
           else
@@ -164,7 +172,8 @@ router.get('/overview/:id', function(req, res)
             {
               cube:cube,
               owner: user.username,
-              post:blogs[0]
+              post:blogs[0],
+              loginCallback:'/cube/overview/'+req.params.id
             });
           }
         });
@@ -190,6 +199,12 @@ router.get('/blog/:id', function(req, res)
       {
         Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
+          blogs.forEach(function(item, index){
+            if(!item.date_formatted)
+            {
+              item.date_formatted = item.date.toLocaleString("en-US");
+            }
+          });
           var pages = [];
           if(blogs.length > 0)
           {
@@ -232,7 +247,8 @@ router.get('/blog/:id', function(req, res)
                 cube:cube,
                 owner: user.username,
                 posts:blog_page,
-                pages:pages
+                pages:pages,
+                loginCallback:'/cube/blog/'+req.params.id
               });
             }
             else
@@ -241,7 +257,8 @@ router.get('/blog/:id', function(req, res)
               {
                 cube:cube,
                 owner: user.username,
-                posts:blogs
+                posts:blogs,
+                loginCallback:'/cube/blog/'+req.params.id
               });
             }
           }
@@ -250,7 +267,8 @@ router.get('/blog/:id', function(req, res)
             res.render('cube_blog',
             {
               cube:cube,
-              owner: user.username
+              owner: user.username,
+              loginCallback:'/cube/blog/'+req.params.id
             });
           }
         });
@@ -341,7 +359,8 @@ router.get('/list/:id', function(req, res)
           {
             cube:cube,
             author: 'unknown',
-            cards:sorted_cards
+            cards:sorted_cards,
+            loginCallback:'/cube/list/'+req.params.id
           });
         }
         else
@@ -350,7 +369,8 @@ router.get('/list/:id', function(req, res)
           {
             cube:cube,
             owner: user.username,
-            cards:sorted_cards
+            cards:sorted_cards,
+            loginCallback:'/cube/list/'+req.params.id
           });
         }
       });
@@ -380,7 +400,8 @@ router.get('/playtest/:id', function(req, res)
             {
               cube:cube,
               author: 'unknown',
-              decks:decklinks
+              decks:decklinks,
+              loginCallback:'/cube/playtest/'+req.params.id
             });
           }
           else
@@ -389,7 +410,8 @@ router.get('/playtest/:id', function(req, res)
             {
               cube:cube,
               owner: user.username,
-              decks:decklinks
+              decks:decklinks,
+              loginCallback:'/cube/playtest/'+req.params.id
             });
           }
         });
@@ -855,7 +877,8 @@ router.get('/analysis/:id', function(req, res)
             author: 'unknown',
             TypeByColor:GetTypeByColor(cube.cards),
             MulticoloredCounts:GetColorCounts(cube.cards),
-            curve:JSON.stringify(GetCurve(cube.cards))
+            curve:JSON.stringify(GetCurve(cube.cards)),
+            loginCallback:'/cube/analysis/'+req.params.id
           });
         }
         else
@@ -866,7 +889,8 @@ router.get('/analysis/:id', function(req, res)
             owner: user.username,
             TypeByColor:GetTypeByColor(cube.cards),
             MulticoloredCounts:GetColorCounts(cube.cards),
-            curve:JSON.stringify(GetCurve(cube.cards))
+            curve:JSON.stringify(GetCurve(cube.cards)),
+            loginCallback:'/cube/analysis/'+req.params.id
           });
         }
       });
@@ -978,6 +1002,7 @@ function bulkUpload(req, res, list, cube){
     blogpost.date=Date.now();
     blogpost.cube=cube._id;
     blogpost.dev='false';
+    blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
     //console.log(draft);
     blogpost.save(function(err)
@@ -1410,7 +1435,8 @@ router.get('/draft/:id', function(req, res)
                 cube:cube,
                 picks:picks,
                 owner: 'Unkown',
-                activecards:activecards
+                activecards:activecards,
+                loginCallback:'/cube/draft/'+req.params.id
               });
             }
             else
@@ -1574,6 +1600,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       blogpost.date=Date.now();
       blogpost.cube=cube._id;
       blogpost.dev='false';
+      blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
       //console.log(draft);
       blogpost.save(function(err)
@@ -1759,7 +1786,8 @@ router.get('/deck/:id', function(req, res)
               drafter:drafter_name,
               cards:player_deck,
               bot_decks:bot_decks,
-              bots:bot_names
+              bots:bot_names,
+              loginCallback:'/cube/deck/'+req.params.id
             });
           });
         });
