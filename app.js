@@ -315,25 +315,25 @@ var imagedict = {};
 
 function updateCardbase()
 {
-    dict = {};
-    names = [];
-    full_names = [];
-    nameToId = {};
-    imagedict={};
+  dict = {};
+  names = [];
+  full_names = [];
+  nameToId = {};
+  imagedict={};
 
-    var file = fs.createWriteStream('private/cards.json');
-    var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
+  var file = fs.createWriteStream('private/cards.json');
+  var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
+  {
+    let stream = response.pipe(file);
+    stream.on('finish', function()
     {
-      let stream = response.pipe(file);
-      stream.on('finish', function()
-      {
-        var contents = fs.readFileSync('private/cards.json');
-        // Define to JSON type
-        var cards = JSON.parse(contents);
-        saveAllCards(cards);
-        console.log("Finished cardbase update...");
-      });
+      var contents = fs.readFileSync('private/cards.json');
+      // Define to JSON type
+      var cards = JSON.parse(contents);
+      saveAllCards(cards);
+      console.log("Finished cardbase update...");
     });
+  });
 }
 
 schedule.scheduleJob('0 0 * * *', function(){
@@ -504,10 +504,17 @@ function convertCard(card)
   }
   let newcard = {};
   newcard._id = card.id;
+  newcard.set = card.set;
   newcard.full_name = card.name + ' [' + card.set + '-'+ card.collector_number + ']';
   newcard.name = card.name;
   newcard.name_lower = card.name.toLowerCase();
   newcard.artist = card.artist;
+  newcard.scryfall_uri = card.scryfall_uri;
+  newcard.rarity = card.rarity;
+  if(card.tcgplayer_id)
+  {
+    newcard.tcgplayer_id = card.tcgplayer_id;
+  }
   if(card.card_faces && card.card_faces[0].image_uris)
   {
     newcard.image_small = card.card_faces[0].image_uris.small;

@@ -13,7 +13,14 @@ let cubeSchema = mongoose.Schema(
       type: String,
       required: true
     },
-    cards: [String],
+    cards: [{
+      tags:[String],
+      status:String,
+      colors:[String],
+      cmc:Number,
+      cardID:String,
+      details:{}
+    }],
     decks: [String],
     numDecks:Number,
     description:String,

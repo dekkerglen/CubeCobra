@@ -23,7 +23,15 @@ block content
   .container
     br  
     .row
-      .col
+      if decks.length > 0
+        .col-6
+          .card
+            .card-body
+              h5.card-title Recent Decks
+              each deck, i in decks
+                a(href='/cube/deck/'+deck._id) #{deck.name}
+                br
+      .col-6
         .card
           .card-body
             h5.card-title Start a new draft
@@ -70,11 +78,3 @@ block content
                     option 10
 
               button.btn.btn-success(type='submit') Start Draft
-      .col
-        if decks.length > 0
-          .card
-            .card-body
-              h5.card-title Recent Decks
-              each deck, i in decks
-                a(href='/cube/deck/'+deck._id) #{deck.name}
-                br

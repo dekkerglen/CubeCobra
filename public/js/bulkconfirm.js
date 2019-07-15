@@ -108,6 +108,8 @@ function init_bulkconfirm()
   });
   updateCollapse();
 }
+
+
 var prev_handler = window.onload;
 window.onload = function () {
     if (prev_handler) {

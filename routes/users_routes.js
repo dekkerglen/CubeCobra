@@ -58,7 +58,7 @@ router.post('/lostpassword', function(req, res)
           });
 
           var mail = {
-              from: "Cube Cobra Team <cubecobrateam@gmail.com>",
+              from: "Cube Cobra Team <support@cubecobra.com>",
               to: passwordReset.email,
               subject: "Password Reset",
               html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"https://cubecobra.com/user/passwordreset/" +
@@ -277,7 +277,7 @@ router.post('/register', function(req, res)
                       });
 
                       var mail = {
-                          from: "Cube Cobra Team <cubecobrateam@gmail.com>",
+                          from: "Cube Cobra Team <support@cubecobra.com>",
                           to: email,
                           subject: "Confirm Account",
                           html: "Hi " + newUser.username +

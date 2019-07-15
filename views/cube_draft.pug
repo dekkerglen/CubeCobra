@@ -21,16 +21,13 @@ block content
       li.nav-item
         a.nav-link(href='/cube/blog/'+cube._id) Blog
   .container
-    br  
-    h4=title
-    h6=subtitle
-    br  
+    br
     .row
-      .col-9
-        each card, i in activecards
-          a.autocard(card=card.image_normal, href='/cube/draft/pick/'+draftid+';'+card._id)
-            img( src=card.image_normal, width='150', height='210' alt=card.name)
-      .col        
+      .col     
+        br  
+        h4=title
+        h6=subtitle
+        br     
         ul.list-group
           each card, i in picks
             if card.colorcategory == 'w'
@@ -81,5 +78,8 @@ block content
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
-              
-            
+    
+      .col-9
+        each card, i in activecards
+          a.autocard(card=card.image_normal, href='/cube/draft/pick/'+draftid+';'+card._id)
+            img( src=card.image_normal, width='150', height='210' alt=card.name)

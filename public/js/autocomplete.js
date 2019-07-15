@@ -302,7 +302,10 @@ window.onload = async () => {
   }
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  autocomplete(document.getElementById("addInput"), cardnames,document.getElementById("justAddButton"));
+  if(document.getElementById("addInput"))
+  {
+    autocomplete(document.getElementById("addInput"), cardnames,document.getElementById("justAddButton"));
+  }
   if(document.getElementById("removeInput"))
   {
     autocomplete(document.getElementById("removeInput"), cubenames,document.getElementById("removeButton"));

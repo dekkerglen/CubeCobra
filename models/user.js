@@ -31,7 +31,8 @@ const UserSchema = mongoose.Schema({
   {
     type: String,
     required: false
-  }
+  },
+  edit_token:String
 });
 
 const User = module.exports = mongoose.model('User', UserSchema);

@@ -288,92 +288,75 @@ router.get('/list/:id', function(req, res)
     }
     else
     {
-      User.findById(cube.owner, function(err, user)
+      cube.cards.forEach(function(card, index)
       {
-        var sorted_cards =
+        card.details = carddict[card.cardID];
+      });
+
+      if(req.user)
+      {
+        User.findById(req.user._id, function(err, currentuser)
         {
-          white: [],
-          blue: [],
-          red: [],
-          green: [],
-          black: [],
-          multi: [],
-          colorless: [],
-          lands: []
-        };
-        cube.cards.forEach(function(card_id, index)
-        {
-          var card = carddict[card_id];
-          if(card.type.toLowerCase().includes('land'))
+          if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
           {
-            sorted_cards.lands.push(card);
+            currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
           }
-          else if(card.colors.length == 0)
+          currentuser.save(function(err)
           {
-            sorted_cards.colorless.push(card);
-          }
-          else if(card.colors.length > 1)
-          {
-            sorted_cards.multi.push(card);
-          }
-          else {
-            switch(card.colors[0])
+            User.findById(cube.owner, function(err, owner)
             {
-              case "W":
-                sorted_cards.white.push(card);
-                break;
-              case "U":
-                sorted_cards.blue.push(card);
-                break;
-              case "B":
-                sorted_cards.black.push(card);
-                break;
-              case "R":
-                sorted_cards.red.push(card);
-                break;
-              case "G":
-                sorted_cards.green.push(card);
-                break;
-            }
+              if(!owner)
+              {
+                res.render('cube_list',
+                {
+                  cube:cube,
+                  cube_raw:JSON.stringify(cube.cards),
+                  author: 'unknown',
+                  loginCallback:'/cube/list/'+req.params.id,
+                  edittoken:currentuser.edit_token
+                });
+              }
+              else
+              {
+                res.render('cube_list',
+                {
+                  cube:cube,
+                  cube_raw:JSON.stringify(cube.cards),
+                  owner: owner.username,
+                  loginCallback:'/cube/list/'+req.params.id,
+                  edittoken:currentuser.edit_token
+                });
+              }
+            });
+          });
+        });
+      }
+      else
+      {
+        User.findById(cube.owner, function(err, owner)
+        {
+          if(!owner)
+          {
+            res.render('cube_list',
+            {
+              cube:cube,
+              cube_raw:JSON.stringify(cube.cards),
+              author: 'unknown',
+              loginCallback:'/cube/list/'+req.params.id
+            });
+          }
+          else
+          {
+            res.render('cube_list',
+            {
+              cube:cube,
+              cube_raw:JSON.stringify(cube.cards),
+              owner: owner.username,
+              loginCallback:'/cube/list/'+req.params.id
+            });
           }
         });
-        sort_fn = function(a,b){
-          if(a.cmc == b.cmc)
-          {
-            return  ( ( a.name == b.name ) ? 0 : ( ( a.name > b.name ) ? 1 : -1 ) );
-          }
-          else {
-            return a.cmc-b.cmc;
-          }
-        };
-        sorted_cards.white.sort(sort_fn);
-        sorted_cards.blue.sort(sort_fn);
-        sorted_cards.black.sort(sort_fn);
-        sorted_cards.red.sort(sort_fn);
-        sorted_cards.green.sort(sort_fn);
-        sorted_cards.colorless.sort(sort_fn);
-        sorted_cards.multi.sort(sort_fn);
-        if(err)
-        {
-          res.render('cube_list',
-          {
-            cube:cube,
-            author: 'unknown',
-            cards:sorted_cards,
-            loginCallback:'/cube/list/'+req.params.id
-          });
-        }
-        else
-        {
-          res.render('cube_list',
-          {
-            cube:cube,
-            owner: user.username,
-            cards:sorted_cards,
-            loginCallback:'/cube/list/'+req.params.id
-          });
-        }
-      });
+      }
     }
   });
 });
@@ -420,6 +403,43 @@ router.get('/playtest/:id', function(req, res)
   });
 });
 
+function GetColorCategory(type, colors)
+{
+  if(type.toLowerCase().includes('land'))
+  {
+    return 'l';
+  }
+  else if(colors.length == 0)
+  {
+    return 'c';
+  }
+  else if(colors.length >  1)
+  {
+    return 'm';
+  }
+  else if(colors.length ==  1)
+  {
+    switch(colors[0])
+    {
+      case "W":
+        return 'w';
+        break;
+      case "U":
+        return 'u';
+        break;
+      case "B":
+        return 'b';
+        break;
+      case "R":
+        return 'r';
+        break;
+      case "G":
+        return 'g';
+        break;
+    }
+  }
+}
+
 function GetTypeByColor(cards) {
   var TypeByColor = {
     Creatures:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
@@ -431,49 +451,53 @@ function GetTypeByColor(cards) {
     Artifacts:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0},
     Total:{White:0, Blue:0,Black:0,Red:0,Green:0,Colorless:0,Multi:0,Total:0}
   };
-  cards.forEach(function(card_id, index)
+  cards.forEach(function(card, index)
   {
-    var card = carddict[card_id];
+    card.details = carddict[card.cardID];
+  });
+  cards.forEach(function(card, index)
+  {
     var type = {};
-    if(card.type.toLowerCase().includes('creature'))
+    if(card.details.type.toLowerCase().includes('creature'))
     {
       type = TypeByColor['Creatures'];
     }
-    else if(card.type.toLowerCase().includes('enchantment'))
+    else if(card.details.type.toLowerCase().includes('enchantment'))
     {
       type = TypeByColor['Enchantments'];
     }
-    else if(card.type.toLowerCase().includes('land'))
+    else if(card.details.type.toLowerCase().includes('land'))
     {
       type = TypeByColor['Lands'];
     }
-    else if(card.type.toLowerCase().includes('planeswalker'))
+    else if(card.details.type.toLowerCase().includes('planeswalker'))
     {
       type = TypeByColor['Planeswalkers'];
     }
-    else if(card.type.toLowerCase().includes('instant'))
+    else if(card.details.type.toLowerCase().includes('instant'))
     {
       type = TypeByColor['Instants'];
     }
-    else if(card.type.toLowerCase().includes('sorcery'))
+    else if(card.details.type.toLowerCase().includes('sorcery'))
     {
       type = TypeByColor['Sorceries'];
     }
-    else if(card.type.toLowerCase().includes('artifact'))
+    else if(card.details.type.toLowerCase().includes('artifact'))
     {
       type = TypeByColor['Artifacts'];
     }
 
-    if(card.colorcategory=='l')
+    var colorCategory = GetColorCategory(card.details.type, card.colors);
+    if(colorCategory=='l')
     {
-      if(card.colors.length == 0)
+      if(card.details.colors.length == 0)
       {
         type['Colorless'] += 1;
         type['Total'] += 1;
         TypeByColor['Total']['Colorless'] += 1;
         TypeByColor['Total']['Total'] += 1;
       }
-      else if(card.colors.length > 1)
+      else if(card.details.colors.length > 1)
       {
         type['Multi'] += 1;
         type['Total'] += 1;
@@ -482,7 +506,7 @@ function GetTypeByColor(cards) {
       }
       else
       {
-        switch(card.colors[0])
+        switch(card.details.colors[0])
         {
           case 'W':
           type['White'] += 1;
@@ -519,7 +543,7 @@ function GetTypeByColor(cards) {
     }
     else
     {
-      switch(card.colorcategory)
+      switch(colorCategory)
       {
         case 'w':
         type['White'] += 1;
@@ -603,66 +627,69 @@ function GetColorCounts(cards) {
     NonGreen:0,
     FiveColor:0
   };
-  cards.forEach(function(card_id, index)
+  cards.forEach(function(card, index)
   {
-    var card = carddict[card_id];
-    if(card.colors.length === 2)
+    card.details = carddict[card.cardID];
+  });
+  cards.forEach(function(card, index)
+  {
+    if(card.details.colors.length === 2)
     {
-      if(card.colors.includes('W') && card.colors.includes('U'))
+      if(card.details.colors.includes('W') && card.details.colors.includes('U'))
       {
         ColorCounts.Azorius += 1;
         ColorCounts.White += 1;
         ColorCounts.Blue += 1;
       }
-      else if(card.colors.includes('B') && card.colors.includes('U'))
+      else if(card.details.colors.includes('B') && card.details.colors.includes('U'))
       {
         ColorCounts.Dimir += 1;
         ColorCounts.Black += 1;
         ColorCounts.Blue += 1;
       }
-      else if(card.colors.includes('B') && card.colors.includes('R'))
+      else if(card.details.colors.includes('B') && card.details.colors.includes('R'))
       {
         ColorCounts.Rakdos += 1;
         ColorCounts.Black += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('R'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('R'))
       {
         ColorCounts.Gruul += 1;
         ColorCounts.Green += 1;
         ColorCounts.White += 1;
       }
-      else if(card.colors.includes('W') && card.colors.includes('G'))
+      else if(card.details.colors.includes('W') && card.details.colors.includes('G'))
       {
         ColorCounts.Selesnya += 1;
         ColorCounts.Green += 1;
         ColorCounts.White += 1;
       }
-      else if(card.colors.includes('W') && card.colors.includes('B'))
+      else if(card.details.colors.includes('W') && card.details.colors.includes('B'))
       {
         ColorCounts.Orzhov += 1;
         ColorCounts.White += 1;
         ColorCounts.Black += 1;
       }
-      else if(card.colors.includes('R') && card.colors.includes('U'))
+      else if(card.details.colors.includes('R') && card.details.colors.includes('U'))
       {
         ColorCounts.Izzet += 1;
         ColorCounts.Red += 1;
         ColorCounts.Blue += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('B'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('B'))
       {
         ColorCounts.Golgari += 1;
         ColorCounts.Green += 1;
         ColorCounts.Black += 1;
       }
-      else if(card.colors.includes('W') && card.colors.includes('R'))
+      else if(card.details.colors.includes('W') && card.details.colors.includes('R'))
       {
         ColorCounts.Boros += 1;
         ColorCounts.White += 1;
         ColorCounts.Red += 1;
       }
-       else if(card.colors.includes('G') && card.colors.includes('U'))
+       else if(card.details.colors.includes('G') && card.details.colors.includes('U'))
       {
         ColorCounts.Simic += 1
         ColorCounts.Green += 1;
@@ -671,70 +698,70 @@ function GetColorCounts(cards) {
     }
     else if(card.colors.length == 3)
     {
-      if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('R'))
+      if(card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('R'))
       {
         ColorCounts.Jund += 1;
         ColorCounts.Green += 1;
         ColorCounts.Black += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('W'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('U') && card.details.colors.includes('W'))
       {
         ColorCounts.Bant += 1;
         ColorCounts.Green += 1;
         ColorCounts.White += 1;
         ColorCounts.Blue += 1;
       }
-      else if(card.colors.includes('U') && card.colors.includes('B') && card.colors.includes('R'))
+      else if(card.details.colors.includes('U') && card.details.colors.includes('B') && card.details.colors.includes('R'))
       {
         ColorCounts.Grixis += 1;
         ColorCounts.Blue += 1;
         ColorCounts.Black += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('W') && card.colors.includes('R'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('W') && card.details.colors.includes('R'))
       {
         ColorCounts.Naya += 1;
         ColorCounts.Green += 1;
         ColorCounts.White += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('U') && card.colors.includes('B') && card.colors.includes('W'))
+      else if(card.details.colors.includes('U') && card.details.colors.includes('B') && card.details.colors.includes('W'))
       {
         ColorCounts.Esper += 1;
         ColorCounts.Blue += 1;
         ColorCounts.Black += 1;
         ColorCounts.White += 1;
       }
-      else if(card.colors.includes('W') && card.colors.includes('U') && card.colors.includes('R'))
+      else if(card.details.colors.includes('W') && card.details.colors.includes('U') && card.details.colors.includes('R'))
       {
         ColorCounts.Jeskai += 1;
         ColorCounts.Blue += 1;
         ColorCounts.White += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('W') && card.colors.includes('B') && card.colors.includes('R'))
+      else if(card.details.colors.includes('W') && card.details.colors.includes('B') && card.details.colors.includes('R'))
       {
         ColorCounts.Mardu += 1;
         ColorCounts.White += 1;
         ColorCounts.Black += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('U'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('U'))
       {
         ColorCounts.Sultai += 1;
         ColorCounts.Green += 1;
         ColorCounts.Black += 1;
         ColorCounts.Blue += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('R'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('U') && card.details.colors.includes('R'))
       {
         ColorCounts.Temur += 1;
         ColorCounts.Green += 1;
         ColorCounts.Blue += 1;
         ColorCounts.Red += 1;
       }
-      else if(card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('W'))
+      else if(card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('W'))
       {
         ColorCounts.Abzan += 1;
         ColorCounts.Green += 1;
@@ -744,7 +771,7 @@ function GetColorCounts(cards) {
     }
     else if(card.colors.length == 4)
     {
-      if(!card.colors.includes('W'))
+      if(!card.details.colors.includes('W'))
       {
         ColorCounts.NonWhite += 1;
         ColorCounts.Green += 1;
@@ -752,7 +779,7 @@ function GetColorCounts(cards) {
         ColorCounts.Blue += 1;
         ColorCounts.Red += 1;
       }
-      else if(!card.colors.includes('U'))
+      else if(!card.details.colors.includes('U'))
       {
         ColorCounts.NonBlue += 1;
         ColorCounts.Green += 1;
@@ -760,7 +787,7 @@ function GetColorCounts(cards) {
         ColorCounts.White += 1;
         ColorCounts.Red += 1;
       }
-      else if(!card.colors.includes('B'))
+      else if(!card.details.colors.includes('B'))
       {
         ColorCounts.NonBlack += 1;
         ColorCounts.Green += 1;
@@ -768,7 +795,7 @@ function GetColorCounts(cards) {
         ColorCounts.Blue += 1;
         ColorCounts.Red += 1;
       }
-      else if(!card.colors.includes('R'))
+      else if(!card.details.colors.includes('R'))
       {
         ColorCounts.NonRed += 1;
         ColorCounts.Green += 1;
@@ -776,7 +803,7 @@ function GetColorCounts(cards) {
         ColorCounts.White += 1;
         ColorCounts.Blue += 1;
       }
-      else if(!card.colors.includes('G'))
+      else if(!card.details.colors.includes('G'))
       {
         ColorCounts.NonGreen += 1;
         ColorCounts.Black += 1;
@@ -785,7 +812,7 @@ function GetColorCounts(cards) {
         ColorCounts.Red += 1;
       }
     }
-    else if(card.colors.length == 5)
+    else if(card.details.colors.length == 5)
     {
       ColorCounts.FiveColor += 1;
       ColorCounts.Green += 1;
@@ -810,11 +837,14 @@ function GetCurve(cards) {
     total:[0,0,0,0,0,0,0,0,0,0]
   }
 
-  cards.forEach(function(card_id, index)
+  cards.forEach(function(card, index)
   {
-    card = carddict[card_id];
+    card.details = carddict[card.cardID];
+  });
+  cards.forEach(function(card, index)
+  {
     var category;
-    switch(card.colorcategory)
+    switch(GetColorCategory(card.details.type, card.colors))
     {
       case 'w':
       category = curve.white;
@@ -966,20 +996,40 @@ function bulkUpload(req, res, list, cube){
       var currentId =nameToId[item.toLowerCase().trim()];
       if(currentId && currentId[0])
       {
-        cube.cards.push(currentId[0]);
+        //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
+        var details = carddict[currentId[0]];
+        cube.cards.push(
+          {
+            tags:['New'],
+            status:"Not Owned",
+            colors:details.colors,
+            cmc:details.cmc,
+            cardID:currentId[0]
+          }
+        );
         added.push(carddict[currentId[0]]);
         changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
         changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
       }
       else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
       {
+        //if we've found a match, and it DOES need to be parsed with cubecobra syntax
         var found = false;
         var possibilities = nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()];
         possibilities.forEach(function(possible, ind)
         {
           if(!found && carddict[possible].full_name.toLowerCase() == item.toLowerCase().trim())
           {
-            cube.cards.push(carddict[possible]);
+            var details = carddict[possible];
+            cube.cards.push(
+              {
+                tags:['New'],
+                status:"Not Owned",
+                colors:details.colors,
+                cmc:details.cmc,
+                cardID:carddict[possible]
+              }
+            );
             added.push(carddict[possible]);
             found = true;
           }
@@ -991,6 +1041,7 @@ function bulkUpload(req, res, list, cube){
       }
       else
       {
+        //we didn't find a match for this item
         missing += item +'\n';
       }
     });
@@ -1049,9 +1100,62 @@ router.get('/download/cubecobra/:id', function(req, res)
       res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
-      cube.cards.forEach(function(card_id, index)
+      cube.cards.forEach(function(card, index)
       {
-        res.write(carddict[card_id].full_name + '\r\n');
+        res.write(carddict[card.cardID].full_name + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
+
+router.get('/download/csv/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(!cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.csv');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      res.write('Name,CMC,Type,Color,Set,Status,Tags\r\n');
+      cube.cards.forEach(function(card, index)
+      {
+        res.write('"' + carddict[card.cardID].name + '"' + ',');
+        res.write(card.cmc+ ',');
+        res.write('"' + carddict[card.cardID].type.replace('—','-') + '"' + ',');
+        if(card.colors.length == 0)
+        {
+          res.write('C,');
+        }
+        else if(carddict[card.cardID].type.toLowerCase().includes('land'))
+        {
+          res.write('L,');
+        }
+        else
+        {
+          card.colors.forEach(function(color, c_index)
+          {
+            res.write(color);
+          });
+          res.write(',');
+        }
+        res.write('"' + carddict[card.cardID].set + '"' + ',');
+        res.write(card.status+ ',"');
+        card.tags.forEach(function(tag, t_index)
+        {
+          if(t_index != 0)
+          {
+          res.write(', ');
+          }
+          res.write(tag);
+        });
+        res.write('"\r\n');
       });
       res.end();
     }
@@ -1072,9 +1176,9 @@ router.get('/download/plaintext/:id', function(req, res)
       res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
-      cube.cards.forEach(function(card_id, index)
+      cube.cards.forEach(function(card, index)
       {
-        res.write(carddict[card_id].name + '\r\n');
+        res.write(carddict[card.cardID].name + '\r\n');
       });
       res.end();
     }
@@ -1182,7 +1286,15 @@ router.get('/draft/pick/:id', function(req, res)
     }
     else
     {
-      if(!draft.activepacks[0].includes(pick))
+      var found = false;
+      draft.activepacks[0].forEach(function(card, index)
+      {
+        if(card.cardID == pick)
+        {
+          found = true;
+        }
+      });
+      if(!found)
       {
         res.redirect('/cube/draft/'+draftid);
       }
@@ -1203,6 +1315,7 @@ router.get('/draft/pick/:id', function(req, res)
             cardrating.value = rating;
             cardrating.picks = 1;
           }
+
           cardrating.save(function(err)
           {
             var draftover = false;
@@ -1210,7 +1323,7 @@ router.get('/draft/pick/:id', function(req, res)
             var activecards_id = draft.activepacks[0];
             for( var i = 0; i < draft.activepacks[0].length; i++)
             {
-               if ( draft.activepacks[0][i] === pick)
+               if ( draft.activepacks[0][i].cardID === pick)
                {
                  draft.activepacks[0].splice(i, 1);
                }
@@ -1229,9 +1342,9 @@ router.get('/draft/pick/:id', function(req, res)
                 //only do this if you aren't monocolor
                 if(!taken && bot[0] != bot[1])
                 {
-                  if(carddict[draft.activepacks[i][j]].colors.length == 2)
+                  if(draft.activepacks[i][j].colors.length == 2)
                   {
-                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) && carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                    if(draft.activepacks[i][j].colors.includes(bot[0]) && draft.activepacks[i][j].colors.includes(bot[1]))
                     {
                       pick = draft.activepacks[i].splice(j,1);
                       draft.picks[i].push(pick[0]);
@@ -1245,9 +1358,9 @@ router.get('/draft/pick/:id', function(req, res)
               {
                 if(!taken)
                 {
-                  if(carddict[draft.activepacks[i][j]].colors.length == 1)
+                  if(draft.activepacks[i][j].colors.length == 1)
                   {
-                    if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                    if(draft.activepacks[i][j].colors.includes(bot[0]) || draft.activepacks[i][j].colors.includes(bot[1]))
                     {
                       pick = draft.activepacks[i].splice(j,1);
                       draft.picks[i].push(pick[0]);
@@ -1261,7 +1374,7 @@ router.get('/draft/pick/:id', function(req, res)
               {
                 if(!taken)
                 {
-                  if(carddict[draft.activepacks[i][j]].colors.includes(bot[0]) || carddict[draft.activepacks[i][j]].colors.includes(bot[1]))
+                  if(draft.activepacks[i][j].colors.includes(bot[0]) || draft.activepacks[i][j].colors.includes(bot[1]))
                   {
                     pick = draft.activepacks[i].splice(j,1);
                     draft.picks[i].push(pick[0]);
@@ -1408,11 +1521,11 @@ router.get('/draft/:id', function(req, res)
       }
       picks_id.forEach(function(id, index)
       {
-        picks.push(carddict[id]);
+        picks.push(carddict[id[0]]);
       });
       activecards_id.forEach(function(id, index)
       {
-        activecards.push(carddict[id]);
+        activecards.push(carddict[id.cardID]);
       });
       Cube.findById(draft.cube, function(err, cube)
       {
@@ -1433,7 +1546,7 @@ router.get('/draft/:id', function(req, res)
                 subtitle:subtitle,
                 draftid:draft._id,
                 cube:cube,
-                picks:picks,
+                picks:picks.reverse(),
                 owner: 'Unkown',
                 activecards:activecards,
                 loginCallback:'/cube/draft/'+req.params.id
@@ -1447,7 +1560,7 @@ router.get('/draft/:id', function(req, res)
                 subtitle:subtitle,
                 draftid:draft._id,
                 cube:cube,
-                picks:picks,
+                picks:picks.reverse(),
                 owner: user.username,
                 activecards:activecards
               });
@@ -1546,19 +1659,36 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
         if(edit.charAt(0) == '+')
         {
           //add id
-          cube.cards.push(edit.substring(1));
+          var details = carddict[edit.substring(1)];
+          cube.cards.push(
+            {
+              tags:['New'],
+              status:"Not Owned",
+              colors:details.colors,
+              cmc:details.cmc,
+              cardID:edit.substring(1)
+            }
+          );
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
           changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' + carddict[edit.substring(1)].name + '</a>';
         }
         else if(edit.charAt(0) == '-')
         {
           //remove id
-          if(cube.cards.includes(edit.substring(1)))
+          var rm_index = -1;
+          cube.cards.forEach(function(card_to_remove, remove_index)
           {
-            var index = cube.cards.indexOf(edit.substring(1));
-            if (index !== -1) {
-                cube.cards.splice(index, 1);
+            if(rm_index == -1)
+            {
+              if(card_to_remove.cardID == edit.substring(1))
+              {
+                rm_index = remove_index;
+              }
             }
+          });
+          if(rm_index != -1)
+          {
+            cube.cards.splice(rm_index, 1);
 
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
             changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' +carddict[edit.substring(1)].name + '</a>';
@@ -1571,13 +1701,32 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
         else if(edit.charAt(0) == '/')
         {
           var tmp_split = edit.substring(1).split('>');
-          cube.cards.push(tmp_split[1]);
-          if(cube.cards.includes(tmp_split[0]))
-          {
-            var index = cube.cards.indexOf(tmp_split[0]);
-            if (index !== -1) {
-                cube.cards.splice(index, 1);
+          var details = carddict[tmp_split[1]];
+          cube.cards.push(
+            {
+              tags:['New'],
+              status:"Not Owned",
+              colors:details.colors,
+              cmc:details.cmc,
+              cardID:tmp_split[1]
             }
+          );
+
+          var rm_index = -1;
+          cube.cards.forEach(function(card_to_remove, remove_index)
+          {
+            if(rm_index == -1)
+            {
+              if(card_to_remove.cardID == tmp_split[0])
+              {
+                rm_index = remove_index;
+              }
+            }
+          });
+          if(rm_index != -1)
+          {
+            cube.cards.splice(rm_index, 1);
+
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
             changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[0]].image_normal + '">' + carddict[tmp_split[0]].name + '</a> > ';
             changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
@@ -1688,7 +1837,7 @@ router.get('/api/cubecardnames/:id', function(req, res)
     cardnames = [];
     cube.cards.forEach(function (item, index)
     {
-      binaryInsert(carddict[item].name,cardnames);
+      binaryInsert(carddict[item.cardID].name,cardnames);
     });
     var result = turnToTree(cardnames);
     res.status(200).send({
@@ -1708,11 +1857,12 @@ router.get('/api/getcardfromcube/:id', function(req, res)
     var found = false;
     cube.cards.forEach(function(card, index)
     {
-      if(!found && carddict[card].name_lower == cardname)
+      if(!found && carddict[card.cardID].name_lower == cardname)
       {
+        card.details = carddict[card.cardID];
         res.status(200).send({
           success:'true',
-          card:carddict[card]
+          card:card.details
         });
         found = true;
       }
@@ -1739,6 +1889,13 @@ router.get('/deck/:id', function(req, res)
     {
       Cube.findById(deck.cube, function(err, cube)
       {
+        if(!cube)
+        {
+          req.flash('danger', 'Cube not found');
+          res.redirect('/404/'+req.params.id);
+        }
+        else
+        {
         var owner_name = "Unknown";
         var drafter_name = "Anonymous";
         User.findById(deck.owner, function(err, drafter)
@@ -1764,12 +1921,12 @@ router.get('/deck/:id', function(req, res)
               var bot_deck = [];
               deck.cards[i].forEach(function(card, index)
               {
-                if(!carddict[card])
+                if(!carddict[card[0].cardID])
                 {
                   console.log("Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
                 }
                 else {
-                  bot_deck.push(carddict[card]);
+                  bot_deck.push(carddict[card[0].cardID]);
                 }
               });
               bot_decks.push(bot_deck);
@@ -1791,6 +1948,7 @@ router.get('/deck/:id', function(req, res)
             });
           });
         });
+        }
       });
     }
   });
@@ -1813,6 +1971,147 @@ router.get('/api/getcard/:name', function(req, res)
       card:card
     });
   }
+});
+
+router.get('/api/getcardfromid/:id', function(req, res)
+{
+  var card = carddict[req.params.id];
+  if(!card)
+  {
+    res.status(200).send({
+      success:'true'
+    });
+  }
+  else
+  {
+    res.status(200).send({
+      success:'true',
+      card:card
+    });
+  }
+});
+
+router.get('/api/getversions/:id', function(req, res)
+{
+  cards = [];
+  nameToId[carddict[req.params.id].name.toLowerCase()].forEach(function(id, index)
+  {
+    cards.push(carddict[id]);
+  });
+  res.status(200).send({
+    success:'true',
+    cards:cards
+  });
+});
+
+router.post('/api/updatecard/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    User.findById(cube.owner, function(err, owner)
+    {
+      if(req.body.token != owner.edit_token)
+      {
+        res.status(401).send({
+          success:'false',
+          message:'Unauthorized'
+        });
+      }
+      else
+      {
+        var found = false;
+        cube.cards.forEach(function(card, index)
+        {
+          if(!found && cardsAreEquivalent(card, req.body.src))
+          {
+            found = true;
+            cube.cards[index] = req.body.updated;
+          }
+        });
+        if(!found)
+        {
+          res.status(400).send({
+            success:'false',
+            message:'Card not found'
+          });
+        }
+        else
+        {
+          cube.save(function(err)
+          {
+            if(err)
+            {
+              res.status(500).send({
+                success:'false',
+                message:'Error saving cube'
+              });
+            }
+            else
+            {
+              res.status(200).send({
+                success:'true'
+              });
+            }
+          });
+        }
+      }
+    });
+  });
+});
+
+router.post('/api/updatecards/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    User.findById(cube.owner, function(err, owner)
+    {
+      if(req.body.token != owner.edit_token)
+      {
+        res.status(401).send({
+          success:'false',
+          message:'Unauthorized'
+        });
+      }
+      else
+      {
+        var found = false;
+        cube.cards.forEach(function(card, index)
+        {
+          card.details = carddict[card.cardID];
+          if(req.body.filters == null || filterCard(card,req.body.filters))
+          {
+            if(cardIsLabel(card,req.body.categories[0],req.body.sorts[0]) && cardIsLabel(card,req.body.categories[1],req.body.sorts[1]))
+            {
+              if(req.body.updated.status)
+              {
+                cube.cards[index].status = req.body.updated.status;
+              }
+              if(req.body.updated.tags)
+              {
+                cube.cards[index].tags = cube.cards[index].tags.concat(req.body.updated.tags);
+              }
+            }
+          }
+        });
+        cube.save(function(err)
+        {
+          if(err)
+          {
+            res.status(500).send({
+              success:'false',
+              message:'Error saving cube'
+            });
+          }
+          else
+          {
+            res.status(200).send({
+              success:'true'
+            });
+          }
+        });
+      }
+    });
+  });
 });
 
 router.delete('/remove/:id',ensureAuth, function(req, res)
@@ -1964,6 +2263,252 @@ function binaryInsert(value, array, startVal, endVal)
 		binaryInsert(value, array, m + 1, end);
 		return;
 	}
+}
+
+function cardsAreEquivalent(card, details)
+{
+  if(card.cardID != details.cardID)
+  {
+    return false;
+  }
+  if(card.status != details.status)
+  {
+    return false;
+  }
+  if(card.cmc != details.cmc)
+  {
+    return false;
+  }
+  if(!arraysEqual(card.tags,details.tags))
+  {
+    return false;
+  }
+  if(!arraysEqual(card.colors,details.colors))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+
+function GetColorCategory2(type, colors)
+{
+  if(type.toLowerCase().includes('land'))
+  {
+    return 'Lands';
+  }
+  else if(colors.length == 0)
+  {
+    return 'Colorless';
+  }
+  else if(colors.length >  1)
+  {
+    return 'Multicolored';
+  }
+  else if(colors.length ==  1)
+  {
+    switch(colors[0])
+    {
+      case "W":
+        return 'White';
+        break;
+      case "U":
+        return 'Blue';
+        break;
+      case "B":
+        return 'Black';
+        break;
+      case "R":
+        return 'Red';
+        break;
+      case "G":
+        return 'Green';
+        break;
+    }
+  }
+}
+
+function cardIsLabel(card, label, sort)
+{
+  if(sort == 'Color Category')
+  {
+    return GetColorCategory2(card.details.type, card.colors) == label;
+  }
+  else if(sort == 'Color')
+  {
+    switch(label)
+    {
+      case 'White':
+        return card.colors.includes('W');
+      case 'Blue':
+        return card.colors.includes('U');
+      case 'Black':
+        return card.colors.includes('B');
+      case 'Green':
+        return card.colors.includes('G');
+      case 'Red':
+        return card.colors.includes('R');
+      case 'Colorless':
+        return card.colors.length == 0;
+    }
+  }
+  else if (sort == 'CMC')
+  {
+    if(card.cmc >= 8)
+    {
+      return label == '8+';
+    }
+    return card.cmc == label;
+  }
+  else if(sort == 'Supertype')
+  {
+    return card.details.type.includes(label);
+  }
+  else if(sort == 'Tags')
+  {
+    if(label == "")
+    {
+      return false;
+    }
+    return card.tags.includes(label);
+  }
+  else if (sort == 'Status')
+  {
+    return card.status == label;
+  }
+  else if (sort == 'Guilds')
+  {
+    if(card.colors.length != 2)
+    {
+      return false;
+    }
+    switch(label)
+    {
+      case 'Azorius':
+        return card.colors.includes('W') && card.colors.includes('U');
+      case 'Dimir':
+        return card.colors.includes('B') && card.colors.includes('U');
+      case 'Rakdos':
+        return card.colors.includes('B') && card.colors.includes('R');
+      case 'Gruul':
+        return card.colors.includes('G') && card.colors.includes('R');
+      case 'Selesnya':
+        return card.colors.includes('W') && card.colors.includes('G');
+      case 'Orzhov':
+        return card.colors.includes('W') && card.colors.includes('B');
+      case 'Izzet':
+        return card.colors.includes('R') && card.colors.includes('U');
+      case 'Golgari':
+        return card.colors.includes('G') && card.colors.includes('B');
+      case 'Boros':
+        return card.colors.includes('W') && card.colors.includes('R');
+      case 'Simic':
+        return card.colors.includes('G') && card.colors.includes('U');
+    }
+  }
+  else if (sort == 'Shards / Wedges')
+  {
+    if(card.colors.length != 3)
+    {
+      return false;
+    }
+    switch(label)
+    {
+      case 'Bant':
+        return card.colors.includes('W') && card.colors.includes('U') && card.colors.includes('G');
+      case 'Esper':
+        return card.colors.includes('B') && card.colors.includes('U') && card.colors.includes('W');
+      case 'Grixis':
+        return card.colors.includes('B') && card.colors.includes('R') && card.colors.includes('U');
+      case 'Jund':
+        return card.colors.includes('G') && card.colors.includes('R') && card.colors.includes('B');
+      case 'Naya':
+        return card.colors.includes('W') && card.colors.includes('G') && card.colors.includes('R');
+      case 'Abzan':
+        return card.colors.includes('W') && card.colors.includes('B') && card.colors.includes('G');
+      case 'Jeskai':
+        return card.colors.includes('R') && card.colors.includes('U') && card.colors.includes('W');
+      case 'Sultai':
+        return card.colors.includes('G') && card.colors.includes('B') && card.colors.includes('U');
+      case 'Mardu':
+        return card.colors.includes('W') && card.colors.includes('R') && card.colors.includes('B');
+      case 'Temur':
+        return card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('R');
+    }
+  }
+  else if(sort == 'Color Count')
+  {
+    return card.colors.length == parseInt(label);
+  }
+  else if (sort == 'Set')
+  {
+    return card.details.set.toUpperCase() == label;
+  }
+  else if (sort == 'Rarity')
+  {
+    return card.details.rarity.toLowerCase() == label.toLowerCase();
+  }
+  else if(sort == 'Unsorted')
+  {
+    return true;
+  }
+  else if(sort == 'Subtype')
+  {
+    if(card.details.type.includes('—'))
+    {
+      return card.details.type.includes(label);
+    }
+    return false;
+  }
+}
+
+//true if card is filtered IN
+function filterCard(card, filterobj)
+{
+  //first filter out everything in this category
+  //then filter in everything that matches one of the ins
+  var filterout = false;
+  var filterin = false;
+  for (var category in filterobj)
+  {
+    if (filterobj.hasOwnProperty(category))
+    {
+      filterobj[category].out.forEach(function(option, index)
+      {
+        if(cardIsLabel(card,option.value,option.category))
+        {
+          filterout = true;
+        }
+      });
+      if(!filterout)
+      {
+        filterobj[category].in.forEach(function(option, index)
+        {
+          if(cardIsLabel(card,option.value,option.category))
+          {
+            filterin = true;
+          }
+        });
+      }
+    }
+  }
+  if(filterout)
+  {
+    return false;
+  }
+  return filterin;
 }
 
 //read files
