@@ -200,7 +200,7 @@ router.post('/register', function(req, res)
   req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
   req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({ min: 5, max:24 });
   req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
-  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
+  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z!@#$%^&*]*$/, "i");
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
