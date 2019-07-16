@@ -269,6 +269,8 @@ router.post('/register', function(req, res)
                     {
                       // Use Smtp Protocol to send Email
                       var smtpTransport = mailer.createTransport({
+                          name: 'CubeCobra.com',
+                          secure: true,
                           service: "Gmail",
                           auth: {
                               user: emailconfig.username,
@@ -295,7 +297,8 @@ router.post('/register', function(req, res)
                           smtpTransport.close();
                       });
 
-                      req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                      //req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                      req.flash('success','Account succesfully created. You are now able to login.');
                       res.redirect('/user/login');
                     }
                   });
@@ -370,7 +373,8 @@ router.post('/login', function(req, res, next)
       }
       else {
         req.body.username = user.username
-        if(user.confirmed == 'true')
+        //TODO: fix confirmation
+        if(true || user.confirmed == 'true')
         {
            var redirect = '/';
            if(req.body.loginCallback)
@@ -404,7 +408,8 @@ router.post('/login', function(req, res, next)
         res.redirect('/user/login');
       }
       else {
-        if(user.confirmed == 'true')
+      //TODO: fix confirmation
+        if(true || user.confirmed == 'true')
         {
            var redirect = '/';
            if(req.body.loginCallback)

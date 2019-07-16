@@ -5,7 +5,7 @@ block content
     nav(aria-label='breadcrumb')
       ol.breadcrumb
         li.breadcrumb-item
-          a(href='#' style='color: #218937;') #{owner}
+          a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
         li.breadcrumb-item.active(aria-current='page')= cube.name
 
 

@@ -149,7 +149,7 @@ app.post('/advanced_search', function(req, res)
   }
   if(req.body.owner && req.body.owner.length > 0)
   {
-    url += 'owner' + req.body.ownerType + req.body.owner + ';';
+    url += 'owner_name' + req.body.ownerType + req.body.owner + ';';
   }
   res.redirect(url)
 });
@@ -202,7 +202,7 @@ app.get('/search/:id', function(req, res)
     }
   });
 
-
+  console.log(query);
   Cube.find(query).sort({'date_updated':-1}).exec(function(err, cubes)
   {
     var pages = [];
@@ -290,6 +290,20 @@ app.get('/cookies', function(req, res)
       loginCallback:'/cookies'
   });
 });
+app.get('/ourstory', function(req, res)
+{
+  res.render('ourstory',
+  {
+      loginCallback:'/ourstory'
+  });
+});
+app.get('/faq', function(req, res)
+{
+  res.render('faq',
+  {
+      loginCallback:'/faq'
+  });
+});
 app.get('/404', function(req, res)
 {
   res.render('404', {});
@@ -347,19 +361,19 @@ function saveAllCards(arr)
   {
     card = convertCard(card);
     dict[card._id]=card;
-    imagedict[card.full_name.toLowerCase()]=
+    imagedict[card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]=
     {
       uri: card.art_crop,
       artist: card.artist
     }
     //only add if it doesn't exist, this makes the default the newest edition
-    if(!nameToId[card.name.toLowerCase()])
+    if(!nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")])
     {
-      nameToId[card.name.toLowerCase()]=[];
+      nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]=[];
     }
-    nameToId[card.name.toLowerCase()].push(card._id);
-    binaryInsert(card.name.toLowerCase(), names);
-    binaryInsert(card.full_name.toLowerCase(), full_names);
+    nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].push(card._id);
+    binaryInsert(card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), names);
+    binaryInsert(card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), full_names);
   });
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function (err)
   {
@@ -500,7 +514,7 @@ function convertCard(card)
 {
   if(card.name.includes('/') && card.layout!='split')
   {
-    card.name = card.name.substring(0,card.name.indexOf('/')).trim();
+    card.name = card.name.substring(0,card.name.indexOf('/')).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
   let newcard = {};
   newcard._id = card.id;
@@ -537,18 +551,25 @@ function convertCard(card)
     newcard.type = card.type_line;
   }
   newcard.colors = [];
+  newcard.color_identity = [];
 
+  newcard.color_identity = newcard.color_identity.concat(card.color_identity);
   if(!card.card_faces)
   {
-    newcard.colors = newcard.colors.concat(card.color_identity);
+    newcard.colors = newcard.colors.concat(card.colors);
     newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).toLowerCase().split('}{').reverse();
   }
   else if(card.layout =='split')
   {
-    newcard.colors = newcard.colors.concat(card.color_identity);
+    newcard.colors = newcard.colors.concat(card.colors);
     newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).replace(' // ','{split}').toLowerCase().split('}{').reverse();
   }
-  else
+  else if(card.layout =='flip')
+  {
+    newcard.colors = newcard.colors.concat(card.colors);
+    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).toLowerCase().split('}{').reverse();
+  }
+  else if(card.card_faces[0].colors)
   {
     newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
     newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1,card.card_faces[0].mana_cost.length-2).toLowerCase().split('}{').reverse();
@@ -564,34 +585,17 @@ function convertCard(card)
   {
     newcard.colorcategory = 'l';
   }
-  else if(newcard.colors.length == 0)
+  else if(newcard.color_identity.length == 0)
   {
     newcard.colorcategory = 'c';
   }
-  else if(newcard.colors.length >  1)
+  else if(newcard.color_identity.length >  1)
   {
     newcard.colorcategory = 'm';
   }
-  else if(newcard.colors.length ==  1)
+  else if(newcard.color_identity.length ==  1)
   {
-    switch(newcard.colors[0])
-    {
-      case "W":
-        newcard.colorcategory = 'w';
-        break;
-      case "U":
-        newcard.colorcategory = 'u';
-        break;
-      case "B":
-        newcard.colorcategory = 'b';
-        break;
-      case "R":
-        newcard.colorcategory = 'r';
-        break;
-      case "G":
-        newcard.colorcategory = 'g';
-        break;
-    }
+    newcard.colorcategory = newcard.color_identity[0].toLowerCase();
   }
 
   return newcard;

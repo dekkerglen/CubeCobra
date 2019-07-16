@@ -1593,21 +1593,19 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
       var description = req.body.description;
       var name = req.body.name;
 
-      if(!image)
-      {
-        req.flash('danger', 'Invalid image selection. Please choose from the list.');
-        res.redirect('/cube/overview/'+req.params.id);
-      }
-      else if(name.length < 5)
+      if(name.length < 5)
       {
         req.flash('danger', 'Cube name should be at least 5 characters long.');
         res.redirect('/cube/overview/'+req.params.id);
       }
       else
       {
-        cube.image_uri = image.uri;
-        cube.image_artist = image.artist;
-        cube.image_name = req.body.imagename;
+        if(image)
+        {
+          cube.image_uri = image.uri;
+          cube.image_artist = image.artist;
+          cube.image_name = req.body.imagename;
+        }
         cube.description = description;
         cube.name = name;
         cube.date_updated = Date.now();
@@ -1619,10 +1617,10 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
             req.flash('danger', 'Server Error');
             res.redirect('/cube/overview/'+req.params.id);
           }
-          else {
-
-              req.flash('success', 'Cube updated successfully.');
-              res.redirect('/cube/overview/'+req.params.id);
+          else
+          {
+            req.flash('success', 'Cube updated successfully.');
+            res.redirect('/cube/overview/'+req.params.id);
           }
         });
       }
@@ -1851,7 +1849,7 @@ router.get('/api/getcardfromcube/:id', function(req, res)
 {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = split[1].replace('-slash-','//').toLowerCase();
+  var cardname = split[1].replace('-slash-','//').replace('-q-','?').toLowerCase();
   Cube.findById(cube, function(err, cube)
   {
     var found = false;
@@ -1956,7 +1954,7 @@ router.get('/deck/:id', function(req, res)
 
 router.get('/api/getcard/:name', function(req, res)
 {
-  req.params.name = req.params.name.replace('-slash-','//').toLowerCase().trim();
+  req.params.name = req.params.name.replace('-slash-','//').replace('-q-','?').toLowerCase().trim();
   var card = carddict[nameToId[req.params.name][0]];
   if(!card)
   {
@@ -2340,28 +2338,55 @@ function GetColorCategory2(type, colors)
   }
 }
 
+
 function cardIsLabel(card, label, sort)
 {
   if(sort == 'Color Category')
   {
-    return GetColorCategory2(card.details.type, card.colors) == label;
+    return GetColorCategory(card.details.type, card.colors) == label;
+  }
+  else if(sort == 'Color Identity')
+  {
+    return GetColorIdentity(card.colors) == label;
   }
   else if(sort == 'Color')
   {
     switch(label)
     {
       case 'White':
-        return card.colors.includes('W');
+        return card.details.colors.includes('W');
       case 'Blue':
-        return card.colors.includes('U');
+        return card.details.colors.includes('U');
       case 'Black':
-        return card.colors.includes('B');
+        return card.details.colors.includes('B');
       case 'Green':
-        return card.colors.includes('G');
+        return card.details.colors.includes('G');
       case 'Red':
-        return card.colors.includes('R');
+        return card.details.colors.includes('R');
       case 'Colorless':
-        return card.colors.length == 0;
+        return card.details.colors.length == 0;
+    }
+  }
+  else if(sort == '4+ Color')
+  {
+    if(card.colors.length < 4)
+    {
+      return false;
+    }
+    switch(label)
+    {
+      case 'Non-White':
+        return !card.colors.includes('W');
+      case 'Non-Blue':
+        return !card.colors.includes('U');
+      case 'Non-Black':
+        return !card.colors.includes('B');
+      case 'Non-Green':
+        return !card.colors.includes('G');
+      case 'Non-Red':
+        return !card.colors.includes('R');
+      case 'Five Color':
+        return !card.colors.length == 0;
     }
   }
   else if (sort == 'CMC')
@@ -2372,7 +2397,7 @@ function cardIsLabel(card, label, sort)
     }
     return card.cmc == label;
   }
-  else if(sort == 'Supertype')
+  else if(sort == 'Supertype' || sort =='Type')
   {
     return card.details.type.includes(label);
   }
@@ -2472,7 +2497,19 @@ function cardIsLabel(card, label, sort)
     }
     return false;
   }
+  else if(sort =='Types-Multicolor')
+  {
+    if(card.colors.length <= 1)
+    {
+      return cardIsLabel(card, label, 'Type');
+    }
+    else
+    {
+      return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
+    }
+  }
 }
+
 
 //true if card is filtered IN
 function filterCard(card, filterobj)

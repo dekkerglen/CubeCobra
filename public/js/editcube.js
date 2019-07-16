@@ -1,6 +1,6 @@
  // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>'+
                      '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
@@ -301,6 +301,8 @@ if(modalFields.submit)
       .then(function(json)
     {
       modalFields.img.src = json.card.image_normal;
+      //fucking everythingamajig, this line is for you and you alone. Fuck you
+      modalFields.cmc.value = json.card.cmc;
     });
   });
   groupModalFields.submit.addEventListener('click',(e) =>
@@ -554,7 +556,7 @@ if(justAddButton) {
 }
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('//','-slash-');
+  var val = addInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch(baseURL+'/cube/api/getcard/'+val)
@@ -577,7 +579,7 @@ function justAddButtonClick() {
 }
 
 function removeButtonClick() {
-  var val = removeInput.value.replace('//','-slash-');
+  var val = removeInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch(baseURL+'/cube/api/getcardfromcube/'+cubeID+';'+val)
@@ -588,7 +590,7 @@ function removeButtonClick() {
       {
         if(addInput.value.length > 0)
         {
-          var val2 = addInput.value.replace('//','-slash-');
+          var val2 = addInput.value.replace('//','-slash-').replace('?','-q-');
           fetch(baseURL+'/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
@@ -744,9 +746,42 @@ function GetColorCategory(type, colors)
   }
 }
 
+function GetColorIdentity(colors)
+{
+  if(colors.length == 0)
+  {
+    return 'Colorless';
+  }
+  else if(colors.length >  1)
+  {
+    return 'Multicolored';
+  }
+  else if(colors.length ==  1)
+  {
+    switch(colors[0])
+    {
+      case "W":
+        return 'White';
+        break;
+      case "U":
+        return 'Blue';
+        break;
+      case "B":
+        return 'Black';
+        break;
+      case "R":
+        return 'Red';
+        break;
+      case "G":
+        return 'Green';
+        break;
+    }
+  }
+}
+
 function getSorts()
 {
-  return ['Color','Color Category','CMC','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity'];
+  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor'];
 }
 
 function getLabels(sort)
@@ -754,6 +789,10 @@ function getLabels(sort)
   if(sort == 'Color Category')
   {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless','Lands'];
+  }
+  else if(sort == 'Color Identity')
+  {
+    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
   }
   else if(sort == 'CMC')
   {
@@ -763,9 +802,13 @@ function getLabels(sort)
   {
     return ['White','Blue','Black','Red','Green','Colorless'];
   }
+  else if (sort == 'Type')
+  {
+    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane'];
+  }
   else if (sort == 'Supertype')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Conspiracy','Snow','Legendary','Tribal'];
+    return ['Snow','Legendary','Tribal','Basic','Elite','Host','Ongoing','World'];
   }
   else if (sort == 'Tags')
   {
@@ -837,8 +880,12 @@ function getLabels(sort)
     });
     return types;
   }
+  else if (sort == 'Types-Multicolor')
+  {
+    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov',
+      'Izzet','Golgari','Boros','Simic','Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color'];
+  }
 }
-
 
 function cardIsLabel(card, label, sort)
 {
@@ -846,22 +893,48 @@ function cardIsLabel(card, label, sort)
   {
     return GetColorCategory(card.details.type, card.colors) == label;
   }
+  else if(sort == 'Color Identity')
+  {
+    return GetColorIdentity(card.colors) == label;
+  }
   else if(sort == 'Color')
   {
     switch(label)
     {
       case 'White':
-        return card.colors.includes('W');
+        return card.details.colors.includes('W');
       case 'Blue':
-        return card.colors.includes('U');
+        return card.details.colors.includes('U');
       case 'Black':
-        return card.colors.includes('B');
+        return card.details.colors.includes('B');
       case 'Green':
-        return card.colors.includes('G');
+        return card.details.colors.includes('G');
       case 'Red':
-        return card.colors.includes('R');
+        return card.details.colors.includes('R');
       case 'Colorless':
-        return card.colors.length == 0;
+        return card.details.colors.length == 0;
+    }
+  }
+  else if(sort == '4+ Color')
+  {
+    if(card.colors.length < 4)
+    {
+      return false;
+    }
+    switch(label)
+    {
+      case 'Non-White':
+        return !card.colors.includes('W');
+      case 'Non-Blue':
+        return !card.colors.includes('U');
+      case 'Non-Black':
+        return !card.colors.includes('B');
+      case 'Non-Green':
+        return !card.colors.includes('G');
+      case 'Non-Red':
+        return !card.colors.includes('R');
+      case 'Five Color':
+        return !card.colors.length == 0;
     }
   }
   else if (sort == 'CMC')
@@ -872,8 +945,16 @@ function cardIsLabel(card, label, sort)
     }
     return card.cmc == label;
   }
-  else if(sort == 'Supertype')
+  else if(sort == 'Supertype' || sort =='Type')
   {
+    if(card.details.type.includes('Contraption'))
+    {
+      return label == 'Contraption';
+    }
+    else if(label == 'Plane')
+    {
+      return card.details.type.includes(label) && !card.details.type.includes('Planeswalker');
+    }
     return card.details.type.includes(label);
   }
   else if(sort == 'Tags')
@@ -971,6 +1052,17 @@ function cardIsLabel(card, label, sort)
       return card.details.type.includes(label);
     }
     return false;
+  }
+  else if(sort =='Types-Multicolor')
+  {
+    if(card.colors.length <= 1)
+    {
+      return cardIsLabel(card, label, 'Type');
+    }
+    else
+    {
+      return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
+    }
   }
 }
 
@@ -1264,6 +1356,7 @@ function filterCard(card, filterobj)
 
   var filterout = false;
   var filterin = false;
+  var hasFilterIn = false;
   for (var category in filterobj)
   {
     if (filterobj.hasOwnProperty(category))
@@ -1279,6 +1372,7 @@ function filterCard(card, filterobj)
       {
         filterobj[category].in.forEach(function(option, index)
         {
+          hasFilterIn = true;
           if(cardIsLabel(card,option.value,option.category))
           {
             filterin = true;
@@ -1290,6 +1384,10 @@ function filterCard(card, filterobj)
   if(filterout)
   {
     return false;
+  }
+  if(!hasFilterIn)
+  {
+    return true;
   }
   return filterin;
 }
@@ -1457,7 +1555,7 @@ function buildFilterArea()
   document.getElementById('secondarySortSelect').innerHTML = sorthtml;
   document.getElementById('primarySortSelect').innerHTML = sorthtml;
   document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
-  document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('CMC');
+  document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
 
   updateFilters();
 }
