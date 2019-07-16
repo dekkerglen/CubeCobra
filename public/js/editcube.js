@@ -1,6 +1,6 @@
  // #cubecobralocalhost
-var baseURL='http://localhost:5000';
-//var baseURL='https://cubecobra.com';
+//var baseURL='http://localhost:5000';
+var baseURL='https://cubecobra.com';
 
 var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>'+
                      '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +

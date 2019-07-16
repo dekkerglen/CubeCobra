@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-var baseURL='http://localhost:5000';
-//var baseURL='https://cubecobra.com';
+//var baseURL='http://localhost:5000';
+var baseURL='https://cubecobra.com';
 
 window.onload = async () => {
   //load the card names
