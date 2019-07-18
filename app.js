@@ -50,9 +50,6 @@ app.set('view engine', 'pug');
 // Set Public Folder
 app.use(express.static(path.join(__dirname,'public')));
 
-
-
-
 // Express session middleware
 app.use(session({
   secret:'vertical donkey gatorade helicopter',
@@ -175,7 +172,6 @@ app.post('/search', function(req, res)
   }
 });
 
-
 app.get('/search/:id', function(req, res)
 {
   var raw_split = req.params.id.split(':');
@@ -269,6 +265,7 @@ app.get('/contact', function(req, res)
     loginCallback:'/contact'
   });
 });
+
 app.get('/tos', function(req, res)
 {
   res.render('tos',
@@ -276,6 +273,7 @@ app.get('/tos', function(req, res)
       loginCallback:'/tos'
   });
 });
+
 app.get('/privacy', function(req, res)
 {
   res.render('privacy_policy',
@@ -283,6 +281,7 @@ app.get('/privacy', function(req, res)
       loginCallback:'/privacy'
   });
 });
+
 app.get('/cookies', function(req, res)
 {
   res.render('cookies',
@@ -290,6 +289,7 @@ app.get('/cookies', function(req, res)
       loginCallback:'/cookies'
   });
 });
+
 app.get('/ourstory', function(req, res)
 {
   res.render('ourstory',
@@ -297,6 +297,7 @@ app.get('/ourstory', function(req, res)
       loginCallback:'/ourstory'
   });
 });
+
 app.get('/faq', function(req, res)
 {
   res.render('faq',
@@ -304,6 +305,15 @@ app.get('/faq', function(req, res)
       loginCallback:'/faq'
   });
 });
+
+app.get('/donate', function(req, res)
+{
+  res.render('donate',
+  {
+      loginCallback:'/donate'
+  });
+});
+
 app.get('/404', function(req, res)
 {
   res.render('404', {});
@@ -359,6 +369,24 @@ function saveAllCards(arr)
 {
   arr.forEach(function(card, index)
   {
+    if(card.layout =='transform')
+    {
+      var extraCard = convertExtraCard(card);
+      dict[extraCard._id]=extraCard;
+      imagedict[extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]=
+      {
+        uri: extraCard.art_crop,
+        artist: extraCard.artist
+      }
+      //only add if it doesn't exist, this makes the default the newest edition
+      if(!nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")])
+      {
+        nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]=[];
+      }
+      nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].push(extraCard._id);
+      binaryInsert(extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), names);
+      binaryInsert(extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), full_names);
+    }
     card = convertCard(card);
     dict[card._id]=card;
     imagedict[card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]=
@@ -510,6 +538,56 @@ function turnToTree(arr)
   return res;
 }
 
+function convertExtraCard(card)
+{
+  var name = card.name.substring(card.name.indexOf('/')+2).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  let newcard = {};
+  newcard._id = card.id + '2';
+  newcard.set = card.set;
+  newcard.full_name = name + ' [' + card.set + '-'+ card.collector_number + ']';
+  newcard.name = name;
+  newcard.name_lower = name.toLowerCase();
+  newcard.artist = card.artist;
+  newcard.scryfall_uri = card.scryfall_uri;
+  newcard.rarity = card.rarity;
+  newcard.oracle_text = card.oracle_text;
+  if(card.tcgplayer_id)
+  {
+    newcard.tcgplayer_id = card.tcgplayer_id;
+  }
+  newcard.image_small = card.card_faces[1].image_uris.small;
+  newcard.image_normal = card.card_faces[1].image_uris.normal;
+  newcard.art_crop = card.card_faces[1].image_uris.art_crop;
+  newcard.cmc = 0;
+
+  newcard.type = card.type_line.substring(card.type_line.indexOf('/')+2).trim();
+  newcard.colors = [];
+  newcard.color_identity = [];
+
+  newcard.color_identity = newcard.color_identity.concat(card.color_identity);
+  newcard.parsed_cost = [];
+  newcard.colors = newcard.colors.concat(card.card_faces[1].colors);
+
+  if(newcard.type.toLowerCase().includes('land'))
+  {
+    newcard.colorcategory = 'l';
+  }
+  else if(newcard.color_identity.length == 0)
+  {
+    newcard.colorcategory = 'c';
+  }
+  else if(newcard.color_identity.length >  1)
+  {
+    newcard.colorcategory = 'm';
+  }
+  else if(newcard.color_identity.length ==  1)
+  {
+    newcard.colorcategory = newcard.color_identity[0].toLowerCase();
+  }
+
+  return newcard;
+}
+
 function convertCard(card)
 {
   if(card.name.includes('/') && card.layout!='split')
@@ -525,6 +603,7 @@ function convertCard(card)
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
+  newcard.oracle_text = card.oracle_text;
   if(card.tcgplayer_id)
   {
     newcard.tcgplayer_id = card.tcgplayer_id;
@@ -534,6 +613,7 @@ function convertCard(card)
     newcard.image_small = card.card_faces[0].image_uris.small;
     newcard.image_normal = card.card_faces[0].image_uris.normal;
     newcard.art_crop = card.card_faces[0].image_uris.art_crop;
+    newcard.image_flip = card.card_faces[1].image_uris.normal;
   }
   else
   {
@@ -554,7 +634,7 @@ function convertCard(card)
   newcard.color_identity = [];
 
   newcard.color_identity = newcard.color_identity.concat(card.color_identity);
-  if(!card.card_faces)
+  if(!card.card_faces || card.layout =='flip')
   {
     newcard.colors = newcard.colors.concat(card.colors);
     newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).toLowerCase().split('}{').reverse();
@@ -564,16 +644,12 @@ function convertCard(card)
     newcard.colors = newcard.colors.concat(card.colors);
     newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).replace(' // ','{split}').toLowerCase().split('}{').reverse();
   }
-  else if(card.layout =='flip')
-  {
-    newcard.colors = newcard.colors.concat(card.colors);
-    newcard.parsed_cost = card.mana_cost.substr(1,card.mana_cost.length-2).toLowerCase().split('}{').reverse();
-  }
   else if(card.card_faces[0].colors)
   {
     newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
     newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1,card.card_faces[0].mana_cost.length-2).toLowerCase().split('}{').reverse();
   }
+
   if(newcard.parsed_cost)
   {
     newcard.parsed_cost.forEach(function(item, index)

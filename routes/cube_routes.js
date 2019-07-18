@@ -1,6 +1,9 @@
 const express = require('express');
 let mongoose = require('mongoose');
+const request = require('request');
 const fs = require('fs');
+const rp = require('request-promise');
+const cheerio = require('cheerio');
 
 const router = express.Router();
 
@@ -161,6 +164,7 @@ router.get('/overview/:id', function(req, res)
             res.render('cube_overview',
             {
               cube:cube,
+              num_cards:cube.cards.length,
               author: 'unknown',
               post:blogs[0],
               loginCallback:'/cube/overview/'+req.params.id
@@ -171,6 +175,7 @@ router.get('/overview/:id', function(req, res)
             res.render('cube_overview',
             {
               cube:cube,
+              num_cards:cube.cards.length,
               owner: user.username,
               post:blogs[0],
               loginCallback:'/cube/overview/'+req.params.id
@@ -928,6 +933,170 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
+router.post('/importcubetutor/:id',ensureAuth, function(req,res,next)
+{
+  Cube.findById(req.params.id, function(err,cube)
+  {
+    if(err)
+    {
+      console.log(err);
+    }
+    else
+    {
+      if(cube.owner != req.user._id)
+      {
+        req.flash('danger','Not Authorized');
+        res.redirect('/cube/list/'+req.params.id);
+      }
+      else
+      {
+        const options = {
+          uri: 'http://www.cubetutor.com/viewcube/'+req.body.cubeid,
+          transform: function (body) {
+            return cheerio.load(body);
+          },
+          headers: {
+            //this tricks cubetutor into not redirecting us to the unsupported browser page
+              'User-Agent': 'Mozilla/5.0'
+          },
+        };
+        rp(options).then(function (data)
+        {
+          var cards = [];
+          var unknown = [];
+          data('.cardPreview').each(function(i, elem) {
+            var str = elem.attribs['data-image'].substring(37,elem.attribs['data-image'].length-4);
+            if(!str.includes('/'))
+            {
+              cards.push({
+                set:'unknown',
+                name:decodeURIComponent(elem.children[0].data).replace('_flip','')
+              })
+            }
+            else
+            {
+              var split = str.split('/');
+              cards.push({
+                set:split[0],
+                name:decodeURIComponent(elem.children[0].data).replace('_flip','')
+              })
+            }
+          });
+          var added = [];
+          var missing = "";
+          var changelog = "";
+          cards.forEach(function(card, index)
+          {
+            var currentId =nameToId[card.name.toLowerCase().trim()];
+            if(currentId && currentId[0])
+            {
+              var found = false;
+              currentId.forEach(function(possible, index)
+              {
+                if(!found && carddict[possible].set.toUpperCase() == card.set)
+                {
+                  found = true;
+                  added.push(carddict[possible]);
+                  var details = carddict[possible];
+                  cube.cards.push(
+                    {
+                      tags:['New'],
+                      status:"Not Owned",
+                      colors:details.color_identity,
+                      cmc:details.cmc,
+                      cardID:possible
+                    }
+                  );
+                  changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+                  if(carddict[possible].image_flip)
+                  {
+                    changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '" card_flip="'+ carddict[possible].image_flip + '">' + carddict[possible].name + '</a></br>';
+                  }
+                  else
+                  {
+                    changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '">' + carddict[possible].name + '</a></br>';
+                  }
+                }
+              });
+              if(!found)
+              {
+                added.push(carddict[currentId[0]]);
+                var details = carddict[currentId[0]];
+                cube.cards.push(
+                  {
+                    tags:['New'],
+                    status:"Not Owned",
+                    colors:details.color_identity,
+                    cmc:details.cmc,
+                    cardID:currentId[0]
+                  }
+                );
+                changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+                if(carddict[currentId[0]].image_flip)
+                {
+                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
+                }
+                else
+                {
+                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
+                }
+              }
+            }
+            else
+            {
+              missing += card.name +'\n';
+            }
+          });
+
+          var blogpost = new Blog();
+          blogpost.title='Cube Updated - Automatic Post'
+          blogpost.html=changelog;
+          blogpost.owner=cube.owner;
+          blogpost.date=Date.now();
+          blogpost.cube=cube._id;
+          blogpost.dev='false';
+          blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+          //console.log(draft);
+          blogpost.save(function(err)
+          {
+            if(missing.length > 0)
+            {
+              res.render('bulk_upload',
+              {
+                missing:missing,
+                added:JSON.stringify(added),
+                cube:cube
+              });
+            }
+            else
+            {
+              Cube.updateOne({_id:cube._id}, cube, function(err)
+              {
+                if(err)
+                {
+                  req.flash('danger', 'Error adding cards. Please try again.');
+                  res.redirect('/cube/list/'+req.params.id);
+                }
+                else
+                {
+                  req.flash('success', 'All cards successfully added.');
+                  res.redirect('/cube/list/'+req.params.id);
+                }
+              });
+            }
+          });
+        })
+        .catch(function (err) {
+          console.log(err);
+          req.flash('danger','Error: Unable to import this cube.');
+          res.redirect('/cube/list/'+req.params.id);
+        });
+      }
+    }
+  });
+});
+
 router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
 {
   Cube.findById(req.params.id, function(err,cube)
@@ -977,112 +1146,246 @@ router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
   }
 });
 
-function bulkUpload(req, res, list, cube){
-  cards = list.match(/[^\r\n]+/g);
-  cube.date_updated = Date.now();
-  cube.updated_string = cube.date_updated.toLocaleString("en-US");
-  if(!cards)
+function bulkuploadCSV(req, res, cards, cube)
+{
+  var added = [];
+  var missing = "";
+  var changelog = "";
+  cards.forEach(function(card_raw, index)
   {
-    req.flash('danger', 'No Cards Detected');
-    res.redirect('/cube/list/'+req.params.id);
-  }
-  else
-  {
-    var missing = "";
-    var added = [];
-    var changelog = "";
-    cards.forEach(function(item, index)
+    var split = CSVtoArray(card_raw);
+    var card = {
+      name:split[0],
+      cmc:split[1],
+      colors:split[3].split(''),
+      set:split[4].toUpperCase(),
+      status:split[5],
+      tags:split[6].split(',')
+    };
+    var currentId =nameToId[card.name.toLowerCase().trim()];
+    if(currentId && currentId[0])
     {
-      var currentId =nameToId[item.toLowerCase().trim()];
-      if(currentId && currentId[0])
+      var found = false;
+      currentId.forEach(function(possible, index)
       {
-        //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
-        var details = carddict[currentId[0]];
-        cube.cards.push(
+        if(!found && carddict[possible].set.toUpperCase() == card.set)
+        {
+          found = true;
+          added.push(carddict[possible]);
+          var details = carddict[possible];
+          cube.cards.push(
+            {
+              tags:card.tags,
+              status:card.status,
+              colors:card.colors,
+              cmc:card.cmc,
+              cardID:possible
+            }
+          );
+          changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+          if(carddict[possible].image_flip)
           {
-            tags:['New'],
-            status:"Not Owned",
-            colors:details.colors,
-            cmc:details.cmc,
-            cardID:currentId[0]
-          }
-        );
-        added.push(carddict[currentId[0]]);
-        changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-        changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
-      }
-      else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
-      {
-        //if we've found a match, and it DOES need to be parsed with cubecobra syntax
-        var found = false;
-        var possibilities = nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()];
-        possibilities.forEach(function(possible, ind)
-        {
-          if(!found && carddict[possible].full_name.toLowerCase() == item.toLowerCase().trim())
-          {
-            var details = carddict[possible];
-            cube.cards.push(
-              {
-                tags:['New'],
-                status:"Not Owned",
-                colors:details.colors,
-                cmc:details.cmc,
-                cardID:carddict[possible]
-              }
-            );
-            added.push(carddict[possible]);
-            found = true;
-          }
-        });
-        if(!found)
-        {
-          missing += item +'\n';
-        }
-      }
-      else
-      {
-        //we didn't find a match for this item
-        missing += item +'\n';
-      }
-    });
-
-    var blogpost = new Blog();
-    blogpost.title='Cube Updated - Automatic Post'
-    blogpost.html=changelog;
-    blogpost.owner=cube.owner;
-    blogpost.date=Date.now();
-    blogpost.cube=cube._id;
-    blogpost.dev='false';
-    blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
-
-    //console.log(draft);
-    blogpost.save(function(err)
-    {
-      if(missing.length > 0)
-      {
-        res.render('bulk_upload',
-        {
-          missing:missing,
-          added:JSON.stringify(added),
-          cube:cube
-        });
-      }
-      else
-      {
-        Cube.updateOne({_id:cube._id}, cube, function(err)
-        {
-          if(err)
-          {
-            console.log(err);
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '" card_flip="'+ carddict[possible].image_flip + '">' + carddict[possible].name + '</a></br>';
           }
           else
           {
-            req.flash('success', 'All cards successfully added.');
-            res.redirect('/cube/list/'+req.params.id);
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '">' + carddict[possible].name + '</a></br>';
           }
-        });
+        }
+      });
+      if(!found)
+      {
+        added.push(carddict[currentId[0]]);
+        var details = carddict[currentId[0]];
+        cube.cards.push(
+          {
+            tags:card.tags,
+            status:card.status,
+            colors:card.colors,
+            cmc:card.cmc,
+            cardID:currentId[0]
+          }
+        );
+        changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+        if(carddict[currentId[0]].image_flip)
+        {
+          changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
+        }
+        else
+        {
+          changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
+        }
       }
+    }
+    else
+    {
+      missing += card.name +'\n';
+    }
+  });
+
+  var blogpost = new Blog();
+  blogpost.title='Cube Updated - Automatic Post'
+  blogpost.html=changelog;
+  blogpost.owner=cube.owner;
+  blogpost.date=Date.now();
+  blogpost.cube=cube._id;
+  blogpost.dev='false';
+  blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+  //console.log(draft);
+  blogpost.save(function(err)
+  {
+    if(missing.length > 0)
+    {
+      res.render('bulk_upload',
+      {
+        missing:missing,
+        added:JSON.stringify(added),
+        cube:cube
+      });
+    }
+    else
+    {
+      Cube.updateOne({_id:cube._id}, cube, function(err)
+      {
+        if(err)
+        {
+          req.flash('danger', 'Error adding cards. Please try again.');
+          res.redirect('/cube/list/'+req.params.id);
+        }
+        else
+        {
+          req.flash('success', 'All cards successfully added.');
+          res.redirect('/cube/list/'+req.params.id);
+        }
+      });
+    }
     });
+}
+
+function bulkUpload(req, res, list, cube)
+{
+  cards = list.match(/[^\r\n]+/g);
+  if(cards[0].trim() == 'Name,CMC,Type,Color,Set,Status,Tags')
+  {
+    cards.splice(0,1);
+    bulkuploadCSV(req, res, cards, cube);
+  }
+  else
+  {
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString("en-US");
+    if(!cards)
+    {
+      req.flash('danger', 'No Cards Detected');
+      res.redirect('/cube/list/'+req.params.id);
+    }
+    else
+    {
+      var missing = "";
+      var added = [];
+      var changelog = "";
+      cards.forEach(function(item, index)
+      {
+        var currentId =nameToId[item.toLowerCase().trim()];
+        if(currentId && currentId[0])
+        {
+          //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
+          var details = carddict[currentId[0]];
+          cube.cards.push(
+            {
+              tags:['New'],
+              status:"Not Owned",
+              colors:details.color_identity,
+              cmc:details.cmc,
+              cardID:currentId[0]
+            }
+          );
+          added.push(carddict[currentId[0]]);
+          changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+          if(carddict[currentId[0]].image_flip)
+          {
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
+          }
+          else
+          {
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
+          }
+        }
+        else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
+        {
+          //if we've found a match, and it DOES need to be parsed with cubecobra syntax
+          var found = false;
+          var possibilities = nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()];
+          possibilities.forEach(function(possible, ind)
+          {
+            if(!found && carddict[possible].full_name.toLowerCase() == item.toLowerCase().trim())
+            {
+              var details = carddict[possible];
+              cube.cards.push(
+                {
+                  tags:['New'],
+                  status:"Not Owned",
+                  colors:details.color_identity,
+                  cmc:details.cmc,
+                  cardID:carddict[possible]
+                }
+              );
+              added.push(carddict[possible]);
+              found = true;
+            }
+          });
+          if(!found)
+          {
+            missing += item +'\n';
+          }
+        }
+        else
+        {
+          //we didn't find a match for this item
+          missing += item +'\n';
+        }
+      });
+
+      var blogpost = new Blog();
+      blogpost.title='Cube Updated - Automatic Post'
+      blogpost.html=changelog;
+      blogpost.owner=cube.owner;
+      blogpost.date=Date.now();
+      blogpost.cube=cube._id;
+      blogpost.dev='false';
+      blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+      //console.log(draft);
+      blogpost.save(function(err)
+      {
+        if(missing.length > 0)
+        {
+          res.render('bulk_upload',
+          {
+            missing:missing,
+            added:JSON.stringify(added),
+            cube:cube
+          });
+        }
+        else
+        {
+          Cube.updateOne({_id:cube._id}, cube, function(err)
+          {
+            if(err)
+            {
+              req.flash('danger', 'Error adding cards. Please try again.');
+              res.redirect('/cube/list/'+req.params.id);
+            }
+            else
+            {
+              req.flash('success', 'All cards successfully added.');
+              res.redirect('/cube/list/'+req.params.id);
+            }
+          });
+        }
+      });
+    }
   }
 }
 
@@ -1668,7 +1971,14 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             }
           );
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-          changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' + carddict[edit.substring(1)].name + '</a>';
+          if(carddict[edit.substring(1)].image_flip)
+          {
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '" card_flip="'+ carddict[edit.substring(1)].image_flip + '">' + carddict[edit.substring(1)].name + '</a></br>';
+          }
+          else
+          {
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' + carddict[edit.substring(1)].name + '</a>';
+          }
         }
         else if(edit.charAt(0) == '-')
         {
@@ -1689,7 +1999,14 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             cube.cards.splice(rm_index, 1);
 
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' +carddict[edit.substring(1)].name + '</a>';
+            if(carddict[edit.substring(1)].image_flip)
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '" card_flip="'+ carddict[edit.substring(1)].image_flip + '">' +carddict[edit.substring(1)].name + '</a>';
+            }
+            else
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '">' +carddict[edit.substring(1)].name + '</a>';
+            }
           }
           else
           {
@@ -1726,14 +2043,35 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             cube.cards.splice(rm_index, 1);
 
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[0]].image_normal + '">' + carddict[tmp_split[0]].name + '</a> > ';
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
+            if(carddict[tmp_split[0]].image_flip)
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[0]].image_normal + '" card_flip="'+ carddict[tmp_split[0]].image_flip + '">' + carddict[tmp_split[0]].name + '</a> > ';
+            }
+            else
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[0]].image_normal + '">' + carddict[tmp_split[0]].name + '</a> > ';
+            }
+            if(carddict[tmp_split[1]].image_flip)
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '" card_flip="'+ carddict[tmp_split[1]].image_flip + '">' + carddict[tmp_split[1]].name + '</a>';
+            }
+            else
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
+            }
           }
           else
           {
             fail_remove.push(tmp_split[0]);
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
+            if(carddict[tmp_split[1]].image_flip)
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '" card_flip="'+ carddict[tmp_split[1]].image_flip + '">' + carddict[tmp_split[1]].name + '</a>';
+            }
+            else
+            {
+              changelog += '<a class="dynamic-autocard" card="'+ carddict[tmp_split[1]].image_normal + '">' + carddict[tmp_split[1]].name + '</a>';
+            }
           }
         }
         changelog += '<br>';
@@ -1971,6 +2309,25 @@ router.get('/api/getcard/:name', function(req, res)
   }
 });
 
+router.get('/api/getimage/:name', function(req, res)
+{
+  req.params.name = req.params.name.replace('-slash-','//').replace('-q-','?').toLowerCase().trim();
+  var img = imagedict[req.params.name];
+  if(!img)
+  {
+    res.status(200).send({
+      success:'true'
+    });
+  }
+  else
+  {
+    res.status(200).send({
+      success:'true',
+      img:img
+    });
+  }
+});
+
 router.get('/api/getcardfromid/:id', function(req, res)
 {
   var card = carddict[req.params.id];
@@ -2073,6 +2430,7 @@ router.post('/api/updatecards/:id', function(req, res)
       else
       {
         var found = false;
+        console.log(req.body.updated);
         cube.cards.forEach(function(card, index)
         {
           card.details = carddict[card.cardID];
@@ -2080,13 +2438,28 @@ router.post('/api/updatecards/:id', function(req, res)
           {
             if(cardIsLabel(card,req.body.categories[0],req.body.sorts[0]) && cardIsLabel(card,req.body.categories[1],req.body.sorts[1]))
             {
+              console.log(card.details.name);
               if(req.body.updated.status)
               {
                 cube.cards[index].status = req.body.updated.status;
               }
               if(req.body.updated.tags)
               {
-                cube.cards[index].tags = cube.cards[index].tags.concat(req.body.updated.tags);
+                if(req.body.updated.addTags)
+                {
+                  cube.cards[index].tags = cube.cards[index].tags.concat(req.body.updated.tags);
+                }
+                else
+                {
+                  //remove the tags
+                  req.body.updated.tags.forEach(function(tag, tag_in)
+                  {
+                    var temp = cube.cards[index].tags.indexOf(tag);
+                    if (temp > -1) {
+                       cube.cards[index].tags.splice(temp, 1);
+                    }
+                  });
+                }
               }
             }
           }
@@ -2141,6 +2514,44 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
         res.send('Success');
       });
     }
+  });
+});
+
+router.post('/api/savesorts/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    User.findById(cube.owner, function(err, owner)
+    {
+      if(req.body.token != owner.edit_token)
+      {
+        res.status(401).send({
+          success:'false',
+          message:'Unauthorized'
+        });
+      }
+      else
+      {
+        var found = false;
+        cube.default_sorts = req.body.sorts;
+        cube.save(function(err)
+        {
+          if(err)
+          {
+            res.status(500).send({
+              success:'false',
+              message:'Error saving cube'
+            });
+          }
+          else
+          {
+            res.status(200).send({
+              success:'true'
+            });
+          }
+        });
+      }
+    });
   });
 });
 
@@ -2300,44 +2711,38 @@ function arraysEqual(a, b) {
   return true;
 }
 
-
-function GetColorCategory2(type, colors)
+//taken from https://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript-which-contains-comma-in-data
+function CSVtoArray(text)
 {
-  if(type.toLowerCase().includes('land'))
+  let ret = [''], i = 0, p = '', s = true;
+  for (let l in text)
   {
-    return 'Lands';
-  }
-  else if(colors.length == 0)
-  {
-    return 'Colorless';
-  }
-  else if(colors.length >  1)
-  {
-    return 'Multicolored';
-  }
-  else if(colors.length ==  1)
-  {
-    switch(colors[0])
+    l = text[l];
+    if ('"' === l)
     {
-      case "W":
-        return 'White';
-        break;
-      case "U":
-        return 'Blue';
-        break;
-      case "B":
-        return 'Black';
-        break;
-      case "R":
-        return 'Red';
-        break;
-      case "G":
-        return 'Green';
-        break;
+      s = !s;
+      if ('"' === p)
+      {
+        ret[i] += '"';
+        l = '-';
+      }
+      else if ('' === p)
+      {
+        l = '-';
+      }
     }
+    else if (s && ',' === l)
+    {
+      l = ret[++i] = '';
+    }
+    else
+    {
+      ret[i] += l;
+    }
+    p = l;
   }
+  return ret;
 }
-
 
 function cardIsLabel(card, label, sort)
 {
@@ -2399,6 +2804,14 @@ function cardIsLabel(card, label, sort)
   }
   else if(sort == 'Supertype' || sort =='Type')
   {
+    if(card.details.type.includes('Contraption'))
+    {
+      return label == 'Contraption';
+    }
+    else if(label == 'Plane')
+    {
+      return card.details.type.includes(label) && !card.details.type.includes('Planeswalker');
+    }
     return card.details.type.includes(label);
   }
   else if(sort == 'Tags')
@@ -2501,15 +2914,20 @@ function cardIsLabel(card, label, sort)
   {
     if(card.colors.length <= 1)
     {
-      return cardIsLabel(card, label, 'Type');
+      var split1 = card.details.type.split('—');
+      var split2 = split1[0].trim().split(' ');
+      return label == split2[split2.length-1];
     }
     else
     {
       return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
     }
   }
+  else if (sort == 'Artist')
+  {
+    return card.details.artist == label;
+  }
 }
-
 
 //true if card is filtered IN
 function filterCard(card, filterobj)

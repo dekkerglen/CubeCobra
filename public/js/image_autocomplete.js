@@ -1,15 +1,13 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 window.onload = async () => {
   //load the card names
   const response = await fetch(baseURL+'/cube/api/fullnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
-  const response2 = await fetch(baseURL+'/cube/api/imagedict');
-  const myJson2 = await response2.json();
-  var imagedict = myJson2.dict;
+  //
 
   function autocomplete(inp, arr, submit_button) {
     /*the autocomplete function takes two arguments,
@@ -46,7 +44,15 @@ window.onload = async () => {
               inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
               /*close the list of autocompleted values,
               (or any other open lists of autocompleted values:*/
-              document.getElementById('dynamicImage').src = imagedict[inp.value.toLowerCase()].uri;
+              fetch(baseURL+'/cube/api/getimage/'+inp.value.toLowerCase().replace('//','-slash-').replace('?','-q-'))
+                .then(response => response.json())
+                .then(function(json)
+              {
+                if(json.img)
+                {
+                  document.getElementById('dynamicImage').src = json.img.uri;
+                }
+              });
               closeAllLists();
           });
           a.appendChild(b);

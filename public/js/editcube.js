@@ -1,6 +1,6 @@
  // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>'+
                      '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
@@ -20,6 +20,7 @@ var changelistFormBody = document.getElementById("changelistFormBody");
 var updateSortButton = document.getElementById("updateSortButton");
 var updateFilterButton = document.getElementById("updateFilterButton");
 var addFilterButton = document.getElementById("addFilterButton");
+var saveSortButton = document.getElementById("saveSortButton");
 var changes = [];
 
 var modalFields = {
@@ -64,6 +65,8 @@ var groupModalFields = {
   buy:document.getElementById("groupContextBuyForm"),
   buy_list:document.getElementById("groupContextBuyHidden"),
   submit:document.getElementById("groupContextModalSubmit"),
+  tagAddRadio:document.getElementById("groupContextAdd"),
+  tagRemoveRadio:document.getElementById("groupContextRemove"),
   selected:null
 };
 
@@ -89,7 +92,6 @@ function updateTags()
     }
   });
   modalFields.tags.tagsdiv.innerHTML = tagsText;
-
 
   if(modalFields.submit)
   {
@@ -148,7 +150,7 @@ function updateGroupTags()
           tagsText += tag;
         });
         groupModalFields.tags.hiddeninput.value= tagsText;
-        updateTags();
+        updateGroupTags();
       });
     }
   }
@@ -323,7 +325,9 @@ if(modalFields.submit)
       }
       updateGroupTags();
     }
-    updated = {};
+    updated = {
+      addTags:groupModalFields.tagAddRadio.checked
+    };
 
     tags_split = groupModalFields.tags.hiddeninput.value.split(',');
     tags_split.forEach(function(tag, index)
@@ -369,7 +373,21 @@ if(modalFields.submit)
           }
           if(updated.tags)
           {
-            cube[index].tags = cube[index].tags.concat(updated.tags);
+            if(updated.addTags)
+            {
+              cube[index].tags = cube[index].tags.concat(updated.tags);
+            }
+            else
+            {
+              //remove the tags
+              updated.tags.forEach(function(tag, tag_in)
+              {
+                var temp = cube[index].tags.indexOf(tag);
+                if (temp > -1) {
+                   cube[index].tags.splice(temp, 1);
+                }
+              });
+            }
           }
         }
       });
@@ -479,18 +497,41 @@ if(modalFields.submit)
         var found = false;
         cube.forEach(function(card, index)
         {
-          if(!found && cardsAreEquivalent(card, data.src))
+          if(!found && card.index==data.src.index)
           {
             found = true;
             cube[index] = updated;
+            cube[index].index = card.index;
             cube[index].details = json.card;
-            cubeDict[cube[index].cardID] = cube[index];
+            console.log( card.index);
+            cubeDict[cube[index].index] = cube[index];
           }
         });
 
         updateCubeList();
         $('#contextModal').modal('hide');
       });
+    });
+  });
+  saveSortButton.addEventListener('click',(e) =>
+  {
+    var temp_sorts = [];
+    temp_sorts[0] = document.getElementById('primarySortSelect').value;
+    temp_sorts[1] = document.getElementById('secondarySortSelect').value;
+    let data =
+    {
+      sorts:temp_sorts,
+      token:document.getElementById("edittoken").value
+    };
+    fetch(baseURL + "/cube/api/savesorts/"+cubeID,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+        $('#cubeSaveModal').modal('show');
     });
   });
 }
@@ -565,6 +606,7 @@ function justAddButtonClick() {
     {
       if(json.card)
       {
+        console.log(json.card);
         addInput.value = "";
         changes.push({add:json.card})
         updateCollapse();
@@ -661,19 +703,47 @@ function updateCollapse() {
     val += "<a style='color:red;font-weight: bold;text-decoration: underline;' id='clickx" + index+ "' href=#>x</a> ";
     if(change.add)
     {
-      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '">' + change.add.name + '</a>';
+      val += '<span class="badge badge-success">+</span> ';
+      if(change.add.image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '" card_flip="'+ change.add.image_flip + '">' + change.add.name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '">' + change.add.name + '</a>';
+      }
     }
     else if(change.remove)
     {
-      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '">' + change.remove.name + '</a>';
+      val += '<span class="badge badge-danger">–</span> ';
+      if(change.remove.image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '" card_flip="'+ change.remove.image_flip + '">' + change.remove.name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '">' + change.remove.name + '</a>';
+      }
     }
     else if(change.replace)
     {
-      val += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
-      val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
+      val += '<span class="badge badge-primary">→</span> ';
+      if(change.replace[0].image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '" card_flip="'+ change.replace[0].image_flip + '">' + change.replace[0].name + '</a> > ';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
+      }
+      if(change.replace[1].image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '" card_flip="'+ change.replace[1].image_flip + '">' + change.replace[1].name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
+      }
     }
     val += "<br>"
   });
@@ -705,7 +775,8 @@ var cube = JSON.parse(document.getElementById("cuberaw").value);
 var cubeDict = {};
 cube.forEach(function(card, index)
 {
-  cubeDict[card.cardID] = card;
+  card.index = index;
+  cubeDict[index] = card;
 });
 var cubeArea = document.getElementById("cubelistarea");
 
@@ -781,7 +852,7 @@ function GetColorIdentity(colors)
 
 function getSorts()
 {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor'];
+  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Price'];
 }
 
 function getLabels(sort)
@@ -852,6 +923,18 @@ function getLabels(sort)
       }
     });
     return sets;
+  }
+  else if (sort == 'Artist')
+  {
+    var artists = [];
+    cube.forEach(function(card, index)
+    {
+      if(!artists.includes(card.details.artist))
+      {
+        artists.push(card.details.artist);
+      }
+    });
+    return artists;
   }
   else if (sort == 'Rarity')
   {
@@ -1057,12 +1140,18 @@ function cardIsLabel(card, label, sort)
   {
     if(card.colors.length <= 1)
     {
-      return cardIsLabel(card, label, 'Type');
+      var split1 = card.details.type.split('—');
+      var split2 = split1[0].trim().split(' ');
+      return label == split2[split2.length-1];
     }
     else
     {
       return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
     }
+  }
+  else if (sort == 'Artist')
+  {
+    return card.details.artist == label;
   }
 }
 
@@ -1142,14 +1231,21 @@ function init_groupcontextModal()
         groupModalFields.title.innerHTML = sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2;
         var cardlist = "";
 
-        cardlist += '<ul class="list-group" style="padding:5px 0px;">';
+        cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
 
         groupModalFields.tags.hiddeninput.value= "";
 
         updateGroupTags();
         matches.forEach(function( card, index)
         {
-          cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+          if(card.details.image_flip)
+          {
+            cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+          }
+          else
+          {
+            cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+          }
           cardlist += card.details.name+'</li>';
           cardlist += '</li>';
         });
@@ -1209,7 +1305,7 @@ function show_contextModal(card)
   modalFields.tags.hiddeninput.value= tagsText;
 
   updateTags();
-  modalFields.cmc.value = card.details.cmc;
+  modalFields.cmc.value = card.cmc;
   modalFields.colors.white.checked = card.colors.includes('W');
   modalFields.colors.blue.checked = card.colors.includes('U');
   modalFields.colors.black.checked = card.colors.includes('B');
@@ -1258,7 +1354,7 @@ function init_contextModal()
     links[i].addEventListener('click', (e) =>
     {
       e.preventDefault();
-      card = cubeDict[e.target.getAttribute("cardid")];
+      card = cubeDict[e.target.getAttribute("cardindex")];
 
 
       show_contextModal(card);
@@ -1396,7 +1492,6 @@ function updateCubeList()
 {
   sorts[0] = document.getElementById('primarySortSelect').value;
   sorts[1] = document.getElementById('secondarySortSelect').value;
-
   columns = sortIntoGroups(filteredCube(), sorts[0]);
   Object.keys(columns).forEach(function(column_label, col_index)
   {
@@ -1459,7 +1554,14 @@ function updateCubeList()
 
           rowgroup.forEach(function( card, index)
           {
-            res += '<a href="#" cardID="'+card.cardID+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+            if(card.details.image_flip)
+            {
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+            }
+            else
+            {
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+            }
             res += card.details.name+'</a>';
           });
 
@@ -1554,8 +1656,16 @@ function buildFilterArea()
   sorthtml += filterItemTemplate.replace('#{value}','Unsorted').replace('#{label}','Unsorted');
   document.getElementById('secondarySortSelect').innerHTML = sorthtml;
   document.getElementById('primarySortSelect').innerHTML = sorthtml;
-  document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
-  document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
+  if(document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0)
+  {
+    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort1").value);
+    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort2").value);
+  }
+  else
+  {
+    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
+    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
+  }
 
   updateFilters();
 }

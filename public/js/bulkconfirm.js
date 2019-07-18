@@ -1,6 +1,6 @@
 // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+var baseURL='http://localhost:5000';
+//var baseURL='https://cubecobra.com';
 
 var justAddButton = document.getElementById("justAddButton");
 var addInput = document.getElementById("addInput");
@@ -14,7 +14,7 @@ saveChangesButton.addEventListener("click", saveChangesButtonClick);
 var changes = [];
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('//','-slash-');
+  var val = addInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch(baseURL+'/cube/api/getcard/'+val)
@@ -68,18 +68,46 @@ function updateCollapse()
     if(change.add)
     {
       val += '<span class="badge badge-success">+</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '">' + change.add.name + '</a>';
+      if(change.add.image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '" card_flip="'+ change.add.image_flip + '">' + change.add.name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.add.image_normal + '">' + change.add.name + '</a>';
+      }
     }
     else if(change.remove)
     {
       val += '<span class="badge badge-danger">–</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '">' + change.remove.name + '</a>';
+      if(change.remove.image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '" card_flip="'+ change.remove.image_flip + '">' + change.remove.name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.remove.image_normal + '">' + change.remove.name + '</a>';
+      }
     }
     else if(change.replace)
     {
       val += '<span class="badge badge-primary">→</span> ';
-      val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
-      val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
+      if(change.replace[0].image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '" card_flip="'+ change.replace[0].image_flip + '">' + change.replace[0].name + '</a> > ';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
+      }
+      if(change.replace[1].image_flip)
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '" card_flip="'+ change.replace[1].image_flip + '">' + change.replace[1].name + '</a>';
+      }
+      else
+      {
+        val += '<a class="dynamic-autocard" card="'+ change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
+      }
     }
     val += "<br>"
   });

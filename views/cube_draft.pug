@@ -27,53 +27,53 @@ block content
         br  
         h4=title
         h6=subtitle
-        br     
+        br
         ul.list-group
           each card, i in picks
             if card.colorcategory == 'w'
-              li.list-group-item.autocard.white(card=card.image_normal)
+              li.list-group-item.autocard.white(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'u'
-              li.list-group-item.autocard.blue(card=card.image_normal)
+              li.list-group-item.autocard.blue(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'b'
-              li.list-group-item.autocard.black(card=card.image_normal)
+              li.list-group-item.autocard.black(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'r'
-              li.list-group-item.autocard.red(card=card.image_normal)
+              li.list-group-item.autocard.red(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'g'
-              li.list-group-item.autocard.green(card=card.image_normal)
+              li.list-group-item.autocard.green(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'c'
-              li.list-group-item.autocard.colorless(card=card.image_normal)
+              li.list-group-item.autocard.colorless(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'm'
-              li.list-group-item.autocard.multi(card=card.image_normal)
+              li.list-group-item.autocard.multi(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
                     img(src='/content/symbols/'+symbol+'.png' align='right' width='15px' style='margin-top: 5px;')
             if card.colorcategory == 'l'
-              li.list-group-item.autocard.lands(card=card.image_normal)
+              li.list-group-item.autocard.lands(card=card.image_normal card_flip=card.image_flip)
                 a.card-list-item= card.name
                 for symbol, j in card.parsed_cost
                   if symbol.length > 0
@@ -81,5 +81,5 @@ block content
     
       .col-9
         each card, i in activecards
-          a.autocard(card=card.image_normal, href='/cube/draft/pick/'+draftid+';'+card._id)
+          a.autocard(card=card.image_normal, href='/cube/draft/pick/'+draftid+';'+card._id  card_flip=card.image_flip)
             img( src=card.image_normal, width='150', height='210' alt=card.name)

@@ -9,6 +9,7 @@ html
     link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
     link(rel='stylesheet' href='/css/stylesheet.css')
     #autocard_popup(style='position:absolute;z-index: 9999;')
+    #autocard_popup2(style='position:absolute;z-index: 9999;')
   body
     nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
       .container
@@ -32,6 +33,7 @@ html
               a.dropdown-item(href='/dev/blog') Dev Blog
               a.dropdown-item(href='/ourstory') Our Story
               a.dropdown-item(href='/faq') FAQ
+              a.dropdown-item(href='/donate') Donate
           if user
             li.nav-item
               a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
