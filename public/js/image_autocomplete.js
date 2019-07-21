@@ -1,10 +1,7 @@
-// #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
 
 window.onload = async () => {
   //load the card names
-  const response = await fetch(baseURL+'/cube/api/fullnames');
+  const response = await fetch('/cube/api/fullnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
   //
@@ -44,7 +41,7 @@ window.onload = async () => {
               inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
               /*close the list of autocompleted values,
               (or any other open lists of autocompleted values:*/
-              fetch(baseURL+'/cube/api/getimage/'+inp.value.toLowerCase().replace('//','-slash-').replace('?','-q-'))
+              fetch('/cube/api/getimage/'+inp.value.toLowerCase().replace('//','-slash-').replace('?','-q-'))
                 .then(response => response.json())
                 .then(function(json)
               {

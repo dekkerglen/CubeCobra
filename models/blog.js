@@ -10,7 +10,8 @@ let blogSchema = mongoose.Schema(
     cube:String,
     html:String,
     dev:String,
-    date_formatted:String
+    date_formatted:String,
+    changelist:String
   }
 );
 

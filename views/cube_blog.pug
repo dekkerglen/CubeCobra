@@ -6,7 +6,10 @@ block content
       ol.breadcrumb
         li.breadcrumb-item
           a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
-        li.breadcrumb-item.active(aria-current='page')= cube.name
+        li.breadcrumb-item.active(aria-current='page') 
+          a #{cube.name}
+          if cube.type
+            a  (#{cube.card_count} Card #{cube.type} Cube)
       
 
   ul.nav.nav-tabs.nav-fill.nav-justified
@@ -24,17 +27,9 @@ block content
     if user
       br
       if user.id == cube.owner
-        .card(style='padding:10px')
-          h5 Create New Blog Post
-          form(method='POST', action='/cube/blog/post/'+cube._id)
-            #form-group
-              label Title:
-              input.form-control(maxlength='200' name='title', type='text')
-            #form-group
-              label Body:
-              textarea.form-control(maxlength='20000' name='body')
-            br
-            input.btn.btn-success(type='submit',value='Submit')      
+        button.btn.btn-success.newBlogButton(role='button') Create new blog post
+        br
+    br
     if pages      
       hr
       nav(aria-label='pagination')
@@ -51,13 +46,48 @@ block content
     if posts
       each post, i in posts
         .card
-          .card-body
-            h5.card-title=post.title
-            h6.card-subtitle.mb-2.text-muted=post.date_formatted
-            if post.body
-              p.card-text=post.body
-            if post.html
-              p.card-text !{post.html}
+          if post.changelist && post.html
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .row.no-gutters
+              .col-4(style='border-right: 1px solid #DFDFDF;')
+                .card-body
+                  p.card-text 
+                    a !{post.changelist}   
+              .col-8
+                .card-body
+                  .card-text
+                    a !{post.html}           
+          else if post.changelist
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .card-body
+              p.card-text 
+                a !{post.changelist}
+              a
+          else
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .card-body
+              if post.html
+                p=post.body
+                .card-text
+                  a !{post.html}
+              else
+                p=post.body
+          if user && user.id == cube.owner
+            .card-footer
+              span
+                button.btn.btn-success.editBlogButton(role='button' data-id=post._id) Edit
+                a  
+                a.btn.btn-danger(data-toggle='collapse', href='#collapsepost'+i, role='button') Delete
+              .collapse(id='collapsepost'+i)
+                span
+                  a Are you sure? This action cannot be undone.  
+                  button.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id=post._id ) Yes, delete this post
         br
       if pages      
         hr
@@ -72,3 +102,25 @@ block content
                 li.page-item
                   a.page-link(href=page.url)=page.content
         hr
+  if user
+    if user.id == cube.owner
+      // edit overview modal
+      #editBlogModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
+        .modal-dialog.modal-lg(role='document')
+          .modal-content
+            form#postBlogForm(method='POST', action='/cube/blog/post/'+cube.id)
+              .modal-header
+                h5#blogEditTitle Edit Blog Post
+                button.close(type='button', data-dismiss='modal', aria-label='Close')
+                  span(aria-hidden='true') ×
+              .modal-body
+                  label Title:
+                  input#postBlogTitleInput.form-control(maxlength='200' name='title', type='text')
+                  label Body:
+                  input#postBlogHiddenId(type='hidden', name='id')
+                  input#postBlogHiddenHTML(type='hidden', name='html')
+                  include texteditor
+              .modal-footer
+                input.btn.btn-success(type='submit',value='Save')   
+                button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+      script(src='/js/blog.js')

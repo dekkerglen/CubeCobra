@@ -551,9 +551,29 @@ function convertExtraCard(card)
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
   newcard.oracle_text = card.oracle_text;
+  newcard.legalities =
+  {
+    Legacy:false,
+    Modern:false,
+    Standard:false,
+    Pauper:false,
+  };
   if(card.tcgplayer_id)
   {
     newcard.tcgplayer_id = card.tcgplayer_id;
+  }
+
+  if(card.card_faces[1].loyalty)
+  {
+    newcard.loyalty = card.card_faces[1].loyalty;
+  }
+  if(card.card_faces[1].power)
+  {
+    newcard.power = card.card_faces[1].power;
+  }
+  if(card.card_faces[1].toughness)
+  {
+    newcard.toughness = card.card_faces[1].toughness;
   }
   newcard.image_small = card.card_faces[1].image_uris.small;
   newcard.image_normal = card.card_faces[1].image_uris.normal;
@@ -595,6 +615,7 @@ function convertCard(card)
     card.name = card.name.substring(0,card.name.indexOf('/')).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
   let newcard = {};
+
   newcard._id = card.id;
   newcard.set = card.set;
   newcard.full_name = card.name + ' [' + card.set + '-'+ card.collector_number + ']';
@@ -603,11 +624,43 @@ function convertCard(card)
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
+  newcard.legalities =
+  {
+    Legacy:card.legalities.legacy == 'legal',
+    Modern:card.legalities.modern == 'legal',
+    Standard:card.legalities.standard == 'legal',
+    Pauper:card.legalities.pauper == 'legal'
+  };
   newcard.oracle_text = card.oracle_text;
   if(card.tcgplayer_id)
   {
     newcard.tcgplayer_id = card.tcgplayer_id;
   }
+  if(card.card_faces && card.card_faces[0].loyalty)
+  {
+    newcard.loyalty = card.card_faces[0].loyalty;
+  }
+  else if(card.loyalty)
+  {
+    newcard.loyalty = card.loyalty;
+  }
+  if(card.card_faces && card.card_faces[0].power)
+  {
+    newcard.power = card.card_faces[0].power;
+  }
+  else if(card.power)
+  {
+    newcard.power = card.power;
+  }
+  if(card.card_faces && card.card_faces[0].toughness)
+  {
+    newcard.toughness = card.card_faces[0].toughness;
+  }
+  else if(card.toughness)
+  {
+    newcard.toughness = card.toughness;
+  }
+
   if(card.card_faces && card.card_faces[0].image_uris)
   {
     newcard.image_small = card.card_faces[0].image_uris.small;

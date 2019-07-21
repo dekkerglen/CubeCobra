@@ -1,7 +1,3 @@
- // #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
-
 var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>'+
                      '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
                      '#{items}</select><div class="input-group-append"><div class="input-group-text"><input type="checkbox" data-index="#{checkboxindex}" id="#{checkbox}"/><a style="padding-left: 5px">Not </a></div>' +
@@ -298,7 +294,7 @@ if(modalFields.submit)
 {
   modalFields.version.addEventListener('change', (e) =>
   {
-    fetch(baseURL+'/cube/api/getcardfromid/'+e.target.value)
+    fetch('/cube/api/getcardfromid/'+e.target.value)
       .then(response => response.json())
       .then(function(json)
     {
@@ -356,7 +352,7 @@ if(modalFields.submit)
     };
 
 
-    fetch(baseURL + "/cube/api/updatecards/"+cubeID, {
+    fetch("/cube/api/updatecards/"+cubeID, {
       method: "POST",
       body: JSON.stringify(data),
       headers:{
@@ -375,7 +371,13 @@ if(modalFields.submit)
           {
             if(updated.addTags)
             {
-              cube[index].tags = cube[index].tags.concat(updated.tags);
+              updated.tags.forEach(function(newtag, tag_ind)
+              {
+                if(!cube[index].tags.includes(newtag))
+                {
+                  cube[index].tags.push(newtag);
+                }
+              });
             }
             else
             {
@@ -483,14 +485,14 @@ if(modalFields.submit)
       updated:updated,
       token:document.getElementById("edittoken").value
     };
-    fetch(baseURL + "/cube/api/updatecard/"+cubeID, {
+    fetch("/cube/api/updatecard/"+cubeID, {
       method: "POST",
       body: JSON.stringify(data),
       headers:{
         'Content-Type': 'application/json'
       }
     }).then(res => {
-      fetch(baseURL+'/cube/api/getcardfromid/'+updated.cardID)
+      fetch('/cube/api/getcardfromid/'+updated.cardID)
         .then(response => response.json())
         .then(function(json)
       {
@@ -523,7 +525,7 @@ if(modalFields.submit)
       sorts:temp_sorts,
       token:document.getElementById("edittoken").value
     };
-    fetch(baseURL + "/cube/api/savesorts/"+cubeID,
+    fetch("/cube/api/savesorts/"+cubeID,
     {
       method: "POST",
       body: JSON.stringify(data),
@@ -600,7 +602,7 @@ function justAddButtonClick() {
   var val = addInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
-    fetch(baseURL+'/cube/api/getcard/'+val)
+    fetch('/cube/api/getcard/'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -624,7 +626,7 @@ function removeButtonClick() {
   var val = removeInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
-    fetch(baseURL+'/cube/api/getcardfromcube/'+cubeID+';'+val)
+    fetch('/cube/api/getcardfromcube/'+cubeID+';'+val)
       .then(response => response.json())
       .then(function(json)
     {
@@ -633,7 +635,7 @@ function removeButtonClick() {
         if(addInput.value.length > 0)
         {
           var val2 = addInput.value.replace('//','-slash-').replace('?','-q-');
-          fetch(baseURL+'/cube/api/getcard/'+val2)
+          fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
           {
@@ -673,6 +675,8 @@ function discardAllButtonClick() {
 }
 
 function saveChangesButtonClick() {
+
+  $('#changelistBlog').val($('#editor').html());
   changes.forEach(function(change, index)
   {
     if(index != 0)
@@ -813,6 +817,9 @@ function GetColorCategory(type, colors)
       case "G":
         return 'Green';
         break;
+      case "C":
+        return 'Colorless';
+        break;
     }
   }
 }
@@ -846,13 +853,16 @@ function GetColorIdentity(colors)
       case "G":
         return 'Green';
         break;
+      case "C":
+        return 'Colorless';
+        break;
     }
   }
 }
 
 function getSorts()
 {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Price'];
+  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty'];
 }
 
 function getLabels(sort)
@@ -968,6 +978,55 @@ function getLabels(sort)
     return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov',
       'Izzet','Golgari','Boros','Simic','Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color'];
   }
+  else if (sort=='Legality')
+  {
+    return ['Standard','Modern','Legacy','Vintage','Pauper'];
+  }
+  else if (sort == 'Power')
+  {
+    var items = [];
+    cube.forEach(function(card, index)
+    {
+      if(card.details.power)
+      {
+        if(!items.includes(card.details.power))
+        {
+          items.push(card.details.power);
+        }
+      }
+    });
+    return items;
+  }
+  else if (sort == 'Toughness')
+  {
+    var items = [];
+    cube.forEach(function(card, index)
+    {
+      if(card.details.toughness)
+      {
+        if(!items.includes(card.details.toughness))
+        {
+          items.push(card.details.toughness);
+        }
+      }
+    });
+    return items;
+  }
+  else if (sort == 'Loyalty')
+  {
+    var items = [];
+    cube.forEach(function(card, index)
+    {
+      if(card.details.loyalty)
+      {
+        if(!items.includes(card.details.loyalty))
+        {
+          items.push(card.details.loyalty);
+        }
+      }
+    });
+    return items;
+  }
 }
 
 function cardIsLabel(card, label, sort)
@@ -1017,7 +1076,7 @@ function cardIsLabel(card, label, sort)
       case 'Non-Red':
         return !card.colors.includes('R');
       case 'Five Color':
-        return !card.colors.length == 0;
+        return card.colors.length == 5;
     }
   }
   else if (sort == 'CMC')
@@ -1153,6 +1212,41 @@ function cardIsLabel(card, label, sort)
   {
     return card.details.artist == label;
   }
+  else if(sort == 'Legality')
+  {
+    if(label=='Vintage')
+    {
+      return true;
+    }
+    return card.details.legalities[label];
+  }
+  else if (sort == 'Power')
+  {
+    console.log(card);
+    if(card.details.power)
+    {
+      return card.details.power == label;
+    }
+    return false;
+  }
+  else if (sort == 'Toughness')
+  {
+    console.log(card);
+    if(card.details.toughness)
+    {
+      return card.details.toughness == label;
+    }
+    return false;
+  }
+  else if (sort == 'Loyalty')
+  {
+    console.log(card);
+    if(card.details.loyalty)
+    {
+      return card.details.loyalty == label;
+    }
+    return false;
+  }
 }
 
 function getCardColorClass(card)
@@ -1189,6 +1283,9 @@ function getCardColorClass(card)
         break;
       case "G":
         return 'green';
+        break;
+      case "C":
+        return 'colorless';
         break;
     }
   }
@@ -1321,7 +1418,7 @@ function show_contextModal(card)
   {
     modalFields.buy.href = 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+encodeURIComponent(card.details.name)+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
   }
-  fetch(baseURL+'/cube/api/getversions/'+card.cardID)
+  fetch('/cube/api/getversions/'+card.cardID)
     .then(response => response.json())
     .then(function(json)
   {

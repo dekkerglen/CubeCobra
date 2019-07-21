@@ -6,8 +6,10 @@ block content
       ol.breadcrumb
         li.breadcrumb-item
           a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
-        li.breadcrumb-item.active(aria-current='page')= cube.name
-      
+        li.breadcrumb-item.active(aria-current='page') 
+          a #{cube.name}
+          if cube.type
+            a  (#{cube.card_count} Card #{cube.type} Cube)
 
   ul.nav.nav-tabs.nav-fill.nav-justified
       li.nav-item

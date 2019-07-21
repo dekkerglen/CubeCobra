@@ -1,17 +1,15 @@
-// #cubecobralocalhost
-//var baseURL='http://localhost:5000';
-var baseURL='https://cubecobra.com';
+
 
 window.onload = async () => {
   //load the card names
   if(document.getElementById("removeInput"))
   {
     var cubeID=document.getElementById("cubeID").value;
-    const response2 = await fetch(baseURL+'/cube/api/cubecardnames/'+cubeID);
+    const response2 = await fetch('/cube/api/cubecardnames/'+cubeID);
     const myJson2 = await response2.json();
     var cubenames = myJson2.cardnames;
   }
-  const response = await fetch(baseURL+'/cube/api/cardnames');
+  const response = await fetch('/cube/api/cardnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
 

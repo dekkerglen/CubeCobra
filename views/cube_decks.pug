@@ -1,0 +1,59 @@
+extends layout
+
+block content
+  h5
+    nav(aria-label='breadcrumb')
+      ol.breadcrumb
+        li.breadcrumb-item
+          a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
+        li.breadcrumb-item.active(aria-current='page') 
+          a #{cube.name}
+          if cube.type
+            a  (#{cube.card_count} Card #{cube.type} Cube)
+  ul.nav.nav-tabs.nav-fill.nav-justified
+      li.nav-item
+        a.nav-link(href='/cube/overview/'+cube._id) Overview
+      li.nav-item
+        a.nav-link(href='/cube/list/'+cube._id) List
+      li.nav-item
+        a.nav-link.active(href='/cube/playtest/'+cube._id) Playtest
+      li.nav-item
+        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+      li.nav-item
+        a.nav-link(href='/cube/blog/'+cube._id) Blog
+        
+  if pages      
+    hr
+    nav(aria-label='pagination')
+      ul.pagination
+        each page, i in pages
+          if page.active
+            li.page-item.active(aria-current='page')
+              a.page-link(href=page.url)=page.content
+                span.sr-only (current)
+          else
+            li.page-item
+              a.page-link(href=page.url)=page.content
+    hr    
+  br
+  .card
+    .card-header
+      h4 All Decks
+    .card-body
+      if decks.length > 0
+        each deck, i in decks
+          a(href='/cube/deck/'+deck._id) #{deck.name}
+          br    
+  if pages      
+    hr
+    nav(aria-label='pagination')
+      ul.pagination
+        each page, i in pages
+          if page.active
+            li.page-item.active(aria-current='page')
+              a.page-link(href=page.url)=page.content
+                span.sr-only (current)
+          else
+            li.page-item
+              a.page-link(href=page.url)=page.content
+    hr

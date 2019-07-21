@@ -7,7 +7,10 @@ block content
       ol.breadcrumb
         li.breadcrumb-item
           a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
-        li.breadcrumb-item.active(aria-current='page')= cube.name
+        li.breadcrumb-item.active(aria-current='page') 
+          a #{cube.name}
+          if cube.type
+            a  (#{cube.card_count} Card #{cube.type} Cube)
         
   // tabbed cube nav    
   ul.nav.nav-tabs.nav-fill.nav-justified
@@ -24,7 +27,7 @@ block content
 
   //edit controls
   .pos-f-t
-    nav.navbar.navbar-expand-lg.navbar-light.bg-light
+    nav.navbar.navbar-expand.navbar-light.bg-light
       .collapse.navbar-collapse
         ul.navbar-nav          
           if user
@@ -35,6 +38,8 @@ block content
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
+          li.nav-item
+            a.nav-link(href='/cube/visualspoiler/'+cube.id) Visual Spoiler
           if user
             if user.id == cube.owner
               li.nav-item.dropdown
@@ -68,20 +73,31 @@ block content
                     .form-group.mb-2.autocomplete
                       input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
                     button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
-              .row.collapse.editForm
-                .col
-                  form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
-                    label Changelist:
-                    .editarea
-                      p.editlist#changelist
-                    br
-                    input#changelistFormBody(type='hidden', name='body')
-                    input#changelistBlog(type='hidden', name='blog')
-                    input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
-                    input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
-                  br
-                .col
-                  br
+              .collapse.editForm                
+                form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+                  .row
+                    .col
+                      br
+                      label Changelist:
+                      .editarea
+                        p.editlist#changelist
+                      br
+                      input#changelistFormBody(type='hidden', name='body')
+                      input#changelistBlog(type='hidden', name='blog')
+                    .col            
+                      br
+                      #form-group
+                        label Blog Title:
+                        input.form-control(maxlength='200' name='title', type='text' value='Cube Updated - Automatic Post')
+                      #form-group
+                        label Body:
+                        include texteditor
+                  .row
+                    .col
+                      input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
+                      input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
+                      br
+                      br
       #navsort.collapse(data-parent='#accordion')
         .container.bg-light
           .row
@@ -218,7 +234,7 @@ block content
                 h5 Card Attributes
                 .input-group.mb-3
                   .input-group-prepend
-                    span.input-group-text Version
+                    span.input-group-text Version (Set and Collector's #)
                   select#contextModalVersionSelect.custom-select
                 .input-group.mb-3
                   .input-group-prepend
@@ -281,7 +297,7 @@ block content
                   h5 Card Attributes
                   .input-group.mb-3
                     .input-group-prepend
-                      span.input-group-text Version
+                      span.input-group-text Version (Set and Collector's #)
                     select#contextModalVersionSelect.custom-select
                   .input-group.mb-3
                     .input-group-prepend

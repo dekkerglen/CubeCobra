@@ -37,6 +37,9 @@ block content
             .card
               .card-header
                 h5=cube.name
+                if cube.type
+                  a #{cube.card_count} Card #{cube.type} Cube
+                  br
                 em
                   a Designed by 
                   a(href='/user/view/'+cube.owner) #{cube.owner_name}  

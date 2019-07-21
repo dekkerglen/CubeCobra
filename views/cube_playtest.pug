@@ -6,7 +6,10 @@ block content
       ol.breadcrumb
         li.breadcrumb-item
           a(href='/user/view/'+cube.owner style='color: #218937;') #{owner}
-        li.breadcrumb-item.active(aria-current='page')= cube.name
+        li.breadcrumb-item.active(aria-current='page') 
+          a #{cube.name}
+          if cube.type
+            a  (#{cube.card_count} Card #{cube.type} Cube)
       
 
   ul.nav.nav-tabs.nav-fill.nav-justified
@@ -26,55 +29,59 @@ block content
       if decks.length > 0
         .col-6
           .card
-            .card-body
+            .card-header
               h5.card-title Recent Decks
+            .card-body
               each deck, i in decks
                 a(href='/cube/deck/'+deck._id) #{deck.name}
                 br
+            .card-footer
+              a(href='/cube/decks/'+cube.id) View all
       .col-6
         .card
-          .card-body
-            h5.card-title Start a new draft
-            form(method='POST', action='/cube/startdraft/'+cube.id)
-              .form-group.row
-                label.col-sm-4.col-form-label.col-form-label-sm Number of Packs
-                .col-sm-8
-                  select#inputState.form-control(name='packs')
-                    option 1
-                    option 2
-                    option(selected='') 3
-                    option 4
-                    option 5
-              .form-group.row
-                label.col-sm-4.col-form-label.col-form-label-sm Cards per Pack
-                .col-sm-8
-                  select#inputState.form-control(name='cards')
-                    option 5
-                    option 6
-                    option 7
-                    option 8
-                    option 9
-                    option 10
-                    option 11
-                    option 12
-                    option 13
-                    option 14
-                    option(selected='') 15
-                    option 16
-                    option 17
-                    option 18
-                    option 19
-                    option 20             
-              .form-group.row
-                label.col-sm-4.col-form-label.col-form-label-sm Total Seats
-                .col-sm-8
-                  select#inputState.form-control(name='seats')
-                    option 4
-                    option 5
-                    option 6
-                    option 7
-                    option(selected='') 8
-                    option 9
-                    option 10
-
+          form(method='POST', action='/cube/startdraft/'+cube.id)
+            .card-header
+              h5.card-title Start a new draft
+            .card-body
+                .form-group.row
+                  label.col-sm-4.col-form-label.col-form-label-sm Number of Packs
+                  .col-sm-8
+                    select#inputState.form-control(name='packs')
+                      option 1
+                      option 2
+                      option(selected='') 3
+                      option 4
+                      option 5
+                .form-group.row
+                  label.col-sm-4.col-form-label.col-form-label-sm Cards per Pack
+                  .col-sm-8
+                    select#inputState.form-control(name='cards')
+                      option 5
+                      option 6
+                      option 7
+                      option 8
+                      option 9
+                      option 10
+                      option 11
+                      option 12
+                      option 13
+                      option 14
+                      option(selected='') 15
+                      option 16
+                      option 17
+                      option 18
+                      option 19
+                      option 20             
+                .form-group.row
+                  label.col-sm-4.col-form-label.col-form-label-sm Total Seats
+                  .col-sm-8
+                    select#inputState.form-control(name='seats')
+                      option 4
+                      option 5
+                      option 6
+                      option 7
+                      option(selected='') 8
+                      option 9
+                      option 10
+            .card-footer
               button.btn.btn-success(type='submit') Start Draft

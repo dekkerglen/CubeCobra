@@ -10,6 +10,7 @@ const fs = require('fs')
 let User = require('../models/user')
 let PasswordReset = require('../models/passwordreset')
 let Cube = require('../models/cube')
+let Deck = require('../models/deck')
 
 //Lost password form
 router.get('/lostpassword', function(req, res)
@@ -200,7 +201,6 @@ router.post('/register', function(req, res)
   req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
   req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({ min: 5, max:24 });
   req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
-  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z!@#$%^&*]*$/, "i");
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
@@ -464,21 +464,115 @@ router.get('/view/:id', function(req, res)
     {
       Cube.find({owner:user._id}, function(err, cubes)
       {
-        user_limited=
-        {
-          username:user.username,
-          email:user.email,
-          about:user.about,
-          userid:user._id
-        }
         res.render('user_view',
         {
-          user_limited:user_limited,
+          user_limited:{
+            username:user.username,
+            email:user.email,
+            about:user.about,
+            id:user._id
+          },
           cubes:cubes,
           loginCallback:'/user/view/'+req.params.id
         });
       });
     }
+  });
+});
+
+router.get('/decks/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  var userid = split[0];
+  User.findById(userid, function(err, user)
+  {
+    Deck.find({owner:userid}).sort('date').exec(function(err, decks)
+    {
+      if(!user)
+      {
+        user = {username:'unknown'};
+      }
+      var pages = [];
+      var pagesize = 30;
+      if(decks.length > 0)
+      {
+        decks.reverse();
+        if(decks.length > pagesize)
+        {
+          var page = parseInt(split[1]);
+          if(!page)
+          {
+            page = 0;
+          }
+          for(i = 0; i < decks.length/pagesize; i++)
+          {
+            if(page==i)
+            {
+              pages.push({
+                url:'/user/decks/'+userid+';'+i,
+                content:(i+1),
+                active:true
+              });
+            }
+            else
+            {
+              pages.push({
+                url:'/user/decks/'+userid+';'+i,
+                content:(i+1),
+              });
+            }
+          }
+          deck_page = [];
+          for(i = 0; i < pagesize; i++)
+          {
+            if(decks[i+page*pagesize])
+            {
+              deck_page.push(decks[i+page*pagesize]);
+            }
+          }
+          res.render('user_decks',
+          {
+            user_limited:{
+              username:user.username,
+              email:user.email,
+              about:user.about,
+              id:user._id
+            },
+            decks:deck_page,
+            pages:pages,
+            loginCallback:'/user/decks/'+userid
+          });
+        }
+        else
+        {
+          res.render('user_decks',
+          {
+            user_limited:{
+              username:user.username,
+              email:user.email,
+              about:user.about,
+              id:user._id
+            },
+            decks:decks,
+            loginCallback:'/user/decks/'+userid
+          });
+        }
+      }
+      else
+      {
+        res.render('user_decks',
+        {
+          user_limited:{
+            username:user.username,
+            email:user.email,
+            about:user.about,
+            id:user._id
+          },
+          loginCallback:'/user/decks/'+userid,
+          decks:[]
+        });
+      }
+    });
   });
 });
 

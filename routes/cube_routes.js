@@ -4,6 +4,7 @@ const request = require('request');
 const fs = require('fs');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
+var sanitizeHtml = require('sanitize-html');
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.post('/add',ensureAuth, function(req,res,next)
           cube.owner_name = user.username;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
-
+          cube = setCubeType(cube);
           cube.save(function(err)
           {
             if(err)
@@ -76,12 +77,13 @@ router.get('/view/:id', function(req, res)
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
+  req.body.html = sanitize(req.body.html);
   if(req.body.title.length < 5 || req.body.title.length > 100)
   {
     req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
     res.redirect('/cube/blog/'+req.params.id);
   }
-  else if(req.body.body.length <= 10)
+  else if(req.body.html.length <= 10)
   {
     req.flash('danger', 'Blog body length must be greater than 10 characters.');
     res.redirect('/cube/blog/'+req.params.id);
@@ -99,32 +101,66 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
       {
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
+        cube = setCubeType(cube);
         cube.save(function(err)
         {
           User.findById(cube.owner, function(err, user)
           {
-            var blogpost = new Blog();
-            blogpost.title=req.body.title;
-            blogpost.body=req.body.body;
-            blogpost.owner=user._id;
-            blogpost.date=Date.now();
-            blogpost.cube=cube._id;
-            blogpost.dev='false';
-            blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
-
-            //console.log(draft);
-            blogpost.save(function(err)
+            if(req.body.id && req.body.id.length > 0)
             {
-              if(err)
+              Blog.findById(req.body.id, function(err, blog)
               {
-                console.log(err);
-              }
-              else
+                if(err || !blog)
+                {
+                  req.flash('success', 'Unable to update this blog post.');
+                  res.redirect('/cube/blog/'+cube._id);
+                }
+                else
+                {
+                  blog.html=req.body.html;
+                  blog.title=req.body.title;
+
+                  //console.log(draft);
+                  blog.save(function(err)
+                  {
+                    if(err)
+                    {
+                      console.log(err);
+                    }
+                    else
+                    {
+                      req.flash('success', 'Blog update successful');
+                      res.redirect('/cube/blog/'+cube._id);
+                    }
+                  });
+                }
+              });
+            }
+            else
+            {
+              var blogpost = new Blog();
+              blogpost.html=req.body.html;
+              blogpost.title=req.body.title;
+              blogpost.owner=user._id;
+              blogpost.date=Date.now();
+              blogpost.cube=cube._id;
+              blogpost.dev='false';
+              blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+              //console.log(draft);
+              blogpost.save(function(err)
               {
-                req.flash('success', 'Blog post successful');
-                res.redirect('/cube/blog/'+cube._id);
-              }
-            });
+                if(err)
+                {
+                  console.log(err);
+                }
+                else
+                {
+                  req.flash('success', 'Blog post successful');
+                  res.redirect('/cube/blog/'+cube._id);
+                }
+              });
+            }
           });
         });
       }
@@ -154,10 +190,20 @@ router.get('/overview/:id', function(req, res)
             {
               item.date_formatted = item.date.toLocaleString("en-US");
             }
+            if(item.html)
+            {
+              item.html = addAutocard(item.html);
+            }
           });
           if(blogs.length > 0)
           {
             blogs.reverse();
+          }
+          cube.raw_desc = cube.body;
+          if(cube.descriptionhtml)
+          {
+            cube.raw_desc = cube.descriptionhtml;
+            cube.descriptionhtml = addAutocard(cube.descriptionhtml);
           }
           if(!user)
           {
@@ -178,10 +224,33 @@ router.get('/overview/:id', function(req, res)
               num_cards:cube.cards.length,
               owner: user.username,
               post:blogs[0],
-              loginCallback:'/cube/overview/'+req.params.id
+              loginCallback:'/cube/overview/'+req.params.id,
+              editorvalue:cube.raw_desc
             });
           }
         });
+      });
+    }
+  });
+});
+
+router.get('/blogsrc/:id', function(req, res)
+{
+  Blog.findById(req.params.id, function(err, blog)
+  {
+    if(err || !blog)
+    {
+      res.status(400).send({
+        success:'false'
+      });
+    }
+    else
+    {
+      res.status(200).send({
+        success:'true',
+        src:blog.html,
+        title:blog.title,
+        body:blog.body
       });
     }
   });
@@ -204,10 +273,18 @@ router.get('/blog/:id', function(req, res)
       {
         Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
         {
+          if(!user)
+          {
+            user = {username:'unknown'};
+          }
           blogs.forEach(function(item, index){
             if(!item.date_formatted)
             {
               item.date_formatted = item.date.toLocaleString("en-US");
+            }
+            if(item.html)
+            {
+              item.html = addAutocard(item.html);
             }
           });
           var pages = [];
@@ -282,7 +359,17 @@ router.get('/blog/:id', function(req, res)
   });
 });
 
+router.get('/visualspoiler/:id', function(req, res)
+{
+  LoadListView(req, res, 'cube_visualspoiler','/cube/visualspoiler/'+req.params.id);
+});
+
 router.get('/list/:id', function(req, res)
+{
+  LoadListView(req, res, 'cube_list','/cube/list/'+req.params.id);
+});
+
+function LoadListView(req, res, template, callback)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
@@ -312,23 +399,23 @@ router.get('/list/:id', function(req, res)
             {
               if(!owner)
               {
-                res.render('cube_list',
+                res.render(template,
                 {
                   cube:cube,
                   cube_raw:JSON.stringify(cube.cards),
                   author: 'unknown',
-                  loginCallback:'/cube/list/'+req.params.id,
+                  loginCallback:callback,
                   edittoken:currentuser.edit_token
                 });
               }
               else
               {
-                res.render('cube_list',
+                res.render(template,
                 {
                   cube:cube,
                   cube_raw:JSON.stringify(cube.cards),
                   owner: owner.username,
-                  loginCallback:'/cube/list/'+req.params.id,
+                  loginCallback:callback,
                   edittoken:currentuser.edit_token
                 });
               }
@@ -342,29 +429,29 @@ router.get('/list/:id', function(req, res)
         {
           if(!owner)
           {
-            res.render('cube_list',
+            res.render(template,
             {
               cube:cube,
               cube_raw:JSON.stringify(cube.cards),
               author: 'unknown',
-              loginCallback:'/cube/list/'+req.params.id
+              loginCallback:callback
             });
           }
           else
           {
-            res.render('cube_list',
+            res.render(template,
             {
               cube:cube,
               cube_raw:JSON.stringify(cube.cards),
               owner: owner.username,
-              loginCallback:'/cube/list/'+req.params.id
+              loginCallback:callback
             });
           }
         });
       }
     }
   });
-});
+}
 
 router.get('/playtest/:id', function(req, res)
 {
@@ -440,6 +527,9 @@ function GetColorCategory(type, colors)
         break;
       case "G":
         return 'g';
+        break;
+      case "C":
+        return 'c';
         break;
     }
   }
@@ -543,6 +633,12 @@ function GetTypeByColor(cards) {
           TypeByColor['Total']['Green'] += 1;
           TypeByColor['Total']['Total'] += 1;
           break;
+          case 'C':
+          type['Colorless'] += 1;
+          type['Total'] += 1;
+          TypeByColor['Total']['Colorless'] += 1;
+          TypeByColor['Total']['Total'] += 1;
+          break;
         }
       }
     }
@@ -592,6 +688,8 @@ function GetTypeByColor(cards) {
         TypeByColor['Total']['Colorless'] += 1;
         TypeByColor['Total']['Total'] += 1;
         break;
+        default:
+        console.log(card);
       }
     }
   });
@@ -903,13 +1001,16 @@ router.get('/analysis/:id', function(req, res)
     {
       User.findById(cube.owner, function(err, user)
       {
-
+        if(!user)
+        {
+          user = {username:'unknown'};
+        }
         if(err)
         {
           res.render('cube_analysis',
           {
             cube:cube,
-            author: 'unknown',
+            owner: user.username,
             TypeByColor:GetTypeByColor(cube.cards),
             MulticoloredCounts:GetColorCounts(cube.cards),
             curve:JSON.stringify(GetCurve(cube.cards)),
@@ -933,8 +1034,7 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
-router.post('/importcubetutor/:id',ensureAuth, function(req,res,next)
-{
+router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
   Cube.findById(req.params.id, function(err,cube)
   {
     if(err)
@@ -1049,7 +1149,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next)
           });
 
           var blogpost = new Blog();
-          blogpost.title='Cube Updated - Automatic Post'
+          blogpost.title='Cubetutor Import - Automatic Post'
           blogpost.html=changelog;
           blogpost.owner=cube.owner;
           blogpost.date=Date.now();
@@ -1071,6 +1171,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next)
             }
             else
             {
+              cube = setCubeType(cube);
               Cube.updateOne({_id:cube._id}, cube, function(err)
               {
                 if(err)
@@ -1146,8 +1247,7 @@ router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
   }
 });
 
-function bulkuploadCSV(req, res, cards, cube)
-{
+function bulkuploadCSV(req, res, cards, cube) {
   var added = [];
   var missing = "";
   var changelog = "";
@@ -1224,7 +1324,7 @@ function bulkuploadCSV(req, res, cards, cube)
   });
 
   var blogpost = new Blog();
-  blogpost.title='Cube Updated - Automatic Post'
+  blogpost.title='Cube Bulk Import - Automatic Post'
   blogpost.html=changelog;
   blogpost.owner=cube.owner;
   blogpost.date=Date.now();
@@ -1246,6 +1346,7 @@ function bulkuploadCSV(req, res, cards, cube)
     }
     else
     {
+      cube = setCubeType(cube);
       Cube.updateOne({_id:cube._id}, cube, function(err)
       {
         if(err)
@@ -1263,129 +1364,164 @@ function bulkuploadCSV(req, res, cards, cube)
     });
 }
 
-function bulkUpload(req, res, list, cube)
-{
+function bulkUpload(req, res, list, cube) {
   cards = list.match(/[^\r\n]+/g);
-  if(cards[0].trim() == 'Name,CMC,Type,Color,Set,Status,Tags')
+  if(cards)
   {
-    cards.splice(0,1);
-    bulkuploadCSV(req, res, cards, cube);
-  }
-  else
-  {
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString("en-US");
-    if(!cards)
+    if(cards[0].trim() == 'Name,CMC,Type,Color,Set,Status,Tags')
     {
-      req.flash('danger', 'No Cards Detected');
-      res.redirect('/cube/list/'+req.params.id);
+      cards.splice(0,1);
+      bulkuploadCSV(req, res, cards, cube);
     }
     else
     {
-      var missing = "";
-      var added = [];
-      var changelog = "";
-      cards.forEach(function(item, index)
+      cube.date_updated = Date.now();
+      cube.updated_string = cube.date_updated.toLocaleString("en-US");
+      if(!cards)
       {
-        var currentId =nameToId[item.toLowerCase().trim()];
-        if(currentId && currentId[0])
+        req.flash('danger', 'No Cards Detected');
+        res.redirect('/cube/list/'+req.params.id);
+      }
+      else
+      {
+        var missing = "";
+        var added = [];
+        var changelog = "";
+        for(i = 0; i < cards.length; i++)
         {
-          //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
-          var details = carddict[currentId[0]];
-          cube.cards.push(
-            {
-              tags:['New'],
-              status:"Not Owned",
-              colors:details.color_identity,
-              cmc:details.cmc,
-              cardID:currentId[0]
-            }
-          );
-          added.push(carddict[currentId[0]]);
-          changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-          if(carddict[currentId[0]].image_flip)
+          item=cards[i].toLowerCase().trim();
+          if(/([0-9]+x )(.*)/.test(item))
           {
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
+            var count = parseInt(item.substring(0,item.indexOf('x')));
+            for(j = 0; j < count; j++)
+            {
+              cards.push(item.substring(item.indexOf('x')+1));
+            }
           }
           else
           {
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
-          }
-        }
-        else if(nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()])
-        {
-          //if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          var found = false;
-          var possibilities = nameToId[item.toLowerCase().substring(0,item.indexOf('[')).trim()];
-          possibilities.forEach(function(possible, ind)
-          {
-            if(!found && carddict[possible].full_name.toLowerCase() == item.toLowerCase().trim())
+            if(/(.*)( \((.*)\))/.test(item))
             {
-              var details = carddict[possible];
-              cube.cards.push(
+              //has set info
+              if(nameToId[item.toLowerCase().substring(0,item.indexOf('(')).trim()])
+              {
+                var name = item.toLowerCase().substring(0,item.indexOf('(')).trim();
+                var set = item.toLowerCase().substring(item.indexOf('(')+1,item.indexOf(')'))
+                //if we've found a match, and it DOES need to be parsed with cubecobra syntax
+                var found = false;
+                var possibilities = nameToId[name];
+                possibilities.forEach(function(possible, ind)
                 {
-                  tags:['New'],
-                  status:"Not Owned",
-                  colors:details.color_identity,
-                  cmc:details.cmc,
-                  cardID:carddict[possible]
+                  if(!found && carddict[possible].set.toLowerCase() == set)
+                  {
+                    var details = carddict[possible];
+                    cube.cards.push(
+                      {
+                        tags:['New'],
+                        status:"Not Owned",
+                        colors:details.color_identity,
+                        cmc:details.cmc,
+                        cardID:carddict[possible]
+                      }
+                    );
+                    added.push(carddict[possible]);
+                    found = true;
+                  }
+                });
+                if(!found)
+                {
+                  missing += item +'\n';
                 }
-              );
-              added.push(carddict[possible]);
-              found = true;
-            }
-          });
-          if(!found)
-          {
-            missing += item +'\n';
-          }
-        }
-        else
-        {
-          //we didn't find a match for this item
-          missing += item +'\n';
-        }
-      });
-
-      var blogpost = new Blog();
-      blogpost.title='Cube Updated - Automatic Post'
-      blogpost.html=changelog;
-      blogpost.owner=cube.owner;
-      blogpost.date=Date.now();
-      blogpost.cube=cube._id;
-      blogpost.dev='false';
-      blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
-
-      //console.log(draft);
-      blogpost.save(function(err)
-      {
-        if(missing.length > 0)
-        {
-          res.render('bulk_upload',
-          {
-            missing:missing,
-            added:JSON.stringify(added),
-            cube:cube
-          });
-        }
-        else
-        {
-          Cube.updateOne({_id:cube._id}, cube, function(err)
-          {
-            if(err)
-            {
-              req.flash('danger', 'Error adding cards. Please try again.');
-              res.redirect('/cube/list/'+req.params.id);
+              }
+              else
+              {
+                //we didn't find a match for this item
+                missing += item +'\n';
+              }
             }
             else
             {
-              req.flash('success', 'All cards successfully added.');
-              res.redirect('/cube/list/'+req.params.id);
+              //does not have set info
+              var currentId =nameToId[item.toLowerCase().trim()];
+              if(currentId && currentId[0])
+              {
+                //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
+                var details = carddict[currentId[0]];
+                cube.cards.push(
+                  {
+                    tags:['New'],
+                    status:"Not Owned",
+                    colors:details.color_identity,
+                    cmc:details.cmc,
+                    cardID:currentId[0]
+                  }
+                );
+                added.push(carddict[currentId[0]]);
+                changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+                if(carddict[currentId[0]].image_flip)
+                {
+                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
+                }
+                else
+                {
+                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
+                }
+              }
+              else
+              {
+                //we didn't find a match for this item
+                missing += item +'\n';
+              }
             }
-          });
+          }
         }
-      });
+
+        var blogpost = new Blog();
+        blogpost.title='Cube Bulk Import - Automatic Post'
+        blogpost.html=changelog;
+        blogpost.owner=cube.owner;
+        blogpost.date=Date.now();
+        blogpost.cube=cube._id;
+        blogpost.dev='false';
+        blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+        //console.log(draft);
+        blogpost.save(function(err)
+        {
+          if(missing.length > 0)
+          {
+            res.render('bulk_upload',
+            {
+              missing:missing,
+              added:JSON.stringify(added),
+              cube:cube
+            });
+          }
+          else
+          {
+            cube = setCubeType(cube);
+            Cube.updateOne({_id:cube._id}, cube, function(err)
+            {
+              if(err)
+              {
+                req.flash('danger', 'Error adding cards. Please try again.');
+                res.redirect('/cube/list/'+req.params.id);
+              }
+              else
+              {
+                req.flash('success', 'All cards successfully added.');
+                res.redirect('/cube/list/'+req.params.id);
+              }
+            });
+          }
+        });
+      }
     }
+  }
+  else
+  {
+    req.flash('danger', 'Error adding cards. Invalid format.');
+    res.redirect('/cube/list/'+req.params.id);
   }
 }
 
@@ -1878,6 +2014,7 @@ router.get('/draft/:id', function(req, res)
 // Edit Submit POST Route
 router.post('/editoverview/:id',ensureAuth, function(req,res,next)
 {
+  req.body.html = sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
   {
     if(err)
@@ -1893,7 +2030,6 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
     else
     {
       var image = imagedict[req.body.imagename];
-      var description = req.body.description;
       var name = req.body.name;
 
       if(name.length < 5)
@@ -1909,10 +2045,12 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
           cube.image_artist = image.artist;
           cube.image_name = req.body.imagename;
         }
-        cube.description = description;
+        cube.descriptionhtml = req.body.html;
         cube.name = name;
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
+
+        cube = setCubeType(cube);
         cube.save(function(err)
         {
           if(err)
@@ -1934,6 +2072,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
 // Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res,next)
 {
+  req.body.blog = sanitize(req.body.blog);
   Cube.findById(req.params.id, function(err, cube)
   {
     cube.date_updated = Date.now();
@@ -2077,10 +2216,13 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
         changelog += '<br>';
       });
 
-
       var blogpost = new Blog();
-      blogpost.title='Cube Updated - Automatic Post'
-      blogpost.html=changelog;
+      blogpost.title=req.body.title;
+      if(req.body.blog.length > 0)
+      {
+        blogpost.html=req.body.blog;
+      }
+      blogpost.changelist=changelog;
       blogpost.owner=cube.owner;
       blogpost.date=Date.now();
       blogpost.cube=cube._id;
@@ -2107,6 +2249,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
               }
               errors += carddict[fail].name;
             });
+            cube = setCubeType(cube);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -2122,6 +2265,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
           }
           else
           {
+            cube = setCubeType(cube);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -2207,6 +2351,102 @@ router.get('/api/getcardfromcube/:id', function(req, res)
     {
       res.status(200).send({
         success:'true'
+      });
+    }
+  });
+});
+
+router.get('/decks/:id', function(req, res)
+{
+  var split = req.params.id.split(';');
+  var cubeid = split[0];
+  Cube.findById(cubeid, function(err, cube)
+  {
+    if(err || !cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      Deck.find({cube:cubeid}).sort('date').exec(function(err, decks)
+      {
+        User.findById(cube.owner, function(err, owner)
+        {
+          var owner_name = 'unknown';
+          if(owner)
+          {
+            owner_name = owner.username;
+          }
+          var pages = [];
+          var pagesize = 30;
+          if(decks.length > 0)
+          {
+            decks.reverse();
+            if(decks.length > pagesize)
+            {
+              var page = parseInt(split[1]);
+              if(!page)
+              {
+                page = 0;
+              }
+              for(i = 0; i < decks.length/pagesize; i++)
+              {
+                if(page==i)
+                {
+                  pages.push({
+                    url:'/cube/decks/'+cubeid+';'+i,
+                    content:(i+1),
+                    active:true
+                  });
+                }
+                else
+                {
+                  pages.push({
+                    url:'/cube/decks/'+cubeid+';'+i,
+                    content:(i+1),
+                  });
+                }
+              }
+              deck_page = [];
+              for(i = 0; i < pagesize; i++)
+              {
+                if(decks[i+page*pagesize])
+                {
+                  deck_page.push(decks[i+page*pagesize]);
+                }
+              }
+              res.render('cube_decks',
+              {
+                cube:cube,
+                owner:owner_name,
+                decks:deck_page,
+                pages:pages,
+                loginCallback:'/user/decks/'+cubeid
+              });
+            }
+            else
+            {
+              res.render('cube_decks',
+              {
+                cube:cube,
+                owner:owner_name,
+                decks:decks,
+                loginCallback:'/user/decks/'+cubeid
+              });
+            }
+          }
+          else
+          {
+            res.render('cube_decks',
+            {
+              cube:cube,
+              owner:owner_name,
+              loginCallback:'/user/decks/'+cubeid,
+              decks:[]
+            });
+          }
+        });
       });
     }
   });
@@ -2392,6 +2632,7 @@ router.post('/api/updatecard/:id', function(req, res)
         }
         else
         {
+          cube = setCubeType(cube);
           cube.save(function(err)
           {
             if(err)
@@ -2447,7 +2688,13 @@ router.post('/api/updatecards/:id', function(req, res)
               {
                 if(req.body.updated.addTags)
                 {
-                  cube.cards[index].tags = cube.cards[index].tags.concat(req.body.updated.tags);
+                  req.body.updated.tags.forEach(function(newtag, tag_ind)
+                  {
+                    if(!cube.cards[index].tags.includes(newtag))
+                    {
+                      cube.cards[index].tags.push(newtag);
+                    }
+                  });
                 }
                 else
                 {
@@ -2517,6 +2764,38 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
   });
 });
 
+router.delete('/blog/remove/:id',ensureAuth, function(req, res)
+{
+  if(!req.user._id)
+  {
+    req.flash('danger', 'Not Authorized');
+    res.redirect('/'+req.params.id);
+  }
+
+  let query = {_id:req.params.id};
+
+  Blog.findById(req.params.id, function(err, blog)
+  {
+    if(err || (blog.owner != req.user._id))
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      Blog.deleteOne(query, function(err)
+      {
+        if(err)
+        {
+          console.log(err);
+        }
+        req.flash('success', 'Post Removed');
+        res.send('Success');
+      });
+    }
+  });
+});
+
 router.post('/api/savesorts/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -2556,8 +2835,7 @@ router.post('/api/savesorts/:id', function(req, res)
 });
 
 // Access Control
-function ensureAuth(req, res, next)
-{
+function ensureAuth(req, res, next) {
   if(req.isAuthenticated())
   {
     return next();
@@ -2575,8 +2853,7 @@ function arrayRemove(arr, value) {
    });
 }
 
-function shuffle(array)
-{
+function shuffle(array) {
 	var currentIndex = array.length;
 	var temporaryValue, randomIndex;
 
@@ -2597,8 +2874,7 @@ function shuffle(array)
 };
 
 //cube autocomplete functions
-function add_word(obj, word)
-{
+function add_word(obj, word) {
   if(word.length <= 0)
   {
     return;
@@ -2626,8 +2902,7 @@ function add_word(obj, word)
   }
 }
 
-function turnToTree(arr)
-{
+function turnToTree(arr) {
   var res = {};
   arr.forEach(function (item, index)
   {
@@ -2637,8 +2912,7 @@ function turnToTree(arr)
   return res;
 }
 
-function binaryInsert(value, array, startVal, endVal)
-{
+function binaryInsert(value, array, startVal, endVal) {
 	var length = array.length;
 	var start = typeof(startVal) != 'undefined' ? startVal : 0;
   var end = typeof(endVal) != 'undefined' ? endVal : length - 1;//!! endVal could be 0 don't use || syntax
@@ -2674,8 +2948,7 @@ function binaryInsert(value, array, startVal, endVal)
 	}
 }
 
-function cardsAreEquivalent(card, details)
-{
+function cardsAreEquivalent(card, details) {
   if(card.cardID != details.cardID)
   {
     return false;
@@ -2712,8 +2985,7 @@ function arraysEqual(a, b) {
 }
 
 //taken from https://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript-which-contains-comma-in-data
-function CSVtoArray(text)
-{
+function CSVtoArray(text) {
   let ret = [''], i = 0, p = '', s = true;
   for (let l in text)
   {
@@ -2744,8 +3016,7 @@ function CSVtoArray(text)
   return ret;
 }
 
-function cardIsLabel(card, label, sort)
-{
+function cardIsLabel(card, label, sort) {
   if(sort == 'Color Category')
   {
     return GetColorCategory(card.details.type, card.colors) == label;
@@ -2791,7 +3062,7 @@ function cardIsLabel(card, label, sort)
       case 'Non-Red':
         return !card.colors.includes('R');
       case 'Five Color':
-        return !card.colors.length == 0;
+        return card.colors.length == 5;
     }
   }
   else if (sort == 'CMC')
@@ -2927,11 +3198,34 @@ function cardIsLabel(card, label, sort)
   {
     return card.details.artist == label;
   }
+  else if (sort == 'Power')
+  {
+    if(card.power)
+    {
+      return card.power == label;
+    }
+    return false;
+  }
+  else if (sort == 'Toughness')
+  {
+    if(card.toughness)
+    {
+      return card.toughness == label;
+    }
+    return false;
+  }
+  else if (sort == 'Loyalty')
+  {
+    if(card.loyalty)
+    {
+      return card.loyalty == label;
+    }
+    return false;
+  }
 }
 
 //true if card is filtered IN
-function filterCard(card, filterobj)
-{
+function filterCard(card, filterobj) {
   //first filter out everything in this category
   //then filter in everything that matches one of the ins
   var filterout = false;
@@ -2964,6 +3258,98 @@ function filterCard(card, filterobj)
     return false;
   }
   return filterin;
+}
+
+function setCubeType(cube)
+{
+  var pauper = true;
+  var type = legalityToInt('Standard');
+  cube.cards.forEach(function(card, index)
+  {
+    if(pauper && !carddict[card.cardID].legalities.Pauper)
+    {
+      pauper = false;
+    }
+    while(type>0 && !carddict[card.cardID].legalities[intToLegality(type)])
+    {
+      type -= 1;
+    }
+  });
+
+  cube.type = intToLegality(type);
+  if(pauper)
+  {
+    cube.type += ' Pauper';
+  }
+  cube.card_count = cube.cards.length;
+  return cube;
+}
+
+function intToLegality(val)
+{
+  switch(val)
+  {
+    case 0:
+      return 'Vintage';
+    case 1:
+      return 'Legacy';
+    case 2:
+      return 'Modern';
+    case 3:
+      return 'Standard';
+  }
+  console.log(cube);
+  return cube;
+}
+
+//vintage < legacy < modern < standard
+function legalityToInt(legality)
+{
+  switch(legality)
+  {
+    case 'Vintage':
+      return 0;
+    case 'Legacy':
+      return 1;
+    case 'Modern':
+      return 2;
+    case 'Standard':
+      return 3;
+  }
+}
+
+function sanitize(html)
+{
+  return sanitizeHtml(html, {
+    allowedTags: [ 'div','p','strike','strong','b', 'i', 'em', 'u', 'a', 'h5','h6','ul','ol','li','span'],
+    selfClosing: [ 'br']
+  });
+}
+
+function addAutocard(src)
+{
+  while(src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]'))
+  {
+    var cardname = src.substring(src.indexOf('[[')+2,src.indexOf(']]'));
+    var mid = cardname;
+    if(nameToId[cardname.toLowerCase()])
+    {
+      var card = carddict[nameToId[cardname.toLowerCase()][0]];
+      if(card.image_flip)
+      {
+        mid = '<a class="autocard" card="'+ card.image_normal + '" card_flip="'+ card.image_flip + '">' +  card.name + '</a>';
+      }
+      else
+      {
+        mid = '<a class="autocard" card="'+ card.image_normal + '">' +  card.name + '</a>';
+      }
+    }
+    //front + autocard + back
+    src = src.substring(0,src.indexOf('[['))
+      + mid
+      + src.substring(src.indexOf(']]')+2);
+  }
+  return src;
 }
 
 //read files

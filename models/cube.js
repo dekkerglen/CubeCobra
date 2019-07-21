@@ -24,13 +24,16 @@ let cubeSchema = mongoose.Schema(
     decks: [String],
     numDecks:Number,
     description:String,
+    descriptionhtml:String,
     image_uri:String,
     image_artist:String,
     image_name:String,
     owner_name:String,
     date_updated:Date,
     updated_string:String,
-    default_sorts:[String]
+    default_sorts:[String],
+    card_count:Number,
+    type:String
   }
 );
 

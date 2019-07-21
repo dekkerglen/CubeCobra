@@ -36,9 +36,10 @@ block content
   if blogs
     each post, i in blogs
       .card
-        .card-body
+        .card-header
           h5.card-title=post.title
           h6.card-subtitle.mb-2.text-muted=post.date_formatted
+        .card-body
           if post.body
             p.card-text=post.body
           if post.html
