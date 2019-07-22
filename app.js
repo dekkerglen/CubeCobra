@@ -359,7 +359,7 @@ function updateCardbase()
     });
   });
 }
-
+updateCardbase();
 schedule.scheduleJob('0 0 * * *', function(){
   console.log("Starting midnight cardbase update...");
   updateCardbase();
@@ -682,6 +682,10 @@ function convertCard(card)
   else
   {
     newcard.type = card.type_line;
+  }
+  if(newcard.type=='Artifact — Contraption')
+  {
+    newcard.type = 'Artifact Contraption';
   }
   newcard.colors = [];
   newcard.color_identity = [];

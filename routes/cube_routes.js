@@ -495,41 +495,78 @@ router.get('/playtest/:id', function(req, res)
   });
 });
 
+
 function GetColorCategory(type, colors)
 {
   if(type.toLowerCase().includes('land'))
   {
-    return 'l';
+    return 'Lands';
   }
   else if(colors.length == 0)
   {
-    return 'c';
+    return 'Colorless';
   }
   else if(colors.length >  1)
   {
-    return 'm';
+    return 'Multicolored';
   }
   else if(colors.length ==  1)
   {
     switch(colors[0])
     {
       case "W":
-        return 'w';
+        return 'White';
         break;
       case "U":
-        return 'u';
+        return 'Blue';
         break;
       case "B":
-        return 'b';
+        return 'Black';
         break;
       case "R":
-        return 'r';
+        return 'Red';
         break;
       case "G":
-        return 'g';
+        return 'Green';
         break;
       case "C":
-        return 'c';
+        return 'Colorless';
+        break;
+    }
+  }
+}
+
+function GetColorIdentity(colors)
+{
+  if(colors.length == 0)
+  {
+    return 'Colorless';
+  }
+  else if(colors.length >  1)
+  {
+    return 'Multicolored';
+  }
+  else if(colors.length ==  1)
+  {
+    switch(colors[0])
+    {
+      case "W":
+        return 'White';
+        break;
+      case "U":
+        return 'Blue';
+        break;
+      case "B":
+        return 'Black';
+        break;
+      case "R":
+        return 'Red';
+        break;
+      case "G":
+        return 'Green';
+        break;
+      case "C":
+        return 'Colorless';
         break;
     }
   }
@@ -582,7 +619,7 @@ function GetTypeByColor(cards) {
       type = TypeByColor['Artifacts'];
     }
 
-    var colorCategory = GetColorCategory(card.details.type, card.colors);
+    var colorCategory = GetColorCategory(card.details.type, card.colors).toLowerCase()[0];
     if(colorCategory=='l')
     {
       if(card.details.colors.length == 0)
@@ -689,7 +726,6 @@ function GetTypeByColor(cards) {
         TypeByColor['Total']['Total'] += 1;
         break;
         default:
-        console.log(card);
       }
     }
   });
@@ -947,7 +983,7 @@ function GetCurve(cards) {
   cards.forEach(function(card, index)
   {
     var category;
-    switch(GetColorCategory(card.details.type, card.colors))
+    switch(GetColorCategory(card.details.type, card.colors).toLowerCase()[0])
     {
       case 'w':
       category = curve.white;
@@ -1923,7 +1959,7 @@ router.get('/draft/pick/:id', function(req, res)
                 }
                 else
                 {
-                  res.redirect('/cube/draft/'+draftid);
+                  res.redirect('/cube/draft/'+draft._id);
                 }
               });
             }
@@ -2671,7 +2707,6 @@ router.post('/api/updatecards/:id', function(req, res)
       else
       {
         var found = false;
-        console.log(req.body.updated);
         cube.cards.forEach(function(card, index)
         {
           card.details = carddict[card.cardID];
@@ -2679,7 +2714,6 @@ router.post('/api/updatecards/:id', function(req, res)
           {
             if(cardIsLabel(card,req.body.categories[0],req.body.sorts[0]) && cardIsLabel(card,req.body.categories[1],req.body.sorts[1]))
             {
-              console.log(card.details.name);
               if(req.body.updated.status)
               {
                 cube.cards[index].status = req.body.updated.status;
@@ -3016,7 +3050,9 @@ function CSVtoArray(text) {
   return ret;
 }
 
-function cardIsLabel(card, label, sort) {
+
+function cardIsLabel(card, label, sort)
+{
   if(sort == 'Color Category')
   {
     return GetColorCategory(card.details.type, card.colors) == label;
@@ -3198,38 +3234,50 @@ function cardIsLabel(card, label, sort) {
   {
     return card.details.artist == label;
   }
+  else if(sort == 'Legality')
+  {
+    if(label=='Vintage')
+    {
+      return true;
+    }
+    return card.details.legalities[label];
+  }
   else if (sort == 'Power')
   {
-    if(card.power)
+    if(card.details.power)
     {
-      return card.power == label;
+      return card.details.power == label;
     }
     return false;
   }
   else if (sort == 'Toughness')
   {
-    if(card.toughness)
+    if(card.details.toughness)
     {
-      return card.toughness == label;
+      return card.details.toughness == label;
     }
     return false;
   }
   else if (sort == 'Loyalty')
   {
-    if(card.loyalty)
+    if(card.details.loyalty)
     {
-      return card.loyalty == label;
+      return card.details.loyalty == label;
     }
     return false;
   }
 }
 
+
 //true if card is filtered IN
-function filterCard(card, filterobj) {
+function filterCard(card, filterobj)
+{
   //first filter out everything in this category
   //then filter in everything that matches one of the ins
+
   var filterout = false;
   var filterin = false;
+  var hasFilterIn = false;
   for (var category in filterobj)
   {
     if (filterobj.hasOwnProperty(category))
@@ -3245,6 +3293,7 @@ function filterCard(card, filterobj) {
       {
         filterobj[category].in.forEach(function(option, index)
         {
+          hasFilterIn = true;
           if(cardIsLabel(card,option.value,option.category))
           {
             filterin = true;
@@ -3256,6 +3305,10 @@ function filterCard(card, filterobj) {
   if(filterout)
   {
     return false;
+  }
+  if(!hasFilterIn)
+  {
+    return true;
   }
   return filterin;
 }
@@ -3298,7 +3351,6 @@ function intToLegality(val)
     case 3:
       return 'Standard';
   }
-  console.log(cube);
   return cube;
 }
 
