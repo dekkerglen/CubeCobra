@@ -359,7 +359,7 @@ function updateCardbase()
     });
   });
 }
-updateCardbase();
+
 schedule.scheduleJob('0 0 * * *', function(){
   console.log("Starting midnight cardbase update...");
   updateCardbase();

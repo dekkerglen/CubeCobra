@@ -496,6 +496,46 @@ router.get('/playtest/:id', function(req, res)
 });
 
 
+function GetColorCategoryServerSide(type, colors)
+{
+  if(type.toLowerCase().includes('land'))
+  {
+    return 'l';
+  }
+  else if(colors.length == 0)
+  {
+    return 'c';
+  }
+  else if(colors.length >  1)
+  {
+    return 'm';
+  }
+  else if(colors.length ==  1)
+  {
+    switch(colors[0])
+    {
+      case "W":
+        return 'w';
+        break;
+      case "U":
+        return 'u';
+        break;
+      case "B":
+        return 'b';
+        break;
+      case "R":
+        return 'r';
+        break;
+      case "G":
+        return 'g';
+        break;
+      case "C":
+        return 'c';
+        break;
+    }
+  }
+}
+
 function GetColorCategory(type, colors)
 {
   if(type.toLowerCase().includes('land'))
@@ -619,7 +659,7 @@ function GetTypeByColor(cards) {
       type = TypeByColor['Artifacts'];
     }
 
-    var colorCategory = GetColorCategory(card.details.type, card.colors).toLowerCase()[0];
+    var colorCategory = GetColorCategoryServerSide(card.details.type, card.colors);
     if(colorCategory=='l')
     {
       if(card.details.colors.length == 0)
@@ -983,7 +1023,7 @@ function GetCurve(cards) {
   cards.forEach(function(card, index)
   {
     var category;
-    switch(GetColorCategory(card.details.type, card.colors).toLowerCase()[0])
+    switch(GetColorCategoryServerSide(card.details.type, card.colors))
     {
       case 'w':
       category = curve.white;
