@@ -2569,9 +2569,9 @@ router.get('/deck/:id', function(req, res)
               var bot_deck = [];
               deck.cards[i].forEach(function(card, index)
               {
-                if(!carddict[card[0]] || !carddict[card[0].cardID])
+                if(!card[0].cardID || !carddict[card[0].cardID])
                 {
-                  console.log("Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
+                  console.log(req.params.id + ": Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
                 }
                 else {
                   bot_deck.push(carddict[card[0].cardID]);
