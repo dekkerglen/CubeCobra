@@ -120,7 +120,6 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
                   blog.html=req.body.html;
                   blog.title=req.body.title;
 
-                  //console.log(draft);
                   blog.save(function(err)
                   {
                     if(err)
@@ -147,7 +146,6 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
               blogpost.dev='false';
               blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-              //console.log(draft);
               blogpost.save(function(err)
               {
                 if(err)
@@ -1233,7 +1231,6 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
           blogpost.dev='false';
           blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-          //console.log(draft);
           blogpost.save(function(err)
           {
             if(missing.length > 0)
@@ -2305,7 +2302,6 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       blogpost.dev='false';
       blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-      //console.log(draft);
       blogpost.save(function(err)
       {
         if(err)
@@ -2573,7 +2569,7 @@ router.get('/deck/:id', function(req, res)
               var bot_deck = [];
               deck.cards[i].forEach(function(card, index)
               {
-                if(!carddict[card[0].cardID])
+                if(!carddict[card[0]] || !carddict[card[0].cardID])
                 {
                   console.log("Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
                 }

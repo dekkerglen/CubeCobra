@@ -198,7 +198,6 @@ app.get('/search/:id', function(req, res)
     }
   });
 
-  console.log(query);
   Cube.find(query).sort({'date_updated':-1}).exec(function(err, cubes)
   {
     var pages = [];
