@@ -14,13 +14,14 @@ block content
         if user
           if user.id == user_limited.id
           a.btn.btn-success(href='/user/account') Update
-  br
+  br    
     
   ul.nav.nav-tabs.nav-fill.nav-justified
     li.nav-item
       a.nav-link.active(href='/user/view/'+user_limited.id) Cubes
     li.nav-item
       a.nav-link(href='/user/decks/'+user_limited.id) Decks
+
   br
   .row
     each cube, i in cubes

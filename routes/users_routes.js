@@ -577,30 +577,6 @@ router.get('/decks/:id', function(req, res)
 });
 
 //account page
-router.get('/account/yourcubes', ensureAuth, function(req, res)
-{
-  User.findById(req.user._id, function (err, user)
-  {
-    Cube.find({owner:user._id}, function(err, cubes)
-    {
-      user_limited=
-      {
-        username:user.username,
-        email:user.email,
-        about:user.about
-      }
-      res.render('user_account',
-      {
-        selected:'cube',
-        user:user_limited,
-        cubes:cubes,
-        loginCallback:'/account/yourcubes'
-      });
-    });
-  });
-});
-
-//account page
 router.get('/account', ensureAuth, function(req, res)
 {
   User.findById(req.user._id, function (err, user)
@@ -609,7 +585,8 @@ router.get('/account', ensureAuth, function(req, res)
     {
       username:user.username,
       email:user.email,
-      about:user.about
+      about:user.about,
+      id:user._id
     }
     res.render('user_account',
     {
@@ -629,7 +606,8 @@ router.get('/account/changepassword', ensureAuth, function(req, res)
     {
       username:user.username,
       email:user.email,
-      about:user.about
+      about:user.about,
+      id:user._id
     }
     res.render('user_account',
     {
@@ -649,7 +627,8 @@ router.get('/account/updateemail', ensureAuth, function(req, res)
     {
       username:user.username,
       email:user.email,
-      about:user.about
+      about:user.about,
+      id:user._id
     }
     res.render('user_account',
     {

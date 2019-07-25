@@ -22,7 +22,7 @@ router.post('/add',ensureAuth, function(req,res,next)
   if(req.body.name.length < 5)
   {
     req.flash('danger', 'Cube name should be at least 5 characters long.');
-    res.redirect('/user/account/yourcubes');
+    res.redirect('/user/view/'+req.user._id);
   }
   else
   {
@@ -50,7 +50,7 @@ router.post('/add',ensureAuth, function(req,res,next)
           {
             if(err)
             {
-              console.log(err);
+              console.log(err, req);
             }
             else
             {
@@ -62,7 +62,7 @@ router.post('/add',ensureAuth, function(req,res,next)
         else
         {
           req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
-          res.redirect('/user/account/yourcubes');
+          res.redirect('/user/view/'+req.user._id);
         }
       });
     });
@@ -73,6 +73,54 @@ router.post('/add',ensureAuth, function(req,res,next)
 router.get('/view/:id', function(req, res)
 {
   res.redirect('/cube/overview/'+req.params.id);
+});
+
+router.post('/format/add/:id',ensureAuth, function(req, res) {
+  req.body.html = sanitize(req.body.html);
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(err || !cube)
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    if(req.body.id == -1)
+    {
+      if(!cube.draft_formats)
+      {
+        cube.draft_formats = [];
+      }
+      cube.draft_formats.push({
+        title: req.body.title,
+        multiples: req.body.multiples=='true',
+        html:req.body.html,
+        packs:req.body.format
+      });
+    }
+    else
+    {
+      cube.draft_formats[req.body.id] ={
+        title: req.body.title,
+        multiples: req.body.multiples=='true',
+        html:req.body.html,
+        packs:req.body.format
+      };
+    }
+    Cube.updateOne({_id:cube._id}, cube, function(err)
+    {
+      if(err)
+      {
+        console.log(err, req);
+        req.flash('danger', 'An error occured saving your custom format.');
+        res.redirect('/cube/playtest/'+req.params.id);
+      }
+      else
+      {
+        req.flash('success', 'Custom format successfully added.');
+        res.redirect('/cube/playtest/'+req.params.id);
+      }
+    });
+  });
 });
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
@@ -92,7 +140,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
   {
     Cube.findById(req.params.id, function(err, cube)
     {
-      if(!cube)
+      if(err || !cube)
       {
         req.flash('danger', 'Cube not found');
         res.redirect('/404/'+req.params.id);
@@ -124,7 +172,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
                   {
                     if(err)
                     {
-                      console.log(err);
+                      console.log(err, req);
                     }
                     else
                     {
@@ -150,7 +198,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
               {
                 if(err)
                 {
-                  console.log(err);
+                  console.log(err, req);
                 }
                 else
                 {
@@ -462,6 +510,10 @@ router.get('/playtest/:id', function(req, res)
     }
     else
     {
+      cube.cards.forEach(function(card, index)
+      {
+        card.details = carddict[card.cardID];
+      });
       User.findById(cube.owner, function(err, user)
       {
         Deck.find( { _id: { $in : cube.decks } }, function(err, decks)
@@ -474,6 +526,7 @@ router.get('/playtest/:id', function(req, res)
               cube:cube,
               author: 'unknown',
               decks:decklinks,
+              cube_raw:JSON.stringify(cube),
               loginCallback:'/cube/playtest/'+req.params.id
             });
           }
@@ -484,6 +537,7 @@ router.get('/playtest/:id', function(req, res)
               cube:cube,
               owner: user.username,
               decks:decklinks,
+              cube_raw:JSON.stringify(cube),
               loginCallback:'/cube/playtest/'+req.params.id
             });
           }
@@ -1113,7 +1167,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
   {
     if(err)
     {
-      console.log(err);
+      console.log(err, req);
     }
     else
     {
@@ -1124,148 +1178,157 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
       }
       else
       {
-        const options = {
-          uri: 'http://www.cubetutor.com/viewcube/'+req.body.cubeid,
-          transform: function (body) {
-            return cheerio.load(body);
-          },
-          headers: {
-            //this tricks cubetutor into not redirecting us to the unsupported browser page
-              'User-Agent': 'Mozilla/5.0'
-          },
-        };
-        rp(options).then(function (data)
+        if(isNaN(req.body.cubeid))
         {
-          var cards = [];
-          var unknown = [];
-          data('.cardPreview').each(function(i, elem) {
-            var str = elem.attribs['data-image'].substring(37,elem.attribs['data-image'].length-4);
-            if(!str.includes('/'))
-            {
-              cards.push({
-                set:'unknown',
-                name:decodeURIComponent(elem.children[0].data).replace('_flip','')
-              })
-            }
-            else
-            {
-              var split = str.split('/');
-              cards.push({
-                set:split[0],
-                name:decodeURIComponent(elem.children[0].data).replace('_flip','')
-              })
-            }
-          });
-          var added = [];
-          var missing = "";
-          var changelog = "";
-          cards.forEach(function(card, index)
+          req.flash('danger','Error: Provided ID is not in correct format.');
+          res.redirect('/cube/list/'+req.params.id);
+        }
+        else
+        {
+
+          const options = {
+            uri: 'http://www.cubetutor.com/viewcube/'+req.body.cubeid,
+            transform: function (body) {
+              return cheerio.load(body);
+            },
+            headers: {
+              //this tricks cubetutor into not redirecting us to the unsupported browser page
+                'User-Agent': 'Mozilla/5.0'
+            },
+          };
+          rp(options).then(function (data)
           {
-            var currentId =nameToId[card.name.toLowerCase().trim()];
-            if(currentId && currentId[0])
-            {
-              var found = false;
-              currentId.forEach(function(possible, index)
+            var cards = [];
+            var unknown = [];
+            data('.cardPreview').each(function(i, elem) {
+              var str = elem.attribs['data-image'].substring(37,elem.attribs['data-image'].length-4);
+              if(!str.includes('/'))
               {
-                if(!found && carddict[possible].set.toUpperCase() == card.set)
+                cards.push({
+                  set:'unknown',
+                  name:decodeURIComponent(elem.children[0].data).replace('_flip','')
+                })
+              }
+              else
+              {
+                var split = str.split('/');
+                cards.push({
+                  set:split[0],
+                  name:decodeURIComponent(elem.children[0].data).replace('_flip','')
+                })
+              }
+            });
+            var added = [];
+            var missing = "";
+            var changelog = "";
+            cards.forEach(function(card, index)
+            {
+              var currentId =nameToId[card.name.toLowerCase().trim()];
+              if(currentId && currentId[0])
+              {
+                var found = false;
+                currentId.forEach(function(possible, index)
                 {
-                  found = true;
-                  added.push(carddict[possible]);
-                  var details = carddict[possible];
+                  if(!found && carddict[possible].set.toUpperCase() == card.set)
+                  {
+                    found = true;
+                    added.push(carddict[possible]);
+                    var details = carddict[possible];
+                    cube.cards.push(
+                      {
+                        tags:['New'],
+                        status:"Not Owned",
+                        colors:details.color_identity,
+                        cmc:details.cmc,
+                        cardID:possible
+                      }
+                    );
+                    changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
+                    if(carddict[possible].image_flip)
+                    {
+                      changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '" card_flip="'+ carddict[possible].image_flip + '">' + carddict[possible].name + '</a></br>';
+                    }
+                    else
+                    {
+                      changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '">' + carddict[possible].name + '</a></br>';
+                    }
+                  }
+                });
+                if(!found)
+                {
+                  added.push(carddict[currentId[0]]);
+                  var details = carddict[currentId[0]];
                   cube.cards.push(
                     {
                       tags:['New'],
                       status:"Not Owned",
                       colors:details.color_identity,
                       cmc:details.cmc,
-                      cardID:possible
+                      cardID:currentId[0]
                     }
                   );
                   changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-                  if(carddict[possible].image_flip)
+                  if(carddict[currentId[0]].image_flip)
                   {
-                    changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '" card_flip="'+ carddict[possible].image_flip + '">' + carddict[possible].name + '</a></br>';
+                    changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
                   }
                   else
                   {
-                    changelog += '<a class="dynamic-autocard" card="'+ carddict[possible].image_normal + '">' + carddict[possible].name + '</a></br>';
+                    changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
                   }
-                }
-              });
-              if(!found)
-              {
-                added.push(carddict[currentId[0]]);
-                var details = carddict[currentId[0]];
-                cube.cards.push(
-                  {
-                    tags:['New'],
-                    status:"Not Owned",
-                    colors:details.color_identity,
-                    cmc:details.cmc,
-                    cardID:currentId[0]
-                  }
-                );
-                changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-                if(carddict[currentId[0]].image_flip)
-                {
-                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '" card_flip="'+ carddict[currentId[0]].image_flip + '">' + carddict[currentId[0]].name + '</a></br>';
-                }
-                else
-                {
-                  changelog += '<a class="dynamic-autocard" card="'+ carddict[currentId[0]].image_normal + '">' + carddict[currentId[0]].name + '</a></br>';
                 }
               }
-            }
-            else
-            {
-              missing += card.name +'\n';
-            }
-          });
-
-          var blogpost = new Blog();
-          blogpost.title='Cubetutor Import - Automatic Post'
-          blogpost.html=changelog;
-          blogpost.owner=cube.owner;
-          blogpost.date=Date.now();
-          blogpost.cube=cube._id;
-          blogpost.dev='false';
-          blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
-
-          blogpost.save(function(err)
-          {
-            if(missing.length > 0)
-            {
-              res.render('bulk_upload',
+              else
               {
-                missing:missing,
-                added:JSON.stringify(added),
-                cube:cube
-              });
-            }
-            else
+                missing += card.name +'\n';
+              }
+            });
+
+            var blogpost = new Blog();
+            blogpost.title='Cubetutor Import - Automatic Post'
+            blogpost.html=changelog;
+            blogpost.owner=cube.owner;
+            blogpost.date=Date.now();
+            blogpost.cube=cube._id;
+            blogpost.dev='false';
+            blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+
+            blogpost.save(function(err)
             {
-              cube = setCubeType(cube);
-              Cube.updateOne({_id:cube._id}, cube, function(err)
+              if(missing.length > 0)
               {
-                if(err)
+                res.render('bulk_upload',
                 {
-                  req.flash('danger', 'Error adding cards. Please try again.');
-                  res.redirect('/cube/list/'+req.params.id);
-                }
-                else
+                  missing:missing,
+                  added:JSON.stringify(added),
+                  cube:cube
+                });
+              }
+              else
+              {
+                cube = setCubeType(cube);
+                Cube.updateOne({_id:cube._id}, cube, function(err)
                 {
-                  req.flash('success', 'All cards successfully added.');
-                  res.redirect('/cube/list/'+req.params.id);
-                }
-              });
-            }
+                  if(err)
+                  {
+                    req.flash('danger', 'Error adding cards. Please try again.');
+                    res.redirect('/cube/list/'+req.params.id);
+                  }
+                  else
+                  {
+                    req.flash('success', 'All cards successfully added.');
+                    res.redirect('/cube/list/'+req.params.id);
+                  }
+                });
+              }
+            });
+          })
+          .catch(function (err) {
+            console.log(err, req);
+            req.flash('danger','Error: Unable to import this cube.');
+            res.redirect('/cube/list/'+req.params.id);
           });
-        })
-        .catch(function (err) {
-          console.log(err);
-          req.flash('danger','Error: Unable to import this cube.');
-          res.redirect('/cube/list/'+req.params.id);
-        });
+        }
       }
     }
   });
@@ -1277,7 +1340,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
   {
     if(err)
     {
-      console.log(err);
+      console.log(err, req);
     }
     else
     {
@@ -1405,7 +1468,7 @@ function bulkuploadCSV(req, res, cards, cube) {
   blogpost.dev='false';
   blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-  //console.log(draft);
+  //
   blogpost.save(function(err)
   {
     if(missing.length > 0)
@@ -1558,7 +1621,7 @@ function bulkUpload(req, res, list, cube) {
         blogpost.dev='false';
         blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-        //console.log(draft);
+        //
         blogpost.save(function(err)
         {
           if(missing.length > 0)
@@ -1609,7 +1672,7 @@ router.get('/download/cubecobra/:id', function(req, res)
     }
     else
     {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       cube.cards.forEach(function(card, index)
@@ -1632,7 +1695,7 @@ router.get('/download/csv/:id', function(req, res)
     }
     else
     {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.csv');
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '')  + '.csv');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       res.write('Name,CMC,Type,Color,Set,Status,Tags\r\n');
@@ -1685,7 +1748,7 @@ router.get('/download/plaintext/:id', function(req, res)
     }
     else
     {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name + '.txt');
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '')  + '.txt');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       cube.cards.forEach(function(card, index)
@@ -1697,8 +1760,314 @@ router.get('/download/plaintext/:id', function(req, res)
   });
 });
 
-router.post('/startdraft/:id', function(req, res)
+function getDraftBots(params)
 {
+  var botcolors = Math.ceil((params.seats-1)*2/5);
+  var draftbots = [];
+  var colors = [];
+  for(i = 0; i < botcolors; i++)
+  {
+    colors.push('W');
+    colors.push('U');
+    colors.push('B');
+    colors.push('R');
+    colors.push('G');
+  }
+  shuffle(colors);
+  for(i = 0; i < params.seats-1; i++)
+  {
+    var colorcombo= [colors.pop(), colors.pop()];
+    draftbots.push(colorcombo);
+  }
+  return draftbots;
+}
+
+function indexOfTag(cards, tag)
+{
+  tag = tag.toLowerCase();
+  for(var i = 0; i < cards.length; i++)
+  {
+    if(cards[i].tags && cards[i].tags.length > 0)
+    {
+      for(var j = 0; j < cards[i].tags.length; j++)
+      {
+        if(tag == cards[i].tags[j].toLowerCase())
+        {
+          return i;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+function startCustomDraft(req, res, params, cube) {
+  //setup draft conditions
+  cards = cube.cards;
+
+  if(cube.draft_formats[params.id].multiples)
+  {
+    var format = JSON.parse(cube.draft_formats[params.id].packs);
+    for(j = 0; j < format.length; j++)
+    {
+      for(k = 0; k < format[j].length; k++)
+      {
+        format[j][k] = format[j][k].split(',');
+        for(m = 0; m < format[j][k].length; m++)
+        {
+          format[j][k][m] = format[j][k][m].trim().toLowerCase();
+        }
+      }
+    }
+    var pools = {};
+    //sort the cards into groups by tag, then we can pull from them randomly
+    pools['*'] = [];
+    cards.forEach(function(card, index)
+    {
+      pools['*'].push(index);
+      if(card.tags && card.tags.length > 0)
+      {
+        card.tags.forEach(function(tag, tag_index)
+        {
+          tag = tag.toLowerCase();
+          if(tag != '*')
+          {
+            if(!pools[tag])
+            {
+              pools[tag] = [];
+            }
+            if(!pools[tag].includes(index))
+            {
+              pools[tag].push(index);
+            }
+          }
+        });
+      }
+    });
+    var draft = new Draft();
+
+    //setup draftbots
+    draft.bots = getDraftBots(params);
+
+    var fail = false;
+    var failMessage = "";
+
+    draft.picks = [];
+    draft.packs = [];
+    draft.activepacks = [];
+    draft.cube = cube._id;
+    draft.pickNumber = 1;
+    draft.packNumber = 1;
+    for(i = 0; i < params.seats; i++)
+    {
+      draft.picks.push([]);
+      draft.packs.push([]);
+      for(j = 0; j < format.length; j++)
+      {
+        draft.packs[i].push([]);
+        for(k = 0; k < format[j].length; k++)
+        {
+          draft.packs[i][j].push(0);
+          var tag = format[j][k][Math.floor(Math.random()*format[j][k].length)];
+          var pool = pools[tag];
+          if(pool && pool.length > 0)
+          {
+            var card = cards[pool[Math.floor(Math.random()*pool.length)]];
+            draft.packs[i][j][k] = card;
+          }
+          else
+          {
+            fail = true;
+            failMessage = 'Unable to create draft, no card with tag "' + tag + '" found.';
+          }
+        }
+      }
+    }
+    if(!fail)
+    {
+      for(i = 0; i < params.seats; i++)
+      {
+        draft.activepacks.push(draft.packs[i].pop());
+      }
+      draft.save(function(err)
+      {
+        if(err)
+        {
+          console.log(err, req);
+        }
+        else
+        {
+          res.redirect('/cube/draft/'+draft._id);
+        }
+      });
+    }
+    else
+    {
+      req.flash('danger',failMessage);
+      res.redirect('/cube/playtest/'+cube._id);
+    }
+  }
+  else
+  {
+    shuffle(cards);
+    var format = JSON.parse(cube.draft_formats[params.id].packs);
+    for(j = 0; j < format.length; j++)
+    {
+      for(k = 0; k < format[j].length; k++)
+      {
+        format[j][k] = format[j][k].split(',');
+        for(m = 0; m < format[j][k].length; m++)
+        {
+          format[j][k][m] = format[j][k][m].trim().toLowerCase();
+        }
+      }
+    }
+    var draft = new Draft();
+    //setup draftbots
+    draft.bots = getDraftBots(params);
+
+    var fail = false;
+    var failMessage = "";
+
+    draft.picks = [];
+    draft.packs = [];
+    draft.activepacks = [];
+    draft.cube = cube._id;
+    draft.pickNumber = 1;
+    draft.packNumber = 1;
+    for(i = 0; i < params.seats; i++)
+    {
+      draft.picks.push([]);
+      draft.packs.push([]);
+      for(j = 0; j < format.length; j++)
+      {
+        draft.packs[i].push([]);
+        for(k = 0; k < format[j].length; k++)
+        {
+          if(!fail)
+          {
+            draft.packs[i][j].push(0);
+            var tag = format[j][k][Math.floor(Math.random()*format[j][k].length)];
+            var index = indexOfTag(cards, tag);
+            //slice out the first card with the index, or error out
+            if(index != -1)
+            {
+              draft.packs[i][j][k] = cards.splice(index, 1)[0];
+            }
+            else
+            {
+              fail = true;
+              failMessage = 'Unable to create draft, not enough cards with tag "' + tag + '" found.';
+            }
+          }
+        }
+      }
+    }
+    if(!fail)
+    {
+      for(i = 0; i < params.seats; i++)
+      {
+        draft.activepacks.push(draft.packs[i].pop());
+      }
+      draft.save(function(err)
+      {
+        if(err)
+        {
+          console.log(err, req);
+        }
+        else
+        {
+          res.redirect('/cube/draft/'+draft._id);
+        }
+      });
+    }
+    else
+    {
+      req.flash('danger',failMessage);
+      res.redirect('/cube/playtest/'+cube._id);
+    }
+  }
+}
+
+function startStandardDraft(req, res, params, cube) {
+  //setup draft conditions
+  cards = cube.cards;
+  var cardpool = shuffle(cards.slice());
+  var draft = new Draft();
+
+  draft.bots = getDraftBots(params);
+  var totalCards = params.packs * params.cards * params.seats;
+  if(cube.cards.length < totalCards)
+  {
+    req.flash('danger', 'Requested draft requires ' + totalCards + ' cards, but this cube only has ' +  cube.cards.length + ' cards.');
+    res.redirect('/cube/playtest/'+cube._id);
+  }
+  else
+  {
+    draft.picks = [];
+    draft.packs = [];
+    draft.activepacks = [];
+    draft.cube = cube._id;
+    draft.packNumber = 1;
+    draft.pickNumber = 1;
+    for(i = 0; i < params.seats; i++)
+    {
+      draft.picks.push([]);
+      draft.packs.push([]);
+      for(j = 0; j < params.packs - 1; j++)
+      {
+        draft.packs[i].push([]);
+        for(k = 0; k < params.cards; k++)
+        {
+          draft.packs[i][j].push(0);
+          draft.packs[i][j][k] = cardpool.pop();
+        }
+      }
+      draft.activepacks.push([]);
+      for(k = 0; k < params.cards; k++)
+      {
+        draft.activepacks[i].push(0);
+        draft.activepacks[i][k] = cardpool.pop();
+      }
+    }
+    draft.save(function(err)
+    {
+      if(err)
+      {
+        console.log(err, req);
+      }
+      else
+      {
+        res.redirect('/cube/draft/'+draft._id);
+      }
+    });
+  }
+}
+
+function getCardRatings(cards, callback) {
+  var names = [];
+  cards.forEach(function(card, index)
+  {
+    if(!names.includes(carddict[card.cardID].name))
+    {
+      names.push(carddict[card.cardID].name);
+    }
+  });
+  CardRating.find({'name': { $in: names}}, function(err, ratings)
+  {
+     var dict = {};
+     if(ratings)
+     {
+       ratings.forEach(function(rating, index)
+       {
+         dict[rating.name] = rating.value;
+       });
+     }
+     callback(dict);
+  });
+}
+
+router.post('/startdraft/:id', function(req, res) {
   Cube.findById(req.params.id, function(err, cube)
   {
     if(!cube)
@@ -1708,84 +2077,21 @@ router.post('/startdraft/:id', function(req, res)
     }
     else
     {
-      //setup draft conditions
-      cards = cube.cards;
-      var cardpool = shuffle(cards.slice());
-      var draft = new Draft();
-      draft.numPacks = req.body.packs;
-      draft.numCards = req.body.cards;
-      draft.numSeats = req.body.seats;
-
-      var botcolors = Math.ceil((draft.numSeats-1)*2/5);
-      var draftbots = [];
-      var colors = [];
-      for(i = 0; i < botcolors; i++)
+      params = JSON.parse(req.body.body);
+      if(params.id == -1)
       {
-        colors.push('W');
-        colors.push('U');
-        colors.push('B');
-        colors.push('R');
-        colors.push('G');
-      }
-      shuffle(colors);
-      for(i = 0; i < draft.numSeats-1; i++)
-      {
-        var colorcombo= [colors.pop(), colors.pop()];
-        draftbots.push(colorcombo);
-      }
-      draft.bots = draftbots;
-      var totalCards = draft.numPacks * draft.numCards * draft.numSeats;
-      if(cube.cards.length < totalCards)
-      {
-        req.flash('danger', 'Requested draft requires ' + totalCards + ' cards, but this cube only has ' +  cube.cards.length + ' cards.');
-        res.redirect('/cube/playtest/'+cube._id);
+        //standard draft
+        startStandardDraft(req, res, params, cube);
       }
       else
       {
-        draft.picks = [];
-        draft.packs = [];
-        draft.activepacks = [];
-        draft.cube = cube._id;
-        for(i = 0; i < req.body.seats; i++)
-        {
-          draft.picks.push([]);
-          draft.packs.push([]);
-          for(j = 0; j < req.body.packs - 1; j++)
-          {
-            draft.packs[i].push([]);
-            for(k = 0; k < req.body.cards; k++)
-            {
-              draft.packs[i][j].push(0);
-              draft.packs[i][j][k] = cardpool.pop();
-            }
-          }
-          draft.activepacks.push([]);
-          for(k = 0; k < req.body.cards; k++)
-          {
-            draft.activepacks[i].push(0);
-            draft.activepacks[i][k] = cardpool.pop();
-          }
-        }
-
-        //console.log(draft);
-        draft.save(function(err)
-        {
-          if(err)
-          {
-            console.log(err);
-          }
-          else
-          {
-            res.redirect('/cube/draft/'+draft._id);
-          }
-        });
+        startCustomDraft(req, res, params, cube);
       }
     }
   });
 });
 
-router.get('/draft/pick/:id', function(req, res)
-{
+router.get('/draft/pick/:id', function(req, res) {
   var split = req.params.id.split(';');
   draftid = split[0];
   pick = split[1];
@@ -1813,9 +2119,9 @@ router.get('/draft/pick/:id', function(req, res)
       else
       {
         //add pick cardvalue
-        CardRating.findById(pick, function(err, cardrating)
+        CardRating.findOne({name:carddict[pick].name}, function(err, cardrating)
         {
-          var rating = (draft.numCards - draft.activepacks[0].length + 1)/draft.numCards;
+          var rating = (draft.pickNumber)/(draft.activepacks[0].length + draft.pickNumber);
           if(cardrating)
           {
             cardrating.value = cardrating.value * (cardrating.picks/(cardrating.picks+1)) + rating * (1/(cardrating.picks+1));
@@ -1826,8 +2132,8 @@ router.get('/draft/pick/:id', function(req, res)
             cardrating = new CardRating();
             cardrating.value = rating;
             cardrating.picks = 1;
+            cardrating.name = carddict[pick].name;
           }
-
           cardrating.save(function(err)
           {
             var draftover = false;
@@ -1841,165 +2147,164 @@ router.get('/draft/pick/:id', function(req, res)
                }
             }
 
-            //make bots take a pick out of active activepacks
-            for(i = 1; i < draft.numSeats; i++)
+            var flattened_cards = [].concat.apply([], draft.activepacks);
+            getCardRatings(flattened_cards,function(ratings)
             {
-              var bot = draft.bots[i-1];
-              var taken = false;
-              //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
-              //try to take card with exactly our two colors
-              shuffle(draft.activepacks[i]);
-              for(j = 0; j < draft.activepacks[i].length; j++)
+              //make bots take a pick out of active activepacks
+              for(i = 1; i < draft.activepacks.length; i++)
               {
-                //only do this if you aren't monocolor
-                if(!taken && bot[0] != bot[1])
+                var bot = draft.bots[i-1];
+                var taken = false;
+                //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
+                //try to take card with exactly our two colors
+                var ratedpicks = [];
+                var unratedpicks = [];
+                for(var j = 0; j < draft.activepacks[i].length; j++)
                 {
-                  if(draft.activepacks[i][j].colors.length == 2)
+                  if(ratings[carddict[draft.activepacks[i][j].cardID].name])
                   {
-                    if(draft.activepacks[i][j].colors.includes(bot[0]) && draft.activepacks[i][j].colors.includes(bot[1]))
-                    {
-                      pick = draft.activepacks[i].splice(j,1);
-                      draft.picks[i].push(pick[0]);
-                      taken = true;
-                    }
+                    ratedpicks.push(j);
+                  }
+                  else
+                  {
+                    unratedpicks.push(j)
                   }
                 }
-              }
-              //try to take card with one color
-              for(j = 0; j < draft.activepacks[i].length; j++)
-              {
-                if(!taken)
-                {
-                  if(draft.activepacks[i][j].colors.length == 1)
-                  {
-                    if(draft.activepacks[i][j].colors.includes(bot[0]) || draft.activepacks[i][j].colors.includes(bot[1]))
-                    {
-                      pick = draft.activepacks[i].splice(j,1);
-                      draft.picks[i].push(pick[0]);
-                      taken = true;
-                    }
-                  }
-                }
-              }
-              //try to take card that contains one of our colors, or is colorless
-              for(j = 0; j < draft.activepacks[i].length; j++)
-              {
-                if(!taken)
-                {
-                  if(draft.activepacks[i][j].colors.includes(bot[0]) || draft.activepacks[i][j].colors.includes(bot[1]))
-                  {
-                    pick = draft.activepacks[i].splice(j,1);
-                    draft.picks[i].push(pick[0]);
-                    taken = true;
-                  }
-                }
-              }
-              //take a random card
-              if(!taken)
-              {
-                pick = draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
-                draft.picks[i].push(pick[0]);
-              }
-            }
 
-            if(draft.activepacks[0].length <= 0)
-            {
-              if(draft.packs[0].length > 0)
-              {
-                //open new packs
-                for(i = 0; i < draft.numSeats; i++)
+                ratedpicks.sort(function(x, y) {
+                  if (ratings[carddict[draft.activepacks[i][x].cardID].name] < ratings[carddict[draft.activepacks[i][y].cardID].name]) {
+                    return -1;
+                  }
+                  if (ratings[carddict[draft.activepacks[i][x].cardID].name] > ratings[carddict[draft.activepacks[i][y].cardID].name]) {
+                    return 1;
+                  }
+                  return 0;
+                });
+                shuffle(unratedpicks);
+                var picknums = ratedpicks.concat(unratedpicks);
+                //try to take card that contains one of our colors, or is colorless
+                for(j = 0; j < draft.activepacks[i].length; j++)
                 {
-                  draft.activepacks[i] = draft.packs[i].pop();
+                  if(!taken)
+                  {
+                    if(draft.activepacks[i][picknums[j]].colors.includes(bot[0]) || draft.activepacks[i][picknums[j]].colors.includes(bot[1]) || draft.activepacks[i][picknums[j]].colors.length == 0)
+                    {
+                      pick = draft.activepacks[i].splice(picknums[j],1);
+                      draft.picks[i].push(pick[0]);
+                      taken = true;
+                    }
+                  }
+                }
+                //take a random card
+                if(!taken)
+                {
+                  pick = draft.activepacks[i].splice( Math.floor(Math.random() * draft.activepacks[i].length),1);
+                  draft.picks[i].push(pick[0]);
+                }
+              }
+
+              if(draft.activepacks[0].length <= 0)
+              {
+                if(draft.packs[0].length > 0)
+                {
+                  draft.packNumber += 1;
+                  draft.pickNumber = 1;
+                  //open new packs
+                  for(i = 0; i < draft.activepacks.length; i++)
+                  {
+                    draft.activepacks[i] = draft.packs[i].pop();
+                  }
+                }
+                else
+                {
+                  //draft is over
+                  draftover = true;
                 }
               }
               else
               {
-                //draft is over
-                draftover = true;
+                draft.pickNumber += 1;
+                //rotate active packs
+                draft.activepacks.unshift(draft.activepacks.pop());
               }
-            }
-            else
-            {
-              //rotate active packs
-              draft.activepacks.unshift(draft.activepacks.pop());
-            }
-            if(draftover)
-            {
-              Draft.updateOne({_id:draft._id}, draft, function(err)
+              if(draftover)
               {
-                if(err)
+                Draft.updateOne({_id:draft._id}, draft, function(err)
                 {
-                  console.log(err);
-                }
-                else
-                {
-                  //create deck, save it, redirect to it
-                  var deck = new Deck();
-                  deck.cards = draft.picks;
-                  if(req.user)
+                  if(err)
                   {
-                    deck.owner = req.user._id;
+                    console.log(err, req);
                   }
-                  deck.cube = draft.cube;
-                  deck.date = Date.now();
-                  deck.bots = draft.bots;
-                  Cube.findById(draft.cube,function(err, cube)
+                  else
                   {
-                    if(!cube.decks)
+                    //create deck, save it, redirect to it
+                    var deck = new Deck();
+                    deck.cards = draft.picks;
+                    if(req.user)
                     {
-                      cube.decks = [];
+                      deck.owner = req.user._id;
                     }
-                    cube.decks.push(deck._id);
-                    if(!cube.numDecks)
+                    deck.cube = draft.cube;
+                    deck.date = Date.now();
+                    deck.bots = draft.bots;
+                    Cube.findById(draft.cube,function(err, cube)
                     {
-                      cube.numDecks = 0;
-                    }
-                    cube.numDecks += 1;
-                    cube.save(function(err)
-                    {
-                      User.findById(deck.owner, function(err, user)
+                      if(!cube.decks)
                       {
-                        var owner = "Anonymous";
-                        if(user)
+                        cube.decks = [];
+                      }
+                      cube.decks.push(deck._id);
+                      if(!cube.numDecks)
+                      {
+                        cube.numDecks = 0;
+                      }
+                      cube.numDecks += 1;
+                      cube.save(function(err)
+                      {
+                        User.findById(deck.owner, function(err, user)
                         {
-                          owner = user.username;
-                        }
-                        deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
-                        cube.decks.push(deck._id);
-                        cube.save(function(err)
-                        {
-                          deck.save(function(err)
+                          var owner = "Anonymous";
+                          if(user)
                           {
-                            if(err)
+                            owner = user.username;
+                          }
+                          deck.name = owner + "'s draft of " + cube.name + " on "+ deck.date.toLocaleString("en-US");
+                          cube.decks.push(deck._id);
+                          cube.save(function(err)
+                          {
+                            deck.save(function(err)
                             {
-                              console.log(err);
-                            }
-                            else
-                            {
-                              return res.redirect('/cube/deck/'+deck._id);
-                            }
+                              if(err)
+                              {
+                                console.log(err, req);
+                              }
+                              else
+                              {
+                                return res.redirect('/cube/deck/'+deck._id);
+                              }
+                            });
                           });
                         });
                       });
                     });
-                  });
-                }
-              });
-            }
-            else
-            {
-              Draft.updateOne({_id:draft._id}, draft, function(err)
+                  }
+                });
+              }
+              else
               {
-                if(err)
+                Draft.updateOne({_id:draft._id}, draft, function(err)
                 {
-                  console.log(err);
-                }
-                else
-                {
-                  res.redirect('/cube/draft/'+draft._id);
-                }
-              });
-            }
+                  if(err)
+                  {
+                    console.log(err, req);
+                  }
+                  else
+                  {
+                    res.redirect('/cube/draft/'+draft._id);
+                  }
+                });
+              }
+            });
           });
         });
       }
@@ -2022,10 +2327,10 @@ router.get('/draft/:id', function(req, res)
       var activecards_id = draft.activepacks[0];
       var picks = [];
       var activecards = [];
-      var pickNumber = draft.numCards + 1 - draft.activepacks[0].length;
-      var packNumber = draft.numPacks - draft.packs[0].length;
+      var pickNumber = draft.pickNumber;
+      var packNumber = draft.packNumber;
       var title = 'Pack ' + packNumber + ', Pick ' + pickNumber;
-      var packsleft= (draft.numPacks - packNumber);
+      var packsleft= (draft.packs[0].length + 1 - packNumber);
       var subtitle =  packsleft + ' unopened packs left.';
       if(packsleft == 1)
       {
@@ -2185,7 +2490,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
           if(carddict[edit.substring(1)].image_flip)
           {
-            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '" card_flip="'+ carddict[edit.substring(1)].image_flip + '">' + carddict[edit.substring(1)].name + '</a></br>';
+            changelog += '<a class="dynamic-autocard" card="'+ carddict[edit.substring(1)].image_normal + '" card_flip="'+ carddict[edit.substring(1)].image_flip + '">' + carddict[edit.substring(1)].name + '</a>';
           }
           else
           {
@@ -2290,7 +2595,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       });
 
       var blogpost = new Blog();
-      blogpost.title=req.body.title;
+      blogpost.title='Automatic Post - Bulk Upload';
       if(req.body.blog.length > 0)
       {
         blogpost.html=req.body.blog;
@@ -2306,7 +2611,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       {
         if(err)
         {
-          console.log(err);
+          console.log(err, req);
         }
         else
         {
@@ -2326,7 +2631,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             {
               if(err)
               {
-                console.log(err);
+                console.log(err, req);
               }
               else
               {
@@ -2342,7 +2647,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
             {
               if(err)
               {
-                console.log(err);
+                console.log(err, req);
               }
               else
               {
@@ -2528,6 +2833,8 @@ router.get('/deck/:id', function(req, res)
 {
   Deck.findById(req.params.id, function(err, deck)
   {
+    console.log(deck.cards[0]);
+    console.log(deck.cards[1]);
     if(!deck)
     {
       req.flash('danger', 'Deck not found');
@@ -2569,7 +2876,7 @@ router.get('/deck/:id', function(req, res)
               var bot_deck = [];
               deck.cards[i].forEach(function(card, index)
               {
-                if(!card[0].cardID || !carddict[card[0].cardID])
+                if(!card[0].cardID && !carddict[card[0].cardID])
                 {
                   console.log(req.params.id + ": Could not find seat " + (bot_decks.length+1) + ", pick " + (bot_deck.length+1));
                 }
@@ -2745,10 +3052,15 @@ router.post('/api/updatecards/:id', function(req, res)
         var found = false;
         cube.cards.forEach(function(card, index)
         {
-          card.details = carddict[card.cardID];
-          if(req.body.filters == null || filterCard(card,req.body.filters))
+          if(card.details)
           {
-            if(cardIsLabel(card,req.body.categories[0],req.body.sorts[0]) && cardIsLabel(card,req.body.categories[1],req.body.sorts[1]))
+            delete card.details;
+          }
+          var tempcard = card;
+          tempcard.details = carddict[tempcard.cardID];
+          if(req.body.filters == null || filterCard(tempcard,req.body.filters))
+          {
+            if(cardIsLabel(tempcard,req.body.categories[0],req.body.sorts[0]) && cardIsLabel(tempcard,req.body.categories[1],req.body.sorts[1]))
             {
               if(req.body.updated.status)
               {
@@ -2825,7 +3137,7 @@ router.delete('/remove/:id',ensureAuth, function(req, res)
       {
         if(err)
         {
-          console.log(err);
+          console.log(err, req);
         }
         req.flash('success', 'Cube Removed');
         res.send('Success');
@@ -2857,9 +3169,47 @@ router.delete('/blog/remove/:id',ensureAuth, function(req, res)
       {
         if(err)
         {
-          console.log(err);
+          console.log(err, req);
         }
         req.flash('success', 'Post Removed');
+        res.send('Success');
+      });
+    }
+  });
+});
+
+
+router.delete('/format/remove/:id',ensureAuth, function(req, res)
+{
+  if(!req.user._id)
+  {
+    req.flash('danger', 'Not Authorized');
+    res.redirect('/'+req.params.id);
+  }
+
+  var cubeid = req.params.id.split(';')[0];
+  var id = req.params.id.split(';')[1];
+
+  Cube.findById(cubeid, function(err, cube)
+  {
+    if(err || (cube.owner != req.user._id))
+    {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/'+req.params.id);
+    }
+    else
+    {
+      cube.draft_formats.splice(id,1);
+
+      Cube.updateOne({_id:cube._id}, cube, function(err)
+      {
+        if(err)
+        {
+          console.log(err, req);
+          req.flash('danger', 'An error occured saving your custom format.');
+          res.redirect('/cube/playtest/'+req.params.id);
+        }
+        req.flash('success', 'Format Removed');
         res.send('Success');
       });
     }

@@ -41,7 +41,7 @@ app.use(fileUpload());
 
 // Body parser middleware
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit:'10mb',extended:true}));
 
 //Load view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -98,7 +98,7 @@ app.get('*', function(req, res, next)
 // Home route
 app.get('/', function(req, res)
 {
-  Cube.find().sort({'date_updated': -1}).limit(12).exec(function(err, recents)
+  Cube.find({'card_count':{$gt : 200}}).sort({'date_updated': -1}).limit(12).exec(function(err, recents)
   {
     Cube.find().sort({'numDecks': -1}).limit(12).exec(function(err, drafted)
     {

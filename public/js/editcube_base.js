@@ -859,7 +859,7 @@ function GetColorIdentity(colors)
 
 function getSorts()
 {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty'];
+  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty','Manacost Type'];
 }
 
 function getLabels(sort)
@@ -1093,6 +1093,10 @@ function getLabels(sort)
       return 1;
     });
   }
+  else if (sort == 'Manacost Type')
+  {
+    return ['Gold','Hybrid','Phyrexian'];
+  }
 }
 
 function cardIsLabel(card, label, sort)
@@ -1309,6 +1313,50 @@ function cardIsLabel(card, label, sort)
       return card.details.loyalty == label;
     }
     return false;
+  }
+  else if (sort == 'Manacost Type')
+  {
+    switch(label)
+    {
+      case 'Gold':
+        if(card.details.colors.length <= 1)
+        {
+          return false;
+        }
+        var res = true;
+        card.details.parsed_cost.forEach(function(symbol, index)
+        {
+          if(symbol.includes('-'))
+          {
+            res = false;
+          }
+        });
+        return res;
+      case 'Hybrid':
+        if(card.details.colors.length <= 1)
+        {
+          return false;
+        }
+        var res = false;
+        card.details.parsed_cost.forEach(function(symbol, index)
+        {
+          if(symbol.includes('-') && !symbol.includes('-p'))
+          {
+            res = true;
+          }
+        });
+        return res;
+      case 'Phyrexian':
+      var res = false;
+        card.details.parsed_cost.forEach(function(symbol, index)
+        {
+          if(symbol.includes('-p'))
+          {
+            res = true;
+          }
+        });
+        return res;
+    }
   }
 }
 

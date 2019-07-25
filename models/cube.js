@@ -33,7 +33,8 @@ let cubeSchema = mongoose.Schema(
     updated_string:String,
     default_sorts:[String],
     card_count:Number,
-    type:String
+    type:String,
+    draft_formats:{}
   }
 );
 

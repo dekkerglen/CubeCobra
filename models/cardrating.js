@@ -4,7 +4,8 @@ let mongoose = require('mongoose');
 let cardRatingSchema = mongoose.Schema(
   {
     value:Number,
-    picks:Number
+    picks:Number,
+    name:String
   }
 );
 

@@ -7,10 +7,9 @@ let draftSchema = mongoose.Schema(
     packs:[[[]]],
     activepacks:[[]],
     cube:String,
-    numPacks:Number,
-    numCards:Number,
-    numSeats:Number,
-    bots:[[]]
+    bots:[[]],
+    pickNumber:Number,
+    packNumber:Number
   }
 );
 
