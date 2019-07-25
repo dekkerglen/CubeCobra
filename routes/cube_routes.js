@@ -2833,8 +2833,6 @@ router.get('/deck/:id', function(req, res)
 {
   Deck.findById(req.params.id, function(err, deck)
   {
-    console.log(deck.cards[0]);
-    console.log(deck.cards[1]);
     if(!deck)
     {
       req.flash('danger', 'Deck not found');

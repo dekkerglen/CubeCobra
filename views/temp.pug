@@ -1,10 +1,23 @@
 p
-  a This update is a small hotfix for issues that users reported after the 1.4 release. 
+  a This is a small update with respect to the number of new functional features, but it is adding custom draft formats, which is quite a large feature. I originally wanted to include this with the
+  a  complete draft overhaul, including a deckbuilder, but I needed to put out this update early. As many of you may have noticed, earlier this week Cube Cobra was struggling with some unexpected downtime.
+  a  I was able to put out a temporary fix, so Cube Cobra won't be down for extended periods of time anymore. However, I added in a few safeguards and logging so I can better identify what the issue is,
+  a  and be able to completely fix it in the future. Thank you for patience!
+p
+  a New Features
+    ul
+      li Users can now access their profile, and their cubes, with less clicks
+      li Custom draft formats, I'll be uploading a cube named 'Modern Horizons Draft' that will contain an authentic modern horizons draft for anyone to try out
+      li Draftbots now prefer cards with a better draft rating, over time you will see the draft bots prioritizing higher power cards than they used to
+      li Cubes under 200 cards will no longer be elgible to be displayed on the front pages
+      li New filter/search type: 'Manacost Type', you can use this to differentiate cards into Gold, Hybrid, or Phyrexian mana costs
+      
 p
   a Bugfixes
     ul
-      li Contraptions are now sorted correctly
-      li Group edit tags now save correctly
+      li Increased bulk upload file limit
+      li Cube analysis no longer counts blue cards as black cards
+      li Internal cube storage no longer stores unneccesary information
+      li Changelist no longer has linebreaks after double faced cards
 p
-  a I've also refactored the edit cube client side scripts, with no functionality changed. I've recieved several reports now on a bug with a playtest draft, but I haven't been able to replicate the issue so far. 
-  a  For the next update, I will be working on the large playtest overhaul, that I have delayed for a couple of updates. This will likely fix the draft bug inadvertently, so stay tuned for updates!
+  a Thanks again for all the support during the development of Cube Cobra. 
