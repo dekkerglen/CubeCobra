@@ -1,5 +1,3 @@
-
-
 window.onload = async () => {
   //load the card names
   if(document.getElementById("removeInput"))

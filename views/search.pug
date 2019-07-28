@@ -1,6 +1,12 @@
 extends layout
 
 block content
+  != messages('message', locals)
+  if errors
+    each error, i in errors
+      br
+      div(class="alert alert-danger") #{error.msg}
+  br
   h4 Search Results
   h6
     a(href='/advanced_search') Advanced Search

@@ -15,7 +15,7 @@ let Deck = require('../models/deck')
 //Lost password form
 router.get('/lostpassword', function(req, res)
 {
-  res.render('lostpassword');
+  res.render('user/lostpassword');
 });
 
 //Lost password submit
@@ -28,7 +28,7 @@ router.post('/lostpassword', function(req, res)
 
   if(errors)
   {
-    res.render('lostpassword', {
+    res.render('user/lostpassword', {
       errors:errors
     });
   }
@@ -98,7 +98,7 @@ router.get('/passwordreset/:id', function(req, res)
     }
     else
     {
-      res.render('passwordreset');
+      res.render('user/passwordreset');
     }
   });
 });
@@ -111,7 +111,7 @@ router.post('/lostpasswordreset', function(req, res)
 
   if(errors)
   {
-    res.render('passwordreset',
+    res.render('user/passwordreset',
     {
       errors: errors
     })
@@ -123,7 +123,7 @@ router.post('/lostpasswordreset', function(req, res)
       if(!passwordreset)
       {
         req.flash('danger', 'Incorrect email and recovery code combination.');
-        res.render('passwordreset');
+        res.render('user/passwordreset');
       }
       else
       {
@@ -134,7 +134,7 @@ router.post('/lostpasswordreset', function(req, res)
             if(req.body.password2 != req.body.password)
             {
               req.flash('danger', 'New passwords don\'t match');
-              res.render('passwordreset');
+              res.render('user/passwordreset');
             }
             else
             {
@@ -176,7 +176,7 @@ router.post('/lostpasswordreset', function(req, res)
 //Register form
 router.get('/register', function(req, res)
 {
-  res.render('register');
+  res.render('user/register');
 });
 
 //Register process
@@ -206,7 +206,7 @@ router.post('/register', function(req, res)
 
   if(errors)
   {
-    res.render('register',
+    res.render('user/register',
     {
       errors: errors,
       attempt: attempt
@@ -219,7 +219,7 @@ router.post('/register', function(req, res)
       if(user)
       {
         req.flash('danger','Username already taken.');
-          res.render('register',
+          res.render('user/register',
           {
             attempt: attempt
           });
@@ -232,7 +232,7 @@ router.post('/register', function(req, res)
           if(user)
           {
             req.flash('danger','Email already associated with an existing account.');
-            res.render('register',
+            res.render('user/register',
             {
               attempt: attempt
             });
@@ -355,7 +355,7 @@ router.get('/register/confirm/:id', function(req, res)
 //Login route
 router.get('/login', function(req, res)
 {
-  res.render('login');
+  res.render('user/login');
 })
 
 //Login post
@@ -464,7 +464,7 @@ router.get('/view/:id', function(req, res)
     {
       Cube.find({owner:user._id}, function(err, cubes)
       {
-        res.render('user_view',
+        res.render('user/user_view',
         {
           user_limited:{
             username:user.username,
@@ -530,7 +530,7 @@ router.get('/decks/:id', function(req, res)
               deck_page.push(decks[i+page*pagesize]);
             }
           }
-          res.render('user_decks',
+          res.render('user/user_decks',
           {
             user_limited:{
               username:user.username,
@@ -545,7 +545,7 @@ router.get('/decks/:id', function(req, res)
         }
         else
         {
-          res.render('user_decks',
+          res.render('user/user_decks',
           {
             user_limited:{
               username:user.username,
@@ -560,7 +560,7 @@ router.get('/decks/:id', function(req, res)
       }
       else
       {
-        res.render('user_decks',
+        res.render('user/user_decks',
         {
           user_limited:{
             username:user.username,
@@ -588,7 +588,7 @@ router.get('/account', ensureAuth, function(req, res)
       about:user.about,
       id:user._id
     }
-    res.render('user_account',
+    res.render('user/user_account',
     {
       selected:'info',
       user:user_limited,
@@ -609,7 +609,7 @@ router.get('/account/changepassword', ensureAuth, function(req, res)
       about:user.about,
       id:user._id
     }
-    res.render('user_account',
+    res.render('user/user_account',
     {
       selected:'changepw',
       user:user_limited,
@@ -630,7 +630,7 @@ router.get('/account/updateemail', ensureAuth, function(req, res)
       about:user.about,
       id:user._id
     }
-    res.render('user_account',
+    res.render('user/user_account',
     {
       selected:'changeemail',
       user:user_limited,
@@ -656,7 +656,7 @@ router.post('/resetpassword', ensureAuth, function(req,res,next)
         email:user.email,
         about:user.about
       }
-      res.render('user_account',
+      res.render('user/user_account',
       {
         selected:'changepw',
         user:user_limited,

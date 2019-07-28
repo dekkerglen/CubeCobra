@@ -1,3 +1,5 @@
+var stopAutocard = false;
+
 function getElementPosition(el) {
 	var l = 0, t = 0;
 	while (el.offsetParent) {
@@ -43,12 +45,15 @@ function autocard_showcard_helper(element)
 {
 	return function()
 	{
-		if(element.getAttribute("card_flip"))
+		if(!stopAutocard)
 		{
-			autocard_show_card_flip(element.getAttribute("card"),element.getAttribute("card_flip"));
-		}
-		else {
-			autocard_show_card(element.getAttribute("card"));
+			if(element.getAttribute("card_flip"))
+			{
+				autocard_show_card_flip(element.getAttribute("card"),element.getAttribute("card_flip"));
+			}
+			else {
+				autocard_show_card(element.getAttribute("card"));
+			}
 		}
 	}
 }

@@ -1,3 +1,16 @@
+.cubenav {
+	border-right: 1px solid #DEE2E6;
+	border-left: 1px solid #DEE2E6;
+}
+
+.usercontrols
+{
+	background-image: linear-gradient(white, #EFEFEF);
+		border-right: 1px solid #DEE2E6;
+		border-left: 1px solid #DEE2E6;
+		border-bottom: 1px solid #DEE2E6;
+}
+
 .alert-error {
 	color: #a94442;
 	background-color: #f2dede;

@@ -5,11 +5,11 @@ let draftSchema = mongoose.Schema(
   {
     picks:[[]],
     packs:[[[]]],
-    activepacks:[[]],
     cube:String,
     bots:[[]],
     pickNumber:Number,
-    packNumber:Number
+    packNumber:Number,
+    ratings:{}
   }
 );
 

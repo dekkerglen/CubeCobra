@@ -8,7 +8,10 @@ let deckSchema = mongoose.Schema(
     cube:String,
     date:Date,
     name:String,
-    bots:[[]]
+    bots:[[]],
+    playerdeck:[[]],
+    playersideboard:[[]],
+    cols:Number
   }
 );
 

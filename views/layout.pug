@@ -38,10 +38,8 @@ html
           if user
             li.nav-item
               a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
-          if user
             li.nav-item
               a.nav-link(href="/user/view/"+user.id) Your Profile
-          if user
             li.nav-item.dropdown
               a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
                 |  #{user.username}  
@@ -49,7 +47,6 @@ html
                 a.dropdown-item(href='/user/account') Account Information
                 a.dropdown-item(href='/user/account/changepassword') Change Password
                 a.dropdown-item(href='/user/account/updateemail') Update Email
-                a.dropdown-item(href='/user/view/'+user.username) View Profile
                 a.dropdown-item(href='/user/logout') Logout
               
           else
@@ -58,12 +55,6 @@ html
             li.nav-item
               a.nav-link(data-toggle='modal', data-target='#loginModal') Login
     .container
-      br
-      != messages('message', locals)
-      if errors
-        each error, i in errors
-          div(class="alert alert-danger") #{error.msg}
-      
       block content
       br
       hr

@@ -13,6 +13,31 @@ const fs = require('fs');
 const https = require('https');
 var fileUpload  = require('express-fileupload');
 
+//very unhelpful for debugging
+/*
+var compressor = require('node-minify');
+//minify js
+ fs.readdir('clientjs', function (err, files) {
+   //handling error
+   if (err)
+   {
+       return console.log('Unable to scan directory: ' + err);
+   }
+   //listing all files using forEach
+   files.forEach(function (file) {
+     // Do whatever you want to do with the file
+     console.log('Minifying: ' + file);
+     compressor.minify({
+       compressor: 'uglifyjs',
+       input: 'clientjs/' + file,
+       output: 'public/js/' + file,
+       callback: function(err, min) {}
+     });
+   });
+ });
+ */
+
+
 // Connect db
 mongoose.connect(config.database);
 let db = mongoose.connection;
@@ -40,8 +65,8 @@ let Deck = require('./models/deck')
 app.use(fileUpload());
 
 // Body parser middleware
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json({limit:'10mb',extended:true}));
+app.use(bodyParser.urlencoded({limit:'50mb',extended:true}));
+app.use(bodyParser.json({limit:'50mb',extended:true}));
 
 //Load view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -128,10 +153,9 @@ app.get('/', function(req, res)
 //name, owner
 //symbols:
 //=,~(contains)
-
 app.get('/advanced_search', function(req, res)
 {
-  res.render('advanced_search',
+  res.render('search/advanced_search',
   {
     loginCallback:'/advanced_search'
   });
@@ -259,7 +283,7 @@ app.get('/search/:id', function(req, res)
 
 app.get('/contact', function(req, res)
 {
-  res.render('contact',
+  res.render('info/contact',
   {
     loginCallback:'/contact'
   });
@@ -267,7 +291,7 @@ app.get('/contact', function(req, res)
 
 app.get('/tos', function(req, res)
 {
-  res.render('tos',
+  res.render('info/tos',
   {
       loginCallback:'/tos'
   });
@@ -275,7 +299,7 @@ app.get('/tos', function(req, res)
 
 app.get('/privacy', function(req, res)
 {
-  res.render('privacy_policy',
+  res.render('info/privacy_policy',
   {
       loginCallback:'/privacy'
   });
@@ -283,7 +307,7 @@ app.get('/privacy', function(req, res)
 
 app.get('/cookies', function(req, res)
 {
-  res.render('cookies',
+  res.render('info/cookies',
   {
       loginCallback:'/cookies'
   });
@@ -291,7 +315,7 @@ app.get('/cookies', function(req, res)
 
 app.get('/ourstory', function(req, res)
 {
-  res.render('ourstory',
+  res.render('info/ourstory',
   {
       loginCallback:'/ourstory'
   });
@@ -299,7 +323,7 @@ app.get('/ourstory', function(req, res)
 
 app.get('/faq', function(req, res)
 {
-  res.render('faq',
+  res.render('info/faq',
   {
       loginCallback:'/faq'
   });
@@ -307,7 +331,7 @@ app.get('/faq', function(req, res)
 
 app.get('/donate', function(req, res)
 {
-  res.render('donate',
+  res.render('info/donate',
   {
       loginCallback:'/donate'
   });
@@ -315,7 +339,7 @@ app.get('/donate', function(req, res)
 
 app.get('/404', function(req, res)
 {
-  res.render('404', {});
+  res.render('misc/404', {});
 });
 
 //Route files

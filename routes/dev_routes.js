@@ -77,7 +77,7 @@ router.get('/blog/:id', function(req, res)
 
         if(admin)
         {
-          res.render('blog',
+          res.render('blog/devblog',
           {
             blogs:blog_page,
             pages:pages,
@@ -87,7 +87,7 @@ router.get('/blog/:id', function(req, res)
         }
         else
         {
-          res.render('blog',
+          res.render('blog/devblog',
           {
             blogs:blog_page,
             pages:pages,
@@ -99,7 +99,7 @@ router.get('/blog/:id', function(req, res)
       {
         if(admin)
         {
-          res.render('blog',
+          res.render('blog/devblog',
           {
             blogs:blogs,
             admin:'true',
@@ -108,7 +108,7 @@ router.get('/blog/:id', function(req, res)
         }
         else
         {
-          res.render('blog',
+          res.render('blog/devblog',
           {
             blogs:blogs,
             loginCallback:'/dev/blog/'+req.params.id
