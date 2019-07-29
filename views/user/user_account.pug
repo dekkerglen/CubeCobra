@@ -1,0 +1,40 @@
+extends user_base
+
+block information
+  include ../flash
+  .container
+    dl.row
+      dt.col-sm-3 Username
+      dd.col-sm-9 #{user.username}
+      dt.col-sm-3 Email
+      dd.col-sm-9 #{user.email}
+      dt.col-sm-3 About
+      dd.col-sm-9
+        form(method='POST', action='/user/updatebio')
+          #form-group
+            textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about
+          br
+          input.btn.btn-success(type='submit',value='Update')
+
+block changepassword
+  form(method='POST', action='/user/resetpassword')
+    .form-group.row
+      label.col-sm-4.col-form-label Old password:
+      input#password.form-control.form-control.col-sm-8(name='password', type='password')
+    .form-group.row
+      label.col-sm-4.col-form-label New Password:
+      input#newPassword.form-control.form-control.col-sm-8(name='password2', type='password')
+    .form-group.row
+      label.col-sm-4.col-form-label Confirm New Password:
+      input#confirmPassword.form-control.form-control.col-sm-8(name='password3', type='password')
+    input.btn.btn-success(type='submit',value='Change Password')
+
+block changeemail
+  form(method='POST', action='/user/updateemail')
+    .form-group.row
+      label.col-sm-4.col-form-label New Email:
+      input#email.form-control.col-sm-8(name='email', type='text')
+    .form-group.row
+      label.col-sm-4.col-form-label Password:
+      input#password.form-control.form-control.col-sm-8(name='password', type='password')
+    input.btn.btn-success(type='submit',value='Update')

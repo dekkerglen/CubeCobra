@@ -1,0 +1,5 @@
+!= messages('message', locals)
+if errors
+  each error, i in errors
+    br
+    div(class="alert alert-danger") #{error.msg}
