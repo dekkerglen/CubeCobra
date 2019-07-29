@@ -1,0 +1,3 @@
+# Contribution Guidelines
+### Git Policy
+The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a new branch with the name "feature-#", where the number is the corresponding feature ID. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. If the feature doesn't meet our guidelines, or there are other issues, an admin will add a comment to the pull request describing the problem.
