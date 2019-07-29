@@ -8,6 +8,11 @@ var nameToId = {};
 var full_names = [];
 var imagedict = {};
 
+
+if (!fs.existsSync('private')){
+    fs.mkdirSync('private');
+}
+
 function updateCardbase() {
   dict = {};
   names = [];

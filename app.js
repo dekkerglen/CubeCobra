@@ -329,6 +329,7 @@ app.get('*', function(req, res){
   res.redirect('/404');
 });
 
+updatedb.updateCardbase();
 schedule.scheduleJob('0 0 * * *', function(){
   console.log("Starting midnight cardbase update...");
   updatedb.updateCardbase();
