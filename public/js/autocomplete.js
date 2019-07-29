@@ -10,7 +10,6 @@ window.onload = async () => {
   const response = await fetch('/cube/api/cardnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
-
   function autocomplete(inp, arr, submit_button) {
     /*the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values:*/

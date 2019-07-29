@@ -17,7 +17,6 @@ block content
         a.nav-link(href='/cube/analysis/'+cube._id) Analysis
       li.nav-item(style='padding-right:10px;')
         a.nav-link(href='/cube/blog/'+cube._id) Blog
-  include ../flash
   //edit controls
   .usercontrols
     nav.navbar.navbar-expand.navbar-light
@@ -141,8 +140,8 @@ block content
             .col
               button#updateFilterButton.btn.btn-success(type='button') Update Table
               br
-              br           
-
+              br              
+  include ../flash
 
    
   input#cubeID(type='hidden', name='cubeID', value=cube._id)     
@@ -402,6 +401,7 @@ block content
           button.btn.btn-secondary(type='button', data-dismiss='modal') OK
               
   script(src='/js/autocomplete.js')
+  script(src='/js/sortfilter.js')     
   script(src='/js/editcube_spoiler.js')     
   script(src='/js/editcube_base.js')     
               

@@ -17,7 +17,6 @@ block content
         a.nav-link(href='/cube/analysis/'+cube._id) Analysis
       li.nav-item(style='padding-right:10px;')
         a.nav-link(href='/cube/blog/'+cube._id) Blog      
-  include ../flash
       
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
   //edit controls
@@ -28,6 +27,7 @@ block content
           ul.navbar-nav          
             li.nav-item
               a#customDraftButton.nav-link(href='#' data-toggle='modal', data-target='#customDraftModal') Create Custom Draft
+  include ../flash
   .container
     br  
     .row
