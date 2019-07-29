@@ -6,7 +6,7 @@ const expressValidator = require('express-validator');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
-const config = require('../cubecobrasecrets/database');
+const config = require('./config/database');
 var schedule = require('node-schedule');
 const http = require('http');
 var fileUpload  = require('express-fileupload');
@@ -85,7 +85,7 @@ app.use(expressValidator({
 }));
 
 // Passport config and middleware
-require('../cubecobrasecrets/passport')(passport);
+require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
