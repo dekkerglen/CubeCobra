@@ -139,6 +139,18 @@ function cardIsLabel(card, label, sort)
     }
     return card.cmc == label;
   }
+  else if (sort == 'CMC2')
+  {
+    if(card.cmc >= 7)
+    {
+      return label == '7+';
+    }
+    else if (card.cmc <= 1)
+    {
+      return label == '0-1';
+    }
+    return card.cmc == label;
+  }
   else if(sort == 'Supertype' || sort =='Type')
   {
     if(card.details.type.includes('Contraption'))
@@ -339,6 +351,14 @@ function cardIsLabel(card, label, sort)
         });
         return res;
     }
+  }
+  else if(sort == 'CNC')
+  {
+    if(label == 'Creature')
+    {
+      return card.details.type.includes(label);
+    }
+    return !card.details.type.toLowerCase().includes('creature');
   }
 }
 

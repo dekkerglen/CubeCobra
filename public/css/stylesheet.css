@@ -197,67 +197,67 @@
 	text-decoration: none;
 }
 
-.list-group-item.autocard.white:not(:hover) {
+.autocard.white:not(:hover) {
 	background-color: #FFFAE8;
 }
 
-.list-group-item.autocard.white:hover {
+.autocard.white:hover {
 	background-color: #FFFDF9;
 }
 
-.list-group-item.autocard.blue:not(:hover) {
+.autocard.blue:not(:hover) {
 	background-color: #B7E1FF;
 }
 
-.list-group-item.autocard.blue:hover {
+.autocard.blue:hover {
 	background-color: #DBF0FF;
 }
 
-.list-group-item.autocard.black:not(:hover) {
+.autocard.black:not(:hover) {
 	background-color: #C2A7C9;
 }
 
-.list-group-item.autocard.black:hover {
+.autocard.black:hover {
 	background-color: #E0C2E8;
 }
 
-.list-group-item.autocard.red:not(:hover) {
+.autocard.red:not(:hover) {
 	background-color: #DB878D;
 }
 
-.list-group-item.autocard.red:hover {
+.autocard.red:hover {
 	background-color: #E89DA3;
 }
 
-.list-group-item.autocard.green:not(:hover) {
+.autocard.green:not(:hover) {
 	background-color: #9ED3A4;
 }
 
-.list-group-item.autocard.green:hover {
+.autocard.green:hover {
 	background-color: #B5E5BA;
 }
 
-.list-group-item.autocard.multi:not(:hover) {
+.autocard.multi:not(:hover) {
 	background-color: #FFEC99;
 }
 
-.list-group-item.autocard.multi:hover {
+.autocard.multi:hover {
 	background-color: #FFF4CC;
 }
 
-.list-group-item.autocard.colorless:not(:hover) {
+.autocard.colorless:not(:hover) {
 	background-color: #CCCCCC;
 }
 
-.list-group-item.autocard.colorless:hover {
+.autocard.colorless:hover {
 	background-color: #E5E5E5;
 }
 
-.list-group-item.autocard.lands:not(:hover) {
+.autocard.lands:not(:hover) {
 	background-color: #FFBE99;
 }
 
-.list-group-item.autocard.lands:hover {
+.autocard.lands:hover {
 	background-color: #FFDDCC;
 }
 
@@ -303,6 +303,52 @@
 	cursor: pointer;
 }
 
+.nostretch{
+	width:1%;
+	white-space:nowrap;
+}
+.tdcheck{
+	margin-top:10px;
+}
+.tdcard:hover {
+	cursor: pointer;
+}
+.tdcard{
+	font-size: 13px;
+	color: black;
+	text-decoration: none;
+}
+.listviewrow{
+	line-height:15px;
+	margin:0px;
+}
+.listviewrow:hover{
+	background-color: #F8F9FA;
+}
+.nospace
+{
+	padding: 0px;
+	margin: 0px;
+}
+.tdname
+{
+	padding-top:10px;
+}
+.versionselect
+{
+	width: 130px;
+}
+.inputmd
+{
+	width:50px;
+}
+.inputl
+{
+	width:100px;
+}
+.tags-input {
+	background-color: white;
+}
 .tags-input .tag:hover {
 	background-color: #F8F9FA;
 	color: #000000;

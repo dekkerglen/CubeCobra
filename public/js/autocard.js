@@ -41,6 +41,14 @@ function autocard_init_class2(htmlclass) {
 			links[i].onmouseout = function(){autocard_hide_card();};
 }}}
 
+function autocard_init_class3(htmlclass) {
+	var links = document.getElementsByTagName("td");
+	for(var i=0;i<links.length;i++){
+		if(links[i].className.includes(htmlclass)){
+			links[i].onmouseover = autocard_showcard_helper(links[i]);
+			links[i].onmouseout = function(){autocard_hide_card();};
+}}}
+
 function autocard_showcard_helper(element)
 {
 	return function()

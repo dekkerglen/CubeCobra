@@ -2,73 +2,27 @@ var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{in
                      '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
                      '#{items}</select><div class="input-group-append"><div class="input-group-text"><input type="checkbox" data-index="#{checkboxindex}" id="#{checkbox}"/><a style="padding-left: 5px">Not </a></div>' +
                      '<button class="btn btn-outline-secondary filter-button" data-index="#{buttonindex}" type="button">Remove</button></div></div>';
-
 var filterItemTemplate = '<option value="#{value}">#{label}</option>';
-
-var justAddButton = document.getElementById("justAddButton");
-var removeButton = document.getElementById("removeButton");
-var addInput = document.getElementById("addInput");
-var removeInput = document.getElementById("removeInput");
-var changelist = document.getElementById("changelist");
-var saveChangesButton = document.getElementById("saveChangesButton");
-var discardAllButton = document.getElementById("discardAllButton");
-var changelistFormBody = document.getElementById("changelistFormBody");
-var updateSortButton = document.getElementById("updateSortButton");
-var updateFilterButton = document.getElementById("updateFilterButton");
-var addFilterButton = document.getElementById("addFilterButton");
-var saveSortButton = document.getElementById("saveSortButton");
+var canEdit = $('#edittoken').val();
+var listGranularity = 100;
 var changes = [];
+var sorts = [];
+var filters = [];
+var groupSelect = null;
+var modalSelect = null;
+var view = $('#viewSelect').val();
 
-var modalFields = {
-  title: document.getElementById("contextModalTitle"),
-  img: document.getElementById("contextModalImg"),
-  version: document.getElementById("contextModalVersionSelect"),
-  status: document.getElementById("contextModalStatusSelect"),
-  tags: document.getElementById("contextModalTagsText"),
-  cmc: document.getElementById("contextModalTagsCMC"),
-  colors: {
-    white: document.getElementById("contextModalCheckboxW"),
-    blue: document.getElementById("contextModalCheckboxU"),
-    black: document.getElementById("contextModalCheckboxB"),
-    red: document.getElementById("contextModalCheckboxR"),
-    green: document.getElementById("contextModalCheckboxG")
-  },
-  submit: document.getElementById("contextModalSubmit"),
-  selected:null,
-  buy: document.getElementById("contextBuyButton"),
-  scryfall: document.getElementById("contextScryfallButton"),
-  remove: document.getElementById("contextRemoveButton"),
-  tags:{
-    mainInput:document.getElementById("contextModalTagsMainInput"),
-    hiddeninput: document.getElementById("contextModalTagsHiddenInput"),
-    tagsdiv: document.getElementById("contextModalTagsDiv"),
-    area: document.getElementById("contextModalTagsArea")
-  }
-};
-
-var groupModalFields = {
-  title:document.getElementById("groupContextModalTitle"),
-  area:document.getElementById("groupContextModalArea"),
-  tags:
-  {
-    area:document.getElementById("groupContextModalTagsArea"),
-    div:document.getElementById("groupContextModalTagsDiv"),
-    hiddeninput:document.getElementById("groupContextModalTagsHiddenInput"),
-    mainInput:document.getElementById("groupContextModalTagsMainInput")
-  },
-  status:document.getElementById("groupContextModalStatusSelect"),
-  remove:document.getElementById("groupContextRemoveButton"),
-  buy:document.getElementById("groupContextBuyForm"),
-  buy_list:document.getElementById("groupContextBuyHidden"),
-  submit:document.getElementById("groupContextModalSubmit"),
-  tagAddRadio:document.getElementById("groupContextAdd"),
-  tagRemoveRadio:document.getElementById("groupContextRemove"),
-  selected:null
-};
-
-addFilterButton.addEventListener('click', (e) =>
+var cubeDict = {};
+var cube = JSON.parse($('#cuberaw').val());
+cube.forEach(function(card, index)
 {
-  var filterType = document.getElementById('filterType').value;
+  card.index = index;
+  cubeDict[index] = card;
+});
+
+$('#addFilterButton').click(function(e)
+{
+  var filterType = $('#filterType').val();
   filters.push({
     category: filterType,
     value: getLabels(filterType)[0],
@@ -77,78 +31,365 @@ addFilterButton.addEventListener('click', (e) =>
   updateFilters();
 });
 
-function updateTags()
+$('.updateButton').click(function(e)
 {
+  updateCubeList();
+});
+
+$('#viewSelect').change(function(e)
+{
+  view = $('#viewSelect').val();
+  updateCubeList();
+});
+
+if(canEdit) {
+  tags_autocomplete($('#contextModalTagsMainInput')[0], $('#contextModalTagsHiddenInput')[0], updateTags);
+  tags_autocomplete($('#groupContextModalTagsMainInput')[0], $('#groupContextModalTagsHiddenInput')[0], updateGroupTags);
+
+  $('#justAddButton').click(function(e) {
+    justAdd()
+  });
+  $('#removeButton').click(function(e) {
+    remove();
+  });
+  $('#saveChangesButton').click(function(e) {
+    $('#changelistBlog').val($('#editor').html());
+    var val = $('changelistFormBody').val();
+    if(!val)
+    {
+      val = '';
+    }
+    changes.forEach(function(change, index)
+    {
+      if(index != 0)
+      {
+        val += ';';
+      }
+      if(change.add)
+      {
+        val += '+' + change.add._id;
+      }
+      else if(change.remove)
+      {
+        val += '-' + change.remove._id;
+      }
+      else if(change.replace)
+      {
+        val += '/' + change.replace[0]._id + '>';
+        val += change.replace[1]._id;
+      }
+    });
+    $('#changelistFormBody').val(val);
+    console.log(val);
+    document.getElementById("changelistForm").submit();
+  });
+  $('#discardAllButton').click(function(e)
+  {
+    changes = [];
+    updateCollapse();
+  });
+  $('#addInput').keyup(function(e) {
+    if (e.keyCode === 13 && $('#addInput').val().length == 0) {
+      e.preventDefault();
+      justAdd();
+    }
+  });
+  $('#removeInput').keyup(function(e) {
+    if (e.keyCode === 13 && $('#removeInput').val().length == 0) {
+      e.preventDefault();
+      remove();
+    }
+  });
+  $('#contextModalVersionSelect').change(function(e) {
+    fetch('/cube/api/getcardfromid/'+e.target.value)
+      .then(response => response.json())
+      .then(function(json)
+    {
+      $('#contextModalImg').attr('src',json.card.image_normal);
+    });
+  });
+  $('#groupContextModalSubmit').click(function(e) {
+    //if we typed a tag but didn't hit enter, register that tag
+    if($('#groupContextModalTagsMainInput').val().length > 0)
+    {
+      var tag = $('#groupContextModalTagsMainInput').val();
+      $('#groupContextModalTagsMainInput').val('');
+
+      var val = $('#groupContextModalTagsHiddenInput').val();
+
+      if(val.length > 0)
+      {
+        val += ', ' + tag;
+      }
+      else
+      {
+        val = tag;
+      }
+      $('#groupContextModalTagsHiddenInput').val(val);
+      updateGroupTags();
+    }
+    updated = {
+      addTags:$('#groupContextAdd').prop('checked')
+    };
+
+    tags_split = $('#groupContextModalTagsHiddenInput').val().split(',');
+    tags_split.forEach(function(tag, index)
+    {
+      tags_split[index] = tags_split[index].trim();
+    });
+    updated.tags = tags_split;
+
+    var val = $('#groupContextModalStatusSelect').val();
+    if(val.length > 0)
+    {
+      updated.status = val;
+    }
+
+    var filterobj = null;
+    if(filters.length > 0)
+    {
+      filterobj = getFilterObj();
+    }
+    let data =
+    {
+      sorts:sorts,
+      filters:filterobj,
+      categories:groupContextModal.categories,
+      updated:updated,
+      token:$('#edittoken').val()
+    };
+
+    fetch("/cube/api/updatecards/"+$('#cubeID').val(), {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      cube.forEach(function(card, index)
+      {
+        if(cardIsLabel(card,data.categories[0],sorts[0]) && cardIsLabel(card,data.categories[1],sorts[1]))
+        {
+          if(updated.status)
+          {
+            cube[index].status = updated.status;
+          }
+          if(updated.tags)
+          {
+            if(updated.addTags)
+            {
+              updated.tags.forEach(function(newtag, tag_ind)
+              {
+                if(!cube[index].tags.includes(newtag))
+                {
+                  cube[index].tags.push(newtag);
+                }
+              });
+            }
+            else
+            {
+              //remove the tags
+              updated.tags.forEach(function(tag, tag_in)
+              {
+                var temp = cube[index].tags.indexOf(tag);
+                if (temp > -1) {
+                   cube[index].tags.splice(temp, 1);
+                }
+              });
+            }
+          }
+        }
+      });
+
+      updateCubeList();
+      $('#groupContextModal').modal('hide');
+    });
+  });
+  $('#contextModalTagsArea').click(function(e)
+  {
+    $('#groupContextModalTagsMainInput').focus();
+  });
+  $('#groupContextModalTagsArea').click(function(e) {
+    $('#groupContextModalTagsMainInput').focus();
+  });
+  $('#groupContextRemoveButton').click(function(e) {
+    groupSelect.forEach(function(card, index)
+    {
+      changes.push({remove:card.details})
+    });
+    updateCollapse();
+    $('#groupContextModal').modal('hide');
+    $('#navedit').collapse("show");
+    $('.warnings').collapse("hide");
+  });
+  $('#contextRemoveButton').click(function(e)
+  {
+    changes.push({remove:modalSelect.details})
+    updateCollapse();
+    $('#contextModal').modal('hide');
+    $('#navedit').collapse("show");
+    $('.warnings').collapse("hide");
+  });
+  $('#contextModalSubmit').click(function(e)
+  {
+    //if we typed a tag but didn't hit enter, register that tag
+    if($('#groupContextModalTagsMainInput').val().length > 0)
+    {
+      var tag = $('#groupContextModalTagsMainInput').val();
+      $('#groupContextModalTagsMainInput').val('');
+
+      var val = $('#contextModalTagsHiddenInput').val();
+      if(val.length > 0)
+      {
+        val += ', ' + tag;
+      }
+      else
+      {
+        val = tag;
+      }
+      $('#contextModalTagsHiddenInput').val(val);
+      updateTags();
+    }
+
+    updated = {};
+
+    tags_split = $('#contextModalTagsHiddenInput').val().split(',');
+    tags_split.forEach(function(tag, index)
+    {
+      tags_split[index] = tags_split[index].trim();
+    });
+    updated.tags = tags_split;
+    updated.colors = [];
+
+    ['W','U','B','R','G'].forEach(function(color, index)
+    {
+      if($('#contextModalCheckbox'+color).prop('checked'))
+      {
+        updated.colors.push(color);
+      }
+    });
+
+    updated.status = $('#contextModalStatusSelect').val();
+    updated.cardID = $('#contextModalVersionSelect').val();
+    updated.cmc = $('#contextModalTagsCMC').val();
+
+    let data =
+    {
+      src:modalSelect,
+      updated:updated,
+      token:document.getElementById("edittoken").value
+    };
+    fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      fetch('/cube/api/getcardfromid/'+updated.cardID)
+        .then(response => response.json())
+        .then(function(json)
+      {
+        var found = false;
+        cube.forEach(function(card, index)
+        {
+          if(!found && card.index==data.src.index)
+          {
+            found = true;
+            cube[index] = updated;
+            cube[index].index = card.index;
+            cube[index].details = json.card;
+            cubeDict[cube[index].index] = cube[index];
+          }
+        });
+
+        updateCubeList();
+        $('#contextModal').modal('hide');
+      });
+    });
+  });
+  $('#saveSortButton').click(function(e)
+  {
+    var temp_sorts = [];
+    temp_sorts[0] = document.getElementById('primarySortSelect').value;
+    temp_sorts[1] = document.getElementById('secondarySortSelect').value;
+    let data =
+    {
+      sorts:temp_sorts,
+      token:document.getElementById("edittoken").value
+    };
+    fetch("/cube/api/savesorts/"+$('#cubeID').val(),
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+        $('#cubeSaveModal').modal('show');
+    });
+  });
+}
+
+function updateTags() {
   var tagsText = "";
-  modalFields.tags.hiddeninput.value.split(',').forEach(function(tag, index)
+  $('#contextModalTagsHiddenInput').val().split(',').forEach(function(tag, index)
   {
     if(tag.trim() != "")
     {
       tagsText += "<span class='tag'>"+tag.trim()+"<span tag-data='"+tag.trim()+"' class='close-tag'></span></span>";
     }
   });
-  modalFields.tags.tagsdiv.innerHTML = tagsText;
+  $('#contextModalTagsDiv').html(tagsText);
 
-  if(modalFields.submit)
+  if(canEdit)
   {
-  	var links = document.getElementsByClassName("close-tag");
-
-  	for(var i=0;i<links.length;i++)
+    $('.close-tag').click(function(e)
     {
-      links[i].addEventListener('click', (e) =>
+      newtags = $('#contextModalTagsHiddenInput').val().split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
+      var tagsText = "";
+      newtags.forEach(function(tag, index)
       {
-        newtags = modalFields.tags.hiddeninput.value.split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
-        var tagsText = "";
-        newtags.forEach(function(tag, index)
+        if(index != 0)
         {
-          if(index != 0)
-          {
-             tagsText += ', ';
-          }
-          tagsText += tag;
-        });
-        modalFields.tags.hiddeninput.value= tagsText;
-        updateTags();
+           tagsText += ', ';
+        }
+        tagsText += tag;
       });
-    }
+      $('#contextModalTagsHiddenInput').val(tagsText);
+      updateTags();
+    });
   }
 }
 
-function updateGroupTags()
-{
+function updateGroupTags() {
   var tagsText = "";
-  groupModalFields.tags.hiddeninput.value.split(',').forEach(function(tag, index)
+  $('#groupContextModalTagsHiddenInput').val().split(',').forEach(function(tag, index)
   {
     if(tag.trim() != "")
     {
       tagsText += "<span class='tag'>"+tag.trim()+"<span tag-data='"+tag.trim()+"' class='close-tag'></span></span>";
     }
   });
-  groupModalFields.tags.div.innerHTML = tagsText;
+  $('#groupContextModalTagsDiv').html(tagsText);
 
-
-  if(groupModalFields.submit)
+  if(canEdit)
   {
-  	var links = document.getElementsByClassName("close-tag");
-
-  	for(var i=0;i<links.length;i++)
+    $('.close-tag').click(function(e)
     {
-      links[i].addEventListener('click', (e) =>
+      newtags = $('#groupContextModalTagsHiddenInput').val().split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
+      var tagsText = "";
+      newtags.forEach(function(tag, index)
       {
-        newtags = groupModalFields.tags.hiddeninput.value.split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
-        var tagsText = "";
-        newtags.forEach(function(tag, index)
+        if(index != 0)
         {
-          if(index != 0)
-          {
-             tagsText += ', ';
-          }
-          tagsText += tag;
-        });
-        groupModalFields.tags.hiddeninput.value= tagsText;
-        updateGroupTags();
+           tagsText += ', ';
+        }
+        tagsText += tag;
       });
-    }
+      $('#groupContextModalTagsHiddenInput').val(tagsText);
+      updateGroupTags();
+    });
   }
 }
 
@@ -185,9 +426,9 @@ function tags_autocomplete(inp, hidden, updatefn) {
         /*execute a function when someone clicks on the item value (DIV element):*/
         b.addEventListener("click", function(e)
         {
-            inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
-            closeAllLists();
-            submitTag();
+          inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
+          closeAllLists();
+          submitTag();
         });
         a.appendChild(b);
       }
@@ -289,255 +530,7 @@ function tags_autocomplete(inp, hidden, updatefn) {
   }
 }
 
-//if we are logged in, essentially
-if(modalFields.submit)
-{
-  modalFields.version.addEventListener('change', (e) =>
-  {
-    fetch('/cube/api/getcardfromid/'+e.target.value)
-      .then(response => response.json())
-      .then(function(json)
-    {
-      modalFields.img.src = json.card.image_normal;
-      //fucking everythingamajig, this line is for you and you alone. Fuck you
-      modalFields.cmc.value = json.card.cmc;
-    });
-  });
-  groupModalFields.submit.addEventListener('click',(e) =>
-  {
-    //if we typed a tag but didn't hit enter, register that tag
-    if(groupModalFields.tags.mainInput.value.length > 0)
-    {
-      var tag = groupModalFields.tags.mainInput.value;
-      groupModalFields.tags.mainInput.value = "";
-
-      if(groupModalFields.tags.hiddeninput.value.length > 0)
-      {
-        groupModalFields.tags.hiddeninput.value += ', ' + tag;
-      }
-      else
-      {
-        groupModalFields.tags.hiddeninput.value = tag;
-      }
-      updateGroupTags();
-    }
-    updated = {
-      addTags:groupModalFields.tagAddRadio.checked
-    };
-
-    tags_split = groupModalFields.tags.hiddeninput.value.split(',');
-    tags_split.forEach(function(tag, index)
-    {
-      tags_split[index] = tags_split[index].trim();
-    });
-    updated.tags = tags_split;
-
-    if(groupModalFields.status.value.length > 0)
-    {
-      updated.status = groupModalFields.status.value;
-    }
-
-    var filterobj = null;
-    if(filters.length > 0)
-    {
-      filterobj = getFilterObj();
-    }
-    let data =
-    {
-      sorts:sorts,
-      filters:filterobj,
-      categories:groupContextModal.categories,
-      updated:updated,
-      token:document.getElementById("edittoken").value
-    };
-
-    fetch("/cube/api/updatecards/"+cubeID, {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers:{
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      cube.forEach(function(card, index)
-      {
-        if(cardIsLabel(card,data.categories[0],sorts[0]) && cardIsLabel(card,data.categories[1],sorts[1]))
-        {
-          if(updated.status)
-          {
-            cube[index].status = updated.status;
-          }
-          if(updated.tags)
-          {
-            if(updated.addTags)
-            {
-              updated.tags.forEach(function(newtag, tag_ind)
-              {
-                if(!cube[index].tags.includes(newtag))
-                {
-                  cube[index].tags.push(newtag);
-                }
-              });
-            }
-            else
-            {
-              //remove the tags
-              updated.tags.forEach(function(tag, tag_in)
-              {
-                var temp = cube[index].tags.indexOf(tag);
-                if (temp > -1) {
-                   cube[index].tags.splice(temp, 1);
-                }
-              });
-            }
-          }
-        }
-      });
-
-      updateCubeList();
-      $('#groupContextModal').modal('hide');
-    });
-  });
-  modalFields.tags.area.addEventListener('click',function(e)
-  {
-    modalFields.tags.mainInput.focus();
-  });
-  groupModalFields.tags.area.addEventListener('click',function(e)
-  {
-    groupModalFields.tags.mainInput.focus();
-  });
-  tags_autocomplete(modalFields.tags.mainInput, modalFields.tags.hiddeninput, updateTags);
-  tags_autocomplete(groupModalFields.tags.mainInput, groupModalFields.tags.hiddeninput, updateGroupTags);
-  groupModalFields.remove.addEventListener('click',(e) =>
-  {
-    groupModalFields.selected.forEach(function(card, index)
-    {
-      changes.push({remove:card.details})
-    });
-    updateCollapse();
-    $('#groupContextModal').modal('hide');
-    $('#navedit').collapse("show");
-    $('.warnings').collapse("hide");
-  });
-  modalFields.remove.addEventListener('click',(e) =>
-  {
-    changes.push({remove:modalFields.selected.details})
-    updateCollapse();
-    $('#contextModal').modal('hide');
-    $('#navedit').collapse("show");
-    $('.warnings').collapse("hide");
-  });
-  modalFields.submit.addEventListener('click',(e) =>
-  {
-    //if we typed a tag but didn't hit enter, register that tag
-    if(modalFields.tags.mainInput.value.length > 0)
-    {
-      var tag = modalFields.tags.mainInput.value;
-      modalFields.tags.mainInput.value = "";
-
-      if(modalFields.tags.hiddeninput.value.length > 0)
-      {
-        modalFields.tags.hiddeninput.value += ', ' + tag;
-      }
-      else
-      {
-        modalFields.tags.hiddeninput.value = tag;
-      }
-      updateTags();
-    }
-
-    updated = {};
-
-    tags_split = modalFields.tags.hiddeninput.value.split(',');
-    tags_split.forEach(function(tag, index)
-    {
-      tags_split[index] = tags_split[index].trim();
-    });
-    updated.tags = tags_split;
-    updated.colors = [];
-    if(modalFields.colors.white.checked)
-    {
-      updated.colors.push('W');
-    }
-    if(modalFields.colors.blue.checked)
-    {
-      updated.colors.push('U');
-    }
-    if(modalFields.colors.black.checked)
-    {
-      updated.colors.push('B');
-    }
-    if(modalFields.colors.red.checked)
-    {
-      updated.colors.push('R');
-    }
-    if(modalFields.colors.green.checked)
-    {
-      updated.colors.push('G');
-    }
-    updated.status = modalFields.status.value;
-    updated.cardID = modalFields.version.value;
-    updated.cmc = modalFields.cmc.value;
-
-    let data =
-    {
-      src:modalFields.selected,
-      updated:updated,
-      token:document.getElementById("edittoken").value
-    };
-    fetch("/cube/api/updatecard/"+cubeID, {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers:{
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      fetch('/cube/api/getcardfromid/'+updated.cardID)
-        .then(response => response.json())
-        .then(function(json)
-      {
-        var found = false;
-        cube.forEach(function(card, index)
-        {
-          if(!found && card.index==data.src.index)
-          {
-            found = true;
-            cube[index] = updated;
-            cube[index].index = card.index;
-            cube[index].details = json.card;
-            cubeDict[cube[index].index] = cube[index];
-          }
-        });
-
-        updateCubeList();
-        $('#contextModal').modal('hide');
-      });
-    });
-  });
-  saveSortButton.addEventListener('click',(e) =>
-  {
-    var temp_sorts = [];
-    temp_sorts[0] = document.getElementById('primarySortSelect').value;
-    temp_sorts[1] = document.getElementById('secondarySortSelect').value;
-    let data =
-    {
-      sorts:temp_sorts,
-      token:document.getElementById("edittoken").value
-    };
-    fetch("/cube/api/savesorts/"+cubeID,
-    {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers:{
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-        $('#cubeSaveModal').modal('show');
-    });
-  });
-}
-
-function cardsAreEquivalent(card, details)
-{
+function cardsAreEquivalent(card, details) {
   if(card.cardID != details.cardID)
   {
     return false;
@@ -573,31 +566,8 @@ function arraysEqual(a, b) {
   return true;
 }
 
-updateSortButton.addEventListener("click", updateCubeList);
-updateFilterButton.addEventListener("click", updateCubeList);
-
-if(justAddButton) {
-  justAddButton.addEventListener("click", justAddButtonClick);
-  removeButton.addEventListener("click", removeButtonClick);
-  discardAllButton.addEventListener("click", discardAllButtonClick);
-  saveChangesButton.addEventListener("click", saveChangesButtonClick);
-
-  addInput.addEventListener("keyup", function(event) {
-    if (event.keyCode === 13 && addInput.value.length == 0) {
-      event.preventDefault();
-      justAddButton.click();
-    }
-  });
-  removeInput.addEventListener("keyup", function(event) {
-    if (event.keyCode === 13 && removeInput.value.length == 0) {
-      event.preventDefault();
-      removeButton.click();
-    }
-  });
-}
-
-function justAddButtonClick() {
-  var val = addInput.value.replace('//','-slash-').replace('?','-q-');
+function justAdd() {
+  var val = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -606,7 +576,7 @@ function justAddButtonClick() {
     {
       if(json.card)
       {
-        addInput.value = "";
+        $('#addInput').val('');
         changes.push({add:json.card})
         updateCollapse();
         $('.warnings').collapse("hide");
@@ -619,27 +589,27 @@ function justAddButtonClick() {
   }
 }
 
-function removeButtonClick() {
-  var val = removeInput.value.replace('//','-slash-').replace('?','-q-');
+function remove() {
+  var val = $('#removeInput').val().replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
-    fetch('/cube/api/getcardfromcube/'+cubeID+';'+val)
+    fetch('/cube/api/getcardfromcube/'+$('#cubeID').val()+';'+val)
       .then(response => response.json())
       .then(function(json)
     {
       if(json.card)
       {
-        if(addInput.value.length > 0)
+        if($('#addInput').val().length > 0)
         {
-          var val2 = addInput.value.replace('//','-slash-').replace('?','-q-');
+          var val2 = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
           {
             if(json2.card)
             {
-              addInput.value = "";
-              removeInput.value = "";
+              $('#addInput').val('');
+              $('#removeInput').val('');
               changes.push({replace:[json.card,json2.card]})
               updateCollapse();
               $('.warnings').collapse("hide");
@@ -652,7 +622,7 @@ function removeButtonClick() {
         }
         else
         {
-          removeInput.value = "";
+          $('#removeInput').val('');
           changes.push({remove:json.card})
           updateCollapse();
           $('.warnings').collapse("hide");
@@ -664,37 +634,6 @@ function removeButtonClick() {
       }
     });
   }
-}
-
-function discardAllButtonClick() {
-  changes = [];
-  updateCollapse();
-}
-
-function saveChangesButtonClick() {
-
-  $('#changelistBlog').val($('#editor').html());
-  changes.forEach(function(change, index)
-  {
-    if(index != 0)
-    {
-      changelistFormBody.value += ';';
-    }
-    if(change.add)
-    {
-      changelistFormBody.value += '+' + change.add._id;
-    }
-    else if(change.remove)
-    {
-      changelistFormBody.value += '-' + change.remove._id;
-    }
-    else if(change.replace)
-    {
-      changelistFormBody.value += '/' + change.replace[0]._id + '>';
-      changelistFormBody.value += change.replace[1]._id;
-    }
-  });
-  document.getElementById("changelistForm").submit();
 }
 
 function updateCollapse() {
@@ -749,9 +688,9 @@ function updateCollapse() {
     val += "<br>"
   });
 
-  changelist.innerHTML = val;
+  $('#changelist').html(val);
 
-  if(changelist.innerHTML.length > 0)
+  if($('#changelist').html().length > 0)
   {
     $('.editForm').collapse("show");
   }
@@ -771,18 +710,7 @@ function updateCollapse() {
   });
 }
 
-var cubeID=document.getElementById("cubeID").value;
-var cube = JSON.parse(document.getElementById("cuberaw").value);
-var cubeDict = {};
-cube.forEach(function(card, index)
-{
-  card.index = index;
-  cubeDict[index] = card;
-});
-var cubeArea = document.getElementById("cubelistarea");
-
-function GetColorIdentity(colors)
-{
+function GetColorIdentity(colors) {
   if(colors.length == 0)
   {
     return 'Colorless';
@@ -817,13 +745,11 @@ function GetColorIdentity(colors)
   }
 }
 
-function getSorts()
-{
+function getSorts() {
   return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty','Manacost Type'];
 }
 
-function getLabels(sort)
-{
+function getLabels(sort) {
   if(sort == 'Color Category')
   {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless','Lands'];
@@ -835,6 +761,10 @@ function getLabels(sort)
   else if(sort == 'CMC')
   {
     return ['0','1','2','3','4','5','6','7','8+'];
+  }
+  else if(sort == 'CMC2')
+  {
+    return ['0-1','2','3','4','5','6','7+'];
   }
   else if(sort == 'Color')
   {
@@ -1057,10 +987,13 @@ function getLabels(sort)
   {
     return ['Gold','Hybrid','Phyrexian'];
   }
+  else if (sort == 'CNC')
+  {
+    return ['Creature','Non-Creature'];
+  }
 }
 
-function getCardColorClass(card)
-{
+function getCardColorClass(card) {
   var type = card.details.type;
   var colors = card.colors;
   if(type.toLowerCase().includes('land'))
@@ -1101,8 +1034,7 @@ function getCardColorClass(card)
   }
 }
 
-function createMassEntry(cards)
-{
+function createMassEntry(cards) {
   var res = "";
   cards.forEach(function(card, index)
   {
@@ -1115,8 +1047,7 @@ function createMassEntry(cards)
   return res;
 }
 
-function init_groupcontextModal()
-{
+function init_groupcontextModal() {
 	var links = document.getElementsByClassName("activateGroupContextModal");
 
 	for(var i=0;i<links.length;i++)
@@ -1134,13 +1065,12 @@ function init_groupcontextModal()
       }
       else
       {
-        groupModalFields.selected = matches;
-        groupModalFields.title.innerHTML = sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2;
+        groupSelect = matches;
+        $('#groupContextModalTitle').html(sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2);
         var cardlist = "";
 
         cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
-
-        groupModalFields.tags.hiddeninput.value= "";
+        $('#groupContextModalTagsHiddenInput').val('');
 
         updateGroupTags();
         matches.forEach(function( card, index)
@@ -1156,9 +1086,9 @@ function init_groupcontextModal()
           cardlist += card.details.name+'</li>';
           cardlist += '</li>';
         });
-
         cardlist += '</ul">';
-        groupModalFields.area.innerHTML = cardlist;
+        $('#groupContextModalArea').html(cardlist);
+
         var statusHTML = "";
         var statuses = getLabels('Status');
         statusHTML += '<option selected value=""></option>';
@@ -1166,10 +1096,10 @@ function init_groupcontextModal()
         {
           statusHTML += '<option value="' + status+'">'+status+'</option>';
         });
-        groupModalFields.status.innerHTML = statusHTML;
+        $('#groupContextModalStatusSelect').html(statusHTML);
 
-        groupModalFields.buy.action = 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
-        groupModalFields.buy_list.value = createMassEntry(matches);
+        $('#groupContextBuyForm').attr('action', 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+        $('#groupContextBuyHidden').val(createMassEntry(matches));
 
         autocard_init_class2('autocard');
         $('#groupContextModal').modal('show');
@@ -1178,13 +1108,12 @@ function init_groupcontextModal()
   }
 }
 
-function show_contextModal(card)
-{
-  modalFields.selected = card;
+function show_contextModal(card) {
+  modalSelect = card;
 
-  modalFields.title.innerHTML = card.details.name;
-  modalFields.img.src = card.details.image_normal;
-  modalFields.version.innerHTML = "";
+  $('#contextModalTitle').html(card.details.name);
+  $('#contextModalImg').attr('src',card.details.image_normal);
+  $('#contextModalVersionSelect').html('');
   var statusHTML = "";
   var statuses = getLabels('Status');
   statuses.forEach(function(status, index)
@@ -1198,7 +1127,7 @@ function show_contextModal(card)
       statusHTML += '<option value="' + status+'">'+status+'</option>';
     }
   });
-  modalFields.status.innerHTML = statusHTML;
+  $('#contextModalStatusSelect').html(statusHTML);
 
   var tagsText = "";
   card.tags.forEach(function(tag, index)
@@ -1209,24 +1138,24 @@ function show_contextModal(card)
     }
     tagsText += tag;
   });
-  modalFields.tags.hiddeninput.value= tagsText;
+  $('#contextModalTagsHiddenInput').val(tagsText);
 
   updateTags();
-  modalFields.cmc.value = card.cmc;
-  modalFields.colors.white.checked = card.colors.includes('W');
-  modalFields.colors.blue.checked = card.colors.includes('U');
-  modalFields.colors.black.checked = card.colors.includes('B');
-  modalFields.colors.red.checked = card.colors.includes('R');
-  modalFields.colors.green.checked = card.colors.includes('G');
+  $('#contextModalTagsCMC').val(card.cmc);
 
-  modalFields.scryfall.href = card.details.scryfall_uri;
+  ['W','U','B','R','G'].forEach(function(color, index)
+  {
+    $('#contextModalCheckbox'+color).prop('checked', card.colors.includes(color));
+  });
+
+  $('#contextScryfallButton').attr('href',card.details.scryfall_uri);
   if(card.details.tcgplayer_id)
   {
-    modalFields.buy.href = 'https://shop.tcgplayer.com/product/productsearch?id='+card.details.tcgplayer_id+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
+    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/product/productsearch?id='+card.details.tcgplayer_id+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
   else
   {
-    modalFields.buy.href = 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+encodeURIComponent(card.details.name)+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
+    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+encodeURIComponent(card.details.name)+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
   fetch('/cube/api/getversions/'+card.cardID)
     .then(response => response.json())
@@ -1246,14 +1175,13 @@ function show_contextModal(card)
         versionHTML += '<option value="' + version._id+'">'+name+'</option>';
       }
     });
-    modalFields.version.innerHTML = versionHTML;
+    $('#contextModalVersionSelect').html(versionHTML);
 
     $('#contextModal').modal('show');
   });
 }
 
-function init_contextModal()
-{
+function init_contextModal() {
 	var links = document.getElementsByClassName("activateContextModal");
 
 	for(var i=0;i<links.length;i++)
@@ -1269,8 +1197,7 @@ function init_contextModal()
   }
 }
 
-function sortIntoGroups(cards, sort)
-{
+function sortIntoGroups(cards, sort) {
   var groups = {};
   var labels = getLabels(sort);
   labels.forEach(function(label, index)
@@ -1293,8 +1220,7 @@ function sortIntoGroups(cards, sort)
   return groups;
 }
 
-function columnLength(sort, label)
-{
+function columnLength(sort, label) {
   var res = 0;
   var cards = filteredCube();
 
@@ -1308,11 +1234,7 @@ function columnLength(sort, label)
   return res;
 }
 
-var sorts = [];
-var filters = [];
-
-function getFilterObj()
-{
+function getFilterObj() {
   var filterobj = {};
   filters.forEach(function(filter, index)
   {
@@ -1332,8 +1254,7 @@ function getFilterObj()
   return filterobj;
 }
 
-function filteredCube()
-{
+function filteredCube() {
   if(filters.length == 0)
   {
     return cube;
@@ -1351,11 +1272,472 @@ function filteredCube()
   return res;
 }
 
-//true if card is filtered IN
+function updateCubeList() {
+  switch(view)
+  {
+    case 'table':
+      return renderTableView();
+    case 'spoiler':
+      return renderVisualSpoiler();
+    case 'curve':
+      return renderCurveView();
+    case 'list':
+      return renderListView();
+  }
+}
+
+function renderListView() {
+  sorts[0] = document.getElementById('primarySortSelect').value;
+  sorts[1] = document.getElementById('secondarySortSelect').value;
+  var columns = sortIntoGroups(filteredCube(), sorts[0]);
+  Object.keys(columns).forEach(function(column_label, col_index)
+  {
+    columns[column_label] = sortIntoGroups(columns[column_label],sorts[1]);
+  });
+
+  cards = [];
+  var card_ids = [];
+  Object.keys(columns).forEach(function(col, index)
+  {
+    Object.keys(columns[col]).forEach(function(rowgroup_label, rowgroup_index)
+    {
+      columns[col][rowgroup_label].forEach(function( card, index)
+      {
+        cards.push(card);
+        card_ids.push(card.cardID);
+      });
+    });
+  });
+  cards = cards.splice(0,listGranularity);
+  card_ids = card_ids.splice(0,listGranularity);
+
+  fetch("/cube/api/getversions", {
+    method: "POST",
+    body: JSON.stringify(card_ids),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  }).then(response => response.json())
+    .then(function(json)
+  {
+    var versiondict = json.dict;
+
+    var res = '<h5>'+cards.length+'/'+cube.length+'</h5></br><table class="table">';
+    res += '<thead>';
+    var headers = ["","Name","Version","Status","CMC","Color","Tags"];
+    headers.forEach(function(header, index)
+    {
+      res += '<th scope="col">'+header+'</th>';
+    });
+    res += '</thead>';
+    for(i = 0; i < cards.length; i++)
+    {
+      res += '<tr class="listviewrow autocard '+getCardColorClass(cards[i])+'">';
+      //checkbox col
+      if(changes[i] && changes[i].checked)
+      {
+        res += '<td class="nostretch"><input id="tdcheck'+i+'" class="tdcheck" data-index="'+i+'" type="checkbox" checked></td>';
+      }
+      else
+      {
+        res += '<td class="nostretch"><input id="tdcheck'+i+'" class="tdcheck" data-index="'+i+'" type="checkbox" ></td>';
+      }
+
+      //name col
+      res += '<td data-index="'+i+'" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal +'"><div class="tdname">'+ cards[i].details.name+'</div></td>';
+
+      //version col
+      res += '<td data-index="'+i+'" class="nostretch">';
+      res += '<select class="form-control versionselect">'
+      versiondict[cards[i].cardID].forEach(function(version, index)
+      {
+        if(version.id == cards[i].cardID)
+        {
+          res += '<option selected>'+version.version+'</option>';
+        }
+        else
+        {
+          res += '<option>'+version.version+'</option>';
+        }
+      });
+      res += '</select>'
+      res += '</td>';
+
+      //status col
+      res += '<td data-index="'+i+'" class="nostretch">';
+      var labels = getLabels('Status');
+      res += '<select class="form-control versionselect">'
+      labels.forEach(function(label, index)
+      {
+        if(cards[i].status == label)
+        {
+          res += '<option selected>'+label+'</option>';
+        }
+        else
+        {
+          res += '<option>'+label+'</option>';
+        }
+      });
+      res += '</select>'
+      res += '</td>';
+
+      //CMC col
+      res += '<td data-index="'+i+'" class="nostretch">';
+      res += '<input class="form-control inputmd" value="'+cards[i].cmc+'">'
+      res += '</td>';
+
+      //color identiy col
+      res += '<td data-index="'+i+'" class="nostretch">';
+      var labels = ['C','W','U','B','R','G','WU','WB','WR','WG','UB','UR','UG','BR','BG','RG','WUB','WUR','WUG','WBR','WBG','WRG','UBR','UBG','URG','BRG','WUBR','WUBG','WURG','WBRG','UBRG','WUBRG'];
+      res += '<select class="form-control inputl">'
+      labels.forEach(function(label, index)
+      {
+        if(label == 'C' && cards[i].colors.count == 0)
+        {
+          res += '<option selected>'+label+'</option>';
+        }
+        else
+        {
+          var match = true;
+          cards[i].colors.forEach(function(color, index)
+          {
+            if(!label.includes(color.toUpperCase()))
+            {
+              match = false;
+            }
+          })
+          if(match && label.length == cards[i].colors.length)
+          {
+            res += '<option selected>'+label+'</option>';
+          }
+          else
+          {
+            res += '<option>'+label+'</option>';
+          }
+        }
+      });
+      res += '</select>'
+      res += '</td>';
+
+      //tags col
+      res += '<td data-index="'+i+'" class="">';
+      res += '<div class="tags-input" data-name="tags-input">';
+      res += '<span class="tags">';
+      cards[i].tags.forEach(function(tag,index)
+      {
+        res += '<span class="tag">'+tag+'</span>';
+      });
+      res += '</span>';
+      res += '<input class="tags-input" type="hidden">';
+      res += '<input class="main-input" type="hidden" maxLength="24">';
+      res += '</div></td>';
+
+      res += '</tr>';
+    }
+    res += '</table>'
+
+    $('#cubelistarea').html(res);
+    autocard_init_class3('autocard');
+    $('.tdcheck').change(function(e)
+    {
+      var index = e.target.getAttribute('data-index');
+      if(!changes[index])
+      {
+        changes[index] = {};
+      }
+      changes[index].checked = $(this).prop('checked');
+    });
+    $('.tdcard').click(function(e)
+    {
+      var index = e.target.getAttribute('data-index');
+      if(!changes[index])
+      {
+        changes[index] = {checked:$('#tdcheck'+index).prop('checked')};
+      }
+      changes[index].checked = !changes[index].checked;
+      renderListView();
+    });
+  });
+}
+
+function renderCurveView() {
+  sorts[0] = document.getElementById('primarySortSelect').value;
+  sorts[1] = document.getElementById('secondarySortSelect').value
+
+  var groups = sortIntoGroups(filteredCube(), sorts[0]);
+  var groupcounts = {};
+  Object.keys(groups).forEach(function(group_label, g_index)
+  {
+    groups[group_label] = sortIntoGroups(groups[group_label],'CNC');
+    groupcounts[group_label] = 0;
+    Object.keys(groups[group_label]).forEach(function(col_label, col_index)
+    {
+      groups[group_label][col_label] = sortIntoGroups(groups[group_label][col_label],'CMC2');
+      Object.keys(groups[group_label][col_label]).forEach(function(label, index)
+      {
+        groups[group_label][col_label][label].sort(function(x, y)
+        {
+          if (x.cmc < y.cmc)
+          {
+            return -1;
+          }
+          if (x.cmc > y.cmc)
+          {
+            return 1;
+          }
+          if (x.details.name < y.details.name)
+          {
+            return -1;
+          }
+          if (x.details.name > y.details.name)
+          {
+            return 1;
+          }
+          return 0;
+        });
+        groupcounts[group_label] += groups[group_label][col_label][label].length;
+      });
+    });
+  });
 
 
-function updateFilters()
-{
+  //var res = '<em>Curve View ignores secondary sort</em></br>';
+  var res = '';
+  Object.keys(groups).forEach(function(group_label, group_index)
+  {
+    res += '<div class="card"><div class="card-header"><h5>'+group_label+' ('+groupcounts[group_label]+')</h5></div><div class="card-body">';
+
+    var labels = getLabels('CNC');
+    //creatures
+    labels.forEach(function(label, index)
+    {
+      if(groups[group_label][label])
+      {
+        res += '<h6>'+label+'</h6>';
+        res += '<div class="row even-cols">';
+        var colWidth = Math.max(10,100.0 / getLabels('CMC2').length);
+        getLabels('CMC2').forEach(function(col_label, col_index)
+        {
+          res += '<div class="col-even" style="width: '+colWidth+'%;">'
+          res += '<ul class="list-group" style="padding:5px 0px;">';
+          if(groups[group_label][label][col_label])
+          {
+            res += '<a class="list-group-item list-group-heading">'+col_label+ ' ('+ groups[group_label][label][col_label].length + ')</a>';
+            groups[group_label][label][col_label].forEach(function( card, index)
+            {
+              if(card.details.image_flip)
+              {
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+              }
+              else
+              {
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+              }
+              res += card.details.name+'</a>';
+            });
+          }
+          else
+          {
+            res += '<a class="list-group-item list-group-heading">'+col_label+ ' (0)</a>';
+          }
+
+          res += '</div>'
+        });
+        res += '</div>'
+      }
+    });
+
+
+    //noncreatures
+
+    var group = groups[group_label];
+    res += '</div></div></br>';
+  });
+
+  res += '</div>';
+  $('#cubelistarea').html(res);
+
+  autocard_init_class('autocard');
+  init_contextModal();
+}
+
+function renderTableView() {
+  sorts[0] = document.getElementById('primarySortSelect').value;
+  sorts[1] = document.getElementById('secondarySortSelect').value;
+  var columns = sortIntoGroups(filteredCube(), sorts[0]);
+  Object.keys(columns).forEach(function(column_label, col_index)
+  {
+    columns[column_label] = sortIntoGroups(columns[column_label],sorts[1]);
+  });
+
+  var count = 0;
+
+   Object.keys(columns).forEach(function(col, index)
+   {
+     if(Object.keys(columns[col]).length > 0)
+     {
+       count += 1;
+     }
+   });
+
+  var colWidth = Math.max(10,100.0 / count);
+
+  var res = '<div class="row even-cols">';
+  Object.keys(columns).forEach(function(column_label, col_index)
+  {
+    var column = columns[column_label];
+
+    if(Object.keys(column).length > 0)
+    {
+      res += '<div class="col-even" style="width: '+colWidth+'%;">'
+      res += '<h6>'+column_label+ ' ('+ columnLength(sorts[0],column_label) + ')</h6>';
+
+      Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
+      {
+          var rowgroup = column[rowgroup_label];
+          rowgroup.sort(function(x, y)
+          {
+            if (x.cmc < y.cmc)
+            {
+              return -1;
+            }
+            if (x.cmc > y.cmc)
+            {
+              return 1;
+            }
+            if (x.details.name < y.details.name)
+            {
+              return -1;
+            }
+            if (x.details.name > y.details.name)
+            {
+              return 1;
+            }
+            return 0;
+          });
+
+          res += '<ul class="list-group" style="padding:5px 0px;">';
+          res += '<a '
+          if(canEdit)
+          {
+            res += 'href="#"'
+          }
+          res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
+
+          rowgroup.forEach(function( card, index)
+          {
+            if(card.details.image_flip)
+            {
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+            }
+            else
+            {
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+            }
+            res += card.details.name+'</a>';
+          });
+
+          res += '</ul">';
+      });
+
+      res += '</div>';
+    }
+  });
+
+  res += '</div>';
+  $('#cubelistarea').html(res);
+
+  autocard_init_class('autocard');
+  init_contextModal();
+  if(canEdit)
+  {
+    init_groupcontextModal();
+  }
+}
+
+function renderVisualSpoiler() {
+  sorts[0] = document.getElementById('primarySortSelect').value;
+  sorts[1] = document.getElementById('secondarySortSelect').value;
+  var columns = sortIntoGroups(filteredCube(), sorts[0]);
+  Object.keys(columns).forEach(function(column_label, col_index)
+  {
+    columns[column_label] = sortIntoGroups(columns[column_label],sorts[1]);
+  });
+
+  var count = 0;
+
+   Object.keys(columns).forEach(function(col, index)
+   {
+     if(Object.keys(columns[col]).length > 0)
+     {
+       count += 1;
+     }
+   });
+
+  var colWidth = Math.max(10,100.0 / count);
+
+  var res = '<div class="row no-gutters"><div class="col">';
+  Object.keys(columns).forEach(function(column_label, col_index)
+  {
+    var column = columns[column_label];
+
+    if(Object.keys(column).length > 0)
+    {
+      //res += '<h6>'+column_label+ ' ('+ columnLength(sorts[0],column_label) + ')</h6>';
+
+      Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
+      {
+        var rowgroup = column[rowgroup_label];
+        rowgroup.sort(function(x, y)
+        {
+          if (x.cmc < y.cmc)
+          {
+            return -1;
+          }
+          if (x.cmc > y.cmc)
+          {
+            return 1;
+          }
+          if (x.details.name < y.details.name)
+          {
+            return -1;
+          }
+          if (x.details.name > y.details.name)
+          {
+            return 1;
+          }
+          return 0;
+        });
+
+        rowgroup.forEach(function( card, index)
+        {
+          if(card.details.image_flip)
+          {
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+          }
+          else
+          {
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'">';
+          }
+          res += '<img cardIndex="'+card.index+'" class="activateContextModal" src="'+card.details.image_normal+'" alt="'+card.details.name+'" width=150 height=210>';
+          res += '</a>';
+        });
+      });
+
+    }
+  });
+
+  res += '</div></div>';
+  $('#cubelistarea').html(res);
+  autocard_init_class('autocard');
+  init_contextModal();
+  if(canEdit)
+  {
+    init_groupcontextModal();
+  }
+}
+
+function updateFilters() {
   sort_categories = getSorts();
 
   if(filters.length <= 0)
@@ -1414,8 +1796,7 @@ function updateFilters()
   }
 }
 
-function buildFilterArea()
-{
+function buildFilterArea() {
   sort_categories = getSorts();
   var sorthtml = "";
   sort_categories.forEach(function(category, index)

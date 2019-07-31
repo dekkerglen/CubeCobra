@@ -22,6 +22,12 @@ block content
     nav.navbar.navbar-expand.navbar-light
       .collapse.navbar-collapse
         ul.navbar-nav          
+          li.nav-item(style='padding-right:10px')
+            select#viewSelect.form-control
+              option(selected='' value='table') Table View
+              option(value='spoiler') Visual Spoiler
+              option(value='list') List View
+              option(value='curve') Curve View
           if user
             if user.id == cube.owner
               li.nav-item
@@ -30,8 +36,7 @@ block content
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-          li.nav-item
-            a.nav-link(href='/cube/visualspoiler/'+cube.id) Visual Spoiler
+
           if user
             if user.id == cube.owner
               li.nav-item.dropdown
@@ -95,7 +100,6 @@ block content
           .row
             .col
               h5 Primary Sort
-                em  (columns)
               select#primarySortSelect.custom-select
                 option(selected='', value='color') Color
                 option(value='cmc') CMC
@@ -114,11 +118,10 @@ block content
                 em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
             .col
               h5 Secondary Sort
-                em  (row groups)
               select#secondarySortSelect.custom-select
           .row
             .col
-              button#updateSortButton.btn.btn-success(type='button') Update Table
+              button.updateButton.btn.btn-success(type='button') Update Table
               a   
               if user && user.id == cube.owner
                 button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
@@ -138,7 +141,7 @@ block content
               #filterarea
           .row
             .col
-              button#updateFilterButton.btn.btn-success(type='button') Update Table
+              button.updateButton.btn.btn-success(type='button') Update Table
               br
               br           
               
@@ -147,7 +150,8 @@ block content
    
   input#cubeID(type='hidden', name='cubeID', value=cube._id)     
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
-  input#edittoken(type='hidden', name='edittoken', value=edittoken)
+  if user && user.id == cube.owner
+    input#edittoken(type='hidden', name='edittoken', value=edittoken)
   if cube.default_sorts        
     input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])        
     input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])        
@@ -227,7 +231,7 @@ block content
                 h5 Card Attributes
                 .input-group.mb-3
                   .input-group-prepend
-                    span.input-group-text Version (Set and Collector's #)
+                    span.input-group-text Version (Set and #)
                   select#contextModalVersionSelect.custom-select
                 .input-group.mb-3
                   .input-group-prepend
@@ -289,7 +293,7 @@ block content
                   h5 Card Attributes
                   .input-group.mb-3
                     .input-group-prepend
-                      span.input-group-text Version (Set and Collector's #)
+                      span.input-group-text Version (Set and #)
                     select#contextModalVersionSelect.custom-select
                   .input-group.mb-3
                     .input-group-prepend
@@ -401,6 +405,5 @@ block content
               
   script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')     
-  script(src='/js/editcube_list.js')     
   script(src='/js/editcube_base.js')     
               

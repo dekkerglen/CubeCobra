@@ -27,7 +27,16 @@ function legalityToInt (legality) {
       return 3;
   }
 }
+function arraysEqual (a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
 
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 var methods =
 {
   getBasics: function(carddb) {
@@ -65,11 +74,11 @@ var methods =
     {
       return false;
     }
-    if(!util.arraysEqual(card.tags,details.tags))
+    if(!arraysEqual(card.tags,details.tags))
     {
       return false;
     }
-    if(!util.arraysEqual(card.colors,details.colors))
+    if(!arraysEqual(card.colors,details.colors))
     {
       return false;
     }
