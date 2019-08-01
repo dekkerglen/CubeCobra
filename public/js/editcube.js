@@ -10,6 +10,7 @@ var sorts = [];
 var filters = [];
 var groupSelect = null;
 var modalSelect = null;
+var listSelect = [];
 var view = $('#viewSelect').val();
 
 var cubeDict = {};
@@ -43,9 +44,6 @@ $('#viewSelect').change(function(e)
 });
 
 if(canEdit) {
-  tags_autocomplete($('#contextModalTagsMainInput')[0], $('#contextModalTagsHiddenInput')[0], updateTags);
-  tags_autocomplete($('#groupContextModalTagsMainInput')[0], $('#groupContextModalTagsHiddenInput')[0], updateGroupTags);
-
   $('#justAddButton').click(function(e) {
     justAdd()
   });
@@ -54,11 +52,7 @@ if(canEdit) {
   });
   $('#saveChangesButton').click(function(e) {
     $('#changelistBlog').val($('#editor').html());
-    var val = $('changelistFormBody').val();
-    if(!val)
-    {
-      val = '';
-    }
+    var val = '';
     changes.forEach(function(change, index)
     {
       if(index != 0)
@@ -80,7 +74,6 @@ if(canEdit) {
       }
     });
     $('#changelistFormBody').val(val);
-    console.log(val);
     document.getElementById("changelistForm").submit();
   });
   $('#discardAllButton').click(function(e)
@@ -109,14 +102,13 @@ if(canEdit) {
     });
   });
   $('#groupContextModalSubmit').click(function(e) {
+
     //if we typed a tag but didn't hit enter, register that tag
-    if($('#groupContextModalTagsMainInput').val().length > 0)
+    if($('#groupContextTags').find('.main-input').val().length > 0)
     {
-      var tag = $('#groupContextModalTagsMainInput').val();
-      $('#groupContextModalTagsMainInput').val('');
-
-      var val = $('#groupContextModalTagsHiddenInput').val();
-
+      var tag = $('#groupContextTags').find('.main-input').val();
+      $('#groupContextTags').find('.main-input').val('');
+      var val = $('#groupContextTags').find('.hidden-input').val();
       if(val.length > 0)
       {
         val += ', ' + tag;
@@ -125,14 +117,14 @@ if(canEdit) {
       {
         val = tag;
       }
-      $('#groupContextModalTagsHiddenInput').val(val);
-      updateGroupTags();
+      $('#groupContextTags').find('.hidden-input').val(val);
+      $('#groupContextTags').find('.hidden-input').trigger('change');
     }
     updated = {
       addTags:$('#groupContextAdd').prop('checked')
     };
 
-    tags_split = $('#groupContextModalTagsHiddenInput').val().split(',');
+    tags_split = $('#groupContextTags').find('.hidden-input').val().split(',');
     tags_split.forEach(function(tag, index)
     {
       tags_split[index] = tags_split[index].trim();
@@ -143,6 +135,28 @@ if(canEdit) {
     if(val.length > 0)
     {
       updated.status = val;
+    }
+    val = $('#groupContextModalCMC').val();
+    if(val.length > 0)
+    {
+      updated.cmc = val;
+    }
+    val = $('#groupContextModalType').val().replace('-','—');
+    if(val.length > 0)
+    {
+      updated.type_line = val;
+    }
+    val = [];
+    ['W','U','B','R','G'].forEach(function(color, index)
+    {
+      if($('#groupContextModalCheckbox'+color).prop('checked'))
+      {
+        val.push(color);
+      }
+    });
+    if(val.length > 0)
+    {
+      updated.colors = val;
     }
 
     var filterobj = null;
@@ -173,6 +187,18 @@ if(canEdit) {
           if(updated.status)
           {
             cube[index].status = updated.status;
+          }
+          if(updated.cmc)
+          {
+            cube[index].cmc = updated.cmc;
+          }
+          if(updated.type_line)
+          {
+            cube[index].type_line = updated.type_line;
+          }
+          if(updated.colors)
+          {
+            cube[index].colors = updated.colors;
           }
           if(updated.tags)
           {
@@ -205,13 +231,6 @@ if(canEdit) {
       $('#groupContextModal').modal('hide');
     });
   });
-  $('#contextModalTagsArea').click(function(e)
-  {
-    $('#groupContextModalTagsMainInput').focus();
-  });
-  $('#groupContextModalTagsArea').click(function(e) {
-    $('#groupContextModalTagsMainInput').focus();
-  });
   $('#groupContextRemoveButton').click(function(e) {
     groupSelect.forEach(function(card, index)
     {
@@ -233,12 +252,11 @@ if(canEdit) {
   $('#contextModalSubmit').click(function(e)
   {
     //if we typed a tag but didn't hit enter, register that tag
-    if($('#groupContextModalTagsMainInput').val().length > 0)
+    if($('#contextTags').find('.main-input').val().length > 0)
     {
-      var tag = $('#groupContextModalTagsMainInput').val();
-      $('#groupContextModalTagsMainInput').val('');
-
-      var val = $('#contextModalTagsHiddenInput').val();
+      var tag = $('#contextTags').find('.main-input').val();
+      $('#contextTags').find('.main-input').val('');
+      var val = $('#contextTags').find('.hidden-input').val();
       if(val.length > 0)
       {
         val += ', ' + tag;
@@ -247,13 +265,13 @@ if(canEdit) {
       {
         val = tag;
       }
-      $('#contextModalTagsHiddenInput').val(val);
-      updateTags();
+      $('#contextTags').find('.hidden-input').val(val);
+      $('#contextTags').find('.hidden-input').trigger('change');
     }
 
     updated = {};
 
-    tags_split = $('#contextModalTagsHiddenInput').val().split(',');
+    tags_split = $('#contextTags').find('.hidden-input').val().split(',');
     tags_split.forEach(function(tag, index)
     {
       tags_split[index] = tags_split[index].trim();
@@ -271,7 +289,8 @@ if(canEdit) {
 
     updated.status = $('#contextModalStatusSelect').val();
     updated.cardID = $('#contextModalVersionSelect').val();
-    updated.cmc = $('#contextModalTagsCMC').val();
+    updated.cmc = $('#contextModalCMC').val();
+    updated.type_line = $('#contextModalType').val().replace('-','—');
 
     let data =
     {
@@ -329,205 +348,6 @@ if(canEdit) {
         $('#cubeSaveModal').modal('show');
     });
   });
-}
-
-function updateTags() {
-  var tagsText = "";
-  $('#contextModalTagsHiddenInput').val().split(',').forEach(function(tag, index)
-  {
-    if(tag.trim() != "")
-    {
-      tagsText += "<span class='tag'>"+tag.trim()+"<span tag-data='"+tag.trim()+"' class='close-tag'></span></span>";
-    }
-  });
-  $('#contextModalTagsDiv').html(tagsText);
-
-  if(canEdit)
-  {
-    $('.close-tag').click(function(e)
-    {
-      newtags = $('#contextModalTagsHiddenInput').val().split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
-      var tagsText = "";
-      newtags.forEach(function(tag, index)
-      {
-        if(index != 0)
-        {
-           tagsText += ', ';
-        }
-        tagsText += tag;
-      });
-      $('#contextModalTagsHiddenInput').val(tagsText);
-      updateTags();
-    });
-  }
-}
-
-function updateGroupTags() {
-  var tagsText = "";
-  $('#groupContextModalTagsHiddenInput').val().split(',').forEach(function(tag, index)
-  {
-    if(tag.trim() != "")
-    {
-      tagsText += "<span class='tag'>"+tag.trim()+"<span tag-data='"+tag.trim()+"' class='close-tag'></span></span>";
-    }
-  });
-  $('#groupContextModalTagsDiv').html(tagsText);
-
-  if(canEdit)
-  {
-    $('.close-tag').click(function(e)
-    {
-      newtags = $('#groupContextModalTagsHiddenInput').val().split(',').filter(function(element) { return element.trim() !== e.target.getAttribute('tag-data')});
-      var tagsText = "";
-      newtags.forEach(function(tag, index)
-      {
-        if(index != 0)
-        {
-           tagsText += ', ';
-        }
-        tagsText += tag;
-      });
-      $('#groupContextModalTagsHiddenInput').val(tagsText);
-      updateGroupTags();
-    });
-  }
-}
-
-function tags_autocomplete(inp, hidden, updatefn) {
-  var currentFocus;
-  /*execute a function when someone writes in the text field:*/
-  inp.addEventListener("input", function(e)
-  {
-    var a, b, i, val = this.value;
-    /*close any already open lists of autocompleted values*/
-    closeAllLists();
-    if (!val) { return false;}
-    currentFocus = -1;
-    /*create a DIV element that will contain the items (values):*/
-    a = document.createElement("DIV");
-    a.setAttribute("id", this.id + "autocomplete-list");
-    a.setAttribute("class", "autocomplete-modal-items");
-    /*append the DIV element as a child of the autocomplete container:*/
-    this.parentNode.parentNode.appendChild(a);
-    /*for each item in the array...*/
-    matches = getLabels('Tags');
-    for (i = 0; i < matches.length; i++)
-    {
-      if (matches[i].substr(0, val.length).toUpperCase() == val.toUpperCase())
-      {
-        /*check if the item starts with the same letters as the text field value:*/
-        /*create a DIV element for each matching element:*/
-        b = document.createElement("DIV");
-        /*make the matching letters bold:*/
-        b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
-        b.innerHTML += matches[i].substr(val.length);
-        /*insert a input field that will hold the current array item's value:*/
-        b.innerHTML += "<input type='hidden' value='" + matches[i].replace("'","%27") + "'>";
-        /*execute a function when someone clicks on the item value (DIV element):*/
-        b.addEventListener("click", function(e)
-        {
-          inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
-          closeAllLists();
-          submitTag();
-        });
-        a.appendChild(b);
-      }
-    }
-  });
-  /*execute a function presses a key on the keyboard:*/
-  inp.addEventListener("keydown", function(e) {
-      var x = document.getElementById(this.id + "autocomplete-list");
-      if (x) x = x.getElementsByTagName("div");
-      if (e.keyCode == 40) {
-        /*If the arrow DOWN key is pressed,
-        increase the currentFocus variable:*/
-        currentFocus++;
-        /*and and make the current item more visible:*/
-        addActive(x);
-      } else if (e.keyCode == 38) { //up
-        /*If the arrow UP key is pressed,
-        decrease the currentFocus variable:*/
-        currentFocus--;
-        /*and and make the current item more visible:*/
-        addActive(x);
-      } else if (e.keyCode == 9) {
-        /*If the tab key is pressed, prevent the form from being submitted,*/
-        if (currentFocus > -1) {
-          /*and simulate a click on the "active" item:*/
-          e.preventDefault();
-          if (x)
-          {
-             x[currentFocus].click();
-          }
-        }
-        else
-        {
-          submitTag();
-        }
-      }else if (e.keyCode == 13) {
-        /*If the ENTER key is pressed, prevent the form from being submitted,*/
-        e.preventDefault();
-        if (currentFocus > -1) {
-          /*and simulate a click on the "active" item:*/
-          if (x)
-          {
-             x[currentFocus].click();
-          }
-        }
-        else
-        {
-          submitTag();
-        }
-      }
-  });
-  function addActive(x) {
-    /*a function to classify an item as "active":*/
-    if (!x) return false;
-    /*start by removing the "active" class on all items:*/
-    removeActive(x);
-    if (currentFocus >= x.length) currentFocus = 0;
-    if (currentFocus < 0) currentFocus = (x.length - 1);
-    /*add class "autocomplete-active":*/
-    x[currentFocus].classList.add("autocomplete-active");
-  }
-  function removeActive(x) {
-    /*a function to remove the "active" class from all autocomplete items:*/
-    for (var i = 0; i < x.length; i++) {
-      x[i].classList.remove("autocomplete-active");
-    }
-  }
-  function closeAllLists(elmnt) {
-    /*close all autocomplete lists in the document,
-    except the one passed as an argument:*/
-    var x = document.getElementsByClassName("autocomplete-modal-items");
-    for (var i = 0; i < x.length; i++) {
-      if (elmnt != x[i] && elmnt != inp) {
-        x[i].parentNode.removeChild(x[i]);
-      }
-    }
-  }
-  /*execute a function when someone clicks in the document:*/
-  document.addEventListener("click", function (e) {
-      closeAllLists(e.target);
-  });
-  function submitTag()
-  {
-    var tag = inp.value;
-    if(tag.length > 0)
-    {
-      inp.value = "";
-
-      if(hidden.value.length > 0)
-      {
-        hidden.value += ', ' + tag;
-      }
-      else
-      {
-        hidden.value = tag;
-      }
-      updatefn();
-    }
-  }
 }
 
 function cardsAreEquivalent(card, details) {
@@ -698,7 +518,7 @@ function updateCollapse() {
     $('.editForm').collapse("hide")
   }
 
-  autocard_init_class('dynamic-autocard');
+  autocard_init('dynamic-autocard');
   changes.forEach(function(change, index)
   {
     var clickx = document.getElementById("clickx"+index);
@@ -846,9 +666,9 @@ function getLabels(sort) {
     var types = [];
     cube.forEach(function(card, index)
     {
-      if(card.details.type.includes('—'))
+      if(card.type_line.includes('—'))
       {
-        var subtypes = card.details.type.substr(card.details.type.indexOf('—')+1).split(' ');
+        var subtypes = card.type_line.substr(card.type_line.indexOf('—')+1).split(' ');
         subtypes.forEach(function(subtype, index)
         {
           if(!types.includes(subtype.trim()) && subtype.trim().length > 0)
@@ -994,7 +814,7 @@ function getLabels(sort) {
 }
 
 function getCardColorClass(card) {
-  var type = card.details.type;
+  var type = card.type_line;
   var colors = card.colors;
   if(type.toLowerCase().includes('land'))
   {
@@ -1048,64 +868,64 @@ function createMassEntry(cards) {
 }
 
 function init_groupcontextModal() {
-	var links = document.getElementsByClassName("activateGroupContextModal");
-
-	for(var i=0;i<links.length;i++)
-  {
-    links[i].addEventListener('click', (e) =>
+  $('.activateGroupContextModal').click(function(e) {
+    e.preventDefault();
+    var category1 = e.target.getAttribute("primarysort");
+    var category2 = e.target.getAttribute("secondarysort");
+    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1 ],sorts[1])[category2];
+    groupContextModal.categories = [category1, category2];
+    if(matches.length == 1)
     {
-      e.preventDefault();
-      var category1 = e.target.getAttribute("primarysort");
-      var category2 = e.target.getAttribute("secondarysort");
-      var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1 ],sorts[1])[category2];
-      groupContextModal.categories = [category1, category2];
-      if(matches.length == 1)
+      show_contextModal(matches[0]);
+    }
+    else
+    {
+      groupSelect = matches;
+      $('#groupContextModalTitle').html(sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2);
+      var cardlist = "";
+
+      cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
+      $('#groupContextTags').find('.hidden-input').val('');
+      $('#groupContextTags').find('.main-input').val('');
+      $('#groupContextTags').find('.hidden-input').trigger('change');
+
+      matches.forEach(function( card, index)
       {
-        show_contextModal(matches[0]);
-      }
-      else
+        if(card.details.image_flip)
+        {
+          cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+        }
+        else
+        {
+          cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+        }
+        cardlist += card.details.name+'</li>';
+        cardlist += '</li>';
+      });
+      cardlist += '</ul">';
+      $('#groupContextModalArea').html(cardlist);
+
+      var statusHTML = "";
+      var statuses = getLabels('Status');
+      statusHTML += '<option selected value=""></option>';
+      statuses.forEach(function(status, index)
       {
-        groupSelect = matches;
-        $('#groupContextModalTitle').html(sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2);
-        var cardlist = "";
+        statusHTML += '<option value="' + status+'">'+status+'</option>';
+      });
+      $('#groupContextModalStatusSelect').html(statusHTML);
+      $('#groupContextBuyForm').attr('action', 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+      $('#groupContextBuyHidden').val(createMassEntry(matches));
+      $('#groupContextModalCMC').val('');
+      $('#groupContextModalType').val('');
+      ['W','U','B','R','G'].forEach(function(color, index)
+      {
+        $('#groupContextModalCheckbox'+color).prop('checked',false);
+      });
 
-        cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
-        $('#groupContextModalTagsHiddenInput').val('');
-
-        updateGroupTags();
-        matches.forEach(function( card, index)
-        {
-          if(card.details.image_flip)
-          {
-            cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
-          }
-          else
-          {
-            cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
-          }
-          cardlist += card.details.name+'</li>';
-          cardlist += '</li>';
-        });
-        cardlist += '</ul">';
-        $('#groupContextModalArea').html(cardlist);
-
-        var statusHTML = "";
-        var statuses = getLabels('Status');
-        statusHTML += '<option selected value=""></option>';
-        statuses.forEach(function(status, index)
-        {
-          statusHTML += '<option value="' + status+'">'+status+'</option>';
-        });
-        $('#groupContextModalStatusSelect').html(statusHTML);
-
-        $('#groupContextBuyForm').attr('action', 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-        $('#groupContextBuyHidden').val(createMassEntry(matches));
-
-        autocard_init_class2('autocard');
-        $('#groupContextModal').modal('show');
-      }
-    });
-  }
+      autocard_init('autocard');
+      $('#groupContextModal').modal('show');
+    }
+  });
 }
 
 function show_contextModal(card) {
@@ -1138,11 +958,10 @@ function show_contextModal(card) {
     }
     tagsText += tag;
   });
-  $('#contextModalTagsHiddenInput').val(tagsText);
+  $('#contextTags').find('.hidden-input').val(tagsText);
+  $('#contextTags').find('.hidden-input').trigger("change");
 
-  updateTags();
-  $('#contextModalTagsCMC').val(card.cmc);
-
+  $('#contextModalCMC').val(card.cmc);
   ['W','U','B','R','G'].forEach(function(color, index)
   {
     $('#contextModalCheckbox'+color).prop('checked', card.colors.includes(color));
@@ -1157,6 +976,8 @@ function show_contextModal(card) {
   {
     $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+encodeURIComponent(card.details.name)+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
+  $('#contextModalType').val(card.type_line);
+
   fetch('/cube/api/getversions/'+card.cardID)
     .then(response => response.json())
     .then(function(json)
@@ -1276,14 +1097,19 @@ function updateCubeList() {
   switch(view)
   {
     case 'table':
-      return renderTableView();
+      renderTableView();
+      break;
     case 'spoiler':
-      return renderVisualSpoiler();
+      renderVisualSpoiler();
+      break;
     case 'curve':
-      return renderCurveView();
+      renderCurveView();
+      break;
     case 'list':
-      return renderListView();
+      renderListView();
+      break;
   }
+  autocard_hide_card();
 }
 
 function renderListView() {
@@ -1332,9 +1158,9 @@ function renderListView() {
     res += '</thead>';
     for(i = 0; i < cards.length; i++)
     {
-      res += '<tr class="listviewrow autocard '+getCardColorClass(cards[i])+'">';
+      res += '<tr class="listviewrow '+getCardColorClass(cards[i])+'">';
       //checkbox col
-      if(changes[i] && changes[i].checked)
+      if(listSelect[i] && listSelect[i].checked)
       {
         res += '<td class="nostretch"><input id="tdcheck'+i+'" class="tdcheck" data-index="'+i+'" type="checkbox" checked></td>';
       }
@@ -1344,11 +1170,11 @@ function renderListView() {
       }
 
       //name col
-      res += '<td data-index="'+i+'" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal +'"><div class="tdname">'+ cards[i].details.name+'</div></td>';
+      res += '<td id="namecol'+i+'" data-index="'+i+'" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal +'"><div data-index="'+i+'" class="tdname"><a data-index="'+i+'">'+ cards[i].details.name+'</a></div></td>';
 
       //version col
       res += '<td data-index="'+i+'" class="nostretch">';
-      res += '<select class="form-control versionselect">'
+      res += '<select class="form-control versionselect" data-index="'+i+'" cardid="'+cards[i].cardID+'">'
       versiondict[cards[i].cardID].forEach(function(version, index)
       {
         if(version.id == cards[i].cardID)
@@ -1364,9 +1190,9 @@ function renderListView() {
       res += '</td>';
 
       //status col
-      res += '<td data-index="'+i+'" class="nostretch">';
+      res += '<td class="nostretch">';
       var labels = getLabels('Status');
-      res += '<select class="form-control versionselect">'
+      res += '<select data-index="'+i+'" class="form-control statusselect inputl">'
       labels.forEach(function(label, index)
       {
         if(cards[i].status == label)
@@ -1383,13 +1209,13 @@ function renderListView() {
 
       //CMC col
       res += '<td data-index="'+i+'" class="nostretch">';
-      res += '<input class="form-control inputmd" value="'+cards[i].cmc+'">'
+      res += '<input data-index="'+i+'" class="form-control cmcselect inputsm" value="'+cards[i].cmc+'">'
       res += '</td>';
 
       //color identiy col
       res += '<td data-index="'+i+'" class="nostretch">';
       var labels = ['C','W','U','B','R','G','WU','WB','WR','WG','UB','UR','UG','BR','BG','RG','WUB','WUR','WUG','WBR','WBG','WRG','UBR','UBG','URG','BRG','WUBR','WUBG','WURG','WBRG','UBRG','WUBRG'];
-      res += '<select class="form-control inputl">'
+      res += '<select data-index="'+i+'" class="form-control colorselect inputl">'
       labels.forEach(function(label, index)
       {
         if(label == 'C' && cards[i].colors.count == 0)
@@ -1421,41 +1247,84 @@ function renderListView() {
 
       //tags col
       res += '<td data-index="'+i+'" class="">';
+      res += '<div class="tags-area" style="width:300px">';
       res += '<div class="tags-input" data-name="tags-input">';
       res += '<span class="tags">';
+      var tagstext = '';
       cards[i].tags.forEach(function(tag,index)
       {
-        res += '<span class="tag">'+tag+'</span>';
+        if(index != 0)
+        {
+          tagstext += ', ';
+        }
+        tagstext += tag;
       });
       res += '</span>';
-      res += '<input class="tags-input" type="hidden">';
-      res += '<input class="main-input" type="hidden" maxLength="24">';
-      res += '</div></td>';
+      res += '<input data-index="'+i+'" class="hidden-input tagsselect" type="hidden" value='+tagstext+'>';
+      res += '<input class="main-input" maxLength="24">';
+      res += '</div></div></td>';
 
       res += '</tr>';
     }
     res += '</table>'
 
     $('#cubelistarea').html(res);
-    autocard_init_class3('autocard');
+    autocard_init('autocard');
+    activateTags();
     $('.tdcheck').change(function(e)
     {
-      var index = e.target.getAttribute('data-index');
-      if(!changes[index])
+      var index = $(this).attr('data-index');
+      if(!listSelect[index])
       {
-        changes[index] = {};
+        listSelect[index] = {};
       }
-      changes[index].checked = $(this).prop('checked');
+      listSelect[index].checked = $(this).prop('checked');
     });
     $('.tdcard').click(function(e)
     {
-      var index = e.target.getAttribute('data-index');
-      if(!changes[index])
+      var index = $(this).attr('data-index');
+      if(!listSelect[index])
       {
-        changes[index] = {checked:$('#tdcheck'+index).prop('checked')};
+        listSelect[index] = {checked:$('#tdcheck'+index).prop('checked')};
       }
-      changes[index].checked = !changes[index].checked;
-      renderListView();
+      listSelect[index].checked = !listSelect[index].checked;
+      $('#tdcheck'+index).prop('checked',listSelect[index].checked);
+    });
+    $('.versionselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+      versiondict[$(this).attr('cardid')].forEach(function(version, i)
+      {
+        if(version.version == val)
+        {
+          $('#namecol'+index).attr('card',version.img);
+        }
+      });
+    });
+    $('.statusselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+      console.log(index + ' status: ' + val);
+    });
+    $('.cmcselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+      console.log(index + ' cmc: ' + val);
+    });
+    $('.colorselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+      console.log(index + ' color: ' + val);
+    });
+    $('.tagsselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+      console.log(index + ' tags: ' + val);
     });
   });
 }
@@ -1557,7 +1426,7 @@ function renderCurveView() {
   res += '</div>';
   $('#cubelistarea').html(res);
 
-  autocard_init_class('autocard');
+  autocard_init('autocard');
   init_contextModal();
 }
 
@@ -1647,7 +1516,7 @@ function renderTableView() {
   res += '</div>';
   $('#cubelistarea').html(res);
 
-  autocard_init_class('autocard');
+  autocard_init('autocard');
   init_contextModal();
   if(canEdit)
   {
@@ -1729,7 +1598,7 @@ function renderVisualSpoiler() {
 
   res += '</div></div>';
   $('#cubelistarea').html(res);
-  autocard_init_class('autocard');
+  autocard_init('autocard');
   init_contextModal();
   if(canEdit)
   {
@@ -1764,7 +1633,7 @@ function updateFilters() {
         .replace('#{filterindex}',index)
         .replace('#{checkboxindex}',index);
     });
-    document.getElementById('filterarea').innerHTML = filterhtml;
+    $('#filterarea').html(filterhtml);
 
     //setup filter control events
     filters.forEach(function(filter, index)
@@ -1829,4 +1698,5 @@ window.onload = function () {
     }
     buildFilterArea();
     updateCubeList();
+    activateTags();
 };

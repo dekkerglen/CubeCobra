@@ -321,7 +321,7 @@ function renderDraft()
     $('#picksColumn'+index).html(pickshtml);
   });
 
-  autocard_init_class('autocard');
+  autocard_init('autocard');
   var elements = document.getElementsByClassName("packcard");
   for(i = 0; i < elements.length; i++)
   {

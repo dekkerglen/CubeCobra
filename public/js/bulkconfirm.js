@@ -40,20 +40,21 @@ function discardAllButtonClick()
 
 function saveChangesButtonClick()
 {
+  var val = '';
   changes.forEach(function(change, index)
   {
     if(index != 0)
     {
-      changelistFormBody.value += ';';
+      val += ';';
     }
     if(change.add)
     {
-      changelistFormBody.value += '+' + change.add._id;
+      val += '+' + change.add._id;
     }
   });
+  changelistFormBody.value = val;
   document.getElementById("changelistForm").submit();
 }
-
 
 function updateCollapse()
 {
@@ -110,7 +111,7 @@ function updateCollapse()
 
   changelist.innerHTML = val;
 
-  autocard_init_class('dynamic-autocard');
+  autocard_init('dynamic-autocard');
   changes.forEach(function(change, index)
   {
     var clickx = document.getElementById("clickx"+index);

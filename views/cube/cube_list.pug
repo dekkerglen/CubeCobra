@@ -1,6 +1,9 @@
 extends ../layout
 
-block content          
+block content            
+  link(rel='stylesheet' href='/css/tags.css')  
+  link(rel='stylesheet' href='/css/autocomplete.css')  
+  link(rel='stylesheet' href='/css/editcube.css')  
   .cubenav
     ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
       li.nav-item
@@ -62,12 +65,12 @@ block content
               .row
                 .col
                   form(autocomplete='off').form-inline
-                    .form-group.mb-2.autocomplete
+                    .mb-2.autocomplete
                       input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
                     button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
                 .col
                   form.form-inline
-                    .form-group.mb-2.autocomplete
+                    .mb-2.autocomplete
                       input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
                     button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
               .collapse.editForm                
@@ -100,19 +103,7 @@ block content
           .row
             .col
               h5 Primary Sort
-              select#primarySortSelect.custom-select
-                option(selected='', value='color') Color
-                option(value='cmc') CMC
-                option(value='type') Supertype
-                option(value='subtype') Subtype
-                option(value='tags') Tags
-                option(value='status') Status
-                option(value='guilds') Guilds
-                option(value='tricolor') Shards / Wedges
-                option(value='colorcount') Color Count
-                option(value='set') Set
-                option(value='rarity') Rarity
-                option(value='unsorted') Unsorted                
+              select#primarySortSelect.custom-select      
               br
               p 
                 em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
@@ -184,6 +175,40 @@ block content
                       option(value='Ordered') Ordered
                       option(value='Owned') Owned
                       option(value='Premium Owned') Premium Owned
+                  h5 Override Attribute on All
+                  .input-group.mb-3
+                    .input-group-prepend
+                      span.input-group-text CMC
+                    input#groupContextModalCMC.form-control(type='text', value='2')
+                  .input-group.mb-3
+                    .input-group-prepend
+                      span.input-group-text Type
+                    input#groupContextModalType.form-control(type='text', value='2')
+                  h5 Color Identity Override: 
+                  .form-check.form-check-inline
+                    input#groupContextModalCheckboxW.form-check-input(type='checkbox', value='option1')
+                    label.form-check-label(for='groupContextModalCheckboxW')
+                      img(src='/content/symbols/w.png' alt='White' title='White')
+                  .form-check.form-check-inline
+                    input#groupContextModalCheckboxU.form-check-input(type='checkbox', value='option2')
+                    label.form-check-label(for='groupContextModalCheckboxU')
+                      img(src='/content/symbols/u.png' alt='Blue' title='Blue')
+                  .form-check.form-check-inline
+                    input#groupContextModalCheckboxB.form-check-input(type='checkbox', value='option3')
+                    label.form-check-label(for='groupContextModalCheckboxB')
+                      img(src='/content/symbols/b.png' alt='Black' title='Black')
+                  .form-check.form-check-inline
+                    input#groupContextModalCheckboxR.form-check-input(type='checkbox', value='option4')
+                    label.form-check-label(for='groupContextModalCheckboxR')
+                      img(src='/content/symbols/r.png' alt='Red' title='Red')
+                  .form-check.form-check-inline
+                    input#groupContextModalCheckboxG.form-check-input(type='checkbox', value='option5')
+                    label.form-check-label(for='groupContextModalCheckboxG')
+                      img(src='/content/symbols/g.png' alt='Green' title='Green')
+                  br
+                  em No symbols selected will have no change.
+                  br
+                  br
                   h5 Edit Tags
                   .form-check
                     input#groupContextAdd.form-check-input(type='radio', name='nameType', value='~', checked='')
@@ -192,16 +217,11 @@ block content
                     input#groupContextRemove.form-check-input(type='radio', name='nameType', value='=')
                     label.form-check-label(for='groupContextRemove') Remove tags from All
                   br
-                  .tags-input#groupContextModalTagsArea(data-name='tags-input')
-                    span#groupContextModalTagsDiv.tags
-                      span.tag CSS
-                        span.close-tag                 
-                      span.tag Javascript
-                        span.close-tag 
-                      span.tag HTML
-                        span.close-tag
-                    input#groupContextModalTagsHiddenInput.tags-input(type='hidden')
-                    input#groupContextModalTagsMainInput.main-input(maxlength="24")
+                  .tags-area#groupContextTags
+                    .tags-input(data-name='tags-input')
+                      span.tags
+                      input.hidden-input(type='hidden')
+                      input.main-input(maxlength="24")
                 br
                 br
                 p
@@ -240,33 +260,38 @@ block content
                 .input-group.mb-3
                   .input-group-prepend
                     span.input-group-text CMC
-                  input#contextModalTagsCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
+                  input#contextModalCMC.form-control(type='text', value='2')
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text Type
+                  input#contextModalType.form-control(type='text', value='2')
                 h5 Color Identity Override: 
                 .form-check.form-check-inline
                   input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                  label.form-check-label(for='inlineCheckbox1')
+                  label.form-check-label(for='contextModalCheckboxW')
                     img(src='/content/symbols/w.png' alt='White' title='White')
                 .form-check.form-check-inline
                   input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                  label.form-check-label(for='inlineCheckbox2')
+                  label.form-check-label(for='contextModalCheckboxU')
                     img(src='/content/symbols/u.png' alt='Blue' title='Blue')
                 .form-check.form-check-inline
                   input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                  label.form-check-label(for='inlineCheckbox3')
+                  label.form-check-label(for='contextModalCheckboxB')
                     img(src='/content/symbols/b.png' alt='Black' title='Black')
                 .form-check.form-check-inline
                   input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                  label.form-check-label(for='inlineCheckbox4')
+                  label.form-check-label(for='contextModalCheckboxR')
                     img(src='/content/symbols/r.png' alt='Red' title='Red')
                 .form-check.form-check-inline
                   input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                  label.form-check-label(for='inlineCheckbox5')
+                  label.form-check-label(for='contextModalCheckboxG')
                     img(src='/content/symbols/g.png' alt='Green' title='Green')
                 h5 Tags
-                .tags-input#contextModalTagsArea(data-name='tags-input')
-                  span#contextModalTagsDiv.tags
-                  input#contextModalTagsHiddenInput.tags-input(type='hidden')
-                  input#contextModalTagsMainInput.main-input(maxlength="24")
+                .tags-area#contextTags
+                  .tags-input(data-name='tags-input')
+                    span.tags
+                    input.hidden-input(type='hidden')
+                    input.main-input(maxlength="24")
 
           .modal-footer
             button#contextRemoveButton.btn.btn-danger(type='button') Remove from cube
@@ -302,27 +327,31 @@ block content
                   .input-group.mb-3
                     .input-group-prepend
                       span.input-group-text CMC
-                    input#contextModalTagsCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
+                    input#contextModalCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
+                  .input-group.mb-3
+                    .input-group-prepend
+                      span.input-group-text Type
+                    input#contextModalType.form-control(type='text', value='2')
                   h6 Color Identity Override:
                   .form-check.form-check-inline
                     input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                    label.form-check-label(for='inlineCheckbox1')
+                    label.form-check-label(for='contextModalCheckboxW')
                       img(src='/content/symbols/w.png' alt='White' title='White')
                   .form-check.form-check-inline
                     input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                    label.form-check-label(for='inlineCheckbox2')
+                    label.form-check-label(for='contextModalCheckboxU')
                       img(src='/content/symbols/u.png' alt='Blue' title='Blue')
                   .form-check.form-check-inline
                     input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                    label.form-check-label(for='inlineCheckbox3')
+                    label.form-check-label(for='contextModalCheckboxB')
                       img(src='/content/symbols/b.png' alt='Black' title='Black')
                   .form-check.form-check-inline
                     input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                    label.form-check-label(for='inlineCheckbox4')
+                    label.form-check-label(for='contextModalCheckboxR')
                       img(src='/content/symbols/r.png' alt='Red' title='Red')
                   .form-check.form-check-inline
                     input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                    label.form-check-label(for='inlineCheckbox5')
+                    label.form-check-label(for='contextModalCheckboxG')
                       img(src='/content/symbols/g.png' alt='Green' title='Green')                    
                   h5 Tags
                   .tags-input-disabled(data-name='tags-input')
@@ -405,5 +434,6 @@ block content
               
   script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')     
-  script(src='/js/editcube_base.js')     
+  script(src='/js/tags.js')     
+  script(src='/js/editcube.js')
               

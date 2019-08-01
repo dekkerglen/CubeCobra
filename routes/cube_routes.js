@@ -424,6 +424,10 @@ router.get('/list/:id', function(req, res)
       cube.cards.forEach(function(card, index)
       {
         card.details = carddb.carddict[card.cardID];
+        if(!card.type_line)
+        {
+          card.type_line = card.details.type;
+        }
       });
 
       if(req.user)
@@ -841,7 +845,8 @@ function bulkuploadCSV(req, res, cards, cube) {
               status:card.status,
               colors:card.colors,
               cmc:card.cmc,
-              cardID:possible
+              cardID:possible,
+              type:carddb.carddict[possible].type_line
             }
           );
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -865,7 +870,8 @@ function bulkuploadCSV(req, res, cards, cube) {
             status:card.status,
             colors:card.colors,
             cmc:card.cmc,
-            cardID:currentId[0]
+            cardID:currentId[0],
+            type:carddb.carddict[currentId[0]].type_line
           }
         );
         changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -983,7 +989,8 @@ function bulkUpload(req, res, list, cube) {
                         status:"Not Owned",
                         colors:details.color_identity,
                         cmc:details.cmc,
-                        cardID:carddb.carddict[possible]
+                        cardID:carddb.carddict[possible],
+                        type:carddb.carddict[possible].type_line
                       }
                     );
                     added.push(carddb.carddict[possible]);
@@ -1015,7 +1022,8 @@ function bulkUpload(req, res, list, cube) {
                     status:"Not Owned",
                     colors:details.color_identity,
                     cmc:details.cmc,
-                    cardID:currentId[0]
+                    cardID:currentId[0],
+                    type:carddb.carddict[currentId[0]].type_line
                   }
                 );
                 added.push(carddb.carddict[currentId[0]]);
@@ -1129,12 +1137,12 @@ router.get('/download/csv/:id', function(req, res)
       {
         res.write('"' + carddb.carddict[card.cardID].name + '"' + ',');
         res.write(card.cmc+ ',');
-        res.write('"' + carddb.carddict[card.cardID].type.replace('—','-') + '"' + ',');
+        res.write('"' + carddb.carddict[card.cardID].type_line.replace('—','-') + '"' + ',');
         if(card.colors.length == 0)
         {
           res.write('C,');
         }
-        else if(carddb.carddict[card.cardID].type.toLowerCase().includes('land'))
+        else if(carddb.carddict[card.cardID].type_line.toLowerCase().includes('land'))
         {
           res.write('L,');
         }
@@ -1632,7 +1640,8 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
                 status:"Not Owned",
                 colors:details.color_identity,
                 cmc:details.cmc,
-                cardID:edit.substring(1)
+                cardID:details._id,
+                type:details.type_line
               }
             );
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -1689,7 +1698,8 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
               status:"Not Owned",
               colors:details.color_identity,
               cmc:details.cmc,
-              cardID:tmp_split[1]
+              cardID:details._id,
+              type:details.type_line
             }
           );
 
@@ -2348,7 +2358,8 @@ router.post('/api/getversions', function(req, res)
     {
       cards[cardid].push({
         id:id,
-        version:carddb.carddict[id].full_name.toUpperCase().substring(carddb.carddict[id].full_name.indexOf('[')+1,carddb.carddict[id].full_name.indexOf(']'))
+        version:carddb.carddict[id].full_name.toUpperCase().substring(carddb.carddict[id].full_name.indexOf('[')+1,carddb.carddict[id].full_name.indexOf(']')),
+        img:carddb.carddict[id].image_normal
       });
     });
   });
@@ -2432,6 +2443,10 @@ router.post('/api/updatecards/:id', function(req, res)
         var found = false;
         cube.cards.forEach(function(card, index)
         {
+          if(!card.type_line)
+          {
+            card.type_line = carddb.carddict[card.cardID].type;
+          }
           if(card.details)
           {
             delete card.details;
@@ -2445,6 +2460,18 @@ router.post('/api/updatecards/:id', function(req, res)
               if(req.body.updated.status)
               {
                 cube.cards[index].status = req.body.updated.status;
+              }
+              if(req.body.updated.cmc)
+              {
+                cube.cards[index].cmc = req.body.updated.cmc;
+              }
+              if(req.body.updated.type_line)
+              {
+                cube.cards[index].type_line = req.body.updated.type_line;
+              }
+              if(req.body.updated.colors)
+              {
+                cube.cards[index].colors = req.body.updated.colors;
               }
               if(req.body.updated.tags)
               {
