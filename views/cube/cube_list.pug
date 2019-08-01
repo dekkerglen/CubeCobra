@@ -34,14 +34,15 @@ block content
           if user
             if user.id == cube.owner
               li.nav-item
-                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Edit
+                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-
           if user
             if user.id == cube.owner
+              li.nav-item
+                a(href="#")#editSelected.nav-link Edit Selected
               li.nav-item.dropdown
                 a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
                 .dropdown-menu(aria-labelledby='bulkdropdown')
@@ -157,7 +158,7 @@ block content
       .modal-dialog.modal-dialog-centered.modal-lg(role='document')
         .modal-content
           .modal-header
-            h5#groupContextModalTitle.modal-title Ambush Viper
+            h5.modal-title Edit Selected
             button.close(type='button', data-dismiss='modal', aria-label='Close')
               span(aria-hidden='true') ×
           .row.no-gutters
@@ -418,7 +419,19 @@ block content
         .modal-footer
           button.btn.btn-success(type='submit' form='importForm') Import
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-        
+  // cubetutor import
+  #selectEmptyModal.modal.fade(tabindex='-1', role='dialog')
+    .modal-dialog.modal-dialog-scrollable(role='document')
+      .modal-content
+        .modal-header
+          h5.modal-title Cannot Edit Selected
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body  
+          p No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
+
+        .modal-footer
+          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
         
   #cubeSaveModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeSaveModalTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')

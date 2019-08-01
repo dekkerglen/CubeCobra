@@ -2351,6 +2351,7 @@ router.get('/api/getversions/:id', function(req, res)
 router.post('/api/getversions', function(req, res)
 {
   cards = {};
+
   req.body.forEach(function(cardid, index)
   {
     cards[cardid] = [];
@@ -2441,62 +2442,54 @@ router.post('/api/updatecards/:id', function(req, res)
       else
       {
         var found = false;
-        cube.cards.forEach(function(card, index)
+        req.body.selected.forEach(function(select, index)
         {
-          if(!card.type_line)
+          if(!cube.cards[select.index].type_line)
           {
-            card.type_line = carddb.carddict[card.cardID].type;
+            cube.cards[select.index].type_line = carddb.carddict[cube.cards[select.index].cardID].type;
           }
-          if(card.details)
+          if(cube.cards[select.index].details)
           {
-            delete card.details;
+            delete cube.cards[select.index].details;
           }
-          var tempcard = card;
-          tempcard.details = carddb.carddict[tempcard.cardID];
-          if(req.body.filters == null || sortfilter.filterCard(tempcard,req.body.filters))
+          if(req.body.updated.status)
           {
-            if(sortfilter.cardIsLabel(tempcard,req.body.categories[0],req.body.sorts[0]) && sortfilter.cardIsLabel(tempcard,req.body.categories[1],req.body.sorts[1]))
+            cube.cards[select.index].status = req.body.updated.status;
+          }
+          if(req.body.updated.cmc)
+          {
+            cube.cards[select.index].cmc = req.body.updated.cmc;
+          }
+          if(req.body.updated.type_line)
+          {
+            cube.cards[select.index].type_line = req.body.updated.type_line;
+          }
+          if(req.body.updated.colors)
+          {
+            cube.cards[select.index].colors = req.body.updated.colors;
+          }
+          if(req.body.updated.tags)
+          {
+            if(req.body.updated.addTags)
             {
-              if(req.body.updated.status)
+              req.body.updated.tags.forEach(function(newtag, tag_ind)
               {
-                cube.cards[index].status = req.body.updated.status;
-              }
-              if(req.body.updated.cmc)
-              {
-                cube.cards[index].cmc = req.body.updated.cmc;
-              }
-              if(req.body.updated.type_line)
-              {
-                cube.cards[index].type_line = req.body.updated.type_line;
-              }
-              if(req.body.updated.colors)
-              {
-                cube.cards[index].colors = req.body.updated.colors;
-              }
-              if(req.body.updated.tags)
-              {
-                if(req.body.updated.addTags)
+                if(!cube.cards[select.index].tags.includes(newtag))
                 {
-                  req.body.updated.tags.forEach(function(newtag, tag_ind)
-                  {
-                    if(!cube.cards[index].tags.includes(newtag))
-                    {
-                      cube.cards[index].tags.push(newtag);
-                    }
-                  });
+                  cube.cards[select.index].tags.push(newtag);
                 }
-                else
-                {
-                  //remove the tags
-                  req.body.updated.tags.forEach(function(tag, tag_in)
-                  {
-                    var temp = cube.cards[index].tags.indexOf(tag);
-                    if (temp > -1) {
-                       cube.cards[index].tags.splice(temp, 1);
-                    }
-                  });
+              });
+            }
+            else
+            {
+              //remove the tags
+              req.body.updated.tags.forEach(function(tag, tag_in)
+              {
+                var temp = cube.cards[index].tags.indexOf(tag);
+                if (temp > -1) {
+                   cube.cards[index].tags.splice(temp, 1);
                 }
-              }
+              });
             }
           }
         });

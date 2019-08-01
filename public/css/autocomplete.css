@@ -30,6 +30,6 @@
 
 /*when navigating through the items using the arrow keys:*/
 .autocomplete-active {
-	background-color: DodgerBlue !important;
+	background-color: #28A745 !important;
 	color: #ffffff;
 }

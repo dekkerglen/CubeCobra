@@ -4,13 +4,13 @@ var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{in
                      '<button class="btn btn-outline-secondary filter-button" data-index="#{buttonindex}" type="button">Remove</button></div></div>';
 var filterItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
-var listGranularity = 100;
+var listGranularity = 50;
+var listPosition = 0;
 var changes = [];
 var sorts = [];
 var filters = [];
 var groupSelect = null;
 var modalSelect = null;
-var listSelect = [];
 var view = $('#viewSelect').val();
 
 var cubeDict = {};
@@ -164,11 +164,18 @@ if(canEdit) {
     {
       filterobj = getFilterObj();
     }
+
+    groupSelect = JSON.parse(JSON.stringify(groupSelect));
+
+    groupSelect.forEach(function(card, index)
+    {
+      delete card.details;
+    });
+
     let data =
     {
-      sorts:sorts,
+      selected:groupSelect,
       filters:filterobj,
-      categories:groupContextModal.categories,
       updated:updated,
       token:$('#edittoken').val()
     };
@@ -180,53 +187,49 @@ if(canEdit) {
         'Content-Type': 'application/json'
       }
     }).then(res => {
-      cube.forEach(function(card, index)
+      groupSelect.forEach(function(card, index)
       {
-        if(cardIsLabel(card,data.categories[0],sorts[0]) && cardIsLabel(card,data.categories[1],sorts[1]))
+        if(updated.status)
         {
-          if(updated.status)
+          cube[card.index].status = updated.status;
+        }
+        if(updated.cmc)
+        {
+          cube[card.index].cmc = updated.cmc;
+        }
+        if(updated.type_line)
+        {
+          cube[card.index].type_line = updated.type_line;
+        }
+        if(updated.colors)
+        {
+          cube[card.index].colors = updated.colors;
+        }
+        if(updated.tags)
+        {
+          if(updated.addTags)
           {
-            cube[index].status = updated.status;
-          }
-          if(updated.cmc)
-          {
-            cube[index].cmc = updated.cmc;
-          }
-          if(updated.type_line)
-          {
-            cube[index].type_line = updated.type_line;
-          }
-          if(updated.colors)
-          {
-            cube[index].colors = updated.colors;
-          }
-          if(updated.tags)
-          {
-            if(updated.addTags)
+            updated.tags.forEach(function(newtag, tag_ind)
             {
-              updated.tags.forEach(function(newtag, tag_ind)
+              if(!cube[card.index].tags.includes(newtag))
               {
-                if(!cube[index].tags.includes(newtag))
-                {
-                  cube[index].tags.push(newtag);
-                }
-              });
-            }
-            else
+                cube[card.index].tags.push(newtag);
+              }
+            });
+          }
+          else
+          {
+            //remove the tags
+            updated.tags.forEach(function(tag, tag_in)
             {
-              //remove the tags
-              updated.tags.forEach(function(tag, tag_in)
-              {
-                var temp = cube[index].tags.indexOf(tag);
-                if (temp > -1) {
-                   cube[index].tags.splice(temp, 1);
-                }
-              });
-            }
+              var temp = cube[card.index].tags.indexOf(tag);
+              if (temp > -1) {
+                 cube[card.index].tags.splice(temp, 1);
+              }
+            });
           }
         }
       });
-
       updateCubeList();
       $('#groupContextModal').modal('hide');
     });
@@ -348,6 +351,31 @@ if(canEdit) {
         $('#cubeSaveModal').modal('show');
     });
   });
+  $('#editSelected').click(function(e) {
+    e.preventDefault();
+    groupSelect = [];
+    cube.forEach(function(card, index)
+    {
+      if(card.checked)
+      {
+        groupSelect.push(card);
+      }
+    });
+    console.log(groupSelect.length);
+    if(groupSelect.length == 0)
+    {
+      $('#selectEmptyModal').modal('show');
+    }
+    else if (groupSelect.length == 1)
+    {
+      card = groupSelect[0];
+      show_contextModal(card);
+    }
+    else
+    {
+      show_groupContextModal();
+    }
+  });
 }
 
 function cardsAreEquivalent(card, details) {
@@ -360,6 +388,10 @@ function cardsAreEquivalent(card, details) {
     return false;
   }
   if(card.cmc != details.cmc)
+  {
+    return false;
+  }
+  if(card.type_line != details.type_line)
   {
     return false;
   }
@@ -872,8 +904,7 @@ function init_groupcontextModal() {
     e.preventDefault();
     var category1 = e.target.getAttribute("primarysort");
     var category2 = e.target.getAttribute("secondarysort");
-    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1 ],sorts[1])[category2];
-    groupContextModal.categories = [category1, category2];
+    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1],sorts[1])[category2];
     if(matches.length == 1)
     {
       show_contextModal(matches[0]);
@@ -881,51 +912,54 @@ function init_groupcontextModal() {
     else
     {
       groupSelect = matches;
-      $('#groupContextModalTitle').html(sorts[0] + ': ' + category1 + ', ' + sorts[1] + ': ' + category2);
-      var cardlist = "";
-
-      cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
-      $('#groupContextTags').find('.hidden-input').val('');
-      $('#groupContextTags').find('.main-input').val('');
-      $('#groupContextTags').find('.hidden-input').trigger('change');
-
-      matches.forEach(function( card, index)
-      {
-        if(card.details.image_flip)
-        {
-          cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
-        }
-        else
-        {
-          cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
-        }
-        cardlist += card.details.name+'</li>';
-        cardlist += '</li>';
-      });
-      cardlist += '</ul">';
-      $('#groupContextModalArea').html(cardlist);
-
-      var statusHTML = "";
-      var statuses = getLabels('Status');
-      statusHTML += '<option selected value=""></option>';
-      statuses.forEach(function(status, index)
-      {
-        statusHTML += '<option value="' + status+'">'+status+'</option>';
-      });
-      $('#groupContextModalStatusSelect').html(statusHTML);
-      $('#groupContextBuyForm').attr('action', 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-      $('#groupContextBuyHidden').val(createMassEntry(matches));
-      $('#groupContextModalCMC').val('');
-      $('#groupContextModalType').val('');
-      ['W','U','B','R','G'].forEach(function(color, index)
-      {
-        $('#groupContextModalCheckbox'+color).prop('checked',false);
-      });
-
-      autocard_init('autocard');
-      $('#groupContextModal').modal('show');
+      show_groupContextModal();
     }
   });
+}
+
+function show_groupContextModal() {
+  var cardlist = "";
+
+  cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
+  $('#groupContextTags').find('.hidden-input').val('');
+  $('#groupContextTags').find('.main-input').val('');
+  $('#groupContextTags').find('.hidden-input').trigger('change');
+
+  groupSelect.forEach(function( card, index)
+  {
+    if(card.details.image_flip)
+    {
+      cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+    }
+    else
+    {
+      cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+    }
+    cardlist += card.details.name+'</li>';
+    cardlist += '</li>';
+  });
+  cardlist += '</ul">';
+  $('#groupContextModalArea').html(cardlist);
+
+  var statusHTML = "";
+  var statuses = getLabels('Status');
+  statusHTML += '<option selected value=""></option>';
+  statuses.forEach(function(status, index)
+  {
+    statusHTML += '<option value="' + status+'">'+status+'</option>';
+  });
+  $('#groupContextModalStatusSelect').html(statusHTML);
+  $('#groupContextBuyForm').attr('action', 'https://store.tcgplayer.com/massentry?partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+  $('#groupContextBuyHidden').val(createMassEntry(groupSelect));
+  $('#groupContextModalCMC').val('');
+  $('#groupContextModalType').val('');
+  ['W','U','B','R','G'].forEach(function(color, index)
+  {
+    $('#groupContextModalCheckbox'+color).prop('checked',false);
+  });
+
+  autocard_init('autocard');
+  $('#groupContextModal').modal('show');
 }
 
 function show_contextModal(card) {
@@ -1003,19 +1037,11 @@ function show_contextModal(card) {
 }
 
 function init_contextModal() {
-	var links = document.getElementsByClassName("activateContextModal");
-
-	for(var i=0;i<links.length;i++)
-  {
-    links[i].addEventListener('click', (e) =>
-    {
-      e.preventDefault();
-      card = cubeDict[e.target.getAttribute("cardindex")];
-
-
-      show_contextModal(card);
-    });
-  }
+  $('.activateContextModal').click(function(e) {
+    e.preventDefault();
+    card = cubeDict[$(this).attr("cardindex")];
+    show_contextModal(card);
+  });
 }
 
 function sortIntoGroups(cards, sort) {
@@ -1121,7 +1147,7 @@ function renderListView() {
     columns[column_label] = sortIntoGroups(columns[column_label],sorts[1]);
   });
 
-  cards = [];
+  var cards_all = [];
   var card_ids = [];
   Object.keys(columns).forEach(function(col, index)
   {
@@ -1129,13 +1155,15 @@ function renderListView() {
     {
       columns[col][rowgroup_label].forEach(function( card, index)
       {
-        cards.push(card);
+        cards_all.push(card);
         card_ids.push(card.cardID);
       });
     });
   });
-  cards = cards.splice(0,listGranularity);
-  card_ids = card_ids.splice(0,listGranularity);
+  var maxPos = Math.floor((cards_all.length-1)/ listGranularity);
+  listPosition = Math.min(maxPos ,Math.max(0,listPosition));
+  var cards = cards_all.slice(listPosition*listGranularity,(listPosition+1)*listGranularity);
+  card_ids = card_ids.splice(listPosition*listGranularity,(listPosition+1)*listGranularity);
 
   fetch("/cube/api/getversions", {
     method: "POST",
@@ -1148,9 +1176,30 @@ function renderListView() {
   {
     var versiondict = json.dict;
 
-    var res = '<h5>'+cards.length+'/'+cube.length+'</h5></br><table class="table">';
+    var indexerHtml = '';
+    if(maxPos > 0)
+    {
+      indexerHtml += '<hr>';
+      indexerHtml += '<nav><ul class="pagination">';
+      for(var j = 0; j <= maxPos; j++)
+      {
+        if(j == listPosition)
+        {
+          indexerHtml += '<li class="page-item active"><a href="#" data-id="'+j+'" class="listViewIndex page-link">'+(j+1)+'<span class="sr-only">(current)</span></a></li>';
+        }
+        else
+        {
+          indexerHtml += '<li class="page-item"><a href="#" data-id="'+j+'" class="listViewIndex page-link">'+(j+1)+'</a></li>';
+        }
+      }
+      indexerHtml += '</ul></nav>';
+    }
+
+    res = indexerHtml;
+    res += '<table class="table">';
     res += '<thead>';
-    var headers = ["","Name","Version","Status","CMC","Color","Tags"];
+    var headers = ["Name","Version","Type","Status","CMC","Color","Tags"];
+    res += '<th scope="col"><input id="tdcheckall" type="checkbox" ></th>';
     headers.forEach(function(header, index)
     {
       res += '<th scope="col">'+header+'</th>';
@@ -1160,39 +1209,44 @@ function renderListView() {
     {
       res += '<tr class="listviewrow '+getCardColorClass(cards[i])+'">';
       //checkbox col
-      if(listSelect[i] && listSelect[i].checked)
+      if(cards[i].checked)
       {
-        res += '<td class="nostretch"><input id="tdcheck'+i+'" class="tdcheck" data-index="'+i+'" type="checkbox" checked></td>';
+        res += '<td class="nostretch"><input id="tdcheck'+cards[i].index+'" class="tdcheck" data-index="'+cards[i].index+'" type="checkbox" checked></td>';
       }
       else
       {
-        res += '<td class="nostretch"><input id="tdcheck'+i+'" class="tdcheck" data-index="'+i+'" type="checkbox" ></td>';
+        res += '<td class="nostretch"><input id="tdcheck'+cards[i].index+'" class="tdcheck" data-index="'+cards[i].index+'" type="checkbox" ></td>';
       }
 
       //name col
-      res += '<td id="namecol'+i+'" data-index="'+i+'" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal +'"><div data-index="'+i+'" class="tdname"><a data-index="'+i+'">'+ cards[i].details.name+'</a></div></td>';
+      res += '<td id="namecol'+cards[i].index+'" data-index="'+cards[i].index+'" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal +'"><div data-index="'+cards[i].index+'" class="tdname"><a data-index="'+cards[i].index+'">'+ cards[i].details.name+'</a></div></td>';
 
       //version col
-      res += '<td data-index="'+i+'" class="nostretch">';
-      res += '<select class="form-control versionselect" data-index="'+i+'" cardid="'+cards[i].cardID+'">'
+      res += '<td data-index="'+cards[i].index+'" class="nostretch">';
+      res += '<select class="compactControl form-control inputmd versionselect" data-index="'+cards[i].index+'">'
       versiondict[cards[i].cardID].forEach(function(version, index)
       {
         if(version.id == cards[i].cardID)
         {
-          res += '<option selected>'+version.version+'</option>';
+          res += '<option cardid="'+version.id+'" selected>'+version.version+'</option>';
         }
         else
         {
-          res += '<option>'+version.version+'</option>';
+          res += '<option cardid="'+version.id+'">'+version.version+'</option>';
         }
       });
       res += '</select>'
       res += '</td>';
 
+      //type col
+      res += '<td data-index="'+cards[i].index+'" class="nostretch">';
+      res += '<input data-index="'+cards[i].index+'" class="compactControl form-control typeselect inputxl" value="'+cards[i].type_line+'">'
+      res += '</td>';
+
       //status col
       res += '<td class="nostretch">';
       var labels = getLabels('Status');
-      res += '<select data-index="'+i+'" class="form-control statusselect inputl">'
+      res += '<select data-index="'+cards[i].index+'" class="compactControl form-control statusselect inputl">'
       labels.forEach(function(label, index)
       {
         if(cards[i].status == label)
@@ -1208,14 +1262,14 @@ function renderListView() {
       res += '</td>';
 
       //CMC col
-      res += '<td data-index="'+i+'" class="nostretch">';
-      res += '<input data-index="'+i+'" class="form-control cmcselect inputsm" value="'+cards[i].cmc+'">'
+      res += '<td data-index="'+cards[i].index+'" class="nostretch">';
+      res += '<input data-index="'+cards[i].index+'" class="compactControl form-control cmcselect inputsm" value="'+cards[i].cmc+'">'
       res += '</td>';
 
       //color identiy col
-      res += '<td data-index="'+i+'" class="nostretch">';
+      res += '<td data-index="'+cards[i].index+'" class="nostretch">';
       var labels = ['C','W','U','B','R','G','WU','WB','WR','WG','UB','UR','UG','BR','BG','RG','WUB','WUR','WUG','WBR','WBG','WRG','UBR','UBG','URG','BRG','WUBR','WUBG','WURG','WBRG','UBRG','WUBRG'];
-      res += '<select data-index="'+i+'" class="form-control colorselect inputl">'
+      res += '<select data-index="'+cards[i].index+'" class="compactControl form-control colorselect inputmd">'
       labels.forEach(function(label, index)
       {
         if(label == 'C' && cards[i].colors.count == 0)
@@ -1246,7 +1300,7 @@ function renderListView() {
       res += '</td>';
 
       //tags col
-      res += '<td data-index="'+i+'" class="">';
+      res += '<td data-index="'+cards[i].index+'" class="compactControl">';
       res += '<div class="tags-area" style="width:300px">';
       res += '<div class="tags-input" data-name="tags-input">';
       res += '<span class="tags">';
@@ -1260,13 +1314,15 @@ function renderListView() {
         tagstext += tag;
       });
       res += '</span>';
-      res += '<input data-index="'+i+'" class="hidden-input tagsselect" type="hidden" value='+tagstext+'>';
+      res += '<input data-index="'+cards[i].index+'" class="hidden-input tagsselect" type="hidden" value="'+tagstext+'">';
       res += '<input class="main-input" maxLength="24">';
       res += '</div></div></td>';
 
       res += '</tr>';
     }
     res += '</table>'
+    res += indexerHtml;
+    res += '<hr>';
 
     $('#cubelistarea').html(res);
     autocard_init('autocard');
@@ -1274,57 +1330,256 @@ function renderListView() {
     $('.tdcheck').change(function(e)
     {
       var index = $(this).attr('data-index');
-      if(!listSelect[index])
+      cube[index].checked = $(this).prop('checked');
+    });
+    $('#tdcheckall').change(function(e)
+    {
+      console.log('checkall');
+      var checked = $(this).prop('checked');
+      cards_all.forEach(function(card, index)
       {
-        listSelect[index] = {};
-      }
-      listSelect[index].checked = $(this).prop('checked');
+        card.checked = checked;
+        cube[card.index].checked = checked;
+        $('#tdcheck'+card.index).prop('checked',checked);
+      });
     });
     $('.tdcard').click(function(e)
     {
       var index = $(this).attr('data-index');
-      if(!listSelect[index])
+      if(cube[index].checked)
       {
-        listSelect[index] = {checked:$('#tdcheck'+index).prop('checked')};
+        cube[index].checked =false;
       }
-      listSelect[index].checked = !listSelect[index].checked;
-      $('#tdcheck'+index).prop('checked',listSelect[index].checked);
+      else
+      {
+        cube[index].checked = true;
+      }
+      $('#tdcheck'+index).prop('checked',cube[index].checked);
     });
     $('.versionselect').change(function(e)
     {
       var val = $(this).val();
       var index = $(this).attr('data-index');
-      versiondict[$(this).attr('cardid')].forEach(function(version, i)
+      var version = $(this).find('option:selected').attr('cardid');
+      versiondict[cube[index].cardID].forEach(function(version, i)
       {
         if(version.version == val)
         {
           $('#namecol'+index).attr('card',version.img);
         }
       });
+      versiondict[version] = versiondict[cube[index].cardID];
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.cardID = version;
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
     });
     $('.statusselect').change(function(e)
     {
       var val = $(this).val();
       var index = $(this).attr('data-index');
-      console.log(index + ' status: ' + val);
+
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.status = val;
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
     });
     $('.cmcselect').change(function(e)
     {
       var val = $(this).val();
       var index = $(this).attr('data-index');
-      console.log(index + ' cmc: ' + val);
+
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.cmc = val;
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
+    });
+    $('.typeselect').change(function(e)
+    {
+      var val = $(this).val();
+      var index = $(this).attr('data-index');
+
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.type_line = val.replace('-','—');
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
     });
     $('.colorselect').change(function(e)
     {
       var val = $(this).val();
       var index = $(this).attr('data-index');
-      console.log(index + ' color: ' + val);
+
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.colors = [];
+      for(var i = 0; i < val.length; i++)
+      {
+        updated.colors.push(val[i]);
+      }
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
     });
     $('.tagsselect').change(function(e)
     {
       var val = $(this).val();
       var index = $(this).attr('data-index');
-      console.log(index + ' tags: ' + val);
+
+      var updated = JSON.parse(JSON.stringify(cube[index]));
+      delete updated.details;
+      updated.tags = [];
+      val.split(',').forEach(function(tag, index)
+      {
+          updated.tags.push(tag.trim());
+      });
+
+      let data =
+      {
+        src:cube[index],
+        updated:updated,
+        token:document.getElementById("edittoken").value
+      };
+      fetch("/cube/api/updatecard/"+$('#cubeID').val(), {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        fetch('/cube/api/getcardfromid/'+updated.cardID)
+          .then(response => response.json())
+          .then(function(json)
+        {
+          var card = cube[index];
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cubeDict[cube[index].index] = cube[index];
+        });
+      });
+    });
+    $('.listViewIndex').click(function(e){
+      e.preventDefault();
+      listPosition = $(this).attr('data-id');
+      updateCubeList();
     });
   });
 }

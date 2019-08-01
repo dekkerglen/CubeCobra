@@ -9,7 +9,7 @@
 	cursor: pointer;
 }
 .tdcard{
-	font-size: 13px;
+	font-size: 12px;
 	color: black;
 	text-decoration: none;
 }
@@ -22,23 +22,28 @@
 	padding: 0px;
 	margin: 0px;
 }
+.compactControl
+{
+	font-size: 12px;
+	padding:2px;
+}
 .tdname
 {
 	padding-top:10px;
 }
-.versionselect
-{
-	width: 130px;
-}
 .inputsm
 {
-	width:80px;
+	width:50px;
 }
 .inputmd
 {
-	width:100px;
+	width:80px;
 }
 .inputl
+{
+	width:100px;
+}
+.inputxl
 {
 	width:130px;
 }

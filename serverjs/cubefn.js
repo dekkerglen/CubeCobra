@@ -37,6 +37,35 @@ function arraysEqual (a, b) {
   }
   return true;
 }
+function cardsAreEquivalent(card, details) {
+  if(card.cardID != details.cardID)
+  {
+    return false;
+  }
+  if(card.status != details.status)
+  {
+    return false;
+  }
+  if(card.cmc != details.cmc)
+  {
+    return false;
+  }
+  if(card.type_line != details.type_line)
+  {
+    return false;
+  }
+  if(!arraysEqual(card.tags,details.tags))
+  {
+    return false;
+  }
+  if(!arraysEqual(card.colors,details.colors))
+  {
+    return false;
+  }
+
+  return true;
+}
+
 var methods =
 {
   getBasics: function(carddb) {
@@ -61,29 +90,16 @@ var methods =
     });
     return res;
   },
-  cardsAreEquivalent: function(card, details) {
-    if(card.cardID != details.cardID)
+  cardsAreEquivalent: cardsAreEquivalent,
+  selectionContainsCard: function(card, selection) {
+    selection.forEach(function(select, index)
     {
-      return false;
-    }
-    if(card.status != details.status)
-    {
-      return false;
-    }
-    if(card.cmc != details.cmc)
-    {
-      return false;
-    }
-    if(!arraysEqual(card.tags,details.tags))
-    {
-      return false;
-    }
-    if(!arraysEqual(card.colors,details.colors))
-    {
-      return false;
-    }
-
-    return true;
+      if(cardsAreEquivalent(select, card.details))
+      {
+        return true;
+      }
+    });
+    return false;
   },
   setCubeType: function(cube, carddb) {
     var pauper = true;
