@@ -8,7 +8,7 @@ $('.toolbar a').click(function(e) {
   {
     card = prompt('Enter the card name here: ', '');
     document.execCommand('insertHTML', false, "<a class='autocard', card='"+card+"'>"+card+"</a>");
-    autocard_init_class('autocard');
+    autocard_init('autocard');
   }
   else document.execCommand($(this).data('command'), false, null);
 });

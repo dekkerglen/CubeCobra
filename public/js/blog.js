@@ -27,10 +27,10 @@ $(".editBlogButton").click(function(e){
       }
 
       $('#postBlogTitleInput').val(json.title);
-      $('#postBlogHiddenId').val(id);    
+      $('#postBlogHiddenId').val(id);
       $('#blogEditTitle').text('Edit Blog Post');
       $('#editBlogModal').modal('show');
-      autocard_init_class('autocard');
+      autocard_init('autocard');
     });
 });
 
