@@ -2388,6 +2388,10 @@ router.post('/api/updatecard/:id', function(req, res)
         var found = false;
         cube.cards.forEach(function(card, index)
         {
+          if(!card.type_line)
+          {
+            card.type_line = carddb.carddict[card.cardID].type;
+          }
           if(!found && cubefn.cardsAreEquivalent(card, req.body.src, carddb))
           {
             found = true;
@@ -2470,6 +2474,10 @@ router.post('/api/updatecards/:id', function(req, res)
           }
           if(req.body.updated.tags)
           {
+            cube.cards[select.index].tags.forEach(function(tag, ind)
+            {
+                cube.cards[select.index].tags[ind] = tag.trim();
+            });
             if(req.body.updated.addTags)
             {
               req.body.updated.tags.forEach(function(newtag, tag_ind)
