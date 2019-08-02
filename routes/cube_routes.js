@@ -12,9 +12,7 @@ var util = require('../serverjs/util.js');
 
 //grabbing sortfilter.cardIsLabel from client-side
 var sortfilter = require('../public/js/sortfilter.js');
-
 const router = express.Router();
-
 // Bring in models
 let Cube = require('../models/cube');
 let Deck = require('../models/deck');
@@ -412,17 +410,7 @@ router.get('/blog/:id', function(req, res)
   });
 });
 
-router.get('/visualspoiler/:id', function(req, res)
-{
-  LoadListView(req, res, 'cube/cube_visualspoiler','/cube/visualspoiler/'+req.params.id);
-});
-
 router.get('/list/:id', function(req, res)
-{
-  LoadListView(req, res, 'cube/cube_list','/cube/list/'+req.params.id);
-});
-
-function LoadListView(req, res, template, callback)
 {
   Cube.findById(req.params.id, function(err, cube)
   {
@@ -436,6 +424,10 @@ function LoadListView(req, res, template, callback)
       cube.cards.forEach(function(card, index)
       {
         card.details = carddb.carddict[card.cardID];
+        if(!card.type_line)
+        {
+          card.type_line = card.details.type;
+        }
       });
 
       if(req.user)
@@ -452,23 +444,23 @@ function LoadListView(req, res, template, callback)
             {
               if(!owner)
               {
-                res.render(template,
+                res.render('cube/cube_list',
                 {
                   cube:cube,
                   cube_raw:JSON.stringify(cube.cards),
                   author: 'unknown',
-                  loginCallback:callback,
+                  loginCallback:'/cube/list/'+req.params.id,
                   edittoken:currentuser.edit_token
                 });
               }
               else
               {
-                res.render(template,
+                res.render('cube/cube_list',
                 {
                   cube:cube,
                   cube_raw:JSON.stringify(cube.cards),
                   owner: owner.username,
-                  loginCallback:callback,
+                  loginCallback:'/cube/list/'+req.params.id,
                   edittoken:currentuser.edit_token
                 });
               }
@@ -482,29 +474,29 @@ function LoadListView(req, res, template, callback)
         {
           if(!owner)
           {
-            res.render(template,
+            res.render('cube/cube_list',
             {
               cube:cube,
               cube_raw:JSON.stringify(cube.cards),
               author: 'unknown',
-              loginCallback:callback
+              loginCallback:'/cube/list/'+req.params.id
             });
           }
           else
           {
-            res.render(template,
+            res.render('cube/cube_list',
             {
               cube:cube,
               cube_raw:JSON.stringify(cube.cards),
               owner: owner.username,
-              loginCallback:callback
+              loginCallback:'/cube/list/'+req.params.id
             });
           }
         });
       }
     }
   });
-}
+});
 
 router.get('/playtest/:id', function(req, res)
 {
@@ -853,7 +845,8 @@ function bulkuploadCSV(req, res, cards, cube) {
               status:card.status,
               colors:card.colors,
               cmc:card.cmc,
-              cardID:possible
+              cardID:possible,
+              type:carddb.carddict[possible].type_line
             }
           );
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -877,7 +870,8 @@ function bulkuploadCSV(req, res, cards, cube) {
             status:card.status,
             colors:card.colors,
             cmc:card.cmc,
-            cardID:currentId[0]
+            cardID:currentId[0],
+            type:carddb.carddict[currentId[0]].type_line
           }
         );
         changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -995,7 +989,8 @@ function bulkUpload(req, res, list, cube) {
                         status:"Not Owned",
                         colors:details.color_identity,
                         cmc:details.cmc,
-                        cardID:carddb.carddict[possible]
+                        cardID:carddb.carddict[possible],
+                        type:carddb.carddict[possible].type_line
                       }
                     );
                     added.push(carddb.carddict[possible]);
@@ -1027,7 +1022,8 @@ function bulkUpload(req, res, list, cube) {
                     status:"Not Owned",
                     colors:details.color_identity,
                     cmc:details.cmc,
-                    cardID:currentId[0]
+                    cardID:currentId[0],
+                    type:carddb.carddict[currentId[0]].type_line
                   }
                 );
                 added.push(carddb.carddict[currentId[0]]);
@@ -1141,12 +1137,12 @@ router.get('/download/csv/:id', function(req, res)
       {
         res.write('"' + carddb.carddict[card.cardID].name + '"' + ',');
         res.write(card.cmc+ ',');
-        res.write('"' + carddb.carddict[card.cardID].type.replace('—','-') + '"' + ',');
+        res.write('"' + carddb.carddict[card.cardID].type_line.replace('—','-') + '"' + ',');
         if(card.colors.length == 0)
         {
           res.write('C,');
         }
-        else if(carddb.carddict[card.cardID].type.toLowerCase().includes('land'))
+        else if(carddb.carddict[card.cardID].type_line.toLowerCase().includes('land'))
         {
           res.write('L,');
         }
@@ -1644,7 +1640,8 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
                 status:"Not Owned",
                 colors:details.color_identity,
                 cmc:details.cmc,
-                cardID:edit.substring(1)
+                cardID:details._id,
+                type:details.type_line
               }
             );
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -1701,7 +1698,8 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
               status:"Not Owned",
               colors:details.color_identity,
               cmc:details.cmc,
-              cardID:tmp_split[1]
+              cardID:details._id,
+              type:details.type_line
             }
           );
 
@@ -2350,6 +2348,28 @@ router.get('/api/getversions/:id', function(req, res)
   });
 });
 
+router.post('/api/getversions', function(req, res)
+{
+  cards = {};
+
+  req.body.forEach(function(cardid, index)
+  {
+    cards[cardid] = [];
+    carddb.nameToId[carddb.carddict[cardid].name.toLowerCase()].forEach(function(id, index)
+    {
+      cards[cardid].push({
+        id:id,
+        version:carddb.carddict[id].full_name.toUpperCase().substring(carddb.carddict[id].full_name.indexOf('[')+1,carddb.carddict[id].full_name.indexOf(']')),
+        img:carddb.carddict[id].image_normal
+      });
+    });
+  });
+  res.status(200).send({
+    success:'true',
+    dict:cards
+  });
+});
+
 router.post('/api/updatecard/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -2422,46 +2442,54 @@ router.post('/api/updatecards/:id', function(req, res)
       else
       {
         var found = false;
-        cube.cards.forEach(function(card, index)
+        req.body.selected.forEach(function(select, index)
         {
-          if(card.details)
+          if(!cube.cards[select.index].type_line)
           {
-            delete card.details;
+            cube.cards[select.index].type_line = carddb.carddict[cube.cards[select.index].cardID].type;
           }
-          var tempcard = card;
-          tempcard.details = carddb.carddict[tempcard.cardID];
-          if(req.body.filters == null || sortfilter.filterCard(tempcard,req.body.filters))
+          if(cube.cards[select.index].details)
           {
-            if(sortfilter.cardIsLabel(tempcard,req.body.categories[0],req.body.sorts[0]) && sortfilter.cardIsLabel(tempcard,req.body.categories[1],req.body.sorts[1]))
+            delete cube.cards[select.index].details;
+          }
+          if(req.body.updated.status)
+          {
+            cube.cards[select.index].status = req.body.updated.status;
+          }
+          if(req.body.updated.cmc)
+          {
+            cube.cards[select.index].cmc = req.body.updated.cmc;
+          }
+          if(req.body.updated.type_line)
+          {
+            cube.cards[select.index].type_line = req.body.updated.type_line;
+          }
+          if(req.body.updated.colors)
+          {
+            cube.cards[select.index].colors = req.body.updated.colors;
+          }
+          if(req.body.updated.tags)
+          {
+            if(req.body.updated.addTags)
             {
-              if(req.body.updated.status)
+              req.body.updated.tags.forEach(function(newtag, tag_ind)
               {
-                cube.cards[index].status = req.body.updated.status;
-              }
-              if(req.body.updated.tags)
+                if(!cube.cards[select.index].tags.includes(newtag))
+                {
+                  cube.cards[select.index].tags.push(newtag);
+                }
+              });
+            }
+            else
+            {
+              //remove the tags
+              req.body.updated.tags.forEach(function(tag, tag_in)
               {
-                if(req.body.updated.addTags)
-                {
-                  req.body.updated.tags.forEach(function(newtag, tag_ind)
-                  {
-                    if(!cube.cards[index].tags.includes(newtag))
-                    {
-                      cube.cards[index].tags.push(newtag);
-                    }
-                  });
+                var temp = cube.cards[index].tags.indexOf(tag);
+                if (temp > -1) {
+                   cube.cards[index].tags.splice(temp, 1);
                 }
-                else
-                {
-                  //remove the tags
-                  req.body.updated.tags.forEach(function(tag, tag_in)
-                  {
-                    var temp = cube.cards[index].tags.indexOf(tag);
-                    if (temp > -1) {
-                       cube.cards[index].tags.splice(temp, 1);
-                    }
-                  });
-                }
-              }
+              });
             }
           }
         });

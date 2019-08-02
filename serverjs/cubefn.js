@@ -27,6 +27,44 @@ function legalityToInt (legality) {
       return 3;
   }
 }
+function arraysEqual (a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+function cardsAreEquivalent(card, details) {
+  if(card.cardID != details.cardID)
+  {
+    return false;
+  }
+  if(card.status != details.status)
+  {
+    return false;
+  }
+  if(card.cmc != details.cmc)
+  {
+    return false;
+  }
+  if(card.type_line != details.type_line)
+  {
+    return false;
+  }
+  if(!arraysEqual(card.tags,details.tags))
+  {
+    return false;
+  }
+  if(!arraysEqual(card.colors,details.colors))
+  {
+    return false;
+  }
+
+  return true;
+}
 
 var methods =
 {
@@ -52,29 +90,16 @@ var methods =
     });
     return res;
   },
-  cardsAreEquivalent: function(card, details) {
-    if(card.cardID != details.cardID)
+  cardsAreEquivalent: cardsAreEquivalent,
+  selectionContainsCard: function(card, selection) {
+    selection.forEach(function(select, index)
     {
-      return false;
-    }
-    if(card.status != details.status)
-    {
-      return false;
-    }
-    if(card.cmc != details.cmc)
-    {
-      return false;
-    }
-    if(!util.arraysEqual(card.tags,details.tags))
-    {
-      return false;
-    }
-    if(!util.arraysEqual(card.colors,details.colors))
-    {
-      return false;
-    }
-
-    return true;
+      if(cardsAreEquivalent(select, card.details))
+      {
+        return true;
+      }
+    });
+    return false;
   },
   setCubeType: function(cube, carddb) {
     var pauper = true;

@@ -55,7 +55,7 @@ function renderDraft()
   $('#deckName').text('Deck ('+cards+' cards, '+ lands +' lands)')
 
 
-  autocard_init_class('autocard');
+  autocard_init('autocard');
 }
 
 function getDeckRowHeight()

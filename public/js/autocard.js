@@ -10,55 +10,23 @@ function getElementPosition(el) {
 	return {left:l, top:t};
 }
 
-function autocard_init(){
-	var links = document.getElementsByTagName("li");
-	for(var i=0;i<links.length;i++){
-		if(links[i].className.includes("autocard")){
-			links[i].onmouseover = autocard_showcard_helper(links[i]);
-			links[i].onmouseout = function(){autocard_hide_card();};
-}}}
-function autocard_init2(){
-	var links = document.getElementsByTagName("a");
-	for(var i=0;i<links.length;i++){
-		if(links[i].className.includes("autocard")){
-			links[i].onmouseover = autocard_showcard_helper(links[i]);
-			links[i].onmouseout = function(){autocard_hide_card();};
-}}}
-
-function autocard_init_class(htmlclass) {
-	var links = document.getElementsByTagName("a");
-	for(var i=0;i<links.length;i++){
-		if(links[i].className.includes(htmlclass)){
-			links[i].onmouseover = autocard_showcard_helper(links[i]);
-			links[i].onmouseout = function(){autocard_hide_card();};
-}}}
-
-function autocard_init_class2(htmlclass) {
-	var links = document.getElementsByTagName("li");
-	for(var i=0;i<links.length;i++){
-		if(links[i].className.includes(htmlclass)){
-			links[i].onmouseover = autocard_showcard_helper(links[i]);
-			links[i].onmouseout = function(){autocard_hide_card();};
-}}}
-
-function autocard_showcard_helper(element)
-{
-	return function()
-	{
-		if(!stopAutocard)
-		{
-			if(element.getAttribute("card_flip"))
-			{
-				autocard_show_card_flip(element.getAttribute("card"),element.getAttribute("card_flip"));
+function autocard_init(classname) {
+	$('.'+classname).off('mouseover').on('mouseover', function(e)	{
+		if(!stopAutocard)	{
+			if($(this).attr("card_flip"))	{
+				autocard_show_card_flip($(this).attr("card"),$(this).attr("card_flip"));
 			}
 			else {
-				autocard_show_card(element.getAttribute("card"));
+				autocard_show_card($(this).attr("card"));
 			}
 		}
-	}
+	});
+	$('.'+classname).off('mouseout').on('mouseout', function(e)	{
+		autocard_hide_card();
+	});
 }
 
-function autocard_show_card(imagename){
+function autocard_show_card(imagename) {
 	document.onmousemove = function(e){
 		if(window.event){e = window.event;}
         el = document.getElementById("autocard_popup");
@@ -89,8 +57,7 @@ function autocard_show_card(imagename){
 	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=315>';
 }
 
-
-function autocard_show_card_flip(imagename, imagename2){
+function autocard_show_card_flip(imagename, imagename2) {
 	document.onmousemove = function(e){
 		if(window.event){e = window.event;}
         el = document.getElementById("autocard_popup");
@@ -126,9 +93,9 @@ function autocard_show_card_flip(imagename, imagename2){
 	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=315>';
 }
 
-function autocard_hide_card(){
+function autocard_hide_card() {
 	document.getElementById("autocard_popup").innerHTML = '';
 	document.getElementById("autocard_popup2").innerHTML = '';
 }
-autocard_init();
-autocard_init2();
+
+autocard_init('autocard');
