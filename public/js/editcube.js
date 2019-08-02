@@ -1746,7 +1746,6 @@ function renderTableView() {
             {
               return 1;
             }
-            console.log(x, y);
             if (x.details.name < y.details.name)
             {
               return -1;
