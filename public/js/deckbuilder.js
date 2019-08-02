@@ -232,7 +232,7 @@ function renderDraft()
     $('#sideboardColumn'+index).html(colhtml);
   });
 
-  autocard_init_class('autocard');
+  autocard_init('autocard');
   var elements = document.getElementsByClassName("sideboardcard");
   for(i = 0; i < elements.length; i++)
   {

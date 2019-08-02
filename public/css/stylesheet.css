@@ -68,71 +68,6 @@
 	border: solid 1px #28A745;
 }
 
-
-/*the container must be positioned relative:*/
-
-.autocomplete {
-	position: relative;
-	display: inline-block;
-}
-
-.autocomplete-items {
-	position: absolute;
-	border: 1px solid #d4d4d4;
-	border-bottom: none;
-	border-top: none;
-	z-index: 9999;
-	/*position the autocomplete items to be the same width as the container:*/
-	top: 100%;
-	left: 0;
-	right: 0;
-}
-
-.autocomplete-items div {
-	padding: 10px;
-	cursor: pointer;
-	background-color: #fff;
-	border-bottom: 1px solid #d4d4d4;
-}
-
-
-/*when hovering an item:*/
-
-.autocomplete-items div:hover {
-	background-color: #e9e9e9;
-}
-
-
-.autocomplete-modal-items {
-	margin:0px 20px;
-	position: absolute;
-	border: 1px solid #d4d4d4;
-	border-bottom: none;
-	border-top: none;
-	z-index: 9999;
-	/*position the autocomplete items to be the same width as the container:*/
-	left: 0;
-	right: 0;
-}
-
-.autocomplete-modal-items div {
-	padding: 10px;
-	cursor: pointer;
-	background-color: #fff;
-	border-bottom: 1px solid #d4d4d4;
-}
-
-.autocomplete-modal-items div:hover {
-	background-color: #e9e9e9;
-}
-
-/*when navigating through the items using the arrow keys:*/
-
-.autocomplete-active {
-	background-color: DodgerBlue !important;
-	color: #ffffff;
-}
-
 .dropdown-menu>li>a:hover {
 	background-color: red;
 	background-image: none;
@@ -197,131 +132,71 @@
 	text-decoration: none;
 }
 
-.list-group-item.autocard.white:not(:hover) {
+.white:not(:hover) {
 	background-color: #FFFAE8;
 }
 
-.list-group-item.autocard.white:hover {
+.white:hover {
 	background-color: #FFFDF9;
 }
 
-.list-group-item.autocard.blue:not(:hover) {
+.blue:not(:hover) {
 	background-color: #B7E1FF;
 }
 
-.list-group-item.autocard.blue:hover {
+.blue:hover {
 	background-color: #DBF0FF;
 }
 
-.list-group-item.autocard.black:not(:hover) {
+.black:not(:hover) {
 	background-color: #C2A7C9;
 }
 
-.list-group-item.autocard.black:hover {
+.black:hover {
 	background-color: #E0C2E8;
 }
 
-.list-group-item.autocard.red:not(:hover) {
+.red:not(:hover) {
 	background-color: #DB878D;
 }
 
-.list-group-item.autocard.red:hover {
+.red:hover {
 	background-color: #E89DA3;
 }
 
-.list-group-item.autocard.green:not(:hover) {
+.green:not(:hover) {
 	background-color: #9ED3A4;
 }
 
-.list-group-item.autocard.green:hover {
+.green:hover {
 	background-color: #B5E5BA;
 }
 
-.list-group-item.autocard.multi:not(:hover) {
+.multi:not(:hover) {
 	background-color: #FFEC99;
 }
 
-.list-group-item.autocard.multi:hover {
+.multi:hover {
 	background-color: #FFF4CC;
 }
 
-.list-group-item.autocard.colorless:not(:hover) {
+.colorless:not(:hover) {
 	background-color: #CCCCCC;
 }
 
-.list-group-item.autocard.colorless:hover {
+.colorless:hover {
 	background-color: #E5E5E5;
 }
 
-.list-group-item.autocard.lands:not(:hover) {
+.lands:not(:hover) {
 	background-color: #FFBE99;
 }
 
-.list-group-item.autocard.lands:hover {
+.lands:hover {
 	background-color: #FFDDCC;
 }
 
 .dropdown-menu a:focus {
 	background-color: #28A745;
 	color: white
-}
-
-
-.tags-input-disabled {
-	border: 1px solid #CED4DA;
-	display: inline-block;
-  border-radius: 6px;
-	width: 100%;
-}
-
-.tags-input-disabled .tag {
-	font-size: 85%;
-	padding: 0.5em .75em;
-	margin: .25em .1em;
-	display: inline-block;
-	background-color: #E9ECEF;
-	border: 1px solid #DEE2E6;
-	transition: all .1s linear;
-}
-
-.tags-input {
-	border: 1px solid #CED4DA;
-	display: inline-block;
-  border-radius: 6px;
-	width: 100%;
-	cursor: text;
-}
-
-.tags-input .tag {
-	font-size: 85%;
-	padding: 0.5em .75em;
-	margin: .25em .1em;
-	display: inline-block;
-	background-color: #E9ECEF;
-	border: 1px solid #DEE2E6;
-	transition: all .1s linear;
-	cursor: pointer;
-}
-
-.tags-input .tag:hover {
-	background-color: #F8F9FA;
-	color: #000000;
-}
-
-.tags-input .tag .close-tag::after {
-	content: '×';
-	font-weight: bold;
-	display: inline-block;
-	transform: scale(1.4);
-	margin-left: .75em;
-}
-.tags-input .tag .close-tag:hover::after {
-	color:red;
-}
-
-.tags-input .main-input {
-	border: 0;
-	outline: 0;
-	background: 0;
-	padding: .5em .2em;
 }

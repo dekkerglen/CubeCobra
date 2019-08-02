@@ -85,7 +85,7 @@ function cardIsLabel(card, label, sort)
 {
   if(sort == 'Color Category')
   {
-    return GetColorCategory(card.details.type, card.colors) == label;
+    return GetColorCategory(card.type_line, card.colors) == label;
   }
   else if(sort == 'Color Identity')
   {
@@ -139,17 +139,29 @@ function cardIsLabel(card, label, sort)
     }
     return card.cmc == label;
   }
+  else if (sort == 'CMC2')
+  {
+    if(card.cmc >= 7)
+    {
+      return label == '7+';
+    }
+    else if (card.cmc <= 1)
+    {
+      return label == '0-1';
+    }
+    return card.cmc == label;
+  }
   else if(sort == 'Supertype' || sort =='Type')
   {
-    if(card.details.type.includes('Contraption'))
+    if(card.type_line.includes('Contraption'))
     {
       return label == 'Contraption';
     }
     else if(label == 'Plane')
     {
-      return card.details.type.includes(label) && !card.details.type.includes('Planeswalker');
+      return card.type_line.includes(label) && !card.type_line.includes('Planeswalker');
     }
-    return card.details.type.includes(label);
+    return card.type_line.includes(label);
   }
   else if(sort == 'Tags')
   {
@@ -241,9 +253,9 @@ function cardIsLabel(card, label, sort)
   }
   else if(sort == 'Subtype')
   {
-    if(card.details.type.includes('—'))
+    if(card.type_line.includes('—'))
     {
-      return card.details.type.includes(label);
+      return card.type_line.includes(label);
     }
     return false;
   }
@@ -251,7 +263,7 @@ function cardIsLabel(card, label, sort)
   {
     if(card.colors.length <= 1)
     {
-      var split1 = card.details.type.split('—');
+      var split1 = card.type_line.split('—');
       var split2 = split1[0].trim().split(' ');
       return label == split2[split2.length-1];
     }
@@ -339,6 +351,14 @@ function cardIsLabel(card, label, sort)
         });
         return res;
     }
+  }
+  else if(sort == 'CNC')
+  {
+    if(label == 'Creature')
+    {
+      return card.type_line.includes(label);
+    }
+    return !card.type_line.toLowerCase().includes('creature');
   }
 }
 
