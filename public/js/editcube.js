@@ -207,6 +207,10 @@ if(canEdit) {
         }
         if(updated.tags)
         {
+          cube[card.index].tags.forEach(function(tag, ind)
+          {
+            cube[card.index].tags[ind] = tag.trim();
+          });
           if(updated.addTags)
           {
             updated.tags.forEach(function(newtag, tag_ind)
@@ -279,6 +283,10 @@ if(canEdit) {
     {
       tags_split[index] = tags_split[index].trim();
     });
+    while(tags_split.includes(""))
+    {
+      tags_split.splice(tags_split.indexOf(""),1);
+    }
     updated.tags = tags_split;
     updated.colors = [];
 
@@ -361,7 +369,6 @@ if(canEdit) {
         groupSelect.push(card);
       }
     });
-    console.log(groupSelect.length);
     if(groupSelect.length == 0)
     {
       $('#selectEmptyModal').modal('show');
@@ -1351,7 +1358,6 @@ function renderListView() {
     });
     $('#tdcheckall').change(function(e)
     {
-      console.log('checkall');
       var checked = $(this).prop('checked');
       cards_all.forEach(function(card, index)
       {
