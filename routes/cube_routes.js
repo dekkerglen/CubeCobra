@@ -670,7 +670,8 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
                         status:"Not Owned",
                         colors:details.color_identity,
                         cmc:details.cmc,
-                        cardID:possible
+                        cardID:possible,
+                        type_line:details.type
                       }
                     );
                     changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -694,7 +695,8 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
                       status:"Not Owned",
                       colors:details.color_identity,
                       cmc:details.cmc,
-                      cardID:currentId[0]
+                      cardID:currentId[0],
+                      type_line:details.type
                     }
                   );
                   changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -823,6 +825,7 @@ function bulkuploadCSV(req, res, cards, cube) {
     var card = {
       name:split[0],
       cmc:split[1],
+      type_line:split[2].replace('-','—'),
       colors:split[3].split(''),
       set:split[4].toUpperCase(),
       status:split[5],
@@ -846,7 +849,7 @@ function bulkuploadCSV(req, res, cards, cube) {
               colors:card.colors,
               cmc:card.cmc,
               cardID:possible,
-              type:carddb.carddict[possible].type_line
+              type_line:card.type_line
             }
           );
           changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -871,7 +874,7 @@ function bulkuploadCSV(req, res, cards, cube) {
             colors:card.colors,
             cmc:card.cmc,
             cardID:currentId[0],
-            type:carddb.carddict[currentId[0]].type_line
+            type_line:card.type_line
           }
         );
         changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -990,7 +993,7 @@ function bulkUpload(req, res, list, cube) {
                         colors:details.color_identity,
                         cmc:details.cmc,
                         cardID:carddb.carddict[possible],
-                        type:carddb.carddict[possible].type_line
+                        type:carddb.carddict[possible].type
                       }
                     );
                     added.push(carddb.carddict[possible]);
@@ -1023,7 +1026,7 @@ function bulkUpload(req, res, list, cube) {
                     colors:details.color_identity,
                     cmc:details.cmc,
                     cardID:currentId[0],
-                    type:carddb.carddict[currentId[0]].type_line
+                    type:carddb.carddict[currentId[0]].type
                   }
                 );
                 added.push(carddb.carddict[currentId[0]]);
@@ -1135,14 +1138,19 @@ router.get('/download/csv/:id', function(req, res)
       res.write('Name,CMC,Type,Color,Set,Status,Tags\r\n');
       cube.cards.forEach(function(card, index)
       {
+        if(!card.type_line)
+        {
+          card.type_line = carddb.carddict[card.cardID].type;
+        }
+
         res.write('"' + carddb.carddict[card.cardID].name + '"' + ',');
         res.write(card.cmc+ ',');
-        res.write('"' + carddb.carddict[card.cardID].type_line.replace('—','-') + '"' + ',');
+        res.write('"' + card.type_line.replace('—','-') + '"' + ',');
         if(card.colors.length == 0)
         {
           res.write('C,');
         }
-        else if(carddb.carddict[card.cardID].type_line.toLowerCase().includes('land'))
+        else if(card.type_line.toLowerCase().includes('land'))
         {
           res.write('L,');
         }
@@ -1641,7 +1649,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
                 colors:details.color_identity,
                 cmc:details.cmc,
                 cardID:details._id,
-                type:details.type_line
+                type:details.type
               }
             );
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
@@ -1699,7 +1707,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
               colors:details.color_identity,
               cmc:details.cmc,
               cardID:details._id,
-              type:details.type_line
+              type:details.type
             }
           );
 
