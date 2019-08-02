@@ -29,7 +29,9 @@ block content
             select#viewSelect.form-control
               option(selected='' value='table') Table View
               option(value='spoiler') Visual Spoiler
-              option(value='list') List View
+              if user
+                if user.id == cube.owner
+                  option(value='list') List View
               option(value='curve') Curve View
           if user
             if user.id == cube.owner
