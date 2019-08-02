@@ -1,0 +1,61 @@
+.nostretch{
+	width:1%;
+	white-space:nowrap;
+}
+.tdcheck{
+	margin-top:10px;
+}
+.tdcard:hover {
+	cursor: pointer;
+}
+.tdcard{
+	font-size: 12px;
+	color: black;
+	text-decoration: none;
+}
+.listviewrow{
+	line-height:15px;
+	margin:0px;
+}
+.nospace
+{
+	padding: 0px;
+	margin: 0px;
+}
+.compactControl
+{
+	font-size: 12px;
+	padding:2px;
+}
+.tdname
+{
+	padding-top:10px;
+}
+.inputsm
+{
+	width:50px;
+}
+.inputmd
+{
+	width:80px;
+}
+.inputl
+{
+	width:100px;
+}
+.inputxl
+{
+	width:130px;
+}
+.clickx
+{
+	color:black;
+	font-weight: bold;
+	text-decoration:none;
+}
+.clickx:hover
+{
+	color:red;
+	font-weight: bold;
+	text-decoration:none;
+}
