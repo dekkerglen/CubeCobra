@@ -357,9 +357,9 @@ block content
                     label.form-check-label(for='contextModalCheckboxG')
                       img(src='/content/symbols/g.png' alt='Green' title='Green')                    
                   h5 Tags
-                  .tags-input-disabled(data-name='tags-input')
+                  .tags-input#contextModalTagsArea(data-name='tags-input')
                     span#contextModalTagsDiv.tags
-                  input#contextModalTagsHiddenInput.tags-input(type='hidden')
+                    input#contextModalTagsHiddenInput.tags-input(type='hidden')
           .modal-footer
             a#contextScryfallButton(href="#", target="_blank")
               button.btn.btn-secondary(type='button') View on Scryfall
