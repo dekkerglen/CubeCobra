@@ -19,7 +19,8 @@ let cubeSchema = mongoose.Schema(
       colors:[String],
       cmc:Number,
       cardID:String,
-      type_line:String
+      type_line:String,
+      details:{}
     }],
     decks: [String],
     numDecks:Number,
