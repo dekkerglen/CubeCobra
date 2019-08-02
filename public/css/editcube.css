@@ -47,3 +47,15 @@
 {
 	width:130px;
 }
+.clickx
+{
+	color:black;
+	font-weight: bold;
+	text-decoration:none;
+}
+.clickx:hover
+{
+	color:red;
+	font-weight: bold;
+	text-decoration:none;
+}

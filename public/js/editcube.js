@@ -492,7 +492,7 @@ function updateCollapse() {
   var val = "";
   changes.forEach(function(change, index)
   {
-    val += "<a style='color:red;font-weight: bold;text-decoration: underline;' id='clickx" + index+ "' href=#>x</a> ";
+    val += "<a class='clickx' id='clickx" + index+ "' href=#>x</a> ";
     if(change.add)
     {
       val += '<span class="badge badge-success">+</span> ';
@@ -917,29 +917,47 @@ function init_groupcontextModal() {
   });
 }
 
-function show_groupContextModal() {
-  var cardlist = "";
-
-  cardlist += '<ul class="listgroup" style="padding:5px 0px;">';
-  $('#groupContextTags').find('.hidden-input').val('');
-  $('#groupContextTags').find('.main-input').val('');
-  $('#groupContextTags').find('.hidden-input').trigger('change');
-
+function renderGroupContext()
+{
+  var cardlist = '<ul class="listgroup" style="padding:5px 0px;">';
   groupSelect.forEach(function( card, index)
   {
     if(card.details.image_flip)
     {
-      cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
     }
     else
     {
-      cardlist += '<li cardID="'+card.cardID+'" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
     }
-    cardlist += card.details.name+'</li>';
-    cardlist += '</li>';
+    cardlist += '<a data-index="'+index+'" class="groupModalRm clickx" href="#">×</a><a>  ';
+    cardlist += card.details.name;
+    cardlist += '</a></li>';
   });
   cardlist += '</ul">';
   $('#groupContextModalArea').html(cardlist);
+  autocard_init('autocard');
+  $('.groupModalRm').click(function(e)
+  {
+    e.preventDefault();
+    groupSelect.splice($(this).attr('data-index'),1);
+    if(groupSelect.length < 1)
+    {
+      $('#groupContextModal').modal('hide');
+    }
+    else
+    {
+      renderGroupContext();
+    }
+  });
+}
+
+function show_groupContextModal() {
+  $('#groupContextTags').find('.hidden-input').val('');
+  $('#groupContextTags').find('.main-input').val('');
+  $('#groupContextTags').find('.hidden-input').trigger('change');
+
+  renderGroupContext();
 
   var statusHTML = "";
   var statuses = getLabels('Status');
@@ -958,7 +976,6 @@ function show_groupContextModal() {
     $('#groupContextModalCheckbox'+color).prop('checked',false);
   });
 
-  autocard_init('autocard');
   $('#groupContextModal').modal('show');
 }
 
