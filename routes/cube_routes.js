@@ -1762,7 +1762,7 @@ router.post('/edit/:id',ensureAuth, function(req,res,next)
       });
 
       var blogpost = new Blog();
-      blogpost.title='Automatic Post - Bulk Upload';
+      blogpost.title=req.body.title;
       if(req.body.blog.length > 0)
       {
         blogpost.html=req.body.blog;
