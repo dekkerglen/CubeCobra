@@ -69,6 +69,7 @@ This will be a learning process for all involved. Expect some comments and discu
 # Community
 
 We have a fairly active discord and would love for you to join the discussion.  https://discord.gg/Hn39bCU
+Private Message 'DEKKARU', the admin on Discord, to gain the contributor role and unlock the contributor-only channels.
 
 ### Commit Message Style
 
