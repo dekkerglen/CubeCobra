@@ -39,8 +39,14 @@ The master branch is the branch that contains live code. The development branch 
 ### Code Style
 
 Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Please refer to the following guidelines with respect to each language.
+
+#### Javascript, CSS, and HTML
+
 For Javascript, CSS, and HTML, you can use the following formatter to format your code: https://beautifier.io/
 Please ensure you set the indentation to 2 spaces. There might be some code from the initial commit that doesn't adhere to the style guidelines, and it is fine to reformat it with that tool.
+
+#### Jade/PUG
+
 For Jade/PUG, you can use the following atom package: https://atom.io/packages/jade-beautify
 For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
 
@@ -65,6 +71,7 @@ This will be a learning process for all involved. Expect some comments and discu
 # Community
 
 We have a fairly active discord and would love for you to join the discussion.  https://discord.gg/Hn39bCU
+
 Private Message 'DEKKARU', the admin on Discord, to gain the contributor role and unlock the contributor-only channels.
 
 ### Commit Message Style
