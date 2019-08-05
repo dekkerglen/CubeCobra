@@ -653,7 +653,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
             var changelog = "";
             cards.forEach(function(card, index)
             {
-              var currentId =carddb.nameToId[card.name.toLowerCase().trim()];
+              var currentId =carddb.nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()];
               if(currentId && currentId[0])
               {
                 var found = false;
@@ -831,7 +831,7 @@ function bulkuploadCSV(req, res, cards, cube) {
       status:split[5],
       tags:split[6].split(',')
     };
-    var currentId =carddb.nameToId[card.name.toLowerCase().trim()];
+    var currentId =carddb.nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()];
     if(currentId && currentId[0])
     {
       var found = false;
@@ -2346,7 +2346,8 @@ router.get('/api/getcardfromid/:id', function(req, res)
 router.get('/api/getversions/:id', function(req, res)
 {
   cards = [];
-  carddb.nameToId[carddb.carddict[req.params.id].name.toLowerCase()].forEach(function(id, index)
+  console.log(carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+  carddb.nameToId[carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index)
   {
     cards.push(carddb.carddict[id]);
   });
@@ -2363,7 +2364,7 @@ router.post('/api/getversions', function(req, res)
   req.body.forEach(function(cardid, index)
   {
     cards[cardid] = [];
-    carddb.nameToId[carddb.carddict[cardid].name.toLowerCase()].forEach(function(id, index)
+    carddb.nameToId[carddb.carddict[cardid].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index)
     {
       cards[cardid].push({
         id:id,
