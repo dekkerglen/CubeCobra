@@ -6,7 +6,9 @@ The main goal with Cube Cobra is to create a cube management tool that doesn't n
 
 ### Why contribute?
 
-One of the best ways to create a sustainable software project is open source it. For cubecobra to become the best possible tool for cube managment it needs help from the community. By contributing to the project, you are giving back to the magic community. Maybe there's a lower priority feature you want to use or maybe there's just a bug that's been bothering you, either way contributing yourself is a great way to get it into the project. Open source software is often more realiable (more eyes on the code). 
+One of the best ways to create a sustainable software project is open source it. For cubecobra to become the best possible tool for cube managment it needs help from the community. By contributing to the project, you are giving back to the magic community. Maybe there's a lower priority feature you want to use or maybe there's just a bug that's been bothering you, either way contributing yourself is a great way to get it into the project. Open source software is often more reliable (more eyes on the code). 
+
+Don't feel nervous about making your first contribution, we accept developers with all levels of knowledge and will happily work with and help with whatever you need to make your first contribution. We are not code snobs, so don't be afraid to reach out with questions of any kind.
 
 ### What kind of contributions do we need?
 
@@ -32,13 +34,7 @@ Issues are tagged with 'good first issue' if we think it's a good beginner task 
 # Getting started
 ### How to submit a contribution.
 
-The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a new branch with the name "feature-#", where the number is the corresponding feature ID. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. If the feature doesn't meet our guidelines, or there are other issues, an admin will add a comment to the pull request describing the problem.
-
-For larger issues create a fork:
-
-1. Create your own fork of the code.
-2. Make your changes in the fork.
-3. Submit the PR to be merged into this repository. Expect some comments and feedback.
+The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
 
 ### Code Style
 
