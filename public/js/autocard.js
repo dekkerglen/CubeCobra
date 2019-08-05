@@ -99,3 +99,4 @@ function autocard_hide_card() {
 }
 
 autocard_init('autocard');
+autocard_init('dynamic-autocard');
