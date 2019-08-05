@@ -19,10 +19,11 @@ The issues tab in github is kept up to date and tagged, but any contribution is 
 Be a decent person. Copy pasted from the linux code of conduct: In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
 > Responsibilities
-> * Ensure cross-platform compatibility for every change that's accepted. Test your code on every browser.
 > * Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 > * Keep features small. For large features consider splitting into multiple pull requests to get consistent feedback.
 > * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
+
+Contributing to Cube Cobra does not entitle any contributor to compensation of any kind. Contributions are made at will, with the goal of improving the tool for the entire community. Cube Cobra's hosting costs are paid through donations and affiliate links. These funds are managed solely by Gwen Dekker, who is solely in charge of hosting and managing the live site. 
 
 # Your First Contribution
 
@@ -39,14 +40,18 @@ For larger issues create a fork:
 2. Make your changes in the fork.
 3. Submit the PR to be merged into this repository. Expect some comments and feedback.
 
-TODO: Code style
-TODO: Any license requirements?
+### Code Style
+
+Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Please refer to the following guidelines with respect to each language.
+For Javascript, CSS, and HTML, you can use the following formatter to format your code: https://beautifier.io/
+Please ensure you set the indentation to 2 spaces. There might be some code from the initial commit that doesn't adhere to the style guidelines, and it is fine to reformat it with that tool.
+For Jade/PUG, you can use the following atom package: https://atom.io/packages/jade-beautify
+For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
 
 # How to report a bug
 ### Security Disclosures
 
-If you find a security vulnerability, do NOT open an issue. Send a private message to DEKKARU#2784 on discord instead.
-TODO: Consider setting up an email for this.
+If you find a security vulnerability, do NOT open an issue. Send a private message to DEKKARU#2784 on discord instead. You can also email support@cubecobra.com.
 
 ### Tell your contributors how to file a bug report.
 
@@ -65,14 +70,10 @@ This will be a learning process for all involved. Expect some comments and discu
 
 We have a fairly active discord and would love for you to join the discussion.  https://discord.gg/Hn39bCU
 
-### Code Style
-
-TODO
-
 ### Commit Message Style
 
-TODO
+Please keep commit messages brief and informative. 
 
 ### Labeling Conventions for new issues
 
-TODO
+Please apply either 'Bug' or 'Enhancement'. If the feature is small and easy, please add the 'Good First Issue' tag as well.
