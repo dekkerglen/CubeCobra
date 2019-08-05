@@ -38,3 +38,5 @@ Then, run the following commands in the root of the cloned repository:
     nodemon
 
 You can now open up a browser and connect to the app through: http://localhost:5000
+
+Nodemon will restart the application anytime there is a change to a source file.
