@@ -105,16 +105,16 @@ block content
 				.card-footer
 					a#draftMore(data-toggle="collapse" href="#draftCollapse" onclick="toggleDraft()") View More...
 			br
-			.card
-				.card-header
-					h4.card-title Devblog
-					if devblog.title
-						h5.card-title=devblog.title
-						h6.card-subtitle.mb-2.text-muted=devblog.date_formatted
-				.card-body
-					if devblog.body
-						p.card-text=devblog.body
-					if devblog.html
-						p.card-text !{devblog.html}
-					p
-						a(href='/dev/blog') See more...
+			if devblog
+				.card
+					.card-header
+						h4.card-title Devblog
+							h5.card-title=devblog.title
+							h6.card-subtitle.mb-2.text-muted=devblog.date_formatted
+					.card-body
+						if devblog.body
+							p.card-text=devblog.body
+						if devblog.html
+							p.card-text !{devblog.html}
+						p
+							a(href='/dev/blog') See more...
