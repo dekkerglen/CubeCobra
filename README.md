@@ -36,7 +36,8 @@ In email.js, you can paste the following, and replace the fields with any gmail 
 
 Then, run the following commands in the root of the cloned repository:
 
-    npm install
+    npm install    
+    npm install nodemon
     nodemon
 
 You can now open up a browser and connect to the app through: http://localhost:5000
