@@ -13,6 +13,8 @@ NodeJS: https://nodejs.org/en/download/
 
 MongoDB: https://docs.mongodb.com/manual/installation/
 
+You will need start a MongoDB background process, and create a database titled 'nodecube'. Refer to the official documentation for directions on how to set this up for your OS.
+
 Atom (optional): https://atom.io/
 
 ### Clone Project
