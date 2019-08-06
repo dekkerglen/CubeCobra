@@ -38,6 +38,7 @@ Then, run the following commands in the root of the cloned repository:
 
     npm install    
     npm install nodemon -g
+    node force_update.js
     nodemon
 
 You can now open up a browser and connect to the app through: http://localhost:5000
