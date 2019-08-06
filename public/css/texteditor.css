@@ -1,5 +1,3 @@
-
-
 #editor {
   box-shadow: 0 0 2px #CCC;
   min-height: 150px;
@@ -10,29 +8,28 @@
 }
 
 
-.toolbar-item
-{
+.toolbar-item {
   text-align: center;
   margin: 0px;
   width: 30px;
   height: 30px;
   padding: 3px 0px;
   border-right: 1px solid #DFDFDF;
-	color: black;
-	text-decoration: none;
+  color: black;
+  text-decoration: none;
 }
-.toolbar-item:hover
-{
-	background-color: #fdffff;
-	cursor: pointer;
-	color: black;
-	text-decoration: none;
+
+.toolbar-item:hover {
+  background-color: #fdffff;
+  cursor: pointer;
+  color: black;
+  text-decoration: none;
 }
-.toolbar-item:active
-{
-	cursor: pointer;
-	color: black;
-	text-decoration: none;
-	background-color: #EEEEEE;
+
+.toolbar-item:active {
+  cursor: pointer;
+  color: black;
+  text-decoration: none;
+  background-color: #EEEEEE;
   box-shadow: inset 0 0 2px #000000;
 }

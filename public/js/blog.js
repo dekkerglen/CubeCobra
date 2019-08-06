@@ -6,7 +6,7 @@ $("#postBlogForm").submit(function(e){
     form.submit();
 });
 
-$(".editBlogButton").click(function(e){
+$(".edit-blog-button").click(function(e){
     e.preventDefault();
     const id = $(this).attr('data-id');
 

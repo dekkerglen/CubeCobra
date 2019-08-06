@@ -81,8 +81,8 @@ if(canEdit) {
     changes = [];
     updateCollapse();
   });
-  $('#addInput').keyup(function(e) {
-    if (e.keyCode === 13 && $('#addInput').val().length == 0) {
+  $('#addCardInput').keyup(function(e) {
+    if (e.keyCode === 13 && $('#addCardInput').val().length == 0) {
       e.preventDefault();
       justAdd();
     }
@@ -426,7 +426,7 @@ function arraysEqual(a, b) {
 }
 
 function justAdd() {
-  var val = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = $('#addCardInput').val().replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -435,7 +435,7 @@ function justAdd() {
     {
       if(json.card)
       {
-        $('#addInput').val('');
+        $('#addCardInput').val('');
         changes.push({add:json.card})
         updateCollapse();
         $('.warnings').collapse("hide");
@@ -458,16 +458,16 @@ function remove() {
     {
       if(json.card)
       {
-        if($('#addInput').val().length > 0)
+        if($('#addCardInput').val().length > 0)
         {
-          var val2 = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+          var val2 = $('#addCardInput').val().replace('//','-slash-').replace('?','-q-');
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
           {
             if(json2.card)
             {
-              $('#addInput').val('');
+              $('#addCardInput').val('');
               $('#removeInput').val('');
               changes.push({replace:[json.card,json2.card]})
               updateCollapse();
@@ -1951,7 +1951,6 @@ function buildFilterArea() {
     sorthtml += filterItemTemplate.replace('#{value}',category).replace('#{label}',category);
   });
 
-  document.getElementById('filterType').innerHTML = sorthtml;
   sorthtml += filterItemTemplate.replace('#{value}','Unsorted').replace('#{label}','Unsorted');
   document.getElementById('secondarySortSelect').innerHTML = sorthtml;
   document.getElementById('primarySortSelect').innerHTML = sorthtml;

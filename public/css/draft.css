@@ -1,4 +1,3 @@
-
 .dragcard {
   position: absolute;
   z-index: 9;
@@ -6,6 +5,7 @@
   border: 1px solid #d3d3d3;
   text-align: center;
 }
+
 /*
 .card-hover:hover{
   box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);
@@ -16,25 +16,27 @@
 }
 
 */
-#packarea{
+#packarea {
   min-height: 25px;
 }
 
-.pickscol{
+.pickscol {
   position: relative;
   width: 129px;
   min-height: 25px;
   /*border: 1px solid;*/
   overflow: hidden;
 }
-.deckcol{
+
+.deckcol {
   position: relative;
   width: 129px;
   min-height: 25px;
   /*border: 1px solid;*/
   overflow: hidden;
 }
-.sideboardcol{
+
+.sideboardcol {
   position: relative;
   width: 129px;
   min-height: 25px;

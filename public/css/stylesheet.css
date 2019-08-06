@@ -1,202 +1,203 @@
 .cubenav {
-	border-right: 1px solid #DEE2E6;
-	border-left: 1px solid #DEE2E6;
+  border-right: 1px solid #DEE2E6;
+  border-left: 1px solid #DEE2E6;
 }
 
-.usercontrols
-{
-	background-image: linear-gradient(white, #EFEFEF);
-		border-right: 1px solid #DEE2E6;
-		border-left: 1px solid #DEE2E6;
-		border-bottom: 1px solid #DEE2E6;
+.usercontrols {
+  background-image: linear-gradient(white, #EFEFEF);
+  border-right: 1px solid #DEE2E6;
+  border-left: 1px solid #DEE2E6;
+  border-bottom: 1px solid #DEE2E6;
 }
 
 .alert-error {
-	color: #a94442;
-	background-color: #f2dede;
-	border-color: #ebccd1;
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
 }
 
 .alert-success-msg {
-	color: #3c763d;
-	background-color: #dff0d8;
-	border-color: #d6e9c6;
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
 }
 
 * {
-	box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .nav-pills .nav-link.active {
-	background-color: #28A745;
+  background-color: #28A745;
 }
 
 .nav-pills .nav-link:not(.active) {
-	color: #218937;
+  color: #218937;
 }
 
 .nav-link:not(.hover) {
-	color: #218937;
+  color: #218937;
 }
 
 .nav-link.hover {
-	color: #218937;
+  color: #218937;
 }
 
 .pagination>li>a {
-	background-color: white;
-	color: #5A4181;
+  background-color: white;
+  color: #5A4181;
 }
 
 .pagination>li>a:focus,
 .pagination>li>a:hover,
 .pagination>li>span:focus,
 .pagination>li>span:hover {
-	color: #5a5a5a;
-	background-color: #eee;
-	border-color: #ddd;
+  color: #5a5a5a;
+  background-color: #eee;
+  border-color: #ddd;
 }
 
 .pagination>.active>a {
-	color: white;
-	background-color: #28A745 !Important;
-	border: solid 1px #28A745 !Important;
+  color: white;
+  background-color: #28A745 !Important;
+  border: solid 1px #28A745 !Important;
 }
 
 .pagination>.active>a:hover {
-	background-color: #28A745 !Important;
-	border: solid 1px #28A745;
+  background-color: #28A745 !Important;
+  border: solid 1px #28A745;
 }
 
 .dropdown-menu>li>a:hover {
-	background-color: red;
-	background-image: none;
+  background-color: red;
+  background-image: none;
 }
 
 .even-cols .col-even {
-	padding: 1px 1px
+  padding: 1px 1px
 }
 
 .list-group-item {
-	padding: 1px 2px
+  padding: 1px 2px
 }
 
 .list-group {
-	padding: 0px 0px
+  padding: 0px 0px
 }
 
 .list-group,
 .list-group-item {
-	display: block;
+  display: block;
 }
 
 .list-group-item.list-group-heading {
-	background-color: #F4F4F4 !Important;
-	text-align: center;
-	color: black;
-	text-decoration: none;
+  background-color: #F4F4F4 !Important;
+  text-align: center;
+  color: black;
+  text-decoration: none;
 }
+
 .list-group-item.list-group-heading:hover {
-	background-color: #FCFCFC !Important;
-	color: black;
-	text-decoration: none;
+  background-color: #FCFCFC !Important;
+  color: black;
+  text-decoration: none;
 }
 
 .col-md-1 {
-	padding: 3px
+  padding: 3px
 }
 
 .editarea {
-	overflow: auto;
-	max-height: 200px;
+  overflow: auto;
+  max-height: 200px;
 }
 
 .filterarea {
-	overflow: auto;
-	max-height: 250px;
-	border: 1px solid #CED4DA;
+  overflow: auto;
+  max-height: 250px;
+  border: 1px solid #CED4DA;
   border-radius: 4px;
-	padding: 2px;
+  padding: 2px;
 }
 
-.card-list-item:not(:hover){
-	font-size: 12px;
-	padding: 3px 3px;
-	color: black;
-	text-decoration: none;
+.card-list-item:not(:hover) {
+  font-size: 12px;
+  padding: 3px 3px;
+  color: black;
+  text-decoration: none;
 }
-.card-list-item:hover{
-	font-size: 12px;
-	padding: 3px 3px;
-	color: black;
-	text-decoration: none;
+
+.card-list-item:hover {
+  font-size: 12px;
+  padding: 3px 3px;
+  color: black;
+  text-decoration: none;
 }
 
 .white:not(:hover) {
-	background-color: #FFFAE8;
+  background-color: #FFFAE8;
 }
 
 .white:hover {
-	background-color: #FFFDF9;
+  background-color: #FFFDF9;
 }
 
 .blue:not(:hover) {
-	background-color: #B7E1FF;
+  background-color: #B7E1FF;
 }
 
 .blue:hover {
-	background-color: #DBF0FF;
+  background-color: #DBF0FF;
 }
 
 .black:not(:hover) {
-	background-color: #C2A7C9;
+  background-color: #C2A7C9;
 }
 
 .black:hover {
-	background-color: #E0C2E8;
+  background-color: #E0C2E8;
 }
 
 .red:not(:hover) {
-	background-color: #DB878D;
+  background-color: #DB878D;
 }
 
 .red:hover {
-	background-color: #E89DA3;
+  background-color: #E89DA3;
 }
 
 .green:not(:hover) {
-	background-color: #9ED3A4;
+  background-color: #9ED3A4;
 }
 
 .green:hover {
-	background-color: #B5E5BA;
+  background-color: #B5E5BA;
 }
 
 .multi:not(:hover) {
-	background-color: #FFEC99;
+  background-color: #FFEC99;
 }
 
 .multi:hover {
-	background-color: #FFF4CC;
+  background-color: #FFF4CC;
 }
 
 .colorless:not(:hover) {
-	background-color: #CCCCCC;
+  background-color: #CCCCCC;
 }
 
 .colorless:hover {
-	background-color: #E5E5E5;
+  background-color: #E5E5E5;
 }
 
 .lands:not(:hover) {
-	background-color: #FFBE99;
+  background-color: #FFBE99;
 }
 
 .lands:hover {
-	background-color: #FFDDCC;
+  background-color: #FFDDCC;
 }
 
 .dropdown-menu a:focus {
-	background-color: #28A745;
-	color: white
+  background-color: #28A745;
+  color: white
 }

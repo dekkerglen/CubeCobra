@@ -1,5 +1,5 @@
 var justAddButton = document.getElementById("justAddButton");
-var addInput = document.getElementById("addInput");
+var addCardInput = document.getElementById("addCardInput");
 var changelist = document.getElementById("changelist");
 var saveChangesButton = document.getElementById("saveChangesButton");
 var changelistFormBody = document.getElementById("changelistFormBody");
@@ -10,7 +10,7 @@ saveChangesButton.addEventListener("click", saveChangesButtonClick);
 var changes = [];
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('//','-slash-').replace('?','-q-');
+  var val = addCardInput.value.replace('//','-slash-').replace('?','-q-');
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -19,7 +19,7 @@ function justAddButtonClick() {
     {
       if(json.card)
       {
-        addInput.value = "";
+        addCardInput.value = "";
         changes.push({add:json.card})
         updateCollapse();
         $('.warnings').collapse("hide");

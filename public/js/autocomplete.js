@@ -13,6 +13,7 @@ function autocompleteByTree(inp, tree, submit_button) {
       a = document.createElement("DIV");
       a.setAttribute("id", this.id + "autocomplete-list");
       a.setAttribute("class", "autocomplete-items");
+      a.setAttribute("style", "top:40px");
       /*append the DIV element as a child of the autocomplete container:*/
       this.parentNode.appendChild(a);
       /*for each item in the array...*/
@@ -298,9 +299,9 @@ window.onload = async () => {
   var cardnames = myJson.cardnames;
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  if(document.getElementById("addInput"))
+  if(document.getElementById("addCardInput"))
   {
-    autocompleteByTree(document.getElementById("addInput"), cardnames,document.getElementById("justAddButton"));
+    autocompleteByTree(document.getElementById("addCardInput"), cardnames,document.getElementById("justAddButton"));
   }
   if(document.getElementById("removeInput"))
   {
