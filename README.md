@@ -26,7 +26,7 @@ Clone the project into a folder of your choice. Then, you will need to add a fol
     └── cubecobrasecrets        # Secrets folder    
         └── email.js            # Secrets file
         
-In email.js, you can paste the following, and replace the fields with any gmail account you have access to. This step is only neccesary if you need to create user account validation emails.
+In email.js, you can paste the following, and replace the fields with any gmail account you have access to. You only need to fill out these fields with real information if you need to create user account validation emails.
 
     module.exports =
     {
@@ -37,7 +37,7 @@ In email.js, you can paste the following, and replace the fields with any gmail 
 Then, run the following commands in the root of the cloned repository:
 
     npm install    
-    npm install nodemon
+    npm install nodemon -g
     nodemon
 
 You can now open up a browser and connect to the app through: http://localhost:5000
