@@ -658,7 +658,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Guilds')
   {
-    return ['Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Izzet','Golgari','Boros','Simic'];
+    return ['Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros'];
   }
   else if (sort == 'Shards / Wedges')
   {
