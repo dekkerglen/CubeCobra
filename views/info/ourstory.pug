@@ -1,40 +1,24 @@
 extends ../layout
 
 block content
-  include ../flash
-  br
-  h4 Our Story
-  br
-  dl.row
-    dt.col-3 About Me
-    dd.col-9
-      p My name is Gwen, and I'm the sole developer of Cube Cobra. I've been playing magic since Alara block, and my favorite formats are Cube and Legacy. 
-      p I most identify with black on the color pie, as I enjoy strategies involving the graveyard, attrition, and paying high costs for high payoffs. In Legacy,
-        |  I have the most experience playing Junk (dark maverick), but I've also played Dead guy ale, Lands, Golgari midrange quite a bit as well. In cube,
-        |  you can usually find me trying to figure out how to get Griselbrand into play or going 0-3 after tunneling into some strategy that seemed interesting,
-        |  but is not actually good.
-      p I'm currently working on my Master's in Computer Science at Northeastern University with Artificial Intelligence and Data Science as my focus areas.
-        |  I work full time as a software engineer, so it can be difficult for me to find time between school and work to spend on a personal project.
-    dt.col-3 Why I started Cube Cobra
-    dd.col-9
-      p Cube Cobra is my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me.
-        |  I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot
-        |  to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features.
-        |  With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me
-        |  to create a cube management tool for cube designers, by a fellow cube designer.
-    dt.col-3 Project Goals
-    dd.col-9
-      p My main goal with Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app.
-        |  I want to create a platform that is easy to use, that still has advanced features that allow users a high degree of freedom to organize and analyze their cube in a way
-        |  that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.
-    dt.col-3 In the Pipeline...
-    dd.col-9
-      p My most requested feature at the moment is a deckbuilder, and that should ship with the next major update. I'd like to add the deckbuilder module to the draft as well,
-        |  so players can organize their drafted cards however they like during the draft. With this update I'm also looking to create a module for users to create custom-seeded
-        |  booster packs for playtesting, based on card tags. This way users can set up authentic set drafts, and create their own 'Masters'-esque draft enviornments! 
-      p Draft bots is the feature in the pipeline I am most excited about, but also anxious about working on. It's an incredibly difficult problem to solve, one that wizards hasn't 
-        |  even been able to completely solve (see arena draft bots). And with cube, the card pool is so much larger it becomes even more challenging. Currently, every single pick 
-        |  is being saved in a database, which I hope to use later on for my draft bot implementation. The current draft bots are not that smart, they only see the color
-        |  identity of cards they pick, and nothing else. This means the bots ignore power level, and tabling a lotus is something that happens from time to time.
-      
-    
+	include ../flash
+	br
+	h4 Our Story
+	br
+	dl.row
+		dt.col-3 About The Creator
+		dd.col-9
+			p My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me.
+				|  I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot
+				|  to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features.
+				|  With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me
+				|  to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, to 
+		dt.col-3 Project Goals
+		dd.col-9
+			p The main goal of Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app.
+				|  We want to create a platform that is easy to use, that still has advanced enough features that allow users a high degree of freedom to organize and analyze their cube in a way
+				|  that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.
+		dt.col-3 Moving Forward
+		dd.col-9
+			p Cube Cobra is an ongoing collaborative effort. We have a ton of feature requests, and passionate developers working through to constantly improve the platform. We're have several
+				|  large, long-term features that are in the pipeline, that we're very excited about. Make sure to follow us on Twitter, Facebook and/or Discord to stay up to date on all Cube Cobra updates.
