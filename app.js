@@ -201,7 +201,7 @@ app.get('/search/:id', function(req, res)
 
   var user_id = '';
   if(req.user) user_id = req.user._id;
-  query = {$and:[query,{$or:[{'isListed':true},{'owner':user_id}]}]}
+  query = {$and:[query,{$or:[{'isListed':true},{'owner':user_id}]}]};
 
   Cube.find(query).sort({'date_updated':-1}).exec(function(err, cubes)
   {
