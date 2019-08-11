@@ -1,4 +1,4 @@
-function autocompleteByTree(inp, tree, submit_button) {
+function autocompleteByTree(inp, tree, images, submit_button) {
   /*the autocomplete function takes two arguments,
   the text field element and an array of possible autocompleted values:*/
   var currentFocus;
@@ -21,11 +21,21 @@ function autocompleteByTree(inp, tree, submit_button) {
         /*check if the item starts with the same letters as the text field value:*/
         /*create a DIV element for each matching element:*/
         b = document.createElement("DIV");
-        /*make the matching letters bold:*/
+
+        // Add an autocard to the div
+        b.setAttribute("class", "autocard");
+        let image = images[matches[i]];
+        b.setAttribute("card", image.image_normal);
+        if(image.image_flip)
+        {
+          b.setAttribute("card_flip", image.image_flip);
+        }
+
         b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
         b.innerHTML += matches[i].substr(val.length);
         /*insert a input field that will hold the current array item's value:*/
         b.innerHTML += "<input type='hidden' value='" + matches[i].replace("'","%27") + "'>";
+
         /*execute a function when someone clicks on the item value (DIV element):*/
         b.addEventListener("click", function(e) {
             /*insert the value for the autocomplete text field:*/
@@ -36,6 +46,7 @@ function autocompleteByTree(inp, tree, submit_button) {
         });
         a.appendChild(b);
       }
+      autocard_init('autocard');
   });
   /*execute a function presses a key on the keyboard:*/
   inp.addEventListener("keydown", function(e) {
@@ -297,13 +308,17 @@ window.onload = async () => {
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
 
+  const image_resp = await fetch('/cube/api/cardimages');
+  const image_json = await image_resp.json();
+  var cardimages = image_json.cardimages;
+
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
   if(document.getElementById("addInput"))
   {
-    autocompleteByTree(document.getElementById("addInput"), cardnames,document.getElementById("justAddButton"));
+    autocompleteByTree(document.getElementById("addInput"), cardnames, cardimages, document.getElementById("justAddButton"));
   }
   if(document.getElementById("removeInput"))
   {
-    autocompleteByTree(document.getElementById("removeInput"), cubenames,document.getElementById("removeButton"));
+    autocompleteByTree(document.getElementById("removeInput"), cubenames, cardimages, document.getElementById("removeButton"));
   }
 }

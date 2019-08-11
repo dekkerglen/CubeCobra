@@ -1845,6 +1845,20 @@ router.get('/api/cardnames', function(req, res)
   });
 });
 
+// Get the full card images including image_normal and image_flip
+router.get('/api/cardimages', function(req, res)
+{
+  images = {};
+  Object.values(carddb.carddict).forEach(function(card, index) {
+      images[card.name.toLowerCase()] = {'image_normal':card.image_normal};
+      if(card.image_flip) images[card.name.toLowerCase()]['image_flip'] = card.image_flip;
+  });
+  res.status(200).send({
+    success:'true',
+    cardimages:images
+  });
+});
+
 router.get('/api/imagedict', function(req, res)
 {
   res.status(200).send({
