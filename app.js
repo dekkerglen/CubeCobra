@@ -100,9 +100,14 @@ app.get('/', function(req, res)
 {
   var user_id = '';
   if(req.user) user_id = req.user._id;
-  Cube.find({'card_count':{$gt : 200},$or:[{'isListed':true},{'owner':user_id}]}).sort({'date_updated': -1}).limit(12).exec(function(err, recents)
+  Cube.find({
+      'card_count':{$gt : 200},
+      $or:[ {'isListed':true}, {'owner':user_id} ]
+  }).sort({'date_updated': -1}).limit(12).exec(function(err, recents)
   {
-    Cube.find({$or:[{'isListed':true},{'owner':user_id}]}).sort({'numDecks': -1}).limit(12).exec(function(err, drafted)
+    Cube.find({
+        $or:[ {'isListed':true}, {'owner':user_id} ]
+    }).sort({'numDecks': -1}).limit(12).exec(function(err, drafted)
     {
       Blog.find({dev:'true'}).sort({'date': -1}).exec(function(err, blog)
       {
@@ -201,7 +206,9 @@ app.get('/search/:id', function(req, res)
 
   var user_id = '';
   if(req.user) user_id = req.user._id;
-  query = {$and:[query,{$or:[{'isListed':true},{'owner':user_id}]}]};
+  query = {
+      $and:[ query, {$or:[ {'isListed':true}, {'owner':user_id} ]} ]
+  };
 
   Cube.find(query).sort({'date_updated':-1}).exec(function(err, cubes)
   {
