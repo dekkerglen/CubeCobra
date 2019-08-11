@@ -24,7 +24,7 @@ function autocompleteByTree(inp, tree, images, submit_button) {
 
         // Add an autocard to the div
         b.setAttribute("class", "autocard");
-        let image = images[matches[i]];
+        let image = images[matches[i].toLowerCase()];
         b.setAttribute("card", image.image_normal);
         if(image.image_flip)
         {
@@ -288,6 +288,7 @@ function autocompleteByTree(inp, tree, images, submit_button) {
         x[i].parentNode.removeChild(x[i]);
       }
     }
+	autocard_hide_card();
   }
   /*execute a function when someone clicks in the document:*/
   document.addEventListener("click", function (e) {

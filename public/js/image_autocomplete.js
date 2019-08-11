@@ -36,7 +36,7 @@ window.onload = async () => {
 
           // Add an autocard to the div
           b.setAttribute("class", "autocard autocard-art-crop");
-          let image = images[matches[i]];
+          let image = images[matches[i].toLowerCase()];
           b.setAttribute("card", image.uri);
 
           /*make the matching letters bold:*/
@@ -306,6 +306,7 @@ window.onload = async () => {
           x[i].parentNode.removeChild(x[i]);
         }
       }
+	  autocard_hide_card();
     }
     /*execute a function when someone clicks in the document:*/
     document.addEventListener("click", function (e) {
