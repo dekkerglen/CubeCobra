@@ -763,6 +763,14 @@ router.post('/updateuserinfo',ensureAuth, function(req,res,next)
             {
               user.username = req.body.username;
               user.username_lower = req.body.username.toLowerCase();
+              Cube.find({'owner':req.user._id}, function (err, cubes)
+              {
+                for(i = 0; i < cubes.length; i++)
+                {
+                  cubes[i].owner_name = req.body.username;
+                  Cube.updateOne({_id:cubes[i]._id}, cubes[i], function(err) {});
+                }
+              });
             }
           }
         }
