@@ -3,18 +3,19 @@ extends user_base
 block information
   include ../flash
   .container
-    dl.row
-      dt.col-sm-3 Username
-      dd.col-sm-9 #{user.username}
-      dt.col-sm-3 Email
-      dd.col-sm-9 #{user.email}
-      dt.col-sm-3 About
-      dd.col-sm-9
-        form(method='POST', action='/user/updatebio')
-          #form-group
+    form(method='POST', action='/user/updateuserinfo')
+      #form-group
+        dl.row
+          dt.col-sm-3 Username
+          dd.col-sm-9
+            input.form-control(name='username' type='text', value=user.username)
+          dt.col-sm-3 Email
+          dd.col-sm-9 #{user.email}
+          dt.col-sm-3 About
+          dd.col-sm-9
             textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about
-          br
-          input.btn.btn-success(type='submit',value='Update')
+            br
+            input.btn.btn-success(type='submit',value='Update')
 
 block changepassword
   form(method='POST', action='/user/resetpassword')
