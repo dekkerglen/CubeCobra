@@ -1660,7 +1660,10 @@ function renderCurveView() {
     {
       if(groups[group_label][label])
       {
-        res += '<h6>'+label+'</h6>';
+        var labelCount = Object.values(groups[group_label][label]).map(function(group) {
+          return group ? group.length : 0;
+        }).reduce(function(sum, ct){ return sum + ct; }, 0);
+        res += '<h6>'+label+ ' ('+ labelCount + ')</h6>';
         res += '<div class="row even-cols">';
         var colWidth = Math.max(10,100.0 / getLabels('CMC2').length);
         getLabels('CMC2').forEach(function(col_label, col_index)
