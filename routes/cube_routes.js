@@ -1583,6 +1583,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
         }
         cube.descriptionhtml = req.body.html;
         cube.name = name;
+        cube.isListed = req.body.isListed ? true : false;
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
