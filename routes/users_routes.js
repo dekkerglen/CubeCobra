@@ -12,6 +12,15 @@ let PasswordReset = require('../models/passwordreset')
 let Cube = require('../models/cube')
 let Deck = require('../models/deck')
 
+// For consistency between different forms, validate username through this function.
+function checkUsernameValid(req)
+{
+  req.checkBody('username', 'Username is required').notEmpty();
+  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({ min: 5, max:24 });
+  req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
+  return req;
+}
+
 //Lost password form
 router.get('/lostpassword', function(req, res)
 {
@@ -192,16 +201,14 @@ router.post('/register', function(req, res)
     username: username
   }
 
+  req = checkUsernameValid(req);
   req.checkBody('email', 'Email is required').notEmpty();
   req.checkBody('email', 'Email is not valid').isEmail();
-  req.checkBody('username', 'Username is required').notEmpty();
   req.checkBody('password', 'Password is required').notEmpty();
   req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
   req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({ min: 5, max:100 });
-  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({ min: 5, max:24 });
   req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max:24 });
-  req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
   if(errors)
@@ -722,27 +729,67 @@ router.post('/resetpassword', ensureAuth, function(req,res,next)
   }
 });
 
-router.post('/updatebio',ensureAuth, function(req,res,next)
+router.post('/updateuserinfo',ensureAuth, function(req,res,next)
 {
   User.findById(req.user._id, function (err, user)
   {
     if(user)
     {
-      user.about = req.body.body;
-
-      let query = {_id:req.user._id};
-
-      User.updateOne(query, user, function(err)
+      User.findOne({
+          username_lower: req.body.username.toLowerCase(),
+          _id: { $ne:req.user._id }
+      }, function (err, duplicate_user)
       {
-        if(err)
+        if(user.username !== req.body.username)
         {
-          console.log(err);
+          req = checkUsernameValid(req);
+          let errors = req.validationErrors();
+          if(errors)
+          {
+            for(i = 0; i < errors.length; i++ )
+            {
+              req.flash('danger',errors[i].msg);
+            }
+            return res.redirect('/user/account');
+          }
+          else
+          {
+            if(duplicate_user)
+            {
+              req.flash('danger','Username already taken.');
+              return res.redirect('/user/account');
+            }
+            else
+            {
+              user.username = req.body.username;
+              user.username_lower = req.body.username.toLowerCase();
+              Cube.find({'owner':req.user._id}, function (err, cubes)
+              {
+                cubes.forEach(function(item, index){
+                  item.owner_name = req.body.username;
+                  Cube.updateOne({_id:item._id}, item, function(err) {});
+                });
+              });
+            }
+          }
         }
-        else
+
+        user.about = req.body.body;
+
+        let query = {_id:req.user._id};
+
+        User.updateOne(query, user, function(err)
         {
-          req.flash('success', 'Your profile has been updated.');
-          res.redirect('/user/account');
-        }
+          if(err)
+          {
+            console.log(err);
+          }
+          else
+          {
+            req.flash('success', 'Your profile has been updated.');
+            res.redirect('/user/account');
+          }
+        });
       });
     }
   });
