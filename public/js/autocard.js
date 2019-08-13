@@ -13,14 +13,15 @@ function getElementPosition(el) {
 function autocard_init(classname) {
 	$('.'+classname).off('mouseover').on('mouseover', function(e) {
 		if(!stopAutocard) {
+            let art_crop = $(this).hasClass('autocard-art-crop');
 			if($(this).attr("card_tags")) {
                 console.log($(this).attr("card_tags"));
             }
 			if($(this).attr("card_flip")) {
-				autocard_show_card_flip($(this).attr("card"),$(this).attr("card_flip"));
+				autocard_show_card_flip($(this).attr("card"),$(this).attr("card_flip"), art_crop);
 			}
 			else {
-				autocard_show_card($(this).attr("card"));
+				autocard_show_card($(this).attr("card"), art_crop);
 			}
 		}
 	});
@@ -29,7 +30,8 @@ function autocard_init(classname) {
 	});
 }
 
-function autocard_show_card(imagename) {
+function autocard_show_card(imagename, art_crop) {
+    var h = (art_crop) ? 165 : 315;
 	document.onmousemove = function(e){
 		if(window.event){e = window.event;}
         el = document.getElementById("autocard_popup");
@@ -48,19 +50,20 @@ function autocard_show_card(imagename) {
 		{
 			document.getElementById("autocard_popup").style.left = (-230+e.clientX+self.pageXOffset-parentPos.left) + "px";
 		}
-		if(bottomPixelSpace>340)
+		if(bottomPixelSpace > h+25)
 		{
 			document.getElementById("autocard_popup").style.top = (5+e.clientY+self.pageYOffset-parentPos.top) + "px";
 		}
 		else
 		{
-			document.getElementById("autocard_popup").style.top = (-320+e.clientY+self.pageYOffset-parentPos.top) + "px";
+			document.getElementById("autocard_popup").style.top = (-(h+5)+e.clientY+self.pageYOffset-parentPos.top) + "px";
 		}
 	}
-	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=315>';
+	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=' + h + '>';
 }
 
-function autocard_show_card_flip(imagename, imagename2) {
+function autocard_show_card_flip(imagename, imagename2, art_crop) {
+    var h = (art_crop) ? 165 : 315;
 	document.onmousemove = function(e){
 		if(window.event){e = window.event;}
         el = document.getElementById("autocard_popup");
@@ -81,19 +84,19 @@ function autocard_show_card_flip(imagename, imagename2) {
 			document.getElementById("autocard_popup2").style.left = (-455+e.clientX+self.pageXOffset-parentPos.left) + "px";
 			document.getElementById("autocard_popup").style.left = (-230+e.clientX+self.pageXOffset-parentPos.left) + "px";
 		}
-		if(bottomPixelSpace>340)
+		if(bottomPixelSpace > h+25)
 		{
 			document.getElementById("autocard_popup2").style.top = (5+e.clientY+self.pageYOffset-parentPos.top) + "px";
 			document.getElementById("autocard_popup").style.top = (5+e.clientY+self.pageYOffset-parentPos.top) + "px";
 		}
 		else
 		{
-			document.getElementById("autocard_popup2").style.top = (-320+e.clientY+self.pageYOffset-parentPos.top) + "px";
-			document.getElementById("autocard_popup").style.top = (-320+e.clientY+self.pageYOffset-parentPos.top) + "px";
+			document.getElementById("autocard_popup2").style.top = (-(h+5)+e.clientY+self.pageYOffset-parentPos.top) + "px";
+			document.getElementById("autocard_popup").style.top = (-(h+5)+e.clientY+self.pageYOffset-parentPos.top) + "px";
 		}
 	}
-	document.getElementById("autocard_popup2").innerHTML = '<img src="' + imagename2 + '" width=225 height=315>';
-	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=315>';
+	document.getElementById("autocard_popup2").innerHTML = '<img src="' + imagename2 + '" width=225 height=' + h + '>';
+	document.getElementById("autocard_popup").innerHTML = '<img src="' + imagename + '" width=225 height=' + h + '>';
 }
 
 function autocard_hide_card() {
