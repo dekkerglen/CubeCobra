@@ -1846,6 +1846,15 @@ router.get('/api/cardnames', function(req, res)
   });
 });
 
+// Get the full card images including image_normal and image_flip
+router.get('/api/cardimages', function(req, res)
+{
+  res.status(200).send({
+    success:'true',
+    cardimages:carddb.cardimages
+  });
+});
+
 router.get('/api/imagedict', function(req, res)
 {
   res.status(200).send({
