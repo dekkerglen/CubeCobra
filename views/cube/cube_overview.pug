@@ -101,6 +101,9 @@ block content
                   .form-group
                     label.col-form-label Cube Name:
                     input.form-control(name='name' type='text', value=cube.name)
+                    .form-check
+                      input.form-check-input(name='isListed' type='checkbox', checked=cube.isListed)
+                      label.form-check-label Public
                     label.col-form-label Cube Image:
                     .card(style="width: 16rem;")
                       img#dynamicImage(src=cube.image_uri style='width: 100%;height: auto;')
