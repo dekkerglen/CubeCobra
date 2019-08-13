@@ -11,9 +11,12 @@ function getElementPosition(el) {
 }
 
 function autocard_init(classname) {
-	$('.'+classname).off('mouseover').on('mouseover', function(e)	{
-		if(!stopAutocard)	{
-			if($(this).attr("card_flip"))	{
+	$('.'+classname).off('mouseover').on('mouseover', function(e) {
+		if(!stopAutocard) {
+			if($(this).attr("card_tags")) {
+                console.log($(this).attr("card_tags"));
+            }
+			if($(this).attr("card_flip")) {
 				autocard_show_card_flip($(this).attr("card"),$(this).attr("card_flip"));
 			}
 			else {
