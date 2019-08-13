@@ -7,6 +7,7 @@ var names = [];
 var nameToId = {};
 var full_names = [];
 var imagedict = {};
+var cardimages = {};
 
 
 if (!fs.existsSync('private')){
@@ -19,6 +20,7 @@ function updateCardbase() {
   full_names = [];
   nameToId = {};
   imagedict={};
+  cardimages={};
 
   var file = fs.createWriteStream('private/cards.json');
   var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response)
@@ -63,6 +65,11 @@ function saveAllCards(arr) {
       uri: card.art_crop,
       artist: card.artist
     }
+
+    let card_images = {image_normal: card.image_normal};
+    if(card.image_flip) card_images.image_flip = card.image_flip;
+    cardimages[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = card_images;
+
     //only add if it doesn't exist, this makes the default the newest edition
     if(!nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")])
     {
@@ -119,7 +126,16 @@ function saveAllCards(arr) {
                               console.log(err);
                           }
 
-                          console.log("All JSON files saved.");
+                          fs.writeFile('private/cardimages.json', JSON.stringify(cardimages), 'utf8', function (err)
+                          {
+                              if (err)
+                              {
+                                  console.log("An error occured while writing cardimages.json");
+                                  console.log(err);
+                              }
+
+                              console.log("All JSON files saved.");
+                          });
                       });
                   });
               });
