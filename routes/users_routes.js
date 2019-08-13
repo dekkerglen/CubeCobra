@@ -4,7 +4,9 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require("nodemailer");
+const Email = require('email-templates');
 const fs = require('fs')
+const path = require('path');
 
 // Bring in models
 let User = require('../models/user')
@@ -58,34 +60,27 @@ router.post('/lostpassword', function(req, res)
         }
         else
         {
-          // Use Smtp Protocol to send Email
-          var smtpTransport = mailer.createTransport({
-              service: "Gmail",
-              auth: {
-                  user: emailconfig.username,
-                  pass: emailconfig.password
-              }
-          });
-
-          var mail = {
+          const email = new Email({
+            message: {
               from: "Cube Cobra Team <support@cubecobra.com>",
               to: passwordReset.email,
               subject: "Password Reset",
-              html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"https://cubecobra.com/user/passwordreset/" +
-                passwordReset._id + "\">here</a>.<br> Your recovery code is: " + passwordReset.code  +
-                "<br> This link expires in 15 minutes." +
-                "<br> If you did not request a password reset, ignore this email."
+          },
+          juiceResources: {
+            webResources: {
+              relativeTo: path.join(__dirname, '..', 'public'),
+              images: true
+            }
           }
+          })
 
-          smtpTransport.sendMail(mail, function(err, response)
-          {
-              if(err)
-              {
-                  console.log(err);
-              }
-
-              smtpTransport.close();
-          });
+          email.send({
+            template: "password_reset",
+            locals: {
+              id: passwordReset.id,
+              code: passwordReset.code
+            }
+          })
 
           req.flash('success', 'Password recovery email sent');
           res.redirect('/user/lostpassword');
