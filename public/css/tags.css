@@ -24,7 +24,7 @@
 	cursor: text;
 }
 
-.tags-input .tag {
+.tags-input .tag, .autocard-tags .tag {
 	font-size: 85%;
 	padding: 0.5em .75em;
 	margin: .25em .1em;
@@ -59,9 +59,9 @@
 }
 
 .autocard-tags {
-	background-color: #F8F9FA;
-    border-top-right-radius: 5px;
+	background-color: rgba(210,215,220,0.9);
+    border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     width: 100%;
-    height: 100%;
+    padding: 3px;
 }
