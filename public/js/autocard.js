@@ -1,4 +1,5 @@
 var stopAutocard = false;
+var autocardTimeout = null;
 
 function getElementPosition(el) {
   var l = 0, t = 0;
@@ -100,9 +101,12 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
         {
           $(document.getElementById("autocard_popup2")).find('img')
             .one('load', function() { // only fill in tags area once the image is done loading
-              $(document.getElementById("autocard_popup")).show();
-              $(document.getElementById("autocard_popup2")).show();
-              $(document.getElementById("autocard_popup_info")).show();
+              if(autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
+              autocardTimeout = setTimeout( function() {
+                $(document.getElementById("autocard_popup")).show();
+                $(document.getElementById("autocard_popup2")).show();
+                $(document.getElementById("autocard_popup_info")).show();
+              }, 50 );
             })
             .attr('src', card_flip) // set the image source so it begins fetching
             .each(function() {
@@ -112,8 +116,11 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
         }
         else
         {
-          $(document.getElementById("autocard_popup")).show();
-          $(document.getElementById("autocard_popup_info")).show();
+          if(autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
+          autocardTimeout = setTimeout( function() {
+            $(document.getElementById("autocard_popup")).show();
+            $(document.getElementById("autocard_popup_info")).show();
+          }, 50 );
         }
     })
     .attr('src', card_image) // set the image source so it begins fetching
@@ -129,6 +136,7 @@ function autocard_hide_card() {
   document.getElementById("autocard_popup_info").innerHTML = '';
 
   // clear any load events that haven't fired yet so that they don't fire after the card should be hidden
+  if(autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
   $(document.getElementById("autocard_popup")).find('img').off('load');
   $(document.getElementById("autocard_popup2")).find('img').off('load');
 
