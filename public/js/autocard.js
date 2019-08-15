@@ -39,6 +39,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
 
     var x_offset = e.clientX+self.pageXOffset-parentPos.left;
     var y_offset = e.clientY+self.pageYOffset-parentPos.top;
+    let tag_offset = (tags) ? $(document.getElementById("autocard_popup_info")).outerHeight() : 0;
 
     if(rightPixelSpace > w)
     {
@@ -55,7 +56,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
       document.getElementById("autocard_popup2").style.left = (-230+x_offset) + "px";
       document.getElementById("autocard_popup_info").style.left = (-card_offset+x_offset) + "px";
     }
-    if(bottomPixelSpace > h+25)
+    if(bottomPixelSpace > h+25+tag_offset)
     {
       //display on bottom
       document.getElementById("autocard_popup").style.top = (5+y_offset) + "px";
@@ -65,9 +66,9 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
     else
     {
       //display on top
-      document.getElementById("autocard_popup").style.top = (-(h+5)+y_offset) + "px";
-      document.getElementById("autocard_popup2").style.top = (-(h+5)+y_offset) + "px";
-      document.getElementById("autocard_popup_info").style.top = (-(5)+y_offset) + "px";
+      document.getElementById("autocard_popup").style.top = (-(h+5+tag_offset)+y_offset) + "px";
+      document.getElementById("autocard_popup2").style.top = (-(h+5+tag_offset)+y_offset) + "px";
+      document.getElementById("autocard_popup_info").style.top = (-(5+tag_offset)+y_offset) + "px";
     }
   }
   document.getElementById("autocard_popup").innerHTML = '<img src="" width=225 height=' + h + '>';
@@ -82,7 +83,6 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
   {
     w = (card_flip) ? 450 : 225;
     document.getElementById("autocard_popup_info").style.width = w + "px";
-    document.getElementById("autocard_popup_info").style.height = "100px";
     let tagsText = '<div class="autocard-tags">';
     tags.forEach(function(tag, index)
     {
