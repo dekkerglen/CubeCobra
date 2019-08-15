@@ -931,11 +931,11 @@ function renderGroupContext()
   {
     if(card.details.image_flip)
     {
-      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
     }
     else
     {
-      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
     }
     cardlist += '<a data-index="'+index+'" class="groupModalRm clickx" href="#">×</a><a>  ';
     cardlist += card.details.name;
@@ -1677,11 +1677,11 @@ function renderCurveView() {
             {
               if(card.details.image_flip)
               {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
               }
               else
               {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
               }
               res += card.details.name+'</a>';
             });
@@ -1863,11 +1863,11 @@ function renderVisualSpoiler() {
         {
           if(card.details.image_flip)
           {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
           }
           else
           {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
           }
           res += '<img cardIndex="'+card.index+'" class="activateContextModal" src="'+card.details.image_normal+'" alt="'+card.details.name+'" width=150 height=210>';
           res += '</a>';
