@@ -25,8 +25,6 @@ function autocard_init(classname) {
 
 function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
   var w = (card_flip) ? 425 : 250;
-  //if(tags) w += 100;
-
   var h = (show_art_crop) ? 165 : 315;
 
   document.onmousemove = function(e) {
@@ -102,11 +100,11 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
           $(document.getElementById("autocard_popup2")).find('img')
             .one('load', function() { // only fill in tags area once the image is done loading
               if(autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
-              autocardTimeout = setTimeout( function() {
+              autocardTimeout = setTimeout(function() {
                 $(document.getElementById("autocard_popup")).show();
                 $(document.getElementById("autocard_popup2")).show();
                 $(document.getElementById("autocard_popup_info")).show();
-              }, 50 );
+              }, 50);
             })
             .attr('src', card_flip) // set the image source so it begins fetching
             .each(function() {
@@ -117,10 +115,10 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
         else
         {
           if(autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
-          autocardTimeout = setTimeout( function() {
+          autocardTimeout = setTimeout(function() {
             $(document.getElementById("autocard_popup")).show();
             $(document.getElementById("autocard_popup_info")).show();
-          }, 50 );
+          }, 50);
         }
     })
     .attr('src', card_image) // set the image source so it begins fetching
