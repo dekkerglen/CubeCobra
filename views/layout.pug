@@ -1,125 +1,125 @@
 doctype html
 html
-  head  
-    meta(charset='UTF-8')
-    meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
-    meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
-    link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
-    title Cube Cobra
-    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
-    link(rel='stylesheet' href='/css/stylesheet.css')
-    #autocard_popup(style='position:absolute;z-index: 9999;')
-    #autocard_popup2(style='position:absolute;z-index: 9999;')
-    #autocard_popup_info(style='position:absolute;z-index: 9999;')
-    script(src='/bower_components/jquery/dist/jquery.js')
-  body
-    nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
-      .container
-        a(href='/')
-          img(src="/content/banner_small.png" alt="Cube Cobra: a site for Magic: the Gathering Cubing")
-        button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
-          span.navbar-toggler-icon
-        ul.navbar-nav.mr-auto         
-          form(method='POST', action='/search').form-inline
-            .input-group
-              input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
-              .input-group-append
-                button.btn.btn-success.my-2.my-sm-0(type='submit') Search
+	head  
+		meta(charset='UTF-8')
+		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
+		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
+		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
+		title Cube Cobra
+		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+		link(rel='stylesheet' href='/css/stylesheet.css')
+		#autocard_popup(style='position:absolute;z-index: 9999;')
+		#autocard_popup2(style='position:absolute;z-index: 9999;')
+		#autocard_popup_info(style='position:absolute;z-index: 9999;')
+		script(src='/bower_components/jquery/dist/jquery.js')
+	body
+		nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
+			.container
+				a(href='/')
+					img(src="/content/banner.png" height=50 alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+				button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
+					span.navbar-toggler-icon
+				ul.navbar-nav.mr-auto         
+					form(method='POST', action='/search').form-inline
+						.input-group
+							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
+							.input-group-append
+								button.btn.btn-success.my-2.my-sm-0(type='submit') Search
 
-        ul.navbar-nav.navbar-right
-          li.nav-item.dropdown
-            a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
-              |  About
-            .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-              a.dropdown-item(href='/contact') Contact
-              a.dropdown-item(href='/dev/blog') Dev Blog
-              a.dropdown-item(href='/ourstory') Our Story
-              a.dropdown-item(href='/faq') FAQ
-              a.dropdown-item(href='/donate') Donate
-          if user
-            li.nav-item
-              a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
-            li.nav-item
-              a.nav-link(href="/user/view/"+user.id) Your Profile
-            li.nav-item.dropdown
-              a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
-                |  #{user.username}  
-              .dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-                a.dropdown-item(href='/user/account') Account Information
-                a.dropdown-item(href='/user/account/changepassword') Change Password
-                a.dropdown-item(href='/user/account/updateemail') Update Email
-                a.dropdown-item(href='/user/logout') Logout
-              
-          else
-            li.nav-item
-              a.nav-link(href='/user/register') Register
-            li.nav-item
-              a.nav-link(data-toggle='modal', data-target='#loginModal') Login
-    .container
-      block content
-      br
-      hr
-      footer
-        p.center(style='text-align: center; font-size:12px')
-          a Magic: The Gathering is &copy; 
-          a(href='https://company.wizards.com/') Wizards of the Coast
-          a . Cube Cobra is not affiliated nor produced nor endorsed by Wizards of the Coast. 
-          br
-          a All card images, mana symbols, expansions and art related to Magic the Gathering is a property of Wizards of the Coast/Hasbro. 
-          br
-          a This site is not affiliated nor endorsed by Scryfall LLC. This site endeavours to adhere to the Scryfall data guidelines. 
-          br
-          a All other content Copyright &copy; 2019 Cube Cobra
-          br
-          a(href='/privacy') Privacy Privacy 
-          a  | 
-          a(href='/tos') Terms and Conditions
-          a  | 
-          a(href='/cookies') Cookies Policy
-           
-    script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
-    script(src='/js/main.js')
-    script(src='/js/autocard.js')
-    
+				ul.navbar-nav.navbar-right
+					li.nav-item.dropdown
+						a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+							|  About
+						.dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+							a.dropdown-item(href='/contact') Contact
+							a.dropdown-item(href='/dev/blog') Dev Blog
+							a.dropdown-item(href='/ourstory') Our Story
+							a.dropdown-item(href='/faq') FAQ
+							a.dropdown-item(href='/donate') Donate
+					if user
+						li.nav-item
+							a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+						li.nav-item
+							a.nav-link(href="/user/view/"+user.id) Your Profile
+						li.nav-item.dropdown
+							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+								|  #{user.username}  
+							.dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+								a.dropdown-item(href='/user/account') Account Information
+								a.dropdown-item(href='/user/account/changepassword') Change Password
+								a.dropdown-item(href='/user/account/updateemail') Update Email
+								a.dropdown-item(href='/user/logout') Logout
+
+					else
+						li.nav-item
+							a.nav-link(href='/user/register') Register
+						li.nav-item
+							a.nav-link(data-toggle='modal', data-target='#loginModal') Login
+		.container
+			block content
+			br
+			hr
+			footer
+				p.center(style='text-align: center; font-size:12px')
+					a Magic: The Gathering is &copy; 
+					a(href='https://company.wizards.com/') Wizards of the Coast
+					a . Cube Cobra is not affiliated nor produced nor endorsed by Wizards of the Coast. 
+					br
+					a All card images, mana symbols, expansions and art related to Magic the Gathering is a property of Wizards of the Coast/Hasbro. 
+					br
+					a This site is not affiliated nor endorsed by Scryfall LLC. This site endeavours to adhere to the Scryfall data guidelines. 
+					br
+					a All other content Copyright &copy; 2019 Cube Cobra
+					br
+					a(href='/privacy') Privacy Privacy 
+					a  | 
+					a(href='/tos') Terms and Conditions
+					a  | 
+					a(href='/cookies') Cookies Policy
+
+		script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
+		script(src='/js/main.js')
+		script(src='/js/autocard.js')
+
 // Login modal
 #loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
-  .modal-dialog(role='document')
-    .modal-content
-      form(method='POST', action='/user/login')
-        .modal-header
-          h5#loginModalLabel.modal-title Login
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body
-            .form-group
-              label.col-form-label Username or Email Address:
-              input#username.form-control(name='username', type='text')
-            .form-group
-              label.col-form-label Password:
-              input#password.form-control(name='password', type='password')
-            a(href='/user/lostpassword') Forgot password?
-            if loginCallback
-              input(type='hidden', name='loginCallback', value=loginCallback)     
-            br
-        .modal-footer
-          input.btn.btn-success(type='submit',value='Login')
-          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+	.modal-dialog(role='document')
+		.modal-content
+			form(method='POST', action='/user/login')
+				.modal-header
+					h5#loginModalLabel.modal-title Login
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body
+					.form-group
+						label.col-form-label Username or Email Address:
+						input#username.form-control(name='username', type='text')
+					.form-group
+						label.col-form-label Password:
+						input#password.form-control(name='password', type='password')
+					a(href='/user/lostpassword') Forgot password?
+					if loginCallback
+						input(type='hidden', name='loginCallback', value=loginCallback)     
+					br
+				.modal-footer
+					input.btn.btn-success(type='submit',value='Login')
+					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
 // Add cube modal
 #cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-  .modal-dialog(role='document')
-    .modal-content
-      form(method='POST', action='/cube/add')
-        .modal-header
-          h5#loginModalLabel.modal-title Create New Cube
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body
-            .form-group
-              label.col-form-label Cube Name:
-              input.form-control(name='name', type='text')
+	.modal-dialog(role='document')
+		.modal-content
+			form(method='POST', action='/cube/add')
+				.modal-header
+					h5#loginModalLabel.modal-title Create New Cube
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body
+					.form-group
+						label.col-form-label Cube Name:
+						input.form-control(name='name', type='text')
 
-            br
-        .modal-footer
-          input.btn.btn-success(type='submit',value='Create')
-          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+					br
+				.modal-footer
+					input.btn.btn-success(type='submit',value='Create')
+					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
