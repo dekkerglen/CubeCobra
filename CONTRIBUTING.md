@@ -34,7 +34,7 @@ Issues are tagged with 'good first issue' if we think it's a good beginner task 
 # Getting started
 ### How to submit a contribution.
 
-The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
+The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, comment on the issue you would like to work with, and it will be assigned to you. Then, create a fork of the code. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
 
 ### Code Style
 
