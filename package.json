@@ -32,6 +32,7 @@
     "sanitize-html": "^1.20.1",
     "selenium-webdriver": "^4.0.0-alpha.4",
     "serve-favicon": "^2.5.0",
+    "shuffle-seed": "^1.1.6",
     "website-scraper": "^4.0.1"
   }
 }
