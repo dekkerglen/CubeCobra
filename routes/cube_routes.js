@@ -9,6 +9,7 @@ var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
+const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 
 //grabbing sortfilter.cardIsLabel from client-side
 var sortfilter = require('../public/js/sortfilter.js');
@@ -421,6 +422,7 @@ router.get('/list/:id', function(req, res)
     }
     else
     {
+      var pids = [];
       cube.cards.forEach(function(card, index)
       {
         card.details = carddb.carddict[card.cardID];
@@ -428,6 +430,26 @@ router.get('/list/:id', function(req, res)
         {
           card.type_line = card.details.type;
         }
+        if(card.details.tcgplayer_id)
+        {
+          pids.push(card.details.tcgplayer_id);
+        }
+      });
+      var options = {
+        headers: {
+          Authorization: ' Bearer ' + tcgconfig.Public_Key
+        },
+        method: 'GET',
+        url: 'http://api.tcgplayer.com/v1.32.0/pricing/product/'+pids
+      };
+
+      request(options, function (error, response, body) {
+        if (error)
+        {
+          console.log(error);
+        }
+
+        console.log(body);
       });
 
       if(req.user)
