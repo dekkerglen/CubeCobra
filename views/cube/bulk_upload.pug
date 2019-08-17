@@ -1,37 +1,39 @@
 extends ../layout
 
 block content
-  include ../flash
-  br
-  style(type='text/css').
-    .editarea {
-    overflow: auto;
-    max-height: 200px;
-    }
-  .container
-    h5 Confirm Upload
-    p There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through and manually add them. No changes have been saved.
-    .row
-      .col
-        textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')= missing
-      .col
-        .row
-        form(autocomplete='off').form-inline
-          .form-group.mb-2.autocomplete
-            input.form-control#addInput(style='width: 350px', type='text', name='myCountry', placeholder='Card to Add')
-          button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Add
-        .row
-          label Changelist:
-        .row
-          .col
-            .editarea
-              p.editlist#changelist
-        .row
-          form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
-            input(id='addedcardshidden', type='hidden', value=added)
-            input#changelistFormBody(type='hidden', name='body')
-            input#changelistBlog(type='hidden', name='blog')
-            input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
-            
-  script(src='/js/autocomplete.js')
-  script(src='/js/bulkconfirm.js')        
+	link(rel='stylesheet' href='/css/autocomplete.css')  
+	link(rel='stylesheet' href='/css/editcube.css')  
+	include ../flash
+	br
+	style(type='text/css').
+		.editarea {
+		overflow: auto;
+		max-height: 200px;
+		}
+	.container
+		h5 Confirm Upload
+		p There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through and manually add them. No changes have been saved.
+		.row
+			.col
+				textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')= missing
+			.col
+				.row
+					form(autocomplete='off').form-inline
+						.mb-2.autocomplete
+							input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
+						button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
+				.row
+					label Changelist:
+				.row
+					.col
+						.editarea
+							p.editlist#changelist
+				.row
+					form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+						input(id='addedcardshidden', type='hidden', value=added)
+						input#changelistFormBody(type='hidden', name='body')
+						input#changelistBlog(type='hidden', name='blog')
+						input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
+
+	script(src='/js/autocomplete.js')
+	script(src='/js/bulkconfirm.js')        
