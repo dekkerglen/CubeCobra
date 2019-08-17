@@ -22,7 +22,7 @@ let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
 
 // Add Submit POST Route
-router.post('/add',ensureAuth, function(req,res,next)
+router.post('/add',ensureAuth, function(req,res)
 {
   if(req.body.name.length < 5)
   {
@@ -592,7 +592,7 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
-router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
+router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
   Cube.findById(req.params.id, function(err,cube)
   {
     if(err)
@@ -733,7 +733,11 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
                 {
                   missing:missing,
                   added:JSON.stringify(added),
-                  cube:cube
+                  cube:cube,
+                  user:{
+                    id:req.user._id,
+                    username:req.user.username
+                  }
                 });
               }
               else
@@ -766,8 +770,9 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
   });
 });
 
-router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
+router.post('/bulkupload/:id',ensureAuth, function(req,res)
 {
+  console.log(res);
   Cube.findById(req.params.id, function(err,cube)
   {
     if(err)
@@ -789,7 +794,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
   });
 });
 
-router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
+router.post('/bulkuploadfile/:id',ensureAuth, function(req,res)
 {
   if(!req.files)
   {
@@ -912,7 +917,11 @@ function bulkuploadCSV(req, res, cards, cube) {
       {
         missing:missing,
         added:JSON.stringify(added),
-        cube:cube
+        cube:cube,
+        user:{
+          id:req.user._id,
+          username:req.user.username
+        }
       });
     }
     else
@@ -1067,7 +1076,11 @@ function bulkUpload(req, res, list, cube) {
             {
               missing:missing,
               added:JSON.stringify(added),
-              cube:cube
+              cube:cube,
+              user:{
+                id:req.user._id,
+                username:req.user.username
+              }
             });
           }
           else
@@ -1548,7 +1561,7 @@ router.get('/draft/:id', function(req, res)
 });
 
 // Edit Submit POST Route
-router.post('/editoverview/:id',ensureAuth, function(req,res,next)
+router.post('/editoverview/:id',ensureAuth, function(req,res)
 {
   req.body.html = cubefn.sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
@@ -1607,7 +1620,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
 });
 
 // Edit Submit POST Route
-router.post('/edit/:id',ensureAuth, function(req,res,next)
+router.post('/edit/:id',ensureAuth, function(req,res)
 {
   req.body.blog = cubefn.sanitize(req.body.blog);
   Cube.findById(req.params.id, function(err, cube)
