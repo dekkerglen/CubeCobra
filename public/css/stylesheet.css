@@ -133,7 +133,7 @@
 }
 
 .card-list-item {
-	transition: .5s;
+	transition: .25s;
 	font-size: 12px;
 	border-radius: 0 !important;
 	white-space: nowrap;
