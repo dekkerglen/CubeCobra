@@ -4,7 +4,7 @@ const request = require('request');
 const fs = require('fs');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var cubefn = require('../serverjs/cubefn.js');
+var cubefn, { generatePack } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
@@ -2715,6 +2715,31 @@ router.post('/api/draftpick/:id', function(req, res)
     });
   });
 });
+
+router.get('/api/p1p1/:id', async (req, res) => {
+  const pack = await generatePack(req.params.id, carddb);
+
+  if (pack) {
+    res.status(200).send(pack);
+  } else {
+    res.status(500).send({
+      success: false
+    });
+  }
+});
+
+router.get('/api/p1p1/:id/:seed', async (req, res) => {
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
+  if (pack) {
+    res.status(200).send(pack);
+  } else {
+    res.status(500).send({
+      success: false
+    });
+  }
+});
+
+
 
 // Access Control
 function ensureAuth(req, res, next) {
