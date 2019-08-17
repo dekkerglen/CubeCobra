@@ -60,6 +60,16 @@ router.post('/lostpassword', function(req, res)
         }
         else
         {
+          const smtpTransport = mailer.createTransport({
+              name: 'CubeCobra.com',
+              secure: true,
+              service: "Gmail",
+              auth: {
+                  user: emailconfig.username,
+                  pass: emailconfig.password
+              }
+          });
+
           const email = new Email({
             message: {
               from: "Cube Cobra Team <support@cubecobra.com>",
@@ -71,7 +81,8 @@ router.post('/lostpassword', function(req, res)
               relativeTo: path.join(__dirname, '..', 'public'),
               images: true
             }
-          }
+          },
+          transport: smtpTransport
           })
 
           email.send({
@@ -269,35 +280,67 @@ router.post('/register', function(req, res)
                     }
                     else
                     {
-                      // Use Smtp Protocol to send Email
-                      var smtpTransport = mailer.createTransport({
-                          name: 'CubeCobra.com',
-                          secure: true,
-                          service: "Gmail",
-                          auth: {
-                              user: emailconfig.username,
-                              pass: emailconfig.password
-                          }
-                      });
+                      const smtpTransport = mailer.createTransport({
+                        name: 'CubeCobra.com',
+                        secure: true,
+                        service: "Gmail",
+                        auth: {
+                            user: emailconfig.username,
+                            pass: emailconfig.password
+                        }
+                    });
 
-                      var mail = {
+                      const email = new Email({
+                        message: {
                           from: "Cube Cobra Team <support@cubecobra.com>",
                           to: email,
-                          subject: "Confirm Account",
-                          html: "Hi " + newUser.username +
-                            ",</br> Thanks for joining! To confirm your email, click <a href=\"https://cubecobra.com/user/register/confirm/" +
-                            newUser._id + "\">here</a>."
-                      }
-
-                      smtpTransport.sendMail(mail, function(error, response)
-                      {
-                          if(error)
-                          {
-                              console.log(error);
-                          }
-
-                          smtpTransport.close();
+                          subject: "Confirm Email",
+                      },
+                      juiceResources: {
+                        webResources: {
+                          relativeTo: path.join(__dirname, '..', 'public'),
+                          images: true
+                        }
+                      },
+                      transport: smtpTransport
                       });
+            
+                      email.send({
+                        template: "confirm_email",
+                        locals: {
+                          id: newUser._id,
+                        }
+                      });
+
+                      // // Use Smtp Protocol to send Email
+                      // var smtpTransport = mailer.createTransport({
+                      //     name: 'CubeCobra.com',
+                      //     secure: true,
+                      //     service: "Gmail",
+                      //     auth: {
+                      //         user: emailconfig.username,
+                      //         pass: emailconfig.password
+                      //     }
+                      // });
+
+                      // var mail = {
+                      //     from: "Cube Cobra Team <support@cubecobra.com>",
+                      //     to: email,
+                      //     subject: "Confirm Account",
+                      //     html: "Hi " + newUser.username +
+                      //       ",</br> Thanks for joining! To confirm your email, click <a href=\"https://cubecobra.com/user/register/confirm/" +
+                      //       newUser._id + "\">here</a>."
+                      // }
+
+                      // smtpTransport.sendMail(mail, function(error, response)
+                      // {
+                      //     if(error)
+                      //     {
+                      //         console.log(error);
+                      //     }
+
+                      //     smtpTransport.close();
+                      // });
 
                       //req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
                       req.flash('success','Account succesfully created. You are now able to login.');

@@ -1,11 +1,12 @@
-link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
-link(rel='stylesheet' href='/css/stylesheet.css')
+link(rel='stylesheet' href='/css/email.css')
 
-img(src="/content/banner_small.png" alt="Cube Cobra: a site for Magic: the Gathering Cubing")
-p Hi,
-p We received a request to reset your password.
-a(href="https://cubecobra.com/user/passwordreset/"+id) Reset password.
-p Your recovery code is: 
-    code #{code}
-p This link expires in 15 minutes.
-p If you did not request a password reset, ignore this email.
+div(class="banner-container")
+    img(src="https://cubecobra.com/content/banner_small.png" alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+
+p We received a request to reset your password. Your recovery code is: 
+code #{code}
+
+a(class="button", href="https://cubecobra.com/user/passwordreset/"+id) Reset password
+
+div This link expires in 15 minutes.
+div If you did not request a password reset, ignore this email.
