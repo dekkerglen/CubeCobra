@@ -1,4 +1,6 @@
 var sanitizeHtml = require('sanitize-html');
+let Cube = require('../models/cube');
+let util = require('./util');
 
 function intToLegality (val) {
   switch(val)
@@ -153,6 +155,29 @@ var methods =
         + src.substring(src.indexOf(']]')+2);
     }
     return src;
+  },
+  generatePack: async (cubeId, carddb, seed) => {
+    try {
+      const cube = await Cube.findById(cubeId);
+  
+      if (!seed) {
+        seed = Date.now();
+      }
+  
+      if (!cube) {
+        throw Error('Cube Not Found!');
+      }
+  
+      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID].name);
+  
+      return {
+        seed,
+        pack
+      };
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   }
 };
 

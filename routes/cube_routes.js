@@ -4,7 +4,7 @@ const request = require('request');
 const fs = require('fs');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var cubefn = require('../serverjs/cubefn.js');
+var cubefn, { generatePack } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
@@ -2717,7 +2717,7 @@ router.post('/api/draftpick/:id', function(req, res)
 });
 
 router.get('/api/p1p1/:id', async (req, res) => {
-  const pack = await generatePack(req.params.id);
+  const pack = await generatePack(req.params.id, carddb);
 
   if (pack) {
     res.status(200).send(pack);
@@ -2729,7 +2729,7 @@ router.get('/api/p1p1/:id', async (req, res) => {
 });
 
 router.get('/api/p1p1/:id/:seed', async (req, res) => {
-  const pack = await generatePack(req.params.id, req.params.seed);
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
   if (pack) {
     res.status(200).send(pack);
   } else {
@@ -2739,29 +2739,7 @@ router.get('/api/p1p1/:id/:seed', async (req, res) => {
   }
 });
 
-const generatePack = async (cubeId, seed) => {
-  try {
-    const cube = await Cube.findById(cubeId);
 
-    if (!seed) {
-      seed = Date.now();
-    }
-
-    if (!cube) {
-      throw Error('Cube Not Found!');
-    }
-
-    const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID].name);
-
-    return {
-      seed,
-      pack
-    };
-  } catch (err) {
-    console.log(err);
-    return;
-  }
-}
 
 // Access Control
 function ensureAuth(req, res, next) {
