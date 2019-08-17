@@ -4,7 +4,7 @@ const request = require('request');
 const fs = require('fs');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var cubefn, { generatePack } = require('../serverjs/cubefn.js');
+var cubefn = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
@@ -725,22 +725,22 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
             blogpost.dev='false';
             blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-            blogpost.save(function(err)
+            if(missing.length > 0)
             {
-              if(missing.length > 0)
+              res.render('cube/bulk_upload',
               {
-                res.render('cube/bulk_upload',
-                {
-                  missing:missing,
-                  added:JSON.stringify(added),
-                  cube:cube,
-                  user:{
-                    id:req.user._id,
-                    username:req.user.username
-                  }
-                });
-              }
-              else
+                missing:missing,
+                added:JSON.stringify(added),
+                cube:cube,
+                user:{
+                  id:req.user._id,
+                  username:req.user.username
+                }
+              });
+            }
+            else
+            {
+              blogpost.save(function(err)
               {
                 cube = cubefn.setCubeType(cube, carddb);
                 Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -756,8 +756,8 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
                     res.redirect('/cube/list/'+req.params.id);
                   }
                 });
-              }
-            });
+              });
+            }
           })
           .catch(function (err) {
             console.log(err, req);
@@ -772,7 +772,6 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
 
 router.post('/bulkupload/:id',ensureAuth, function(req,res)
 {
-  console.log(res);
   Cube.findById(req.params.id, function(err,cube)
   {
     if(err)
@@ -909,22 +908,22 @@ function bulkuploadCSV(req, res, cards, cube) {
   blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
   //
-  blogpost.save(function(err)
+  if(missing.length > 0)
   {
-    if(missing.length > 0)
+    res.render('cube/bulk_upload',
     {
-      res.render('cube/bulk_upload',
-      {
-        missing:missing,
-        added:JSON.stringify(added),
-        cube:cube,
-        user:{
-          id:req.user._id,
-          username:req.user.username
-        }
-      });
-    }
-    else
+      missing:missing,
+      added:JSON.stringify(added),
+      cube:cube,
+      user:{
+        id:req.user._id,
+        username:req.user.username
+      }
+    });
+  }
+  else
+  {
+    blogpost.save(function(err)
     {
       cube = cubefn.setCubeType(cube, carddb);
       Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -940,8 +939,8 @@ function bulkuploadCSV(req, res, cards, cube) {
           res.redirect('/cube/list/'+req.params.id);
         }
       });
-    }
     });
+  }
 }
 
 function bulkUpload(req, res, list, cube) {
@@ -1068,22 +1067,22 @@ function bulkUpload(req, res, list, cube) {
         blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
         //
-        blogpost.save(function(err)
+        if(missing.length > 0)
         {
-          if(missing.length > 0)
+          res.render('cube/bulk_upload',
           {
-            res.render('cube/bulk_upload',
-            {
-              missing:missing,
-              added:JSON.stringify(added),
-              cube:cube,
-              user:{
-                id:req.user._id,
-                username:req.user.username
-              }
-            });
-          }
-          else
+            missing:missing,
+            added:JSON.stringify(added),
+            cube:cube,
+            user:{
+              id:req.user._id,
+              username:req.user.username
+            }
+          });
+        }
+        else
+        {
+          blogpost.save(function(err)
           {
             cube = cubefn.setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -1099,8 +1098,8 @@ function bulkUpload(req, res, list, cube) {
                 res.redirect('/cube/list/'+req.params.id);
               }
             });
-          }
-        });
+          });
+        }
       }
     }
   }
