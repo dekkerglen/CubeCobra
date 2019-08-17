@@ -12,13 +12,15 @@ function getElementPosition(el) {
 }
 
 function autocard_init(classname) {
-  $('.'+classname).off('mouseover').on('mouseover', function(e) {
+  $('.'+classname).off('mouseenter').on('mouseenter', function(e) {
     if(!stopAutocard) {
+      console.log('fired');
+      
       let tags = $(this).attr("card_tags") ? $(this).attr("card_tags").split(',') : null;
       autocard_show_card($(this).attr("card"), $(this).attr("card_flip"), $(this).hasClass('autocard-art-crop'), tags);
     }
   });
-  $('.'+classname).off('mouseout').on('mouseout', function(e) {
+  $('.'+classname).off('mouseleave').on('mouseleave', function(e) {
     autocard_hide_card();
   });
 }
