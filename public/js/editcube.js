@@ -988,14 +988,20 @@ function show_groupContextModal() {
 
 function show_contextModal(card) {
   modalSelect = card;
+  var priceHtml = '';
   if(card.details.price)
   {
-    $('.price-area').html('<a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a>');
+    priceHtml += '<a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a>';
   }
-  else
+  if(card.details.price && card.details.price_foil)
   {
-    $('.price-area').html('');
+    priceHtml += '</br>';
   }
+  if(card.details.price_foil)
+  {
+    priceHtml += '<a>TCGPlayer Market Foil: $'+card.details.price_foil.toFixed(2)+'</a>';
+  }
+  $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src',card.details.image_normal);
   $('#contextModalVersionSelect').html('');

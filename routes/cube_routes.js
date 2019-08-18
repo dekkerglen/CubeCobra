@@ -115,6 +115,10 @@ function GetPrices(card_ids, callback)
           {
             price_dict[item.productId] = item.marketPrice;
           }
+          else if(item.marketPrice && item.subTypeName =='Foil')
+          {
+            price_dict[item.productId+'_foil'] = item.marketPrice;
+          }
         });
       });
       callback(price_dict);
@@ -541,7 +545,14 @@ router.get('/list/:id', function(req, res)
         {
           if(card.details.tcgplayer_id)
           {
-            card.details.price = price_dict[card.details.tcgplayer_id];
+            if(price_dict[card.details.tcgplayer_id])
+            {
+              card.details.price = price_dict[card.details.tcgplayer_id];
+            }
+            if(price_dict[card.details.tcgplayer_id +'_foil'])
+            {
+              card.details.price_foil = price_dict[card.details.tcgplayer_id +'_foil'];
+            }
           }
         });
 
