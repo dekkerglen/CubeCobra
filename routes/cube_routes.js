@@ -2,6 +2,7 @@ const express = require('express');
 let mongoose = require('mongoose');
 const request = require('request');
 const fs = require('fs');
+const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
 var cubefn = require('../serverjs/cubefn.js');
@@ -21,6 +22,105 @@ let Blog = require('../models/blog');
 let User = require('../models/user');
 let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
+
+var token = null;
+function GetToken(callback)
+{
+  if(token)
+  {
+    //TODO: check if token is expired, if so, fetch a new one
+    callback(token.access_token);
+  }
+  else
+  {
+    var options = {
+      url: 'https://api.tcgplayer.com/token',
+      method: 'POST',
+      header: 'application/x-www-form-urlencoded',
+      body: 'grant_type=client_credentials&client_id='+tcgconfig.Public_Key+'&client_secret='+tcgconfig.Private_Key
+    };
+
+    request(options, function(error, response, body)
+    {
+      if(error)
+      {
+        console.log(error);
+      }
+      else
+      {
+        console.log(body);
+        token = JSON.parse(body);
+        callback(token.access_token);
+      }
+    });
+  }
+}
+
+function listToString(list)
+{
+  var str = '';
+  list.forEach(function(item, index)
+  {
+    if(index != 0)
+    {
+      str += ',';
+    }
+    str += item;
+  })
+  return str;
+}
+
+function checkStatus(response) {
+  if (response.ok) {
+    return Promise.resolve(response);
+  } else {
+    return Promise.reject(new Error(response.statusText));
+  }
+}
+
+function parseJSON(response) {
+  return response.json();
+}
+
+//callback with a dict of card prices
+function GetPrices(card_ids, callback)
+{
+  var chunkSize = 250;
+  //max tcgplayer request size is 250
+  var chunks = [];
+  for(i = 0; i <= card_ids.length/chunkSize; i++)
+  {
+    chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
+  }
+
+  GetToken(function(access_token)
+  {
+    Promise.all(chunks.map(chunk =>
+       fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/'+listToString(chunk), {
+        headers: {
+          Authorization: ' Bearer ' + access_token
+        },
+        method: 'GET',
+      })
+      .then(checkStatus)
+      .then(parseJSON)
+    )).then(function(responses)
+    {
+      var price_dict = {};
+      responses.forEach(function(response, index)
+      {
+        response.results.forEach(function(item, index)
+        {
+          if(item.marketPrice && item.subTypeName == 'Normal')
+          {
+            price_dict[item.productId] = item.marketPrice;
+          }
+        });
+      });
+      callback(price_dict);
+    });
+  });
+}
 
 // Add Submit POST Route
 router.post('/add',ensureAuth, function(req,res)
@@ -430,92 +530,86 @@ router.get('/list/:id', function(req, res)
         {
           card.type_line = card.details.type;
         }
-        if(card.details.tcgplayer_id)
+        if(card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id))
         {
           pids.push(card.details.tcgplayer_id);
         }
       });
-      var options = {
-        headers: {
-          Authorization: ' Bearer ' + tcgconfig.Public_Key
-        },
-        method: 'GET',
-        url: 'http://api.tcgplayer.com/v1.32.0/pricing/product/'+pids
-      };
-
-      request(options, function (error, response, body) {
-        if (error)
-        {
-          console.log(error);
-        }
-
-        console.log(body);
-      });
-
-      if(req.user)
+      GetPrices(pids, function(price_dict)
       {
-        User.findById(req.user._id, function(err, currentuser)
+        cube.cards.forEach(function(card, index)
         {
-          if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
+          if(card.details.tcgplayer_id)
           {
-            currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            card.details.price = price_dict[card.details.tcgplayer_id];
           }
-          currentuser.save(function(err)
+        });
+
+        if(req.user)
+        {
+          User.findById(req.user._id, function(err, currentuser)
           {
-            User.findById(cube.owner, function(err, owner)
+            if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
             {
-              if(!owner)
+              currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            }
+            currentuser.save(function(err)
+            {
+              User.findById(cube.owner, function(err, owner)
               {
-                res.render('cube/cube_list',
+                if(!owner)
                 {
-                  cube:cube,
-                  cube_raw:JSON.stringify(cube.cards),
-                  author: 'unknown',
-                  loginCallback:'/cube/list/'+req.params.id,
-                  edittoken:currentuser.edit_token
-                });
-              }
-              else
-              {
-                res.render('cube/cube_list',
+                  res.render('cube/cube_list',
+                  {
+                    cube:cube,
+                    cube_raw:JSON.stringify(cube.cards),
+                    author: 'unknown',
+                    loginCallback:'/cube/list/'+req.params.id,
+                    edittoken:currentuser.edit_token
+                  });
+                }
+                else
                 {
-                  cube:cube,
-                  cube_raw:JSON.stringify(cube.cards),
-                  owner: owner.username,
-                  loginCallback:'/cube/list/'+req.params.id,
-                  edittoken:currentuser.edit_token
-                });
-              }
+                  res.render('cube/cube_list',
+                  {
+                    cube:cube,
+                    cube_raw:JSON.stringify(cube.cards),
+                    owner: owner.username,
+                    loginCallback:'/cube/list/'+req.params.id,
+                    edittoken:currentuser.edit_token
+                  });
+                }
+              });
             });
           });
-        });
-      }
-      else
-      {
-        User.findById(cube.owner, function(err, owner)
+        }
+        else
         {
-          if(!owner)
+          User.findById(cube.owner, function(err, owner)
           {
-            res.render('cube/cube_list',
+            if(!owner)
             {
-              cube:cube,
-              cube_raw:JSON.stringify(cube.cards),
-              author: 'unknown',
-              loginCallback:'/cube/list/'+req.params.id
-            });
-          }
-          else
-          {
-            res.render('cube/cube_list',
+              res.render('cube/cube_list',
+              {
+                cube:cube,
+                cube_raw:JSON.stringify(cube.cards),
+                author: 'unknown',
+                loginCallback:'/cube/list/'+req.params.id
+              });
+            }
+            else
             {
-              cube:cube,
-              cube_raw:JSON.stringify(cube.cards),
-              owner: owner.username,
-              loginCallback:'/cube/list/'+req.params.id
-            });
-          }
-        });
-      }
+              res.render('cube/cube_list',
+              {
+                cube:cube,
+                cube_raw:JSON.stringify(cube.cards),
+                owner: owner.username,
+                loginCallback:'/cube/list/'+req.params.id
+              });
+            }
+          });
+        }
+      });
     }
   });
 });
@@ -2390,7 +2484,6 @@ router.get('/api/getcardfromid/:id', function(req, res)
 router.get('/api/getversions/:id', function(req, res)
 {
   cards = [];
-  console.log(carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
   carddb.nameToId[carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index)
   {
     cards.push(carddb.carddict[id]);

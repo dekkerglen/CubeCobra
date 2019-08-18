@@ -1,455 +1,456 @@
 extends ../layout
 
 block content            
-  link(rel='stylesheet' href='/css/tags.css')  
-  link(rel='stylesheet' href='/css/autocomplete.css')  
-  link(rel='stylesheet' href='/css/editcube.css')  
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link.active(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube._id) Blog
-  //edit controls    
-  .usercontrols
-    nav.navbar.navbar-expand.navbar-light
-      .collapse.navbar-collapse
-        ul.navbar-nav          
-          li.nav-item(style='padding-right:10px')
-            select#viewSelect.form-control
-              option(selected='' value='table') Table View
-              option(value='spoiler') Visual Spoiler
-              if user
-                if user.id == cube.owner
-                  option(value='list') List View
-              option(value='curve') Curve View
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a(href="#")#editSelected.nav-link Edit Selected
-              li.nav-item.dropdown
-                a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
-                .dropdown-menu(aria-labelledby='bulkdropdown')
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
-          li.nav-item.dropdown
-            a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
-            .dropdown-menu(aria-labelledby='exportdropdown')
-              a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
-              a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
-                br
-    #accordion.accordion
-      if user
-        if user.id == cube.owner
-          #navedit.collapse(data-parent='#accordion')
-            .container
-              .row.collapse.warnings
-                .col
-                  .alert.alert-danger(role='alert') Invalid input: card not recognized.
-              .row
-                .col
-                  form(autocomplete='off').form-inline
-                    .mb-2.autocomplete
-                      input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
-                    button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
-                .col
-                  form.form-inline
-                    .mb-2.autocomplete
-                      input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
-                    button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
-              .collapse.editForm                
-                form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
-                  .row
-                    .col
-                      br
-                      label Changelist:
-                      .editarea
-                        p.editlist#changelist
-                      br
-                      input#changelistFormBody(type='hidden', name='body')
-                      input#changelistBlog(type='hidden', name='blog')
-                    .col            
-                      br
-                      #form-group
-                        label Blog Title:
-                        input.form-control(maxlength='200' name='title', type='text' value='Cube Updated - Automatic Post')
-                      #form-group
-                        label Body:
-                        include ../texteditor
-                  .row
-                    .col
-                      input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
-                      input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
-                      br
-                      br
-      #navsort.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              h5 Primary Sort
-              select#primarySortSelect.custom-select      
-              br
-              p 
-                em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
-            .col
-              h5 Secondary Sort
-              select#secondarySortSelect.custom-select
-          .row
-            .col
-              button.updateButton.btn.btn-success(type='button') Update Table
-              a   
-              if user && user.id == cube.owner
-                button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
-              br
-              br                
-      #navfilter.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col         
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Filter Type
-                select#filterType.custom-select(aria-label='Example select with button addon')
-                .input-group-append
-                  button#addFilterButton.btn.btn-success(type='button') Add Filter
-              h5 Filters     
-              #filterarea
-          .row
-            .col
-              button.updateButton.btn.btn-success(type='button') Update Table
-              br
-              br           
-              
-  include ../flash
+	link(rel='stylesheet' href='/css/tags.css')  
+	link(rel='stylesheet' href='/css/autocomplete.css')  
+	link(rel='stylesheet' href='/css/editcube.css')  
+	.cubenav
+		ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
+			li.nav-item
+				h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
+					if cube.type
+						| (#{cube.card_count} Card #{cube.type} Cube)
+			li.nav-item
+				a.nav-link(href='/cube/overview/'+cube._id) Overview
+			li.nav-item
+				a.nav-link.active(href='/cube/list/'+cube._id) List
+			li.nav-item
+				a.nav-link(href='/cube/playtest/'+cube._id) Playtest
+			li.nav-item
+				a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+			li.nav-item(style='padding-right:10px;')
+				a.nav-link(href='/cube/blog/'+cube._id) Blog
+	//edit controls    
+	.usercontrols
+		nav.navbar.navbar-expand.navbar-light
+			.collapse.navbar-collapse
+				ul.navbar-nav          
+					li.nav-item(style='padding-right:10px')
+						select#viewSelect.form-control
+							option(selected='' value='table') Table View
+							option(value='spoiler') Visual Spoiler
+							if user
+								if user.id == cube.owner
+									option(value='list') List View
+							option(value='curve') Curve View
+					if user
+						if user.id == cube.owner
+							li.nav-item
+								a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
+					li.nav-item
+						a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
+					li.nav-item
+						a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
+					if user
+						if user.id == cube.owner
+							li.nav-item
+								a(href="#")#editSelected.nav-link Edit Selected
+							li.nav-item.dropdown
+								a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
+								.dropdown-menu(aria-labelledby='bulkdropdown')
+									a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
+									a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
+									a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
+					li.nav-item.dropdown
+						a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
+						.dropdown-menu(aria-labelledby='exportdropdown')
+							a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
+							a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
+								br
+		#accordion.accordion
+			if user
+				if user.id == cube.owner
+					#navedit.collapse(data-parent='#accordion')
+						.container
+							.row.collapse.warnings
+								.col
+									.alert.alert-danger(role='alert') Invalid input: card not recognized.
+							.row
+								.col
+									form(autocomplete='off').form-inline
+										.mb-2.autocomplete
+											input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
+										button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
+								.col
+									form.form-inline
+										.mb-2.autocomplete
+											input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
+										button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
+							.collapse.editForm                
+								form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+									.row
+										.col
+											br
+											label Changelist:
+											.editarea
+												p.editlist#changelist
+											br
+											input#changelistFormBody(type='hidden', name='body')
+											input#changelistBlog(type='hidden', name='blog')
+										.col            
+											br
+											#form-group
+												label Blog Title:
+												input.form-control(maxlength='200' name='title', type='text' value='Cube Updated - Automatic Post')
+											#form-group
+												label Body:
+												include ../texteditor
+									.row
+										.col
+											input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
+											input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
+											br
+											br
+			#navsort.collapse(data-parent='#accordion')
+				.container
+					.row
+						.col
+							h5 Primary Sort
+							select#primarySortSelect.custom-select      
+							br
+							p 
+								em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
+						.col
+							h5 Secondary Sort
+							select#secondarySortSelect.custom-select
+					.row
+						.col
+							button.updateButton.btn.btn-success(type='button') Update Table
+							a   
+							if user && user.id == cube.owner
+								button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
+							br
+							br                
+			#navfilter.collapse(data-parent='#accordion')
+				.container
+					.row
+						.col         
+							.input-group.mb-3
+								.input-group-prepend
+									span.input-group-text Filter Type
+								select#filterType.custom-select(aria-label='Example select with button addon')
+								.input-group-append
+									button#addFilterButton.btn.btn-success(type='button') Add Filter
+							h5 Filters     
+							#filterarea
+					.row
+						.col
+							button.updateButton.btn.btn-success(type='button') Update Table
+							br
+							br           
 
-   
-  input#cubeID(type='hidden', name='cubeID', value=cube._id)     
-  input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
-  if user && user.id == cube.owner
-    input#edittoken(type='hidden', name='edittoken', value=edittoken)
-  if cube.default_sorts        
-    input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])        
-    input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])        
+	include ../flash
 
-  //Cube list
-  br      
-  .container#cubelistarea
-    
-  //group context modal
-  if user && user.id == cube.owner
-    #groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-      .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-        .modal-content
-          .modal-header
-            h5.modal-title Edit Selected
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .row.no-gutters
-            .col-4#groupContextModalArea(style='padding: 4px;')            
-            .col-8  
-              .modal-body                
-                .controls
-                  h5 Set Status of All
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Status
-                    select#groupContextModalStatusSelect.custom-select(aria-label='Example select with button addon')
-                      option(selected='') 
-                      option(value='Not Owned') Not Owned
-                      option(value='Ordered') Ordered
-                      option(value='Owned') Owned
-                      option(value='Premium Owned') Premium Owned
-                  h5 Override Attribute on All
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text CMC
-                    input#groupContextModalCMC.form-control(type='text', value='2')
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Type
-                    input#groupContextModalType.form-control(type='text', value='2')
-                  h5 Color Identity Override: 
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                    label.form-check-label(for='groupContextModalCheckboxW')
-                      img(src='/content/symbols/w.png' alt='White' title='White')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                    label.form-check-label(for='groupContextModalCheckboxU')
-                      img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                    label.form-check-label(for='groupContextModalCheckboxB')
-                      img(src='/content/symbols/b.png' alt='Black' title='Black')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                    label.form-check-label(for='groupContextModalCheckboxR')
-                      img(src='/content/symbols/r.png' alt='Red' title='Red')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                    label.form-check-label(for='groupContextModalCheckboxG')
-                      img(src='/content/symbols/g.png' alt='Green' title='Green')
-                  br
-                  em No symbols selected will have no change.
-                  br
-                  br
-                  h5 Edit Tags
-                  .form-check
-                    input#groupContextAdd.form-check-input(type='radio', name='nameType', value='~', checked='')
-                    label.form-check-label(for='groupContextAdd') Add tags to All
-                  .form-check
-                    input#groupContextRemove.form-check-input(type='radio', name='nameType', value='=')
-                    label.form-check-label(for='groupContextRemove') Remove tags from All
-                  br
-                  .tags-area#groupContextTags
-                    .tags-input(data-name='tags-input')
-                      span.tags
-                      input.hidden-input(type='hidden')
-                      input.main-input(maxlength="24")
-                br
-                br
-                p
-                  em TCGplayer currently does not support mass entry while preserving card versions, be sure to verify any card versions after using 'Buy all'.
 
-          .modal-footer
-            button#groupContextRemoveButton.btn.btn-danger(type='button') Remove all from cube
-            form#groupContextBuyForm(method='POST', action='#', target="_blank")
-              input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
-              input.btn.btn-secondary(type='submit',value='Buy all')
-            button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
-    
-  if user && user.id == cube.owner
-    // Modal
-    #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-      .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-        .modal-content
-          .modal-header
-            h5#contextModalTitle.modal-title Ambush Viper
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .row.no-gutters
-            .col-4(style='padding: 4px;')
-              img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-            .col-8  
-              .modal-body
-                h5 Card Attributes
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Version (Set and #)
-                  select#contextModalVersionSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Status
-                  select#contextModalStatusSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text CMC
-                  input#contextModalCMC.form-control(type='text', value='2')
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Type
-                  input#contextModalType.form-control(type='text', value='2')
-                h5 Color Identity Override: 
-                .form-check.form-check-inline
-                  input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                  label.form-check-label(for='contextModalCheckboxW')
-                    img(src='/content/symbols/w.png' alt='White' title='White')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                  label.form-check-label(for='contextModalCheckboxU')
-                    img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                  label.form-check-label(for='contextModalCheckboxB')
-                    img(src='/content/symbols/b.png' alt='Black' title='Black')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                  label.form-check-label(for='contextModalCheckboxR')
-                    img(src='/content/symbols/r.png' alt='Red' title='Red')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                  label.form-check-label(for='contextModalCheckboxG')
-                    img(src='/content/symbols/g.png' alt='Green' title='Green')
-                h5 Tags
-                .tags-area#contextTags
-                  .tags-input(data-name='tags-input')
-                    span.tags
-                    input.hidden-input(type='hidden')
-                    input.main-input(maxlength="24")
+	input#cubeID(type='hidden', name='cubeID', value=cube._id)     
+	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
+	if user && user.id == cube.owner
+		input#edittoken(type='hidden', name='edittoken', value=edittoken)
+	if cube.default_sorts        
+		input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])        
+		input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])        
 
-          .modal-footer
-            button#contextRemoveButton.btn.btn-danger(type='button') Remove from cube
-            a#contextScryfallButton(href="#", target="_blank")
-              button.btn.btn-secondary(type='button') View on Scryfall
-            a#contextBuyButton(href="#", target="_blank")
-              button.btn.btn-secondary(type='button') Buy
-            button#contextModalSubmit.btn.btn-success(type='button') Save changes
-  else
-    // Modal
-    #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-      .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-        .modal-content
-          .modal-header
-            h5#contextModalTitle.modal-title Ambush Viper
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .row.no-gutters
-            .col-4(style='padding: 4px;')
-              img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-            .col-8  
-              .modal-body                
-                fieldset(disabled='')
-                  h5 Card Attributes
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Version (Set and #)
-                    select#contextModalVersionSelect.custom-select
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Status
-                    select#contextModalStatusSelect.custom-select
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text CMC
-                    input#contextModalCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Type
-                    input#contextModalType.form-control(type='text', value='2')
-                  h6 Color Identity Override:
-                  .form-check.form-check-inline
-                    input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                    label.form-check-label(for='contextModalCheckboxW')
-                      img(src='/content/symbols/w.png' alt='White' title='White')
-                  .form-check.form-check-inline
-                    input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                    label.form-check-label(for='contextModalCheckboxU')
-                      img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                  .form-check.form-check-inline
-                    input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                    label.form-check-label(for='contextModalCheckboxB')
-                      img(src='/content/symbols/b.png' alt='Black' title='Black')
-                  .form-check.form-check-inline
-                    input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                    label.form-check-label(for='contextModalCheckboxR')
-                      img(src='/content/symbols/r.png' alt='Red' title='Red')
-                  .form-check.form-check-inline
-                    input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                    label.form-check-label(for='contextModalCheckboxG')
-                      img(src='/content/symbols/g.png' alt='Green' title='Green')                    
-                  h5 Tags
-                  .tags-area#contextTags
-                    .tags-input(data-name='tags-input')
-                      span.tags
-                      input.hidden-input(type='hidden')
-          .modal-footer
-            a#contextScryfallButton(href="#", target="_blank")
-              button.btn.btn-secondary(type='button') View on Scryfall
-            a#contextBuyButton(href="#", target="_blank")
-              button.btn.btn-secondary(type='button') Buy
-  // Paste bulk Modal
-  #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        form(method='POST', action='/cube/bulkupload/'+cube._id)
-          .modal-header
-            h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .modal-body
-              p Acceptable plain text with one card name per line.
-              textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
-          .modal-footer
-            #bulkspinner.collapse.spinner-border.text-success(role='status')
-              span.sr-only Loading...
-            button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
-            button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-            
-  // file upload
-  #uploadBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadBulkModalTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        .modal-header
-          h5#uploadBulkModalTitle.modal-title Bulk Upload - Upload File
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body  
-          p Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as our .csv export.
-          form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube.id, method='post', enctype='multipart/form-data')
-            input#customFile.custom-file-input(style='padding:10px' type='file' name='document' onchange="$('#upload-file-info').html(this.files[0].name)")
-            label#upload-file-info.custom-file-label(for='customFile') Choose file
-        .modal-footer
-          button.btn.btn-success(type='submit' form='uploadFileForm') Upload
-          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-          
-  // cubetutor import
-  #importModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='importModalTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        .modal-header
-          h5#importModalModalTitle.modal-title Bulk Upload - Import from Cubetutor          
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body  
-          p Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags will not be imported. Cubetutor does not recognize alternate versions
-            |  of cards with the same name, in the same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked to ensure the desired version
-            |  has been added.
-          .input-group.mb-3
-            .input-group-prepend
-              span#basic-addon3.input-group-text Cube ID  (enter cube id from URL):              
-            form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube.id, method='post', enctype='multipart/form-data')
-              input.form-control(type='text', name='cubeid', placeholder='e.g. 123456')
+	//Cube list
+	br      
+	.container#cubelistarea
 
-        .modal-footer
-          button.btn.btn-success(type='submit' form='importForm') Import
-          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-  // cubetutor import
-  #selectEmptyModal.modal.fade(tabindex='-1', role='dialog')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        .modal-header
-          h5.modal-title Cannot Edit Selected
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body  
-          p No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
+	//group context modal
+	if user && user.id == cube.owner
+		#groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
+				.modal-content
+					.modal-header
+						h5.modal-title Edit Selected
+						button.close(type='button', data-dismiss='modal', aria-label='Close')
+							span(aria-hidden='true') ×
+					.row.no-gutters
+						.col-4#groupContextModalArea(style='padding: 4px;')            
+						.col-8  
+							.modal-body                
+								.controls
+									h5 Set Status of All
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text Status
+										select#groupContextModalStatusSelect.custom-select(aria-label='Example select with button addon')
+											option(selected='') 
+											option(value='Not Owned') Not Owned
+											option(value='Ordered') Ordered
+											option(value='Owned') Owned
+											option(value='Premium Owned') Premium Owned
+									h5 Override Attribute on All
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text CMC
+										input#groupContextModalCMC.form-control(type='text', value='2')
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text Type
+										input#groupContextModalType.form-control(type='text', value='2')
+									h5 Color Identity Override: 
+									.form-check.form-check-inline
+										input#groupContextModalCheckboxW.form-check-input(type='checkbox', value='option1')
+										label.form-check-label(for='groupContextModalCheckboxW')
+											img(src='/content/symbols/w.png' alt='White' title='White')
+									.form-check.form-check-inline
+										input#groupContextModalCheckboxU.form-check-input(type='checkbox', value='option2')
+										label.form-check-label(for='groupContextModalCheckboxU')
+											img(src='/content/symbols/u.png' alt='Blue' title='Blue')
+									.form-check.form-check-inline
+										input#groupContextModalCheckboxB.form-check-input(type='checkbox', value='option3')
+										label.form-check-label(for='groupContextModalCheckboxB')
+											img(src='/content/symbols/b.png' alt='Black' title='Black')
+									.form-check.form-check-inline
+										input#groupContextModalCheckboxR.form-check-input(type='checkbox', value='option4')
+										label.form-check-label(for='groupContextModalCheckboxR')
+											img(src='/content/symbols/r.png' alt='Red' title='Red')
+									.form-check.form-check-inline
+										input#groupContextModalCheckboxG.form-check-input(type='checkbox', value='option5')
+										label.form-check-label(for='groupContextModalCheckboxG')
+											img(src='/content/symbols/g.png' alt='Green' title='Green')
+									br
+									em No symbols selected will have no change.
+									br
+									br
+									h5 Edit Tags
+									.form-check
+										input#groupContextAdd.form-check-input(type='radio', name='nameType', value='~', checked='')
+										label.form-check-label(for='groupContextAdd') Add tags to All
+									.form-check
+										input#groupContextRemove.form-check-input(type='radio', name='nameType', value='=')
+										label.form-check-label(for='groupContextRemove') Remove tags from All
+									br
+									.tags-area#groupContextTags
+										.tags-input(data-name='tags-input')
+											span.tags
+											input.hidden-input(type='hidden')
+											input.main-input(maxlength="24")
+								br
+								br
+								p
+									em TCGplayer currently does not support mass entry while preserving card versions, be sure to verify any card versions after using 'Buy all'.
 
-        .modal-footer
-          button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-        
-  #cubeSaveModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeSaveModalTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        .modal-header
-          h5#cubeSaveModalTitle.modal-title Success
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body  
-          p Default sorts saved successfully
-        .modal-footer
-          button.btn.btn-secondary(type='button', data-dismiss='modal') OK
-              
-  script(src='/js/autocomplete.js')
-  script(src='/js/sortfilter.js')     
-  script(src='/js/tags.js')     
-  script(src='/js/editcube.js')
-              
+					.modal-footer
+						button#groupContextRemoveButton.btn.btn-danger(type='button') Remove all from cube
+						form#groupContextBuyForm(method='POST', action='#', target="_blank")
+							input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
+							input.btn.btn-secondary(type='submit',value='Buy all')
+						button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
+
+	if user && user.id == cube.owner
+		// Modal
+		#contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
+				.modal-content
+					.modal-header
+						h5#contextModalTitle.modal-title Ambush Viper
+						button.close(type='button', data-dismiss='modal', aria-label='Close')
+							span(aria-hidden='true') ×
+					.row.no-gutters
+						.col-4(style='padding: 4px;')
+							img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
+							.price-area
+						.col-8  
+							.modal-body
+								h5 Card Attributes
+								.input-group.mb-3
+									.input-group-prepend
+										span.input-group-text Version (Set and #)
+									select#contextModalVersionSelect.custom-select
+								.input-group.mb-3
+									.input-group-prepend
+										span.input-group-text Status
+									select#contextModalStatusSelect.custom-select
+								.input-group.mb-3
+									.input-group-prepend
+										span.input-group-text CMC
+									input#contextModalCMC.form-control(type='text', value='2')
+								.input-group.mb-3
+									.input-group-prepend
+										span.input-group-text Type
+									input#contextModalType.form-control(type='text', value='2')
+								h5 Color Identity Override: 
+								.form-check.form-check-inline
+									input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
+									label.form-check-label(for='contextModalCheckboxW')
+										img(src='/content/symbols/w.png' alt='White' title='White')
+								.form-check.form-check-inline
+									input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
+									label.form-check-label(for='contextModalCheckboxU')
+										img(src='/content/symbols/u.png' alt='Blue' title='Blue')
+								.form-check.form-check-inline
+									input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
+									label.form-check-label(for='contextModalCheckboxB')
+										img(src='/content/symbols/b.png' alt='Black' title='Black')
+								.form-check.form-check-inline
+									input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
+									label.form-check-label(for='contextModalCheckboxR')
+										img(src='/content/symbols/r.png' alt='Red' title='Red')
+								.form-check.form-check-inline
+									input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
+									label.form-check-label(for='contextModalCheckboxG')
+										img(src='/content/symbols/g.png' alt='Green' title='Green')
+								h5 Tags
+								.tags-area#contextTags
+									.tags-input(data-name='tags-input')
+										span.tags
+										input.hidden-input(type='hidden')
+										input.main-input(maxlength="24")
+
+					.modal-footer
+						button#contextRemoveButton.btn.btn-danger(type='button') Remove from cube
+						a#contextScryfallButton(href="#", target="_blank")
+							button.btn.btn-secondary(type='button') View on Scryfall
+						a#contextBuyButton(href="#", target="_blank")
+							button.btn.btn-secondary(type='button') Buy
+						button#contextModalSubmit.btn.btn-success(type='button') Save changes
+	else
+		// Modal
+		#contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
+				.modal-content
+					.modal-header
+						h5#contextModalTitle.modal-title Ambush Viper
+						button.close(type='button', data-dismiss='modal', aria-label='Close')
+							span(aria-hidden='true') ×
+					.row.no-gutters
+						.col-4(style='padding: 4px;')
+							img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
+							.price-area
+						.col-8  
+							.modal-body                
+								fieldset(disabled='')
+									h5 Card Attributes
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text Version (Set and #)
+										select#contextModalVersionSelect.custom-select
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text Status
+										select#contextModalStatusSelect.custom-select
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text CMC
+										input#contextModalCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
+									.input-group.mb-3
+										.input-group-prepend
+											span.input-group-text Type
+										input#contextModalType.form-control(type='text', value='2')
+									h6 Color Identity Override:
+									.form-check.form-check-inline
+										input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
+										label.form-check-label(for='contextModalCheckboxW')
+											img(src='/content/symbols/w.png' alt='White' title='White')
+									.form-check.form-check-inline
+										input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
+										label.form-check-label(for='contextModalCheckboxU')
+											img(src='/content/symbols/u.png' alt='Blue' title='Blue')
+									.form-check.form-check-inline
+										input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
+										label.form-check-label(for='contextModalCheckboxB')
+											img(src='/content/symbols/b.png' alt='Black' title='Black')
+									.form-check.form-check-inline
+										input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
+										label.form-check-label(for='contextModalCheckboxR')
+											img(src='/content/symbols/r.png' alt='Red' title='Red')
+									.form-check.form-check-inline
+										input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
+										label.form-check-label(for='contextModalCheckboxG')
+											img(src='/content/symbols/g.png' alt='Green' title='Green')                    
+									h5 Tags
+									.tags-area#contextTags
+										.tags-input(data-name='tags-input')
+											span.tags
+											input.hidden-input(type='hidden')
+					.modal-footer
+						a#contextScryfallButton(href="#", target="_blank")
+							button.btn.btn-secondary(type='button') View on Scryfall
+						a#contextBuyButton(href="#", target="_blank")
+							button.btn.btn-secondary(type='button') Buy
+	// Paste bulk Modal
+	#pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
+		.modal-dialog.modal-dialog-scrollable(role='document')
+			.modal-content
+				form(method='POST', action='/cube/bulkupload/'+cube._id)
+					.modal-header
+						h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
+						button.close(type='button', data-dismiss='modal', aria-label='Close')
+							span(aria-hidden='true') ×
+					.modal-body
+						p Acceptable plain text with one card name per line.
+						textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
+					.modal-footer
+						#bulkspinner.collapse.spinner-border.text-success(role='status')
+							span.sr-only Loading...
+						button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
+						button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+	// file upload
+	#uploadBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadBulkModalTitle', aria-hidden='true')
+		.modal-dialog.modal-dialog-scrollable(role='document')
+			.modal-content
+				.modal-header
+					h5#uploadBulkModalTitle.modal-title Bulk Upload - Upload File
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body  
+					p Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as our .csv export.
+					form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube.id, method='post', enctype='multipart/form-data')
+						input#customFile.custom-file-input(style='padding:10px' type='file' name='document' onchange="$('#upload-file-info').html(this.files[0].name)")
+						label#upload-file-info.custom-file-label(for='customFile') Choose file
+				.modal-footer
+					button.btn.btn-success(type='submit' form='uploadFileForm') Upload
+					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+	// cubetutor import
+	#importModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='importModalTitle', aria-hidden='true')
+		.modal-dialog.modal-dialog-scrollable(role='document')
+			.modal-content
+				.modal-header
+					h5#importModalModalTitle.modal-title Bulk Upload - Import from Cubetutor          
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body  
+					p Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags will not be imported. Cubetutor does not recognize alternate versions
+						|  of cards with the same name, in the same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked to ensure the desired version
+						|  has been added.
+					.input-group.mb-3
+						.input-group-prepend
+							span#basic-addon3.input-group-text Cube ID  (enter cube id from URL):              
+						form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube.id, method='post', enctype='multipart/form-data')
+							input.form-control(type='text', name='cubeid', placeholder='e.g. 123456')
+
+				.modal-footer
+					button.btn.btn-success(type='submit' form='importForm') Import
+					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+	// cubetutor import
+	#selectEmptyModal.modal.fade(tabindex='-1', role='dialog')
+		.modal-dialog.modal-dialog-scrollable(role='document')
+			.modal-content
+				.modal-header
+					h5.modal-title Cannot Edit Selected
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body  
+					p No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
+
+				.modal-footer
+					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+	#cubeSaveModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeSaveModalTitle', aria-hidden='true')
+		.modal-dialog.modal-dialog-scrollable(role='document')
+			.modal-content
+				.modal-header
+					h5#cubeSaveModalTitle.modal-title Success
+					button.close(type='button', data-dismiss='modal', aria-label='Close')
+						span(aria-hidden='true') ×
+				.modal-body  
+					p Default sorts saved successfully
+				.modal-footer
+					button.btn.btn-secondary(type='button', data-dismiss='modal') OK
+
+	script(src='/js/autocomplete.js')
+	script(src='/js/sortfilter.js')     
+	script(src='/js/tags.js')     
+	script(src='/js/editcube.js')

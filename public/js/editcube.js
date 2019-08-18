@@ -988,7 +988,14 @@ function show_groupContextModal() {
 
 function show_contextModal(card) {
   modalSelect = card;
-
+  if(card.details.price)
+  {
+    $('.price-area').html('<a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a>');
+  }
+  else
+  {
+    $('.price-area').html('');
+  }
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src',card.details.image_normal);
   $('#contextModalVersionSelect').html('');
@@ -1765,7 +1772,7 @@ function renderTableView() {
             }
             return 0;
           });
-          
+
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
@@ -1777,7 +1784,7 @@ function renderTableView() {
           res += '<div class="cmc-group">'
           rowgroup.forEach(function( card, index)
           {
-            
+
             if (index == 0) {
               cmc = card.cmc;
             }
@@ -1788,7 +1795,7 @@ function renderTableView() {
                 res += '</div><div class="cmc-group">';
               }
               cmc = card.cmc;
-            } 
+            }
             if(card.details.image_flip)
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -1796,11 +1803,11 @@ function renderTableView() {
             else
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-            } 
+            }
             res += card.details.name+'</a>';
           });
           res += '</div>'
-          
+
           res += '</ul>';
       });
 
