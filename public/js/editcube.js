@@ -926,7 +926,7 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
-  var cardlist = '<ul class="listgroup" style="padding:5px 0px;">';
+  var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
     if(card.details.image_flip)
@@ -1669,7 +1669,7 @@ function renderCurveView() {
         getLabels('CMC2').forEach(function(col_label, col_index)
         {
           res += '<div class="col-even" style="width: '+colWidth+'%;">'
-          res += '<ul class="list-group" style="padding:5px 0px;">';
+          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           if(groups[group_label][label][col_label])
           {
             res += '<a class="list-group-item list-group-heading">'+col_label+ ' ('+ groups[group_label][label][col_label].length + ')</a>';

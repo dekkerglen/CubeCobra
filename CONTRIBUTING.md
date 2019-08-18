@@ -6,14 +6,13 @@ The main goal with Cube Cobra is to create a cube management tool that doesn't n
 
 ### Why contribute?
 
-One of the best ways to create a sustainable software project is open source it. For cubecobra to become the best possible tool for cube managment it needs help from the community. By contributing to the project, you are giving back to the magic community. Maybe there's a lower priority feature you want to use or maybe there's just a bug that's been bothering you, either way contributing yourself is a great way to get it into the project. Open source software is often more reliable (more eyes on the code). 
+One of the best ways to create a sustainable software project is open source it. For cubecobra to become the best possible tool for cube managment it needs help from the community. By contributing to the project, you are giving back to the magic community. Maybe there's a lower priority feature you want to use or maybe there's just a bug that's been bothering you, either way contributing yourself is a great way to get it into the project. Open source software is often more reliable (more eyes on the code).
 
 Don't feel nervous about making your first contribution, we accept developers with all levels of knowledge and will happily work with and help with whatever you need to make your first contribution. We are not code snobs, so don't be afraid to reach out with questions of any kind.
 
 ### What kind of contributions do we need?
 
 The issues tab in github is kept up to date and tagged, but any contribution is appriciated from code comments to experimental features. Just keep in mind completing a feature does not guarantee it will be merged. If you want to complete a feature that you don't see in the backlog, communicate with dekkerglen to make sure you don't waste any effort.
-
 
 # Ground Rules
 ### Code of conduct.
@@ -25,7 +24,7 @@ Be a decent person. Copy pasted from the linux code of conduct: In the interest 
 > * Keep features small. For large features consider splitting into multiple pull requests to get consistent feedback.
 > * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
 
-Contributing to Cube Cobra does not entitle any contributor to compensation of any kind. Contributions are made at will, with the goal of improving the tool for the entire community. Cube Cobra's hosting costs are paid through donations and affiliate links. These funds are managed solely by Gwen Dekker, who is solely in charge of hosting and managing the live site. 
+Contributing to Cube Cobra does not entitle any contributor to compensation of any kind. Contributions are made at will, with the goal of improving the tool for the entire community. Cube Cobra's hosting costs are paid through donations and affiliate links. These funds are managed solely by Gwen Dekker, who is solely in charge of hosting and managing the live site.
 
 # Your First Contribution
 
@@ -76,7 +75,7 @@ Private Message 'DEKKARU', the admin on Discord, to gain the contributor role an
 
 ### Commit Message Style
 
-Please keep commit messages brief and informative. 
+Please keep commit messages brief and informative.
 
 ### Labeling Conventions for new issues
 
