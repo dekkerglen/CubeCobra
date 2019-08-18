@@ -1577,7 +1577,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res)
     }
     else
     {
-      var image = carddb.imagedict[req.body.imagename];
+      var image = carddb.imagedict[req.body.imagename.toLowerCase()];
       var name = req.body.name;
 
       if(name.length < 5)

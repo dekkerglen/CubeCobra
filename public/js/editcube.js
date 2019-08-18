@@ -926,7 +926,7 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
-  var cardlist = '<ul class="listgroup" style="padding:5px 0px;">';
+  var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
     if(card.details.image_flip)
@@ -1669,7 +1669,7 @@ function renderCurveView() {
         getLabels('CMC2').forEach(function(col_label, col_index)
         {
           res += '<div class="col-even" style="width: '+colWidth+'%;">'
-          res += '<ul class="list-group" style="padding:5px 0px;">';
+          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           if(groups[group_label][label][col_label])
           {
             res += '<a class="list-group-item list-group-heading">'+col_label+ ' ('+ groups[group_label][label][col_label].length + ')</a>';
@@ -1732,7 +1732,7 @@ function renderTableView() {
 
   var colWidth = Math.max(10,100.0 / count);
 
-  var res = '<div class="row even-cols">';
+  var res = '<div class="row no-gutters even-cols">';
   Object.keys(columns).forEach(function(column_label, col_index)
   {
     var column = columns[column_label];
@@ -1740,7 +1740,7 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      res += '<h6>'+column_label+ ' ('+ columnLength(sorts[0],column_label) + ')</h6>';
+      res += '<h6>'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
       {
@@ -1765,17 +1765,30 @@ function renderTableView() {
             }
             return 0;
           });
-
-          res += '<ul class="list-group" style="padding:5px 0px;">';
+          
+          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
           {
             res += 'href="#"'
           }
           res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
-
+          let cmc = 0
+          res += '<div class="cmc-group">'
           rowgroup.forEach(function( card, index)
           {
+            
+            if (index == 0) {
+              cmc = card.cmc;
+            }
+            if (card.cmc != cmc) {
+              if (index + 1 == rowgroup.length) {
+                res += "";
+              } else {
+                res += '</div><div class="cmc-group">';
+              }
+              cmc = card.cmc;
+            } 
             if(card.details.image_flip)
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -1783,11 +1796,12 @@ function renderTableView() {
             else
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-            }
+            } 
             res += card.details.name+'</a>';
           });
-
-          res += '</ul">';
+          res += '</div>'
+          
+          res += '</ul>';
       });
 
       res += '</div>';
