@@ -2692,6 +2692,64 @@ router.post('/api/savesorts/:id', function(req, res)
   });
 });
 
+router.post('/api/draftpickcard/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    Draft.findById({_id:req.body.draft_id}, function(err, draft)
+    {
+      CardRating.findOne({'name': req.body.card.details.name}, function(err, cardrating)
+      {
+        let cards_in_pack = draft.packs[0][0].length + draft.pickNumber - 1;
+        var rating = (cards_in_pack - draft.pickNumber + 1)/cards_in_pack;
+
+        if(cardrating)
+        {
+          console.log( cardrating )
+          console.log( cardrating.name, cardrating.value, cardrating.picks )
+          cardrating.value = cardrating.value * (cardrating.picks/(cardrating.picks+1)) + rating * (1/(cardrating.picks+1));
+          cardrating.picks += 1;
+          console.log( cardrating.name, cardrating.value, cardrating.picks )
+          CardRating.updateOne({_id:cardrating._id}, cardrating, function(err) {
+            if(err)
+            {
+              console.log(err, req);
+              res.status(500).send({
+                success:'false',
+                message:'Error saving pick rating'
+              });
+              return;
+            }
+          });
+        }
+        else
+        {
+          cardrating = new CardRating();
+          cardrating.name = req.body.card.details.name;
+          cardrating.value = rating;
+          cardrating.picks = 1;
+          console.log( cardrating.name, cardrating.value, cardrating.picks )
+          cardrating.save(function(err)
+          {
+            if(err)
+            {
+              console.log(err, req);
+              res.status(500).send({
+                success:'false',
+                message:'Error saving pick rating'
+              });
+              return;
+            }
+          });
+        }
+        res.status(200).send({
+          success:'true'
+        });
+      });
+    });
+  });
+});
+
 router.post('/api/draftpick/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
