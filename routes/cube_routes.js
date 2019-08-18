@@ -2705,11 +2705,8 @@ router.post('/api/draftpickcard/:id', function(req, res)
 
         if(cardrating)
         {
-          console.log( cardrating )
-          console.log( cardrating.name, cardrating.value, cardrating.picks )
           cardrating.value = cardrating.value * (cardrating.picks/(cardrating.picks+1)) + rating * (1/(cardrating.picks+1));
           cardrating.picks += 1;
-          console.log( cardrating.name, cardrating.value, cardrating.picks )
           CardRating.updateOne({_id:cardrating._id}, cardrating, function(err) {
             if(err)
             {
@@ -2728,7 +2725,6 @@ router.post('/api/draftpickcard/:id', function(req, res)
           cardrating.name = req.body.card.details.name;
           cardrating.value = rating;
           cardrating.picks = 1;
-          console.log( cardrating.name, cardrating.value, cardrating.picks )
           cardrating.save(function(err)
           {
             if(err)
