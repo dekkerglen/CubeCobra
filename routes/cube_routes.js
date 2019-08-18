@@ -2700,8 +2700,8 @@ router.post('/api/draftpickcard/:id', function(req, res)
     {
       CardRating.findOne({'name': req.body.card.details.name}, function(err, cardrating)
       {
-        let cards_in_pack = draft.packs[0][0].length + draft.pickNumber - 1;
-        var rating = (cards_in_pack - draft.pickNumber + 1)/cards_in_pack;
+        const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
+        var rating = (cards_per_pack - draft.packs[0][0].length + 1)/cards_per_pack;
 
         if(cardrating)
         {
