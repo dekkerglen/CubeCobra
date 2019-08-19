@@ -254,6 +254,7 @@ function addToPicks(card, x, y, cmccol,frompack)
     draft.picks[0][x] = [];
   }
   draft.picks[0][x].push(card);
+  draft.pickOrder.push(card._id);
   if(frompack)
   {
     fetch("/cube/api/draftpickcard/"+draft.cube, {
