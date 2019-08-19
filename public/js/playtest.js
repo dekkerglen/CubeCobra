@@ -20,3 +20,9 @@ $('.start-custom-draft').click(function(e){
   }));
   $('#fireDraftForm').submit();
 });
+
+$('#sampleSeedValue').keyup(function(e){
+  const cubeId = $('#viewSeededButton').attr('data-cube-id');
+  const seed = $(this).val();
+  $('#viewSeededButton').attr('href', `/cube/samplepack/${cubeId}/${seed}`);
+});
