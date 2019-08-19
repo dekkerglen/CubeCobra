@@ -1663,7 +1663,7 @@ function renderCurveView() {
         var labelCount = Object.values(groups[group_label][label]).map(function(group) {
           return group ? group.length : 0;
         }).reduce(function(sum, ct){ return sum + ct; }, 0);
-        res += '<h6>'+label+ ' ('+ labelCount + ')</h6>';
+        res += '<h6 class="text-center">'+label+ ' ('+ labelCount + ')</h6>';
         res += '<div class="row even-cols">';
         var colWidth = Math.max(10,100.0 / getLabels('CMC2').length);
         getLabels('CMC2').forEach(function(col_label, col_index)
@@ -1740,7 +1740,7 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      res += '<h6>'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
+      res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
       {
