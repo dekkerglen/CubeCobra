@@ -926,9 +926,20 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
+
+  var price = 0;
+  var price_foil = 0;
   var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
+    if(card.details.price)
+    {
+      price += card.details.price;
+    }
+    if(card.details.price_foil)
+    {
+      price_foil += card.details.price_foil;
+    }
     if(card.details.image_flip)
     {
       cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -942,6 +953,18 @@ function renderGroupContext()
     cardlist += '</a></li>';
   });
   cardlist += '</ul">';
+
+  var priceHtml = '';
+  if(price > 0)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+price.toFixed(2)+'</a></div>';
+  }
+  if(price_foil > 0)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
+
   $('#groupContextModalArea').html(cardlist);
   autocard_init('autocard');
   $('.groupModalRm').click(function(e)
@@ -991,15 +1014,11 @@ function show_contextModal(card) {
   var priceHtml = '';
   if(card.details.price)
   {
-    priceHtml += '<a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a>';
-  }
-  if(card.details.price && card.details.price_foil)
-  {
-    priceHtml += '</br>';
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a></div>';
   }
   if(card.details.price_foil)
   {
-    priceHtml += '<a>TCGPlayer Market Foil: $'+card.details.price_foil.toFixed(2)+'</a>';
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+card.details.price_foil.toFixed(2)+'</a></div>';
   }
   $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);

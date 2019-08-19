@@ -85,45 +85,52 @@ function parseJSON(response) {
 //callback with a dict of card prices
 function GetPrices(card_ids, callback)
 {
-  var chunkSize = 250;
-  //max tcgplayer request size is 250
-  var chunks = [];
-  for(i = 0; i <= card_ids.length/chunkSize; i++)
+  if(card_ids.length > 0)
   {
-    chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
-  }
-
-  GetToken(function(access_token)
-  {
-    Promise.all(chunks.map(chunk =>
-       fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/'+listToString(chunk), {
-        headers: {
-          Authorization: ' Bearer ' + access_token
-        },
-        method: 'GET',
-      })
-      .then(checkStatus)
-      .then(parseJSON)
-    )).then(function(responses)
+    var chunkSize = 250;
+    //max tcgplayer request size is 250
+    var chunks = [];
+    for(i = 0; i <= card_ids.length/chunkSize; i++)
     {
-      var price_dict = {};
-      responses.forEach(function(response, index)
+      chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
+    }
+
+    GetToken(function(access_token)
+    {
+      Promise.all(chunks.map(chunk =>
+         fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/'+listToString(chunk), {
+          headers: {
+            Authorization: ' Bearer ' + access_token
+          },
+          method: 'GET',
+        })
+        .then(checkStatus)
+        .then(parseJSON)
+      )).then(function(responses)
       {
-        response.results.forEach(function(item, index)
+        var price_dict = {};
+        responses.forEach(function(response, index)
         {
-          if(item.marketPrice && item.subTypeName == 'Normal')
+          response.results.forEach(function(item, index)
           {
-            price_dict[item.productId] = item.marketPrice;
-          }
-          else if(item.marketPrice && item.subTypeName =='Foil')
-          {
-            price_dict[item.productId+'_foil'] = item.marketPrice;
-          }
+            if(item.marketPrice && item.subTypeName == 'Normal')
+            {
+              price_dict[item.productId] = item.marketPrice;
+            }
+            else if(item.marketPrice && item.subTypeName =='Foil')
+            {
+              price_dict[item.productId+'_foil'] = item.marketPrice;
+            }
+          });
         });
+        callback(price_dict);
       });
-      callback(price_dict);
     });
-  });
+  }
+  else
+  {
+    callback({});
+  }
 }
 
 // Add Submit POST Route
