@@ -605,7 +605,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty','Manacost Type'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -631,11 +631,11 @@ function getLabels(sort) {
   }
   else if (sort == 'Type')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane'];
+    return ['Artifact','Conspiracy','Contraption','Creature','Enchantment','Instant','Land','Phenomenon','Plane','Planeswalker','Scheme','Sorcery','Vanguard'];
   }
   else if (sort == 'Supertype')
   {
-    return ['Snow','Legendary','Tribal','Basic','Elite','Host','Ongoing','World'];
+    return ['Basic','Elite','Host','Legendary','Ongoing','Tribal','World','Snow'];
   }
   else if (sort == 'Tags')
   {
@@ -1765,7 +1765,7 @@ function renderTableView() {
             }
             return 0;
           });
-          
+
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
@@ -1777,7 +1777,7 @@ function renderTableView() {
           res += '<div class="cmc-group">'
           rowgroup.forEach(function( card, index)
           {
-            
+
             if (index == 0) {
               cmc = card.cmc;
             }
@@ -1788,7 +1788,7 @@ function renderTableView() {
                 res += '</div><div class="cmc-group">';
               }
               cmc = card.cmc;
-            } 
+            }
             if(card.details.image_flip)
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -1796,11 +1796,11 @@ function renderTableView() {
             else
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-            } 
+            }
             res += card.details.name+'</a>';
           });
           res += '</div>'
-          
+
           res += '</ul>';
       });
 
