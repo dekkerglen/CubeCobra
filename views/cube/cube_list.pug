@@ -41,6 +41,8 @@ block content
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
+          li.nav-item
+            a.nav-link(href='#', data-toggle="collapse" data-target="#navcompare" aria-controls="navcompare" aria-expanded="false" aria-label="Toggle navigation") Compare
           if user
             if user.id == cube.owner
               li.nav-item
@@ -138,6 +140,14 @@ block content
               button.updateButton.btn.btn-success(type='button') Update Table
               br
               br           
+      #navcompare.collapse(data-parent='#accordion')
+        .container
+          .row
+            .col
+              form(autocomplete='off').form-inline
+                .mb-2
+                  input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
+                button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
               
   include ../flash
 

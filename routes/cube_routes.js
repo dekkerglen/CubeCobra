@@ -417,6 +417,32 @@ router.get('/blog/:id', function(req, res)
   });
 });
 
+router.get('/compare/:id_a/to/:id_b', function(req, res)
+{
+  const id_a = req.params.id_a;
+  const id_b = req.params.id_b;
+  Cube.findById(id_a, function(err, cubeA)
+  {
+    Cube.findById(id_b, function(err, cubeB)
+    {
+      if(!cubeA)
+      {
+        req.flash('danger', 'Base cube not found');
+        res.redirect('/404/');
+      }
+      else if(!cubeB)
+      {
+        req.flash('danger', 'Comparison cube was not found');
+        res.redirect('/cube/list/'+id_a);
+      }
+      else
+      {
+        console.log( cubeA._id, cubeB._id );
+      }
+    });
+  });
+})
+
 router.get('/list/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)

@@ -21,6 +21,13 @@ cube.forEach(function(card, index)
   cubeDict[index] = card;
 });
 
+$('#compareButton').click(function(e)
+{
+  const id_a = $('#cubeID').val();
+  const id_b = $('#compareInput').val();
+  if(id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
+});
+
 $('#addFilterButton').click(function(e)
 {
   var filterType = $('#filterType').val();
