@@ -4,7 +4,7 @@ const request = require('request');
 const fs = require('fs');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var cubefn, { addAutocard, generatePack } = require('../serverjs/cubefn.js');
+var cubefn, { addAutocard, generatePack, sanitize, setCubeType } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
@@ -57,7 +57,7 @@ router.post('/add',ensureAuth, function(req,res)
           cube.owner_name = user.username;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
-          cube = cubefn.setCubeType(cube, carddb);
+          cube = setCubeType(cube, carddb);
           cube.save(function(err)
           {
             if(err)
@@ -88,7 +88,7 @@ router.get('/view/:id', function(req, res)
 });
 
 router.post('/format/add/:id',ensureAuth, function(req, res) {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
   {
     if(err || !cube)
@@ -137,7 +137,7 @@ router.post('/format/add/:id',ensureAuth, function(req, res) {
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   if(req.body.title.length < 5 || req.body.title.length > 100)
   {
     req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
@@ -161,7 +161,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
       {
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
-        cube = cubefn.setCubeType(cube, carddb);
+        cube = setCubeType(cube, carddb);
         cube.save(function(err)
         {
           User.findById(cube.owner, function(err, user)
@@ -838,7 +838,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
             {
               blogpost.save(function(err)
               {
-                cube = cubefn.setCubeType(cube, carddb);
+                cube = setCubeType(cube, carddb);
                 Cube.updateOne({_id:cube._id}, cube, function(err)
                 {
                   if(err)
@@ -1021,7 +1021,7 @@ function bulkuploadCSV(req, res, cards, cube) {
   {
     blogpost.save(function(err)
     {
-      cube = cubefn.setCubeType(cube, carddb);
+      cube = setCubeType(cube, carddb);
       Cube.updateOne({_id:cube._id}, cube, function(err)
       {
         if(err)
@@ -1180,7 +1180,7 @@ function bulkUpload(req, res, list, cube) {
         {
           blogpost.save(function(err)
           {
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -1658,7 +1658,7 @@ router.get('/draft/:id', function(req, res)
 // Edit Submit POST Route
 router.post('/editoverview/:id',ensureAuth, function(req,res)
 {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
   {
     if(err)
@@ -1695,7 +1695,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res)
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
-        cube = cubefn.setCubeType(cube, carddb);
+        cube = setCubeType(cube, carddb);
         cube.save(function(err)
         {
           if(err)
@@ -1717,7 +1717,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res)
 // Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res)
 {
-  req.body.blog = cubefn.sanitize(req.body.blog);
+  req.body.blog = sanitize(req.body.blog);
   Cube.findById(req.params.id, function(err, cube)
   {
     cube.date_updated = Date.now();
@@ -1909,7 +1909,7 @@ router.post('/edit/:id',ensureAuth, function(req,res)
                 console.log('ERROR: Could not find the card with ID: ' + fail, req);
               }
             });
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -1925,7 +1925,7 @@ router.post('/edit/:id',ensureAuth, function(req,res)
           }
           else
           {
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -2263,7 +2263,7 @@ router.get('/deckbuilder/:id',function(req, res)
                 owner: 'Unknown',
                 loginCallback:'/cube/draft/'+req.params.id,
                 deck_raw:JSON.stringify(deck),
-                basics_raw:JSON.stringify(cubefn.getBasics(carddb)),
+                basics_raw:JSON.stringify(getBasics(carddb)),
                 deckid:deck._id
               });
             }
@@ -2275,7 +2275,7 @@ router.get('/deckbuilder/:id',function(req, res)
                 owner: user.username,
                 loginCallback:'/cube/draft/'+req.params.id,
                 deck_raw:JSON.stringify(deck),
-                basics_raw:JSON.stringify(cubefn.getBasics(carddb)),
+                basics_raw:JSON.stringify(getBasics(carddb)),
                 deckid:deck._id
               });
             }
@@ -2519,7 +2519,7 @@ router.post('/api/updatecard/:id', function(req, res)
           {
             card.type_line = carddb.carddict[card.cardID].type;
           }
-          if(!found && cubefn.cardsAreEquivalent(card, req.body.src, carddb))
+          if(!found && cardsAreEquivalent(card, req.body.src, carddb))
           {
             found = true;
             cube.cards[index] = req.body.updated;
@@ -2534,7 +2534,7 @@ router.post('/api/updatecard/:id', function(req, res)
         }
         else
         {
-          cube = cubefn.setCubeType(cube,carddb);
+          cube = setCubeType(cube,carddb);
           cube.save(function(err)
           {
             if(err)

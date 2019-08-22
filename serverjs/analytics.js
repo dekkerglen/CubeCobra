@@ -296,7 +296,7 @@ var methods = {
         {
           ColorCounts.Gruul += 1;
           ColorCounts.Green += 1;
-          ColorCounts.White += 1;
+          ColorCounts.Red += 1;
         }
         else if(card.details.colors.includes('W') && card.details.colors.includes('G'))
         {
