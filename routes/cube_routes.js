@@ -437,7 +437,21 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
       }
       else
       {
-        console.log( cubeA._id, cubeB._id );
+        User.findById(cubeA.owner, function(err, ownerA)
+        {
+          User.findById(cubeB.owner, function(err, ownerB)
+          {
+            console.log( cubeA._id, cubeB._id );
+            res.render('cube/cube_list',
+            {
+              cube:cubeA,
+              cube_raw:JSON.stringify(cubeA.cards),
+              author: 'unknown',
+              loginCallback:'/cube/comapre/'+id_a+'/to/'+id_b,
+              //edittoken:currentuser.edit_token
+            });
+          });
+        });
       }
     });
   });
