@@ -28,7 +28,7 @@ var cached_prices = {};
 
 function GetToken(callback)
 {
-  if(token && Date(Date.now()) < token.expires)
+  if(token && Date.now() < token.expires)
   {
     //TODO: check if token is expired, if so, fetch a new one
     callback(token.access_token);
@@ -53,6 +53,7 @@ function GetToken(callback)
       {
         token = JSON.parse(body);
         token.expires = Tomorrow();
+        console.log(token.expires.toString());
         callback(token.access_token);
       }
     });
@@ -101,7 +102,7 @@ function GetPrices(card_ids, callback)
   //trim card_ids if we have a recent cached date
   for(i = card_ids.length-1; i >= 0; i--)
   {
-    if(cached_prices[card_ids[i]] && cached_prices[card_ids[i]].expires > Date(Date.now()))
+    if(cached_prices[card_ids[i]] && cached_prices[card_ids[i]].expires < Date.now())
     {
       if(cached_prices[card_ids[i]].price)
       {
@@ -382,53 +383,80 @@ router.get('/overview/:id', function(req, res)
     }
     else
     {
-      User.findById(cube.owner, function(err, user)
+      var pids = [];
+      cube.cards.forEach(function(card, index)
       {
-        Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+        card.details = carddb.carddict[card.cardID];
+        if(card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id))
         {
-          blogs.forEach(function(item, index){
-            if(!item.date_formatted)
+          pids.push(card.details.tcgplayer_id);
+        }
+      });
+      GetPrices(pids, function(price_dict)
+      {
+        var sum = 0;
+        cube.cards.forEach(function(card, index)
+        {
+          if(price_dict[card.details.tcgplayer_id])
+          {
+            sum += price_dict[card.details.tcgplayer_id];
+          }
+          else if(price_dict[card.details.tcgplayer_id+'_foil'])
+          {
+            sum += price_dict[card.details.tcgplayer_id+'_foil'];
+          }
+        });
+        console.log(sum);
+        User.findById(cube.owner, function(err, user)
+        {
+          Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+          {
+            blogs.forEach(function(item, index){
+              if(!item.date_formatted)
+              {
+                item.date_formatted = item.date.toLocaleString("en-US");
+              }
+              if(item.html)
+              {
+                item.html = cubefn.addAutocard(item.html,carddb);
+              }
+            });
+            if(blogs.length > 0)
             {
-              item.date_formatted = item.date.toLocaleString("en-US");
+              blogs.reverse();
             }
-            if(item.html)
+            cube.raw_desc = cube.body;
+            if(cube.descriptionhtml)
             {
-              item.html = cubefn.addAutocard(item.html,carddb);
+              cube.raw_desc = cube.descriptionhtml;
+              cube.descriptionhtml = cubefn.addAutocard(cube.descriptionhtml,carddb);
+            }
+            if(!user)
+            {
+              res.render('cube/cube_overview',
+              {
+                cube:cube,
+                num_cards:cube.cards.length,
+                author: 'unknown',
+                post:blogs[0],
+                loginCallback:'/cube/overview/'+req.params.id,
+                price:sum.toFixed(2)
+              });
+            }
+            else
+            {
+              res.render('cube/cube_overview',
+              {
+                cube:cube,
+                num_cards:cube.cards.length,
+                owner: user.username,
+                post:blogs[0],
+                loginCallback:'/cube/overview/'+req.params.id,
+                editorvalue:cube.raw_desc,
+                price:sum.toFixed(2)
+              });
             }
           });
-          if(blogs.length > 0)
-          {
-            blogs.reverse();
-          }
-          cube.raw_desc = cube.body;
-          if(cube.descriptionhtml)
-          {
-            cube.raw_desc = cube.descriptionhtml;
-            cube.descriptionhtml = cubefn.addAutocard(cube.descriptionhtml,carddb);
-          }
-          if(!user)
-          {
-            res.render('cube/cube_overview',
-            {
-              cube:cube,
-              num_cards:cube.cards.length,
-              author: 'unknown',
-              post:blogs[0],
-              loginCallback:'/cube/overview/'+req.params.id
-            });
-          }
-          else
-          {
-            res.render('cube/cube_overview',
-            {
-              cube:cube,
-              num_cards:cube.cards.length,
-              owner: user.username,
-              post:blogs[0],
-              loginCallback:'/cube/overview/'+req.params.id,
-              editorvalue:cube.raw_desc
-            });
-          }
         });
       });
     }
@@ -2522,19 +2550,36 @@ router.get('/api/getimage/:name', function(req, res)
 router.get('/api/getcardfromid/:id', function(req, res)
 {
   var card = carddb.carddict[req.params.id];
-  if(!card)
+  //need to get the price of the card with the new version in here
+  var tcg = [];
+  if(card.tcgplayer_id)
   {
-    res.status(200).send({
-      success:'true'
-    });
+    tcg.push(card.tcgplayer_id);
   }
-  else
+  GetPrices(tcg, function(price_dict)
   {
-    res.status(200).send({
-      success:'true',
-      card:card
-    });
-  }
+    if(!card)
+    {
+      res.status(200).send({
+        success:'true'
+      });
+    }
+    else
+    {
+      if(price_dict[card.tcgplayer_id])
+      {
+        card.price = price_dict[card.tcgplayer_id];
+      }
+      if(price_dict[card.tcgplayer_id+'_foil'])
+      {
+        card.price_foil = price_dict[card.tcgplayer_id+'_foil'];
+      }
+      res.status(200).send({
+        success:'true',
+        card:card
+      });
+    }
+  });
 });
 
 router.get('/api/getversions/:id', function(req, res)

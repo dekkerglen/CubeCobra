@@ -99,6 +99,16 @@ if(canEdit) {
       .then(function(json)
     {
       $('#contextModalImg').attr('src',json.card.image_normal);
+      var priceHtml = '';
+      if(json.card.price)
+      {
+        priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+json.card.price.toFixed(2)+'</a></div>';
+      }
+      if(json.card.price_foil)
+      {
+        priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+json.card.price_foil.toFixed(2)+'</a></div>';
+      }
+      $('.price-area').html(priceHtml);
     });
   });
   $('#groupContextModalSubmit').click(function(e) {
