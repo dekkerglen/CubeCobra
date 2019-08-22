@@ -421,6 +421,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
 {
   const id_a = req.params.id_a;
   const id_b = req.params.id_b;
+  const user_id = req.user ? req.user._id : '';
   Cube.findById(id_a, function(err, cubeA)
   {
     Cube.findById(id_b, function(err, cubeB)
@@ -437,21 +438,44 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
       }
       else
       {
-        User.findById(cubeA.owner, function(err, ownerA)
+        User.findById(user_id, function(err, currentuser)
         {
-          User.findById(cubeB.owner, function(err, ownerB)
+          if(!currentuser) build_response();
+          else
           {
-            console.log( cubeA._id, cubeB._id );
-            res.render('cube/cube_list',
+            if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
             {
-              cube:cubeA,
-              cube_raw:JSON.stringify(cubeA.cards),
-              author: 'unknown',
-              loginCallback:'/cube/comapre/'+id_a+'/to/'+id_b,
-              //edittoken:currentuser.edit_token
+              currentuser.edit_token = util.generate_edit_token();
+            }
+            currentuser.save(function(err)
+            {
+              build_response(currentuser);
+            });
+          }
+        });
+
+        function build_response(currentuser) {
+          User.findById(cubeA.owner, function(err, ownerA)
+          {
+            User.findById(cubeB.owner, function(err, ownerB)
+            {
+              params = {
+                cube:cubeA,
+                cube_raw:JSON.stringify(cubeA.cards),
+                loginCallback:'/cube/comapre/'+id_a+'/to/'+id_b,
+              };
+
+              if(currentuser) params.edittoken = currentuser.edit_token;
+
+              if(ownerA) params.owner = ownerA.username;
+              else params.author = 'unknown';
+
+              console.log( cubeA._id, cubeB._id );
+              res.render('cube/cube_list', params);
             });
           });
-        });
+        }
+
       }
     });
   });
@@ -483,7 +507,7 @@ router.get('/list/:id', function(req, res)
         {
           if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
           {
-            currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            currentuser.edit_token = util.generate_edit_token();
           }
           currentuser.save(function(err)
           {
