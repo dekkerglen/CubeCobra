@@ -1,3 +1,5 @@
+var shuffleSeed = require('shuffle-seed');
+
 function add_word(obj, word) {
   if(word.length <= 0)
   {
@@ -63,18 +65,11 @@ function binaryInsert(value, array, startVal, endVal) {
 }
 
 var methods = {
-  shuffle: function (array) {
-    var currentIndex = array.length;
-    var temporaryValue, randomIndex;
-    while (0 !== currentIndex) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex -= 1;
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
+  shuffle: function (array, seed) {
+    if (!seed) {
+      seed = Date.now();
     }
-
-    return array;
+    return shuffleSeed.shuffle(array, seed);
 
   },
   turnToTree: function (arr) {

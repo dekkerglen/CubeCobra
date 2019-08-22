@@ -4,9 +4,13 @@ window.onload = async () => {
   const response = await fetch('/cube/api/fullnames');
   const myJson = await response.json();
   var cardnames = myJson.cardnames;
-  //
 
-  function autocomplete(inp, arr, submit_button) {
+  //load the card images
+  const image_resp = await fetch('/cube/api/imagedict');
+  const image_json = await image_resp.json();
+  var cardimages = image_json.dict;
+
+  function autocomplete(inp, arr, images, submit_button) {
     /*the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values:*/
     var currentFocus;
@@ -29,6 +33,12 @@ window.onload = async () => {
           /*check if the item starts with the same letters as the text field value:*/
           /*create a DIV element for each matching element:*/
           b = document.createElement("DIV");
+
+          // Add an autocard to the div
+          b.setAttribute("class", "autocard autocard-art-crop");
+          let image = images[matches[i].toLowerCase()];
+          b.setAttribute("card", image.uri);
+
           /*make the matching letters bold:*/
           b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
           b.innerHTML += matches[i].substr(val.length);
@@ -54,6 +64,7 @@ window.onload = async () => {
           });
           a.appendChild(b);
         }
+        autocard_init('autocard');
     });
     /*execute a function presses a key on the keyboard:*/
     inp.addEventListener("keydown", function(e) {
@@ -295,6 +306,7 @@ window.onload = async () => {
           x[i].parentNode.removeChild(x[i]);
         }
       }
+	  autocard_hide_card();
     }
     /*execute a function when someone clicks in the document:*/
     document.addEventListener("click", function (e) {
@@ -303,5 +315,5 @@ window.onload = async () => {
   }
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  autocomplete(document.getElementById("imageInput"), cardnames);
+  autocomplete(document.getElementById("imageInput"), cardnames, cardimages);
 }

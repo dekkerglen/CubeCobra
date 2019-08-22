@@ -2,6 +2,7 @@ const express = require('express');
 let mongoose = require('mongoose');
 const request = require('request');
 const fs = require('fs');
+const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
 var cubefn = require('../serverjs/cubefn.js');
@@ -9,6 +10,7 @@ var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
+const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 
 //grabbing sortfilter.cardIsLabel from client-side
 var sortfilter = require('../public/js/sortfilter.js');
@@ -21,8 +23,157 @@ let User = require('../models/user');
 let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
 
+var token = null;
+var cached_prices = {};
+
+function GetToken(callback)
+{
+  if(token && Date.now() < token.expires)
+  {
+    //TODO: check if token is expired, if so, fetch a new one
+    callback(token.access_token);
+  }
+  else
+  {
+    console.log(Date(Date.now()).toString(), 'fetching fresh token');
+    var options = {
+      url: 'https://api.tcgplayer.com/token',
+      method: 'POST',
+      header: 'application/x-www-form-urlencoded',
+      body: 'grant_type=client_credentials&client_id='+tcgconfig.Public_Key+'&client_secret='+tcgconfig.Private_Key
+    };
+
+    request(options, function(error, response, body)
+    {
+      if(error)
+      {
+        console.log(error);
+      }
+      else
+      {
+        token = JSON.parse(body);
+        token.expires = Tomorrow();
+        console.log(token.expires.toString());
+        callback(token.access_token);
+      }
+    });
+  }
+}
+
+function Tomorrow()
+{
+  var date = new Date();
+  //add 1 day to expiration date
+  date.setDate(date.getDate() + 1);
+  return date;
+}
+
+function listToString(list)
+{
+  var str = '';
+  list.forEach(function(item, index)
+  {
+    if(index != 0)
+    {
+      str += ',';
+    }
+    str += item;
+  })
+  return str;
+}
+
+function checkStatus(response) {
+  if (response.ok) {
+    return Promise.resolve(response);
+  } else {
+    return Promise.reject(new Error(response.statusText));
+  }
+}
+
+function parseJSON(response) {
+  return response.json();
+}
+
+//callback with a dict of card prices
+function GetPrices(card_ids, callback)
+{
+  var price_dict = {};
+
+  //trim card_ids if we have a recent cached date
+  for(i = card_ids.length-1; i >= 0; i--)
+  {
+    if(cached_prices[card_ids[i]] && cached_prices[card_ids[i]].expires < Date.now())
+    {
+      if(cached_prices[card_ids[i]].price)
+      {
+        price_dict[card_ids[i]] = cached_prices[card_ids[i]].price;
+      }
+      if(cached_prices[card_ids[i]].price_foil)
+      {
+        price_dict[card_ids[i]+'_foil'] = cached_prices[card_ids[i]].price_foil;
+      }
+      card_ids.splice(i,1);
+    }
+  }
+
+  if(card_ids.length > 0)
+  {
+
+    var chunkSize = 250;
+    //max tcgplayer request size is 250
+    var chunks = [];
+    for(i = 0; i <= card_ids.length/chunkSize; i++)
+    {
+      chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
+    }
+
+    GetToken(function(access_token)
+    {
+      Promise.all(chunks.map(chunk =>
+         fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/'+listToString(chunk), {
+          headers: {
+            Authorization: ' Bearer ' + access_token
+          },
+          method: 'GET',
+        })
+        .then(checkStatus)
+        .then(parseJSON)
+      )).then(function(responses)
+      {
+        responses.forEach(function(response, index)
+        {
+          response.results.forEach(function(item, index)
+          {
+            if(!cached_prices[item.productId])
+            {
+              cached_prices[item.productId] = {};
+            }
+            if(item.marketPrice && item.subTypeName == 'Normal')
+            {
+              price_dict[item.productId] = item.marketPrice;
+              cached_prices[item.productId].price = item.marketPrice;
+              cached_prices[item.productId].expires = Tomorrow();
+            }
+            else if(item.marketPrice && item.subTypeName =='Foil')
+            {
+              price_dict[item.productId+'_foil'] = item.marketPrice;
+              cached_prices[item.productId].price_foil = item.marketPrice;
+              cached_prices[item.productId].expires = Tomorrow();
+            }
+          });
+        });
+        callback(price_dict);
+      });
+    });
+  }
+  else
+  {
+    callback(price_dict);
+  }
+}
+
 // Add Submit POST Route
-router.post('/add',ensureAuth, function(req,res,next)
+router.post('/add',ensureAuth, function(req,res)
 {
   if(req.body.name.length < 5)
   {
@@ -232,53 +383,80 @@ router.get('/overview/:id', function(req, res)
     }
     else
     {
-      User.findById(cube.owner, function(err, user)
+      var pids = [];
+      cube.cards.forEach(function(card, index)
       {
-        Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+        card.details = carddb.carddict[card.cardID];
+        if(card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id))
         {
-          blogs.forEach(function(item, index){
-            if(!item.date_formatted)
+          pids.push(card.details.tcgplayer_id);
+        }
+      });
+      GetPrices(pids, function(price_dict)
+      {
+        var sum = 0;
+        cube.cards.forEach(function(card, index)
+        {
+          if(price_dict[card.details.tcgplayer_id])
+          {
+            sum += price_dict[card.details.tcgplayer_id];
+          }
+          else if(price_dict[card.details.tcgplayer_id+'_foil'])
+          {
+            sum += price_dict[card.details.tcgplayer_id+'_foil'];
+          }
+        });
+        console.log(sum);
+        User.findById(cube.owner, function(err, user)
+        {
+          Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
+          {
+            blogs.forEach(function(item, index){
+              if(!item.date_formatted)
+              {
+                item.date_formatted = item.date.toLocaleString("en-US");
+              }
+              if(item.html)
+              {
+                item.html = cubefn.addAutocard(item.html,carddb);
+              }
+            });
+            if(blogs.length > 0)
             {
-              item.date_formatted = item.date.toLocaleString("en-US");
+              blogs.reverse();
             }
-            if(item.html)
+            cube.raw_desc = cube.body;
+            if(cube.descriptionhtml)
             {
-              item.html = cubefn.addAutocard(item.html,carddb);
+              cube.raw_desc = cube.descriptionhtml;
+              cube.descriptionhtml = cubefn.addAutocard(cube.descriptionhtml,carddb);
+            }
+            if(!user)
+            {
+              res.render('cube/cube_overview',
+              {
+                cube:cube,
+                num_cards:cube.cards.length,
+                author: 'unknown',
+                post:blogs[0],
+                loginCallback:'/cube/overview/'+req.params.id,
+                price:sum.toFixed(2)
+              });
+            }
+            else
+            {
+              res.render('cube/cube_overview',
+              {
+                cube:cube,
+                num_cards:cube.cards.length,
+                owner: user.username,
+                post:blogs[0],
+                loginCallback:'/cube/overview/'+req.params.id,
+                editorvalue:cube.raw_desc,
+                price:sum.toFixed(2)
+              });
             }
           });
-          if(blogs.length > 0)
-          {
-            blogs.reverse();
-          }
-          cube.raw_desc = cube.body;
-          if(cube.descriptionhtml)
-          {
-            cube.raw_desc = cube.descriptionhtml;
-            cube.descriptionhtml = cubefn.addAutocard(cube.descriptionhtml,carddb);
-          }
-          if(!user)
-          {
-            res.render('cube/cube_overview',
-            {
-              cube:cube,
-              num_cards:cube.cards.length,
-              author: 'unknown',
-              post:blogs[0],
-              loginCallback:'/cube/overview/'+req.params.id
-            });
-          }
-          else
-          {
-            res.render('cube/cube_overview',
-            {
-              cube:cube,
-              num_cards:cube.cards.length,
-              owner: user.username,
-              post:blogs[0],
-              loginCallback:'/cube/overview/'+req.params.id,
-              editorvalue:cube.raw_desc
-            });
-          }
         });
       });
     }
@@ -421,6 +599,7 @@ router.get('/list/:id', function(req, res)
     }
     else
     {
+      var pids = [];
       cube.cards.forEach(function(card, index)
       {
         card.details = carddb.carddict[card.cardID];
@@ -428,72 +607,93 @@ router.get('/list/:id', function(req, res)
         {
           card.type_line = card.details.type;
         }
-      });
-
-      if(req.user)
-      {
-        User.findById(req.user._id, function(err, currentuser)
+        if(card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id))
         {
-          if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
+          pids.push(card.details.tcgplayer_id);
+        }
+      });
+      GetPrices(pids, function(price_dict)
+      {
+        cube.cards.forEach(function(card, index)
+        {
+          if(card.details.tcgplayer_id)
           {
-            currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-          }
-          currentuser.save(function(err)
-          {
-            User.findById(cube.owner, function(err, owner)
+            if(price_dict[card.details.tcgplayer_id])
             {
-              if(!owner)
+              card.details.price = price_dict[card.details.tcgplayer_id];
+            }
+            if(price_dict[card.details.tcgplayer_id +'_foil'])
+            {
+              card.details.price_foil = price_dict[card.details.tcgplayer_id +'_foil'];
+            }
+          }
+        });
+
+        if(req.user)
+        {
+          User.findById(req.user._id, function(err, currentuser)
+          {
+            if(!currentuser.edit_token || currentuser.edit_token.length <= 0)
+            {
+              currentuser.edit_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            }
+            currentuser.save(function(err)
+            {
+              User.findById(cube.owner, function(err, owner)
               {
-                res.render('cube/cube_list',
+                if(!owner)
                 {
-                  cube:cube,
-                  cube_raw:JSON.stringify(cube.cards),
-                  author: 'unknown',
-                  loginCallback:'/cube/list/'+req.params.id,
-                  edittoken:currentuser.edit_token
-                });
-              }
-              else
-              {
-                res.render('cube/cube_list',
+                  res.render('cube/cube_list',
+                  {
+                    cube:cube,
+                    cube_raw:JSON.stringify(cube.cards),
+                    author: 'unknown',
+                    loginCallback:'/cube/list/'+req.params.id,
+                    edittoken:currentuser.edit_token
+                  });
+                }
+                else
                 {
-                  cube:cube,
-                  cube_raw:JSON.stringify(cube.cards),
-                  owner: owner.username,
-                  loginCallback:'/cube/list/'+req.params.id,
-                  edittoken:currentuser.edit_token
-                });
-              }
+                  res.render('cube/cube_list',
+                  {
+                    cube:cube,
+                    cube_raw:JSON.stringify(cube.cards),
+                    owner: owner.username,
+                    loginCallback:'/cube/list/'+req.params.id,
+                    edittoken:currentuser.edit_token
+                  });
+                }
+              });
             });
           });
-        });
-      }
-      else
-      {
-        User.findById(cube.owner, function(err, owner)
+        }
+        else
         {
-          if(!owner)
+          User.findById(cube.owner, function(err, owner)
           {
-            res.render('cube/cube_list',
+            if(!owner)
             {
-              cube:cube,
-              cube_raw:JSON.stringify(cube.cards),
-              author: 'unknown',
-              loginCallback:'/cube/list/'+req.params.id
-            });
-          }
-          else
-          {
-            res.render('cube/cube_list',
+              res.render('cube/cube_list',
+              {
+                cube:cube,
+                cube_raw:JSON.stringify(cube.cards),
+                author: 'unknown',
+                loginCallback:'/cube/list/'+req.params.id
+              });
+            }
+            else
             {
-              cube:cube,
-              cube_raw:JSON.stringify(cube.cards),
-              owner: owner.username,
-              loginCallback:'/cube/list/'+req.params.id
-            });
-          }
-        });
-      }
+              res.render('cube/cube_list',
+              {
+                cube:cube,
+                cube_raw:JSON.stringify(cube.cards),
+                owner: owner.username,
+                loginCallback:'/cube/list/'+req.params.id
+              });
+            }
+          });
+        }
+      });
     }
   });
 });
@@ -592,7 +792,7 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
-router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
+router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
   Cube.findById(req.params.id, function(err,cube)
   {
     if(err)
@@ -725,18 +925,22 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
             blogpost.dev='false';
             blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-            blogpost.save(function(err)
+            if(missing.length > 0)
             {
-              if(missing.length > 0)
+              res.render('cube/bulk_upload',
               {
-                res.render('cube/bulk_upload',
-                {
-                  missing:missing,
-                  added:JSON.stringify(added),
-                  cube:cube
-                });
-              }
-              else
+                missing:missing,
+                added:JSON.stringify(added),
+                cube:cube,
+                user:{
+                  id:req.user._id,
+                  username:req.user.username
+                }
+              });
+            }
+            else
+            {
+              blogpost.save(function(err)
               {
                 cube = cubefn.setCubeType(cube, carddb);
                 Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -752,8 +956,8 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
                     res.redirect('/cube/list/'+req.params.id);
                   }
                 });
-              }
-            });
+              });
+            }
           })
           .catch(function (err) {
             console.log(err, req);
@@ -766,7 +970,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res,next) {
   });
 });
 
-router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
+router.post('/bulkupload/:id',ensureAuth, function(req,res)
 {
   Cube.findById(req.params.id, function(err,cube)
   {
@@ -789,7 +993,7 @@ router.post('/bulkupload/:id',ensureAuth, function(req,res,next)
   });
 });
 
-router.post('/bulkuploadfile/:id',ensureAuth, function(req,res,next)
+router.post('/bulkuploadfile/:id',ensureAuth, function(req,res)
 {
   if(!req.files)
   {
@@ -904,18 +1108,22 @@ function bulkuploadCSV(req, res, cards, cube) {
   blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
   //
-  blogpost.save(function(err)
+  if(missing.length > 0)
   {
-    if(missing.length > 0)
+    res.render('cube/bulk_upload',
     {
-      res.render('cube/bulk_upload',
-      {
-        missing:missing,
-        added:JSON.stringify(added),
-        cube:cube
-      });
-    }
-    else
+      missing:missing,
+      added:JSON.stringify(added),
+      cube:cube,
+      user:{
+        id:req.user._id,
+        username:req.user.username
+      }
+    });
+  }
+  else
+  {
+    blogpost.save(function(err)
     {
       cube = cubefn.setCubeType(cube, carddb);
       Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -931,8 +1139,8 @@ function bulkuploadCSV(req, res, cards, cube) {
           res.redirect('/cube/list/'+req.params.id);
         }
       });
-    }
     });
+  }
 }
 
 function bulkUpload(req, res, list, cube) {
@@ -1059,18 +1267,22 @@ function bulkUpload(req, res, list, cube) {
         blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
         //
-        blogpost.save(function(err)
+        if(missing.length > 0)
         {
-          if(missing.length > 0)
+          res.render('cube/bulk_upload',
           {
-            res.render('cube/bulk_upload',
-            {
-              missing:missing,
-              added:JSON.stringify(added),
-              cube:cube
-            });
-          }
-          else
+            missing:missing,
+            added:JSON.stringify(added),
+            cube:cube,
+            user:{
+              id:req.user._id,
+              username:req.user.username
+            }
+          });
+        }
+        else
+        {
+          blogpost.save(function(err)
           {
             cube = cubefn.setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
@@ -1086,8 +1298,8 @@ function bulkUpload(req, res, list, cube) {
                 res.redirect('/cube/list/'+req.params.id);
               }
             });
-          }
-        });
+          });
+        }
       }
     }
   }
@@ -1548,7 +1760,7 @@ router.get('/draft/:id', function(req, res)
 });
 
 // Edit Submit POST Route
-router.post('/editoverview/:id',ensureAuth, function(req,res,next)
+router.post('/editoverview/:id',ensureAuth, function(req,res)
 {
   req.body.html = cubefn.sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
@@ -1565,7 +1777,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
     }
     else
     {
-      var image = carddb.imagedict[req.body.imagename];
+      var image = carddb.imagedict[req.body.imagename.toLowerCase()];
       var name = req.body.name;
 
       if(name.length < 5)
@@ -1583,6 +1795,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
         }
         cube.descriptionhtml = req.body.html;
         cube.name = name;
+        cube.isListed = req.body.isListed ? true : false;
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
@@ -1606,7 +1819,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res,next)
 });
 
 // Edit Submit POST Route
-router.post('/edit/:id',ensureAuth, function(req,res,next)
+router.post('/edit/:id',ensureAuth, function(req,res)
 {
   req.body.blog = cubefn.sanitize(req.body.blog);
   Cube.findById(req.params.id, function(err, cube)
@@ -1842,6 +2055,15 @@ router.get('/api/cardnames', function(req, res)
   res.status(200).send({
     success:'true',
     cardnames:carddb.cardtree
+  });
+});
+
+// Get the full card images including image_normal and image_flip
+router.get('/api/cardimages', function(req, res)
+{
+  res.status(200).send({
+    success:'true',
+    cardimages:carddb.cardimages
   });
 });
 
@@ -2328,25 +2550,41 @@ router.get('/api/getimage/:name', function(req, res)
 router.get('/api/getcardfromid/:id', function(req, res)
 {
   var card = carddb.carddict[req.params.id];
-  if(!card)
+  //need to get the price of the card with the new version in here
+  var tcg = [];
+  if(card.tcgplayer_id)
   {
-    res.status(200).send({
-      success:'true'
-    });
+    tcg.push(card.tcgplayer_id);
   }
-  else
+  GetPrices(tcg, function(price_dict)
   {
-    res.status(200).send({
-      success:'true',
-      card:card
-    });
-  }
+    if(!card)
+    {
+      res.status(200).send({
+        success:'true'
+      });
+    }
+    else
+    {
+      if(price_dict[card.tcgplayer_id])
+      {
+        card.price = price_dict[card.tcgplayer_id];
+      }
+      if(price_dict[card.tcgplayer_id+'_foil'])
+      {
+        card.price_foil = price_dict[card.tcgplayer_id+'_foil'];
+      }
+      res.status(200).send({
+        success:'true',
+        card:card
+      });
+    }
+  });
 });
 
 router.get('/api/getversions/:id', function(req, res)
 {
   cards = [];
-  console.log(carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
   carddb.nameToId[carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index)
   {
     cards.push(carddb.carddict[id]);
@@ -2705,6 +2943,31 @@ router.post('/api/draftpick/:id', function(req, res)
     });
   });
 });
+
+router.get('/api/p1p1/:id', async (req, res) => {
+  const pack = await generatePack(req.params.id, carddb);
+
+  if (pack) {
+    res.status(200).send(pack);
+  } else {
+    res.status(500).send({
+      success: false
+    });
+  }
+});
+
+router.get('/api/p1p1/:id/:seed', async (req, res) => {
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
+  if (pack) {
+    res.status(200).send(pack);
+  } else {
+    res.status(500).send({
+      success: false
+    });
+  }
+});
+
+
 
 // Access Control
 function ensureAuth(req, res, next) {

@@ -1,5 +1,7 @@
 
 var draft = JSON.parse(document.getElementById("draftraw").value);
+if(draft.ratings === undefined) draft.ratings = {};
+
 var dragElement = document.getElementById('dragelement');
 var dragCard = null;
 
@@ -307,17 +309,18 @@ function saveDraft(callback)
 function renderDraft()
 {
 
-  //move cards over if they don't fit into columns
-  for(var i = numCols; i < draft.picks[0].length; i++)
-  {
-    draft.picks[0][numCols-1] = draft.picks[0][numCols-1].concat(draft.picks[0][i].splice(0,draft.picks[0][i].length));
-  }
-
   if(draft.packs[0].length > 0)
   {
     $('#packTitle').text('Pack ' + draft.packNumber + ', Pick ' + draft.pickNumber);
     $('#packSubtitle').text( draft.packs[0].length - 1 + ' unopened packs left');
     setupPickColumns();
+
+    //move cards over if they don't fit into columns
+    for(var i = numCols; i < draft.picks[0].length; i++)
+    {
+      draft.picks[0][numCols-1] = draft.picks[0][numCols-1].concat(draft.picks[0][i].splice(0,draft.picks[0][i].length));
+    }
+
     //fill upp pack
     var packhtml = "";
     draft.packs[0][0].forEach(function(card, index)

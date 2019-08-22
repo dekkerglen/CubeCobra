@@ -13,6 +13,11 @@ let cubeSchema = mongoose.Schema(
       type: String,
       required: true
     },
+    isListed:
+    {
+      type: Boolean,
+      default: true
+    },
     cards: [{
       tags:[String],
       status:String,

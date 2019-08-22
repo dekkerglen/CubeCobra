@@ -99,6 +99,16 @@ if(canEdit) {
       .then(function(json)
     {
       $('#contextModalImg').attr('src',json.card.image_normal);
+      var priceHtml = '';
+      if(json.card.price)
+      {
+        priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+json.card.price.toFixed(2)+'</a></div>';
+      }
+      if(json.card.price_foil)
+      {
+        priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+json.card.price_foil.toFixed(2)+'</a></div>';
+      }
+      $('.price-area').html(priceHtml);
     });
   });
   $('#groupContextModalSubmit').click(function(e) {
@@ -926,22 +936,45 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
-  var cardlist = '<ul class="listgroup" style="padding:5px 0px;">';
+
+  var price = 0;
+  var price_foil = 0;
+  var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
+    if(card.details.price)
+    {
+      price += card.details.price;
+    }
+    if(card.details.price_foil)
+    {
+      price_foil += card.details.price_foil;
+    }
     if(card.details.image_flip)
     {
-      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
     }
     else
     {
-      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+      cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
     }
     cardlist += '<a data-index="'+index+'" class="groupModalRm clickx" href="#">×</a><a>  ';
     cardlist += card.details.name;
     cardlist += '</a></li>';
   });
   cardlist += '</ul">';
+
+  var priceHtml = '';
+  if(price > 0)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+price.toFixed(2)+'</a></div>';
+  }
+  if(price_foil > 0)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
+
   $('#groupContextModalArea').html(cardlist);
   autocard_init('autocard');
   $('.groupModalRm').click(function(e)
@@ -988,7 +1021,16 @@ function show_groupContextModal() {
 
 function show_contextModal(card) {
   modalSelect = card;
-
+  var priceHtml = '';
+  if(card.details.price)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a></div>';
+  }
+  if(card.details.price_foil)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+card.details.price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src',card.details.image_normal);
   $('#contextModalVersionSelect').html('');
@@ -1660,13 +1702,16 @@ function renderCurveView() {
     {
       if(groups[group_label][label])
       {
-        res += '<h6>'+label+'</h6>';
+        var labelCount = Object.values(groups[group_label][label]).map(function(group) {
+          return group ? group.length : 0;
+        }).reduce(function(sum, ct){ return sum + ct; }, 0);
+        res += '<h6>'+label+ ' ('+ labelCount + ')</h6>';
         res += '<div class="row even-cols">';
         var colWidth = Math.max(10,100.0 / getLabels('CMC2').length);
         getLabels('CMC2').forEach(function(col_label, col_index)
         {
           res += '<div class="col-even" style="width: '+colWidth+'%;">'
-          res += '<ul class="list-group" style="padding:5px 0px;">';
+          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           if(groups[group_label][label][col_label])
           {
             res += '<a class="list-group-item list-group-heading">'+col_label+ ' ('+ groups[group_label][label][col_label].length + ')</a>';
@@ -1674,11 +1719,11 @@ function renderCurveView() {
             {
               if(card.details.image_flip)
               {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
               }
               else
               {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
               }
               res += card.details.name+'</a>';
             });
@@ -1729,7 +1774,7 @@ function renderTableView() {
 
   var colWidth = Math.max(10,100.0 / count);
 
-  var res = '<div class="row even-cols">';
+  var res = '<div class="row no-gutters even-cols">';
   Object.keys(columns).forEach(function(column_label, col_index)
   {
     var column = columns[column_label];
@@ -1737,7 +1782,7 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      res += '<h6>'+column_label+ ' ('+ columnLength(sorts[0],column_label) + ')</h6>';
+      res += '<h6>'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
       {
@@ -1763,28 +1808,42 @@ function renderTableView() {
             return 0;
           });
 
-          res += '<ul class="list-group" style="padding:5px 0px;">';
+          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
           {
             res += 'href="#"'
           }
           res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
-
+          let cmc = 0
+          res += '<div class="cmc-group">'
           rowgroup.forEach(function( card, index)
           {
+
+            if (index == 0) {
+              cmc = card.cmc;
+            }
+            if (card.cmc != cmc) {
+              if (index + 1 == rowgroup.length) {
+                res += "";
+              } else {
+                res += '</div><div class="cmc-group">';
+              }
+              cmc = card.cmc;
+            }
             if(card.details.image_flip)
             {
-              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
             }
             else
             {
-              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'">';
+              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
             }
             res += card.details.name+'</a>';
           });
+          res += '</div>'
 
-          res += '</ul">';
+          res += '</ul>';
       });
 
       res += '</div>';
@@ -1860,11 +1919,11 @@ function renderVisualSpoiler() {
         {
           if(card.details.image_flip)
           {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
           }
           else
           {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
           }
           res += '<img cardIndex="'+card.index+'" class="activateContextModal" src="'+card.details.image_normal+'" alt="'+card.details.name+'" width=150 height=210>';
           res += '</a>';

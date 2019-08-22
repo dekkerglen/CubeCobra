@@ -1,131 +1,137 @@
 extends ../layout
 
 block content
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link.active(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube._id) Blog
-  //edit controls
-  if user
-    if user.id == cube.owner
-      .usercontrols
-        nav.navbar.navbar-expand.navbar-light
-          .collapse.navbar-collapse
-            ul.navbar-nav          
-              li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
-              li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube   
-  include ../flash     
-  .container
-    br
-    .row
-      .col-md-4
-        .card(style='margin: 4px;')
-          .card-header
-            h3=cube.name
-          img.card-img-top(src=cube.image_uri style='width: 100%;height:auto;')
-          em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
-          .card-body
-            if cube.type
-              a #{cube.card_count} Card #{cube.type} Cube
-              br
-            em
-              h6 Designed by 
-                a(href='/user/view/'+owner) #{owner}  
-      .col
-        .card(style='margin: 4px;')
-          .card-header
-            h5.card-title Description
-          .card-body
-            if cube.descriptionhtml
-              p.card-text !{cube.descriptionhtml}
-            else
-              p.card-text #{cube.description}
-    if post
-      br
-      .row
-        .col
-          .card
-            if post.changelist && post.html
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .row.no-gutters
-                .col-4(style='border-right: 1px solid #DFDFDF;')
-                  .card-body
-                    p.card-text !{post.changelist}   
-                .col-8
-                  .card-body
-                    p.card-text !{post.html}           
-            else if post.changelist
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .card-body
-                p.card-text !{post.changelist}
-            else
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .card-body
-                p=post.body
-                if post.html
-                  p.card-text !{post.html}
-          br
-            
-  if user
-    if user.id == cube.owner
-      // edit overview modal
-      #overviewModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-        .modal-dialog.modal-lg(role='document')
-          .modal-content
-            form#postBlogForm(method='POST', action='/cube/editoverview/'+cube._id, autocomplete='off')
-              .modal-header
-                h5.modal-title Edit Overview
-                button.close(type='button', data-dismiss='modal', aria-label='Close')
-                  span(aria-hidden='true') ×
-              .modal-body
-                  .form-group
-                    label.col-form-label Cube Name:
-                    input.form-control(name='name' type='text', value=cube.name)
-                    label.col-form-label Cube Image:
-                    .card(style="width: 16rem;")
-                      img#dynamicImage(src=cube.image_uri style='width: 100%;height: auto;')
-                    P 
-                    .card
-                      input.form-control#imageInput(name='imagename' type='text', value=cube.image_name)
-                    input#postBlogHiddenHTML(type='hidden', name='html')
-                    label.col-form-label Cube Description:
-                    include ../texteditor
-                  br
-              .modal-footer
-                input.btn.btn-success(type='submit',value='Save')
-                button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-                
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
-        .modal-dialog(role='document')
-          .modal-content
-            .modal-header
-              h5.modal-title Confirm Delete
-              button.close(type='button', data-dismiss='modal', aria-label='Close')
-                span(aria-hidden='true') ×
-            .modal-body                
-                  P Are you sure you wish to delete this cube? This action cannot be undone.
-            .modal-footer
-              input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube._id)
-              button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-      script(src='/js/image_autocomplete.js')
-      script(src='/js/blog.js')
+	link(rel='stylesheet' href='/css/autocomplete.css')  
+	.cubenav
+		ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
+			li.nav-item
+				h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
+					if cube.type
+						| (#{cube.card_count} Card #{cube.type} Cube)
+			li.nav-item
+				a.nav-link.active(href='/cube/overview/'+cube._id) Overview
+			li.nav-item
+				a.nav-link(href='/cube/list/'+cube._id) List
+			li.nav-item
+				a.nav-link(href='/cube/playtest/'+cube._id) Playtest
+			li.nav-item
+				a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+			li.nav-item(style='padding-right:10px;')
+				a.nav-link(href='/cube/blog/'+cube._id) Blog
+	//edit controls
+	if user
+		if user.id == cube.owner
+			.usercontrols
+				nav.navbar.navbar-expand.navbar-light
+					.collapse.navbar-collapse
+						ul.navbar-nav          
+							li.nav-item
+								a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
+							li.nav-item
+								a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube   
+	include ../flash     
+	.container
+		br
+		.row
+			.col-md-4
+				.card(style='margin: 4px;')
+					.card-header
+						h3=cube.name
+					img.card-img-top(src=cube.image_uri style='width: 100%;height:auto;')
+					em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+					.card-body
+						if cube.type
+							a #{cube.card_count} Card #{cube.type} Cube
+							br
+						a Approx: $#{price}
+						em
+							h6 Designed by 
+								a(href='/user/view/'+owner) #{owner}  
+			.col
+				.card(style='margin: 4px;')
+					.card-header
+						h5.card-title Description
+					.card-body
+						if cube.descriptionhtml
+							p.card-text !{cube.descriptionhtml}
+						else
+							p.card-text #{cube.description}
+		if post
+			br
+			.row
+				.col
+					.card
+						if post.changelist && post.html
+							.card-header
+								h5.card-title=post.title
+								h6.card-subtitle.mb-2.text-muted=post.date_formatted
+							.row.no-gutters
+								.col-4(style='border-right: 1px solid #DFDFDF;')
+									.card-body
+										p.card-text !{post.changelist}   
+								.col-8
+									.card-body
+										p.card-text !{post.html}           
+						else if post.changelist
+							.card-header
+								h5.card-title=post.title
+								h6.card-subtitle.mb-2.text-muted=post.date_formatted
+							.card-body
+								p.card-text !{post.changelist}
+						else
+							.card-header
+								h5.card-title=post.title
+								h6.card-subtitle.mb-2.text-muted=post.date_formatted
+							.card-body
+								p=post.body
+								if post.html
+									p.card-text !{post.html}
+					br
+
+	if user
+		if user.id == cube.owner
+			// edit overview modal
+			#overviewModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
+				.modal-dialog.modal-lg(role='document')
+					.modal-content
+						form#postBlogForm(method='POST', action='/cube/editoverview/'+cube._id, autocomplete='off')
+							.modal-header
+								h5.modal-title Edit Overview
+								button.close(type='button', data-dismiss='modal', aria-label='Close')
+									span(aria-hidden='true') ×
+							.modal-body
+								.form-group
+									label.col-form-label Cube Name:
+									input.form-control(name='name' type='text', value=cube.name)
+									.form-check
+										input.form-check-input(name='isListed' type='checkbox', checked=cube.isListed)
+										label.form-check-label Public
+									label.col-form-label Cube Image:
+									.card(style="width: 16rem;")
+										img#dynamicImage(src=cube.image_uri style='width: 100%;height: auto;')
+									P 
+									form(autocomplete='off').form-inline
+										.mb-2.autocomplete
+											input.form-control#imageInput(name='imagename' type='text', value=cube.image_name)
+									input#postBlogHiddenHTML(type='hidden', name='html')
+									label.col-form-label Cube Description:
+									include ../texteditor
+								br
+							.modal-footer
+								input.btn.btn-success(type='submit',value='Save')
+								button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
+			#deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+				.modal-dialog(role='document')
+					.modal-content
+						.modal-header
+							h5.modal-title Confirm Delete
+							button.close(type='button', data-dismiss='modal', aria-label='Close')
+								span(aria-hidden='true') ×
+						.modal-body                
+							P Are you sure you wish to delete this cube? This action cannot be undone.
+						.modal-footer
+							input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube._id)
+							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+			script(src='/js/image_autocomplete.js')
+			script(src='/js/blog.js')

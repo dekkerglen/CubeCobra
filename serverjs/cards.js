@@ -4,6 +4,7 @@ const fs = require('fs');
 var data ={
   cardtree: {},
   imagedict: {},
+  cardimages: {},
   cardnames: [],
   full_names: [],
   carddict: {},
@@ -38,6 +39,17 @@ fs.watchFile('private/imagedict.json', (curr, prev) => {
   fs.readFile('private/imagedict.json', 'utf8', function(err, contents) {
       data.imagedict = JSON.parse(contents);
       console.log("imagedict reloaded");
+  });
+});
+fs.readFile('private/cardimages.json', 'utf8', function(err, contents) {
+    data.cardimages = JSON.parse(contents);
+    console.log("cardimages loaded");
+});
+fs.watchFile('private/cardimages.json', (curr, prev) => {
+  console.log('File Changed: cardimages');
+  fs.readFile('private/cardimages.json', 'utf8', function(err, contents) {
+      data.cardimages = JSON.parse(contents);
+      console.log("cardimages reloaded");
   });
 });
 fs.watchFile('private/cardtree.json', (curr, prev) => {
