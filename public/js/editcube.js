@@ -631,7 +631,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Type')
   {
-    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard''Land'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land'];
   }
   else if (sort == 'Supertype')
   {
