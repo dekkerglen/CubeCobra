@@ -827,7 +827,7 @@ router.get('/samplepack/:id', function (req, res) {
   });
 });
 
-router.get('/samplepack/:id/:seed', async (req, res) => {
+router.get('/samplepack/:id/:seed', function (req, res) {
   Cube.findById(req.params.id, function(err, cube)
   {
     if (!cube) {
@@ -867,7 +867,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
   });
 });
 
-router.get('/samplepackimage/:id/:seed', async (req, res) => {
+router.get('/samplepackimage/:id/:seed', function (req, res) {
   Cube.findById(req.params.id, function(err, cube)
   {
     if (!cube) {
@@ -3112,7 +3112,7 @@ router.post('/api/draftpick/:id', function(req, res)
   });
 });
 
-router.get('/api/p1p1/:id', async (req, res) => {
+router.get('/api/p1p1/:id', function (req, res) {
   generatePack(req.params.id, carddb,false, function(err, seed, pack)
   {
     if(err)
@@ -3132,7 +3132,7 @@ router.get('/api/p1p1/:id', async (req, res) => {
   });
 });
 
-router.get('/api/p1p1/:id/:seed', async (req, res) => {
+router.get('/api/p1p1/:id/:seed', function(req, res) {
   generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
   {
     if(err)
