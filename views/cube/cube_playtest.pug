@@ -130,6 +130,23 @@ block content
                         option 10
               .card-footer
                 button#startDraftButton.btn.btn-success Start Draft
+      .col-6
+        .row
+          .col-12
+            .card
+              .card-header
+                h5.card-title View sample pack
+              .card-body
+                .form-group.row
+                  label.col-sm-4.col-form-label.col-form-label-sm Seed
+                  .col-sm-8
+                    input#sampleSeedValue.form-control(name='sampleSeedValue', type='text')           
+              .card-footer
+                .row
+                  .col-md-6
+                    a#viewRandomButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}`) View Random
+                  .col-md-6
+                    a#viewSeededButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}/`, data-cube-id=cube._id) View Seeded
   script(src='/js/playtest.js')
   if user
     if user.id == cube.owner

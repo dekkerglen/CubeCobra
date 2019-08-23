@@ -1,11 +1,11 @@
 extends ../layout
 
 block content
-	link(rel='stylesheet' href='/css/autocomplete.css')  
+	link(rel='stylesheet' href='/css/autocomplete.css')
 	.cubenav
 		ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
 			li.nav-item
-				h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
+				h6(href='#' style='color: #218937;padding:5px;') #{cube.name}
 					if cube.type
 						| (#{cube.card_count} Card #{cube.type} Cube)
 			li.nav-item
@@ -24,12 +24,12 @@ block content
 			.usercontrols
 				nav.navbar.navbar-expand.navbar-light
 					.collapse.navbar-collapse
-						ul.navbar-nav          
+						ul.navbar-nav
 							li.nav-item
 								a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
 							li.nav-item
-								a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube   
-	include ../flash     
+								a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube
+	include ../flash
 	.container
 		br
 		.row
@@ -46,7 +46,7 @@ block content
 						a Approx: $#{price}
 						em
 							h6 Designed by 
-								a(href='/user/view/'+owner) #{owner}  
+								a(href='/user/view/'+owner) #{owner}
 			.col
 				.card(style='margin: 4px;')
 					.card-header
@@ -68,10 +68,10 @@ block content
 							.row.no-gutters
 								.col-4(style='border-right: 1px solid #DFDFDF;')
 									.card-body
-										p.card-text !{post.changelist}   
+										p.card-text !{post.changelist}
 								.col-8
 									.card-body
-										p.card-text !{post.html}           
+										p.card-text !{post.html}
 						else if post.changelist
 							.card-header
 								h5.card-title=post.title
@@ -87,14 +87,13 @@ block content
 								if post.html
 									p.card-text !{post.html}
 					br
-
 	if user
 		if user.id == cube.owner
 			// edit overview modal
 			#overviewModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
 				.modal-dialog.modal-lg(role='document')
-					.modal-content
-						form#postBlogForm(method='POST', action='/cube/editoverview/'+cube._id, autocomplete='off')
+					form#postBlogForm(method='POST', action='/cube/editoverview/'+cube._id, autocomplete='off')
+						.modal-content
 							.modal-header
 								h5.modal-title Edit Overview
 								button.close(type='button', data-dismiss='modal', aria-label='Close')
@@ -128,7 +127,7 @@ block content
 							h5.modal-title Confirm Delete
 							button.close(type='button', data-dismiss='modal', aria-label='Close')
 								span(aria-hidden='true') ×
-						.modal-body                
+						.modal-body
 							P Are you sure you wish to delete this cube? This action cannot be undone.
 						.modal-footer
 							input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube._id)

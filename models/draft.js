@@ -7,6 +7,7 @@ let draftSchema = mongoose.Schema(
     packs:[[[]]],
     cube:String,
     bots:[[]],
+    pickOrder:[],
     pickNumber:Number,
     packNumber:Number,
     ratings:{}
