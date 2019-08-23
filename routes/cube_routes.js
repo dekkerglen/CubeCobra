@@ -5,7 +5,7 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var { addAutocard, generatePack, sanitize, setCubeType, cardsAreEquivalent } = require('../serverjs/cubefn.js');
+var { addAutocard, generatePack, sanitize, setCubeType, cardsAreEquivalent, getBasics } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
@@ -819,6 +819,7 @@ router.get('/samplepack/:id', function (req, res) {
           res.render('cube/cube_samplepack', {
             cube,
             pack,
+            seed,
             loginCallback:'/cube/samplepack/'+req.params.id
           });
         }
@@ -846,6 +847,7 @@ router.get('/samplepack/:id/:seed', function (req, res) {
         res.render('cube/cube_samplepack', {
           cube,
           pack,
+          seed,
           activeLink: 'playtest',
           metadata: [{
             property: 'og:title',
