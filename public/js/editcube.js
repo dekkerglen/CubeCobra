@@ -635,7 +635,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Supertype')
   {
-    return ['Basic','Elite','Host','Legendary','Ongoing','Tribal','World','Snow'];
+    return ['Snow','Legendary','Tribal','Basic','Elite','Host','Ongoing','World'];
   }
   else if (sort == 'Tags')
   {
