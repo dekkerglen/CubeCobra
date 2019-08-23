@@ -4,6 +4,12 @@ html
 		meta(charset='UTF-8')
 		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
+		if metadata
+			for metadatum, i in metadata
+				if metadatum.name
+					meta(name=metadatum.name, content=metadatum.content)
+				if metadatum.property
+					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
 		title Cube Cobra
 		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')

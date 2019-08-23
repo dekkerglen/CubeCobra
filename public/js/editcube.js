@@ -615,7 +615,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty','Manacost Type'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -641,7 +641,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Type')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land'];
   }
   else if (sort == 'Supertype')
   {
@@ -1705,7 +1705,7 @@ function renderCurveView() {
         var labelCount = Object.values(groups[group_label][label]).map(function(group) {
           return group ? group.length : 0;
         }).reduce(function(sum, ct){ return sum + ct; }, 0);
-        res += '<h6>'+label+ ' ('+ labelCount + ')</h6>';
+        res += '<h6 class="text-center">'+label+ ' ('+ labelCount + ')</h6>';
         res += '<div class="row even-cols">';
         var colWidth = Math.max(10,100.0 / getLabels('CMC2').length);
         getLabels('CMC2').forEach(function(col_label, col_index)
@@ -1782,7 +1782,7 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      res += '<h6>'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
+      res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
       {

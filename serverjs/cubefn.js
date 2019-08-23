@@ -168,7 +168,7 @@ var methods =
         throw Error('Cube Not Found!');
       }
   
-      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID].name);
+      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID]);
   
       return {
         seed,

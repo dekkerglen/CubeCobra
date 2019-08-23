@@ -5,12 +5,19 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-var cubefn = require('../serverjs/cubefn.js');
+var { addAutocard, generatePack, sanitize, setCubeType, cardsAreEquivalent } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
+
+var mergeImages = require('merge-images');
+const { Canvas, Image } = require('canvas');
+Canvas.Image = Image;
+
+const CARD_HEIGHT = 204;
+const CARD_WIDTH = 146;
 
 //grabbing sortfilter.cardIsLabel from client-side
 var sortfilter = require('../public/js/sortfilter.js');
@@ -201,7 +208,7 @@ router.post('/add',ensureAuth, function(req,res)
           cube.owner_name = user.username;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
-          cube = cubefn.setCubeType(cube, carddb);
+          cube = setCubeType(cube, carddb);
           cube.save(function(err)
           {
             if(err)
@@ -232,7 +239,7 @@ router.get('/view/:id', function(req, res)
 });
 
 router.post('/format/add/:id',ensureAuth, function(req, res) {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
   {
     if(err || !cube)
@@ -281,7 +288,7 @@ router.post('/format/add/:id',ensureAuth, function(req, res) {
 
 router.post('/blog/post/:id',ensureAuth, function(req, res)
 {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   if(req.body.title.length < 5 || req.body.title.length > 100)
   {
     req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
@@ -305,7 +312,7 @@ router.post('/blog/post/:id',ensureAuth, function(req, res)
       {
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
-        cube = cubefn.setCubeType(cube, carddb);
+        cube = setCubeType(cube, carddb);
         cube.save(function(err)
         {
           User.findById(cube.owner, function(err, user)
@@ -397,7 +404,7 @@ router.get('/overview/:id', function(req, res)
         var sum = 0;
         cube.cards.forEach(function(card, index)
         {
-          if(price_dict[card.details.tcgplayer_id])
+          if(price_dict[card.details.tcgplayer_id])            
           {
             sum += price_dict[card.details.tcgplayer_id];
           }
@@ -406,7 +413,6 @@ router.get('/overview/:id', function(req, res)
             sum += price_dict[card.details.tcgplayer_id+'_foil'];
           }
         });
-        console.log(sum);
         User.findById(cube.owner, function(err, user)
         {
           Blog.find({cube:cube._id}).sort('date').exec(function(err, blogs)
@@ -513,7 +519,7 @@ router.get('/blog/:id', function(req, res)
             }
             if(item.html)
             {
-              item.html = cubefn.addAutocard(item.html,carddb);
+              item.html = addAutocard(item.html,carddb);
             }
           });
           var pages = [];
@@ -792,6 +798,95 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
+router.get('/samplepack/:id', async (req, res) => {
+  const cube = await Cube.findById(req.params.id);
+
+  if (!cube) {
+    req.flash('danger', 'Cube not found');
+    res.redirect('/404/');
+  }
+  const pack = await generatePack(req.params.id, carddb);
+
+  if (pack) {
+    res.render('cube/cube_samplepack', {
+      cube,
+      pack,
+      loginCallback:'/cube/samplepack/'+req.params.id
+    });
+  } else {
+    req.flash('danger', 'Pack could not be created');
+    res.redirect('/404/');
+  }
+});
+
+router.get('/samplepack/:id/:seed', async (req, res) => {
+  const cube = await Cube.findById(req.params.id);
+
+  if (!cube) {
+    req.flash('danger', 'Cube not found');
+    res.redirect('/404/');
+  }
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+  if (pack) {
+    res.render('cube/cube_samplepack', {
+      cube,
+      pack,
+      activeLink: 'playtest',
+      metadata: [{
+        property: 'og:title',
+        content: 'Cube Cobra Sample Pack'
+      }, {
+        property: 'og:description',
+        content: `A sample pack from ${cube.name}`
+      }, {
+        property: 'og:image',
+        content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`
+      }, {
+        property: 'og:url',
+        content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
+      }],
+      loginCallback:'/cube/samplepack/'+req.params.id
+    });
+  } else {
+    req.flash('danger', 'Pack could not be created');
+    res.redirect('/404/');
+  }
+});
+
+router.get('/samplepackimage/:id/:seed', async (req, res) => {
+  const cube = await Cube.findById(req.params.id);
+
+  if (!cube) {
+    req.flash('danger', 'Cube not found');
+    res.redirect('/404/');
+  }
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+  if (pack) {
+    var srcArray = pack.pack.map((card, index) => {return {
+        src: card.image_small,
+        x: CARD_WIDTH * (index % 5),
+        y: CARD_HEIGHT * Math.floor(index / 5)
+      }
+    });
+    var image = await mergeImages(srcArray, {
+      width: CARD_WIDTH * 5,
+      height: CARD_HEIGHT * 3,
+      Canvas: Canvas
+    });
+
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': image.length
+    });
+    res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64')); 
+  } else {
+    req.flash('danger', 'Pack could not be created');
+    res.redirect('/404/');
+  }
+});
+
 router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
   Cube.findById(req.params.id, function(err,cube)
   {
@@ -942,7 +1037,7 @@ router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
             {
               blogpost.save(function(err)
               {
-                cube = cubefn.setCubeType(cube, carddb);
+                cube = setCubeType(cube, carddb);
                 Cube.updateOne({_id:cube._id}, cube, function(err)
                 {
                   if(err)
@@ -1125,7 +1220,7 @@ function bulkuploadCSV(req, res, cards, cube) {
   {
     blogpost.save(function(err)
     {
-      cube = cubefn.setCubeType(cube, carddb);
+      cube = setCubeType(cube, carddb);
       Cube.updateOne({_id:cube._id}, cube, function(err)
       {
         if(err)
@@ -1284,7 +1379,7 @@ function bulkUpload(req, res, list, cube) {
         {
           blogpost.save(function(err)
           {
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -1762,7 +1857,7 @@ router.get('/draft/:id', function(req, res)
 // Edit Submit POST Route
 router.post('/editoverview/:id',ensureAuth, function(req,res)
 {
-  req.body.html = cubefn.sanitize(req.body.html);
+  req.body.html = sanitize(req.body.html);
   Cube.findById(req.params.id, function(err, cube)
   {
     if(err)
@@ -1799,7 +1894,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res)
         cube.date_updated = Date.now();
         cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
-        cube = cubefn.setCubeType(cube, carddb);
+        cube = setCubeType(cube, carddb);
         cube.save(function(err)
         {
           if(err)
@@ -1821,7 +1916,7 @@ router.post('/editoverview/:id',ensureAuth, function(req,res)
 // Edit Submit POST Route
 router.post('/edit/:id',ensureAuth, function(req,res)
 {
-  req.body.blog = cubefn.sanitize(req.body.blog);
+  req.body.blog = sanitize(req.body.blog);
   Cube.findById(req.params.id, function(err, cube)
   {
     cube.date_updated = Date.now();
@@ -2013,7 +2108,7 @@ router.post('/edit/:id',ensureAuth, function(req,res)
                 console.log('ERROR: Could not find the card with ID: ' + fail, req);
               }
             });
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -2029,7 +2124,7 @@ router.post('/edit/:id',ensureAuth, function(req,res)
           }
           else
           {
-            cube = cubefn.setCubeType(cube, carddb);
+            cube = setCubeType(cube, carddb);
             Cube.updateOne({_id:cube._id}, cube, function(err)
             {
               if(err)
@@ -2367,7 +2462,7 @@ router.get('/deckbuilder/:id',function(req, res)
                 owner: 'Unknown',
                 loginCallback:'/cube/draft/'+req.params.id,
                 deck_raw:JSON.stringify(deck),
-                basics_raw:JSON.stringify(cubefn.getBasics(carddb)),
+                basics_raw:JSON.stringify(getBasics(carddb)),
                 deckid:deck._id
               });
             }
@@ -2379,7 +2474,7 @@ router.get('/deckbuilder/:id',function(req, res)
                 owner: user.username,
                 loginCallback:'/cube/draft/'+req.params.id,
                 deck_raw:JSON.stringify(deck),
-                basics_raw:JSON.stringify(cubefn.getBasics(carddb)),
+                basics_raw:JSON.stringify(getBasics(carddb)),
                 deckid:deck._id
               });
             }
@@ -2639,7 +2734,7 @@ router.post('/api/updatecard/:id', function(req, res)
           {
             card.type_line = carddb.carddict[card.cardID].type;
           }
-          if(!found && cubefn.cardsAreEquivalent(card, req.body.src, carddb))
+          if(!found && cardsAreEquivalent(card, req.body.src, carddb))
           {
             found = true;
             cube.cards[index] = req.body.updated;
@@ -2654,7 +2749,7 @@ router.post('/api/updatecard/:id', function(req, res)
         }
         else
         {
-          cube = cubefn.setCubeType(cube,carddb);
+          cube = setCubeType(cube,carddb);
           cube.save(function(err)
           {
             if(err)
@@ -2908,6 +3003,60 @@ router.post('/api/savesorts/:id', function(req, res)
   });
 });
 
+router.post('/api/draftpickcard/:id', function(req, res)
+{
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    Draft.findById({_id:req.body.draft_id}, function(err, draft)
+    {
+      CardRating.findOne({'name': req.body.card.details.name}, function(err, cardrating)
+      {
+        const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
+        var rating = (cards_per_pack - draft.packs[0][0].length + 1)/cards_per_pack;
+
+        if(cardrating)
+        {
+          cardrating.value = cardrating.value * (cardrating.picks/(cardrating.picks+1)) + rating * (1/(cardrating.picks+1));
+          cardrating.picks += 1;
+          CardRating.updateOne({_id:cardrating._id}, cardrating, function(err) {
+            if(err)
+            {
+              console.log(err, req);
+              res.status(500).send({
+                success:'false',
+                message:'Error saving pick rating'
+              });
+              return;
+            }
+          });
+        }
+        else
+        {
+          cardrating = new CardRating();
+          cardrating.name = req.body.card.details.name;
+          cardrating.value = rating;
+          cardrating.picks = 1;
+          cardrating.save(function(err)
+          {
+            if(err)
+            {
+              console.log(err, req);
+              res.status(500).send({
+                success:'false',
+                message:'Error saving pick rating'
+              });
+              return;
+            }
+          });
+        }
+        res.status(200).send({
+          success:'true'
+        });
+      });
+    });
+  });
+});
+
 router.post('/api/draftpick/:id', function(req, res)
 {
   Cube.findById(req.params.id, function(err, cube)
@@ -2945,9 +3094,13 @@ router.post('/api/draftpick/:id', function(req, res)
 });
 
 router.get('/api/p1p1/:id', async (req, res) => {
-  const pack = await generatePack(req.params.id, carddb);
+  const generatedPack = await generatePack(req.params.id, carddb);
 
-  if (pack) {
+  if (generatedPack) {
+    const pack = {
+      seed: generatedPack.seed,
+      pack: generatedPack.pack.map(card => card.name)
+    };
     res.status(200).send(pack);
   } else {
     res.status(500).send({
@@ -2957,8 +3110,12 @@ router.get('/api/p1p1/:id', async (req, res) => {
 });
 
 router.get('/api/p1p1/:id/:seed', async (req, res) => {
-  const pack = await generatePack(req.params.id, carddb, req.params.seed);
-  if (pack) {
+  const generatedPack = await generatePack(req.params.id, carddb, req.params.seed);
+  if (generatedPack) {
+    const pack = {
+      seed: generatedPack.seed,
+      pack: generatedPack.pack.map(card => card.name)
+    };
     res.status(200).send(pack);
   } else {
     res.status(500).send({
