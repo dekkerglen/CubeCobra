@@ -404,7 +404,7 @@ router.get('/overview/:id', function(req, res)
         var sum = 0;
         cube.cards.forEach(function(card, index)
         {
-          if(price_dict[card.details.tcgplayer_id])            
+          if(price_dict[card.details.tcgplayer_id])
           {
             sum += price_dict[card.details.tcgplayer_id];
           }
@@ -424,7 +424,7 @@ router.get('/overview/:id', function(req, res)
               }
               if(item.html)
               {
-                item.html = cubefn.addAutocard(item.html,carddb);
+                item.html = addAutocard(item.html,carddb);
               }
             });
             if(blogs.length > 0)
@@ -435,7 +435,7 @@ router.get('/overview/:id', function(req, res)
             if(cube.descriptionhtml)
             {
               cube.raw_desc = cube.descriptionhtml;
-              cube.descriptionhtml = cubefn.addAutocard(cube.descriptionhtml,carddb);
+              cube.descriptionhtml = addAutocard(cube.descriptionhtml,carddb);
             }
             if(!user)
             {
@@ -880,7 +880,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       'Content-Type': 'image/png',
       'Content-Length': image.length
     });
-    res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64')); 
+    res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
   } else {
     req.flash('danger', 'Pack could not be created');
     res.redirect('/404/');

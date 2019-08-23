@@ -615,7 +615,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price-Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -641,7 +641,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Type')
   {
-    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land','Other'];
   }
   else if (sort == 'Supertype')
   {
@@ -732,7 +732,7 @@ function getLabels(sort) {
   else if (sort == 'Types-Multicolor')
   {
     return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
-      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color'];
+      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Other'];
   }
   else if (sort=='Legality')
   {
