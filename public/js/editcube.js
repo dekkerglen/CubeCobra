@@ -99,6 +99,16 @@ if(canEdit) {
       .then(function(json)
     {
       $('#contextModalImg').attr('src',json.card.image_normal);
+      var priceHtml = '';
+      if(json.card.price)
+      {
+        priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+json.card.price.toFixed(2)+'</a></div>';
+      }
+      if(json.card.price_foil)
+      {
+        priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+json.card.price_foil.toFixed(2)+'</a></div>';
+      }
+      $('.price-area').html(priceHtml);
     });
   });
   $('#groupContextModalSubmit').click(function(e) {
@@ -926,9 +936,20 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
+
+  var price = 0;
+  var price_foil = 0;
   var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
+    if(card.details.price)
+    {
+      price += card.details.price;
+    }
+    if(card.details.price_foil)
+    {
+      price_foil += card.details.price_foil;
+    }
     if(card.details.image_flip)
     {
       cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -942,6 +963,18 @@ function renderGroupContext()
     cardlist += '</a></li>';
   });
   cardlist += '</ul">';
+
+  var priceHtml = '';
+  if(price > 0)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+price.toFixed(2)+'</a></div>';
+  }
+  if(price_foil > 0)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
+
   $('#groupContextModalArea').html(cardlist);
   autocard_init('autocard');
   $('.groupModalRm').click(function(e)
@@ -988,7 +1021,16 @@ function show_groupContextModal() {
 
 function show_contextModal(card) {
   modalSelect = card;
-
+  var priceHtml = '';
+  if(card.details.price)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a></div>';
+  }
+  if(card.details.price_foil)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+card.details.price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src',card.details.image_normal);
   $('#contextModalVersionSelect').html('');
