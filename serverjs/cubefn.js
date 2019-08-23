@@ -156,28 +156,19 @@ var methods =
     }
     return src;
   },
-  generatePack: async (cubeId, carddb, seed) => {
-    try {
-      const cube = await Cube.findById(cubeId);
-  
+  generatePack: function(cubeId, carddb, seed, callback) {
+    Cube.findById(cubeId, function(err, cube)
+    {
       if (!seed) {
         seed = Date.now();
       }
-  
       if (!cube) {
-        throw Error('Cube Not Found!');
+        //throw Error('Cube Not Found!');
+        callback(true);
       }
-  
       const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID]);
-  
-      return {
-        seed,
-        pack
-      };
-    } catch (err) {
-      console.log(err);
-      return;
-    }
+      callback(false, seed, pack);
+    });
   }
 };
 

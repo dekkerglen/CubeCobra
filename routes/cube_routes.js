@@ -798,93 +798,112 @@ router.get('/analysis/:id', function(req, res)
   });
 });
 
-router.get('/samplepack/:id', async (req, res) => {
-  const cube = await Cube.findById(req.params.id);
-
-  if (!cube) {
-    req.flash('danger', 'Cube not found');
-    res.redirect('/404/');
-  }
-  const pack = await generatePack(req.params.id, carddb);
-
-  if (pack) {
-    res.render('cube/cube_samplepack', {
-      cube,
-      pack,
-      loginCallback:'/cube/samplepack/'+req.params.id
-    });
-  } else {
-    req.flash('danger', 'Pack could not be created');
-    res.redirect('/404/');
-  }
+router.get('/samplepack/:id', function (req, res) {
+  Cube.findById(req.params.id,function(err, cube)
+  {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    }
+    else
+    {
+      generatePack(req.params.id, carddb,false, function(err, seed, pack)
+      {
+        if(err)
+        {
+          req.flash('danger', 'Pack could not be created');
+          res.redirect('/404/');
+        }
+        else
+        {
+          res.render('cube/cube_samplepack', {
+            cube,
+            pack,
+            loginCallback:'/cube/samplepack/'+req.params.id
+          });
+        }
+      });
+    }
+  });
 });
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
-  const cube = await Cube.findById(req.params.id);
-
-  if (!cube) {
-    req.flash('danger', 'Cube not found');
-    res.redirect('/404/');
-  }
-  const pack = await generatePack(req.params.id, carddb, req.params.seed);
-
-  if (pack) {
-    res.render('cube/cube_samplepack', {
-      cube,
-      pack,
-      activeLink: 'playtest',
-      metadata: [{
-        property: 'og:title',
-        content: 'Cube Cobra Sample Pack'
-      }, {
-        property: 'og:description',
-        content: `A sample pack from ${cube.name}`
-      }, {
-        property: 'og:image',
-        content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`
-      }, {
-        property: 'og:url',
-        content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
-      }],
-      loginCallback:'/cube/samplepack/'+req.params.id
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    }
+    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+    {
+      if(err)
+      {
+        req.flash('danger', 'Pack could not be created');
+        res.redirect('/404/');
+      }
+      else
+      {
+        res.render('cube/cube_samplepack', {
+          cube,
+          pack,
+          activeLink: 'playtest',
+          metadata: [{
+            property: 'og:title',
+            content: 'Cube Cobra Sample Pack'
+          }, {
+            property: 'og:description',
+            content: `A sample pack from ${cube.name}`
+          }, {
+            property: 'og:image',
+            content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${seed}`
+          }, {
+            property: 'og:url',
+            content: `https://cubecobra.com/cube/samplepack/${cube._id}/${seed}`
+          }],
+          loginCallback:'/cube/samplepack/'+req.params.id
+        });
+      }
     });
-  } else {
-    req.flash('danger', 'Pack could not be created');
-    res.redirect('/404/');
-  }
+  });
 });
 
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
-  const cube = await Cube.findById(req.params.id);
-
-  if (!cube) {
-    req.flash('danger', 'Cube not found');
-    res.redirect('/404/');
-  }
-  const pack = await generatePack(req.params.id, carddb, req.params.seed);
-
-  if (pack) {
-    var srcArray = pack.pack.map((card, index) => {return {
-        src: card.image_small,
-        x: CARD_WIDTH * (index % 5),
-        y: CARD_HEIGHT * Math.floor(index / 5)
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    }
+    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+    {
+      if(err)
+      {
+        req.flash('danger', 'Pack could not be created');
+        res.redirect('/404/');
+      }
+      else
+      {
+        var srcArray = pack.map((card, index) => {return {
+            src: card.image_small,
+            x: CARD_WIDTH * (index % 5),
+            y: CARD_HEIGHT * Math.floor(index / 5)
+          }
+        });
+        mergeImages(srcArray, {
+          width: CARD_WIDTH * 5,
+          height: CARD_HEIGHT * 3,
+          Canvas: Canvas
+        }).then(function(image)
+        {
+          res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': image.length
+          });
+          res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+        });
       }
     });
-    var image = await mergeImages(srcArray, {
-      width: CARD_WIDTH * 5,
-      height: CARD_HEIGHT * 3,
-      Canvas: Canvas
-    });
-
-    res.writeHead(200, {
-      'Content-Type': 'image/png',
-      'Content-Length': image.length
-    });
-    res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-  } else {
-    req.flash('danger', 'Pack could not be created');
-    res.redirect('/404/');
-  }
+  });
 });
 
 router.post('/importcubetutor/:id',ensureAuth, function(req,res) {
@@ -3094,34 +3113,43 @@ router.post('/api/draftpick/:id', function(req, res)
 });
 
 router.get('/api/p1p1/:id', async (req, res) => {
-  const generatedPack = await generatePack(req.params.id, carddb);
-
-  if (generatedPack) {
-    const pack = {
-      seed: generatedPack.seed,
-      pack: generatedPack.pack.map(card => card.name)
-    };
-    res.status(200).send(pack);
-  } else {
-    res.status(500).send({
-      success: false
-    });
-  }
+  generatePack(req.params.id, carddb,false, function(err, seed, pack)
+  {
+    if(err)
+    {
+      res.status(500).send({
+        success: false
+      });
+    }
+    else
+    {
+      const pack = {
+        seed: seed,
+        pack: pack.map(card => card.name)
+      };
+      res.status(200).send(pack);
+    }
+  });
 });
 
 router.get('/api/p1p1/:id/:seed', async (req, res) => {
-  const generatedPack = await generatePack(req.params.id, carddb, req.params.seed);
-  if (generatedPack) {
-    const pack = {
-      seed: generatedPack.seed,
-      pack: generatedPack.pack.map(card => card.name)
-    };
-    res.status(200).send(pack);
-  } else {
-    res.status(500).send({
-      success: false
-    });
-  }
+  generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+  {
+    if(err)
+    {
+      res.status(500).send({
+        success: false
+      });
+    }
+    else
+    {
+      const pack = {
+        seed: seed,
+        pack: pack.map(card => card.name)
+      };
+      res.status(200).send(pack);
+    }
+  });
 });
 
 
