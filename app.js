@@ -102,11 +102,11 @@ app.get('/', function(req, res)
   if(req.user) user_id = req.user._id;
   Cube.find({
       'card_count':{$gt : 200},
-      $or:[ {'isListed':true}, {'owner':user_id} ]
+      $or:[ {'isListed':true},{'isListed':null}, {'owner':user_id} ]
   }).sort({'date_updated': -1}).limit(12).exec(function(err, recents)
   {
     Cube.find({
-        $or:[ {'isListed':true}, {'owner':user_id} ]
+        $or:[ {'isListed':true},{'isListed':null}, {'owner':user_id} ]
     }).sort({'numDecks': -1}).limit(12).exec(function(err, drafted)
     {
       Blog.find({dev:'true'}).sort({'date': -1}).exec(function(err, blog)
