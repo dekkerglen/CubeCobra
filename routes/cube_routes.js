@@ -455,6 +455,22 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
         });
 
         function build_response(currentuser) {
+          cubeA.cards.forEach(function(card, index)
+          {
+            card.details = carddb.carddict[card.cardID];
+            if(!card.type_line)
+            {
+              card.type_line = card.details.type;
+            }
+          });
+          cubeB.cards.forEach(function(card, index)
+          {
+            card.details = carddb.carddict[card.cardID];
+            if(!card.type_line)
+            {
+              card.type_line = card.details.type;
+            }
+          });
           User.findById(cubeA.owner, function(err, ownerA)
           {
             User.findById(cubeB.owner, function(err, ownerB)
@@ -470,7 +486,6 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
               if(ownerA) params.owner = ownerA.username;
               else params.author = 'unknown';
 
-              console.log( cubeA._id, cubeB._id );
               res.render('cube/cube_list', params);
             });
           });
