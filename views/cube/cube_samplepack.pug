@@ -1,26 +1,26 @@
 extends ../layout
 
 block content
-  include cube_nav
-  include ../flash
-  .container
-    br
-    .card
-      .card-header
-        .row
-          .col-md-6
-            h5.card-title Sample Pack
-          .col-md-6
-            a.float-right(href=`/cube/samplepack/${cube._id}/${pack.seed}`) Link to Pack
-      .card-body
-        .samplepack.row
-          if pack
-            each card, i in pack.pack
-              if i % 5 === 0
-                .col-md-2.offset-md-1(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img( src=card.image_normal, width='150', height='210')
-              else
-                .col-md-2(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img( src=card.image_normal, width='150', height='210')
+	include cube_nav
+	include ../flash
+	.container
+		br
+		.card
+			.card-header
+				.row
+					.col-md-6
+						h5.card-title Sample Pack
+					.col-md-6
+						a.float-right(href=`/cube/samplepack/${cube._id}/${pack.seed}`) Link to Pack
+			.card-body
+				.samplepack.row
+					if pack
+						each card, i in pack
+							if i % 5 === 0
+								.col-md-2.offset-md-1(style='padding-top:10px;')
+									a.autocard(card=card.image_normal)
+										img( src=card.image_normal, width='150', height='210')
+							else
+								.col-md-2(style='padding-top:10px;')
+									a.autocard(card=card.image_normal)
+										img( src=card.image_normal, width='150', height='210')
