@@ -129,7 +129,7 @@ function GetPrices(card_ids, callback)
     var chunkSize = 250;
     //max tcgplayer request size is 250
     var chunks = [];
-    for(i = 0; i <= card_ids.length/chunkSize; i++)
+    for(i = 0; i < card_ids.length/chunkSize; i++)
     {
       chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
     }
@@ -170,6 +170,8 @@ function GetPrices(card_ids, callback)
           });
         });
         callback(price_dict);
+      }).catch(function(error) {
+        console.log("error: " + error);
       });
     });
   }
