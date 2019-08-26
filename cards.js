@@ -1,9 +1,8 @@
 const fs = require('fs');
 
 
-module.exports =
-{
+module.exports = {
   tree: cardtree,
   names: names,
-  dict:carddict
+  dict: carddict
 }
