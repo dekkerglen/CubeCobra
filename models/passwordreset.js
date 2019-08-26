@@ -1,16 +1,20 @@
 const mongoose = require('mongoose');
 
 // User schema
-const PasswordResetSchema = mongoose.Schema({
-  email: {
+const PasswordResetSchema = mongoose.Schema(
+{
+  email:
+  {
     type: String,
     required: true
   },
-  expires: {
+  expires:
+  {
     type: Date,
     required: false
   },
-  code: {
+  code:
+  {
     type: String,
     required: true
   }

@@ -1,7 +1,8 @@
 let mongoose = require('mongoose');
 
 // Cube schema
-let deckSchema = mongoose.Schema({
+let deckSchema = mongoose.Schema(
+{
   cards: [
     []
   ],

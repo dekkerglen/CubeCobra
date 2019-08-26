@@ -1,7 +1,8 @@
 let mongoose = require('mongoose');
 
 // Cube schema
-let blogSchema = mongoose.Schema({
+let blogSchema = mongoose.Schema(
+{
   title: String,
   body: String,
   owner: String,
