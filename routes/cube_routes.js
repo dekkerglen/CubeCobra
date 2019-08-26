@@ -1464,8 +1464,16 @@ router.get('/download/csv/:id', function(req, res)
         {
           card.type_line = carddb.carddict[card.cardID].type;
         }
-
-        res.write('"' + carddb.carddict[card.cardID].name + '"' + ',');
+        var name = carddb.carddict[card.cardID].name;
+        while(name.includes('"'))
+        {
+          name = name.replace('"','-quote-');
+        }
+        while(name.includes('-quote-'))
+        {
+          name = name.replace('-quote-','""');
+        }
+        res.write('"' + name + '"' + ',');
         res.write(card.cmc+ ',');
         res.write('"' + card.type_line.replace('—','-') + '"' + ',');
         if(card.colors.length == 0)
@@ -2214,7 +2222,7 @@ router.get('/api/getcardfromcube/:id', function(req, res)
 {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = split[1].replace('-slash-','//').replace('-q-','?').toLowerCase();
+  var cardname = decodeURIComponent(split[1].toLowerCase());
   Cube.findById(cube, function(err, cube)
   {
     var found = false;
@@ -2621,7 +2629,7 @@ router.get('/deck/:id', function(req, res)
 
 router.get('/api/getcard/:name', function(req, res)
 {
-  req.params.name = req.params.name.replace('-slash-','//').replace('-q-','?').toLowerCase().trim();
+  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
   if(!card)
   {
@@ -2640,7 +2648,7 @@ router.get('/api/getcard/:name', function(req, res)
 
 router.get('/api/getimage/:name', function(req, res)
 {
-  req.params.name = req.params.name.replace('-slash-','//').replace('-q-','?').toLowerCase().trim();
+  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var img = carddb.imagedict[req.params.name];
   if(!img)
   {
