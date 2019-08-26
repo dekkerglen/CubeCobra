@@ -60,7 +60,7 @@ html
 						li.nav-item
 							a.nav-link(href='/user/register') Register
 						li.nav-item
-							a.nav-link(data-toggle='modal', data-target='#loginModal') Login
+							a(href='/user/login').login-link.nav-link Login
 		.container
 			block content
 			br
@@ -89,7 +89,7 @@ html
 
 // Login modal
 #loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
-	.modal-dialog.modal-dialog-centered(role='document')
+	.modal-dialog(role='document')
 		.modal-content
 			form(method='POST', action='/user/login')
 				.modal-header

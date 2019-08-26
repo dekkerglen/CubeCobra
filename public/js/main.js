@@ -1,5 +1,10 @@
 $(document).ready(function()
 {
+  $('.login-link').on('click',function(e)
+  {
+      e.preventDefault();
+      $('#loginModal').modal('show');
+  });
   $('.delete-cube').on('click', function(e)
   {
     $target = $(e.target);
