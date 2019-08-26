@@ -1824,7 +1824,7 @@ function renderTableView() {
               cmc = card.cmc;
             }
             if (card.cmc != cmc) {
-              if (index + 1 == rowgroup.length) {
+              if (index  == rowgroup.length) {
                 res += "";
               } else {
                 res += '</div><div class="cmc-group">';
