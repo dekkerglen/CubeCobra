@@ -436,7 +436,7 @@ function arraysEqual(a, b) {
 }
 
 function justAdd() {
-  var val = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#addInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -459,7 +459,7 @@ function justAdd() {
 }
 
 function remove() {
-  var val = $('#removeInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#removeInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcardfromcube/'+$('#cubeID').val()+';'+val)
@@ -470,7 +470,7 @@ function remove() {
       {
         if($('#addInput').val().length > 0)
         {
-          var val2 = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+          var val2 = encodeURIComponent($('#addInput').val());
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
