@@ -15,7 +15,7 @@ function autocard_init(classname) {
   $('.'+classname).off('mouseenter').on('mouseenter', function(e) {
     if(!stopAutocard) {
       console.log('fired');
-      
+
       let tags = $(this).attr("card_tags") ? $(this).attr("card_tags").split(',') : null;
       autocard_show_card($(this).attr("card"), $(this).attr("card_flip"), $(this).hasClass('autocard-art-crop'), tags);
     }
@@ -68,9 +68,9 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
     else
     {
       //display on top
-      document.getElementById("autocard_popup").style.top = (-(h+5+tag_offset)+y_offset) + "px";
-      document.getElementById("autocard_popup2").style.top = (-(h+5+tag_offset)+y_offset) + "px";
-      document.getElementById("autocard_popup_info").style.top = (-(5+tag_offset)+y_offset) + "px";
+      document.getElementById("autocard_popup").style.top = Math.max(0,(-(h+5+tag_offset)+y_offset)) + "px";
+      document.getElementById("autocard_popup2").style.top = Math.max(0,(-(h+5+tag_offset)+y_offset)) + "px";
+      document.getElementById("autocard_popup_info").style.top = Math.max(0,(-(5+tag_offset)+y_offset)) + "px";
     }
   }
   document.getElementById("autocard_popup").innerHTML = '<img src="" width=225 height=' + h + '>';
