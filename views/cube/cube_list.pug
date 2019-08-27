@@ -155,6 +155,16 @@ block content
 							button.updateButton.btn.btn-success(type='button') Update Table
 							br
 							br           
+			#navcompare.collapse(data-parent='#accordion')
+				.container
+					.row
+						.col
+							form(autocomplete='off').form-inline
+								.mb-2
+									input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
+								button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
+								br
+								br           
 
 	include ../flash
 
