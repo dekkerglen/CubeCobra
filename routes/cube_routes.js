@@ -1637,7 +1637,7 @@ function startCustomDraft(req, res, params, cube) {
   }
   else
   {
-    util.shuffle(cards);
+    var cardpool = util.shuffle(cards.slice());
     var format = JSON.parse(cube.draft_formats[params.id].packs);
     for(j = 0; j < format.length; j++)
     {
@@ -1675,11 +1675,11 @@ function startCustomDraft(req, res, params, cube) {
           {
             draft.packs[i][j].push(0);
             var tag = format[j][k][Math.floor(Math.random()*format[j][k].length)];
-            var index = draftutil.indexOfTag(cards, tag);
+            var index = draftutil.indexOfTag(cardpool, tag);
             //slice out the first card with the index, or error out
             if(index != -1)
             {
-              draft.packs[i][j][k] = cards.splice(index, 1)[0];
+              draft.packs[i][j][k] = cardpool.splice(index, 1)[0];
             }
             else
             {
