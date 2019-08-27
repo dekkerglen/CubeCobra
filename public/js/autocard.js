@@ -70,7 +70,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
       //display on top
       document.getElementById("autocard_popup").style.top = Math.max(0,(-(h+5+tag_offset)+y_offset)) + "px";
       document.getElementById("autocard_popup2").style.top = Math.max(0,(-(h+5+tag_offset)+y_offset)) + "px";
-      document.getElementById("autocard_popup_info").style.top = Math.max(0,(-(5+tag_offset)+y_offset)) + "px";
+      document.getElementById("autocard_popup_info").style.top = Math.max((h),(-(5+tag_offset)+y_offset)) + "px";
     }
   }
   document.getElementById("autocard_popup").innerHTML = '<img src="" width=225 height=' + h + '>';
