@@ -13,9 +13,9 @@ var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
 
-var compare = false;
+var comparing = false;
 if($('#in_both').length) {
-  compare = true;
+  comparing = true;
   var in_both = JSON.parse($('#in_both').val());
   var only_a  = JSON.parse($('#only_a').val());
   var only_b  = JSON.parse($('#only_b').val());
@@ -1792,6 +1792,7 @@ function renderTableView() {
           res += '<div class="cmc-group">'
           rowgroup.forEach(function( card, index)
           {
+            if(comparing) res += '<div>'
             
             if (index == 0) {
               cmc = card.cmc;
@@ -1813,6 +1814,8 @@ function renderTableView() {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
             } 
             res += card.details.name+'</a>';
+
+            if(comparing) res += '</div>'
           });
           res += '</div>'
           
