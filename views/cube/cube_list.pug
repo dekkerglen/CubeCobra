@@ -134,7 +134,7 @@ block content
 						.col
 							button.updateButton.btn.btn-success(type='button') Update Table
 							a   
-							if user && user.id == cube.owner
+							if user && user.id == cube.owner && !cubeB
 								button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
 							br
 							br                
