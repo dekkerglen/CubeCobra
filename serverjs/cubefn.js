@@ -137,8 +137,7 @@ var methods = {
     return src;
   },
   generatePack: function(cubeId, carddb, seed, callback) {
-    Cube.findById(cubeId, function(err, cube)
-    {
+    Cube.findById(cubeId, function(err, cube) {
       if (!cube) {
         callback(true);
       }
@@ -146,7 +145,10 @@ var methods = {
         seed = Date.now().toString();
       }
       const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID]);
-      callback(false, {seed, pack});
+      callback(false, {
+        seed,
+        pack
+      });
     });
   }
 };

@@ -121,9 +121,8 @@ function GetPrices(card_ids, callback) {
     var chunkSize = 250;
     //max tcgplayer request size is 250
     var chunks = [];
-    for(i = 0; i < card_ids.length/chunkSize; i++)
-    {
-      chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
+    for (i = 0; i < card_ids.length / chunkSize; i++) {
+      chunks.push(card_ids.slice(i * chunkSize, (i + 1) * chunkSize));
     }
 
     GetToken(function(access_token) {
@@ -637,19 +636,14 @@ router.get('/analysis/:id', function(req, res) {
   });
 });
 
-router.get('/samplepack/:id', function (req, res) {
-  Cube.findById(req.params.id,function(err, cube)
-  {
+router.get('/samplepack/:id', function(req, res) {
+  Cube.findById(req.params.id, function(err, cube) {
     if (err) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
-    }
-    else
-    {
-      generatePack(req.params.id, carddb, false, function(err, pack)
-      {
-        if(err)
-        {
+    } else {
+      generatePack(req.params.id, carddb, false, function(err, pack) {
+        if (err) {
           req.flash('danger', 'Pack could not be created');
           res.redirect('/404/');
         } else {
@@ -658,7 +652,7 @@ router.get('/samplepack/:id', function (req, res) {
             pack: pack.pack,
             seed: pack.seed,
             activeLink: 'playtest',
-            loginCallback:'/cube/samplepack/'+req.params.id
+            loginCallback: '/cube/samplepack/' + req.params.id
           });
         }
       });
@@ -672,10 +666,8 @@ router.get('/samplepack/:id/:seed', function(req, res) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
-    {
-      if(err)
-      {
+    generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
+      if (err) {
         req.flash('danger', 'Pack could not be created');
         res.redirect('/404/');
       } else {
@@ -697,24 +689,21 @@ router.get('/samplepack/:id/:seed', function(req, res) {
             property: 'og:url',
             content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
           }],
-          loginCallback:'/cube/samplepack/'+req.params.id
+          loginCallback: '/cube/samplepack/' + req.params.id
         });
       }
     });
   });
 });
 
-router.get('/samplepackimage/:id/:seed', function (req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
-  {
-    if(err)
-    {
+router.get('/samplepackimage/:id/:seed', function(req, res) {
+  generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
+    if (err) {
       req.flash('danger', 'Pack could not be created');
       res.redirect('/404/');
-    }
-    else
-    {
-      var srcArray = pack.map((card, index) => {return {
+    } else {
+      var srcArray = pack.map((card, index) => {
+        return {
           src: card.image_small,
           x: CARD_WIDTH * (index % 5),
           y: CARD_HEIGHT * Math.floor(index / 5)
@@ -724,8 +713,7 @@ router.get('/samplepackimage/:id/:seed', function (req, res) {
         width: CARD_WIDTH * 5,
         height: CARD_HEIGHT * 3,
         Canvas
-      }).then(function(image)
-      {
+      }).then(function(image) {
         res.writeHead(200, {
           'Content-Type': 'image/png',
           'Content-Length': image.length
@@ -1168,19 +1156,16 @@ router.get('/download/csv/:id', function(req, res) {
           card.type_line = carddb.carddict[card.cardID].type;
         }
         var name = carddb.carddict[card.cardID].name;
-        while(name.includes('"'))
-        {
-          name = name.replace('"','-quote-');
+        while (name.includes('"')) {
+          name = name.replace('"', '-quote-');
         }
-        while(name.includes('-quote-'))
-        {
-          name = name.replace('-quote-','""');
+        while (name.includes('-quote-')) {
+          name = name.replace('-quote-', '""');
         }
         res.write('"' + name + '"' + ',');
-        res.write(card.cmc+ ',');
-        res.write('"' + card.type_line.replace('—','-') + '"' + ',');
-        if(card.colors.length == 0)
-        {
+        res.write(card.cmc + ',');
+        res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
+        if (card.colors.length == 0) {
           res.write('C,');
         } else if (card.type_line.toLowerCase().includes('land')) {
           res.write('L,');
@@ -1740,8 +1725,7 @@ router.get('/api/getcardfromcube/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube = split[0];
   var cardname = decodeURIComponent(split[1].toLowerCase());
-  Cube.findById(cube, function(err, cube)
-  {
+  Cube.findById(cube, function(err, cube) {
     var found = false;
     cube.cards.forEach(function(card, index) {
       if (!found && carddb.carddict[card.cardID].name_lower == cardname) {
@@ -2045,8 +2029,7 @@ router.get('/deck/:id', function(req, res) {
   });
 });
 
-router.get('/api/getcard/:name', function(req, res)
-{
+router.get('/api/getcard/:name', function(req, res) {
   req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
   if (!card) {
@@ -2061,8 +2044,7 @@ router.get('/api/getcard/:name', function(req, res)
   }
 });
 
-router.get('/api/getimage/:name', function(req, res)
-{
+router.get('/api/getimage/:name', function(req, res) {
   req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var img = carddb.imagedict[req.params.name];
   if (!img) {
@@ -2255,10 +2237,8 @@ router.delete('/remove/:id', ensureAuth, function(req, res) {
     _id: req.params.id
   };
 
-  Cube.findById(req.params.id, function(err, cube)
-  {
-    if(err || !cube || (cube.owner != req.user._id) )
-    {
+  Cube.findById(req.params.id, function(err, cube) {
+    if (err || !cube || (cube.owner != req.user._id)) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     } else {
@@ -2436,11 +2416,9 @@ router.post('/api/draftpick/:id', function(req, res) {
   });
 });
 
-router.get('/api/p1p1/:id', function (req, res) {
-  generatePack(req.params.id, carddb, false, function(err, result)
-  {
-    if(err)
-    {
+router.get('/api/p1p1/:id', function(req, res) {
+  generatePack(req.params.id, carddb, false, function(err, result) {
+    if (err) {
       res.status(500).send({
         success: false
       });
@@ -2455,10 +2433,8 @@ router.get('/api/p1p1/:id', function (req, res) {
 });
 
 router.get('/api/p1p1/:id/:seed', function(req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, result)
-  {
-    if(err)
-    {
+  generatePack(req.params.id, carddb, req.params.seed, function(err, result) {
+    if (err) {
       res.status(500).send({
         success: false
       });

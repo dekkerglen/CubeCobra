@@ -100,17 +100,15 @@ app.get('*', function(req, res, next) {
 });
 
 // Home route
-app.get('/', function(req, res)
-{
+app.get('/', function(req, res) {
   const routeReady = () => {
     if (recents && drafted && blog && decks) {
       decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
-      res.render('index',
-      {
-        devblog:blog.length > 0 ? blog[0] : null,
-        recents:recents,
-        drafted:drafted,
-        decks:decklinks
+      res.render('index', {
+        devblog: blog.length > 0 ? blog[0] : null,
+        recents: recents,
+        drafted: drafted,
+        decks: decklinks
       });
     }
   };
@@ -118,11 +116,21 @@ app.get('/', function(req, res)
   var user_id = '';
   var recents, drafted, blog, decks;
 
-  if(req.user) user_id = req.user._id;
+  if (req.user) user_id = req.user._id;
   Cube.find({
-      'card_count':{$gt : 200},
-      $or:[ {'isListed':true},{'isListed':null}, {'owner':user_id} ]
-  }).sort({'date_updated': -1}).limit(12).exec(function(err, result) {
+    'card_count': {
+      $gt: 200
+    },
+    $or: [{
+      'isListed': true
+    }, {
+      'isListed': null
+    }, {
+      'owner': user_id
+    }]
+  }).sort({
+    'date_updated': -1
+  }).limit(12).exec(function(err, result) {
     if (err) {
       recents = [];
       console.log('recents failed to load');
@@ -134,10 +142,18 @@ app.get('/', function(req, res)
 
     routeReady();
   });
-    
+
   Cube.find({
-    $or:[ {'isListed':true},{'isListed':null}, {'owner':user_id} ]
-  }).sort({'numDecks': -1}).limit(12).exec(function(err, result) {
+    $or: [{
+      'isListed': true
+    }, {
+      'isListed': null
+    }, {
+      'owner': user_id
+    }]
+  }).sort({
+    'numDecks': -1
+  }).limit(12).exec(function(err, result) {
     if (err) {
       drafted = [];
       console.log('drafted failed to load');
@@ -150,7 +166,11 @@ app.get('/', function(req, res)
     routeReady();
   });
 
-  Blog.find({dev:'true'}).sort({'date': -1}).exec(function(err, result) {
+  Blog.find({
+    dev: 'true'
+  }).sort({
+    'date': -1
+  }).exec(function(err, result) {
     if (err) {
       blog = [];
       console.log('blog failed to load');
@@ -163,7 +183,9 @@ app.get('/', function(req, res)
     routeReady();
   });
 
-  Deck.find().sort({'date': -1}).limit(10).exec(function(err, result) {
+  Deck.find().sort({
+    'date': -1
+  }).limit(10).exec(function(err, result) {
     if (err) {
       decks = [];
       console.log('decks failed to load');
