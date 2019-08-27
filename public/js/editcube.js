@@ -13,6 +13,14 @@ var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
 
+var compare = false;
+if($('#in_both').length) {
+  compare = true;
+  var in_both = JSON.parse($('#in_both').val());
+  var only_a  = JSON.parse($('#only_a').val());
+  var only_b  = JSON.parse($('#only_b').val());
+}
+
 var cubeDict = {};
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index)

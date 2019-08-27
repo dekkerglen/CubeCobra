@@ -484,21 +484,25 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
               cubeA.cards.forEach(function(card, index) {
                 if(b_names.includes(card.details.name)) {
                   in_both.push(card);
+
                   only_a.splice(a_names.indexOf(card.details.name),1);
                   only_b.splice(b_names.indexOf(card.details.name),1);
+
+                  a_names.splice(a_names.indexOf(card.details.name),1);
+                  b_names.splice(b_names.indexOf(card.details.name),1);
                 }
               });
               
               let all_cards = in_both.concat(only_a).concat(only_b);
               
               params = {
-                cube:cubeA,
-                cubeB:cubeB,
-                in_both:in_both,
-                only_a:only_a,
-                only_b:only_b,
-                cube_raw:JSON.stringify(all_cards),
-                loginCallback:'/cube/comapre/'+id_a+'/to/'+id_b,
+                cube: cubeA,
+                cubeB: cubeB,
+                in_both: JSON.stringify(in_both.map( card => card.details.name )),
+                only_a: JSON.stringify(a_names),
+                only_b: JSON.stringify(b_names),
+                cube_raw: JSON.stringify(all_cards),
+                loginCallback: '/cube/compare/'+id_a+'/to/'+id_b,
               };
 
               if(currentuser) params.edittoken = currentuser.edit_token;
