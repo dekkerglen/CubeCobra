@@ -6,7 +6,7 @@
   "keep_array_indentation": false,
   "break_chained_methods": false,
   "indent_scripts": "normal",
-  "brace_style": "expand",
+  "brace_style": "collapse",
   "space_before_conditional": true,
   "unescape_strings": false,
   "jslint_happy": false,

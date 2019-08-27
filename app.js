@@ -16,14 +16,12 @@ var updatedb = require('./serverjs/updatecards.js');
 // Connect db
 mongoose.connect(config.database);
 let db = mongoose.connection;
-db.once('open', function()
-{
+db.once('open', function() {
   console.log('connected to nodecube db');
 });
 
 // Check for db errors
-db.on('error', function(err)
-{
+db.on('error', function(err) {
   console.log(err);
 });
 
@@ -40,13 +38,11 @@ let Deck = require('./models/deck')
 app.use(fileUpload());
 
 // Body parser middleware
-app.use(bodyParser.urlencoded(
-{
+app.use(bodyParser.urlencoded({
   limit: '50mb',
   extended: true
 }));
-app.use(bodyParser.json(
-{
+app.use(bodyParser.json({
   limit: '50mb',
   extended: true
 }));
@@ -59,36 +55,30 @@ app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Express session middleware
-app.use(session(
-{
+app.use(session({
   secret: 'vertical donkey gatorade helicopter',
   resave: false,
   saveUninitialized: true,
-  cooke:
-  {
+  cooke: {
     secure: true
   }
 }));
 
 //Express messages middleware
 app.use(require('connect-flash')());
-app.use(function(req, res, next)
-{
+app.use(function(req, res, next) {
   res.locals.messages = require('express-messages')(req, res);
   next();
 });
 
 // Express validator middleware
-app.use(expressValidator(
-{
-  errorFormatter: function(param, msg, value)
-  {
+app.use(expressValidator({
+  errorFormatter: function(param, msg, value) {
     var namespace = param.split('.'),
       root = namespace.shift(),
       formParam = root;
 
-    while (namespace.length)
-    {
+    while (namespace.length) {
       formParam += '[' + namespace.shift() + ']';
     }
     return {
@@ -104,42 +94,20 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('*', function(req, res, next)
-{
+app.get('*', function(req, res, next) {
   res.locals.user = req.user || null;
   next();
 });
 
 // Home route
-app.get('/', function(req, res)
-{
+app.get('/', function(req, res) {
   var user_id = '';
   if (req.user) user_id = req.user._id;
-  Cube.find(
-  {
-    'card_count':
-    {
+  Cube.find({
+    'card_count': {
       $gt: 200
     },
-    $or: [
-    {
-      'isListed': true
-    },
-    {
-      'isListed': null
-    },
-    {
-      'owner': user_id
-    }]
-  }).sort(
-  {
-    'date_updated': -1
-  }).limit(12).exec(function(err, recents)
-  {
-    Cube.find(
-    {
-      $or: [
-      {
+    $or: [{
         'isListed': true
       },
       {
@@ -147,28 +115,35 @@ app.get('/', function(req, res)
       },
       {
         'owner': user_id
-      }]
-    }).sort(
-    {
+      }
+    ]
+  }).sort({
+    'date_updated': -1
+  }).limit(12).exec(function(err, recents) {
+    Cube.find({
+      $or: [{
+          'isListed': true
+        },
+        {
+          'isListed': null
+        },
+        {
+          'owner': user_id
+        }
+      ]
+    }).sort({
       'numDecks': -1
-    }).limit(12).exec(function(err, drafted)
-    {
-      Blog.find(
-      {
+    }).limit(12).exec(function(err, drafted) {
+      Blog.find({
         dev: 'true'
-      }).sort(
-      {
+      }).sort({
         'date': -1
-      }).exec(function(err, blog)
-      {
-        Deck.find().sort(
-        {
+      }).exec(function(err, blog) {
+        Deck.find().sort({
           'date': -1
-        }).limit(10).exec(function(err, decks)
-        {
+        }).limit(10).exec(function(err, decks) {
           decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
-          res.render('index',
-          {
+          res.render('index', {
             devblog: blog[0],
             recents: recents,
             drafted: drafted,
@@ -188,66 +163,49 @@ app.get('/', function(req, res)
 //name, owner
 //symbols:
 //=,~(contains)
-app.get('/advanced_search', function(req, res)
-{
-  res.render('search/advanced_search',
-  {
+app.get('/advanced_search', function(req, res) {
+  res.render('search/advanced_search', {
     loginCallback: '/advanced_search'
   });
 });
 
-app.post('/advanced_search', function(req, res)
-{
+app.post('/advanced_search', function(req, res) {
   var url = '/search/';
-  if (req.body.name && req.body.name.length > 0)
-  {
+  if (req.body.name && req.body.name.length > 0) {
     url += 'name' + req.body.nameType + req.body.name + ';';
   }
-  if (req.body.owner && req.body.owner.length > 0)
-  {
+  if (req.body.owner && req.body.owner.length > 0) {
     url += 'owner_name' + req.body.ownerType + req.body.owner + ';';
   }
   res.redirect(url)
 });
 
-app.post('/search', function(req, res)
-{
-  if (!req.body.search || req.body.search.length == 0)
-  {
+app.post('/search', function(req, res) {
+  if (!req.body.search || req.body.search.length == 0) {
     req.flash('danger', 'No Search Parameters');
     res.redirect('/advanced_search');
-  }
-  else
-  {
+  } else {
     var query = req.body.search;
-    if (query.includes(';'))
-    {
+    if (query.includes(';')) {
       res.redirect('/search/' + query)
-    }
-    else
-    {
+    } else {
       res.redirect('/search/name~' + query);
     }
   }
 });
 
-app.get('/search/:id', function(req, res)
-{
+app.get('/search/:id', function(req, res) {
   var raw_split = req.params.id.split(':');
   var raw_queries = raw_split[0].split(';');
   var page = parseInt(raw_split[1]);
   var query = {};
   var terms = [];
-  raw_queries.forEach(function(val, index)
-  {
-    if (val.includes('='))
-    {
+  raw_queries.forEach(function(val, index) {
+    if (val.includes('=')) {
       var split = val.split('=');
       query[split[0]] = split[1];
       terms.push(split[0].replace('owner_name', 'owner') + ' is exactly ' + split[1]);
-    }
-    else if (val.includes('~'))
-    {
+    } else if (val.includes('~')) {
       var split = val.split('~');
       query[split[0]] = {
         "$regex": split[1],
@@ -261,59 +219,47 @@ app.get('/search/:id', function(req, res)
   if (req.user) user_id = req.user._id;
   query = {
     $and: [query,
-    {
-      $or: [
       {
-        'isListed': true
-      },
-      {
-        'owner': user_id
-      }]
-    }]
+        $or: [{
+            'isListed': true
+          },
+          {
+            'owner': user_id
+          }
+        ]
+      }
+    ]
   };
 
-  Cube.find(query).sort(
-  {
+  Cube.find(query).sort({
     'date_updated': -1
-  }).exec(function(err, cubes)
-  {
+  }).exec(function(err, cubes) {
     var pages = [];
-    if (cubes.length > 12)
-    {
-      if (!page)
-      {
+    if (cubes.length > 12) {
+      if (!page) {
         page = 0;
       }
-      for (i = 0; i < cubes.length / 12; i++)
-      {
-        if (page == i)
-        {
-          pages.push(
-          {
+      for (i = 0; i < cubes.length / 12; i++) {
+        if (page == i) {
+          pages.push({
             url: raw_split[0] + ':' + i,
             content: (i + 1),
             active: true
           });
-        }
-        else
-        {
-          pages.push(
-          {
+        } else {
+          pages.push({
             url: raw_split[0] + ':' + i,
             content: (i + 1)
           });
         }
       }
       cube_page = [];
-      for (i = 0; i < 12; i++)
-      {
-        if (cubes[i + page * 12])
-        {
+      for (i = 0; i < 12; i++) {
+        if (cubes[i + page * 12]) {
           cube_page.push(cubes[i + page * 12]);
         }
       }
-      res.render('search',
-      {
+      res.render('search', {
         results: cube_page,
         search: req.params.id,
         terms: terms,
@@ -321,11 +267,8 @@ app.get('/search/:id', function(req, res)
         numresults: cubes.length,
         loginCallback: '/search/' + req.params.id
       });
-    }
-    else
-    {
-      res.render('search',
-      {
+    } else {
+      res.render('search', {
         results: cubes,
         search: req.params.id,
         terms: terms,
@@ -336,66 +279,50 @@ app.get('/search/:id', function(req, res)
   });
 });
 
-app.get('/contact', function(req, res)
-{
-  res.render('info/contact',
-  {
+app.get('/contact', function(req, res) {
+  res.render('info/contact', {
     loginCallback: '/contact'
   });
 });
 
-app.get('/tos', function(req, res)
-{
-  res.render('info/tos',
-  {
+app.get('/tos', function(req, res) {
+  res.render('info/tos', {
     loginCallback: '/tos'
   });
 });
 
-app.get('/privacy', function(req, res)
-{
-  res.render('info/privacy_policy',
-  {
+app.get('/privacy', function(req, res) {
+  res.render('info/privacy_policy', {
     loginCallback: '/privacy'
   });
 });
 
-app.get('/cookies', function(req, res)
-{
-  res.render('info/cookies',
-  {
+app.get('/cookies', function(req, res) {
+  res.render('info/cookies', {
     loginCallback: '/cookies'
   });
 });
 
-app.get('/ourstory', function(req, res)
-{
-  res.render('info/ourstory',
-  {
+app.get('/ourstory', function(req, res) {
+  res.render('info/ourstory', {
     loginCallback: '/ourstory'
   });
 });
 
-app.get('/faq', function(req, res)
-{
-  res.render('info/faq',
-  {
+app.get('/faq', function(req, res) {
+  res.render('info/faq', {
     loginCallback: '/faq'
   });
 });
 
-app.get('/donate', function(req, res)
-{
-  res.render('info/donate',
-  {
+app.get('/donate', function(req, res) {
+  res.render('info/donate', {
     loginCallback: '/donate'
   });
 });
 
-app.get('/404', function(req, res)
-{
-  res.render('misc/404',
-  {});
+app.get('/404', function(req, res) {
+  res.render('misc/404', {});
 });
 
 //Route files
@@ -406,8 +333,7 @@ app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
 
-app.get('*', function(req, res)
-{
+app.get('*', function(req, res) {
   res.redirect('/404');
 });
 
@@ -419,7 +345,6 @@ schedule.scheduleJob('0 0 * * *', function(){
 */
 
 // Start server
-http.createServer(app).listen(5000, 'localhost', function()
-{
+http.createServer(app).listen(5000, 'localhost', function() {
   console.log('server started on port 5000...');
 });

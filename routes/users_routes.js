@@ -13,11 +13,9 @@ let Cube = require('../models/cube')
 let Deck = require('../models/deck')
 
 // For consistency between different forms, validate username through this function.
-function checkUsernameValid(req)
-{
+function checkUsernameValid(req) {
   req.checkBody('username', 'Username is required').notEmpty();
-  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength(
-  {
+  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({
     min: 5,
     max: 24
   });
@@ -26,52 +24,38 @@ function checkUsernameValid(req)
 }
 
 //Lost password form
-router.get('/lostpassword', function(req, res)
-{
+router.get('/lostpassword', function(req, res) {
   res.render('user/lostpassword');
 });
 
 //Lost password submit
-router.post('/lostpassword', function(req, res)
-{
+router.post('/lostpassword', function(req, res) {
   req.checkBody('email', 'Email is required').notEmpty();
 
   //handle error checks
   let errors = req.validationErrors();
 
-  if (errors)
-  {
-    res.render('user/lostpassword',
-    {
+  if (errors) {
+    res.render('user/lostpassword', {
       errors: errors
     });
-  }
-  else
-  {
-    PasswordReset.deleteOne(
-    {
+  } else {
+    PasswordReset.deleteOne({
       email: req.body.email.toLowerCase()
-    }, function(err)
-    {
+    }, function(err) {
       let passwordReset = new PasswordReset();
       passwordReset.expires = addMinutes(Date.now(), 15);
       passwordReset.email = req.body.email;
       passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
 
-      passwordReset.save(function(err)
-      {
-        if (err)
-        {
+      passwordReset.save(function(err) {
+        if (err) {
           console.log(err);
-        }
-        else
-        {
+        } else {
           // Use Smtp Protocol to send Email
-          var smtpTransport = mailer.createTransport(
-          {
+          var smtpTransport = mailer.createTransport({
             service: "Gmail",
-            auth:
-            {
+            auth: {
               user: emailconfig.username,
               pass: emailconfig.password
             }
@@ -87,10 +71,8 @@ router.post('/lostpassword', function(req, res)
               "<br> If you did not request a password reset, ignore this email."
           }
 
-          smtpTransport.sendMail(mail, function(err, response)
-          {
-            if (err)
-            {
+          smtpTransport.sendMail(mail, function(err, response) {
+            if (err) {
               console.log(err);
             }
 
@@ -105,89 +87,58 @@ router.post('/lostpassword', function(req, res)
   }
 });
 
-router.get('/passwordreset/:id', function(req, res)
-{
+router.get('/passwordreset/:id', function(req, res) {
   //create a password reset page and return it here
-  PasswordReset.findById(req.params.id, function(err, passwordreset)
-  {
-    if (!passwordreset || (Date.now() > passwordreset.expires))
-    {
+  PasswordReset.findById(req.params.id, function(err, passwordreset) {
+    if (!passwordreset || (Date.now() > passwordreset.expires)) {
       req.flash('danger', 'Password recovery link expired');
       res.redirect('/');
-    }
-    else
-    {
+    } else {
       res.render('user/passwordreset');
     }
   });
 });
 
-router.post('/lostpasswordreset', function(req, res)
-{
-  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength(
-  {
+router.post('/lostpasswordreset', function(req, res) {
+  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24
   });
   req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
-  if (errors)
-  {
-    res.render('user/passwordreset',
-    {
+  if (errors) {
+    res.render('user/passwordreset', {
       errors: errors
     })
-  }
-  else
-  {
-    PasswordReset.findOne(
-    {
+  } else {
+    PasswordReset.findOne({
       code: req.body.code,
       email: req.body.email
-    }, function(err, passwordreset)
-    {
-      if (!passwordreset)
-      {
+    }, function(err, passwordreset) {
+      if (!passwordreset) {
         req.flash('danger', 'Incorrect email and recovery code combination.');
         res.render('user/passwordreset');
-      }
-      else
-      {
-        User.findOne(
-        {
+      } else {
+        User.findOne({
           email: req.body.email
-        }, function(err, user)
-        {
-          if (user)
-          {
-            if (req.body.password2 != req.body.password)
-            {
+        }, function(err, user) {
+          if (user) {
+            if (req.body.password2 != req.body.password) {
               req.flash('danger', 'New passwords don\'t match');
               res.render('user/passwordreset');
-            }
-            else
-            {
-              bcrypt.genSalt(10, function(err, salt)
-              {
-                bcrypt.hash(req.body.password2, salt, function(err, hash)
-                {
-                  if (err)
-                  {
+            } else {
+              bcrypt.genSalt(10, function(err, salt) {
+                bcrypt.hash(req.body.password2, salt, function(err, hash) {
+                  if (err) {
                     console.log(err);
-                  }
-                  else
-                  {
+                  } else {
                     user.password = hash;
-                    user.save(function(err)
-                    {
-                      if (err)
-                      {
+                    user.save(function(err) {
+                      if (err) {
                         console.log(err)
                         return;
-                      }
-                      else
-                      {
+                      } else {
                         req.flash('success', 'Password updated succesfully');
                         return res.redirect('/user/login');
                       }
@@ -204,14 +155,12 @@ router.post('/lostpasswordreset', function(req, res)
 });
 
 //Register form
-router.get('/register', function(req, res)
-{
+router.get('/register', function(req, res) {
   res.render('user/register');
 });
 
 //Register process
-router.post('/register', function(req, res)
-{
+router.post('/register', function(req, res) {
   const email = req.body.email.toLowerCase();
   const username = req.body.username;
   const password = req.body.password;
@@ -228,61 +177,42 @@ router.post('/register', function(req, res)
   req.checkBody('password', 'Password is required').notEmpty();
   req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
-  req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength(
-  {
+  req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({
     min: 5,
     max: 100
   });
-  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength(
-  {
+  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24
   });
   let errors = req.validationErrors();
 
-  if (errors)
-  {
-    res.render('user/register',
-    {
+  if (errors) {
+    res.render('user/register', {
       errors: errors,
       attempt: attempt
     });
-  }
-  else
-  {
-    User.findOne(
-    {
+  } else {
+    User.findOne({
       username_lower: req.body.username.toLowerCase()
-    }, function(err, user)
-    {
-      if (user)
-      {
+    }, function(err, user) {
+      if (user) {
         req.flash('danger', 'Username already taken.');
-        res.render('user/register',
-        {
+        res.render('user/register', {
           attempt: attempt
         });
-      }
-      else
-      {
+      } else {
         //check if user exists
-        User.findOne(
-        {
+        User.findOne({
           email: req.body.email.toLowerCase()
-        }, function(err, user)
-        {
-          if (user)
-          {
+        }, function(err, user) {
+          if (user) {
             req.flash('danger', 'Email already associated with an existing account.');
-            res.render('user/register',
-            {
+            res.render('user/register', {
               attempt: attempt
             });
-          }
-          else
-          {
-            let newUser = new User(
-            {
+          } else {
+            let newUser = new User({
               email: email,
               username: username,
               username_lower: username.toLowerCase(),
@@ -290,35 +220,24 @@ router.post('/register', function(req, res)
               confirm: 'false'
             });
 
-            bcrypt.genSalt(10, function(err, salt)
-            {
-              bcrypt.hash(newUser.password, salt, function(err, hash)
-              {
-                if (err)
-                {
+            bcrypt.genSalt(10, function(err, salt) {
+              bcrypt.hash(newUser.password, salt, function(err, hash) {
+                if (err) {
                   console.log(err);
-                }
-                else
-                {
+                } else {
                   newUser.password = hash;
                   newUser.confirmed = 'false';
-                  newUser.save(function(err)
-                  {
-                    if (err)
-                    {
+                  newUser.save(function(err) {
+                    if (err) {
                       console.log(err)
                       return;
-                    }
-                    else
-                    {
+                    } else {
                       // Use Smtp Protocol to send Email
-                      var smtpTransport = mailer.createTransport(
-                      {
+                      var smtpTransport = mailer.createTransport({
                         name: 'CubeCobra.com',
                         secure: true,
                         service: "Gmail",
-                        auth:
-                        {
+                        auth: {
                           user: emailconfig.username,
                           pass: emailconfig.password
                         }
@@ -333,10 +252,8 @@ router.post('/register', function(req, res)
                           newUser._id + "\">here</a>."
                       }
 
-                      smtpTransport.sendMail(mail, function(error, response)
-                      {
-                        if (error)
-                        {
+                      smtpTransport.sendMail(mail, function(error, response) {
+                        if (error) {
                           console.log(error);
                         }
 
@@ -359,24 +276,16 @@ router.post('/register', function(req, res)
 });
 
 //Register confirm
-router.get('/register/confirm/:id', function(req, res)
-{
-  User.findById(req.params.id, function(err, user)
-  {
-    if (err)
-    {
+router.get('/register/confirm/:id', function(req, res) {
+  User.findById(req.params.id, function(err, user) {
+    if (err) {
       req.flash('danger', 'Invalid confirmation link.');
       res.redirect('/');
-    }
-    else
-    {
-      if (user.confirmed == 'true')
-      {
+    } else {
+      if (user.confirmed == 'true') {
         req.flash('success', 'User already confirmed.');
         res.redirect('/user/login');
-      }
-      else
-      {
+      } else {
         let user = {
           confirmed: 'true'
         };
@@ -384,15 +293,11 @@ router.get('/register/confirm/:id', function(req, res)
           _id: req.params.id
         };
 
-        User.updateOne(query, user, function(err)
-        {
-          if (err)
-          {
+        User.updateOne(query, user, function(err) {
+          if (err) {
             req.flash('danger', 'Invalid confirmation link.');
             res.redirect('/');
-          }
-          else
-          {
+          } else {
             req.flash('success', 'User successfully confirmed');
             res.redirect('/user/login');
           }
@@ -403,86 +308,61 @@ router.get('/register/confirm/:id', function(req, res)
 });
 
 //Login route
-router.get('/login', function(req, res)
-{
+router.get('/login', function(req, res) {
   res.render('user/login');
 })
 
 //Login post
-router.post('/login', function(req, res, next)
-{
-  if (req.body.username.includes('@'))
-  {
+router.post('/login', function(req, res, next) {
+  if (req.body.username.includes('@')) {
     //find by email
-    User.findOne(
-    {
+    User.findOne({
       email: req.body.username
-    }, function(err, user)
-    {
-      if (!user)
-      {
+    }, function(err, user) {
+      if (!user) {
         req.flash('danger', 'Incorrect username or email address.');
         res.redirect('/user/login');
-      }
-      else
-      {
+      } else {
         req.body.username = user.username
         //TODO: fix confirmation
-        if (true || user.confirmed == 'true')
-        {
+        if (true || user.confirmed == 'true') {
           var redirect = '/';
-          if (req.body.loginCallback)
-          {
+          if (req.body.loginCallback) {
             redirect = req.body.loginCallback;
           }
-          passport.authenticate('local',
-          {
+          passport.authenticate('local', {
             successRedirect: redirect,
             failureRedirect: '/user/Login',
             failureFlash: true
           })(req, res, next);
-        }
-        else
-        {
+        } else {
           req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
           res.redirect('/user/login');
         }
       }
     });
-  }
-  else
-  {
+  } else {
     req.body.username = req.body.username.toLowerCase();
     //find by username
-    User.findOne(
-    {
+    User.findOne({
       username_lower: req.body.username
-    }, function(err, user)
-    {
-      if (!user)
-      {
+    }, function(err, user) {
+      if (!user) {
         req.flash('danger', 'Incorrect username or email address.');
         res.redirect('/user/login');
-      }
-      else
-      {
+      } else {
         //TODO: fix confirmation
-        if (true || user.confirmed == 'true')
-        {
+        if (true || user.confirmed == 'true') {
           var redirect = '/';
-          if (req.body.loginCallback)
-          {
+          if (req.body.loginCallback) {
             redirect = req.body.loginCallback;
           }
-          passport.authenticate('local',
-          {
+          passport.authenticate('local', {
             successRedirect: redirect,
             failureRedirect: '/user/Login',
             failureFlash: true
           })(req, res, next);
-        }
-        else
-        {
+        } else {
           req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
           res.redirect('/user/login');
         }
@@ -492,46 +372,31 @@ router.post('/login', function(req, res, next)
 })
 
 //logout
-router.get('/logout', function(req, res)
-{
+router.get('/logout', function(req, res) {
   req.logout();
   req.flash('success', 'You have been logged out');
   res.redirect('/');
 });
 
-router.get('/view/:id', function(req, res)
-{
-  User.findById(req.params.id, function(err, user)
-  {
-    if (!user)
-    {
-      User.findOne(
-      {
+router.get('/view/:id', function(req, res) {
+  User.findById(req.params.id, function(err, user) {
+    if (!user) {
+      User.findOne({
         username_lower: req.params.id.toLowerCase()
-      }, function(err, user2)
-      {
-        if (!user2)
-        {
+      }, function(err, user2) {
+        if (!user2) {
           req.flash('danger', 'User not found');
           res.redirect('/404/' + req.params.id);
-        }
-        else
-        {
+        } else {
           res.redirect('/user/view/' + user2._id);
         }
       });
-    }
-    else
-    {
-      Cube.find(
-      {
+    } else {
+      Cube.find({
         owner: user._id
-      }, function(err, cubes)
-      {
-        res.render('user/user_view',
-        {
-          user_limited:
-          {
+      }, function(err, cubes) {
+        res.render('user/user_view', {
+          user_limited: {
             username: user.username,
             email: user.email,
             about: user.about,
@@ -545,67 +410,49 @@ router.get('/view/:id', function(req, res)
   });
 });
 
-router.get('/decks/:id', function(req, res)
-{
+router.get('/decks/:id', function(req, res) {
   var split = req.params.id.split(';');
   var userid = split[0];
-  User.findById(userid, function(err, user)
-  {
-    Deck.find(
-    {
+  User.findById(userid, function(err, user) {
+    Deck.find({
       owner: userid
-    }).sort('date').exec(function(err, decks)
-    {
-      if (!user)
-      {
+    }).sort('date').exec(function(err, decks) {
+      if (!user) {
         user = {
           username: 'unknown'
         };
       }
       var pages = [];
       var pagesize = 30;
-      if (decks.length > 0)
-      {
+      if (decks.length > 0) {
         decks.reverse();
-        if (decks.length > pagesize)
-        {
+        if (decks.length > pagesize) {
           var page = parseInt(split[1]);
-          if (!page)
-          {
+          if (!page) {
             page = 0;
           }
-          for (i = 0; i < decks.length / pagesize; i++)
-          {
-            if (page == i)
-            {
-              pages.push(
-              {
+          for (i = 0; i < decks.length / pagesize; i++) {
+            if (page == i) {
+              pages.push({
                 url: '/user/decks/' + userid + ';' + i,
                 content: (i + 1),
                 active: true
               });
-            }
-            else
-            {
-              pages.push(
-              {
+            } else {
+              pages.push({
                 url: '/user/decks/' + userid + ';' + i,
                 content: (i + 1),
               });
             }
           }
           deck_page = [];
-          for (i = 0; i < pagesize; i++)
-          {
-            if (decks[i + page * pagesize])
-            {
+          for (i = 0; i < pagesize; i++) {
+            if (decks[i + page * pagesize]) {
               deck_page.push(decks[i + page * pagesize]);
             }
           }
-          res.render('user/user_decks',
-          {
-            user_limited:
-            {
+          res.render('user/user_decks', {
+            user_limited: {
               username: user.username,
               email: user.email,
               about: user.about,
@@ -615,13 +462,9 @@ router.get('/decks/:id', function(req, res)
             pages: pages,
             loginCallback: '/user/decks/' + userid
           });
-        }
-        else
-        {
-          res.render('user/user_decks',
-          {
-            user_limited:
-            {
+        } else {
+          res.render('user/user_decks', {
+            user_limited: {
               username: user.username,
               email: user.email,
               about: user.about,
@@ -631,13 +474,9 @@ router.get('/decks/:id', function(req, res)
             loginCallback: '/user/decks/' + userid
           });
         }
-      }
-      else
-      {
-        res.render('user/user_decks',
-        {
-          user_limited:
-          {
+      } else {
+        res.render('user/user_decks', {
+          user_limited: {
             username: user.username,
             email: user.email,
             about: user.about,
@@ -652,18 +491,15 @@ router.get('/decks/:id', function(req, res)
 });
 
 //account page
-router.get('/account', ensureAuth, function(req, res)
-{
-  User.findById(req.user._id, function(err, user)
-  {
+router.get('/account', ensureAuth, function(req, res) {
+  User.findById(req.user._id, function(err, user) {
     user_limited = {
       username: user.username,
       email: user.email,
       about: user.about,
       id: user._id
     }
-    res.render('user/user_account',
-    {
+    res.render('user/user_account', {
       selected: 'info',
       user: user_limited,
       loginCallback: '/user/account'
@@ -672,18 +508,15 @@ router.get('/account', ensureAuth, function(req, res)
 });
 
 //account page, password reset
-router.get('/account/changepassword', ensureAuth, function(req, res)
-{
-  User.findById(req.user._id, function(err, user)
-  {
+router.get('/account/changepassword', ensureAuth, function(req, res) {
+  User.findById(req.user._id, function(err, user) {
     user_limited = {
       username: user.username,
       email: user.email,
       about: user.about,
       id: user._id
     }
-    res.render('user/user_account',
-    {
+    res.render('user/user_account', {
       selected: 'changepw',
       user: user_limited,
       loginCallback: '/user/account/changepassword'
@@ -692,18 +525,15 @@ router.get('/account/changepassword', ensureAuth, function(req, res)
 });
 
 //account page, password reset
-router.get('/account/updateemail', ensureAuth, function(req, res)
-{
-  User.findById(req.user._id, function(err, user)
-  {
+router.get('/account/updateemail', ensureAuth, function(req, res) {
+  User.findById(req.user._id, function(err, user) {
     user_limited = {
       username: user.username,
       email: user.email,
       about: user.about,
       id: user._id
     }
-    res.render('user/user_account',
-    {
+    res.render('user/user_account', {
       selected: 'changeemail',
       user: user_limited,
       loginCallback: '/user/updateemail'
@@ -711,10 +541,8 @@ router.get('/account/updateemail', ensureAuth, function(req, res)
   });
 });
 
-router.post('/resetpassword', ensureAuth, function(req, res, next)
-{
-  req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength(
-  {
+router.post('/resetpassword', ensureAuth, function(req, res, next) {
+  req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24
   });
@@ -722,66 +550,43 @@ router.post('/resetpassword', ensureAuth, function(req, res, next)
 
   let errors = req.validationErrors();
 
-  if (errors)
-  {
-    User.findById(req.user._id, function(err, user)
-    {
+  if (errors) {
+    User.findById(req.user._id, function(err, user) {
       user_limited = {
         username: user.username,
         email: user.email,
         about: user.about
       }
-      res.render('user/user_account',
-      {
+      res.render('user/user_account', {
         selected: 'changepw',
         user: user_limited,
         errors: errors,
         loginCallback: '/user/account/changepassword'
       });
     });
-  }
-  else
-  {
-    User.findById(req.user._id, function(err, user)
-    {
-      if (user)
-      {
-        bcrypt.compare(req.body.password, user.password, function(err, isMatch)
-        {
-          if (!isMatch)
-          {
+  } else {
+    User.findById(req.user._id, function(err, user) {
+      if (user) {
+        bcrypt.compare(req.body.password, user.password, function(err, isMatch) {
+          if (!isMatch) {
             req.flash('danger', 'Password is incorrect');
             return res.redirect('/user/account/changepassword');
-          }
-          else
-          {
-            if (req.body.password2 != req.body.password3)
-            {
+          } else {
+            if (req.body.password2 != req.body.password3) {
               req.flash('danger', 'New passwords don\'t match');
               return res.redirect('/user/account/changepassword');
-            }
-            else
-            {
-              bcrypt.genSalt(10, function(err, salt)
-              {
-                bcrypt.hash(req.body.password2, salt, function(err, hash)
-                {
-                  if (err)
-                  {
+            } else {
+              bcrypt.genSalt(10, function(err, salt) {
+                bcrypt.hash(req.body.password2, salt, function(err, hash) {
+                  if (err) {
                     console.log(err);
-                  }
-                  else
-                  {
+                  } else {
                     user.password = hash;
-                    user.save(function(err)
-                    {
-                      if (err)
-                      {
+                    user.save(function(err) {
+                      if (err) {
                         console.log(err)
                         return;
-                      }
-                      else
-                      {
+                      } else {
                         req.flash('success', 'Password updated succesfully');
                         return res.redirect('/user/account/changepassword');
                       }
@@ -797,54 +602,36 @@ router.post('/resetpassword', ensureAuth, function(req, res, next)
   }
 });
 
-router.post('/updateuserinfo', ensureAuth, function(req, res, next)
-{
-  User.findById(req.user._id, function(err, user)
-  {
-    if (user)
-    {
-      User.findOne(
-      {
+router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
+  User.findById(req.user._id, function(err, user) {
+    if (user) {
+      User.findOne({
         username_lower: req.body.username.toLowerCase(),
-        _id:
-        {
+        _id: {
           $ne: req.user._id
         }
-      }, function(err, duplicate_user)
-      {
-        if (user.username !== req.body.username)
-        {
+      }, function(err, duplicate_user) {
+        if (user.username !== req.body.username) {
           req = checkUsernameValid(req);
           let errors = req.validationErrors();
-          if (errors)
-          {
-            for (i = 0; i < errors.length; i++)
-            {
+          if (errors) {
+            for (i = 0; i < errors.length; i++) {
               req.flash('danger', errors[i].msg);
             }
             return res.redirect('/user/account');
-          }
-          else
-          {
-            if (duplicate_user)
-            {
+          } else {
+            if (duplicate_user) {
               req.flash('danger', 'Username already taken.');
               return res.redirect('/user/account');
-            }
-            else
-            {
+            } else {
               user.username = req.body.username;
               user.username_lower = req.body.username.toLowerCase();
-              Cube.find(
-              {
+              Cube.find({
                 'owner': req.user._id
-              }, function(err, cubes)
-              {
-                cubes.forEach(function(item, index)
-                {
+              }, function(err, cubes) {
+                cubes.forEach(function(item, index) {
                   item.owner_name = req.body.username;
-                  Cube.updateOne(
-                  {
+                  Cube.updateOne({
                     _id: item._id
                   }, item, function(err) {});
                 });
@@ -859,14 +646,10 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next)
           _id: req.user._id
         };
 
-        User.updateOne(query, user, function(err)
-        {
-          if (err)
-          {
+        User.updateOne(query, user, function(err) {
+          if (err) {
             console.log(err);
-          }
-          else
-          {
+          } else {
             req.flash('success', 'Your profile has been updated.');
             res.redirect('/user/account');
           }
@@ -876,38 +659,26 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next)
   });
 });
 
-router.post('/updateemail', ensureAuth, function(req, res, next)
-{
-  User.findOne(
-  {
+router.post('/updateemail', ensureAuth, function(req, res, next) {
+  User.findOne({
     email: req.body.email.toLowerCase()
-  }, function(err, user)
-  {
-    if (user)
-    {
+  }, function(err, user) {
+    if (user) {
       req.flash('danger', 'Email already associated with an existing account.');
       res.redirect('/user/account/updateemail');
-    }
-    else
-    {
-      User.findById(req.user._id, function(err, user)
-      {
-        if (user)
-        {
+    } else {
+      User.findById(req.user._id, function(err, user) {
+        if (user) {
           user.email = req.body.email;
 
           let query = {
             _id: req.user._id
           };
 
-          User.updateOne(query, user, function(err)
-          {
-            if (err)
-            {
+          User.updateOne(query, user, function(err) {
+            if (err) {
               console.log(err);
-            }
-            else
-            {
+            } else {
               req.flash('success', 'Your profile has been updated.');
               res.redirect('/user/account');
             }
@@ -918,21 +689,16 @@ router.post('/updateemail', ensureAuth, function(req, res, next)
   });
 });
 
-function ensureAuth(req, res, next)
-{
-  if (req.isAuthenticated())
-  {
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) {
     return next();
-  }
-  else
-  {
+  } else {
     req.flash('danger', 'Please login to view this content');
     res.redirect('/user/login');
   }
 }
 
-function addMinutes(date, minutes)
-{
+function addMinutes(date, minutes) {
   return new Date(new Date(date).getTime() + minutes * 60000);
 }
 

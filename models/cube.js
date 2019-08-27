@@ -1,33 +1,27 @@
 let mongoose = require('mongoose');
 
 // Cube schema
-let cubeSchema = mongoose.Schema(
-{
-  name:
-  {
+let cubeSchema = mongoose.Schema({
+  name: {
     type: String,
     required: true
   },
-  owner:
-  {
+  owner: {
     type: String,
     required: true
   },
-  isListed:
-  {
+  isListed: {
     type: Boolean,
     default: true
   },
-  cards: [
-  {
+  cards: [{
     tags: [String],
     status: String,
     colors: [String],
     cmc: Number,
     cardID: String,
     type_line: String,
-    details:
-    {}
+    details: {}
   }],
   decks: [String],
   numDecks: Number,
@@ -42,8 +36,7 @@ let cubeSchema = mongoose.Schema(
   default_sorts: [String],
   card_count: Number,
   type: String,
-  draft_formats:
-  {}
+  draft_formats: {}
 });
 
 let Cube = module.exports = mongoose.model('Cube', cubeSchema)

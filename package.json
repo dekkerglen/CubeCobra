@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "beautify": "js-beautify --config .js-beautify.json -r app.js cards.js config/**/*.js force_update.js models/**/*.js routes/**/*.js serverjs/**/*.js"
+    "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views}/**/*.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",

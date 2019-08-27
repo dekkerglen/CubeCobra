@@ -1,8 +1,7 @@
 let mongoose = require('mongoose');
 
 // Cube schema
-let draftSchema = mongoose.Schema(
-{
+let draftSchema = mongoose.Schema({
   picks: [
     []
   ],
@@ -18,8 +17,7 @@ let draftSchema = mongoose.Schema(
   pickOrder: [],
   pickNumber: Number,
   packNumber: Number,
-  ratings:
-  {}
+  ratings: {}
 });
 
 let Draft = module.exports = mongoose.model('Draft', draftSchema)

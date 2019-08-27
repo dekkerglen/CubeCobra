@@ -1,8 +1,7 @@
 let mongoose = require('mongoose');
 
 // Cube schema
-let cardRatingSchema = mongoose.Schema(
-{
+let cardRatingSchema = mongoose.Schema({
   value: Number,
   picks: Number,
   name: String
