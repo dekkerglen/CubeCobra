@@ -263,9 +263,15 @@ function cardIsLabel(card, label, sort)
   {
     if(card.colors.length <= 1)
     {
-      var split1 = card.type_line.split('—');
-      var split2 = split1[0].trim().split(' ');
-      return label == split2[split2.length-1];
+      var split = card.type_line.split('—');
+      var types = split[0].trim().split(' ');
+      var type = types[types.length-1];
+      //check last type
+      if(!['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land'].includes(type))
+      {
+        return label == 'Other';
+      }
+      return label == type;
     }
     else
     {
@@ -361,7 +367,6 @@ function cardIsLabel(card, label, sort)
     return !card.type_line.toLowerCase().includes('creature');
   }
 }
-
 
 
 try

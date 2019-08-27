@@ -291,6 +291,13 @@
 border-bottom: none;
 }
 
+.card-price {
+  border-radius: 3px;
+	padding: 2px;
+	margin: 2px; 
+  border: 1px solid #CED4DA;
+}
+
 /* removes white corners from popup */
 #autocard_popup {
 	border-radius: 10px 10px 0 0;

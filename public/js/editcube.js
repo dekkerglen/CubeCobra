@@ -114,6 +114,16 @@ if(canEdit) {
       .then(function(json)
     {
       $('#contextModalImg').attr('src',json.card.image_normal);
+      var priceHtml = '';
+      if(json.card.price)
+      {
+        priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+json.card.price.toFixed(2)+'</a></div>';
+      }
+      if(json.card.price_foil)
+      {
+        priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+json.card.price_foil.toFixed(2)+'</a></div>';
+      }
+      $('.price-area').html(priceHtml);
     });
   });
   $('#groupContextModalSubmit').click(function(e) {
@@ -441,7 +451,7 @@ function arraysEqual(a, b) {
 }
 
 function justAdd() {
-  var val = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#addInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -464,7 +474,7 @@ function justAdd() {
 }
 
 function remove() {
-  var val = $('#removeInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#removeInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcardfromcube/'+$('#cubeID').val()+';'+val)
@@ -475,7 +485,7 @@ function remove() {
       {
         if($('#addInput').val().length > 0)
         {
-          var val2 = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+          var val2 = encodeURIComponent($('#addInput').val());
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
@@ -620,7 +630,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Color','Color Identity','Color Category','CMC','Type','Supertype','Subtype','Tags','Status','Guilds','Shards / Wedges','Color Count','Set','Rarity','Types-Multicolor','Artist','Legality','Power','Toughness','Loyalty','Manacost Type'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -646,7 +656,7 @@ function getLabels(sort) {
   }
   else if (sort == 'Type')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land','Other'];
   }
   else if (sort == 'Supertype')
   {
@@ -737,7 +747,7 @@ function getLabels(sort) {
   else if (sort == 'Types-Multicolor')
   {
     return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
-      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color'];
+      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Other'];
   }
   else if (sort=='Legality')
   {
@@ -941,9 +951,20 @@ function init_groupcontextModal() {
 
 function renderGroupContext()
 {
+
+  var price = 0;
+  var price_foil = 0;
   var cardlist = '<ul class="list-group list-outline" style="padding:0px 0px;">';
   groupSelect.forEach(function( card, index)
   {
+    if(card.details.price)
+    {
+      price += card.details.price;
+    }
+    if(card.details.price_foil)
+    {
+      price_foil += card.details.price_foil;
+    }
     if(card.details.image_flip)
     {
       cardlist += '<li cardID="'+card.cardID+'" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -957,6 +978,18 @@ function renderGroupContext()
     cardlist += '</a></li>';
   });
   cardlist += '</ul">';
+
+  var priceHtml = '';
+  if(price > 0)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+price.toFixed(2)+'</a></div>';
+  }
+  if(price_foil > 0)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
+
   $('#groupContextModalArea').html(cardlist);
   autocard_init('autocard');
   $('.groupModalRm').click(function(e)
@@ -1003,7 +1036,16 @@ function show_groupContextModal() {
 
 function show_contextModal(card) {
   modalSelect = card;
-
+  var priceHtml = '';
+  if(card.details.price)
+  {
+    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $'+card.details.price.toFixed(2)+'</a></div>';
+  }
+  if(card.details.price_foil)
+  {
+    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $'+card.details.price_foil.toFixed(2)+'</a></div>';
+  }
+  $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src',card.details.image_normal);
   $('#contextModalVersionSelect').html('');
@@ -1780,7 +1822,7 @@ function renderTableView() {
             }
             return 0;
           });
-          
+
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
@@ -1798,13 +1840,13 @@ function renderTableView() {
               cmc = card.cmc;
             }
             if (card.cmc != cmc) {
-              if (index + 1 == rowgroup.length) {
+              if (index  == rowgroup.length) {
                 res += "";
               } else {
                 res += '</div><div class="cmc-group">';
               }
               cmc = card.cmc;
-            } 
+            }
             if(card.details.image_flip)
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
@@ -1812,13 +1854,13 @@ function renderTableView() {
             else
             {
               res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-            } 
+            }
             res += card.details.name+'</a>';
 
             if(comparing) res += '</div>'
           });
           res += '</div>'
-          
+
           res += '</ul>';
       });
 

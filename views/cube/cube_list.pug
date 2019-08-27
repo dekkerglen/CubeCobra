@@ -1,6 +1,6 @@
 extends ../layout
 
-block content						 
+block content            
 	link(rel='stylesheet' href='/css/tags.css')  
 	link(rel='stylesheet' href='/css/autocomplete.css')  
 	link(rel='stylesheet' href='/css/editcube.css')  
@@ -32,11 +32,11 @@ block content
 					a.nav-link(href='/cube/analysis/'+cube._id) Analysis
 				li.nav-item(style='padding-right:10px;')
 					a.nav-link(href='/cube/blog/'+cube._id) Blog
-	//edit controls		 
+	//edit controls    
 	.usercontrols
 		nav.navbar.navbar-expand.navbar-light
 			.collapse.navbar-collapse
-				ul.navbar-nav					 
+				ul.navbar-nav          
 					li.nav-item(style='padding-right:10px')
 						select#viewSelect.form-control
 							option(selected='' value='table') Table View
@@ -93,7 +93,7 @@ block content
 										.mb-2.autocomplete
 											input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
 										button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
-							.collapse.editForm								
+							.collapse.editForm                
 								form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
 									.row
 										.col
@@ -104,7 +104,7 @@ block content
 											br
 											input#changelistFormBody(type='hidden', name='body')
 											input#changelistBlog(type='hidden', name='blog')
-										.col						
+										.col            
 											br
 											#form-group
 												label Blog Title:
@@ -123,66 +123,58 @@ block content
 					.row
 						.col
 							h5 Primary Sort
-							select#primarySortSelect.custom-select			
+							select#primarySortSelect.custom-select      
 							br
 							p 
-								em	Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
+								em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
 						.col
 							h5 Secondary Sort
 							select#secondarySortSelect.custom-select
 					.row
 						.col
 							button.updateButton.btn.btn-success(type='button') Update Table
-							a		
+							a   
 							if user && user.id == cube.owner
 								button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
 							br
-							br								
+							br                
 			#navfilter.collapse(data-parent='#accordion')
 				.container
 					.row
-						.col				 
+						.col         
 							.input-group.mb-3
 								.input-group-prepend
 									span.input-group-text Filter Type
 								select#filterType.custom-select(aria-label='Example select with button addon')
 								.input-group-append
 									button#addFilterButton.btn.btn-success(type='button') Add Filter
-							h5 Filters		 
+							h5 Filters     
 							#filterarea
 					.row
 						.col
 							button.updateButton.btn.btn-success(type='button') Update Table
 							br
-							br					 
-			#navcompare.collapse(data-parent='#accordion')
-				.container
-					.row
-						.col
-							form(autocomplete='off').form-inline
-								.mb-2
-									input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
-								button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
-							
+							br           
+
 	include ../flash
 
-	 
-	input#cubeID(type='hidden', name='cubeID', value=cube._id)		 
+
+	input#cubeID(type='hidden', name='cubeID', value=cube._id)     
 	if cubeB
-		input#in_both(type='hidden', name='in_both', value=in_both)				 
-		input#only_a(type='hidden', name='only_a', value=only_a)				
-		input#only_b(type='hidden', name='only_b', value=only_b)				
-	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)				
+		input#in_both(type='hidden', name='in_both', value=in_both)
+		input#only_a(type='hidden', name='only_a', value=only_a)
+		input#only_b(type='hidden', name='only_b', value=only_b)
+	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
 	if user && user.id == cube.owner
 		input#edittoken(type='hidden', name='edittoken', value=edittoken)
-	if cube.default_sorts				 
-		input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])				 
-		input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])				 
+	if cube.default_sorts        
+		input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])        
+		input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])        
 
 	//Cube list
-	br			
+	br      
 	.container#cubelistarea
-		
+
 	//group context modal
 	if user && user.id == cube.owner
 		#groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
@@ -193,9 +185,11 @@ block content
 						button.close(type='button', data-dismiss='modal', aria-label='Close')
 							span(aria-hidden='true') ×
 					.row.no-gutters
-						.col-4#groupContextModalArea(style='padding: 4px;')						 
-						.col-8	
-							.modal-body								 
+						.col-4(style='padding: 4px;')            
+							#groupContextModalArea
+							.price-area
+						.col-8  
+							.modal-body                
 								.controls
 									h5 Set Status of All
 									.input-group.mb-3
@@ -265,7 +259,7 @@ block content
 							input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
 							input.btn.btn-secondary(type='submit',value='Buy all')
 						button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
-		
+
 	if user && user.id == cube.owner
 		// Modal
 		#contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
@@ -278,7 +272,8 @@ block content
 					.row.no-gutters
 						.col-4(style='padding: 4px;')
 							img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-						.col-8	
+							.price-area
+						.col-8  
 							.modal-body
 								h5 Card Attributes
 								.input-group.mb-3
@@ -344,8 +339,9 @@ block content
 					.row.no-gutters
 						.col-4(style='padding: 4px;')
 							img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-						.col-8	
-							.modal-body								 
+							.price-area
+						.col-8  
+							.modal-body                
 								fieldset(disabled='')
 									h5 Card Attributes
 									.input-group.mb-3
@@ -384,7 +380,7 @@ block content
 									.form-check.form-check-inline
 										input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
 										label.form-check-label(for='contextModalCheckboxG')
-											img(src='/content/symbols/g.png' alt='Green' title='Green')										 
+											img(src='/content/symbols/g.png' alt='Green' title='Green')                    
 									h5 Tags
 									.tags-area#contextTags
 										.tags-input(data-name='tags-input')
@@ -405,14 +401,14 @@ block content
 						button.close(type='button', data-dismiss='modal', aria-label='Close')
 							span(aria-hidden='true') ×
 					.modal-body
-							p Acceptable plain text with one card name per line.
-							textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
+						p Acceptable plain text with one card name per line.
+						textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
 					.modal-footer
 						#bulkspinner.collapse.spinner-border.text-success(role='status')
 							span.sr-only Loading...
 						button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
 						button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-						
+
 	// file upload
 	#uploadBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadBulkModalTitle', aria-hidden='true')
 		.modal-dialog.modal-dialog-scrollable(role='document')
@@ -429,13 +425,13 @@ block content
 				.modal-footer
 					button.btn.btn-success(type='submit' form='uploadFileForm') Upload
 					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-					
+
 	// cubetutor import
 	#importModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='importModalTitle', aria-hidden='true')
 		.modal-dialog.modal-dialog-scrollable(role='document')
 			.modal-content
 				.modal-header
-					h5#importModalModalTitle.modal-title Bulk Upload - Import from Cubetutor					
+					h5#importModalModalTitle.modal-title Bulk Upload - Import from Cubetutor          
 					button.close(type='button', data-dismiss='modal', aria-label='Close')
 						span(aria-hidden='true') ×
 				.modal-body  
@@ -444,7 +440,7 @@ block content
 						|  has been added.
 					.input-group.mb-3
 						.input-group-prepend
-							span#basic-addon3.input-group-text Cube ID	(enter cube id from URL):							 
+							span#basic-addon3.input-group-text Cube ID  (enter cube id from URL):              
 						form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube.id, method='post', enctype='multipart/form-data')
 							input.form-control(type='text', name='cubeid', placeholder='e.g. 123456')
 
@@ -464,7 +460,7 @@ block content
 
 				.modal-footer
 					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-				
+
 	#cubeSaveModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeSaveModalTitle', aria-hidden='true')
 		.modal-dialog.modal-dialog-scrollable(role='document')
 			.modal-content
@@ -476,9 +472,8 @@ block content
 					p Default sorts saved successfully
 				.modal-footer
 					button.btn.btn-secondary(type='button', data-dismiss='modal') OK
-							
+
 	script(src='/js/autocomplete.js')
-	script(src='/js/sortfilter.js')			
-	script(src='/js/tags.js')			
+	script(src='/js/sortfilter.js')     
+	script(src='/js/tags.js')     
 	script(src='/js/editcube.js')
-							
