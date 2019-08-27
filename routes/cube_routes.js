@@ -475,9 +475,29 @@ router.get('/compare/:id_a/to/:id_b', function(req, res)
           {
             User.findById(cubeB.owner, function(err, ownerB)
             {
+              let in_both = [];
+              let only_a  = cubeA.cards.slice(0);
+              let only_b  = cubeB.cards.slice(0);
+              let a_names = only_a.map( card => card.details.name );
+              let b_names = only_b.map( card => card.details.name );
+
+              cubeA.cards.forEach(function(card, index) {
+                if(b_names.includes(card.details.name)) {
+                  in_both.push(card);
+                  only_a.splice(a_names.indexOf(card.details.name),1);
+                  only_b.splice(b_names.indexOf(card.details.name),1);
+                }
+              });
+              
+              let all_cards = in_both.concat(only_a).concat(only_b);
+              
               params = {
                 cube:cubeA,
-                cube_raw:JSON.stringify(cubeA.cards),
+                cubeB:cubeB,
+                in_both:in_both,
+                only_a:only_a,
+                only_b:only_b,
+                cube_raw:JSON.stringify(all_cards),
                 loginCallback:'/cube/comapre/'+id_a+'/to/'+id_b,
               };
 
