@@ -14,13 +14,13 @@ block content
 				else
 					h6(href='#' style='color: #218937;padding:5px;')
 						span(style='color: #495057; padding:5px;') Comparing
-						| #{cube.name}
-						if cube.type
-							| (#{cube.card_count} Card #{cube.type} Cube)
-						span(style='color: #495057; padding:5px;') To 
-						| #{cubeB.name}
-						if cube.type
-							| (#{cubeB.card_count} Card #{cubeB.type} Cube)
+						a(href='/cube/list/'+cube._id style='color: #218937;padding:5px;') #{cube.name} 
+							if cube.type
+								| (#{cube.card_count} Card #{cube.type} Cube)
+						span(style='color: #495057; padding:5px;') To
+						a(href='/cube/list/'+cubeB._id style='color: #218937;padding:5px;') #{cubeB.name} 
+							if cube.type
+								| (#{cubeB.card_count} Card #{cubeB.type} Cube)
 			if !cubeB
 				li.nav-item
 					a.nav-link(href='/cube/overview/'+cube._id) Overview
