@@ -40,15 +40,17 @@ block content
           li.nav-item(style='padding-right:10px')
             select#viewSelect.form-control
               option(selected='' value='table') Table View
-              option(value='spoiler') Visual Spoiler
-              if user
-                if user.id == cube.owner
-                  option(value='list') List View
+              if !cubeB
+                option(value='spoiler') Visual Spoiler
+                if user
+                  if user.id == cube.owner
+                    option(value='list') List View
               option(value='curve') Curve View
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
+          if !cubeB
+            if user
+              if user.id == cube.owner
+                li.nav-item
+                  a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
