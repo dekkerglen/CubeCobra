@@ -436,7 +436,7 @@ function arraysEqual(a, b) {
 }
 
 function justAdd() {
-  var val = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#addInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -459,7 +459,7 @@ function justAdd() {
 }
 
 function remove() {
-  var val = $('#removeInput').val().replace('//','-slash-').replace('?','-q-');
+  var val = encodeURIComponent($('#removeInput').val());
   if(val.length > 0)
   {
     fetch('/cube/api/getcardfromcube/'+$('#cubeID').val()+';'+val)
@@ -470,7 +470,7 @@ function remove() {
       {
         if($('#addInput').val().length > 0)
         {
-          var val2 = $('#addInput').val().replace('//','-slash-').replace('?','-q-');
+          var val2 = encodeURIComponent($('#addInput').val());
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
@@ -615,7 +615,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price-Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -1824,7 +1824,7 @@ function renderTableView() {
               cmc = card.cmc;
             }
             if (card.cmc != cmc) {
-              if (index + 1 == rowgroup.length) {
+              if (index  == rowgroup.length) {
                 res += "";
               } else {
                 res += '</div><div class="cmc-group">';

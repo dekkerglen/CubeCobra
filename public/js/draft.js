@@ -257,15 +257,13 @@ function addToPicks(card, x, y, cmccol,frompack)
   draft.pickOrder.push(card._id);
   if(frompack)
   {
+    passPack();
     fetch("/cube/api/draftpickcard/"+draft.cube, {
       method: "POST",
       body: JSON.stringify({'draft_id':draft._id, card}),
       headers:{
         'Content-Type': 'application/json'
       }
-    }).then(function()
-    {
-      passPack();
     });
   }
 }

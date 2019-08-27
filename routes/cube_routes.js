@@ -121,8 +121,9 @@ function GetPrices(card_ids, callback) {
     var chunkSize = 250;
     //max tcgplayer request size is 250
     var chunks = [];
-    for (i = 0; i <= card_ids.length / chunkSize; i++) {
-      chunks.push(card_ids.slice(i * chunkSize, (i + 1) * chunkSize));
+    for(i = 0; i < card_ids.length/chunkSize; i++)
+    {
+      chunks.push(card_ids.slice(i*chunkSize,(i+1)*chunkSize));
     }
 
     GetToken(function(access_token) {
@@ -153,6 +154,8 @@ function GetPrices(card_ids, callback) {
           });
         });
         callback(price_dict);
+      }).catch(function(error) {
+        console.log("error: " + error);
       });
     });
   } else {
@@ -634,22 +637,28 @@ router.get('/analysis/:id', function(req, res) {
   });
 });
 
-router.get('/samplepack/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
-    if (!cube) {
+router.get('/samplepack/:id', function (req, res) {
+  Cube.findById(req.params.id,function(err, cube)
+  {
+    if (err) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
-    } else {
-      generatePack(req.params.id, carddb, false, function(err, seed, pack) {
-        if (err) {
+    }
+    else
+    {
+      generatePack(req.params.id, carddb, false, function(err, pack)
+      {
+        if(err)
+        {
           req.flash('danger', 'Pack could not be created');
           res.redirect('/404/');
         } else {
           res.render('cube/cube_samplepack', {
             cube,
-            pack,
-            seed,
-            loginCallback: '/cube/samplepack/' + req.params.id
+            pack: pack.pack,
+            seed: pack.seed,
+            activeLink: 'playtest',
+            loginCallback:'/cube/samplepack/'+req.params.id
           });
         }
       });
@@ -663,71 +672,67 @@ router.get('/samplepack/:id/:seed', function(req, res) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack) {
-      if (err) {
+    generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
+    {
+      if(err)
+      {
         req.flash('danger', 'Pack could not be created');
         res.redirect('/404/');
       } else {
         res.render('cube/cube_samplepack', {
           cube,
-          pack,
-          seed,
+          pack: pack.pack,
+          seed: pack.seed,
           activeLink: 'playtest',
           metadata: [{
-              property: 'og:title',
-              content: 'Cube Cobra Sample Pack'
-            },
-            {
-              property: 'og:description',
-              content: `A sample pack from ${cube.name}`
-            },
-            {
-              property: 'og:image',
-              content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${seed}`
-            },
-            {
-              property: 'og:url',
-              content: `https://cubecobra.com/cube/samplepack/${cube._id}/${seed}`
-            }
-          ],
-          loginCallback: '/cube/samplepack/' + req.params.id
+            property: 'og:title',
+            content: 'Cube Cobra Sample Pack'
+          }, {
+            property: 'og:description',
+            content: `A sample pack from ${cube.name}`
+          }, {
+            property: 'og:image',
+            content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`
+          }, {
+            property: 'og:url',
+            content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
+          }],
+          loginCallback:'/cube/samplepack/'+req.params.id
         });
       }
     });
   });
 });
 
-router.get('/samplepackimage/:id/:seed', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
+router.get('/samplepackimage/:id/:seed', function (req, res) {
+  generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
+  {
+    if(err)
+    {
+      req.flash('danger', 'Pack could not be created');
       res.redirect('/404/');
     }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack) {
-      if (err) {
-        req.flash('danger', 'Pack could not be created');
-        res.redirect('/404/');
-      } else {
-        var srcArray = pack.map((card, index) => {
-          return {
-            src: card.image_small,
-            x: CARD_WIDTH * (index % 5),
-            y: CARD_HEIGHT * Math.floor(index / 5)
-          }
+    else
+    {
+      var srcArray = pack.map((card, index) => {return {
+          src: card.image_small,
+          x: CARD_WIDTH * (index % 5),
+          y: CARD_HEIGHT * Math.floor(index / 5)
+        }
+      });
+      mergeImages(srcArray, {
+        width: CARD_WIDTH * 5,
+        height: CARD_HEIGHT * 3,
+        Canvas
+      }).then(function(image)
+      {
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Content-Length': image.length
         });
-        mergeImages(srcArray, {
-          width: CARD_WIDTH * 5,
-          height: CARD_HEIGHT * 3,
-          Canvas: Canvas
-        }).then(function(image) {
-          res.writeHead(200, {
-            'Content-Type': 'image/png',
-            'Content-Length': image.length
-          });
-          res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-        });
-      }
-    });
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+      });
+    }
   });
 });
 
@@ -1162,11 +1167,20 @@ router.get('/download/csv/:id', function(req, res) {
         if (!card.type_line) {
           card.type_line = carddb.carddict[card.cardID].type;
         }
-
-        res.write('"' + carddb.carddict[card.cardID].name + '"' + ',');
-        res.write(card.cmc + ',');
-        res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
-        if (card.colors.length == 0) {
+        var name = carddb.carddict[card.cardID].name;
+        while(name.includes('"'))
+        {
+          name = name.replace('"','-quote-');
+        }
+        while(name.includes('-quote-'))
+        {
+          name = name.replace('-quote-','""');
+        }
+        res.write('"' + name + '"' + ',');
+        res.write(card.cmc+ ',');
+        res.write('"' + card.type_line.replace('—','-') + '"' + ',');
+        if(card.colors.length == 0)
+        {
           res.write('C,');
         } else if (card.type_line.toLowerCase().includes('land')) {
           res.write('L,');
@@ -1725,8 +1739,9 @@ router.get('/api/cubecardnames/:id', function(req, res) {
 router.get('/api/getcardfromcube/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = split[1].replace('-slash-', '//').replace('-q-', '?').toLowerCase();
-  Cube.findById(cube, function(err, cube) {
+  var cardname = decodeURIComponent(split[1].toLowerCase());
+  Cube.findById(cube, function(err, cube)
+  {
     var found = false;
     cube.cards.forEach(function(card, index) {
       if (!found && carddb.carddict[card.cardID].name_lower == cardname) {
@@ -2030,8 +2045,9 @@ router.get('/deck/:id', function(req, res) {
   });
 });
 
-router.get('/api/getcard/:name', function(req, res) {
-  req.params.name = req.params.name.replace('-slash-', '//').replace('-q-', '?').toLowerCase().trim();
+router.get('/api/getcard/:name', function(req, res)
+{
+  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
   if (!card) {
     res.status(200).send({
@@ -2045,8 +2061,9 @@ router.get('/api/getcard/:name', function(req, res) {
   }
 });
 
-router.get('/api/getimage/:name', function(req, res) {
-  req.params.name = req.params.name.replace('-slash-', '//').replace('-q-', '?').toLowerCase().trim();
+router.get('/api/getimage/:name', function(req, res)
+{
+  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
   var img = carddb.imagedict[req.params.name];
   if (!img) {
     res.status(200).send({
@@ -2238,8 +2255,10 @@ router.delete('/remove/:id', ensureAuth, function(req, res) {
     _id: req.params.id
   };
 
-  Cube.findById(req.params.id, function(err, cube) {
-    if (err || (cube.owner != req.user._id)) {
+  Cube.findById(req.params.id, function(err, cube)
+  {
+    if(err || !cube || (cube.owner != req.user._id) )
+    {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     } else {
@@ -2417,16 +2436,18 @@ router.post('/api/draftpick/:id', function(req, res) {
   });
 });
 
-router.get('/api/p1p1/:id', function(req, res) {
-  generatePack(req.params.id, carddb, false, function(err, seed, pack) {
-    if (err) {
+router.get('/api/p1p1/:id', function (req, res) {
+  generatePack(req.params.id, carddb, false, function(err, result)
+  {
+    if(err)
+    {
       res.status(500).send({
         success: false
       });
     } else {
       const pack = {
-        seed: seed,
-        pack: pack.map(card => card.name)
+        seed: result.seed,
+        pack: result.pack.map(card => card.name)
       };
       res.status(200).send(pack);
     }
@@ -2434,15 +2455,17 @@ router.get('/api/p1p1/:id', function(req, res) {
 });
 
 router.get('/api/p1p1/:id/:seed', function(req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack) {
-    if (err) {
+  generatePack(req.params.id, carddb, req.params.seed, function(err, result)
+  {
+    if(err)
+    {
       res.status(500).send({
         success: false
       });
     } else {
       const pack = {
         seed: seed,
-        pack: pack.map(card => card.name)
+        pack: result.pack.map(card => card.name)
       };
       res.status(200).send(pack);
     }
