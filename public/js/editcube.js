@@ -615,7 +615,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Name','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -701,6 +701,18 @@ function getLabels(sort) {
       }
     });
     return artists.sort();
+  }
+  else if (sort == 'Name')
+  {
+    var names = [];
+    cube.forEach(function(card, index)
+    {
+      if(!names.includes(card.details.name))
+      {
+        names.push(card.details.name);
+      }
+    });
+    return names.sort();
   }
   else if (sort == 'Rarity')
   {

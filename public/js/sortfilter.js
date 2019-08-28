@@ -243,6 +243,10 @@ function cardIsLabel(card, label, sort)
   {
     return card.details.set.toUpperCase() == label;
   }
+  else if (sort == 'Name')
+  {
+    return card.details.name == label;
+  }
   else if (sort == 'Rarity')
   {
     return card.details.rarity.toLowerCase() == label.toLowerCase();
