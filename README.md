@@ -51,4 +51,4 @@ Nodemon will restart the application anytime there is a change to a source file.
 
 ### Running tests
 
-To run the test suite, run `npm yarn test`
+To run the test suite, run `npm run test`
