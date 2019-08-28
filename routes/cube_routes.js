@@ -172,6 +172,7 @@ function GetPrices(card_ids, callback)
         callback(price_dict);
       }).catch(function(error) {
         console.log("error: " + error);
+        callback({});
       });
     });
   }
