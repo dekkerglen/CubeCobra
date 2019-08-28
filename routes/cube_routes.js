@@ -155,6 +155,7 @@ function GetPrices(card_ids, callback) {
         callback(price_dict);
       }).catch(function(error) {
         console.log("error: " + error);
+        callback({});
       });
     });
   } else {
@@ -1283,9 +1284,12 @@ function startCustomDraft(req, res, params, cube) {
     } else {
       req.flash('danger', failMessage);
       res.redirect('/cube/playtest/' + cube._id);
+    } else {
+      req.flash('danger', failMessage);
+      res.redirect('/cube/playtest/' + cube._id);
     }
   } else {
-    util.shuffle(cards);
+    var cardpool = util.shuffle(cards.slice());
     var format = JSON.parse(cube.draft_formats[params.id].packs);
     for (j = 0; j < format.length; j++) {
       for (k = 0; k < format[j].length; k++) {
@@ -1316,10 +1320,10 @@ function startCustomDraft(req, res, params, cube) {
           if (!fail) {
             draft.packs[i][j].push(0);
             var tag = format[j][k][Math.floor(Math.random() * format[j][k].length)];
-            var index = draftutil.indexOfTag(cards, tag);
+            var index = draftutil.indexOfTag(cardpool, tag);
             //slice out the first card with the index, or error out
             if (index != -1) {
-              draft.packs[i][j][k] = cards.splice(index, 1)[0];
+              draft.packs[i][j][k] = cardpool.splice(index, 1)[0];
             } else {
               fail = true;
               failMessage = 'Unable to create draft, not enough cards with tag "' + tag + '" found.';
