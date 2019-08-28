@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",
-    "start": "node app",
+    "start": "nodemon",
     "test": "jest"
   },
   "author": "Gwen Dekker",
@@ -19,6 +19,7 @@
     "cheerio": "^1.0.0-rc.3",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.2.0",
+    "dotenv": "^8.1.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "express-messages": "^1.0.1",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "jest": "^24.9.0",
-    "js-beautify": "^1.10.2"
+    "js-beautify": "^1.10.2",
+    "nodemon": "^1.19.1"
   }
 }

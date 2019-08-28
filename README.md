@@ -22,26 +22,15 @@ Atom (optional): https://atom.io/
 
 ### Clone Project
 
-Clone the project into a folder of your choice. Create a symbolic link from
-`../cubecobrasecrets` to `cubecobrasecrets.example`:
+Clone the project into a folder of your choice. Copy `.env-EXAMPLE` to `.env` and fill out your personal tokens. **NOTE** `TCG_PLAYER_PUBLIC_KEY` and `TCG_PLAYER_PRIVATE_KEY` can be left blank.
 
-  cd CubeCobra/..
-  ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+Once your `.env` file is filled out, run the following commands in the root of the cloned repository:
 
-The resulting directory structure should look like this:
-
-    .
-    ├── CubeCobra               # Cloned repository
-    └── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
-        └── email.js            # Email secrets file
-        └── etc...
-
-Then, run the following commands in the root of the cloned repository:
-
-    npm install
-    npm install nodemon -g
-    node force_update.js
-    nodemon
+```
+npm install    
+node force_update.js
+npm start
+```
 
 You can now open up a browser and connect to the app through: http://localhost:5000
 

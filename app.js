@@ -1,3 +1,6 @@
+// Load Environment Variables
+require('dotenv').config()
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -12,11 +15,10 @@ const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
-const secrets = require('../cubecobrasecrets/secrets');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(config.database);
+mongoose.connect(config.database, {useNewUrlParser: true});
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');
@@ -67,7 +69,7 @@ app.set('view engine', 'pug');
 app.use(express.static(path.join(__dirname, 'public')));
 
 let session_options = {
-  secret: secrets.session,
+  secret: process.env.SESSION_SECRET,
   store: store,
   resave: true,
   saveUninitialized: true,

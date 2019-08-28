@@ -20,7 +20,6 @@ var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
-const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 var mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const {
@@ -56,7 +55,7 @@ function GetToken(callback) {
       url: 'https://api.tcgplayer.com/token',
       method: 'POST',
       header: 'application/x-www-form-urlencoded',
-      body: 'grant_type=client_credentials&client_id=' + tcgconfig.Public_Key + '&client_secret=' + tcgconfig.Private_Key
+      body: 'grant_type=client_credentials&client_id=' + process.env.TCG_PLAYER_PUBLIC_KEY + '&client_secret=' + process.env.TCG_PLAYER_PRIVATE_KEY
     };
 
     request(options, function(error, response, body) {
