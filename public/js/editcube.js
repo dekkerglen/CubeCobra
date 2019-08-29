@@ -1788,26 +1788,9 @@ function renderTableView() {
      }
    });
 
-  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 100;
+  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 70;
 
   var res = '<div class="row no-gutters even-cols">';
-
-  if(comparing)
-  {
-    res += '<div class="col-even" style="width: 100%">'
-    res += '<div class="row no-gutters compare-header">'
-    res += '<div class="col">'
-    res += '<h6 class="text-center compare-title">Only in Base Cube</h6>'
-    res += '</div>'
-    res += '<div class="col">'
-    res += '<h6 class="text-center compare-title">In Both Cubes</h6>'
-    res += '</div>'
-    res += '<div class="col">'
-    res += '<h6 class="text-center compare-title">Only in Comparison Cube</h6>'
-    res += '</div>'
-    res += '</div>'
-    res += '</div>'
-  }
 
   Object.keys(columns).forEach(function(column_label, col_index)
   {
@@ -1815,8 +1798,46 @@ function renderTableView() {
 
     if(Object.keys(column).length > 0)
     {
-      res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
+      let comp_class = (comparing) ? 'compare-col' : '';
+      res += '<div class="col-even ' + comp_class + '" style="width: '+colWidth+'%;">'
+
+      if(comparing)
+      {
+        let first_header = ( col_index === 0 ) ? 'first-compare-header' : '';
+        res += '<div class="col-even compare-header ' + first_header + '">'
+        res += '<div class="row">'
+        res += '<div class="col">'
+        res += '<h6 class="text-center compare-title">'+ column_label + '</h6>';
+        res += '</div>'
+        res += '</div>'
+
+        let in_both_count = 0, only_a_count = 0, only_b_count = 0;
+        Object.keys(column).forEach(function(rowgroup_label, index) {
+          let rowgroup = column[rowgroup_label];
+          rowgroup.forEach(function(card, index) {
+              if(in_both.includes(card.details.name)) in_both_count++;
+              else if(only_a.includes(card.details.name)) only_a_count++;
+              else if(only_b.includes(card.details.name)) only_b_count++;
+          });
+        });
+
+        res += '<div class="row no-gutters">'
+        res += '<div class="col">'
+        res += '<h6 class="text-center">In Both Cubes <br/>(' + in_both_count + ')</h6>'
+        res += '</div>'
+        res += '<div class="col">'
+        res += '<h6 class="text-center">Only in Base Cube <br/>(' + only_a_count + ')</h6>'
+        res += '</div>'
+        res += '<div class="col">'
+        res += '<h6 class="text-center">Only in Comparison Cube <br/>(' + only_b_count + ')</h6>'
+        res += '</div>'
+        res += '</div>'
+        res += '</div>'
+      }
+      else
+      {
+        res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
+      }
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
       {
@@ -1853,8 +1874,8 @@ function renderTableView() {
               i++;
             }
             if(comparing) {
-              if(only_a.includes(card.details.name)) cmc_sections[i][0].push(card);
-              else if(in_both.includes(card.details.name)) cmc_sections[i][1].push(card);
+              if(in_both.includes(card.details.name)) cmc_sections[i][0].push(card);
+              else if(only_a.includes(card.details.name)) cmc_sections[i][1].push(card);
               else if(only_b.includes(card.details.name)) cmc_sections[i][2].push(card);
             }
             else cmc_sections[i][0].push(card);
