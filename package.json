@@ -4,7 +4,7 @@
   "description": "Cube management app",
   "main": "app.js",
   "scripts": {
-    "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views}/**/*.js",
+    "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",
     "start": "node app",
     "test": "jest"
   },
