@@ -2225,7 +2225,11 @@ router.get('/api/getcardfromcube/:id', function(req, res)
 {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = decodeURIComponent(split[1].toLowerCase());
+  var cardname = split[1].toLowerCase().replace('-q-','?');
+  while(cardname.includes('-slash-'))
+  {
+    cardname = cardname.replace('-slash-','//');
+  }
   Cube.findById(cube, function(err, cube)
   {
     var found = false;
@@ -2632,7 +2636,12 @@ router.get('/deck/:id', function(req, res)
 
 router.get('/api/getcard/:name', function(req, res)
 {
-  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
+  req.params.name = req.params.name.toLowerCase().trim().replace('-q-','?');
+  while(req.params.name.includes('-slash-'))
+  {
+    req.params.name = req.params.name.replace('-slash-','//');
+  }
+  console.log(req.params.name);
   var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
   if(!card)
   {
@@ -2651,7 +2660,11 @@ router.get('/api/getcard/:name', function(req, res)
 
 router.get('/api/getimage/:name', function(req, res)
 {
-  req.params.name = decodeURIComponent(req.params.name).toLowerCase().trim();
+  req.params.name = req.params.name.toLowerCase().trim().replace('-q-','?');
+  while(req.params.name.includes('-slash-'))
+  {
+    req.params.name = req.params.name.replace('-slash-','//');
+  }
   var img = carddb.imagedict[req.params.name];
   if(!img)
   {
