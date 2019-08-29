@@ -4,7 +4,8 @@
   "description": "Cube management app",
   "main": "app.js",
   "scripts": {
-    "start": "node app"
+    "start": "node app",
+    "test": "jest"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -37,5 +38,8 @@
     "serve-favicon": "^2.5.0",
     "shuffle-seed": "^1.1.6",
     "website-scraper": "^4.0.1"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0"
   }
 }

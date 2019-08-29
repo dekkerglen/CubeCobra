@@ -906,13 +906,13 @@ router.get('/analysis/:id', function(req, res)
 router.get('/samplepack/:id', function (req, res) {
   Cube.findById(req.params.id,function(err, cube)
   {
-    if (!cube) {
+    if (err) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     }
     else
     {
-      generatePack(req.params.id, carddb,false, function(err, seed, pack)
+      generatePack(req.params.id, carddb, false, function(err, pack)
       {
         if(err)
         {
@@ -923,8 +923,9 @@ router.get('/samplepack/:id', function (req, res) {
         {
           res.render('cube/cube_samplepack', {
             cube,
-            pack,
-            seed,
+            pack: pack.pack,
+            seed: pack.seed,
+            activeLink: 'playtest',
             loginCallback:'/cube/samplepack/'+req.params.id
           });
         }
@@ -940,7 +941,7 @@ router.get('/samplepack/:id/:seed', function (req, res) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+    generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
     {
       if(err)
       {
@@ -951,8 +952,8 @@ router.get('/samplepack/:id/:seed', function (req, res) {
       {
         res.render('cube/cube_samplepack', {
           cube,
-          pack,
-          seed,
+          pack: pack.pack,
+          seed: pack.seed,
           activeLink: 'playtest',
           metadata: [{
             property: 'og:title',
@@ -962,10 +963,10 @@ router.get('/samplepack/:id/:seed', function (req, res) {
             content: `A sample pack from ${cube.name}`
           }, {
             property: 'og:image',
-            content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${seed}`
+            content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`
           }, {
             property: 'og:url',
-            content: `https://cubecobra.com/cube/samplepack/${cube._id}/${seed}`
+            content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
           }],
           loginCallback:'/cube/samplepack/'+req.params.id
         });
@@ -975,41 +976,34 @@ router.get('/samplepack/:id/:seed', function (req, res) {
 });
 
 router.get('/samplepackimage/:id/:seed', function (req, res) {
-  Cube.findById(req.params.id, function(err, cube)
+  generatePack(req.params.id, carddb, req.params.seed, function(err, pack)
   {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
+    if(err)
+    {
+      req.flash('danger', 'Pack could not be created');
       res.redirect('/404/');
     }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+    else
     {
-      if(err)
+      var srcArray = pack.map((card, index) => {return {
+          src: card.image_small,
+          x: CARD_WIDTH * (index % 5),
+          y: CARD_HEIGHT * Math.floor(index / 5)
+        }
+      });
+      mergeImages(srcArray, {
+        width: CARD_WIDTH * 5,
+        height: CARD_HEIGHT * 3,
+        Canvas
+      }).then(function(image)
       {
-        req.flash('danger', 'Pack could not be created');
-        res.redirect('/404/');
-      }
-      else
-      {
-        var srcArray = pack.map((card, index) => {return {
-            src: card.image_small,
-            x: CARD_WIDTH * (index % 5),
-            y: CARD_HEIGHT * Math.floor(index / 5)
-          }
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Content-Length': image.length
         });
-        mergeImages(srcArray, {
-          width: CARD_WIDTH * 5,
-          height: CARD_HEIGHT * 3,
-          Canvas: Canvas
-        }).then(function(image)
-        {
-          res.writeHead(200, {
-            'Content-Type': 'image/png',
-            'Content-Length': image.length
-          });
-          res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-        });
-      }
-    });
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+      });
+    }
   });
 });
 
@@ -3228,7 +3222,7 @@ router.post('/api/draftpick/:id', function(req, res)
 });
 
 router.get('/api/p1p1/:id', function (req, res) {
-  generatePack(req.params.id, carddb,false, function(err, seed, pack)
+  generatePack(req.params.id, carddb, false, function(err, result)
   {
     if(err)
     {
@@ -3239,8 +3233,8 @@ router.get('/api/p1p1/:id', function (req, res) {
     else
     {
       const pack = {
-        seed: seed,
-        pack: pack.map(card => card.name)
+        seed: result.seed,
+        pack: result.pack.map(card => card.name)
       };
       res.status(200).send(pack);
     }
@@ -3248,7 +3242,7 @@ router.get('/api/p1p1/:id', function (req, res) {
 });
 
 router.get('/api/p1p1/:id/:seed', function(req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, seed, pack)
+  generatePack(req.params.id, carddb, req.params.seed, function(err, result)
   {
     if(err)
     {
@@ -3260,7 +3254,7 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
     {
       const pack = {
         seed: seed,
-        pack: pack.map(card => card.name)
+        pack: result.pack.map(card => card.name)
       };
       res.status(200).send(pack);
     }
