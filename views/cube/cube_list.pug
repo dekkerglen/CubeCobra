@@ -37,16 +37,15 @@ block content
 		nav.navbar.navbar-expand.navbar-light
 			.collapse.navbar-collapse
 				ul.navbar-nav          
-					li.nav-item(style='padding-right:10px')
-						select#viewSelect.form-control
-							option(selected='' value='table') Table View
-							if !cubeB
+					if !cubeB
+						li.nav-item(style='padding-right:10px')
+							select#viewSelect.form-control
+								option(selected='' value='table') Table View
 								option(value='spoiler') Visual Spoiler
 								if user
 									if user.id == cube.owner
 										option(value='list') List View
-							option(value='curve') Curve View
-					if !cubeB
+								option(value='curve') Curve View
 						if user
 							if user.id == cube.owner
 								li.nav-item

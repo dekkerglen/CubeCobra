@@ -19,6 +19,7 @@ if($('#in_both').length) {
   var in_both = JSON.parse($('#in_both').val());
   var only_a  = JSON.parse($('#only_a').val());
   var only_b  = JSON.parse($('#only_b').val());
+  view = 'table';
 }
 
 var cubeDict = {};
