@@ -1263,9 +1263,6 @@ function startCustomDraft(req, res, params, cube) {
     } else {
       req.flash('danger', failMessage);
       res.redirect('/cube/playtest/' + cube._id);
-    } else {
-      req.flash('danger', failMessage);
-      res.redirect('/cube/playtest/' + cube._id);
     }
   } else {
     var cardpool = util.shuffle(cards.slice());
