@@ -627,7 +627,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -871,6 +871,19 @@ function getLabels(sort) {
   else if (sort == 'CNC')
   {
     return ['Creature','Non-Creature'];
+  }
+  else if (sort == 'Price' || sort == 'Price Foil')
+  {
+    var labels = [];
+    //fencepost the first and last term
+    labels.push('< '  + price_buckets[0]);
+    for(i = 1; i < price_buckets.length;i++)
+    {
+      labels.push(price_buckets[i-1] + ' - ' + (price_buckets[i] - .01));
+    }
+    labels.push('>= '  + price_buckets[price_buckets.length-1]);
+    //add no price available
+    labels.push("No Price Available");
   }
 }
 

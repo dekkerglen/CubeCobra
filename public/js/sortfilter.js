@@ -1,3 +1,6 @@
+
+var price_buckets = [.25,.5,1,2,3,4,5,7,10,15,20,25,30,40,50,75,100];
+
 function GetColorCategory(type, colors)
 {
   if(type.toLowerCase().includes('land'))
@@ -366,14 +369,72 @@ function cardIsLabel(card, label, sort)
     }
     return !card.type_line.toLowerCase().includes('creature');
   }
+  else if(sort == 'Price')
+  {
+    if(card.details.price)
+    {
+      //fence post first and last term
+      if(card.details.price < price_buckets[0])
+      {
+        return label == '< ' + price_buckets[0];
+      }
+      else if(card.details.price >= price_buckets[price_buckets.length-1])
+      {
+        return label == '>= ' + price_buckets[price_buckets.length-1];
+      }
+      else
+      {
+        for(i = 1; i < price_buckets.length;i++)
+        {
+          if(card.details.price >= price_buckets[i-1] && card.details.price < price_buckets[i])
+          {
+            return label == price_buckets[i-1] + ' - ' + (price_buckets[i] - .01);
+          }
+        }
+      }
+    }
+    else
+    {
+      return label == "No Price Available";
+    }
+  }
+  else if (sort == 'Price Foil')
+  {
+    if(card.details.price_foil)
+    {
+      //fence post first and last term
+      if(card.details.price_foil < price_buckets[0])
+      {
+        return label == '< ' + price_buckets[0];
+      }
+      else if(card.details.price_foil >= price_buckets[price_buckets.length-1])
+      {
+        return label == '>= ' + price_buckets[price_buckets.length-1];
+      }
+      else
+      {
+        for(i = 1; i < price_buckets.length;i++)
+        {
+          if(card.details.price_foil >= price_buckets[i-1] && card.details.price_foil < price_buckets[i])
+          {
+            return label == price_buckets[i-1] + ' - ' + (price_buckets[i] - .01);
+          }
+        }
+      }
+    }
+    else
+    {
+      return label == "No Price Available";
+    }
+  }
 }
-
 
 try
 {
   module.exports = {
     cardIsLabel:cardIsLabel,
-    filterCard:filterCard
+    filterCard:filterCard,
+    price_buckets:price_buckets
   };
 }
 catch(err)
