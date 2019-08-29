@@ -1788,7 +1788,7 @@ function renderTableView() {
      }
    });
 
-  var colWidth = Math.max(10,100.0 / count);
+  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 100;
 
   var res = '<div class="row no-gutters even-cols">';
   Object.keys(columns).forEach(function(column_label, col_index)
@@ -1825,16 +1825,21 @@ function renderTableView() {
           });
 
           let i = 0;
-          let cmc_sections = [[]];
+          let cmc_sections = (!comparing) ? [[[]]] : [[[],[],[]]];
           let cmc = rowgroup[0].cmc;
           rowgroup.forEach(function(card, index) {
-            if(card.cmc != cmc)
-            {
-              cmc_sections.push([]);
+            if(card.cmc != cmc) {
+              if(!comparing) cmc_sections.push([[]]);
+              else cmc_sections.push([[],[],[]]);
               cmc = card.cmc;
               i++;
             }
-            cmc_sections[i].push(card);
+            if(comparing) {
+              if(only_a.includes(card.details.name)) cmc_sections[i][0].push(card);
+              else if(in_both.includes(card.details.name)) cmc_sections[i][1].push(card);
+              else if(only_b.includes(card.details.name)) cmc_sections[i][2].push(card);
+            }
+            else cmc_sections[i][0].push(card);
           });
           
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
@@ -1846,18 +1851,26 @@ function renderTableView() {
           res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
 
           cmc_sections.forEach(function(section, index) {
-            res += '<div class="cmc-group">'
-            section.forEach(function(card, index) {
-              if(card.details.image_flip)
-              {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
-              }
-              else
-              {
-                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-              }
-              res += card.details.name+'</a>';
+            res += '<div class="cmc-group row">'
+
+            section.forEach(function(column, index) {
+              res += '<div class="col">'
+
+              column.forEach(function(card, index) {
+                if(card.details.image_flip)
+                {
+                  res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
+                }
+                else
+                {
+                  res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
+                }
+                res += card.details.name+'</a>';
+              });
+
+              res += '</div>'
             });
+
             res += '</div>'
           });
 
