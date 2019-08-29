@@ -166,7 +166,7 @@ if(canEdit) {
     });
     if(val.length > 0)
     {
-      if(val.indexOf('C') !== -1)
+      if(val.indexOf('C') === 0 && val.length === 1)
       {
         updated.colors = [];
       }
