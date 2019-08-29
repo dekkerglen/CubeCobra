@@ -443,7 +443,11 @@ function arraysEqual(a, b) {
 }
 
 function justAdd() {
-  var val = encodeURIComponent($('#addInput').val());
+  var val = $('#addInput').val().replace('?','-q-');
+  while(val.includes('//'))
+  {
+    val = val.replace('//','-slash-');
+  }
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)
@@ -466,7 +470,11 @@ function justAdd() {
 }
 
 function remove() {
-  var val = encodeURIComponent($('#removeInput').val());
+  var val = $('#removeInput').val().replace('?','-q-');
+  while(val.includes('//'))
+  {
+    val = val.replace('//','-slash-');
+  }
   if(val.length > 0)
   {
     fetch('/cube/api/getcardfromcube/'+$('#cubeID').val()+';'+val)
@@ -477,7 +485,11 @@ function remove() {
       {
         if($('#addInput').val().length > 0)
         {
-          var val2 = encodeURIComponent($('#addInput').val());
+          var val2 = $('#addInput').val().replace('?','-q-');
+          while(val2.includes('//'))
+          {
+            val2 = val2.replace('//','-slash-');
+          }
           fetch('/cube/api/getcard/'+val2)
             .then(response2 => response2.json())
             .then(function(json2)
@@ -738,8 +750,8 @@ function getLabels(sort) {
   }
   else if (sort == 'Types-Multicolor')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
-      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Other'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
+    'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Land','Other'];
   }
   else if (sort=='Legality')
   {
@@ -1081,7 +1093,12 @@ function show_contextModal(card) {
   }
   else
   {
-    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+encodeURIComponent(card.details.name)+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+    var name = card.details.name.replace('?','-q-');
+    while(val.includes('//'))
+    {
+      name = name.replace('//','-slash-');
+    }
+    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/productcatalog/product/show?ProductName='+name+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
   $('#contextModalType').val(card.type_line);
 

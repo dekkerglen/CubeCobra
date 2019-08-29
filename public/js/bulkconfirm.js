@@ -10,7 +10,11 @@ saveChangesButton.addEventListener("click", saveChangesButtonClick);
 var changes = [];
 
 function justAddButtonClick() {
-  var val = encodeURIComponent(addInput.value);
+  var val = addInput.value.replace('//','-slash-').replace('?','-q-');
+  while(val.includes('//'))
+  {
+    val = val.replace('//','-slash-');
+  }
   if(val.length > 0)
   {
     fetch('/cube/api/getcard/'+val)

@@ -14,8 +14,6 @@ function getElementPosition(el) {
 function autocard_init(classname) {
   $('.'+classname).off('mouseenter').on('mouseenter', function(e) {
     if(!stopAutocard) {
-      console.log('fired');
-
       let tags = $(this).attr("card_tags") ? $(this).attr("card_tags").split(',') : null;
       autocard_show_card($(this).attr("card"), $(this).attr("card_flip"), $(this).hasClass('autocard-art-crop'), tags);
     }
