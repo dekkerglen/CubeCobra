@@ -627,7 +627,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
 }
 
 function getLabels(sort) {
@@ -872,6 +872,16 @@ function getLabels(sort) {
   {
     return ['Creature','Non-Creature'];
   }
+  else if (sort == 'Price' || sort == 'Price Foil')
+  {
+    var labels = [];
+    for(i = 0; i <= price_buckets.length;i++)
+    {
+      labels.push(price_bucket_label(i));
+    }
+    labels.push("No Price Available");
+    return labels;
+  }
 }
 
 function getCardColorClass(card) {
@@ -1087,7 +1097,7 @@ function show_contextModal(card) {
   else
   {
     var name = card.details.name.replace('?','-q-');
-    while(val.includes('//'))
+    while(name.includes('//'))
     {
       name = name.replace('//','-slash-');
     }

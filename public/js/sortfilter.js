@@ -1,3 +1,6 @@
+
+var price_buckets = [.25,.5,1,2,3,4,5,7,10,15,20,25,30,40,50,75,100];
+
 function GetColorCategory(type, colors)
 {
   if(type.toLowerCase().includes('land'))
@@ -79,6 +82,25 @@ function filterCard(card, filterobj)
     return true;
   }
   return filterin;
+}
+
+//returns the price bucket label at the index designating the upper bound
+//at index == 0, returns < lowest
+//at index == length, returs >= highest
+function price_bucket_label(index)
+{
+  if(index == 0)
+  {
+    return '< $' + price_buckets[0];
+  }
+  else if (index == price_buckets.length)
+  {
+    return '>= $' + price_buckets[price_buckets.length-1];
+  }
+  else
+  {
+    return '$' + price_buckets[i-1] + ' - $' + (price_buckets[i] - .01);
+  }
 }
 
 function cardIsLabel(card, label, sort)
@@ -366,14 +388,81 @@ function cardIsLabel(card, label, sort)
     }
     return !card.type_line.toLowerCase().includes('creature');
   }
+  else if(sort == 'Price')
+  {
+    var price = null;
+    if(card.details.price)
+    {
+      price = card.details.price;
+    }
+    else if (card.details.price_foil)
+    {
+      price = card.details.price_foil;
+    }
+    if(price)
+    {
+      //fence post first and last term
+      if(price < price_buckets[0])
+      {
+        return label == price_bucket_label(0);
+      }
+      else if(price >= price_buckets[price_buckets.length-1])
+      {
+        return label == price_bucket_label(price_buckets.length);
+      }
+      else
+      {
+        for(i = 1; i < price_buckets.length;i++)
+        {
+          if(price >= price_buckets[i-1] && price < price_buckets[i])
+          {
+            return label == price_bucket_label(i);
+          }
+        }
+      }
+    }
+    else
+    {
+      return label == "No Price Available";
+    }
+  }
+  else if (sort == 'Price Foil')
+  {
+    if(card.details.price_foil)
+    {
+      //fence post first and last term
+      if(card.details.price_foil < price_buckets[0])
+      {
+        return label == price_bucket_label(0);
+      }
+      else if(card.details.price_foil >= price_buckets[price_buckets.length-1])
+      {
+        return label == price_bucket_label(price_buckets.length);
+      }
+      else
+      {
+        for(i = 1; i < price_buckets.length;i++)
+        {
+          if(card.details.price_foil >= price_buckets[i-1] && card.details.price_foil < price_buckets[i])
+          {
+            return label == price_bucket_label(i);
+          }
+        }
+      }
+    }
+    else
+    {
+      return label == "No Price Available";
+    }
+  }
 }
-
 
 try
 {
   module.exports = {
     cardIsLabel:cardIsLabel,
-    filterCard:filterCard
+    filterCard:filterCard,
+    price_buckets:price_buckets
   };
 }
 catch(err)
