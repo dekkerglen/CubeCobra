@@ -1,6 +1,5 @@
-
 var draft = JSON.parse(document.getElementById("draftraw").value);
-if(draft.ratings === undefined) draft.ratings = {};
+if (draft.ratings === undefined) draft.ratings = {};
 
 var dragElement = document.getElementById('dragelement');
 var dragCard = null;
@@ -12,19 +11,18 @@ var stopAutocard = false;
 
 var prev_handler = window.onload;
 
-window.onload = function () {
-    if (prev_handler) {
-        prev_handler();
-    }
-    renderDraft();
+window.onload = function() {
+  if (prev_handler) {
+    prev_handler();
+  }
+  renderDraft();
 };
 
-window.onresize = function () {
+window.onresize = function() {
   renderDraft();
 }
 
-$('#passpack').click(function(e)
-{
+$('#passpack').click(function(e) {
   passPack();
 });
 
@@ -36,22 +34,17 @@ function arrayRotate(arr, reverse) {
 
 function botPicks() {
   //make bots take a pick out of active activepacks
-  for(i = 1; i < draft.packs.length; i++)
-  {
-    var bot = draft.bots[i-1];
+  for (i = 1; i < draft.packs.length; i++) {
+    var bot = draft.bots[i - 1];
     var taken = false;
     //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
     //try to take card with exactly our two colors
     var ratedpicks = [];
     var unratedpicks = [];
-    for(var j = 0; j < draft.packs[i][0].length; j++)
-    {
-      if(draft.ratings[draft.packs[i][0][j].details.name])
-      {
+    for (var j = 0; j < draft.packs[i][0].length; j++) {
+      if (draft.ratings[draft.packs[i][0][j].details.name]) {
         ratedpicks.push(j);
-      }
-      else
-      {
+      } else {
         unratedpicks.push(j)
       }
     }
@@ -68,28 +61,21 @@ function botPicks() {
     shuffle(unratedpicks);
     var picknums = ratedpicks.concat(unratedpicks);
     //try to take card that contains exactly <= our colors
-    for(j = 0; j < draft.packs[i][0].length; j++)
-    {
-      if(!taken)
-      {
+    for (j = 0; j < draft.packs[i][0].length; j++) {
+      if (!taken) {
         var colors = draft.packs[i][0][picknums[j]].colors;
-        if(bot[0] == bot[1])
-        {
-          if((colors.length == 1 && colors.includes(bot[0]))||
-            colors.length == 0)
-          {
-            pick = draft.packs[i][0].splice(picknums[j],1);
+        if (bot[0] == bot[1]) {
+          if ((colors.length == 1 && colors.includes(bot[0])) ||
+            colors.length == 0) {
+            pick = draft.packs[i][0].splice(picknums[j], 1);
             draft.picks[i].push(pick[0].cardID);
             taken = true;
           }
-        }
-        else
-        {
-          if((colors.length == 2 && colors.includes(bot[0]) && colors.includes(bot[1])) ||
-            (colors.length == 1 && (colors.includes(bot[0]) || colors.includes(bot[1])))||
-            colors.length == 0)
-          {
-            pick = draft.packs[i][0].splice(picknums[j],1);
+        } else {
+          if ((colors.length == 2 && colors.includes(bot[0]) && colors.includes(bot[1])) ||
+            (colors.length == 1 && (colors.includes(bot[0]) || colors.includes(bot[1]))) ||
+            colors.length == 0) {
+            pick = draft.packs[i][0].splice(picknums[j], 1);
             draft.picks[i].push(pick[0].cardID);
             taken = true;
           }
@@ -97,109 +83,88 @@ function botPicks() {
       }
     }
     //try to take card that at least has one of our colors
-    for(j = 0; j < draft.packs[i][0].length; j++)
-    {
-      if(!taken)
-      {
+    for (j = 0; j < draft.packs[i][0].length; j++) {
+      if (!taken) {
         var colors = draft.packs[i][0][picknums[j]].colors;
-        if(colors.includes(bot[0]) || colors.includes(bot[1]))
-        {
-          pick = draft.packs[i][0].splice(picknums[j],1);
+        if (colors.includes(bot[0]) || colors.includes(bot[1])) {
+          pick = draft.packs[i][0].splice(picknums[j], 1);
           draft.picks[i].push(pick[0].cardID);
           taken = true;
         }
       }
     }
     //take a random card
-    if(!taken)
-    {
-      pick = draft.packs[i][0].splice( Math.floor(Math.random() * draft.packs[i][0].length),1);
+    if (!taken) {
+      pick = draft.packs[i][0].splice(Math.floor(Math.random() * draft.packs[i][0].length), 1);
       draft.picks[i].push(pick[0].cardID);
     }
   }
 }
 
-var shuffle = function (array) {
+var shuffle = function(array) {
 
-	var currentIndex = array.length;
-	var temporaryValue, randomIndex;
+  var currentIndex = array.length;
+  var temporaryValue, randomIndex;
 
-	// While there remain elements to shuffle...
-	while (0 !== currentIndex) {
-		// Pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
 
-		// And swap it with the current element.
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
 
-	return array;
+  return array;
 
 };
 
-function submitDraft()
-{
-  saveDraft(function()
-  {
+function submitDraft() {
+  saveDraft(function() {
     $('#submitDeckHidden').val(draft._id);
     $('#submitDeckForm').submit();
   });
 }
 
-function passPack()
-{
+function passPack() {
   draft.pickNumber += 1;
   botPicks();
   //check if pack is done
   var done = true;
-  for(i = 0; i < draft.packs.length; i++)
-  {
-    if(draft.packs[i][0].length > 0)
-    {
+  for (i = 0; i < draft.packs.length; i++) {
+    if (draft.packs[i][0].length > 0) {
       done = false;
     }
   }
-  if(done)
-  {
+  if (done) {
     draft.packNumber += 1;
     draft.pickNumber = 1;
     //splice the first pack out
-    for(i = 0; i < draft.packs.length; i++)
-    {
-      draft.packs[i].splice(0,1);
+    for (i = 0; i < draft.packs.length; i++) {
+      draft.packs[i].splice(0, 1);
     }
     //check if draft is done
     done = true;
-    for(i = 0; i < draft.packs.length; i++)
-    {
-      if(draft.packs[i].length > 0)
-      {
+    for (i = 0; i < draft.packs.length; i++) {
+      if (draft.packs[i].length > 0) {
         done = false;
       }
     }
-    if(done)
-    {
+    if (done) {
       renderDraft();
       submitDraft();
-    }
-    else
-    {
+    } else {
       saveDraft();
       renderDraft();
     }
-  }
-  else
-  {
-    if(draft.packs[0].length % 2 == 0)
-    {
+  } else {
+    if (draft.packs[0].length % 2 == 0) {
       //pass left
       arrayRotate(draft.packs, false);
-    }
-    else
-    {
+    } else {
       //pass right
       arrayRotate(draft.packs, true);
     }
@@ -208,269 +173,210 @@ function passPack()
   }
 }
 
-function addToPack(card)
-{
+function addToPack(card) {
   draft.packs[0][0].push(card);
 }
 
-function addToPicks(card, x, y, cmccol,frompack)
-{
+function addToPicks(card, x, y, cmccol, frompack) {
   var area = document.getElementById('picksarea');
   var rect = area.getBoundingClientRect();
-  if(cmccol)
-  {
+  if (cmccol) {
     x = card.details.cmc;
-  }
-  else
-  {
+  } else {
     x -= rect.left;
-    x /= (cardWidth+4);
+    x /= (cardWidth + 4);
     x = Math.floor(x);
   }
-  if(x < 0)
-  {
+  if (x < 0) {
     x = 0;
   }
-  if(x > (numCols/2)-1)
-  {
-    x =(numCols/2)-1;
+  if (x > (numCols / 2) - 1) {
+    x = (numCols / 2) - 1;
   }
-  if(cmccol)
-  {
-    if(!card.details.type.toLowerCase().includes('creature'))
-    {
-      x+= (numCols/2);
+  if (cmccol) {
+    if (!card.details.type.toLowerCase().includes('creature')) {
+      x += (numCols / 2);
+    }
+  } else {
+    if (y > rect.bottom - getRowHeight()) {
+      x += (numCols / 2);
     }
   }
-  else
-  {
-    if(y>rect.bottom-getRowHeight())
-    {
-      x+= (numCols/2);
-    }
-  }
-  if(!draft.picks[0][x])
-  {
+  if (!draft.picks[0][x]) {
     draft.picks[0][x] = [];
   }
   draft.picks[0][x].push(card);
   draft.pickOrder.push(card._id);
-  if(frompack)
-  {
+  if (frompack) {
     passPack();
-    fetch("/cube/api/draftpickcard/"+draft.cube, {
+    fetch("/cube/api/draftpickcard/" + draft.cube, {
       method: "POST",
-      body: JSON.stringify({'draft_id':draft._id, card}),
-      headers:{
+      body: JSON.stringify({
+        'draft_id': draft._id,
+        card
+      }),
+      headers: {
         'Content-Type': 'application/json'
       }
     });
   }
 }
 
-function saveDraft(callback)
-{
+function saveDraft(callback) {
   var temp = JSON.parse(JSON.stringify(draft));
-  temp.packs.forEach(function(seat, index)
-  {
-    seat.forEach(function(pack, index2)
-    {
-      pack.forEach(function(card, index3)
-      {
+  temp.packs.forEach(function(seat, index) {
+    seat.forEach(function(pack, index2) {
+      pack.forEach(function(card, index3) {
         delete card.details;
       });
     });
   });
-  temp.picks.forEach(function(card, index)
-  {
-    if(Array.isArray(card))
-    {
-      card.forEach(function(item, index2)
-      {
-        if(item)
-        {
+  temp.picks.forEach(function(card, index) {
+    if (Array.isArray(card)) {
+      card.forEach(function(item, index2) {
+        if (item) {
           delete item.details;
         }
       });
-    }
-    else
-    {
+    } else {
       delete card.details;
     }
   });
   //save draft, if we fail, we fail
-  fetch("/cube/api/draftpick/"+draft.cube, {
+  fetch("/cube/api/draftpick/" + draft.cube, {
     method: "POST",
     body: JSON.stringify(temp),
-    headers:{
+    headers: {
       'Content-Type': 'application/json'
     }
-  }).then(function()
-  {
-    if(callback)
-    {
+  }).then(function() {
+    if (callback) {
       callback();
     }
   });
 }
 
-function renderDraft()
-{
+function renderDraft() {
 
-  if(draft.packs[0].length > 0)
-  {
+  if (draft.packs[0].length > 0) {
     $('#packTitle').text('Pack ' + draft.packNumber + ', Pick ' + draft.pickNumber);
-    $('#packSubtitle').text( draft.packs[0].length - 1 + ' unopened packs left');
+    $('#packSubtitle').text(draft.packs[0].length - 1 + ' unopened packs left');
     setupPickColumns();
 
     //move cards over if they don't fit into columns
-    for(var i = numCols; i < draft.picks[0].length; i++)
-    {
-      draft.picks[0][numCols-1] = draft.picks[0][numCols-1].concat(draft.picks[0][i].splice(0,draft.picks[0][i].length));
+    for (var i = numCols; i < draft.picks[0].length; i++) {
+      draft.picks[0][numCols - 1] = draft.picks[0][numCols - 1].concat(draft.picks[0][i].splice(0, draft.picks[0][i].length));
     }
 
     //fill upp pack
     var packhtml = "";
-    draft.packs[0][0].forEach(function(card, index)
-    {
-      if(card.details.card_flip)
-      {
-        packhtml += '<a class="autocard" card="'+card.details.image_normal+'" card_flip="'+card.details.image_flip+'" href="#"><img class="packcard" data-id="'+index+'" src="'+card.details.image_normal+'" width="'+cardWidth+'" height="'+cardHeight+'"/></a>';
-      }
-      else
-      {
-        packhtml += '<a class="autocard" card="'+card.details.image_normal+'" href="#"><img class="packcard" data-id="'+index+'" src="'+card.details.image_normal+'" width="'+cardWidth+'" height="'+cardHeight+'"/></a>';
+    draft.packs[0][0].forEach(function(card, index) {
+      if (card.details.card_flip) {
+        packhtml += '<a class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+      } else {
+        packhtml += '<a class="autocard" card="' + card.details.image_normal + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#packarea').html(packhtml);
   }
   //fill up picks
-  draft.picks[0].forEach(function(col, index)
-  {
+  draft.picks[0].forEach(function(col, index) {
     var pickshtml = "";
-    col.forEach(function(card, index2)
-    {
-      if(card.details.card_flip)
-      {
-        pickshtml += '<a style="z-index:'+index2+'; position: relative; top:-'+155*(index2)+'px;" class="autocard" card="'+card.details.image_normal+'" card_flip="'+card.details.image_flip+'" href="#"><img class="pickscard" data-id="'+index2+'" data-col="'+index+'" src="'+card.details.image_normal+'" width="'+cardWidth+'" height="'+cardHeight+'"/></a>';
-      }
-      else
-      {
-        pickshtml += '<a style="z-index:'+index2+'; position: relative; top:-'+155*(index2)+'px;" class="autocard" card="'+card.details.image_normal+'" href="#"><img class="pickscard" data-id="'+index2+'" data-col="'+index+'" src="'+card.details.image_normal+'" width="'+cardWidth+'" height="'+cardHeight+'"/></a>';
+    col.forEach(function(card, index2) {
+      if (card.details.card_flip) {
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+      } else {
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
-    $('#picksColumn'+index).html(pickshtml);
+    $('#picksColumn' + index).html(pickshtml);
   });
 
   autocard_init('autocard');
   var elements = document.getElementsByClassName("packcard");
-  for(i = 0; i < elements.length; i++)
-  {
-    setupDrag(elements[i],true);
+  for (i = 0; i < elements.length; i++) {
+    setupDrag(elements[i], true);
   }
   elements = document.getElementsByClassName("pickscard");
-  for(i = 0; i < elements.length; i++)
-  {
-    setupDrag(elements[i],false);
+  for (i = 0; i < elements.length; i++) {
+    setupDrag(elements[i], false);
   }
 }
 
-function getRowHeight()
-{
+function getRowHeight() {
   var max = 0;
-  for(i = numCols/2; i < numCols; i++)
-  {
-    if(draft.picks[0][i].length > max)
-    {
+  for (i = numCols / 2; i < numCols; i++) {
+    if (draft.picks[0][i].length > max) {
       max = draft.picks[0][i].length;
     }
   }
-  return cardHeight+20*max;
+  return cardHeight + 20 * max;
 }
 
-function drawHover(e)
-{
+function drawHover(e) {
   var elements = document.getElementsByClassName("card-hover");
-  for(i = 0; i < elements.length; i++)
-  {
-    if(elementHovered(elements[i], e.clientX, e.clientY))
-    {
-      elements[i].setAttribute('style','box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);');
-    }
-    else
-    {
-      elements[i].setAttribute('style','');
+  for (i = 0; i < elements.length; i++) {
+    if (elementHovered(elements[i], e.clientX, e.clientY)) {
+      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);');
+    } else {
+      elements[i].setAttribute('style', '');
     }
   }
   elements = document.getElementsByClassName("pickscol");
   var found = false;
-  for(i = 0; i < elements.length; i++)
-  {
-    if(elementHovered(elements[i], e.clientX, e.clientY))
-    {
+  for (i = 0; i < elements.length; i++) {
+    if (elementHovered(elements[i], e.clientX, e.clientY)) {
       found = true;
-      elements[i].setAttribute('style','box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:'+(cardHeight+20*draft.picks[0][i].length)+'px;');
-    }
-    else
-    {
-      elements[i].setAttribute('style','height:'+(cardHeight+20*draft.picks[0][i].length)+'px;');
+      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
+    } else {
+      elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
     }
   }
-  if(!found && elementHovered(document.getElementById('pickshover'), e.clientX, e.clientY))
-  {
+  if (!found && elementHovered(document.getElementById('pickshover'), e.clientX, e.clientY)) {
     var area = document.getElementById('picksarea');
     var rect = area.getBoundingClientRect();
     var x = e.clientX;
     x -= rect.left;
-    x /= (cardWidth+4);
+    x /= (cardWidth + 4);
     x = Math.floor(x);
-    if(x < 0)
-    {
+    if (x < 0) {
       x = 0;
     }
-    if(x > (numCols/2)-1)
-    {
-      x =(numCols/2)-1;
+    if (x > (numCols / 2) - 1) {
+      x = (numCols / 2) - 1;
     }
-    if(e.clientY>rect.bottom-getRowHeight())
-    {
-      x+= (numCols/2);
+    if (e.clientY > rect.bottom - getRowHeight()) {
+      x += (numCols / 2);
     }
-    document.getElementById('picksColumn'+x).setAttribute('style','box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:'+(cardHeight+20*draft.picks[0][x].length)+'px;');
+    document.getElementById('picksColumn' + x).setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * draft.picks[0][x].length) + 'px;');
   }
 }
 
-function removeHover()
-{
+function removeHover() {
   var elements = document.getElementsByClassName("card-hover");
-  for(i = 0; i < elements.length; i++)
-  {
-    elements[i].setAttribute('style','')
+  for (i = 0; i < elements.length; i++) {
+    elements[i].setAttribute('style', '')
   }
   elements = document.getElementsByClassName("pickscol");
-  for(i = 0; i < elements.length; i++)
-  {
-    elements[i].setAttribute('style','height:'+(cardHeight+20*draft.picks[0][i].length)+'px;');
+  for (i = 0; i < elements.length; i++) {
+    elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
   }
 }
 
-function setupPickColumns()
-{
+function setupPickColumns() {
   var area = document.getElementById('picksarea');
   var rect = area.getBoundingClientRect();
-  numCols = Math.floor((rect.width+40)/(cardWidth+4))*2;
+  numCols = Math.floor((rect.width + 40) / (cardWidth + 4)) * 2;
 
   var res = '<div class="row even-cols">';
 
-  for(i = 0; i < numCols; i++)
-  {
-    if(!draft.picks[0][i])
-    {
+  for (i = 0; i < numCols; i++) {
+    if (!draft.picks[0][i]) {
       draft.picks[0][i] = [];
     }
-    res += '<div style="height:'+(cardHeight+20*draft.picks[0][i].length)+'px" id="picksColumn'+i+'" data-id="'+i+'" class="col-even pickscol"></div>'
+    res += '<div style="height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px" id="picksColumn' + i + '" data-id="' + i + '" class="col-even pickscol"></div>'
   }
-  res+= '</div>';
+  res += '</div>';
 
   area.innerHTML = res;
 }
@@ -499,18 +405,15 @@ function setupDrag(elmnt, frompack) {
     finaly = e.clientY;
 
     //get card
-    if(frompack)
-    {
-      dragCard = draft.packs[0][0].splice(e.target.getAttribute('data-id'),1)[0];
-    }
-    else
-    {
-      dragCard = draft.picks[0][e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'),1)[0];
+    if (frompack) {
+      dragCard = draft.packs[0][0].splice(e.target.getAttribute('data-id'), 1)[0];
+    } else {
+      dragCard = draft.picks[0][e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'), 1)[0];
     }
     //set drag element's inner html
-    dragElement.innerHTML='<img src="'+dragCard.details.image_normal+'" width="'+cardWidth+'" height="'+cardHeight+'"/></a>';
-    dragElement.style.top = (e.clientY- cardHeight/2+self.pageYOffset) + "px" ;
-    dragElement.style.left = (e.clientX- cardWidth/2+self.pageXOffset) + "px" ;
+    dragElement.innerHTML = '<img src="' + dragCard.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
+    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
     autocard_hide_card();
     renderDraft();
     drawHover(e);
@@ -524,8 +427,8 @@ function setupDrag(elmnt, frompack) {
     finalx = e.clientX;
     finaly = e.clientY;
     // set the element's new position:
-    dragElement.style.top = (e.clientY- cardHeight/2+self.pageYOffset) + "px" ;
-    dragElement.style.left = (e.clientX- cardWidth/2+self.pageXOffset) + "px" ;
+    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
+    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
   }
 
   function closeDragElement() {
@@ -534,38 +437,25 @@ function setupDrag(elmnt, frompack) {
     document.onmouseup = null;
     document.onmousemove = null;
     dragElement.innerHTML = "";
-    var dist = getDistance(x,y,finalx,finaly);
-    if(dist < 5)
-    {
+    var dist = getDistance(x, y, finalx, finaly);
+    if (dist < 5) {
       //move to other
-      addToPicks(dragCard,finalx,finaly,true,frompack);
-    }
-    else if(elementHovered(document.getElementById('packhover'),finalx,finaly))
-    {
+      addToPicks(dragCard, finalx, finaly, true, frompack);
+    } else if (elementHovered(document.getElementById('packhover'), finalx, finaly)) {
       //move to pack
-      if(frompack)
-      {
+      if (frompack) {
         addToPack(dragCard);
+      } else {
+        addToPicks(dragCard, finalx, finaly, true, frompack);
       }
-      else
-      {
-        addToPicks(dragCard,finalx,finaly,true,frompack);
-      }
-    }
-    else if(elementHovered(document.getElementById('pickshover'),finalx,finaly))
-    {
+    } else if (elementHovered(document.getElementById('pickshover'), finalx, finaly)) {
       //move to picks
-        addToPicks(dragCard,finalx,finaly,false,frompack);
-    }
-    else
-    {
+      addToPicks(dragCard, finalx, finaly, false, frompack);
+    } else {
       //return to original
-      if(!frompack)
-      {
-        addToPicks(dragCard,finalx,finaly,true,frompack);
-      }
-      else
-      {
+      if (!frompack) {
+        addToPicks(dragCard, finalx, finaly, true, frompack);
+      } else {
         addToPack(dragCard);
       }
     }
@@ -575,15 +465,13 @@ function setupDrag(elmnt, frompack) {
   }
 }
 
-function elementHovered(element, x, y)
-{
+function elementHovered(element, x, y) {
   var rect = element.getBoundingClientRect();
   return x < rect.right && x > rect.left && y < rect.bottom && y > rect.top;
 }
 
-function getDistance(x1, y1, x2, y2)
-{
+function getDistance(x1, y1, x2, y2) {
   var a = x1 - x2;
   var b = y1 - y2;
-  return Math.sqrt( a*a + b*b );
+  return Math.sqrt(a * a + b * b);
 }
