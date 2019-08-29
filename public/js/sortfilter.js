@@ -84,6 +84,25 @@ function filterCard(card, filterobj)
   return filterin;
 }
 
+//returns the price bucket label at the index designating the upper bound
+//at index == 0, returns < lowest
+//at index == length, returs >= highest
+function price_bucket_label(index)
+{
+  if(index == 0)
+  {
+    return '< $' + price_buckets[0];
+  }
+  else if (index == price_buckets.length)
+  {
+    return '>= $' + price_buckets[price_buckets.length-1];
+  }
+  else
+  {
+    return '$' + price_buckets[i-1] + ' - $' + (price_buckets[i] - .01);
+  }
+}
+
 function cardIsLabel(card, label, sort)
 {
   if(sort == 'Color Category')
@@ -371,24 +390,33 @@ function cardIsLabel(card, label, sort)
   }
   else if(sort == 'Price')
   {
+    var price = null;
     if(card.details.price)
     {
+      price = card.details.price;
+    }
+    else if (card.details.price_foil)
+    {
+      price = card.details.price_foil;
+    }
+    if(price)
+    {
       //fence post first and last term
-      if(card.details.price < price_buckets[0])
+      if(price < price_buckets[0])
       {
-        return label == '< ' + price_buckets[0];
+        return label == price_bucket_label(0);
       }
-      else if(card.details.price >= price_buckets[price_buckets.length-1])
+      else if(price >= price_buckets[price_buckets.length-1])
       {
-        return label == '>= ' + price_buckets[price_buckets.length-1];
+        return label == price_bucket_label(price_buckets.length);
       }
       else
       {
         for(i = 1; i < price_buckets.length;i++)
         {
-          if(card.details.price >= price_buckets[i-1] && card.details.price < price_buckets[i])
+          if(price >= price_buckets[i-1] && price < price_buckets[i])
           {
-            return label == price_buckets[i-1] + ' - ' + (price_buckets[i] - .01);
+            return label == price_bucket_label(i);
           }
         }
       }
@@ -405,11 +433,11 @@ function cardIsLabel(card, label, sort)
       //fence post first and last term
       if(card.details.price_foil < price_buckets[0])
       {
-        return label == '< ' + price_buckets[0];
+        return label == price_bucket_label(0);
       }
       else if(card.details.price_foil >= price_buckets[price_buckets.length-1])
       {
-        return label == '>= ' + price_buckets[price_buckets.length-1];
+        return label == price_bucket_label(price_buckets.length);
       }
       else
       {
@@ -417,7 +445,7 @@ function cardIsLabel(card, label, sort)
         {
           if(card.details.price_foil >= price_buckets[i-1] && card.details.price_foil < price_buckets[i])
           {
-            return label == price_buckets[i-1] + ' - ' + (price_buckets[i] - .01);
+            return label == price_bucket_label(i);
           }
         }
       }

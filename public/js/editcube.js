@@ -875,15 +875,12 @@ function getLabels(sort) {
   else if (sort == 'Price' || sort == 'Price Foil')
   {
     var labels = [];
-    //fencepost the first and last term
-    labels.push('< '  + price_buckets[0]);
-    for(i = 1; i < price_buckets.length;i++)
+    for(i = 0; i <= price_buckets.length;i++)
     {
-      labels.push(price_buckets[i-1] + ' - ' + (price_buckets[i] - .01));
+      labels.push(price_bucket_label(i));
     }
-    labels.push('>= '  + price_buckets[price_buckets.length-1]);
-    //add no price available
     labels.push("No Price Available");
+    return labels;
   }
 }
 
@@ -1100,7 +1097,7 @@ function show_contextModal(card) {
   else
   {
     var name = card.details.name.replace('?','-q-');
-    while(val.includes('//'))
+    while(name.includes('//'))
     {
       name = name.replace('//','-slash-');
     }
