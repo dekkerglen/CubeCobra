@@ -312,37 +312,6 @@ router.post('/register', function(req, res)
                         }
                       });
 
-                      // // Use Smtp Protocol to send Email
-                      // var smtpTransport = mailer.createTransport({
-                      //     name: 'CubeCobra.com',
-                      //     secure: true,
-                      //     service: "Gmail",
-                      //     auth: {
-                      //         user: emailconfig.username,
-                      //         pass: emailconfig.password
-                      //     }
-                      // });
-
-                      // var mail = {
-                      //     from: "Cube Cobra Team <support@cubecobra.com>",
-                      //     to: email,
-                      //     subject: "Confirm Account",
-                      //     html: "Hi " + newUser.username +
-                      //       ",</br> Thanks for joining! To confirm your email, click <a href=\"https://cubecobra.com/user/register/confirm/" +
-                      //       newUser._id + "\">here</a>."
-                      // }
-
-                      // smtpTransport.sendMail(mail, function(error, response)
-                      // {
-                      //     if(error)
-                      //     {
-                      //         console.log(error);
-                      //     }
-
-                      //     smtpTransport.close();
-                      // });
-
-                      //req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
                       req.flash('success','Account succesfully created. You are now able to login.');
                       res.redirect('/user/login');
                     }
