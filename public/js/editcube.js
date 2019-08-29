@@ -1880,14 +1880,46 @@ function renderTableView() {
             }
             else cmc_sections[i][0].push(card);
           });
-          
+
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
-          res += '<a '
-          if(canEdit)
+
+          if(comparing)
           {
-            res += 'href="#"'
+            let in_both_count = 0, only_a_count = 0, only_b_count = 0;
+            rowgroup.forEach(function(card, index) {
+                if(in_both.includes(card.details.name)) in_both_count++;
+                else if(only_a.includes(card.details.name)) only_a_count++;
+                else if(only_b.includes(card.details.name)) only_b_count++;
+            });
+            res += '<div class="list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">';
+            res += '<div class="row no-gutters">';
+            res += '<div class="col">';
+            res += '<div>' + rowgroup_label + '</div>';
+            res += '</div>';
+            res += '</div>';
+            res += '<div class="row no-gutters">';
+            res += '<div class="col">';
+            res += '<div>(' + in_both_count + ')</div>';
+            res += '</div>';
+            res += '<div class="col">';
+            res += '<div>(' + only_a_count + ')</div>';
+            res += '</div>';
+            res += '<div class="col">';
+            res += '<div>(' + only_b_count + ')</div>';
+            res += '</div>';
+            res += '</div>';
+            res += '</div>';
           }
-          res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
+          else
+          {
+            res += '<a '
+            if(canEdit)
+            {
+              res += 'href="#"'
+            }
+            res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
+          
+          }
 
           cmc_sections.forEach(function(section, section_index) {
             res += '<div class="cmc-group row no-gutters">'
