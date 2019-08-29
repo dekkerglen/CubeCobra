@@ -1,12 +1,15 @@
 # CubeCobra
+
 An open source web application for building, managing, and playtesting Magic the Gathering cubes.
 
 ### Contributing
+
 If you are interested in contributing towards Cube Cobra, please read the [Contribution guidelines for this project](CONTRIBUTING.md).
 
 # Setup
 
 ### Install Prerequisites
+
 You will need to install NodeJS, MongoDB, and an IDE of your preference (I reccomend Atom). You can find the neccesary resources here:
 
 NodeJS: https://nodejs.org/en/download/
@@ -20,7 +23,7 @@ Atom (optional): https://atom.io/
 ### Clone Project
 
 Clone the project into a folder of your choice. Then, you will need to add a folder adjacent to the project folder like this:
-  
+
     .
     ├── CubeCobra               # Cloned repository
     └── cubecobrasecrets        # Secrets folder    
@@ -45,7 +48,7 @@ In tcgplayer.js, you can paste the following. You only need to fill out these fi
 
 Then, run the following commands in the root of the cloned repository:
 
-    npm install    
+    npm install
     npm install nodemon -g
     node force_update.js
     nodemon
@@ -53,3 +56,7 @@ Then, run the following commands in the root of the cloned repository:
 You can now open up a browser and connect to the app through: http://localhost:5000
 
 Nodemon will restart the application anytime there is a change to a source file.
+
+### Running tests
+
+To run the test suite, run `npm run test`
