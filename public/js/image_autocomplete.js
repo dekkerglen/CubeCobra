@@ -51,7 +51,13 @@ window.onload = async () => {
               inp.value = this.getElementsByTagName("input")[0].value.replace("%27","'");
               /*close the list of autocompleted values,
               (or any other open lists of autocompleted values:*/
-              fetch('/cube/api/getimage/'+encodeURIComponent(inp.value.toLowerCase()))
+              var val = inp.value.toLowerCase().replace('?','-q-');
+              while(val.includes('//'))
+              {
+                val = val.replace('//','-slash-');
+              }
+
+              fetch('/cube/api/getimage/'+val)
                 .then(response => response.json())
                 .then(function(json)
               {
