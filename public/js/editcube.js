@@ -731,8 +731,8 @@ function getLabels(sort) {
   }
   else if (sort == 'Types-Multicolor')
   {
-    return ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Conspiracy','Scheme','Vanguard','Phenomenon','Contraption','Plane','Land','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
-      'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Other'];
+    return ['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Golgari','Simic','Izzet','Boros',
+    'Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur','Non-White','Non-Blue','Non-Black','Non-Red','Non-Green','Five Color','Land','Other'];
   }
   else if (sort=='Legality')
   {
