@@ -1824,6 +1824,19 @@ function renderTableView() {
             return 0;
           });
 
+          let i = 0;
+          let cmc_sections = [[]];
+          let cmc = rowgroup[0].cmc;
+          rowgroup.forEach(function(card, index) {
+            if(card.cmc != cmc)
+            {
+              cmc_sections.push([]);
+              cmc = card.cmc;
+              i++;
+            }
+            cmc_sections[i].push(card);
+          });
+          
           res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
           res += '<a '
           if(canEdit)
@@ -1831,36 +1844,22 @@ function renderTableView() {
             res += 'href="#"'
           }
           res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
-          let cmc = 0
-          res += '<div class="cmc-group">'
-          rowgroup.forEach(function( card, index)
-          {
-            if(comparing) res += '<div>'
-            
-            if (index == 0) {
-              cmc = card.cmc;
-            }
-            if (card.cmc != cmc) {
-              if (index  == rowgroup.length) {
-                res += "";
-              } else {
-                res += '</div><div class="cmc-group">';
-              }
-              cmc = card.cmc;
-            }
-            if(card.details.image_flip)
-            {
-              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
-            }
-            else
-            {
-              res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-            }
-            res += card.details.name+'</a>';
 
-            if(comparing) res += '</div>'
+          cmc_sections.forEach(function(section, index) {
+            res += '<div class="cmc-group">'
+            section.forEach(function(card, index) {
+              if(card.details.image_flip)
+              {
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
+              }
+              else
+              {
+                res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
+              }
+              res += card.details.name+'</a>';
+            });
+            res += '</div>'
           });
-          res += '</div>'
 
           res += '</ul>';
       });
