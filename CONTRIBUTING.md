@@ -44,7 +44,7 @@ Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Plea
 
 #### Javascript
 
-For Javascript please make sure your code is formatted using the JS Beautify standard. This can be done by running `npm run-script beautify`.
+For Javascript please make sure your code is formatted using the JS Beautify standard. This can be done by running `npm run-script beautify public/js/*.js`.
 
 #### Jade/PUG CSS and HTML
 
