@@ -72,3 +72,24 @@
 {
 	padding-top:10px;
 }
+
+.left-col
+{
+	padding-right:0px;
+}
+
+.middle-col
+{
+	padding-left:0px;
+	padding-right:0px;
+}
+
+.right-col
+{
+	padding-left:0px;
+}
+
+.cmc-group
+{
+	background:#fafafa;
+}

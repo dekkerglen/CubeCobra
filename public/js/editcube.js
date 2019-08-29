@@ -1791,6 +1791,24 @@ function renderTableView() {
   var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 100;
 
   var res = '<div class="row no-gutters even-cols">';
+
+  if(comparing)
+  {
+    res += '<div class="col">'
+    res += '<div class="row compare-header">'
+    res += '<div class="col">'
+    res += '<h6 class="text-center compare-title">Only in Base Cube</h6>'
+    res += '</div>'
+    res += '<div class="col">'
+    res += '<h6 class="text-center compare-title">In Both Cubes</h6>'
+    res += '</div>'
+    res += '<div class="col">'
+    res += '<h6 class="text-center compare-title">Only in Comparison Cube</h6>'
+    res += '</div>'
+    res += '</div>'
+    res += '</div>'
+  }
+
   Object.keys(columns).forEach(function(column_label, col_index)
   {
     var column = columns[column_label];
@@ -1798,20 +1816,6 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
-      if(comparing)
-      {
-        res += '<div class="row compare-header">'
-        res += '<div class="col">'
-        res += '<h6 class="text-center compare-title">Only in Base Cube</h6>'
-        res += '</div>'
-        res += '<div class="col">'
-        res += '<h6 class="text-center compare-title">In Both Cubes</h6>'
-        res += '</div>'
-        res += '<div class="col">'
-        res += '<h6 class="text-center compare-title">Only in Comparison Cube</h6>'
-        res += '</div>'
-        res += '</div>'
-      }
       res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)
@@ -1864,11 +1868,21 @@ function renderTableView() {
           }
           res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
 
-          cmc_sections.forEach(function(section, index) {
+          cmc_sections.forEach(function(section, section_index) {
             res += '<div class="cmc-group row">'
 
-            section.forEach(function(column, index) {
-              res += '<div class="col">'
+            section.forEach(function(column, column_index) {
+              if(comparing)
+              {
+                let col_id = 'middle-col';
+                if(column_index === 0) col_id = 'left-col';
+                else if(column_index === 2) col_id = 'right-col';
+                res += '<div class="col ' + col_id + '">'
+              }
+              else
+              {
+                res += '<div class="col">'
+              }
 
               column.forEach(function(card, index) {
                 if(card.details.image_flip)
