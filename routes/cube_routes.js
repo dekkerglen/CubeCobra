@@ -779,14 +779,7 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
                       found = true;
                       added.push(carddb.carddict[possible]);
                       var details = carddb.carddict[possible];
-                      cube.cards.push({
-                        tags: ['New'],
-                        status: "Not Owned",
-                        colors: details.color_identity,
-                        cmc: details.cmc,
-                        cardID: possible,
-                        type_line: details.type
-                      });
+                      util.addCardToCube(cube, details);
                       changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
                       if (carddb.carddict[possible].image_flip) {
                         changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[possible].image_normal + '" card_flip="' + carddb.carddict[possible].image_flip + '">' + carddb.carddict[possible].name + '</a></br>';
@@ -1033,15 +1026,8 @@ function bulkUpload(req, res, list, cube) {
                 possibilities.forEach(function(possible, ind) {
                   if (!found && carddb.carddict[possible].set.toLowerCase() == set) {
                     var details = carddb.carddict[possible];
-                    cube.cards.push({
-                      tags: ['New'],
-                      status: "Not Owned",
-                      colors: details.color_identity,
-                      cmc: details.cmc,
-                      cardID: carddb.carddict[possible],
-                      type: carddb.carddict[possible].type
-                    });
-                    added.push(carddb.carddict[possible]);
+                    util.addCardToCube(cube, details, details);
+                    added.push(details);
                     found = true;
                   }
                 });
@@ -1058,15 +1044,8 @@ function bulkUpload(req, res, list, cube) {
               if (currentId && currentId[0]) {
                 //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
                 var details = carddb.carddict[currentId[0]];
-                cube.cards.push({
-                  tags: ['New'],
-                  status: "Not Owned",
-                  colors: details.color_identity,
-                  cmc: details.cmc,
-                  cardID: currentId[0],
-                  type: carddb.carddict[currentId[0]].type
-                });
-                added.push(carddb.carddict[currentId[0]]);
+                util.addCardToCube(cube, details);
+                added.push(details);
                 changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
                 if (carddb.carddict[currentId[0]].image_flip) {
                   changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '" card_flip="' + carddb.carddict[currentId[0]].image_flip + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
@@ -1539,14 +1518,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           if (!details) {
             console.log('Card not found: ' + edit, req);
           } else {
-            cube.cards.push({
-              tags: ['New'],
-              status: "Not Owned",
-              colors: details.color_identity,
-              cmc: details.cmc,
-              cardID: details._id,
-              type: details.type
-            });
+            util.addCardToCube(cube, details);
             changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
             if (carddb.carddict[edit.substring(1)].image_flip) {
               changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[edit.substring(1)].image_normal + '" card_flip="' + carddb.carddict[edit.substring(1)].image_flip + '">' + carddb.carddict[edit.substring(1)].name + '</a>';
@@ -1579,14 +1551,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
         } else if (edit.charAt(0) == '/') {
           var tmp_split = edit.substring(1).split('>');
           var details = carddb.carddict[tmp_split[1]];
-          cube.cards.push({
-            tags: ['New'],
-            status: "Not Owned",
-            colors: details.color_identity,
-            cmc: details.cmc,
-            cardID: details._id,
-            type: details.type
-          });
+          util.addCardToCube(cube, details);
 
           var rm_index = -1;
           cube.cards.forEach(function(card_to_remove, remove_index) {
