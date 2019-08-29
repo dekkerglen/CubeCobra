@@ -1289,17 +1289,8 @@ function bulkUpload(req, res, list, cube) {
                   if(!found && carddb.carddict[possible].set.toLowerCase() == set)
                   {
                     var details = carddb.carddict[possible];
-                    cube.cards.push(
-                      {
-                        tags:['New'],
-                        status:"Not Owned",
-                        colors:details.color_identity,
-                        cmc:details.cmc,
-                        cardID:carddb.carddict[possible],
-                        type:carddb.carddict[possible].type
-                      }
-                    );
-                    added.push(carddb.carddict[possible]);
+                    util.addCardToCube(cube, details, details);
+                    added.push(details);
                     found = true;
                   }
                 });
