@@ -1728,13 +1728,11 @@ router.get('/api/cubecardnames/:id', function(req, res) {
 router.get('/api/getcardfromcube/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = split[1].toLowerCase().replace('-q-','?');
-  while(cardname.includes('-slash-'))
-  {
-    cardname = cardname.replace('-slash-','//');
+  var cardname = split[1].toLowerCase().replace('-q-', '?');
+  while (cardname.includes('-slash-')) {
+    cardname = cardname.replace('-slash-', '//');
   }
-  Cube.findById(cube, function(err, cube)
-  {
+  Cube.findById(cube, function(err, cube) {
     var found = false;
     cube.cards.forEach(function(card, index) {
       if (!found && carddb.carddict[card.cardID].name_lower == cardname) {
@@ -2038,12 +2036,10 @@ router.get('/deck/:id', function(req, res) {
   });
 });
 
-router.get('/api/getcard/:name', function(req, res)
-{
-  req.params.name = req.params.name.toLowerCase().trim().replace('-q-','?');
-  while(req.params.name.includes('-slash-'))
-  {
-    req.params.name = req.params.name.replace('-slash-','//');
+router.get('/api/getcard/:name', function(req, res) {
+  req.params.name = req.params.name.toLowerCase().trim().replace('-q-', '?');
+  while (req.params.name.includes('-slash-')) {
+    req.params.name = req.params.name.replace('-slash-', '//');
   }
   console.log(req.params.name);
   var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
@@ -2059,12 +2055,10 @@ router.get('/api/getcard/:name', function(req, res)
   }
 });
 
-router.get('/api/getimage/:name', function(req, res)
-{
-  req.params.name = req.params.name.toLowerCase().trim().replace('-q-','?');
-  while(req.params.name.includes('-slash-'))
-  {
-    req.params.name = req.params.name.replace('-slash-','//');
+router.get('/api/getimage/:name', function(req, res) {
+  req.params.name = req.params.name.toLowerCase().trim().replace('-q-', '?');
+  while (req.params.name.includes('-slash-')) {
+    req.params.name = req.params.name.replace('-slash-', '//');
   }
   var img = carddb.imagedict[req.params.name];
   if (!img) {
