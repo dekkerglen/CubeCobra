@@ -1891,22 +1891,15 @@ function renderTableView() {
                 else if(only_a.includes(card.details.name)) only_a_count++;
                 else if(only_b.includes(card.details.name)) only_b_count++;
             });
+
             res += '<div class="list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">';
             res += '<div class="row no-gutters">';
-            res += '<div class="col">';
-            res += '<div>' + rowgroup_label + '</div>';
-            res += '</div>';
+            res += '<div class="col">' + rowgroup_label + '</div>';
             res += '</div>';
             res += '<div class="row no-gutters">';
-            res += '<div class="col">';
-            res += '<div>(' + in_both_count + ')</div>';
-            res += '</div>';
-            res += '<div class="col">';
-            res += '<div>(' + only_a_count + ')</div>';
-            res += '</div>';
-            res += '<div class="col">';
-            res += '<div>(' + only_b_count + ')</div>';
-            res += '</div>';
+            res += '<div class="col">(' + in_both_count + ')</div>';
+            res += '<div class="col">(' + only_a_count + ')</div>';
+            res += '<div class="col">(' + only_b_count + ')</div>';
             res += '</div>';
             res += '</div>';
           }
