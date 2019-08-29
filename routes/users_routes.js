@@ -290,7 +290,7 @@ router.post('/register', function(req, res)
                         }
                     });
 
-                      const email = new Email({
+                      const confirmEmail = new Email({
                         message: {
                           from: "Cube Cobra Team <support@cubecobra.com>",
                           to: email,
@@ -305,7 +305,7 @@ router.post('/register', function(req, res)
                       transport: smtpTransport
                       });
             
-                      email.send({
+                      confirmEmail.send({
                         template: "confirm_email",
                         locals: {
                           id: newUser._id,
