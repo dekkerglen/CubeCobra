@@ -1798,6 +1798,20 @@ function renderTableView() {
     if(Object.keys(column).length > 0)
     {
       res += '<div class="col-even" style="width: '+colWidth+'%;">'
+      if(comparing)
+      {
+        res += '<div class="row compare-header">'
+        res += '<div class="col">'
+        res += '<h6 class="text-center compare-title">Only in Base Cube</h6>'
+        res += '</div>'
+        res += '<div class="col">'
+        res += '<h6 class="text-center compare-title">In Both Cubes</h6>'
+        res += '</div>'
+        res += '<div class="col">'
+        res += '<h6 class="text-center compare-title">Only in Comparison Cube</h6>'
+        res += '</div>'
+        res += '</div>'
+      }
       res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index)

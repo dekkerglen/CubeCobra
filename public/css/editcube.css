@@ -59,3 +59,16 @@
 	font-weight: bold;
 	text-decoration:none;
 }
+
+.compare-header
+{
+	margin-bottom:10px;
+	background:#F4F4F4;
+	border:1px solid #bbb;
+	border-radius:5px;
+}
+
+.compare-title
+{
+	padding-top:10px;
+}
