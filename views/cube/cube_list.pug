@@ -185,7 +185,7 @@ block content
 	.container#cubelistarea
 
 	//group context modal
-	if user && user.id == cube.owner
+	if user && user.id == cube.owner && !cubeB
 		#groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
 			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
 				.modal-content
@@ -269,7 +269,7 @@ block content
 							input.btn.btn-secondary(type='submit',value='Buy all')
 						button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
 
-	if user && user.id == cube.owner
+	if user && user.id == cube.owner && !cubeB
 		// Modal
 		#contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
 			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
