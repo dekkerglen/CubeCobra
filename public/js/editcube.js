@@ -516,7 +516,8 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
+  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+
 }
 
 function getLabels(sort) {
@@ -670,6 +671,16 @@ function getLabels(sort) {
     return ['Gold', 'Hybrid', 'Phyrexian'];
   } else if (sort == 'CNC') {
     return ['Creature', 'Non-Creature'];
+  }
+  else if (sort == 'Price' || sort == 'Price Foil')
+  {
+    var labels = [];
+    for(i = 0; i <= price_buckets.length;i++)
+    {
+      labels.push(price_bucket_label(i));
+    }
+    labels.push("No Price Available");
+    return labels;
   }
 }
 
@@ -841,13 +852,17 @@ function show_contextModal(card) {
     $('#contextModalCheckbox' + color).prop('checked', card.colors.includes(color));
   });
 
-  $('#contextScryfallButton').attr('href', card.details.scryfall_uri);
-  if (card.details.tcgplayer_id) {
-    $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/product/productsearch?id=' + card.details.tcgplayer_id + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-  } else {
-    var name = card.details.name.replace('?', '-q-');
-    while (val.includes('//')) {
-      name = name.replace('//', '-slash-');
+  $('#contextScryfallButton').attr('href',card.details.scryfall_uri);
+  if(card.details.tcgplayer_id)
+  {
+    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/product/productsearch?id='+card.details.tcgplayer_id+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+  }
+  else
+  {
+    var name = card.details.name.replace('?','-q-');
+    while(name.includes('//'))
+    {
+      name = name.replace('//','-slash-');
     }
     $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName=' + name + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
