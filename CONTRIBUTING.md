@@ -75,6 +75,10 @@ We have a fairly active discord and would love for you to join the discussion.  
 
 Private Message 'DEKKARU', the admin on Discord, to gain the contributor role and unlock the contributor-only channels.
 
+# Community feedback / product ideas
+
+Feedback from the community is collected and synthesized into roadmap ideas in a shared document [here](https://www.notion.so/CubeCobra-community-feedback-142b06cd81994a61bd850fb5bc817cc8). To gain read/write access, PM 'DEKKARU' or 'emmett9001' on Discord.
+
 ### Commit Message Style
 
 Please keep commit messages brief and informative.
