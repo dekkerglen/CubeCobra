@@ -157,7 +157,7 @@ if(canEdit) {
       updated.type_line = val;
     }
     val = [];
-    ['W','U','B','R','G'].forEach(function(color, index)
+    ['W','U','B','R','G','C'].forEach(function(color, index)
     {
       if($('#groupContextModalCheckbox'+color).prop('checked'))
       {
@@ -166,7 +166,14 @@ if(canEdit) {
     });
     if(val.length > 0)
     {
-      updated.colors = val;
+      if(val.indexOf('C') !== -1)
+      {
+        updated.colors = [];
+      }
+      else
+      {
+        updated.colors = val;
+      }
     }
 
     var filterobj = null;
