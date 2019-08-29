@@ -64,6 +64,19 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
+function addCardToCube(cube, card_details, idOverride) {
+  cube.cards.push(
+    {
+      tags:['New'],
+      status:"Not Owned",
+      colors:card_details.color_identity,
+      cmc:card_details.cmc,
+      cardID:idOverride === undefined ? card_details._id : idOverride,
+      type:card_details.type
+    }
+  );
+}
+
 var methods = {
   shuffle: function (array, seed) {
     if (!seed) {
@@ -82,6 +95,7 @@ var methods = {
     return res;
   },
   binaryInsert: binaryInsert,
+  addCardToCube: addCardToCube,
   arraysEqual: function (a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
