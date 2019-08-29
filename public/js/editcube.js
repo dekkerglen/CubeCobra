@@ -1788,7 +1788,7 @@ function renderTableView() {
      }
    });
 
-  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 70;
+  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 60;
 
   var res = '<div class="row no-gutters even-cols">';
 
