@@ -1,4 +1,5 @@
 
+
 var price_buckets = [.25,.5,1,2,3,4,5,7,10,15,20,25,30,40,50,75,100];
 
 function GetColorCategory(type, colors)
@@ -6,19 +7,12 @@ function GetColorCategory(type, colors)
   if(type.toLowerCase().includes('land'))
   {
     return 'Lands';
-  }
-  else if(colors.length == 0)
-  {
+  } else if (colors.length == 0) {
     return 'Colorless';
-  }
-  else if(colors.length >  1)
-  {
+  } else if (colors.length > 1) {
     return 'Multicolored';
-  }
-  else if(colors.length ==  1)
-  {
-    switch(colors[0])
-    {
+  } else if (colors.length == 1) {
+    switch (colors[0]) {
       case "W":
         return 'White';
         break;
@@ -41,48 +35,39 @@ function GetColorCategory(type, colors)
   }
 }
 
-function filterCard(card, filterobj)
-{
+function filterCard(card, filterobj) {
   //first filter out everything in this category
   //then filter in everything that matches one of the ins
 
   var filterout = false;
   var filterin = false;
   var hasFilterIn = false;
-  for (var category in filterobj)
-  {
-    if (filterobj.hasOwnProperty(category))
-    {
-      filterobj[category].out.forEach(function(option, index)
-      {
-        if(cardIsLabel(card,option.value,option.category))
-        {
+  for (var category in filterobj) {
+    if (filterobj.hasOwnProperty(category)) {
+      filterobj[category].out.forEach(function(option, index) {
+        if (cardIsLabel(card, option.value, option.category)) {
           filterout = true;
         }
       });
-      if(!filterout)
-      {
-        filterobj[category].in.forEach(function(option, index)
-        {
+      if (!filterout) {
+        filterobj[category].in.forEach(function(option, index) {
           hasFilterIn = true;
-          if(cardIsLabel(card,option.value,option.category))
-          {
+          if (cardIsLabel(card, option.value, option.category)) {
             filterin = true;
           }
         });
       }
     }
   }
-  if(filterout)
-  {
+  if (filterout) {
     return false;
   }
-  if(!hasFilterIn)
-  {
+  if (!hasFilterIn) {
     return true;
   }
   return filterin;
 }
+
 
 //returns the price bucket label at the index designating the upper bound
 //at index == 0, returns < lowest
@@ -108,15 +93,10 @@ function cardIsLabel(card, label, sort)
   if(sort == 'Color Category')
   {
     return GetColorCategory(card.type_line, card.colors) == label;
-  }
-  else if(sort == 'Color Identity')
-  {
+  } else if (sort == 'Color Identity') {
     return GetColorIdentity(card.colors) == label;
-  }
-  else if(sort == 'Color')
-  {
-    switch(label)
-    {
+  } else if (sort == 'Color') {
+    switch (label) {
       case 'White':
         return card.details.colors.includes('W');
       case 'Blue':
@@ -130,15 +110,11 @@ function cardIsLabel(card, label, sort)
       case 'Colorless':
         return card.details.colors.length == 0;
     }
-  }
-  else if(sort == '4+ Color')
-  {
-    if(card.colors.length < 4)
-    {
+  } else if (sort == '4+ Color') {
+    if (card.colors.length < 4) {
       return false;
     }
-    switch(label)
-    {
+    switch (label) {
       case 'Non-White':
         return !card.colors.includes('W');
       case 'Non-Blue':
@@ -152,59 +128,37 @@ function cardIsLabel(card, label, sort)
       case 'Five Color':
         return card.colors.length == 5;
     }
-  }
-  else if (sort == 'CMC')
-  {
-    if(card.cmc >= 8)
-    {
+  } else if (sort == 'CMC') {
+    if (card.cmc >= 8) {
       return label == '8+';
     }
     return card.cmc == label;
-  }
-  else if (sort == 'CMC2')
-  {
-    if(card.cmc >= 7)
-    {
+  } else if (sort == 'CMC2') {
+    if (card.cmc >= 7) {
       return label == '7+';
-    }
-    else if (card.cmc <= 1)
-    {
+    } else if (card.cmc <= 1) {
       return label == '0-1';
     }
     return card.cmc == label;
-  }
-  else if(sort == 'Supertype' || sort =='Type')
-  {
-    if(card.type_line.includes('Contraption'))
-    {
+  } else if (sort == 'Supertype' || sort == 'Type') {
+    if (card.type_line.includes('Contraption')) {
       return label == 'Contraption';
-    }
-    else if(label == 'Plane')
-    {
+    } else if (label == 'Plane') {
       return card.type_line.includes(label) && !card.type_line.includes('Planeswalker');
     }
     return card.type_line.includes(label);
-  }
-  else if(sort == 'Tags')
-  {
-    if(label == "")
-    {
+  } else if (sort == 'Tags') {
+    if (label == "") {
       return false;
     }
     return card.tags.includes(label);
-  }
-  else if (sort == 'Status')
-  {
+  } else if (sort == 'Status') {
     return card.status == label;
-  }
-  else if (sort == 'Guilds')
-  {
-    if(card.colors.length != 2)
-    {
+  } else if (sort == 'Guilds') {
+    if (card.colors.length != 2) {
       return false;
     }
-    switch(label)
-    {
+    switch (label) {
       case 'Azorius':
         return card.colors.includes('W') && card.colors.includes('U');
       case 'Dimir':
@@ -226,15 +180,11 @@ function cardIsLabel(card, label, sort)
       case 'Simic':
         return card.colors.includes('G') && card.colors.includes('U');
     }
-  }
-  else if (sort == 'Shards / Wedges')
-  {
-    if(card.colors.length != 3)
-    {
+  } else if (sort == 'Shards / Wedges') {
+    if (card.colors.length != 3) {
       return false;
     }
-    switch(label)
-    {
+    switch (label) {
       case 'Bant':
         return card.colors.includes('W') && card.colors.includes('U') && card.colors.includes('G');
       case 'Esper':
@@ -256,134 +206,89 @@ function cardIsLabel(card, label, sort)
       case 'Temur':
         return card.colors.includes('G') && card.colors.includes('U') && card.colors.includes('R');
     }
-  }
-  else if(sort == 'Color Count')
-  {
+  } else if (sort == 'Color Count') {
     return card.colors.length == parseInt(label);
-  }
-  else if (sort == 'Set')
-  {
+  } else if (sort == 'Set') {
     return card.details.set.toUpperCase() == label;
-  }
-  else if (sort == 'Rarity')
-  {
+  } else if (sort == 'Rarity') {
     return card.details.rarity.toLowerCase() == label.toLowerCase();
-  }
-  else if(sort == 'Unsorted')
-  {
+  } else if (sort == 'Unsorted') {
     return true;
-  }
-  else if(sort == 'Subtype')
-  {
-    if(card.type_line.includes('—'))
-    {
+  } else if (sort == 'Subtype') {
+    if (card.type_line.includes('—')) {
       return card.type_line.includes(label);
     }
     return false;
-  }
-  else if(sort =='Types-Multicolor')
-  {
-    if(card.colors.length <= 1)
-    {
+  } else if (sort == 'Types-Multicolor') {
+    if (card.colors.length <= 1) {
       var split = card.type_line.split('—');
       var types = split[0].trim().split(' ');
-      var type = types[types.length-1];
+      var type = types[types.length - 1];
       //check last type
-      if(!['Creature','Planeswalker','Instant','Sorcery','Artifact','Enchantment','Conspiracy','Contraption','Phenomenon','Plane','Scheme','Vanguard','Land'].includes(type))
-      {
+      if (!['Creature', 'Planeswalker', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Conspiracy', 'Contraption', 'Phenomenon', 'Plane', 'Scheme', 'Vanguard', 'Land'].includes(type)) {
         return label == 'Other';
       }
       return label == type;
-    }
-    else
-    {
+    } else {
       return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
     }
-  }
-  else if (sort == 'Artist')
-  {
+  } else if (sort == 'Artist') {
     return card.details.artist == label;
-  }
-  else if(sort == 'Legality')
-  {
-    if(label=='Vintage')
-    {
+  } else if (sort == 'Legality') {
+    if (label == 'Vintage') {
       return true;
     }
     return card.details.legalities[label];
-  }
-  else if (sort == 'Power')
-  {
-    if(card.details.power)
-    {
+  } else if (sort == 'Power') {
+    if (card.details.power) {
       return card.details.power == label;
     }
     return false;
-  }
-  else if (sort == 'Toughness')
-  {
-    if(card.details.toughness)
-    {
+  } else if (sort == 'Toughness') {
+    if (card.details.toughness) {
       return card.details.toughness == label;
     }
     return false;
-  }
-  else if (sort == 'Loyalty')
-  {
-    if(card.details.loyalty)
-    {
+  } else if (sort == 'Loyalty') {
+    if (card.details.loyalty) {
       return card.details.loyalty == label;
     }
     return false;
-  }
-  else if (sort == 'Manacost Type')
-  {
-    switch(label)
-    {
+  } else if (sort == 'Manacost Type') {
+    switch (label) {
       case 'Gold':
-        if(card.details.colors.length <= 1)
-        {
+        if (card.details.colors.length <= 1) {
           return false;
         }
         var res = true;
-        card.details.parsed_cost.forEach(function(symbol, index)
-        {
-          if(symbol.includes('-'))
-          {
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-')) {
             res = false;
           }
         });
         return res;
       case 'Hybrid':
-        if(card.details.colors.length <= 1)
-        {
+        if (card.details.colors.length <= 1) {
           return false;
         }
         var res = false;
-        card.details.parsed_cost.forEach(function(symbol, index)
-        {
-          if(symbol.includes('-') && !symbol.includes('-p'))
-          {
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-') && !symbol.includes('-p')) {
             res = true;
           }
         });
         return res;
       case 'Phyrexian':
-      var res = false;
-        card.details.parsed_cost.forEach(function(symbol, index)
-        {
-          if(symbol.includes('-p'))
-          {
+        var res = false;
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-p')) {
             res = true;
           }
         });
         return res;
     }
-  }
-  else if(sort == 'CNC')
-  {
-    if(label == 'Creature')
-    {
+  } else if (sort == 'CNC') {
+    if (label == 'Creature') {
       return card.type_line.includes(label);
     }
     return !card.type_line.toLowerCase().includes('creature');
@@ -464,8 +369,6 @@ try
     filterCard:filterCard,
     price_buckets:price_buckets
   };
-}
-catch(err)
-{
+} catch (err) {
   //probably running client side, ignore
 }
