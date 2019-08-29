@@ -26,16 +26,24 @@ Clone the project into a folder of your choice. Then, you will need to add a fol
 
     .
     ├── CubeCobra               # Cloned repository
-    └── cubecobrasecrets        # Secrets folder
-        └── email.js            # Secrets file
-
-
+    └── cubecobrasecrets        # Secrets folder    
+        └── email.js            # Email secrets file
+        └── tcgplayer.js        # TCGPlayer API secrets file
+        
 In email.js, you can paste the following, and replace the fields with any gmail account you have access to. You only need to fill out these fields with real information if you need to create user account validation emails.
 
     module.exports =
     {
       username:'YOUR_EMAIL',
       password:'YOUR_PASSWORD'
+    }
+
+In tcgplayer.js, you can paste the following. You only need to fill out these fields with real information if you need real card prices in your development environment.
+
+    module.exports =
+    {
+      Public_Key:'',
+      Private_Key:''
     }
 
 Then, run the following commands in the root of the cloned repository:
