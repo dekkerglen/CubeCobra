@@ -6,6 +6,11 @@ let cubeSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  shortID: {
+    type: String,
+    required: true
+  },
+  urlAlias: String,
   owner: {
     type: String,
     required: true
