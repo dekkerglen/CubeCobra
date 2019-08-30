@@ -354,7 +354,7 @@ if (canEdit) {
         show_groupContextModal();
       }
     } else {
-      $('viewSelect').val('list').change();
+      $('#viewSelect').val('list').change();
     }
   });
 }
