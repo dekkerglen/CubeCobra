@@ -1864,6 +1864,9 @@ function renderTableView() {
           });
 
           let i = 0;
+          // if we are comparing two cubes, cmc_sections has three columns, otherwise it has one column.
+          // the outer list has an item for each cmc. the middle list has an item for each column,
+          // and the inner lists contain the cards.
           let cmc_sections = (!comparing) ? [[[]]] : [[[],[],[]]];
           let cmc = rowgroup[0].cmc;
           rowgroup.forEach(function(card, index) {
