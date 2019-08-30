@@ -1,5 +1,9 @@
 var shuffleSeed = require('shuffle-seed');
 
+function generate_edit_token() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 function add_word(obj, word) {
   if (word.length <= 0) {
     return;
@@ -58,16 +62,14 @@ function binaryInsert(value, array, startVal, endVal) {
 }
 
 function addCardToCube(cube, card_details, idOverride) {
-  cube.cards.push(
-    {
-      tags:['New'],
-      status:"Not Owned",
-      colors:card_details.color_identity,
-      cmc:card_details.cmc,
-      cardID:idOverride === undefined ? card_details._id : idOverride,
-      type:card_details.type
-    }
-  );
+  cube.cards.push({
+    tags: ['New'],
+    status: "Not Owned",
+    colors: card_details.color_identity,
+    cmc: card_details.cmc,
+    cardID: idOverride === undefined ? card_details._id : idOverride,
+    type: card_details.type
+  });
 }
 
 var methods = {
