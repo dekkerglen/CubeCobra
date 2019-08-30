@@ -22,13 +22,17 @@ Atom (optional): https://atom.io/
 
 ### Clone Project
 
-Clone the project into a folder of your choice. Copy the `cubecobrasecrets.example`
-directory to the directory containing the repository, and change its name to
-`cubecobrasecrets`. The resulting directory structure should look like this:
+Clone the project into a folder of your choice. Create a symbolic link from
+`../cubecobrasecrets` to `cubecobrasecrets.example`:
+
+  cd CubeCobra/..
+  ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+
+The resulting directory structure should look like this:
 
     .
     ├── CubeCobra               # Cloned repository
-    └── cubecobrasecrets        # Secrets folder
+    └── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
         └── email.js            # Email secrets file
         └── etc...
 
