@@ -155,7 +155,11 @@ if (canEdit) {
       }
     });
     if (val.length > 0) {
-      updated.colors = val;
+      if (val.indexOf('C') === 0 && val.length === 1) {
+        updated.colors = [];
+      } else {
+        updated.colors = val;
+      }
     }
 
     var filterobj = null;
