@@ -336,21 +336,25 @@ if (canEdit) {
       $('#cubeSaveModal').modal('show');
     });
   });
-  $('#editSelected').click(function(e) {
+  $('#massEdit').click(function(e) {
     e.preventDefault();
-    groupSelect = [];
-    cube.forEach(function(card, index) {
-      if (card.checked) {
-        groupSelect.push(card);
+    if (view == 'list') {
+      groupSelect = [];
+      cube.forEach(function(card, index) {
+        if (card.checked) {
+          groupSelect.push(card);
+        }
+      });
+      if (groupSelect.length == 0) {
+        $('#selectEmptyModal').modal('show');
+      } else if (groupSelect.length == 1) {
+        card = groupSelect[0];
+        show_contextModal(card);
+      } else {
+        show_groupContextModal();
       }
-    });
-    if (groupSelect.length == 0) {
-      $('#selectEmptyModal').modal('show');
-    } else if (groupSelect.length == 1) {
-      card = groupSelect[0];
-      show_contextModal(card);
     } else {
-      show_groupContextModal();
+      $('#viewSelect').val('list').change();
     }
   });
 }
@@ -977,6 +981,11 @@ function filteredCube() {
 }
 
 function updateCubeList() {
+  if (view == 'list') {
+    $('#massEdit').text('Edit Selected');
+  } else {
+    $('#massEdit').text('Mass Edit');
+  }
   switch (view) {
     case 'table':
       renderTableView();
