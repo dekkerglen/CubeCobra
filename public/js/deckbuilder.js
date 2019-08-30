@@ -133,11 +133,11 @@ function saveDraft(callback) {
       'Content-Type': 'application/json'
     }
   }).then()
-    if (callback) {
-      callback();
-    }
-  };
-  
+  if (callback) {
+    callback();
+  }
+};
+
 function renderDraft() {
   setupColumns();
 
