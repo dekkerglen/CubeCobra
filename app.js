@@ -60,9 +60,8 @@ app.use(session({
   secret: secrets.session,
   resave: true,
   saveUninitialized: true,
-  cookie: {
+  cooke: {
     secure: true,
-    maxAge: 365 * 24 * 60 * 60 * 1000
   }
 }));
 
