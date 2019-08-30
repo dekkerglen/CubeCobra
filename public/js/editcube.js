@@ -1479,7 +1479,7 @@ function renderTableView() {
     }
   });
 
-  var colWidth = (!comparing) ? Math.max(10, 100.0 / count) : 60;
+  var colWidth = Math.max(10, 100.0 / count);
 
   var res = '<div class="row no-gutters even-cols">';
 
@@ -1488,7 +1488,9 @@ function renderTableView() {
 
     if (Object.keys(column).length > 0) {
       let comp_class = (comparing) ? 'compare-col' : '';
-      res += '<div class="col-even ' + comp_class + '" style="width: ' + colWidth + '%;">'
+      res += '<div class="col-even ' + comp_class + '"'
+      if (comparing) res += '>';
+      else res += ' style="width: ' + colWidth + '%;">';
 
       if (comparing) {
         let first_header = (col_index === 0) ? 'first-compare-header' : '';
@@ -1613,10 +1615,11 @@ function renderTableView() {
         }
 
         cmc_sections.forEach(function(section, section_index) {
-          res += '<div class="cmc-group row no-gutters">'
+          res += '<div class="cmc-group row no-gutters">';
 
+          let col_size = (section.length === 3) ? '33' : '100';
           section.forEach(function(column, column_index) {
-            res += '<div class="col">'
+            res += '<div class="col" style="width: ' + col_size + '%;">';
 
             column.forEach(function(card, index) {
               if (card.details.image_flip) {
