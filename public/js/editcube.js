@@ -153,7 +153,7 @@ if (canEdit) {
       updated.type_line = val;
     }
     val = [];
-    ['W', 'U', 'B', 'R', 'G'].forEach(function(color, index) {
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(color, index) {
       if ($('#groupContextModalCheckbox' + color).prop('checked')) {
         val.push(color);
       }
@@ -336,21 +336,25 @@ if (canEdit) {
       $('#cubeSaveModal').modal('show');
     });
   });
-  $('#editSelected').click(function(e) {
+  $('#massEdit').click(function(e) {
     e.preventDefault();
-    groupSelect = [];
-    cube.forEach(function(card, index) {
-      if (card.checked) {
-        groupSelect.push(card);
+    if (view == 'list') {
+      groupSelect = [];
+      cube.forEach(function(card, index) {
+        if (card.checked) {
+          groupSelect.push(card);
+        }
+      });
+      if (groupSelect.length == 0) {
+        $('#selectEmptyModal').modal('show');
+      } else if (groupSelect.length == 1) {
+        card = groupSelect[0];
+        show_contextModal(card);
+      } else {
+        show_groupContextModal();
       }
-    });
-    if (groupSelect.length == 0) {
-      $('#selectEmptyModal').modal('show');
-    } else if (groupSelect.length == 1) {
-      card = groupSelect[0];
-      show_contextModal(card);
     } else {
-      show_groupContextModal();
+      $('#viewSelect').val('list').change();
     }
   });
 }
@@ -977,6 +981,11 @@ function filteredCube() {
 }
 
 function updateCubeList() {
+  if (view == 'list') {
+    $('#massEdit').text('Edit Selected');
+  } else {
+    $('#massEdit').text('Mass Edit');
+  }
   switch (view) {
     case 'table':
       renderTableView();
@@ -1479,7 +1488,7 @@ function renderTableView() {
     }
   });
 
-  var colWidth = (!comparing) ? Math.max(10, 100.0 / count) : 60;
+  var colWidth = Math.max(10, 100.0 / count);
 
   var res = '<div class="row no-gutters even-cols">';
 
@@ -1488,7 +1497,9 @@ function renderTableView() {
 
     if (Object.keys(column).length > 0) {
       let comp_class = (comparing) ? 'compare-col' : '';
-      res += '<div class="col-even ' + comp_class + '" style="width: ' + colWidth + '%;">'
+      res += '<div class="col-even ' + comp_class + '"'
+      if (comparing) res += '>';
+      else res += ' style="width: ' + colWidth + '%;">';
 
       if (comparing) {
         let first_header = (col_index === 0) ? 'first-compare-header' : '';
@@ -1613,10 +1624,11 @@ function renderTableView() {
         }
 
         cmc_sections.forEach(function(section, section_index) {
-          res += '<div class="cmc-group row no-gutters">'
+          res += '<div class="cmc-group row no-gutters">';
 
+          let col_size = (section.length === 3) ? '33' : '100';
           section.forEach(function(column, column_index) {
-            res += '<div class="col">'
+            res += '<div class="col" style="width: ' + col_size + '%;">';
 
             column.forEach(function(card, index) {
               if (card.details.image_flip) {

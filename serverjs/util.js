@@ -123,7 +123,8 @@ var methods = {
       p = l;
     }
     return ret;
-  }
+  },
+  generate_edit_token:generate_edit_token
 }
 
 module.exports = methods;
