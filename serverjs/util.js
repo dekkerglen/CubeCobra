@@ -1,5 +1,9 @@
 var shuffleSeed = require('shuffle-seed');
 
+function generate_edit_token() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 function add_word(obj, word) {
   if (word.length <= 0) {
     return;
