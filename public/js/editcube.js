@@ -31,7 +31,11 @@ cube.forEach(function(card, index) {
 
 $('#compareButton').click(function(e) {
   const id_a = $('#cubeID').val();
-  const id_b = $('#compareInput').val();
+  let id_b = $('#compareInput').val();
+  if (id_b.includes('/')) {
+    let parts = id_b.split('/');
+    id_b = parts[parts.length - 1];
+  }
   if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
 });
 
