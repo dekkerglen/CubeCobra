@@ -59,9 +59,8 @@ app.use(session({
   secret: 'vertical donkey gatorade helicopter',
   resave: false,
   saveUninitialized: true,
-  cookie: {
-    secure: true,
-    maxAge: 365 * 24 * 60 * 60 * 1000
+  cooke: {
+    secure: true
   }
 }));
 
