@@ -153,7 +153,7 @@ if (canEdit) {
       updated.type_line = val;
     }
     val = [];
-    ['W', 'U', 'B', 'R', 'G'].forEach(function(color, index) {
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(color, index) {
       if ($('#groupContextModalCheckbox' + color).prop('checked')) {
         val.push(color);
       }
