@@ -7,56 +7,71 @@ block content
 	.cubenav
 		ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
 			li.nav-item
-				h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-					if cube.type
-						| (#{cube.card_count} Card #{cube.type} Cube)
-			li.nav-item
-				a.nav-link(href='/cube/overview/'+cube._id) Overview
-			li.nav-item
-				a.nav-link.active(href='/cube/list/'+cube._id) List
-			li.nav-item
-				a.nav-link(href='/cube/playtest/'+cube._id) Playtest
-			li.nav-item
-				a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-			li.nav-item(style='padding-right:10px;')
-				a.nav-link(href='/cube/blog/'+cube._id) Blog
+				if !cubeB
+					h6(href='#' style='color: #218937;padding:5px;') #{cube.name}
+						if cube.type
+							| (#{cube.card_count} Card #{cube.type} Cube)
+				else
+					h5(href='#' style='color: #218937;padding:5px;') Compare Cubes
+					h6(href='#' style='color: #218937;padding:5px;')
+						span(style='color: #495057; padding:5px;') Base Cube:
+						a(href='/cube/list/'+cube._id style='color: #218937;padding:5px;') #{cube.name} 
+							| (#{cube.card_count} cards)
+						span(style='color: #495057; padding:5px;') Comparison Cube:
+						a(href='/cube/list/'+cubeB._id style='color: #218937;padding:5px;') #{cubeB.name} 
+							| (#{cubeB.card_count} cards)
+			if !cubeB
+				li.nav-item
+					a.nav-link(href='/cube/overview/'+cube._id) Overview
+				li.nav-item
+					a.nav-link.active(href='/cube/list/'+cube._id) List
+				li.nav-item
+					a.nav-link(href='/cube/playtest/'+cube._id) Playtest
+				li.nav-item
+					a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+				li.nav-item(style='padding-right:10px;')
+					a.nav-link(href='/cube/blog/'+cube._id) Blog
 	//edit controls    
 	.usercontrols
 		nav.navbar.navbar-expand.navbar-light
 			.collapse.navbar-collapse
 				ul.navbar-nav          
-					li.nav-item(style='padding-right:10px')
-						select#viewSelect.form-control
-							option(selected='' value='table') Table View
-							option(value='spoiler') Visual Spoiler
-							if user
-								if user.id == cube.owner
-									option(value='list') List View
-							option(value='curve') Curve View
-					if user
-						if user.id == cube.owner
-							li.nav-item
-								a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
+					if !cubeB
+						li.nav-item(style='padding-right:10px')
+							select#viewSelect.form-control
+								option(selected='' value='table') Table View
+								option(value='spoiler') Visual Spoiler
+								if user
+									if user.id == cube.owner
+										option(value='list') List View
+								option(value='curve') Curve View
+						if user
+							if user.id == cube.owner
+								li.nav-item
+									a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
 					li.nav-item
 						a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
 					li.nav-item
 						a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-					if user
-						if user.id == cube.owner
-							li.nav-item
-								a(href="#")#editSelected.nav-link Edit Selected
-							li.nav-item.dropdown
-								a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
-								.dropdown-menu(aria-labelledby='bulkdropdown')
-									a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
-									a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
-									a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
-					li.nav-item.dropdown
-						a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
-						.dropdown-menu(aria-labelledby='exportdropdown')
-							a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
-							a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
-								br
+					if !cubeB
+						li.nav-item
+							a.nav-link(href='#', data-toggle="collapse" data-target="#navcompare" aria-controls="navcompare" aria-expanded="false" aria-label="Toggle navigation") Compare
+						if user
+							if user.id == cube.owner
+								li.nav-item
+									a(href="#")#editSelected.nav-link Edit Selected
+								li.nav-item.dropdown
+									a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
+									.dropdown-menu(aria-labelledby='bulkdropdown')
+										a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
+										a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
+										a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
+						li.nav-item.dropdown
+							a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
+							.dropdown-menu(aria-labelledby='exportdropdown')
+								a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
+								a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
+									br
 		#accordion.accordion
 			if user
 				if user.id == cube.owner
@@ -117,7 +132,7 @@ block content
 						.col
 							button.updateButton.btn.btn-success(type='button') Update Table
 							a   
-							if user && user.id == cube.owner
+							if user && user.id == cube.owner && !cubeB
 								button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
 							br
 							br                
@@ -138,11 +153,25 @@ block content
 							button.updateButton.btn.btn-success(type='button') Update Table
 							br
 							br           
+			#navcompare.collapse(data-parent='#accordion')
+				.container
+					.row
+						.col
+							form(autocomplete='off').form-inline
+								.mb-2
+									input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
+								button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
+								br
+								br           
 
 	include ../flash
 
 
 	input#cubeID(type='hidden', name='cubeID', value=cube._id)     
+	if cubeB
+		input#in_both(type='hidden', name='in_both', value=in_both)
+		input#only_a(type='hidden', name='only_a', value=only_a)
+		input#only_b(type='hidden', name='only_b', value=only_b)
 	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
 	if user && user.id == cube.owner
 		input#edittoken(type='hidden', name='edittoken', value=edittoken)
@@ -155,7 +184,7 @@ block content
 	.container#cubelistarea
 
 	//group context modal
-	if user && user.id == cube.owner
+	if user && user.id == cube.owner && !cubeB
 		#groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
 			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
 				.modal-content
@@ -239,7 +268,7 @@ block content
 							input.btn.btn-secondary(type='submit',value='Buy all')
 						button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
 
-	if user && user.id == cube.owner
+	if user && user.id == cube.owner && !cubeB
 		// Modal
 		#contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
 			.modal-dialog.modal-dialog-centered.modal-lg(role='document')
