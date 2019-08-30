@@ -132,11 +132,12 @@ function saveDraft(callback) {
     headers: {
       'Content-Type': 'application/json'
     }
-  }).then()
-  if (callback) {
-    callback();
-  }
-};
+  }).then(function() {
+    if (callback) {
+      callback();
+    }
+  });
+}
 
 function renderDraft() {
   setupColumns();
