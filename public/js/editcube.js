@@ -14,11 +14,11 @@ var modalSelect = null;
 var view = $('#viewSelect').val();
 
 var comparing = false;
-if($('#in_both').length) {
+if ($('#in_both').length) {
   comparing = true;
   var in_both = JSON.parse($('#in_both').val());
-  var only_a  = JSON.parse($('#only_a').val());
-  var only_b  = JSON.parse($('#only_b').val());
+  var only_a = JSON.parse($('#only_a').val());
+  var only_b = JSON.parse($('#only_b').val());
   view = 'table';
 }
 
@@ -32,7 +32,7 @@ cube.forEach(function(card, index) {
 $('#compareButton').click(function(e) {
   const id_a = $('#cubeID').val();
   const id_b = $('#compareInput').val();
-  if(id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
+  if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
 });
 
 $('#addFilterButton').click(function(e) {
@@ -535,7 +535,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist','CMC','Color Category','Color Count','Color Identity','Color','Guilds','Legality','Loyalty','Manacost Type','Power','Price','Price Foil','Rarity','Set','Shards / Wedges','Status','Subtype','Supertype','Tags','Toughness','Type','Types-Multicolor'];
+  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
 
 }
 
@@ -690,12 +690,9 @@ function getLabels(sort) {
     return ['Gold', 'Hybrid', 'Phyrexian'];
   } else if (sort == 'CNC') {
     return ['Creature', 'Non-Creature'];
-  }
-  else if (sort == 'Price' || sort == 'Price Foil')
-  {
+  } else if (sort == 'Price' || sort == 'Price Foil') {
     var labels = [];
-    for(i = 0; i <= price_buckets.length;i++)
-    {
+    for (i = 0; i <= price_buckets.length; i++) {
       labels.push(price_bucket_label(i));
     }
     labels.push("No Price Available");
@@ -871,17 +868,13 @@ function show_contextModal(card) {
     $('#contextModalCheckbox' + color).prop('checked', card.colors.includes(color));
   });
 
-  $('#contextScryfallButton').attr('href',card.details.scryfall_uri);
-  if(card.details.tcgplayer_id)
-  {
-    $('#contextBuyButton').attr('href','https://shop.tcgplayer.com/product/productsearch?id='+card.details.tcgplayer_id+'&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-  }
-  else
-  {
-    var name = card.details.name.replace('?','-q-');
-    while(name.includes('//'))
-    {
-      name = name.replace('//','-slash-');
+  $('#contextScryfallButton').attr('href', card.details.scryfall_uri);
+  if (card.details.tcgplayer_id) {
+    $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/product/productsearch?id=' + card.details.tcgplayer_id + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
+  } else {
+    var name = card.details.name.replace('?', '-q-');
+    while (name.includes('//')) {
+      name = name.replace('//', '-slash-');
     }
     $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName=' + name + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
@@ -1481,33 +1474,35 @@ function renderTableView() {
     }
   });
 
-  var colWidth = (!comparing) ? Math.max(10,100.0 / count) : 60;
+  var colWidth = (!comparing) ? Math.max(10, 100.0 / count) : 60;
 
   var res = '<div class="row no-gutters even-cols">';
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
 
-    if(Object.keys(column).length > 0) {
+    if (Object.keys(column).length > 0) {
       let comp_class = (comparing) ? 'compare-col' : '';
-      res += '<div class="col-even ' + comp_class + '" style="width: '+colWidth+'%;">'
+      res += '<div class="col-even ' + comp_class + '" style="width: ' + colWidth + '%;">'
 
-      if(comparing) {
-        let first_header = ( col_index === 0 ) ? 'first-compare-header' : '';
+      if (comparing) {
+        let first_header = (col_index === 0) ? 'first-compare-header' : '';
         res += '<div class="col-even compare-header ' + first_header + '">'
         res += '<div class="row">'
         res += '<div class="col">'
-        res += '<h6 class="text-center compare-title">'+ column_label + '</h6>';
+        res += '<h6 class="text-center compare-title">' + column_label + '</h6>';
         res += '</div>'
         res += '</div>'
 
-        let in_both_count = 0, only_a_count = 0, only_b_count = 0;
+        let in_both_count = 0,
+          only_a_count = 0,
+          only_b_count = 0;
         Object.keys(column).forEach(function(rowgroup_label, index) {
           let rowgroup = column[rowgroup_label];
           rowgroup.forEach(function(card, index) {
-              if(in_both.includes(card.details.name)) in_both_count++;
-              else if(only_a.includes(card.details.name)) only_a_count++;
-              else if(only_b.includes(card.details.name)) only_b_count++;
+            if (in_both.includes(card.details.name)) in_both_count++;
+            else if (only_a.includes(card.details.name)) only_a_count++;
+            else if (only_b.includes(card.details.name)) only_b_count++;
           });
         });
 
@@ -1524,97 +1519,114 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<h6 class="text-center">'+column_label+ ' <br/>('+ columnLength(sorts[0],column_label) + ')</h6>';
+        res += '<h6 class="text-center">' + column_label + ' <br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index) {
-          var rowgroup = column[rowgroup_label];
-          rowgroup.sort(function(x, y) {
-            if (x.cmc < y.cmc) {
-              return -1;
-            }
-            if (x.cmc > y.cmc) {
-              return 1;
-            }
-            if (x.details.name < y.details.name) {
-              return -1;
-            }
-            if (x.details.name > y.details.name) {
-              return 1;
-            }
-            return 0;
-          });
-
-          let i = 0;
-          // if we are comparing two cubes, cmc_sections has three columns, otherwise it has one column.
-          // the outer list has an item for each cmc. the middle list has an item for each column,
-          // and the inner lists contain the cards.
-          let cmc_sections = (!comparing) ? [[[]]] : [[[],[],[]]];
-          let cmc = rowgroup[0].cmc;
-          rowgroup.forEach(function(card, index) {
-            if(card.cmc != cmc) {
-              if(!comparing) cmc_sections.push([[]]);
-              else cmc_sections.push([[],[],[]]);
-              cmc = card.cmc;
-              i++;
-            }
-            if(comparing) {
-              if(in_both.includes(card.details.name)) cmc_sections[i][0].push(card);
-              else if(only_a.includes(card.details.name)) cmc_sections[i][1].push(card);
-              else if(only_b.includes(card.details.name)) cmc_sections[i][2].push(card);
-            }
-            else cmc_sections[i][0].push(card);
-          });
-
-          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
-
-          if(comparing) {
-            let in_both_count = 0, only_a_count = 0, only_b_count = 0;
-            rowgroup.forEach(function(card, index) {
-                if(in_both.includes(card.details.name)) in_both_count++;
-                else if(only_a.includes(card.details.name)) only_a_count++;
-                else if(only_b.includes(card.details.name)) only_b_count++;
-            });
-
-            res += '<div class="list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">';
-            res += '<div class="row no-gutters">';
-            res += '<div class="col">' + rowgroup_label + '</div>';
-            res += '</div>';
-            res += '<div class="row no-gutters">';
-            res += '<div class="col">(' + in_both_count + ')</div>';
-            res += '<div class="col">(' + only_a_count + ')</div>';
-            res += '<div class="col">(' + only_b_count + ')</div>';
-            res += '</div>';
-            res += '</div>';
-          } else {
-            res += '<a '
-            if(canEdit) {
-              res += 'href="#"'
-            }
-            res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="'+column_label+'" secondarysort="'+rowgroup_label+'">' + rowgroup_label +' ('+ rowgroup.length + ')</a>';
-          
+        var rowgroup = column[rowgroup_label];
+        rowgroup.sort(function(x, y) {
+          if (x.cmc < y.cmc) {
+            return -1;
           }
+          if (x.cmc > y.cmc) {
+            return 1;
+          }
+          if (x.details.name < y.details.name) {
+            return -1;
+          }
+          if (x.details.name > y.details.name) {
+            return 1;
+          }
+          return 0;
+        });
 
-          cmc_sections.forEach(function(section, section_index) {
-            res += '<div class="cmc-group row no-gutters">'
+        let i = 0;
+        // if we are comparing two cubes, cmc_sections has three columns, otherwise it has one column.
+        // the outer list has an item for each cmc. the middle list has an item for each column,
+        // and the inner lists contain the cards.
+        let cmc_sections = (!comparing) ? [
+          [
+            []
+          ]
+        ] : [
+          [
+            [],
+            [],
+            []
+          ]
+        ];
+        let cmc = rowgroup[0].cmc;
+        rowgroup.forEach(function(card, index) {
+          if (card.cmc != cmc) {
+            if (!comparing) cmc_sections.push([
+              []
+            ]);
+            else cmc_sections.push([
+              [],
+              [],
+              []
+            ]);
+            cmc = card.cmc;
+            i++;
+          }
+          if (comparing) {
+            if (in_both.includes(card.details.name)) cmc_sections[i][0].push(card);
+            else if (only_a.includes(card.details.name)) cmc_sections[i][1].push(card);
+            else if (only_b.includes(card.details.name)) cmc_sections[i][2].push(card);
+          } else cmc_sections[i][0].push(card);
+        });
 
-            section.forEach(function(column, column_index) {
-              res += '<div class="col">'
+        res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
 
-              column.forEach(function(card, index) {
-                if(card.details.image_flip) {
-                  res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_flip="' + card.details.image_flip +'" card_tags="' + card.tags + '">';
-                } else {
-                  res += '<a href="#" cardIndex="'+card.index+'" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal +'" card_tags="' + card.tags + '">';
-                }
-                res += card.details.name+'</a>';
-              });
+        if (comparing) {
+          let in_both_count = 0,
+            only_a_count = 0,
+            only_b_count = 0;
+          rowgroup.forEach(function(card, index) {
+            if (in_both.includes(card.details.name)) in_both_count++;
+            else if (only_a.includes(card.details.name)) only_a_count++;
+            else if (only_b.includes(card.details.name)) only_b_count++;
+          });
 
-              res += '</div>'
+          res += '<div class="list-group-item list-group-heading" primarysort="' + column_label + '" secondarysort="' + rowgroup_label + '">';
+          res += '<div class="row no-gutters">';
+          res += '<div class="col">' + rowgroup_label + '</div>';
+          res += '</div>';
+          res += '<div class="row no-gutters">';
+          res += '<div class="col">(' + in_both_count + ')</div>';
+          res += '<div class="col">(' + only_a_count + ')</div>';
+          res += '<div class="col">(' + only_b_count + ')</div>';
+          res += '</div>';
+          res += '</div>';
+        } else {
+          res += '<a '
+          if (canEdit) {
+            res += 'href="#"'
+          }
+          res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="' + column_label + '" secondarysort="' + rowgroup_label + '">' + rowgroup_label + ' (' + rowgroup.length + ')</a>';
+
+        }
+
+        cmc_sections.forEach(function(section, section_index) {
+          res += '<div class="cmc-group row no-gutters">'
+
+          section.forEach(function(column, column_index) {
+            res += '<div class="col">'
+
+            column.forEach(function(card, index) {
+              if (card.details.image_flip) {
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+              } else {
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+              }
+              res += card.details.name + '</a>';
             });
 
             res += '</div>'
           });
+
+          res += '</div>'
+        });
 
         res += '</ul>';
       });
