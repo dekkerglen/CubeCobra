@@ -56,7 +56,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Express session middleware
 app.use(session({
-  secret: 'vertical donkey gatorade helicopter',
+  secret: 'zzzzzzzzdddzzzzzzzzzzzzzzzz',
   resave: true,
   saveUninitialized: true,
   cooke: {
