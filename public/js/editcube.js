@@ -541,6 +541,7 @@ function GetColorIdentity(colors) {
 function getSorts() {
   return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
 
+
 }
 
 function getLabels(sort) {
