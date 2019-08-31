@@ -573,6 +573,18 @@ function getLabels(sort) {
       });
     });
     return tags.sort();
+  } else if (sort == 'Date Added') {
+    var days = [], formattedDay, addedTmsp;
+    cube.forEach(function(card, index) {
+      if (card.addedTmsp !== undefined) {
+        addedTmsp = new Date(card.addedTmsp);
+        formattedDay = addedTmsp.getFullYear() + "-" + addedTmsp.getMonth() + "-" + addedTmsp.getDate();
+        if (!days.includes(formattedDay)) {
+            days.push(formattedDay);
+        }
+      }
+    });
+    return days.sort();
   } else if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned'];
   } else if (sort == 'Guilds') {
