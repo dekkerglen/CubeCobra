@@ -74,7 +74,7 @@
 }
 
 .even-cols .col-even {
-	padding: 1px 3px;
+	padding: 1px 2px;
 }
 
 .list-group-item {
@@ -134,19 +134,19 @@
 
 .card-list-item {
 	transition: .25s;
-	font-size: 12px;
+	font-size: 11px;
 	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 .card-list-item:not(:hover){
-	padding: 3px 6px;
+	padding: 3px 4px;
 	color: black;
 	text-decoration: none;
 }
 .card-list-item:hover{
-	padding: 3px 6px;
+	padding: 3px 4px;
 	color: black;
 	text-decoration: none;
 }
@@ -294,7 +294,7 @@ border-bottom: none;
 .card-price {
   border-radius: 3px;
 	padding: 2px;
-	margin: 2px; 
+	margin: 2px;
   border: 1px solid #CED4DA;
 }
 

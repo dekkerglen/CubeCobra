@@ -142,6 +142,12 @@ function cardIsLabel(card, label, sort) {
     return card.tags.includes(label);
   } else if (sort == 'Status') {
     return card.status == label;
+  } else if (sort == 'Date Added') {
+    var day = ISODateToYYYYMMDD(card.addedTmsp);
+    if (day === undefined) {
+      day = "unknown";
+    }
+    return label === day;
   } else if (sort == 'Guilds') {
     if (card.colors.length != 2) {
       return false;
