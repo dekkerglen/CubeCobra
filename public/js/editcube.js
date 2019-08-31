@@ -574,14 +574,11 @@ function getLabels(sort) {
     });
     return tags.sort();
   } else if (sort == 'Date Added') {
-    var days = [], formattedDay, addedTmsp;
+    var days = [], formattedDay;
     cube.forEach(function(card, index) {
-      if (card.addedTmsp !== undefined) {
-        addedTmsp = new Date(card.addedTmsp);
-        formattedDay = addedTmsp.getFullYear() + "-" + addedTmsp.getMonth() + "-" + addedTmsp.getDate();
-        if (!days.includes(formattedDay)) {
-            days.push(formattedDay);
-        }
+      formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
+      if (formattedDay !== undefined && !days.includes(formattedDay)) {
+        days.push(formattedDay);
       }
     });
     return days.sort();

@@ -143,12 +143,7 @@ function cardIsLabel(card, label, sort) {
   } else if (sort == 'Status') {
     return card.status == label;
   } else if (sort == 'Date Added') {
-    var addedTmsp = card.addedTmsp, formattedDay;
-    if (addedTmsp !== undefined) {
-      addedTmsp = new Date(addedTmsp);
-      formattedDay = addedTmsp.getFullYear() + "-" + addedTmsp.getMonth() + "-" + addedTmsp.getDate();
-    }
-    return label === formattedDay;
+    return label === ISODateToYYYYMMDD(card.addedTmsp);
   } else if (sort == 'Guilds') {
     if (card.colors.length != 2) {
       return false;
