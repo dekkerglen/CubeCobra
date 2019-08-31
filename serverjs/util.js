@@ -1,7 +1,41 @@
 var shuffleSeed = require('shuffle-seed');
+var Filter = require('bad-words');
+let Cube = require('../models/cube');
 
 function generate_edit_token() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+function to_base_36(num) {
+  return num.toString(36);
+}
+
+function from_base_36(str) {
+  if (!str) return 0;
+  return parseInt(str, 36);
+}
+
+function generate_short_id(callback) {
+  Cube.find({}, function(err, cubes) {
+    const short_ids = cubes.map(cube => cube.shortID);
+    const url_aliases = cubes.map(cube => cube.url_alias);
+
+    const ids = cubes.map(cube => from_base_36(cube.shortID));
+    let max = Math.max(...ids);
+
+    let new_id = '';
+		let filter = new Filter();
+
+		while(true) {
+			max++;
+			new_id = to_base_36(max);
+			if (!filter.isProfane(new_id) &&
+				  !short_ids.includes(new_id) &&
+				  !url_aliases.includes(new_id)) break;
+		}
+
+    callback(new_id);
+  });
 }
 
 function add_word(obj, word) {
@@ -88,8 +122,8 @@ var methods = {
     });
     return res;
   },
-  binaryInsert: binaryInsert,
-  addCardToCube: addCardToCube,
+  binaryInsert,
+  addCardToCube,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -124,7 +158,8 @@ var methods = {
     }
     return ret;
   },
-  generate_edit_token: generate_edit_token
+  generate_edit_token,
+  generate_short_id,
 }
 
 module.exports = methods;

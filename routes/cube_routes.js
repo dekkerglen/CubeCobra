@@ -174,27 +174,30 @@ router.post('/add', ensureAuth, function(req, res) {
         owner: user._id
       }, function(err, cubes) {
         if (cubes.length < 24) {
-          let cube = new Cube();
-          cube.name = req.body.name;
-          cube.owner = req.user._id;
-          cube.cards = [];
-          cube.decks = [];
-          cube.articles = [];
-          cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
-          cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
-          cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
-          cube.description = "This is a brand new cube!";
-          cube.owner_name = user.username;
-          cube.date_updated = Date.now();
-          cube.updated_string = cube.date_updated.toLocaleString("en-US");
-          cube = setCubeType(cube, carddb);
-          cube.save(function(err) {
-            if (err) {
-              console.log(err, req);
-            } else {
-              req.flash('success', 'Cube Added');
-              res.redirect('/cube/overview/' + cube._id);
-            }
+          util.generate_short_id(function(short_id) {
+            let cube = new Cube();
+            cube.shortID = short_id;
+            cube.name = req.body.name;
+            cube.owner = req.user._id;
+            cube.cards = [];
+            cube.decks = [];
+            cube.articles = [];
+            cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
+            cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
+            cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
+            cube.description = "This is a brand new cube!";
+            cube.owner_name = user.username;
+            cube.date_updated = Date.now();
+            cube.updated_string = cube.date_updated.toLocaleString("en-US");
+            cube = setCubeType(cube, carddb);
+            cube.save(function(err) {
+              if (err) {
+                console.log(err, req);
+              } else {
+                req.flash('success', 'Cube Added');
+                res.redirect('/cube/overview/' + cube._id);
+              }
+            });
           });
         } else {
           req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
