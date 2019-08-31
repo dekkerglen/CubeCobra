@@ -12,6 +12,7 @@ const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
+const secrets = require('../cubecobrasecrets/secrets');
 
 // Connect db
 mongoose.connect(config.database);
@@ -56,11 +57,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Express session middleware
 app.use(session({
-  secret: 'vertical donkey gatorade helicopter',
-  resave: false,
+  secret: secrets.session,
+  resave: true,
   saveUninitialized: true,
   cooke: {
-    secure: true
+    secure: true,
   }
 }));
 
