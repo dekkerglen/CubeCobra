@@ -577,7 +577,10 @@ function getLabels(sort) {
     var days = [], formattedDay;
     cube.forEach(function(card, index) {
       formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
-      if (formattedDay !== undefined && !days.includes(formattedDay)) {
+      if (formattedDay === undefined) {
+          formattedDay = "unknown";
+      }
+      if (!days.includes(formattedDay)) {
         days.push(formattedDay);
       }
     });
