@@ -48,6 +48,14 @@ $(document).ready(function() {
   })
 });
 
+function ISODateToYYYYMMDD(dateString) {
+    if (dateString === undefined) {
+      return undefined;
+    }
+    var date = new Date(dateString);
+    return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
+}
+
 function toggleRecent() {
   var x = document.getElementById("recentMore");
   if (x.innerHTML === "View More...") {
