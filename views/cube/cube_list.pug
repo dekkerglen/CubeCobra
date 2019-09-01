@@ -174,7 +174,7 @@ block content
 		input#only_b(type='hidden', name='only_b', value=only_b)
 	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
 	if user && user.id == cube.owner
-		input#edittoken(type='hidden', name='edittoken', value=edittoken)
+		input#edittoken(type='hidden', name='edittoken', value='edit')
 	if cube.default_sorts        
 		input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])        
 		input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])        
