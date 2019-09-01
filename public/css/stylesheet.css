@@ -152,11 +152,6 @@
 }
 
 
-.card-list-item{
-	border-top-width: 0;
-	border-bottom-width: 0;
-}
-
 .cmc-group:first-of-type .card-list-item:first-of-type{
 	border-top-width: 0;
 }
@@ -164,18 +159,6 @@
 	border-bottom-width: 0;
 }
 
-.card-list-item:first-of-type {
-	border-left-width: 0;
-	border-right-width: 0;
-	border-top-width:3px;
-	border-style: solid
-}
-.card-list-item:last-of-type {
-	border-left-width: 0;
-	border-right-width: 0;
-	border-bottom-width: 3px;
-	border-style: solid
-}
 .white:not(:hover) {
 	background-color: #ffffeb;
 }
