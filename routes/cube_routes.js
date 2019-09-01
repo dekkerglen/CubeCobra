@@ -172,15 +172,15 @@ function cardHtml(card) {
 }
 
 function addCardHtml(card) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ' + cardHtml(card) + '<br/>';
+  return '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' + cardHtml(card) + '<br/>';
 }
 
 function removeCardHtml(card) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">-</span> ' + cardHtml(card) + '<br/>';
+  return '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' + cardHtml(card) + '<br/>';
 }
 
 function replaceCardHtml(oldCard, newCard) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' &gt; ' + cardHtml(newCard) + '<br/>';
+  return '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' &gt; ' + cardHtml(newCard) + '<br/>';
 }
 
 function notPromoOrDigitalId(id) {
