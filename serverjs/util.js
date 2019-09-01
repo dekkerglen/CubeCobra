@@ -18,7 +18,7 @@ function from_base_36(str) {
 function generate_short_id(callback) {
   Cube.find({}, function(err, cubes) {
     const short_ids = cubes.map(cube => cube.shortID);
-    const url_aliases = cubes.map(cube => cube.url_alias);
+    const url_aliases = cubes.map(cube => cube.urlAlias);
 
     const ids = cubes.map(cube => from_base_36(cube.shortID));
     let max = Math.max(...ids);
