@@ -23,10 +23,6 @@
 	border-color: #d6e9c6;
 }
 
-* {
-	box-sizing: border-box;
-}
-
 .nav-pills .nav-link.active {
 	background-color: #28A745;
 }
@@ -286,4 +282,8 @@ border-bottom: none;
 	border-radius: 10px 10px 0 0;
 	overflow: hidden;
 	background: #fff;
+}
+
+.color-column {
+	padding: 2px 2px;
 }

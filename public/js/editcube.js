@@ -1491,18 +1491,16 @@ function renderTableView() {
     }
   });
 
-  var colWidth = Math.max(10, 100.0 / count);
-
-  var res = '<div class="row no-gutters even-cols">';
+  var res = '<div class="row" style="margin: 0 -17px">';
+  res += `<style>@media(min-width: 992px) { .color-column { max-width: ${100 / Object.keys(columns).length}%; } }</style>`;
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
 
     if (Object.keys(column).length > 0) {
       let comp_class = (comparing) ? 'compare-col' : '';
-      res += '<div class="col-even ' + comp_class + '"'
-      if (comparing) res += '>';
-      else res += ' style="width: ' + colWidth + '%;">';
+      let colWidth = 100 * 1 / Object.keys(columns).length;
+      res += '<div class="color-column col-12 col-sm-6 col-md-3 col-lg-auto ' + comp_class + '">';
 
       if (comparing) {
         let first_header = (col_index === 0) ? 'first-compare-header' : '';
@@ -1538,7 +1536,7 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<h6 class="text-center">' + column_label + ' <br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
+        res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index) {
