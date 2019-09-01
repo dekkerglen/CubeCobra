@@ -68,9 +68,21 @@ function addCardToCube(cube, card_details, idOverride) {
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
-    type: card_details.type,
+    type_line: card_details.type,
     addedTmsp: new Date()
   });
+}
+
+// Access Control
+function ensureAuth(req, res, next) {
+  console.log("checking auth");
+  if (req.isAuthenticated()) {
+    console.log("auth success");
+    return next();
+  } else {
+    req.flash('danger', 'Please login to view this content');
+    res.redirect('/user/login');
+  }
 }
 
 var methods = {
@@ -91,6 +103,7 @@ var methods = {
   },
   binaryInsert: binaryInsert,
   addCardToCube: addCardToCube,
+  ensureAuth,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
