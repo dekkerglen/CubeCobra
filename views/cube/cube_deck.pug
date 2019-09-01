@@ -41,32 +41,25 @@ block content
   .row
     each deck, i in bot_decks
       .col        
-        h6 #{bots[i]}
-        ul.list-group
+        
+        div.list-group.list-outline
+          span.list-group-heading.list-group-item #{bots[i]}
           each card, j in bot_decks[i]
             if card.colorcategory == 'w'
-              li.list-group-item.autocard.white(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.white.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'u'
-              li.list-group-item.autocard.blue(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.blue.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'b'
-              li.list-group-item.autocard.black(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.black.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'r'
-              li.list-group-item.autocard.red(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.red.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'g'
-              li.list-group-item.autocard.green(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.green.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'c'
-              li.list-group-item.autocard.colorless(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.colorless.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'm'
-              li.list-group-item.autocard.multi(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.multi.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'l'
-              li.list-group-item.autocard.lands(card=card.image_normal card_flip=card.image_flip)
-                a.card-list-item= card.name
+              a.list-group-item.autocard.lands.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
                 
   script(src='/js/deck.js')
