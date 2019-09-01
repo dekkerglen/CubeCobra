@@ -486,7 +486,6 @@ router.get('/blog/:id', function(req, res) {
 router.get('/compare/:id_a/to/:id_b', function(req, res) {
   const id_a = req.params.id_a;
   const id_b = req.params.id_b;
-  const user_id = req.user ? req.user._id : '';
   Cube.findById(id_a, function(err, cubeA) {
     Cube.findById(id_b, function(err, cubeB) {
       if (!cubeA) {
@@ -496,101 +495,85 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
         req.flash('danger', 'Comparison cube was not found');
         res.redirect('/cube/list/' + id_a);
       } else {
-        User.findById(user_id, function(err, currentuser) {
-          if (!currentuser) build_response();
-          else {
-            if (!currentuser.edit_token || currentuser.edit_token.length <= 0) {
-              currentuser.edit_token = util.generate_edit_token();
-            }
-            currentuser.save(function(err) {
-              build_response(currentuser);
-            });
+        let pids = [];
+        cubeA.cards.forEach(function(card, index) {
+          card.details = carddb.carddict[card.cardID];
+          if (!card.type_line) {
+            card.type_line = card.details.type;
+          }
+          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
+            pids.push(card.details.tcgplayer_id);
           }
         });
-
-        function build_response(currentuser) {
-          let pids = [];
+        cubeB.cards.forEach(function(card, index) {
+          card.details = carddb.carddict[card.cardID];
+          if (!card.type_line) {
+            card.type_line = card.details.type;
+          }
+          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
+            pids.push(card.details.tcgplayer_id);
+          }
+        });
+        GetPrices(pids, function(price_dict) {
           cubeA.cards.forEach(function(card, index) {
-            card.details = carddb.carddict[card.cardID];
-            if (!card.type_line) {
-              card.type_line = card.details.type;
-            }
-            if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-              pids.push(card.details.tcgplayer_id);
+            if (card.details.tcgplayer_id) {
+              if (price_dict[card.details.tcgplayer_id]) {
+                card.details.price = price_dict[card.details.tcgplayer_id];
+              }
+              if (price_dict[card.details.tcgplayer_id + '_foil']) {
+                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+              }
             }
           });
           cubeB.cards.forEach(function(card, index) {
-            card.details = carddb.carddict[card.cardID];
-            if (!card.type_line) {
-              card.type_line = card.details.type;
-            }
-            if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-              pids.push(card.details.tcgplayer_id);
+            if (card.details.tcgplayer_id) {
+              if (price_dict[card.details.tcgplayer_id]) {
+                card.details.price = price_dict[card.details.tcgplayer_id];
+              }
+              if (price_dict[card.details.tcgplayer_id + '_foil']) {
+                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+              }
             }
           });
-          GetPrices(pids, function(price_dict) {
-            cubeA.cards.forEach(function(card, index) {
-              if (card.details.tcgplayer_id) {
-                if (price_dict[card.details.tcgplayer_id]) {
-                  card.details.price = price_dict[card.details.tcgplayer_id];
+          User.findById(cubeA.owner, function(err, ownerA) {
+            User.findById(cubeB.owner, function(err, ownerB) {
+              let in_both = [];
+              let only_a = cubeA.cards.slice(0);
+              let only_b = cubeB.cards.slice(0);
+              let a_names = only_a.map(card => card.details.name);
+              let b_names = only_b.map(card => card.details.name);
+
+              cubeA.cards.forEach(function(card, index) {
+                if (b_names.includes(card.details.name)) {
+                  in_both.push(card);
+
+                  only_a.splice(a_names.indexOf(card.details.name), 1);
+                  only_b.splice(b_names.indexOf(card.details.name), 1);
+
+                  a_names.splice(a_names.indexOf(card.details.name), 1);
+                  b_names.splice(b_names.indexOf(card.details.name), 1);
                 }
-                if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                  card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-                }
-              }
-            });
-            cubeB.cards.forEach(function(card, index) {
-              if (card.details.tcgplayer_id) {
-                if (price_dict[card.details.tcgplayer_id]) {
-                  card.details.price = price_dict[card.details.tcgplayer_id];
-                }
-                if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                  card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-                }
-              }
-            });
-            User.findById(cubeA.owner, function(err, ownerA) {
-              User.findById(cubeB.owner, function(err, ownerB) {
-                let in_both = [];
-                let only_a = cubeA.cards.slice(0);
-                let only_b = cubeB.cards.slice(0);
-                let a_names = only_a.map(card => card.details.name);
-                let b_names = only_b.map(card => card.details.name);
-
-                cubeA.cards.forEach(function(card, index) {
-                  if (b_names.includes(card.details.name)) {
-                    in_both.push(card);
-
-                    only_a.splice(a_names.indexOf(card.details.name), 1);
-                    only_b.splice(b_names.indexOf(card.details.name), 1);
-
-                    a_names.splice(a_names.indexOf(card.details.name), 1);
-                    b_names.splice(b_names.indexOf(card.details.name), 1);
-                  }
-                });
-
-                let all_cards = in_both.concat(only_a).concat(only_b);
-
-                params = {
-                  cube: cubeA,
-                  cubeB: cubeB,
-                  in_both: JSON.stringify(in_both.map(card => card.details.name)),
-                  only_a: JSON.stringify(a_names),
-                  only_b: JSON.stringify(b_names),
-                  cube_raw: JSON.stringify(all_cards),
-                  loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
-                };
-
-                if (currentuser) params.edittoken = currentuser.edit_token;
-
-                if (ownerA) params.owner = ownerA.username;
-                else params.author = 'unknown';
-
-                res.render('cube/cube_list', params);
               });
+
+              let all_cards = in_both.concat(only_a).concat(only_b);
+
+              params = {
+                cube: cubeA,
+                cubeB: cubeB,
+                in_both: JSON.stringify(in_both.map(card => card.details.name)),
+                only_a: JSON.stringify(a_names),
+                only_b: JSON.stringify(b_names),
+                cube_raw: JSON.stringify(all_cards),
+                loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
+              };
+
+              if (ownerA) params.owner = ownerA.username;
+              else params.author = 'unknown';
+
+              res.render('cube/cube_list', params);
             });
           });
-        }
+        });
       }
     });
   });
@@ -624,52 +607,23 @@ router.get('/list/:id', function(req, res) {
           }
         });
 
-        if (req.user) {
-          User.findById(req.user._id, function(err, currentuser) {
-            if (!currentuser.edit_token || currentuser.edit_token.length <= 0) {
-              currentuser.edit_token = util.generate_edit_token();
-            }
-            currentuser.save(function(err) {
-              User.findById(cube.owner, function(err, owner) {
-                if (!owner) {
-                  res.render('cube/cube_list', {
-                    cube: cube,
-                    cube_raw: JSON.stringify(cube.cards),
-                    author: 'unknown',
-                    loginCallback: '/cube/list/' + req.params.id,
-                    edittoken: currentuser.edit_token
-                  });
-                } else {
-                  res.render('cube/cube_list', {
-                    cube: cube,
-                    cube_raw: JSON.stringify(cube.cards),
-                    owner: owner.username,
-                    loginCallback: '/cube/list/' + req.params.id,
-                    edittoken: currentuser.edit_token
-                  });
-                }
-              });
+        User.findById(cube.owner, function(err, owner) {
+          if (!owner) {
+            res.render('cube/cube_list', {
+              cube: cube,
+              cube_raw: JSON.stringify(cube.cards),
+              author: 'unknown',
+              loginCallback: '/cube/list/' + req.params.id
             });
-          });
-        } else {
-          User.findById(cube.owner, function(err, owner) {
-            if (!owner) {
-              res.render('cube/cube_list', {
-                cube: cube,
-                cube_raw: JSON.stringify(cube.cards),
-                author: 'unknown',
-                loginCallback: '/cube/list/' + req.params.id
-              });
-            } else {
-              res.render('cube/cube_list', {
-                cube: cube,
-                cube_raw: JSON.stringify(cube.cards),
-                owner: owner.username,
-                loginCallback: '/cube/list/' + req.params.id
-              });
-            }
-          });
-        }
+          } else {
+            res.render('cube/cube_list', {
+              cube: cube,
+              cube_raw: JSON.stringify(cube.cards),
+              owner: owner.username,
+              loginCallback: '/cube/list/' + req.params.id
+            });
+          }
+        });
       });
     }
   });
@@ -2212,59 +2166,46 @@ router.post('/api/getversions', function(req, res) {
   });
 });
 
-router.post('/api/updatecard/:id', function(req, res) {
+router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   Cube.findById(req.params.id, function(err, cube) {
-    User.findById(cube.owner, function(err, owner) {
-      if (req.body.token != owner.edit_token) {
-        res.status(401).send({
+    if (cube.owner === req.body._id) {
+      var found = false;
+      cube.cards.forEach(function(card, index) {
+        if (!card.type_line) {
+          card.type_line = carddb.carddict[card.cardID].type;
+        }
+        if (!found && cardsAreEquivalent(card, req.body.src, carddb)) {
+          found = true;
+          cube.cards[index] = req.body.updated;
+        }
+      });
+      if (!found) {
+        res.status(400).send({
           success: 'false',
-          message: 'Unauthorized'
+          message: 'Card not found'
         });
       } else {
-        var found = false;
-        cube.cards.forEach(function(card, index) {
-          if (!card.type_line) {
-            card.type_line = carddb.carddict[card.cardID].type;
-          }
-          if (!found && cardsAreEquivalent(card, req.body.src, carddb)) {
-            found = true;
-            cube.cards[index] = req.body.updated;
+        cube = setCubeType(cube, carddb);
+        cube.save(function(err) {
+          if (err) {
+            res.status(500).send({
+              success: 'false',
+              message: 'Error saving cube'
+            });
+          } else {
+            res.status(200).send({
+              success: 'true'
+            });
           }
         });
-        if (!found) {
-          res.status(400).send({
-            success: 'false',
-            message: 'Card not found'
-          });
-        } else {
-          cube = setCubeType(cube, carddb);
-          cube.save(function(err) {
-            if (err) {
-              res.status(500).send({
-                success: 'false',
-                message: 'Error saving cube'
-              });
-            } else {
-              res.status(200).send({
-                success: 'true'
-              });
-            }
-          });
-        }
       }
-    });
+    }
   });
 });
 
-router.post('/api/updatecards/:id', function(req, res) {
+router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
   Cube.findById(req.params.id, function(err, cube) {
-    User.findById(cube.owner, function(err, owner) {
-      if (req.body.token != owner.edit_token) {
-        res.status(401).send({
-          success: 'false',
-          message: 'Unauthorized'
-        });
-      } else {
+    if (cube.owner === req.user._id) {
         var found = false;
         req.body.selected.forEach(function(select, index) {
           if (!cube.cards[select.index].type_line) {
@@ -2318,8 +2259,7 @@ router.post('/api/updatecards/:id', function(req, res) {
             });
           }
         });
-      }
-    });
+    }
   });
 });
 
@@ -2406,31 +2346,24 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
   });
 });
 
-router.post('/api/savesorts/:id', function(req, res) {
+router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
   Cube.findById(req.params.id, function(err, cube) {
-    User.findById(cube.owner, function(err, owner) {
-      if (req.body.token != owner.edit_token) {
-        res.status(401).send({
-          success: 'false',
-          message: 'Unauthorized'
-        });
-      } else {
-        var found = false;
-        cube.default_sorts = req.body.sorts;
-        cube.save(function(err) {
-          if (err) {
-            res.status(500).send({
-              success: 'false',
-              message: 'Error saving cube'
-            });
-          } else {
-            res.status(200).send({
-              success: 'true'
-            });
-          }
-        });
-      }
-    });
+    if (cube.owner === req.body._id) {
+      var found = false;
+      cube.default_sorts = req.body.sorts;
+      cube.save(function(err) {
+        if (err) {
+          res.status(500).send({
+            success: 'false',
+            message: 'Error saving cube'
+          });
+        } else {
+          res.status(200).send({
+            success: 'true'
+          });
+        }
+      });
+    }
   });
 });
 
@@ -2558,7 +2491,9 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
 
 // Access Control
 function ensureAuth(req, res, next) {
+  console.log("checking auth");
   if (req.isAuthenticated()) {
+    console.log("auth success");
     return next();
   } else {
     req.flash('danger', 'Please login to view this content');
