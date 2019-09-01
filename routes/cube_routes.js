@@ -1,5 +1,5 @@
 const express = require('express');
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const request = require('request');
 const fs = require('fs');
 const fetch = require('node-fetch');
@@ -18,8 +18,8 @@ var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
-
 var mergeImages = require('merge-images');
+const generateMeta = require('../serverjs/meta.js');
 const {
   Canvas,
   Image
@@ -744,19 +744,12 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           pack: pack.pack,
           seed: pack.seed,
           activeLink: 'playtest',
-          metadata: [{
-            property: 'og:title',
-            content: 'Cube Cobra Sample Pack'
-          }, {
-            property: 'og:description',
-            content: `A sample pack from ${cube.name}`
-          }, {
-            property: 'og:image',
-            content: `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`
-          }, {
-            property: 'og:url',
-            content: `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
-          }],
+          metadata: generateMeta(
+            'Cube Cobra Sample Pack',
+            `A sample pack from ${cube.name}`,
+            `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`,
+            `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
+          ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
       }
