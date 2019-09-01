@@ -387,6 +387,7 @@ router.get('/overview/:id', function(req, res) {
               res.render('cube/cube_overview', {
                 cube: cube,
                 title: `${cube.name}: Overview`,
+                activeLink: 'overview',
                 num_cards: cube.cards.length,
                 author: 'unknown',
                 post: blogs[0],
@@ -397,6 +398,7 @@ router.get('/overview/:id', function(req, res) {
               res.render('cube/cube_overview', {
                 cube: cube,
                 title: `${cube.name}: Overview`,
+                activeLink: 'overview',
                 num_cards: cube.cards.length,
                 owner: user.username,
                 post: blogs[0],
@@ -485,6 +487,7 @@ router.get('/blog/:id', function(req, res) {
               res.render('cube/cube_blog', {
                 cube: cube,
                 owner: user.username,
+                activeLink: 'blog',
                 posts: blog_page,
                 pages: pages,
                 loginCallback: '/cube/blog/' + req.params.id
@@ -493,6 +496,7 @@ router.get('/blog/:id', function(req, res) {
               res.render('cube/cube_blog', {
                 cube: cube,
                 owner: user.username,
+                activeLink: 'blog',
                 posts: blogs,
                 loginCallback: '/cube/blog/' + req.params.id
               });
@@ -501,6 +505,7 @@ router.get('/blog/:id', function(req, res) {
             res.render('cube/cube_blog', {
               cube: cube,
               owner: user.username,
+              activeLink: 'blog',
               loginCallback: '/cube/blog/' + req.params.id
             });
           }
@@ -598,7 +603,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
               if (ownerA) params.owner = ownerA.username;
               else params.author = 'unknown';
 
-              res.render('cube/cube_list', params);
+              res.render('cube/cube_compare', params);
             });
           });
         });
@@ -635,24 +640,12 @@ router.get('/list/:id', function(req, res) {
           }
         });
 
-        User.findById(cube.owner, function(err, owner) {
-          if (!owner) {
-            res.render('cube/cube_list', {
-              cube: cube,
-              title: `${cube.name}: List`,
-              cube_raw: JSON.stringify(cube.cards),
-              author: 'unknown',
-              loginCallback: '/cube/list/' + req.params.id
-            });
-          } else {
-            res.render('cube/cube_list', {
-              cube: cube,
-              title: `${cube.name}: List`,
-              cube_raw: JSON.stringify(cube.cards),
-              owner: owner.username,
-              loginCallback: '/cube/list/' + req.params.id
-            });
-          }
+        res.render('cube/cube_list', {
+          cube: cube,
+          activeLink: 'list',
+          title: `${cube.name}: List`,
+          cube_raw: JSON.stringify(cube.cards),
+          loginCallback: '/cube/list/' + req.params.id
         });
       });
     }
@@ -678,6 +671,7 @@ router.get('/playtest/:id', function(req, res) {
           if (!user || err) {
             res.render('cube/cube_playtest', {
               cube: cube,
+              activeLink: 'playtest',
               author: 'unknown',
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
@@ -686,6 +680,7 @@ router.get('/playtest/:id', function(req, res) {
           } else {
             res.render('cube/cube_playtest', {
               cube: cube,
+              activeLink: 'playtest',
               owner: user.username,
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
@@ -714,6 +709,7 @@ router.get('/analysis/:id', function(req, res) {
           res.render('cube/cube_analysis', {
             cube: cube,
             owner: user.username,
+            activeLink: 'analysis',
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
@@ -723,6 +719,7 @@ router.get('/analysis/:id', function(req, res) {
           res.render('cube/cube_analysis', {
             cube: cube,
             owner: user.username,
+            activeLink: 'analysis',
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),

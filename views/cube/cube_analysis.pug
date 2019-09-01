@@ -1,24 +1,6 @@
-extends ../layout
+extends cube_layout
 
-block content
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}       
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link.active(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube._id) Blog
-  include ../flash
-      
+block cube_content
   .container(style='padding-top:10px;')
     .row
       .col-2
@@ -30,10 +12,10 @@ block content
         #v-pills-tabContent.tab-content
           #v-pills-curve.tab-pane.fade.show.active(role='tabpanel', aria-labelledby='v-pills-curve-tab')
             h4 Curve
-            p Click the labels to filter the datasets. Lands are omitted for the curve chart.  
+            p Click the labels to filter the datasets. Lands are omitted for the curve chart.
             script(src='https://cdn.jsdelivr.net/npm/chart.js@2.8.0')
             canvas#canvas
-            input#curveData(type='hidden', name='cubeID', value=curve)        
+            input#curveData(type='hidden', name='cubeID', value=curve)
             script(src='/js/charts.js')
           #v-pills-types.tab-pane.fade(role='tabpanel', aria-labelledby='v-pills-types-tab')
             h4 Type Breakdown
@@ -41,7 +23,7 @@ block content
             table.table.table-bordered
               thead
                 tr
-                  th(scope='col') 
+                  th(scope='col')
                   th(scope='col')
                     img(src='/content/symbols/w.png' alt='White' title='White')
                   th(scope='col')
@@ -286,7 +268,7 @@ block content
                         img(src='/content/symbols/r.png' alt='Red' title='NonBlue')
                         img(src='/content/symbols/g.png' alt='Green' title='NonBlue')
                         img(src='/content/symbols/w.png' alt='White' title='NonBlue')
-                      td=MulticoloredCounts.NonBlue           
+                      td=MulticoloredCounts.NonBlue
                     tr
                       th(scope='row' style='padding: 10px;')
                         img(src='/content/symbols/r.png' alt='Red' title='NonBlack')
@@ -330,7 +312,7 @@ block content
                     tr
                       th(scope='row' style='padding: 10px;')
                         img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                      td=MulticoloredCounts.Blue 
+                      td=MulticoloredCounts.Blue
                     tr
                       th(scope='row' style='padding: 10px;')
                         img(src='/content/symbols/b.png' alt='Black' title='Black')
@@ -343,8 +325,3 @@ block content
                       th(scope='row' style='padding: 10px;')
                         img(src='/content/symbols/g.png' alt='Green' title='Green')
                       td=MulticoloredCounts.Green
-
-
-  
-  
-          
