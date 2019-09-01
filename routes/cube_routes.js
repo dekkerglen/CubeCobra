@@ -361,7 +361,6 @@ router.get('/overview/:id', function(req, res) {
             if (!user) {
               res.render('cube/cube_overview', {
                 cube: cube,
-                title: `${cube.name}: Overview`,
                 num_cards: cube.cards.length,
                 author: 'unknown',
                 post: blogs[0],
@@ -371,7 +370,6 @@ router.get('/overview/:id', function(req, res) {
             } else {
               res.render('cube/cube_overview', {
                 cube: cube,
-                title: `${cube.name}: Overview`,
                 num_cards: cube.cards.length,
                 owner: user.username,
                 post: blogs[0],
@@ -576,7 +574,6 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
                 params = {
                   cube: cubeA,
                   cubeB: cubeB,
-                  title: `Comparing ${cubeA.name} to ${cubeB.name}`,
                   in_both: JSON.stringify(in_both.map(card => card.details.name)),
                   only_a: JSON.stringify(a_names),
                   only_b: JSON.stringify(b_names),
@@ -637,7 +634,6 @@ router.get('/list/:id', function(req, res) {
                 if (!owner) {
                   res.render('cube/cube_list', {
                     cube: cube,
-                    title: `${cube.name}: List`,
                     cube_raw: JSON.stringify(cube.cards),
                     author: 'unknown',
                     loginCallback: '/cube/list/' + req.params.id,
@@ -646,7 +642,6 @@ router.get('/list/:id', function(req, res) {
                 } else {
                   res.render('cube/cube_list', {
                     cube: cube,
-                    title: `${cube.name}: List`,
                     cube_raw: JSON.stringify(cube.cards),
                     owner: owner.username,
                     loginCallback: '/cube/list/' + req.params.id,
@@ -661,7 +656,6 @@ router.get('/list/:id', function(req, res) {
             if (!owner) {
               res.render('cube/cube_list', {
                 cube: cube,
-                title: `${cube.name}: List`,
                 cube_raw: JSON.stringify(cube.cards),
                 author: 'unknown',
                 loginCallback: '/cube/list/' + req.params.id
@@ -669,7 +663,6 @@ router.get('/list/:id', function(req, res) {
             } else {
               res.render('cube/cube_list', {
                 cube: cube,
-                title: `${cube.name}: List`,
                 cube_raw: JSON.stringify(cube.cards),
                 owner: owner.username,
                 loginCallback: '/cube/list/' + req.params.id
