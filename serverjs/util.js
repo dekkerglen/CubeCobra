@@ -68,7 +68,8 @@ function addCardToCube(cube, card_details, idOverride) {
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
-    type: card_details.type
+    type: card_details.type,
+    addedTmsp: new Date()
   });
 }
 
