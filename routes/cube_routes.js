@@ -163,6 +163,26 @@ function GetPrices(card_ids, callback) {
   }
 }
 
+function cardHtml(card) {
+  if (card.image_flip) {
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '" card_flip="' + card.image_flip + '">' + card.name + '</a></br>';
+  } else {
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a></br>';
+  }
+}
+
+function addCardHtml(card) {
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ' + cardHtml(card);
+}
+
+function removeCardHtml(card) {
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">-</span> ' + cardHtml(card);
+}
+
+function replaceCardHtml(oldCard, newCard) {
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' > ' + cardHtml(newCard);
+}
+
 // Add Submit POST Route
 router.post('/add', ensureAuth, function(req, res) {
   if (req.body.name.length < 5) {
@@ -883,46 +903,20 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
               var added = [];
               var missing = "";
               var changelog = "";
-              cards.forEach(function(card, index) {
-                var currentId = carddb.nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()];
-                if (currentId && currentId[0]) {
-                  var found = false;
-                  currentId.forEach(function(possible, index) {
-                    if (!found && carddb.carddict[possible].set.toUpperCase() == card.set) {
-                      found = true;
-                      added.push(carddb.carddict[possible]);
-                      var details = carddb.carddict[possible];
-                      util.addCardToCube(cube, details);
-                      changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-                      if (carddb.carddict[possible].image_flip) {
-                        changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[possible].image_normal + '" card_flip="' + carddb.carddict[possible].image_flip + '">' + carddb.carddict[possible].name + '</a></br>';
-                      } else {
-                        changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[possible].image_normal + '">' + carddb.carddict[possible].name + '</a></br>';
-                      }
-                    }
-                  });
-                  if (!found) {
-                    added.push(carddb.carddict[currentId[0]]);
-                    var details = carddb.carddict[currentId[0]];
-                    cube.cards.push({
-                      tags: ['New'],
-                      status: "Not Owned",
-                      colors: details.color_identity,
-                      cmc: details.cmc,
-                      cardID: currentId[0],
-                      type_line: details.type
-                    });
-                    changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-                    if (carddb.carddict[currentId[0]].image_flip) {
-                      changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '" card_flip="' + carddb.carddict[currentId[0]].image_flip + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-                    } else {
-                      changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-                    }
-                  }
+              for (let card of cards) {
+                let potentialIds = carddb.allIds(card);
+                if (potentialIds && potentialIds.length > 0) {
+                  let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+                  let nonPromo = potentialIds.find(id => !carddb.carddict[id].promo);
+                  let selected = matchingSet || nonPromo || potentialIds[0];
+                  let details = carddb.carddict[selected];
+                  added.push(details);
+                  util.addCardToCube(cube, details);
+                  changelog += addCardHtml(details);
                 } else {
                   missing += card.name + '\n';
                 }
-              });
+              }
 
               var blogpost = new Blog();
               blogpost.title = 'Cubetutor Import - Automatic Post'
@@ -961,7 +955,7 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
               }
             })
             .catch(function(err) {
-              console.log(err, req);
+              console.log(err);
               req.flash('danger', 'Error: Unable to import this cube.');
               res.redirect('/cube/list/' + req.params.id);
             });
@@ -1005,13 +999,13 @@ router.post('/bulkuploadfile/:id', ensureAuth, function(req, res) {
 });
 
 function bulkuploadCSV(req, res, cards, cube) {
-  var added = [];
-  var missing = "";
-  var changelog = "";
-  cards.forEach(function(card_raw, index) {
-    var split = util.CSVtoArray(card_raw);
-    var card = {
-      name: split[0],
+  let added = [];
+  let missing = "";
+  let changelog = "";
+  for (let card_raw of cards) {
+    let split = util.CSVtoArray(card_raw);
+    let name = split[0];
+    let card = {
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
       colors: split[3].split(''),
@@ -1019,52 +1013,20 @@ function bulkuploadCSV(req, res, cards, cube) {
       status: split[5],
       tags: split[6].split(',')
     };
-    var currentId = carddb.nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()];
-    if (currentId && currentId[0]) {
-      var found = false;
-      currentId.forEach(function(possible, index) {
-        if (!found && carddb.carddict[possible].set.toUpperCase() == card.set) {
-          found = true;
-          added.push(carddb.carddict[possible]);
-          var details = carddb.carddict[possible];
-          cube.cards.push({
-            tags: card.tags,
-            status: card.status,
-            colors: card.colors,
-            cmc: card.cmc,
-            cardID: possible,
-            type_line: card.type_line
-          });
-          changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-          if (carddb.carddict[possible].image_flip) {
-            changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[possible].image_normal + '" card_flip="' + carddb.carddict[possible].image_flip + '">' + carddb.carddict[possible].name + '</a></br>';
-          } else {
-            changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[possible].image_normal + '">' + carddb.carddict[possible].name + '</a></br>';
-          }
-        }
-      });
-      if (!found) {
-        added.push(carddb.carddict[currentId[0]]);
-        var details = carddb.carddict[currentId[0]];
-        cube.cards.push({
-          tags: card.tags,
-          status: card.status,
-          colors: card.colors,
-          cmc: card.cmc,
-          cardID: currentId[0],
-          type_line: card.type_line
-        });
-        changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-        if (carddb.carddict[currentId[0]].image_flip) {
-          changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '" card_flip="' + carddb.carddict[currentId[0]].image_flip + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-        } else {
-          changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-        }
-      }
+
+    let potentialIds = carddb.allIds(card);
+    if (potentialIds && potentialIds.length > 0) {
+      // First, try to find the correct set.
+      let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+      let nonPromo = potentialIds.find(id => !carddb.carddict[id].promo);
+      let first = potentialIds[0];
+      card.id = matchingSet || nonPromo || first;
+      cube.cards.push(card);
+      changelog += addCardHtml(carddb.carddict[card.id]);
     } else {
       missing += card.name + '\n';
     }
-  });
+  }
 
   var blogpost = new Blog();
   blogpost.title = 'Cube Bulk Import - Automatic Post'
@@ -1128,47 +1090,31 @@ function bulkUpload(req, res, list, cube) {
               cards.push(item.substring(item.indexOf('x') + 1));
             }
           } else {
+            let selected = undefined;
             if (/(.*)( \((.*)\))/.test(item)) {
               //has set info
               if (carddb.nameToId[item.toLowerCase().substring(0, item.indexOf('(')).trim()]) {
-                var name = item.toLowerCase().substring(0, item.indexOf('(')).trim();
-                var set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'))
+                let name = item.toLowerCase().substring(0, item.indexOf('(')).trim();
+                let set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'))
                 //if we've found a match, and it DOES need to be parsed with cubecobra syntax
-                var found = false;
-                var possibilities = carddb.nameToId[name];
-                possibilities.forEach(function(possible, ind) {
-                  if (!found && carddb.carddict[possible].set.toLowerCase() == set) {
-                    var details = carddb.carddict[possible];
-                    util.addCardToCube(cube, details, details);
-                    added.push(details);
-                    found = true;
-                  }
-                });
-                if (!found) {
-                  missing += item + '\n';
-                }
-              } else {
-                //we didn't find a match for this item
-                missing += item + '\n';
+                let potentialIds = carddb.nameToId[name];
+                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
               }
             } else {
               //does not have set info
-              var currentId = carddb.nameToId[item.toLowerCase().trim()];
-              if (currentId && currentId[0]) {
-                //if we've found a match, and it doesn't need to be parsed with cubecobra syntax
-                var details = carddb.carddict[currentId[0]];
-                util.addCardToCube(cube, details);
-                added.push(details);
-                changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-                if (carddb.carddict[currentId[0]].image_flip) {
-                  changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '" card_flip="' + carddb.carddict[currentId[0]].image_flip + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-                } else {
-                  changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[currentId[0]].image_normal + '">' + carddb.carddict[currentId[0]].name + '</a></br>';
-                }
-              } else {
-                //we didn't find a match for this item
-                missing += item + '\n';
+              let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
+              if (potentialIds && potentialIds.length > 0) {
+                let nonPromo = potentialIds.find(id => !carddb.carddict[id].promo);
+                selected = nonPromo || potentialIds[0];
               }
+            }
+            if (selected) {
+              let details = carddb.carddict[selected];
+              util.addCardToCube(cube, details, details);
+              added.push(details);
+              changelog += addCardHtml(details);
+            } else {
+              missing += item + '\n';
             }
           }
         }
@@ -1621,7 +1567,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       var adds = [];
       var removes = [];
       var changelog = "";
-      edits.forEach(function(edit, index) {
+      for (let edit of edits) {
         if (edit.charAt(0) == '+') {
           //add id
           var details = carddb.carddict[edit.substring(1)];
@@ -1629,12 +1575,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             console.log('Card not found: ' + edit, req);
           } else {
             util.addCardToCube(cube, details);
-            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-            if (carddb.carddict[edit.substring(1)].image_flip) {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[edit.substring(1)].image_normal + '" card_flip="' + carddb.carddict[edit.substring(1)].image_flip + '">' + carddb.carddict[edit.substring(1)].name + '</a>';
-            } else {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[edit.substring(1)].image_normal + '">' + carddb.carddict[edit.substring(1)].name + '</a>';
-            }
+            changelog += addCardHtml(carddb.carddict[edit.substring(1)]);
           }
         } else if (edit.charAt(0) == '-') {
           //remove id
@@ -1648,13 +1589,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           });
           if (rm_index != -1) {
             cube.cards.splice(rm_index, 1);
-
-            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">–</span> ';
-            if (carddb.carddict[edit.substring(1)].image_flip) {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[edit.substring(1)].image_normal + '" card_flip="' + carddb.carddict[edit.substring(1)].image_flip + '">' + carddb.carddict[edit.substring(1)].name + '</a>';
-            } else {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[edit.substring(1)].image_normal + '">' + carddb.carddict[edit.substring(1)].name + '</a>';
-            }
+            changelog += removeCardHtml(carddb.carddict[edit.substring(1)]);
           } else {
             fail_remove.push(edit.substring(1));
           }
@@ -1673,30 +1608,14 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           });
           if (rm_index != -1) {
             cube.cards.splice(rm_index, 1);
-
-            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ';
-            if (carddb.carddict[tmp_split[0]].image_flip) {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[0]].image_normal + '" card_flip="' + carddb.carddict[tmp_split[0]].image_flip + '">' + carddb.carddict[tmp_split[0]].name + '</a> > ';
-            } else {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[0]].image_normal + '">' + carddb.carddict[tmp_split[0]].name + '</a> > ';
-            }
-            if (carddb.carddict[tmp_split[1]].image_flip) {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[1]].image_normal + '" card_flip="' + carddb.carddict[tmp_split[1]].image_flip + '">' + carddb.carddict[tmp_split[1]].name + '</a>';
-            } else {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[1]].image_normal + '">' + carddb.carddict[tmp_split[1]].name + '</a>';
-            }
+            changelog += replaceCardHtml(carddb.carddict[tmp_split[0]], carddb.carddict[tmp_split[1]]);
           } else {
             fail_remove.push(tmp_split[0]);
-            changelog += '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ';
-            if (carddb.carddict[tmp_split[1]].image_flip) {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[1]].image_normal + '" card_flip="' + carddb.carddict[tmp_split[1]].image_flip + '">' + carddb.carddict[tmp_split[1]].name + '</a>';
-            } else {
-              changelog += '<a class="dynamic-autocard" card="' + carddb.carddict[tmp_split[1]].image_normal + '">' + carddb.carddict[tmp_split[1]].name + '</a>';
-            }
+            changelog += addCardHtml(carddb.carddict[tmp_split[1]]);
           }
         }
         changelog += '<br>';
-      });
+      }
 
       var blogpost = new Blog();
       blogpost.title = req.body.title;
@@ -2117,19 +2036,15 @@ router.get('/api/getcard/:name', function(req, res) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
   console.log(req.params.name);
-  if(carddb.nameToId[req.params.name] && carddb.carddict[carddb.nameToId[req.params.name][0]])
-  {
-    var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
-    if (!card) {
-      res.status(200).send({
-        success: 'true'
-      });
-    } else {
-      res.status(200).send({
-        success: 'true',
-        card: card
-      });
-    }
+  let potentialIds = carddb.nameToId[req.params.name];
+  if (potentialIds && potentialIds.length > 0) {
+    let nonPromo = potentialIds.find(id => !carddb.carddict[id].promo);
+    let selected = nonPromo || potentialIds[0];
+    let card = carddb.carddict[selected];
+    res.status(200).send({
+      success: 'true',
+      card: card
+    });
   } else {
     res.status(200).send({
       success: 'true'
