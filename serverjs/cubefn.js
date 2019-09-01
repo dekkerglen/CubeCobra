@@ -1,6 +1,31 @@
+var Filter = require('bad-words');
 var sanitizeHtml = require('sanitize-html');
 let Cube = require('../models/cube');
 let util = require('./util');
+
+function generate_short_id(callback) {
+  Cube.find({}, function(err, cubes) {
+    const short_ids = cubes.map(cube => cube.shortID);
+    const url_aliases = cubes.map(cube => cube.urlAlias);
+
+    const ids = cubes.map(cube => util.from_base_36(cube.shortID));
+    let max = Math.max(...ids);
+
+    let new_id = '';
+		let filter = new Filter();
+
+		while(true) {
+			max++;
+			new_id = util.to_base_36(max);
+
+			if (!filter.isProfane(new_id) &&
+				  !short_ids.includes(new_id) &&
+				  !url_aliases.includes(new_id)) break;
+		}
+
+    callback(new_id);
+  });
+}
 
 function intToLegality(val) {
   switch (val) {
@@ -150,7 +175,8 @@ var methods = {
         pack
       });
     });
-  }
+  },
+  generate_short_id,
 };
 
 module.exports = methods;

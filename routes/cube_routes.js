@@ -11,7 +11,8 @@ var {
   sanitize,
   setCubeType,
   cardsAreEquivalent,
-  getBasics
+  getBasics,
+  generate_short_id,
 } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
@@ -174,7 +175,7 @@ router.post('/add', ensureAuth, function(req, res) {
         owner: user._id
       }, function(err, cubes) {
         if (cubes.length < 24) {
-          util.generate_short_id(function(short_id) {
+          generate_short_id(function(short_id) {
             let cube = new Cube();
             cube.shortID = short_id;
             cube.name = req.body.name;
