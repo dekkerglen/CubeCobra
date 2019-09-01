@@ -165,22 +165,22 @@ function GetPrices(card_ids, callback) {
 
 function cardHtml(card) {
   if (card.image_flip) {
-    return '<a class="dynamic-autocard" card="' + card.image_normal + '" card_flip="' + card.image_flip + '">' + card.name + '</a></br>';
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '" card_flip="' + card.image_flip + '">' + card.name + '</a>';
   } else {
-    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a></br>';
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
   }
 }
 
 function addCardHtml(card) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ' + cardHtml(card);
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-success">+</span> ' + cardHtml(card) + '<br/>';
 }
 
 function removeCardHtml(card) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">-</span> ' + cardHtml(card);
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-danger">-</span> ' + cardHtml(card) + '<br/>';
 }
 
 function replaceCardHtml(oldCard, newCard) {
-  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' > ' + cardHtml(newCard);
+  return '<span style=""Lucida Console", Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' &gt; ' + cardHtml(newCard) + '<br/>';
 }
 
 // Add Submit POST Route
@@ -1614,7 +1614,6 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             changelog += addCardHtml(carddb.carddict[tmp_split[1]]);
           }
         }
-        changelog += '<br>';
       }
 
       var blogpost = new Blog();
