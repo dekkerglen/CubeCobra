@@ -10,7 +10,7 @@ saveChangesButton.addEventListener("click", saveChangesButtonClick);
 var changes = [];
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('//', '-slash-').replace('?', '-q-');
+  var val = addInput.value.replace('?', '-q-');
   while (val.includes('//')) {
     val = val.replace('//', '-slash-');
   }

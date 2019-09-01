@@ -2117,15 +2117,22 @@ router.get('/api/getcard/:name', function(req, res) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
   console.log(req.params.name);
-  var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
-  if (!card) {
-    res.status(200).send({
-      success: 'true'
-    });
+  if(carddb.nameToId[req.params.name] && carddb.carddict[carddb.nameToId[req.params.name][0]])
+  {
+    var card = carddb.carddict[carddb.nameToId[req.params.name][0]];
+    if (!card) {
+      res.status(200).send({
+        success: 'true'
+      });
+    } else {
+      res.status(200).send({
+        success: 'true',
+        card: card
+      });
+    }
   } else {
     res.status(200).send({
-      success: 'true',
-      card: card
+      success: 'true'
     });
   }
 });
