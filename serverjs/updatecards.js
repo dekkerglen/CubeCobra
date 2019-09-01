@@ -190,6 +190,8 @@ function convertCard(card) {
   newcard._id = card.id;
   newcard.set = card.set;
   newcard.promo = card.promo;
+  newcard.digital = card.digital;
+  newcard.border_color = card.border_color;
   newcard.full_name = card.name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.name = card.name;
   newcard.name_lower = card.name.toLowerCase();
