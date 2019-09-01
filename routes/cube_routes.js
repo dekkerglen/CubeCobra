@@ -2228,7 +2228,13 @@ router.post('/api/updatecard/:id', function(req, res) {
           }
           if (!found && cardsAreEquivalent(card, req.body.src, carddb)) {
             found = true;
-            cube.cards[index] = req.body.updated;
+            var updated = req.body.updated;
+            Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
+              if (!updated.hasOwnProperty(key)) {
+                updated[key] = card[key];
+              }
+            });
+            cube.cards[index] = updated;
           }
         });
         if (!found) {
