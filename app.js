@@ -60,7 +60,7 @@ app.use(session({
   secret: secrets.session,
   resave: true,
   saveUninitialized: true,
-  cooke: {
+  cookie: {
     secure: true,
   }
 }));
