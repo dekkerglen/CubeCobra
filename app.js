@@ -13,6 +13,7 @@ var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
 const secrets = require('../cubecobrasecrets/secrets');
+const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
 mongoose.connect(config.database);
@@ -28,6 +29,14 @@ db.on('error', function(err) {
 
 // Init app
 const app = express();
+
+var store = new mongoDBStore({
+  uri: 'mongodb://localhost:27017/nodecube',
+  databaseName: 'nodecube',
+  collection: 'session_data'
+}, function(err) {
+  console.log('store failed to connect to mongoDB:\n' + err);
+});
 
 // Bring in models
 let Cube = require('./models/cube')
@@ -55,15 +64,23 @@ app.set('view engine', 'pug');
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Express session middleware
-app.use(session({
+let session_options = {
   secret: secrets.session,
+  store: store,
   resave: true,
   saveUninitialized: true,
-  cooke: {
-    secure: true,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7 //1 week
   }
-}));
+}
+
+if (secrets.environment == 'production') {
+  app.set('trust proxy', 1);
+  session_options.cookie.secure = true;
+}
+
+// Express session middleware
+app.use(session(session_options));
 
 //Express messages middleware
 app.use(require('connect-flash')());
