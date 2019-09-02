@@ -1577,7 +1577,7 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<div class="color-column col-12 col-sm-6 col-md-3 col-lg-auto">';
+        res += '<div class="color-column col-6 col-md-3 col-lg-auto">';
         res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
