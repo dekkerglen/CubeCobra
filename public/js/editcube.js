@@ -989,6 +989,47 @@ function filteredCube() {
   return res;
 }
 
+function setFilterQsargs() {
+  var qsargsToSet = {}, modifier;
+  filters.forEach(function(filter, index) {
+    if (!qsargsToSet[filter.category]) {
+        qsargsToSet[filter.category] = "";
+    }
+    modifier = "+";
+    if (filter.not) {
+      modifier = "-";
+    }
+    qsargsToSet[filter.category] += modifier + filter.value + ",";
+  });
+  var newUrl = window.location.href.split('?')[0];
+  if (!$.isEmptyObject(qsargsToSet)) {
+    newUrl += "?" + $.param(qsargsToSet);
+  }
+  window.history.pushState({}, '', newUrl);
+}
+
+function buildFiltersFromQsargs() {
+  var validCategories = getSorts(),
+    qsargs = new URLSearchParams(window.location.search),
+    qsargValues, value, valueIndex, qsargCategory;
+  for (qsargCategory of qsargs.keys()) {
+    if (!validCategories.includes(qsargCategory)) {
+      continue;
+    }
+    qsargValues = qsargs.get(qsargCategory).split(",");
+    for (valueIndex = 0; valueIndex < qsargValues.length; valueIndex++) {
+      value = qsargValues[valueIndex];
+      if (value.length > 0) {
+        filters.push({
+          category: qsargCategory,
+          value: value.substring(1),
+          not: value[0] === "-"
+        });
+      }
+    }
+  }
+}
+
 function updateCubeList() {
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
@@ -1010,6 +1051,7 @@ function updateCubeList() {
       break;
   }
   autocard_hide_card();
+  setFilterQsargs();
 }
 
 function renderListView() {
@@ -1803,6 +1845,7 @@ window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
+  buildFiltersFromQsargs();
   buildFilterArea();
   updateCubeList();
   activateTags();
