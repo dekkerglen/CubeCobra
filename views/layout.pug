@@ -1,6 +1,6 @@
 doctype html
 html
-	head  
+	head
 		meta(charset='UTF-8')
 		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
@@ -11,7 +11,10 @@ html
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
-		title Cube Cobra
+		title
+			| Cube Cobra
+			if title
+				| : #{title}
 		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup(style='position:absolute;z-index: 9999;')
@@ -19,20 +22,20 @@ html
 		#autocard_popup_info(style='position:absolute;z-index: 9999;')
 		script(src='/bower_components/jquery/dist/jquery.js')
 	body
-		nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
-			.container
-				a(href='/')
-					img(src="/content/banner.png" height=50 alt="Cube Cobra: a site for Magic: the Gathering Cubing")
-				button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExample03', aria-controls='navbarsExample03', aria-expanded='false', aria-label='Toggle navigation')
-					span.navbar-toggler-icon
-				ul.navbar-nav.mr-auto         
+		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
+			a(href='/')
+				img(src="/content/banner.png" style='height: 32px; margin: 0.5rem 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+			button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
+				span.navbar-toggler-icon
+			#navbar.collapse.navbar-collapse
+				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
 						.input-group
 							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
 							.input-group-append
 								button.btn.btn-success.my-2.my-sm-0(type='submit') Search
 
-				ul.navbar-nav.navbar-right
+				ul.navbar-nav
 					li.nav-item.dropdown
 						a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 							|  About

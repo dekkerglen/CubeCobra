@@ -181,7 +181,6 @@ if (canEdit) {
       selected: groupSelect,
       filters: filterobj,
       updated: updated,
-      token: $('#edittoken').val()
     };
 
     fetch("/cube/api/updatecards/" + $('#cubeID').val(), {
@@ -290,7 +289,6 @@ if (canEdit) {
     let data = {
       src: modalSelect,
       updated: updated,
-      token: document.getElementById("edittoken").value
     };
     fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
       method: "POST",
@@ -324,7 +322,6 @@ if (canEdit) {
     temp_sorts[1] = document.getElementById('secondarySortSelect').value;
     let data = {
       sorts: temp_sorts,
-      token: document.getElementById("edittoken").value
     };
     fetch("/cube/api/savesorts/" + $('#cubeID').val(), {
       method: "POST",
@@ -543,7 +540,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
+  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
 
 
 }
@@ -573,6 +570,18 @@ function getLabels(sort) {
       });
     });
     return tags.sort();
+  } else if (sort == 'Date Added') {
+    var days = [], formattedDay;
+    cube.forEach(function(card, index) {
+      formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
+      if (formattedDay === undefined) {
+          formattedDay = "unknown";
+      }
+      if (!days.includes(formattedDay)) {
+        days.push(formattedDay);
+      }
+    });
+    return days.sort();
   } else if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned'];
   } else if (sort == 'Guilds') {
@@ -1196,7 +1205,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1227,7 +1235,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1258,7 +1265,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1289,7 +1295,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1323,7 +1328,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1357,7 +1361,6 @@ function renderListView() {
         let data = {
           src: cube[index],
           updated: updated,
-          token: document.getElementById("edittoken").value
         };
         fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
           method: "POST",
@@ -1488,20 +1491,15 @@ function renderTableView() {
     }
   });
 
-  var colWidth = Math.max(10, 100.0 / count);
-
-  var res = '<div class="row no-gutters even-cols">';
+  var res = '<div class="row even-cols" style="margin: 0 -17px">';
+  res += `<style>@media(min-width: 992px) { .color-column { max-width: ${100 / Object.keys(columns).length}%; } }</style>`;
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
 
     if (Object.keys(column).length > 0) {
-      let comp_class = (comparing) ? 'compare-col' : '';
-      res += '<div class="col-even ' + comp_class + '"'
-      if (comparing) res += '>';
-      else res += ' style="width: ' + colWidth + '%;">';
-
       if (comparing) {
+        res += '<div class="col-even compare-col">';
         let first_header = (col_index === 0) ? 'first-compare-header' : '';
         res += '<div class="col-even compare-header ' + first_header + '">'
         res += '<div class="row">'
@@ -1535,7 +1533,8 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<h6 class="text-center">' + column_label + ' <br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
+        res += '<div class="color-column col-12 col-sm-6 col-md-3 col-lg-auto">';
+        res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
       Object.keys(column).forEach(function(rowgroup_label, rowgroup_index) {

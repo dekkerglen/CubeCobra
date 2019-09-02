@@ -18,6 +18,7 @@
     "chart.js": "^2.8.0",
     "cheerio": "^1.0.0-rc.3",
     "connect-flash": "^0.1.1",
+    "connect-mongodb-session": "^2.2.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "express-messages": "^1.0.1",

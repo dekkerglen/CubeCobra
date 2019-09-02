@@ -23,10 +23,6 @@
 	border-color: #d6e9c6;
 }
 
-* {
-	box-sizing: border-box;
-}
-
 .nav-pills .nav-link.active {
 	background-color: #28A745;
 }
@@ -74,7 +70,7 @@
 }
 
 .even-cols .col-even {
-	padding: 1px 3px;
+	padding: 1px 2px;
 }
 
 .list-group-item {
@@ -134,28 +130,23 @@
 
 .card-list-item {
 	transition: .25s;
-	font-size: 12px;
+	font-size: 11px;
 	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 .card-list-item:not(:hover){
-	padding: 3px 6px;
+	padding: 3px 4px;
 	color: black;
 	text-decoration: none;
 }
 .card-list-item:hover{
-	padding: 3px 6px;
+	padding: 3px 4px;
 	color: black;
 	text-decoration: none;
 }
 
-
-.card-list-item{
-	border-top-width: 0;
-	border-bottom-width: 0;
-}
 
 .cmc-group:first-of-type .card-list-item:first-of-type{
 	border-top-width: 0;
@@ -164,18 +155,6 @@
 	border-bottom-width: 0;
 }
 
-.card-list-item:first-of-type {
-	border-left-width: 0;
-	border-right-width: 0;
-	border-top-width:3px;
-	border-style: solid
-}
-.card-list-item:last-of-type {
-	border-left-width: 0;
-	border-right-width: 0;
-	border-bottom-width: 3px;
-	border-style: solid
-}
 .white:not(:hover) {
 	background-color: #ffffeb;
 }
@@ -294,7 +273,7 @@ border-bottom: none;
 .card-price {
   border-radius: 3px;
 	padding: 2px;
-	margin: 2px; 
+	margin: 2px;
   border: 1px solid #CED4DA;
 }
 
@@ -303,4 +282,8 @@ border-bottom: none;
 	border-radius: 10px 10px 0 0;
 	overflow: hidden;
 	background: #fff;
+}
+
+.color-column {
+	padding: 2px 2px;
 }
