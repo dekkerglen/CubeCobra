@@ -5,6 +5,7 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
+const Filter = require('bad-words');
 var {
   addAutocard,
   generatePack,
@@ -1553,14 +1554,20 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
         res.redirect('/cube/overview/' + req.params.id);
       } else {
         if (req.body.urlAlias && cube.urlAlias !== req.body.urlAlias) {
-          Cube.findOne(build_id_query(req.body.urlAlias), function(err, takenAlias) {
-            if (takenAlias) {
-              req.flash('danger', 'Custom URL already taken.');
-              res.redirect('/cube/overview/' + req.params.id);
-            } else {
-              update_cube();
-            }
-          });
+          let filter = new Filter();
+          if (filter.isProfane(req.body.urlAlias)) {
+            req.flash('danger', 'Custom URL may not contain profanity.');
+            res.redirect('/cube/overview/' + req.params.id);
+          } else {
+            Cube.findOne(build_id_query(req.body.urlAlias), function(err, takenAlias) {
+              if (takenAlias) {
+                req.flash('danger', 'Custom URL already taken.');
+                res.redirect('/cube/overview/' + req.params.id);
+              } else {
+                update_cube();
+              }
+            });
+          }
         } else {
           update_cube();
         }
