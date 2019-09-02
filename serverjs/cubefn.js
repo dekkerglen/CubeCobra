@@ -3,6 +3,12 @@ const sanitizeHtml = require('sanitize-html');
 const Cube = require('../models/cube');
 const util = require('./util');
 
+function get_cube_id(cube) {
+  if (cube.urlAlias) return cube.urlAlias;
+  if (cube.shortID) return cube.shortID;
+  return cube._id;
+}
+
 function build_id_query(id) {
   if (id.match(/^[0-9a-fA-F]{24}$/)) return {
     _id: id
@@ -193,6 +199,7 @@ var methods = {
   },
   generate_short_id,
   build_id_query,
+  get_cube_id,
 };
 
 module.exports = methods;
