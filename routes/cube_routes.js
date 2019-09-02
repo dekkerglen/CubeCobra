@@ -321,7 +321,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
 
 router.get('/overview/:id', function(req, res) {
   var split = req.params.id.split(';');
-  var cube_id = split[0].toLowerCase();
+  var cube_id = split[0];
   Cube.findOne(build_id_query(cube_id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');

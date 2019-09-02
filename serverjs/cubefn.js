@@ -15,10 +15,10 @@ function build_id_query(id) {
   };
   return {
     $or: [{
-        shortID: id,
+        shortID: id.toLowerCase(),
       },
       {
-        urlAlias: id,
+        urlAlias: id.toLowerCase(),
       },
     ],
   };
