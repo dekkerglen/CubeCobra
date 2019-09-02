@@ -13,6 +13,7 @@ var {
   cardsAreEquivalent,
   getBasics,
   generate_short_id,
+  build_id_query,
 } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
@@ -216,7 +217,7 @@ router.get('/view/:id', function(req, res) {
 
 router.post('/format/add/:id', ensureAuth, function(req, res) {
   req.body.html = sanitize(req.body.html);
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err || !cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -263,7 +264,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
     req.flash('danger', 'Blog body length must be greater than 10 characters.');
     res.redirect('/cube/blog/' + req.params.id);
   } else {
-    Cube.findById(req.params.id, function(err, cube) {
+    Cube.findOne(build_query_id(req.params.id), function(err, cube) {
       if (err || !cube) {
         req.flash('danger', 'Cube not found');
         res.redirect('/404/');
@@ -320,8 +321,8 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
 
 router.get('/overview/:id', function(req, res) {
   var split = req.params.id.split(';');
-  var cube_id = split[0];
-  Cube.findById(cube_id, function(err, cube) {
+  var cube_id = split[0].toLowerCase();
+  Cube.findOne(build_id_query(cube_id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -409,7 +410,7 @@ router.get('/blogsrc/:id', function(req, res) {
 router.get('/blog/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube_id = split[0];
-  Cube.findById(cube_id, function(err, cube) {
+  Cube.findOne(build_id_query(cube_id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -491,8 +492,8 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
   const id_a = req.params.id_a;
   const id_b = req.params.id_b;
   const user_id = req.user ? req.user._id : '';
-  Cube.findById(id_a, function(err, cubeA) {
-    Cube.findById(id_b, function(err, cubeB) {
+  Cube.findOne(build_id_query(id_a), function(err, cubeA) {
+    Cube.findOne(build_id_query(id_b), function(err, cubeB) {
       if (!cubeA) {
         req.flash('danger', 'Base cube not found');
         res.redirect('/404/');
@@ -601,7 +602,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 })
 
 router.get('/list/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -680,7 +681,7 @@ router.get('/list/:id', function(req, res) {
 });
 
 router.get('/playtest/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -719,7 +720,7 @@ router.get('/playtest/:id', function(req, res) {
 });
 
 router.get('/analysis/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -755,7 +756,7 @@ router.get('/analysis/:id', function(req, res) {
 });
 
 router.get('/samplepack/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -779,7 +780,7 @@ router.get('/samplepack/:id', function(req, res) {
 });
 
 router.get('/samplepack/:id/:seed', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -843,7 +844,7 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
 });
 
 router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       console.log(err, req);
     } else {
@@ -976,7 +977,7 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
 });
 
 router.post('/bulkupload/:id', ensureAuth, function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       console.log(err, req);
     } else {
@@ -997,7 +998,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, function(req, res) {
   } else {
     items = req.files.document.data.toString('utf8'); // the uploaded file object
 
-    Cube.findById(req.params.id, function(err, cube) {
+    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
       if (cube.owner != req.user._id) {
         req.flash('danger', 'Not Authorized');
         res.redirect('/cube/list/' + req.params.id);
@@ -1222,7 +1223,7 @@ function bulkUpload(req, res, list, cube) {
 }
 
 router.get('/download/cubecobra/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1239,7 +1240,7 @@ router.get('/download/cubecobra/:id', function(req, res) {
 });
 
 router.get('/download/csv/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1288,7 +1289,7 @@ router.get('/download/csv/:id', function(req, res) {
 });
 
 router.get('/download/plaintext/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1479,7 +1480,7 @@ function startStandardDraft(req, res, params, cube) {
 }
 
 router.post('/startdraft/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1534,7 +1535,7 @@ router.get('/draft/:id', function(req, res) {
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
         draft.ratings = ratings;
-        Cube.findById(draft.cube, function(err, cube) {
+        Cube.findOne(build_id_query(draft.cube), function(err, cube) {
           if (!cube) {
             req.flash('danger', 'Cube not found');
             res.redirect('/404/');
@@ -1566,7 +1567,7 @@ router.get('/draft/:id', function(req, res) {
 // Edit Submit POST Route
 router.post('/editoverview/:id', ensureAuth, function(req, res) {
   req.body.html = sanitize(req.body.html);
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       req.flash('danger', 'Server Error');
       res.redirect('/cube/overview/' + req.params.id);
@@ -1610,7 +1611,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
 // Edit Submit POST Route
 router.post('/edit/:id', ensureAuth, function(req, res) {
   req.body.blog = sanitize(req.body.blog);
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString("en-US");
     if (err) {
@@ -1791,7 +1792,7 @@ router.get('/api/fullnames', function(req, res) {
 });
 
 router.get('/api/cubecardnames/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     var cardnames = [];
     cube.cards.forEach(function(item, index) {
       util.binaryInsert(carddb.carddict[item.cardID].name, cardnames);
@@ -1811,7 +1812,7 @@ router.get('/api/getcardfromcube/:id', function(req, res) {
   while (cardname.includes('-slash-')) {
     cardname = cardname.replace('-slash-', '//');
   }
-  Cube.findById(cube, function(err, cube) {
+  Cube.findOne(build_id_query(cube), function(err, cube) {
     var found = false;
     cube.cards.forEach(function(card, index) {
       if (!found && carddb.carddict[card.cardID].name_lower == cardname) {
@@ -1871,7 +1872,7 @@ router.post('/submitdeck/:id', function(req, res) {
     deck.date = Date.now();
     deck.bots = draft.bots;
     deck.playersideboard = [];
-    Cube.findById(draft.cube, function(err, cube) {
+    Cube.findOne(build_id_query(draft.cube), function(err, cube) {
       if (!cube.decks) {
         cube.decks = [];
       }
@@ -1906,7 +1907,7 @@ router.post('/submitdeck/:id', function(req, res) {
 router.get('/decks/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cubeid = split[0];
-  Cube.findById(cubeid, function(err, cube) {
+  Cube.findOne(build_id_query(cubeid), function(err, cube) {
     if (err || !cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1994,7 +1995,7 @@ router.get('/deckbuilder/:id', function(req, res) {
           card.details = carddb.carddict[card.cardID];
         }
       });
-      Cube.findById(deck.cube, function(err, cube) {
+      Cube.findOne(build_id_query(deck.cube), function(err, cube) {
         if (!deck) {
           req.flash('danger', 'Cube not found');
           res.redirect('/404/');
@@ -2032,7 +2033,7 @@ router.get('/deck/:id', function(req, res) {
       req.flash('danger', 'Deck not found');
       res.redirect('/404/');
     } else {
-      Cube.findById(deck.cube, function(err, cube) {
+      Cube.findOne(build_id_query(deck.cube), function(err, cube) {
         if (!cube) {
           req.flash('danger', 'Cube not found');
           res.redirect('/404/');
@@ -2210,7 +2211,7 @@ router.post('/api/getversions', function(req, res) {
 });
 
 router.post('/api/updatecard/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     User.findById(cube.owner, function(err, owner) {
       if (req.body.token != owner.edit_token) {
         res.status(401).send({
@@ -2254,7 +2255,7 @@ router.post('/api/updatecard/:id', function(req, res) {
 });
 
 router.post('/api/updatecards/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     User.findById(cube.owner, function(err, owner) {
       if (req.body.token != owner.edit_token) {
         res.status(401).send({
@@ -2330,7 +2331,7 @@ router.delete('/remove/:id', ensureAuth, function(req, res) {
     _id: req.params.id
   };
 
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err || !cube || (cube.owner != req.user._id)) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -2381,7 +2382,7 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
   var cubeid = req.params.id.split(';')[0];
   var id = req.params.id.split(';')[1];
 
-  Cube.findById(cubeid, function(err, cube) {
+  Cube.findOne(build_id_query(cubeid), function(err, cube) {
     if (err || (cube.owner != req.user._id)) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -2404,7 +2405,7 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
 });
 
 router.post('/api/savesorts/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     User.findById(cube.owner, function(err, owner) {
       if (req.body.token != owner.edit_token) {
         res.status(401).send({
@@ -2432,7 +2433,7 @@ router.post('/api/savesorts/:id', function(req, res) {
 });
 
 router.post('/api/draftpickcard/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     Draft.findById({
       _id: req.body.draft_id
     }, function(err, draft) {
@@ -2482,7 +2483,7 @@ router.post('/api/draftpickcard/:id', function(req, res) {
 });
 
 router.post('/api/draftpick/:id', function(req, res) {
-  Cube.findById(req.params.id, function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     User.findById(cube.owner, function(err, owner) {
       if (!req.body) {
         res.status(400).send({

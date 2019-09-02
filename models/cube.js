@@ -8,9 +8,13 @@ let cubeSchema = mongoose.Schema({
   },
   shortID: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
-  urlAlias: String,
+  urlAlias: {
+    type: String,
+    index: true
+  },
   owner: {
     type: String,
     required: true

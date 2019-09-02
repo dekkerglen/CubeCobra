@@ -4,11 +4,11 @@ const Cube = require('../models/cube');
 const util = require('./util');
 
 function build_id_query(id) {
+  if (id.match(/^[0-9a-fA-F]{24}$/)) return {
+    _id: id
+  };
   return {
     $or: [{
-        _id: id,
-      },
-      {
         shortID: id,
       },
       {
@@ -177,7 +177,7 @@ var methods = {
     return src;
   },
   generatePack: function(cubeId, carddb, seed, callback) {
-    Cube.findById(cubeId, function(err, cube) {
+    Cube.findOne(build_id_query(cubeId), function(err, cube) {
       if (!cube) {
         callback(true);
       }
@@ -192,6 +192,7 @@ var methods = {
     });
   },
   generate_short_id,
+  build_id_query,
 };
 
 module.exports = methods;

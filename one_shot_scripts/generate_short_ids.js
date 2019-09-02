@@ -29,8 +29,7 @@ function generate_short_ids() {
 	mongoose.connect(config.database);
 	let db = mongoose.connection;
 	db.once('open', function() {
-		//Cube.find({shortID:null}, function(err, cubes) {
-		Cube.find({}, function(err, cubes) {
+		Cube.find({shortID:null}, function(err, cubes) {
 			update_short_ids(cubes);
 		});
 	});
