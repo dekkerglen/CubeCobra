@@ -667,6 +667,7 @@ router.get('/playtest/:id', function(req, res) {
           if (!user || err) {
             res.render('cube/cube_playtest', {
               cube: cube,
+              cube_id: req.params.id,
               author: 'unknown',
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
@@ -675,6 +676,7 @@ router.get('/playtest/:id', function(req, res) {
           } else {
             res.render('cube/cube_playtest', {
               cube: cube,
+              cube_id: req.params.id,
               owner: user.username,
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
