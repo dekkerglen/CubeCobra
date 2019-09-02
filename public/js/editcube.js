@@ -296,25 +296,24 @@ if (canEdit) {
       headers: {
         'Content-Type': 'application/json'
       }
-    }).then(res => {
-      fetch('/cube/api/getcardfromid/' + updated.cardID)
-        .then(response => response.json())
-        .then(function(json) {
-          var found = false;
-          cube.forEach(function(card, index) {
-            if (!found && card.index == data.src.index) {
-              found = true;
-              cube[index] = updated;
-              cube[index].index = card.index;
-              cube[index].details = json.card;
-              cubeDict[cube[index].index] = cube[index];
-            }
-          });
-
-          updateCubeList();
-          $('#contextModal').modal('hide');
-        });
     });
+    fetch('/cube/api/getcardfromid/' + updated.cardID)
+      .then(response => response.json())
+      .then(function(json) {
+        var found = false;
+        cube.forEach(function(card, index) {
+          if (!found && card.index == data.src.index) {
+            found = true;
+            cube[index] = updated;
+            cube[index].index = card.index;
+            cube[index].details = json.card;
+            cubeDict[cube[index].index] = cube[index];
+          }
+        });
+
+        updateCubeList();
+        $('#contextModal').modal('hide');
+      });
   });
   $('#saveSortButton').click(function(e) {
     var temp_sorts = [];

@@ -2166,7 +2166,9 @@ router.post('/api/getversions', function(req, res) {
 
 router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   Cube.findById(req.params.id, function(err, cube) {
-    if (cube.owner === req.body._id) {
+    console.log(req.user);
+    console.log(cube.owner);
+    if (cube.owner == req.user._id) {
       var found = false;
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
@@ -2203,6 +2205,14 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           }
         });
       }
+    }
+    else
+    {
+      console.log('Not authorized')
+      res.status(400).send({
+        success: 'false',
+        message: 'Not Authorized'
+      });
     }
   });
 });
@@ -2495,9 +2505,7 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
 
 // Access Control
 function ensureAuth(req, res, next) {
-  console.log("checking auth");
   if (req.isAuthenticated()) {
-    console.log("auth success");
     return next();
   } else {
     req.flash('danger', 'Please login to view this content');
