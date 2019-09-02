@@ -1,4 +1,3 @@
-const Filter = require('bad-words');
 const sanitizeHtml = require('sanitize-html');
 const Cube = require('../models/cube');
 const util = require('./util');
@@ -33,7 +32,7 @@ function generate_short_id(callback) {
     let max = Math.max(...ids);
 
     let new_id = '';
-    let filter = new Filter();
+    let filter = util.get_filter();
 
     while (true) {
       max++;

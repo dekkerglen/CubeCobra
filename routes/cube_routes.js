@@ -5,7 +5,6 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-const Filter = require('bad-words');
 var {
   addAutocard,
   generatePack,
@@ -1558,7 +1557,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
             req.flash('danger', 'Custom URL must contain only alphanumeric characters or underscores.');
             res.redirect('/cube/overview/' + req.params.id);
           } else {
-            let filter = new Filter();
+            let filter = util.get_filter();
             if (filter.isProfane(req.body.urlAlias)) {
               req.flash('danger', 'Custom URL may not contain profanity.');
               res.redirect('/cube/overview/' + req.params.id);

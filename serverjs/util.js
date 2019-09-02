@@ -1,4 +1,10 @@
-var shuffleSeed = require('shuffle-seed');
+const shuffleSeed = require('shuffle-seed');
+const Filter = require('bad-words');
+
+function get_filter() {
+  let filter = new Filter();
+	return filter;
+}
 
 function generate_edit_token() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -137,6 +143,7 @@ var methods = {
   generate_edit_token,
   to_base_36,
   from_base_36,
+	get_filter,
 }
 
 module.exports = methods;
