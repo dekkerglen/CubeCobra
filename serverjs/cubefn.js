@@ -1,7 +1,22 @@
-var Filter = require('bad-words');
-var sanitizeHtml = require('sanitize-html');
-let Cube = require('../models/cube');
-let util = require('./util');
+const Filter = require('bad-words');
+const sanitizeHtml = require('sanitize-html');
+const Cube = require('../models/cube');
+const util = require('./util');
+
+function build_id_query(id) {
+  return {
+    $or: [{
+        _id: id,
+      },
+      {
+        shortID: id,
+      },
+      {
+        urlAlias: id,
+      },
+    ],
+  };
+}
 
 function generate_short_id(callback) {
   Cube.find({}, function(err, cubes) {
@@ -12,16 +27,16 @@ function generate_short_id(callback) {
     let max = Math.max(...ids);
 
     let new_id = '';
-		let filter = new Filter();
+    let filter = new Filter();
 
-		while(true) {
-			max++;
-			new_id = util.to_base_36(max);
+    while (true) {
+      max++;
+      new_id = util.to_base_36(max);
 
-			if (!filter.isProfane(new_id) &&
-				  !short_ids.includes(new_id) &&
-				  !url_aliases.includes(new_id)) break;
-		}
+      if (!filter.isProfane(new_id) &&
+        !short_ids.includes(new_id) &&
+        !url_aliases.includes(new_id)) break;
+    }
 
     callback(new_id);
   });

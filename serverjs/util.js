@@ -134,8 +134,8 @@ var methods = {
     return ret;
   },
   generate_edit_token,
-	to_base_36,
-	from_base_36,
+  to_base_36,
+  from_base_36,
 }
 
 module.exports = methods;
