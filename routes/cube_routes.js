@@ -14,6 +14,7 @@ var {
   getBasics,
   generate_short_id,
   build_id_query,
+  get_cube_id,
 } = require('../serverjs/cubefn.js');
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
@@ -1541,6 +1542,9 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
       req.flash('danger', 'Cube not found');
       res.redirect('/cube/overview/' + req.params.id);
     } else {
+      const old_alias = cube.urlAlias;
+      const used_alias = (cube.urlAlias === req.params.id);
+
       var image = carddb.imagedict[req.body.imagename.toLowerCase()];
       var name = req.body.name;
 
@@ -1548,27 +1552,51 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
         req.flash('danger', 'Cube name should be at least 5 characters long.');
         res.redirect('/cube/overview/' + req.params.id);
       } else {
-        if (image) {
-          cube.image_uri = image.uri;
-          cube.image_artist = image.artist;
-          cube.image_name = req.body.imagename;
+        if (req.body.urlAlias && cube.urlAlias !== req.body.urlAlias) {
+          Cube.findOne(build_id_query(req.body.urlAlias), function(err, takenAlias) {
+            if (takenAlias) {
+              req.flash('danger', 'Custom URL already taken.');
+              res.redirect('/cube/overview/' + req.params.id);
+            } else {
+              update_cube();
+            }
+          });
+        } else {
+          update_cube();
         }
-        cube.descriptionhtml = req.body.html;
-        cube.name = name;
-        cube.isListed = req.body.isListed ? true : false;
-        cube.date_updated = Date.now();
-        cube.updated_string = cube.date_updated.toLocaleString("en-US");
-
-        cube = setCubeType(cube, carddb);
-        cube.save(function(err) {
-          if (err) {
-            req.flash('danger', 'Server Error');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else {
-            req.flash('success', 'Cube updated successfully.');
-            res.redirect('/cube/overview/' + req.params.id);
+        
+        function update_cube() {
+          if (image) {
+            cube.image_uri = image.uri;
+            cube.image_artist = image.artist;
+            cube.image_name = req.body.imagename;
           }
-        });
+          cube.descriptionhtml = req.body.html;
+          cube.name = name;
+          cube.isListed = req.body.isListed ? true : false;
+          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias : null;
+          cube.date_updated = Date.now();
+          cube.updated_string = cube.date_updated.toLocaleString("en-US");
+
+          let url = req.params.id;
+          if (used_alias) {
+            if (!cube.urlAlias) url = get_cube_id(cube)
+            else if (cube.urlAlias !== req.params.id) url = cube.urlAlias;
+          } else if (!old_alias && cube.urlAlias) {
+            url = cube.urlAlias;
+          }
+
+          cube = setCubeType(cube, carddb);
+          cube.save(function(err) {
+            if (err) {
+              req.flash('danger', 'Server Error');
+              res.redirect('/cube/overview/' + url);
+            } else {
+              req.flash('success', 'Cube updated successfully.');
+              res.redirect('/cube/overview/' + url);
+            }
+          });
+        }
       }
     }
   });
