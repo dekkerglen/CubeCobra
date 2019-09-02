@@ -1,4 +1,9 @@
 doctype html
+- function cube_id(cube) {
+-   if (cube.urlAlias) return cube.urlAlias;
+-   if (cube.shortID) return cube.shortID;
+-   return cube._id;
+- }
 html
 	head
 		meta(charset='UTF-8')
