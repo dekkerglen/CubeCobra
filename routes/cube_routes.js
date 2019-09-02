@@ -2185,7 +2185,7 @@ router.post('/api/getversions', function(req, res) {
 
 router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === req.body._id) {
+    if (cube.owner === String(req.user._id)) {
       var found = false;
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
@@ -2228,7 +2228,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
 
 router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === req.user._id) {
+    if (cube.owner === String(req.user._id)) {
         var found = false;
         req.body.selected.forEach(function(select, index) {
           if (!cube.cards[select.index].type_line) {
@@ -2371,7 +2371,7 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
 
 router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === req.body._id) {
+    if (cube.owner === String(req.user._id)) {
       var found = false;
       cube.default_sorts = req.body.sorts;
       cube.save(function(err) {
