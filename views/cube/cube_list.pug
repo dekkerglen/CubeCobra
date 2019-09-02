@@ -15,22 +15,22 @@ block content
 					h5(href='#' style='color: #218937;padding:5px;') Compare Cubes
 					h6(href='#' style='color: #218937;padding:5px;')
 						span(style='color: #495057; padding:5px;') Base Cube:
-						a(href='/cube/list/'+cube._id style='color: #218937;padding:5px;') #{cube.name} 
+						a(href='/cube/list/'+cube_id style='color: #218937;padding:5px;') #{cube.name} 
 							| (#{cube.card_count} cards)
 						span(style='color: #495057; padding:5px;') Comparison Cube:
 						a(href='/cube/list/'+cubeB._id style='color: #218937;padding:5px;') #{cubeB.name} 
 							| (#{cubeB.card_count} cards)
 			if !cubeB
 				li.nav-item
-					a.nav-link(href='/cube/overview/'+cube._id) Overview
+					a.nav-link(href='/cube/overview/'+cube_id) Overview
 				li.nav-item
-					a.nav-link.active(href='/cube/list/'+cube._id) List
+					a.nav-link.active(href='/cube/list/'+cube_id) List
 				li.nav-item
-					a.nav-link(href='/cube/playtest/'+cube._id) Playtest
+					a.nav-link(href='/cube/playtest/'+cube_id) Playtest
 				li.nav-item
-					a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+					a.nav-link(href='/cube/analysis/'+cube_id) Analysis
 				li.nav-item(style='padding-right:10px;')
-					a.nav-link(href='/cube/blog/'+cube._id) Blog
+					a.nav-link(href='/cube/blog/'+cube_id) Blog
 	//edit controls    
 	.usercontrols
 		nav.navbar.navbar-expand.navbar-light
@@ -92,7 +92,7 @@ block content
 											input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
 										button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
 							.collapse.editForm                
-								form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+								form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
 									.row
 										.col
 											br
@@ -167,7 +167,7 @@ block content
 	include ../flash
 
 
-	input#cubeID(type='hidden', name='cubeID', value=cube._id)     
+	input#cubeID(type='hidden', name='cubeID', value=cube_id)     
 	if cubeB
 		input#in_both(type='hidden', name='in_both', value=in_both)
 		input#only_a(type='hidden', name='only_a', value=only_a)
@@ -407,7 +407,7 @@ block content
 	#pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
 		.modal-dialog.modal-dialog-scrollable(role='document')
 			.modal-content
-				form(method='POST', action='/cube/bulkupload/'+cube._id)
+				form(method='POST', action='/cube/bulkupload/'+cube_id)
 					.modal-header
 						h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
 						button.close(type='button', data-dismiss='modal', aria-label='Close')

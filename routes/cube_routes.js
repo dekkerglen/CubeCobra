@@ -197,7 +197,7 @@ router.post('/add', ensureAuth, function(req, res) {
                 console.log(err, req);
               } else {
                 req.flash('success', 'Cube Added');
-                res.redirect('/cube/overview/' + cube._id);
+                res.redirect('/cube/overview/' + cube.shortID);
               }
             });
           });
@@ -278,7 +278,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
               Blog.findById(req.body.id, function(err, blog) {
                 if (err || !blog) {
                   req.flash('success', 'Unable to update this blog post.');
-                  res.redirect('/cube/blog/' + cube._id);
+                  res.redirect('/cube/blog/' + req.params.id);
                 } else {
                   blog.html = req.body.html;
                   blog.title = req.body.title;
@@ -288,7 +288,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
                       console.log(err, req);
                     } else {
                       req.flash('success', 'Blog update successful');
-                      res.redirect('/cube/blog/' + cube._id);
+                      res.redirect('/cube/blog/' + req.params.id);
                     }
                   });
                 }
@@ -308,7 +308,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
                   console.log(err, req);
                 } else {
                   req.flash('success', 'Blog post successful');
-                  res.redirect('/cube/blog/' + cube._id);
+                  res.redirect('/cube/blog/' + req.params.id);
                 }
               });
             }
@@ -366,6 +366,7 @@ router.get('/overview/:id', function(req, res) {
             if (!user) {
               res.render('cube/cube_overview', {
                 cube: cube,
+                cube_id: cube_id,
                 title: `${cube.name}: Overview`,
                 num_cards: cube.cards.length,
                 author: 'unknown',
@@ -376,6 +377,7 @@ router.get('/overview/:id', function(req, res) {
             } else {
               res.render('cube/cube_overview', {
                 cube: cube,
+                cube_id: cube_id,
                 title: `${cube.name}: Overview`,
                 num_cards: cube.cards.length,
                 owner: user.username,
@@ -445,13 +447,13 @@ router.get('/blog/:id', function(req, res) {
               for (i = 0; i < blogs.length / 10; i++) {
                 if (page == i) {
                   pages.push({
-                    url: '/cube/blog/' + cube._id + ';' + i,
+                    url: '/cube/blog/' + cube_id + ';' + i,
                     content: (i + 1),
                     active: true
                   });
                 } else {
                   pages.push({
-                    url: '/cube/blog/' + cube._id + ';' + i,
+                    url: '/cube/blog/' + cube_id + ';' + i,
                     content: (i + 1)
                   });
                 }
@@ -464,6 +466,7 @@ router.get('/blog/:id', function(req, res) {
               }
               res.render('cube/cube_blog', {
                 cube: cube,
+                cube_id: cube_id,
                 owner: user.username,
                 posts: blog_page,
                 pages: pages,
@@ -472,6 +475,7 @@ router.get('/blog/:id', function(req, res) {
             } else {
               res.render('cube/cube_blog', {
                 cube: cube,
+                cube_id: cube_id,
                 owner: user.username,
                 posts: blogs,
                 loginCallback: '/cube/blog/' + req.params.id
@@ -480,6 +484,7 @@ router.get('/blog/:id', function(req, res) {
           } else {
             res.render('cube/cube_blog', {
               cube: cube,
+              cube_id: cube_id,
               owner: user.username,
               loginCallback: '/cube/blog/' + req.params.id
             });
@@ -568,6 +573,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
               params = {
                 cube: cubeA,
                 cubeB: cubeB,
+                cube_id: id_a,
                 title: `Comparing ${cubeA.name} to ${cubeB.name}`,
                 in_both: JSON.stringify(in_both.map(card => card.details.name)),
                 only_a: JSON.stringify(a_names),
@@ -620,6 +626,7 @@ router.get('/list/:id', function(req, res) {
           if (!owner) {
             res.render('cube/cube_list', {
               cube: cube,
+              cube_id: req.params.id,
               title: `${cube.name}: List`,
               cube_raw: JSON.stringify(cube.cards),
               author: 'unknown',
@@ -628,6 +635,7 @@ router.get('/list/:id', function(req, res) {
           } else {
             res.render('cube/cube_list', {
               cube: cube,
+              cube_id: req.params.id,
               title: `${cube.name}: List`,
               cube_raw: JSON.stringify(cube.cards),
               owner: owner.username,
@@ -694,6 +702,7 @@ router.get('/analysis/:id', function(req, res) {
         if (err) {
           res.render('cube/cube_analysis', {
             cube: cube,
+            cube_id: req.params.id,
             owner: user.username,
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
@@ -703,6 +712,7 @@ router.get('/analysis/:id', function(req, res) {
         } else {
           res.render('cube/cube_analysis', {
             cube: cube,
+            cube_id: req.params.id,
             owner: user.username,
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
@@ -758,8 +768,8 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `https://cubecobra.com/cube/samplepackimage/${cube._id}/${pack.seed}`,
-            `https://cubecobra.com/cube/samplepack/${cube._id}/${pack.seed}`
+            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}`,
+            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
@@ -894,6 +904,7 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
               if (missing.length > 0) {
                 res.render('cube/bulk_upload', {
                   missing: missing,
+                  cube_id: req.params.id,
                   added: JSON.stringify(added),
                   cube: cube,
                   user: {
@@ -1333,7 +1344,7 @@ function startCustomDraft(req, res, params, cube) {
       });
     } else {
       req.flash('danger', failMessage);
-      res.redirect('/cube/playtest/' + cube._id);
+      res.redirect('/cube/playtest/' + req.params.id);
     }
   } else {
     var cardpool = util.shuffle(cards.slice());

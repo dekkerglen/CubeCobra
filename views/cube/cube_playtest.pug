@@ -8,15 +8,15 @@ block content
 					if cube.type
 						| (#{cube.card_count} Card #{cube.type} Cube)
 			li.nav-item
-				a.nav-link(href='/cube/overview/'+cube._id) Overview
+				a.nav-link(href='/cube/overview/'+cube_id) Overview
 			li.nav-item
-				a.nav-link(href='/cube/list/'+cube._id) List
+				a.nav-link(href='/cube/list/'+cube_id) List
 			li.nav-item
-				a.nav-link.active(href='/cube/playtest/'+cube._id) Playtest
+				a.nav-link.active(href='/cube/playtest/'+cube_id) Playtest
 			li.nav-item
-				a.nav-link(href='/cube/analysis/'+cube._id) Analysis
+				a.nav-link(href='/cube/analysis/'+cube_id) Analysis
 			li.nav-item(style='padding-right:10px;')
-				a.nav-link(href='/cube/blog/'+cube._id) Blog      
+				a.nav-link(href='/cube/blog/'+cube_id) Blog      
 
 	input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)        
 	//edit controls
@@ -81,7 +81,7 @@ block content
 												.collapse(id='collapsepost'+i)
 													span
 														a Are you sure? This action cannot be undone.  
-														button.btn.btn-danger.delete-format(type='submit',value='Delete', data-id=i, data-cube=cube._id ) Yes, delete this format
+														button.btn.btn-danger.delete-format(type='submit',value='Delete', data-id=i, data-cube=cube_id ) Yes, delete this format
 								br
 					.col-12
 						.card
@@ -144,9 +144,9 @@ block content
 							.card-footer
 								.row
 									.col-md-6
-										a#viewRandomButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}`) View Random
+										a#viewRandomButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube_id}`) View Random
 									.col-md-6
-										a#viewSeededButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}/`, data-cube-id=cube._id) View Seeded
+										a#viewSeededButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube_id}/`, data-cube-id=cube_id) View Seeded
 	script(src='/js/playtest.js')
 	if user
 		if user.id == cube.owner

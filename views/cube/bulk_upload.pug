@@ -29,7 +29,7 @@ block content
 						.editarea
 							p.editlist#changelist
 				.row
-					form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+					form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
 						input(id='addedcardshidden', type='hidden', value=added)
 						input#changelistFormBody(type='hidden', name='body')
 						input#changelistBlog(type='hidden', name='blog')
