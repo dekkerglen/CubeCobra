@@ -1,34 +1,19 @@
-extends ../layout
+extends cube_layout
 
-block content  
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link.active(href='/cube/blog/'+cube._id) Blog
+block cube_toolbar
   //edit controls
   if user
     if user.id == cube.owner
       .usercontrols
         nav.navbar.navbar-expand.navbar-light
           .collapse.navbar-collapse
-            ul.navbar-nav          
+            ul.navbar-nav
               li.nav-item
                 a.nav-link.newBlogButton(href='#' data-toggle='modal', data-target='#customDraftModal') Create new blog post
-  include ../flash
+
+block cube_content
   br
-  if pages      
+  if pages
     hr
     nav(aria-label='pagination')
       ul.pagination
@@ -51,18 +36,18 @@ block content
           .row.no-gutters
             .col-4(style='border-right: 1px solid #DFDFDF;')
               .card-body
-                p.card-text 
-                  a !{post.changelist}   
+                p.card-text
+                  a !{post.changelist}
             .col-8
               .card-body
                 .card-text
-                  a !{post.html}           
+                  a !{post.html}
         else if post.changelist
           .card-header
             h5.card-title=post.title
             h6.card-subtitle.mb-2.text-muted=post.date_formatted
           .card-body
-            p.card-text 
+            p.card-text
               a !{post.changelist}
             a
         else
@@ -80,14 +65,14 @@ block content
           .card-footer
             span
               button.btn.btn-success.editBlogButton(role='button' data-id=post._id) Edit
-              a  
+              a
               a.btn.btn-danger(data-toggle='collapse', href='#collapsepost'+i, role='button') Delete
             .collapse(id='collapsepost'+i)
               span
-                a Are you sure? This action cannot be undone.  
+                a Are you sure? This action cannot be undone.
                 button.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id=post._id ) Yes, delete this post
       br
-    if pages      
+    if pages
       hr
       nav(aria-label='pagination')
         ul.pagination
@@ -119,6 +104,6 @@ block content
                   input#postBlogHiddenHTML(type='hidden', name='html')
                   include ../texteditor
               .modal-footer
-                input.btn.btn-success(type='submit',value='Save')   
+                input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
       script(src='/js/blog.js')

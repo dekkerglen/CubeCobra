@@ -1,47 +1,29 @@
-extends ../layout
+extends cube_layout
 
-block content
-  link(rel='stylesheet' href='/css/draft.css')  
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link.active(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube._id) Blog
-  include ../flash
-  br  
+block cube_content
+  link(rel='stylesheet' href='/css/draft.css')
+  br
   if oldformat
     .container
       h4 Drafted by #{drafter}
-      br  
+      br
       .row
         each card, i in cards
           a.autocard(card=card.image_normal)
             img( src=card.image_normal, width='150', height='210')
-  else 
+  else
     .card.card-hover#deckhover
       .card-header
         h4 Drafted by #{drafter}
       .card-body
-        input#deckraw(type='hidden', name='deckraw', value=deck)     
+        input#deckraw(type='hidden', name='deckraw', value=deck)
         #deckarea(style='margin: 3px;')
   br
   h5 Bot Decks
   br
   .row
     each deck, i in bot_decks
-      .col        
-        
+      .col
         div.list-group.list-outline
           span.list-group-heading.list-group-item #{bots[i]}
           each card, j in bot_decks[i]
@@ -61,5 +43,5 @@ block content
               a.list-group-item.autocard.multi.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
             if card.colorcategory == 'l'
               a.list-group-item.autocard.lands.card-list-item(card=card.image_normal card_flip=card.image_flip)= card.name
-                
+
   script(src='/js/deck.js')
