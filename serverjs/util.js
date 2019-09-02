@@ -3,6 +3,12 @@ const Filter = require('bad-words');
 
 function get_filter() {
   let filter = new Filter();
+	let removeWords = [
+		'hell',
+		'sadist',
+		'God',
+	];
+	filter.removeWords(...removeWords);
 	return filter;
 }
 
