@@ -100,7 +100,7 @@
 	color: black;
 	text-decoration: none;
 	padding: 5px 10px;
-	font-size: .75rem;
+	font-size: 9pt;
 	font-weight: 600;
 	border-bottom: 1px solid #bbb;
     margin-bottom: 0px;
@@ -130,7 +130,7 @@
 
 .card-list-item {
 	transition: .25s;
-	font-size: 11px;
+	font-size: 8.5pt;
 	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
@@ -147,12 +147,13 @@
 	text-decoration: none;
 }
 
-
-.cmc-group:first-of-type .card-list-item:first-of-type{
-	border-top-width: 0;
-}
-.cmc-group:last-of-type .card-list-item:last-of-type{
-	border-bottom-width: 0;
+@media(max-width: 991.98px) {
+	.card-list-item {
+		font-size: 10pt;
+	}
+	.list-group-item.list-group-heading {
+		font-size: 10pt;
+	}
 }
 
 .white:not(:hover) {
