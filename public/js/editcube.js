@@ -921,6 +921,7 @@ function init_contextModal() {
   $('.activateContextModal').click(function(e) {
     e.preventDefault();
     card = cubeDict[$(this).attr("cardindex")];
+    autocard_hide_card();
     show_contextModal(card);
   });
 }
