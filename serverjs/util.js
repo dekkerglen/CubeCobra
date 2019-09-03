@@ -90,7 +90,8 @@ function addCardToCube(cube, card_details, idOverride) {
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
     type_line: card_details.type,
-    addedTmsp: new Date()
+    addedTmsp: new Date(),
+    imgUrl: "https://mtgcardsmith.com/view/complete/full/2019/8/28/1567030583727544.png"
   });
 }
 

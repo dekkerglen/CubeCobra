@@ -31,6 +31,7 @@ let cubeSchema = mongoose.Schema({
     cardID: String,
     type_line: String,
     addedTmsp: Date,
+    imgUrl: String,
     details: {}
   }],
   decks: [String],
