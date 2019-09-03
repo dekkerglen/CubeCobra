@@ -1752,9 +1752,9 @@ function renderVisualSpoiler() {
           if (card.details.image_flip) {
             res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
           } else {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.image_normal + '" card_tags="' + card.tags + '">';
           }
-          res += '<img cardIndex="' + card.index + '" class="activateContextModal" src="' + card.details.image_normal + '" alt="' + card.details.name + '" width=150 height=210>';
+          res += '<img cardIndex="' + card.index + '" class="activateContextModal" src="' + card.imgUrl + '" alt="' + card.details.name + '" width=150 height=210>';
           res += '</a>';
         });
       });
