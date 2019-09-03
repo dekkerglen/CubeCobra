@@ -11,6 +11,7 @@
   "author": "Gwen Dekker",
   "license": "ISC",
   "dependencies": {
+    "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "canvas": "^2.6.0",

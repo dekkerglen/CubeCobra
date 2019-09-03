@@ -25,10 +25,10 @@ block cube_content
                 a(href='/cube/deck/'+deck._id) #{deck.name}
                 br
             .card-footer
-              a(href='/cube/decks/'+cube.id) View all
+              a(href='/cube/decks/'+cube_id) View all
 
       //hidden form to fire draft
-      form#fireDraftForm(method='POST', action='/cube/startdraft/'+cube.id)
+      form#fireDraftForm(method='POST', action='/cube/startdraft/'+cube_id)
         input#fireDraftHidden(type='hidden', name='body')
 
       .col-6
@@ -65,7 +65,7 @@ block cube_content
                         .collapse(id='collapsepost'+i)
                           span
                             a Are you sure? This action cannot be undone.
-                            button.btn.btn-danger.delete-format(type='submit',value='Delete', data-id=i, data-cube=cube._id ) Yes, delete this format
+                            button.btn.btn-danger.delete-format(type='submit',value='Delete', data-id=i, data-cube=cube_id ) Yes, delete this format
                 br
           .col-12
             .card
@@ -128,9 +128,9 @@ block cube_content
               .card-footer
                 .row
                   .col-md-6
-                    a#viewRandomButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}`) View Random
+                    a#viewRandomButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube_id}`) View Random
                   .col-md-6
-                    a#viewSeededButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube._id}/`, data-cube-id=cube._id) View Seeded
+                    a#viewSeededButton.btn.btn-success.btn-block(href=`/cube/samplepack/${cube_id}/`, data-cube-id=cube_id) View Seeded
   script(src='/js/playtest.js')
   if user
     if user.id == cube.owner
@@ -138,7 +138,7 @@ block cube_content
       #customDraftModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
         .modal-dialog.modal-lg(role='document')
           .modal-content
-            form#customDraftForm(method='POST', action='/cube/format/add/'+cube.id)
+            form#customDraftForm(method='POST', action='/cube/format/add/'+cube_id)
               .modal-header
                 h5 Create Custom Draft Format
                 button.close(type='button', data-dismiss='modal', aria-label='Close')

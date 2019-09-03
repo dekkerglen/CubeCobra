@@ -287,3 +287,7 @@ border-bottom: none;
 .color-column {
 	padding: 2px 2px;
 }
+
+.form-check {
+	border: none;
+}

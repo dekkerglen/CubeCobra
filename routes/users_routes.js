@@ -5,6 +5,7 @@ const passport = require('passport');
 const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require("nodemailer");
 const fs = require('fs')
+const util = require('../serverjs/util.js');
 
 // Bring in models
 let User = require('../models/user')
@@ -20,6 +21,10 @@ function checkUsernameValid(req) {
     max: 24
   });
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
+  const filter = util.get_filter();
+  req.checkBody('username', 'Username may not use profanity.').custom((value, {
+    req
+  }) => filter.isProfane(value));
   return req;
 }
 

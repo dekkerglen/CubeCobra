@@ -1,7 +1,28 @@
-var shuffleSeed = require('shuffle-seed');
+const shuffleSeed = require('shuffle-seed');
+const Filter = require('bad-words');
+
+function get_filter() {
+  let filter = new Filter();
+  let removeWords = [
+    'hell',
+    'sadist',
+    'God',
+  ];
+  filter.removeWords(...removeWords);
+  return filter;
+}
 
 function generate_edit_token() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+function to_base_36(num) {
+  return num.toString(36);
+}
+
+function from_base_36(str) {
+  if (!str) return 0;
+  return parseInt(str, 36);
 }
 
 function add_word(obj, word) {
@@ -89,8 +110,8 @@ var methods = {
     });
     return res;
   },
-  binaryInsert: binaryInsert,
-  addCardToCube: addCardToCube,
+  binaryInsert,
+  addCardToCube,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -125,7 +146,10 @@ var methods = {
     }
     return ret;
   },
-  generate_edit_token:generate_edit_token
+  generate_edit_token,
+  to_base_36,
+  from_base_36,
+  get_filter,
 }
 
 module.exports = methods;

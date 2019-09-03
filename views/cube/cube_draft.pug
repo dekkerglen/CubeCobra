@@ -5,7 +5,7 @@ block cube_toolbar
   input#draftraw(type='hidden', name='draftraw', value=draft_raw)
   #dragelement(style='position:absolute;z-index: 9999;')
   //hidden form to finish draft
-  form#submitDeckForm(method='POST', action='/cube/submitdeck/'+cube.id)
+  form#submitDeckForm(method='POST', action='/cube/submitdeck/'+cube_id)
     input#submitDeckHidden(type='hidden', name='body')
 
 block cube_content

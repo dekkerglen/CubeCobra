@@ -39,8 +39,8 @@ block cube_toolbar
           li.nav-item.dropdown
             a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
             .dropdown-menu(aria-labelledby='exportdropdown')
-              a.dropdown-item(href='/cube/download/plaintext/'+cube.id) Card Names (.txt)
-              a.dropdown-item(href='/cube/download/csv/'+cube.id) Comma Separated (.csv)
+              a.dropdown-item(href='/cube/download/plaintext/'+cube_id) Card Names (.txt)
+              a.dropdown-item(href='/cube/download/csv/'+cube_id) Comma Separated (.csv)
                 br
     #accordion.accordion
       if user
@@ -62,7 +62,7 @@ block cube_toolbar
                       input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
                     button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
               .collapse.editForm
-                form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+                form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
                   .row
                     .col
                       br
@@ -134,7 +134,7 @@ block cube_toolbar
                 br
                 br
 
-  input#cubeID(type='hidden', name='cubeID', value=cube._id)
+  input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
@@ -370,7 +370,7 @@ block cube_content
   #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')
       .modal-content
-        form(method='POST', action='/cube/bulkupload/'+cube._id)
+        form(method='POST', action='/cube/bulkupload/'+cube_id)
           .modal-header
             h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
             button.close(type='button', data-dismiss='modal', aria-label='Close')
@@ -394,7 +394,7 @@ block cube_content
             span(aria-hidden='true') ×
         .modal-body
           p Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as our .csv export.
-          form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube.id, method='post', enctype='multipart/form-data')
+          form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube_id, method='post', enctype='multipart/form-data')
             input#customFile.custom-file-input(style='padding:10px' type='file' name='document' onchange="$('#upload-file-info').html(this.files[0].name)")
             label#upload-file-info.custom-file-label(for='customFile') Choose file
         .modal-footer
@@ -416,7 +416,7 @@ block cube_content
           .input-group.mb-3
             .input-group-prepend
               span#basic-addon3.input-group-text Cube ID  (enter cube id from URL):
-            form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube.id, method='post', enctype='multipart/form-data')
+            form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube_id, method='post', enctype='multipart/form-data')
               input.form-control(type='text', name='cubeid', placeholder='e.g. 123456')
 
         .modal-footer

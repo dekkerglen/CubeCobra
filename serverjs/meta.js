@@ -1,6 +1,5 @@
 const generateMeta = function(title, description, image, url) {
-  return [
-  {
+  return [{
     property: 'og:title',
     content: title
   }, {

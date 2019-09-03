@@ -91,7 +91,7 @@ block cube_content
       #editBlogModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
         .modal-dialog.modal-lg(role='document')
           .modal-content
-            form#postBlogForm(method='POST', action='/cube/blog/post/'+cube.id)
+            form#postBlogForm(method='POST', action='/cube/blog/post/'+cube_id)
               .modal-header
                 h5#blogEditTitle Edit Blog Post
                 button.close(type='button', data-dismiss='modal', aria-label='Close')
