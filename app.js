@@ -35,8 +35,7 @@ var store = new mongoDBStore({
   databaseName: 'nodecube',
   collection: 'session_data'
 }, function(err) {
-  if(err)
-  {
+  if (err) {
     console.log('store failed to connect to mongoDB:\n' + err);
   }
 });

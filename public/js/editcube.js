@@ -570,11 +570,12 @@ function getLabels(sort) {
     });
     return tags.sort();
   } else if (sort == 'Date Added') {
-    var days = [], formattedDay;
+    var days = [],
+      formattedDay;
     cube.forEach(function(card, index) {
       formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
       if (formattedDay === undefined) {
-          formattedDay = "unknown";
+        formattedDay = "unknown";
       }
       if (!days.includes(formattedDay)) {
         days.push(formattedDay);
@@ -990,10 +991,11 @@ function filteredCube() {
 }
 
 function setFilterQsargs() {
-  var qsargsToSet = {}, modifier;
+  var qsargsToSet = {},
+    modifier;
   filters.forEach(function(filter, index) {
     if (!qsargsToSet[filter.category]) {
-        qsargsToSet[filter.category] = "";
+      qsargsToSet[filter.category] = "";
     }
     modifier = "+";
     if (filter.not) {

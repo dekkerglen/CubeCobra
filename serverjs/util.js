@@ -3,13 +3,13 @@ const Filter = require('bad-words');
 
 function get_filter() {
   let filter = new Filter();
-	let removeWords = [
-		'hell',
-		'sadist',
-		'God',
-	];
-	filter.removeWords(...removeWords);
-	return filter;
+  let removeWords = [
+    'hell',
+    'sadist',
+    'God',
+  ];
+  filter.removeWords(...removeWords);
+  return filter;
 }
 
 function generate_edit_token() {
@@ -149,7 +149,7 @@ var methods = {
   generate_edit_token,
   to_base_36,
   from_base_36,
-	get_filter,
+  get_filter,
 }
 
 module.exports = methods;

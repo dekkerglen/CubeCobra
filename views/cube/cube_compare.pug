@@ -9,7 +9,7 @@ block content
         h5(href='#' style='color: #218937;padding:5px;') Compare Cubes
         h6(href='#' style='color: #218937;padding:5px;')
           span(style='color: #495057; padding:5px;') Base Cube:
-          a(href='/cube/list/'+cube._id style='color: #218937;padding:5px;') #{cube.name}
+          a(href='/cube/list/'+cube_id style='color: #218937;padding:5px;') #{cube.name}
             |  (#{cube.card_count} cards)
           span(style='color: #495057; padding:5px;') Comparison Cube:
           a(href='/cube/list/'+cubeB._id style='color: #218937;padding:5px;') #{cubeB.name}
@@ -43,7 +43,7 @@ block content
                       input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
                     button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
               .collapse.editForm
-                form#changelistForm(method='POST', action='/cube/edit/'+cube._id)
+                form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
                   .row
                     .col
                       br
@@ -116,7 +116,7 @@ block content
   include ../flash
 
 
-  input#cubeID(type='hidden', name='cubeID', value=cube._id)
+  input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#in_both(type='hidden', name='in_both', value=in_both)
   input#only_a(type='hidden', name='only_a', value=only_a)
   input#only_b(type='hidden', name='only_b', value=only_b)
