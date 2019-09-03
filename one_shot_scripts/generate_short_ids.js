@@ -13,6 +13,7 @@ function update_short_ids(cubes) {
 
 	let cube = cubes.shift();
 	generate_short_id(function(short_id) {
+		console.log('Generated short ID ' + short_id + ' for cube ' + cube._id + '. ' + cubes.length + ' cubes left.' );
 		cube.shortID = short_id;
 		Cube.updateOne({
 			_id: cube._id
