@@ -766,6 +766,7 @@ router.get('/samplepack/:id', function(req, res) {
         } else {
           res.render('cube/cube_samplepack', {
             cube,
+            cube_id: req.params.id,
             pack: pack.pack,
             seed: pack.seed,
             activeLink: 'playtest',
@@ -792,6 +793,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           cube,
           pack: pack.pack,
           seed: pack.seed,
+          cube_id: req.params.id,
           activeLink: 'playtest',
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
@@ -1018,6 +1020,7 @@ function bulkuploadCSV(req, res, cards, cube) {
   if (missing.length > 0) {
     res.render('cube/bulk_upload', {
       missing: missing,
+      cube_id: get_cube_id(cube),
       added: JSON.stringify(added),
       cube: cube,
       user: {
@@ -1109,6 +1112,7 @@ function bulkUpload(req, res, list, cube) {
         if (missing.length > 0) {
           res.render('cube/bulk_upload', {
             missing: missing,
+            cube_id: get_cube_id(cube),
             added: JSON.stringify(added),
             cube: cube,
             user: {
@@ -1462,6 +1466,7 @@ router.get('/draft/:id', function(req, res) {
               if (!user || err) {
                 res.render('cube/cube_draft', {
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: 'Unknown',
                   activeLink: 'playtest',
                   loginCallback: '/cube/draft/' + req.params.id,
@@ -1470,6 +1475,7 @@ router.get('/draft/:id', function(req, res) {
               } else {
                 res.render('cube/cube_draft', {
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: user.username,
                   activeLink: 'playtest',
                   loginCallback: '/cube/draft/' + req.params.id,
@@ -1847,7 +1853,7 @@ router.get('/decks/:id', function(req, res) {
       res.redirect('/404/');
     } else {
       Deck.find({
-        cube: cubeid
+        cube: cube._id
       }).sort('date').exec(function(err, decks) {
         User.findById(cube.owner, function(err, owner) {
           var owner_name = 'unknown';
@@ -1885,6 +1891,7 @@ router.get('/decks/:id', function(req, res) {
               }
               res.render('cube/cube_decks', {
                 cube: cube,
+                cube_id: cubeid,
                 owner: owner_name,
                 activeLink: 'playtest',
                 decks: deck_page,
@@ -1894,6 +1901,7 @@ router.get('/decks/:id', function(req, res) {
             } else {
               res.render('cube/cube_decks', {
                 cube: cube,
+                cube_id: cubeid,
                 owner: owner_name,
                 activeLink: 'playtest',
                 decks: decks,
@@ -1903,6 +1911,7 @@ router.get('/decks/:id', function(req, res) {
           } else {
             res.render('cube/cube_decks', {
               cube: cube,
+              cube_id: cubeid,
               owner: owner_name,
               activeLink: 'playtest',
               loginCallback: '/user/decks/' + cubeid,
