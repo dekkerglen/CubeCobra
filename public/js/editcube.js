@@ -296,25 +296,24 @@ if (canEdit) {
       headers: {
         'Content-Type': 'application/json'
       }
-    }).then(res => {
-      fetch('/cube/api/getcardfromid/' + updated.cardID)
-        .then(response => response.json())
-        .then(function(json) {
-          var found = false;
-          cube.forEach(function(card, index) {
-            if (!found && card.index == data.src.index) {
-              found = true;
-              cube[index] = updated;
-              cube[index].index = card.index;
-              cube[index].details = json.card;
-              cubeDict[cube[index].index] = cube[index];
-            }
-          });
-
-          updateCubeList();
-          $('#contextModal').modal('hide');
-        });
     });
+    fetch('/cube/api/getcardfromid/' + updated.cardID)
+      .then(response => response.json())
+      .then(function(json) {
+        var found = false;
+        cube.forEach(function(card, index) {
+          if (!found && card.index == data.src.index) {
+            found = true;
+            cube[index] = updated;
+            cube[index].index = card.index;
+            cube[index].details = json.card;
+            cubeDict[cube[index].index] = cube[index];
+          }
+        });
+
+        updateCubeList();
+        $('#contextModal').modal('hide');
+      });
   });
   $('#saveSortButton').click(function(e) {
     var temp_sorts = [];
@@ -921,6 +920,7 @@ function init_contextModal() {
   $('.activateContextModal').click(function(e) {
     e.preventDefault();
     card = cubeDict[$(this).attr("cardindex")];
+    autocard_hide_card();
     show_contextModal(card);
   });
 }
@@ -989,6 +989,47 @@ function filteredCube() {
   return res;
 }
 
+function setFilterQsargs() {
+  var qsargsToSet = {}, modifier;
+  filters.forEach(function(filter, index) {
+    if (!qsargsToSet[filter.category]) {
+        qsargsToSet[filter.category] = "";
+    }
+    modifier = "+";
+    if (filter.not) {
+      modifier = "-";
+    }
+    qsargsToSet[filter.category] += modifier + filter.value + ",";
+  });
+  var newUrl = window.location.href.split('?')[0];
+  if (!$.isEmptyObject(qsargsToSet)) {
+    newUrl += "?" + $.param(qsargsToSet);
+  }
+  window.history.pushState({}, '', newUrl);
+}
+
+function buildFiltersFromQsargs() {
+  var validCategories = getSorts(),
+    qsargs = new URLSearchParams(window.location.search),
+    qsargValues, value, valueIndex, qsargCategory;
+  for (qsargCategory of qsargs.keys()) {
+    if (!validCategories.includes(qsargCategory)) {
+      continue;
+    }
+    qsargValues = qsargs.get(qsargCategory).split(",");
+    for (valueIndex = 0; valueIndex < qsargValues.length; valueIndex++) {
+      value = qsargValues[valueIndex];
+      if (value.length > 0) {
+        filters.push({
+          category: qsargCategory,
+          value: value.substring(1),
+          not: value[0] === "-"
+        });
+      }
+    }
+  }
+}
+
 function updateCubeList() {
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
@@ -1010,6 +1051,7 @@ function updateCubeList() {
       break;
   }
   autocard_hide_card();
+  setFilterQsargs();
 }
 
 function renderListView() {
@@ -1803,6 +1845,7 @@ window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
+  buildFiltersFromQsargs();
   buildFilterArea();
   updateCubeList();
   activateTags();

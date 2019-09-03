@@ -1,25 +1,7 @@
-extends ../layout
+extends cube_layout
 
-block content
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube_id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube_id) List
-      li.nav-item
-        a.nav-link.active(href='/cube/playtest/'+cube_id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube_id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube_id) Blog
-  include ../flash
-        
-  if pages      
+block cube_content
+  if pages
     hr
     nav(aria-label='pagination')
       ul.pagination
@@ -31,7 +13,7 @@ block content
           else
             li.page-item
               a.page-link(href=page.url)=page.content
-    hr    
+    hr
   br
   .card
     .card-header
@@ -40,8 +22,8 @@ block content
       if decks.length > 0
         each deck, i in decks
           a(href='/cube/deck/'+deck._id) #{deck.name}
-          br    
-  if pages      
+          br
+  if pages
     hr
     nav(aria-label='pagination')
       ul.pagination
