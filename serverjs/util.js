@@ -95,6 +95,10 @@ function addCardToCube(cube, card_details, idOverride) {
   });
 }
 
+function getCardImageURL(card) {
+    return card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
+}
+
 var methods = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -113,6 +117,7 @@ var methods = {
   },
   binaryInsert,
   addCardToCube,
+  getCardImageURL,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
