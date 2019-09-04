@@ -193,11 +193,10 @@ function notPromoOrDigitalId(id) {
 
 // Add Submit POST Route
 router.post('/add', ensureAuth, function(req, res) {
-  const filter = util.get_filter();
   if (req.body.name.length < 5) {
     req.flash('danger', 'Cube name should be at least 5 characters long.');
     res.redirect('/user/view/' + req.user._id);
-  } else if (filter.isProfane(req.body.name.length)) {
+  } else if (util.has_profanity(req.body.name)) {
     req.flash('danger', 'Cube name should not use profanity.');
     res.redirect('/user/view/' + req.user._id);
   } else {
@@ -1507,11 +1506,10 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
       var image = carddb.imagedict[req.body.imagename.toLowerCase()];
       var name = req.body.name;
 
-      const filter = util.get_filter();
       if (name.length < 5) {
         req.flash('danger', 'Cube name should be at least 5 characters long.');
         res.redirect('/cube/overview/' + req.params.id);
-      } else if (filter.isProfane(req.body.name.length)) {
+      } else if (util.has_profanity(name)) {
         req.flash('danger', 'Cube name should not use profanity.');
         res.redirect('/cube/overview/' + req.params.id);
       } else {
@@ -1520,8 +1518,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
             req.flash('danger', 'Custom URL must contain only alphanumeric characters or underscores.');
             res.redirect('/cube/overview/' + req.params.id);
           } else {
-            let filter = util.get_filter();
-            if (filter.isProfane(req.body.urlAlias)) {
+            if (util.has_profanity(req.body.urlAlias)) {
               req.flash('danger', 'Custom URL may not contain profanity.');
               res.redirect('/cube/overview/' + req.params.id);
             } else {

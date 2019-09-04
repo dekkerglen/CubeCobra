@@ -99,7 +99,8 @@ block cube_content
                   input#postBlogHiddenHTML(type='hidden', name='html')
                   label.col-form-label Cube Description:
                   include ../texteditor
-                br
+                  label.col-form-label Custom URL:
+                  input.form-control(name='urlAlias' type='text', value=cube.urlAlias placeholder='Give this cube an easy to remember URL.')
               .modal-footer
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close

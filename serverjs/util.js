@@ -1,7 +1,9 @@
 const shuffleSeed = require('shuffle-seed');
-const Filter = require('bad-words');
 
-function get_filter() {
+function has_profanity(text) {
+  if (!text) return false;
+
+	const Filter = require('bad-words');
   let filter = new Filter();
   let removeWords = [
     'hell',
@@ -9,7 +11,8 @@ function get_filter() {
     'God',
   ];
   filter.removeWords(...removeWords);
-  return filter;
+
+  return filter.isProfane(text.toLowerCase());
 }
 
 function generate_edit_token() {
@@ -149,7 +152,7 @@ var methods = {
   generate_edit_token,
   to_base_36,
   from_base_36,
-  get_filter,
+  has_profanity,
 }
 
 module.exports = methods;

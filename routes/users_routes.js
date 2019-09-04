@@ -21,10 +21,9 @@ function checkUsernameValid(req) {
     max: 24
   });
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, "i");
-  const filter = util.get_filter();
-  req.checkBody('username', 'Username may not use profanity.').custom((value, {
-    req
-  }) => filter.isProfane(value));
+  req.checkBody('username', 'Username may not use profanity.').custom(function(value) {
+    return !util.has_profanity(value);
+  });
   return req;
 }
 
