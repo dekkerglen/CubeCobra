@@ -1947,6 +1947,7 @@ router.get('/deckbuilder/:id', function(req, res) {
             if (!user || err) {
               res.render('cube/cube_deckbuilder', {
                 cube: cube,
+                cube_id: get_cube_id(cube),
                 owner: 'Unknown',
                 activeLink: 'playtest',
                 loginCallback: '/cube/draft/' + req.params.id,
@@ -1957,6 +1958,7 @@ router.get('/deckbuilder/:id', function(req, res) {
             } else {
               res.render('cube/cube_deckbuilder', {
                 cube: cube,
+                cube_id: get_cube_id(cube),
                 owner: user.username,
                 activeLink: 'playtest',
                 loginCallback: '/cube/draft/' + req.params.id,
@@ -2018,6 +2020,7 @@ router.get('/deck/:id', function(req, res) {
                 return res.render('cube/cube_deck', {
                   oldformat: true,
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
                   drafter: drafter_name,
@@ -2046,6 +2049,7 @@ router.get('/deck/:id', function(req, res) {
                 return res.render('cube/cube_deck', {
                   oldformat: false,
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
                   drafter: drafter_name,
