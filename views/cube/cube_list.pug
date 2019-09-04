@@ -5,17 +5,20 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/editcube.css')
   //edit controls
   .usercontrols
-    nav.navbar.navbar-expand.navbar-light
-      .collapse.navbar-collapse
+    nav.navbar.navbar-expand-md.navbar-light
+      .view-style-select
+        label.sr-only(for='viewSelect') Cube View Style
+        select#viewSelect.form-control
+          option(selected='' value='table') Table View
+          option(value='spoiler') Visual Spoiler
+          if user
+            if user.id == cube.owner
+              option(value='list') List View
+          option(value='curve') Curve View
+      button.navbar-toggler(type='button' data-toggle='collapse' data-target='#user-controls-nav' aria-controls='user-controls-nav' aria-expanded='false' aria-label='Toggle User Controls')
+        span.navbar-toggler-icon
+      #user-controls-nav.collapse.navbar-collapse
         ul.navbar-nav
-          li.nav-item(style='padding-right:10px')
-            select#viewSelect.form-control
-              option(selected='' value='table') Table View
-              option(value='spoiler') Visual Spoiler
-              if user
-                if user.id == cube.owner
-                  option(value='list') List View
-              option(value='curve') Curve View
           if user
             if user.id == cube.owner
               li.nav-item

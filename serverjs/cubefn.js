@@ -31,6 +31,10 @@ function generate_short_id(callback) {
     const ids = cubes.map(cube => util.from_base_36(cube.shortID));
     let max = Math.max(...ids);
 
+    if (max < 0) {
+      max = 0;
+    }
+
     let new_id = '';
     while (true) {
       max++;
