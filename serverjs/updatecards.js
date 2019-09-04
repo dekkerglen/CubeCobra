@@ -129,6 +129,9 @@ function convertExtraCard(card) {
   let newcard = {};
   newcard._id = card.id + '2';
   newcard.set = card.set;
+  newcard.promo = card.promo;
+  newcard.digital = card.digital;
+  newcard.border_color = card.border_color;
   newcard.full_name = name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.name = name;
   newcard.name_lower = name.toLowerCase();
@@ -189,6 +192,9 @@ function convertCard(card) {
 
   newcard._id = card.id;
   newcard.set = card.set;
+  newcard.promo = card.promo;
+  newcard.digital = card.digital;
+  newcard.border_color = card.border_color;
   newcard.full_name = card.name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.name = card.name;
   newcard.name_lower = card.name.toLowerCase();

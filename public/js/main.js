@@ -49,11 +49,11 @@ $(document).ready(function() {
 });
 
 function ISODateToYYYYMMDD(dateString) {
-    if (dateString === undefined) {
-      return undefined;
-    }
-    var date = new Date(dateString);
-    return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
+  if (dateString === undefined) {
+    return undefined;
+  }
+  var date = new Date(dateString);
+  return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
 }
 
 function toggleRecent() {

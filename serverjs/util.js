@@ -1,7 +1,31 @@
-var shuffleSeed = require('shuffle-seed');
+const shuffleSeed = require('shuffle-seed');
+
+function has_profanity(text) {
+  if (!text) return false;
+
+	const Filter = require('bad-words');
+  let filter = new Filter();
+  let removeWords = [
+    'hell',
+    'sadist',
+    'God',
+  ];
+  filter.removeWords(...removeWords);
+
+  return filter.isProfane(text.toLowerCase());
+}
 
 function generate_edit_token() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+function to_base_36(num) {
+  return num.toString(36);
+}
+
+function from_base_36(str) {
+  if (!str) return 0;
+  return parseInt(str, 36);
 }
 
 function add_word(obj, word) {
@@ -68,7 +92,7 @@ function addCardToCube(cube, card_details, idOverride) {
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
-    type: card_details.type,
+    type_line: card_details.type,
     addedTmsp: new Date()
   });
 }
@@ -89,8 +113,8 @@ var methods = {
     });
     return res;
   },
-  binaryInsert: binaryInsert,
-  addCardToCube: addCardToCube,
+  binaryInsert,
+  addCardToCube,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -125,7 +149,10 @@ var methods = {
     }
     return ret;
   },
-  generate_edit_token:generate_edit_token
+  generate_edit_token,
+  to_base_36,
+  from_base_36,
+  has_profanity,
 }
 
 module.exports = methods;

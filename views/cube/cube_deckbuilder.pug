@@ -1,37 +1,22 @@
-extends ../layout
+extends cube_layout
 
-block content
-  link(rel='stylesheet' href='/css/draft.css')  
-  input#basicsraw(type='hidden', name='basicsraw', value=basics_raw)     
+block cube_toolbar
+  link(rel='stylesheet' href='/css/draft.css')
+  input#basicsraw(type='hidden', name='basicsraw', value=basics_raw)
   form#submitDeckForm(method='POST', action='/cube/editdeck/'+deckid)
-    input#deckraw(type='hidden', name='draftraw', value=deck_raw)     
-       
-  #dragelement(style='position:absolute;z-index: 9999;')       
-  .cubenav
-    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
-      li.nav-item
-        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}      
-          if cube.type
-            | (#{cube.card_count} Card #{cube.type} Cube)
-      li.nav-item
-        a.nav-link(href='/cube/overview/'+cube._id) Overview
-      li.nav-item
-        a.nav-link(href='/cube/list/'+cube._id) List
-      li.nav-item
-        a.nav-link.active(href='/cube/playtest/'+cube._id) Playtest
-      li.nav-item
-        a.nav-link(href='/cube/analysis/'+cube._id) Analysis
-      li.nav-item(style='padding-right:10px;')
-        a.nav-link(href='/cube/blog/'+cube._id) Blog        
+    input#deckraw(type='hidden', name='draftraw', value=deck_raw)
+
+  #dragelement(style='position:absolute;z-index: 9999;')
   .usercontrols
     nav.navbar.navbar-expand.navbar-light
       .collapse.navbar-collapse
-        ul.navbar-nav          
+        ul.navbar-nav
           li.nav-item
             a#saveDeckButton.nav-link(href='#' ) Save Deck
           li.nav-item
-            a.nav-link(href='#' data-toggle='modal', data-target='#basicsModal') Add Basic Lands        
-  include ../flash
+            a.nav-link(href='#' data-toggle='modal', data-target='#basicsModal') Add Basic Lands
+
+block cube_content
   br
   .card.card-hover#deckhover
     .card-header
@@ -44,7 +29,7 @@ block content
       h4 Sideboard
     .card-body
       #sideboardarea(style='margin: 3px;')
-        
+
   #basicsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
     .modal-dialog.modal-sm(role='document')
       .modal-content
@@ -74,8 +59,8 @@ block content
               option 17
               option 18
               option 19
-              option 20   
-          .form-inline  
+              option 20
+          .form-inline
             img(src='/content/symbols/u.png' alt='Blue' title='Blue' style='padding-right:10px;')
             select#basicsBlue.form-control(name='Blue')
               option(selected='') 0
@@ -98,7 +83,7 @@ block content
               option 17
               option 18
               option 19
-              option 20   
+              option 20
           .form-inline
             img(src='/content/symbols/b.png' alt='Black' title='Black' style='padding-right:10px;')
             select#basicsBlack.form-control(name='Black')
@@ -122,7 +107,7 @@ block content
               option 17
               option 18
               option 19
-              option 20   
+              option 20
           .form-inline
             img(src='/content/symbols/r.png' alt='Red' title='Red' style='padding-right:10px;')
             select#basicsRed.form-control(name='Red')
@@ -146,7 +131,7 @@ block content
               option 17
               option 18
               option 19
-              option 20   
+              option 20
           .form-inline
             img(src='/content/symbols/g.png' alt='Green' title='Green' style='padding-right:10px;')
             select#basicsGreen.form-control(name='Green')
@@ -170,9 +155,9 @@ block content
               option 17
               option 18
               option 19
-              option 20   
+              option 20
         .modal-footer
           button#addBasicsButton.btn.btn-success(type='submit',value='Add') Add
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
   script(src='/js/deckbuilder.js')
-  
+

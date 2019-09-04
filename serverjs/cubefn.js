@@ -1,6 +1,53 @@
-var sanitizeHtml = require('sanitize-html');
-let Cube = require('../models/cube');
-let util = require('./util');
+const sanitizeHtml = require('sanitize-html');
+const Cube = require('../models/cube');
+const util = require('./util');
+
+function get_cube_id(cube) {
+  if (cube.urlAlias) return cube.urlAlias;
+  if (cube.shortID) return cube.shortID;
+  return cube._id;
+}
+
+function build_id_query(id) {
+  if (id.match(/^[0-9a-fA-F]{24}$/)) return {
+    _id: id
+  };
+  return {
+    $or: [{
+        shortID: id.toLowerCase(),
+      },
+      {
+        urlAlias: id.toLowerCase(),
+      },
+    ],
+  };
+}
+
+function generate_short_id(callback) {
+  Cube.find({}, function(err, cubes) {
+    const short_ids = cubes.map(cube => cube.shortID);
+    const url_aliases = cubes.map(cube => cube.urlAlias);
+
+    const ids = cubes.map(cube => util.from_base_36(cube.shortID));
+    let max = Math.max(...ids);
+
+    if (max < 0) {
+      max = 0;
+    }
+
+    let new_id = '';
+    while (true) {
+      max++;
+      new_id = util.to_base_36(max);
+
+      if (!util.has_profanity(new_id) &&
+        !short_ids.includes(new_id) &&
+        !url_aliases.includes(new_id)) break;
+    }
+
+    callback(new_id);
+  });
+}
 
 function intToLegality(val) {
   switch (val) {
@@ -137,7 +184,7 @@ var methods = {
     return src;
   },
   generatePack: function(cubeId, carddb, seed, callback) {
-    Cube.findById(cubeId, function(err, cube) {
+    Cube.findOne(build_id_query(cubeId), function(err, cube) {
       if (!cube) {
         callback(true);
       }
@@ -150,7 +197,10 @@ var methods = {
         pack
       });
     });
-  }
+  },
+  generate_short_id,
+  build_id_query,
+  get_cube_id,
 };
 
 module.exports = methods;
