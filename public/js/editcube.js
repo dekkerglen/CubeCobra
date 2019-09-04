@@ -1750,9 +1750,9 @@ function renderVisualSpoiler() {
 
         rowgroup.forEach(function(card, index) {
           if (card.details.image_flip) {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
           } else {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.image_url + '" card_tags="' + card.tags + '">';
           }
           res += '<img cardIndex="' + card.index + '" class="activateContextModal" src="' + card.details.image_url + '" alt="' + card.details.name + '" width=150 height=210>';
           res += '</a>';
