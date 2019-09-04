@@ -28,7 +28,7 @@ html
 		#autocard_popup_info(style='position:absolute;z-index: 9999;')
 		script(src='/bower_components/jquery/dist/jquery.js')
 	body
-		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
+		nav.navbar.navbar-expand-md.navbar-dark.bg-dark(style="padding-right:10rem")
 			a(href='/')
 				img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
 			button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
@@ -40,7 +40,6 @@ html
 							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
 							.input-group-append
 								button.btn.btn-success.my-2.my-sm-0(type='submit') Search
-
 				ul.navbar-nav
 					li.nav-item.dropdown
 						a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
