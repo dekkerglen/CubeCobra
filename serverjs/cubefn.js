@@ -32,13 +32,11 @@ function generate_short_id(callback) {
     let max = Math.max(...ids);
 
     let new_id = '';
-    let filter = util.get_filter();
-
     while (true) {
       max++;
       new_id = util.to_base_36(max);
 
-      if (!filter.isProfane(new_id) &&
+      if (!util.has_profanity(new_id) &&
         !short_ids.includes(new_id) &&
         !url_aliases.includes(new_id)) break;
     }
