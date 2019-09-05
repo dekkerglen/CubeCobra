@@ -192,51 +192,47 @@ function notPromoOrDigitalId(id) {
 }
 
 // Add Submit POST Route
-router.post('/add', ensureAuth, function(req, res) {
-  const filter = util.get_filter();
+router.post('/add', ensureAuth, async (req, res) => {
   if (req.body.name.length < 5) {
     req.flash('danger', 'Cube name should be at least 5 characters long.');
     res.redirect('/user/view/' + req.user._id);
-  } else if (filter.isProfane(req.body.name.length)) {
+  } else if (util.has_profanity(req.body.name)) {
     req.flash('danger', 'Cube name should not use profanity.');
     res.redirect('/user/view/' + req.user._id);
   } else {
-    User.findById(req.user._id, function(err, user) {
-      Cube.find({
-        owner: user._id
-      }, function(err, cubes) {
-        if (cubes.length < 24) {
-          generate_short_id(function(short_id) {
-            let cube = new Cube();
-            cube.shortID = short_id;
-            cube.name = req.body.name;
-            cube.owner = req.user._id;
-            cube.cards = [];
-            cube.decks = [];
-            cube.articles = [];
-            cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
-            cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
-            cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
-            cube.description = "This is a brand new cube!";
-            cube.owner_name = user.username;
-            cube.date_updated = Date.now();
-            cube.updated_string = cube.date_updated.toLocaleString("en-US");
-            cube = setCubeType(cube, carddb);
-            cube.save(function(err) {
-              if (err) {
-                console.log(err, req);
-              } else {
-                req.flash('success', 'Cube Added');
-                res.redirect('/cube/overview/' + cube.shortID);
-              }
-            });
-          });
+    let user = await User.findById(req.user._id);
+    let cubes = await Cube.find({
+      owner: user._id
+    });
+    if (cubes.length < 24) {
+      let short_id = await generate_short_id();
+      let cube = new Cube();
+      cube.shortID = short_id;
+      cube.name = req.body.name;
+      cube.owner = req.user._id;
+      cube.cards = [];
+      cube.decks = [];
+      cube.articles = [];
+      cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
+      cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
+      cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
+      cube.description = "This is a brand new cube!";
+      cube.owner_name = user.username;
+      cube.date_updated = Date.now();
+      cube.updated_string = cube.date_updated.toLocaleString("en-US");
+      cube = setCubeType(cube, carddb);
+      cube.save(function(err) {
+        if (err) {
+          console.log(err, req);
         } else {
-          req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
-          res.redirect('/user/view/' + req.user._id);
+          req.flash('success', 'Cube Added');
+          res.redirect('/cube/overview/' + cube.shortID);
         }
       });
-    });
+    } else {
+      req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
+      res.redirect('/user/view/' + req.user._id);
+    }
   }
 });
 
@@ -294,7 +290,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
     req.flash('danger', 'Blog body length must be greater than 10 characters.');
     res.redirect('/cube/blog/' + req.params.id);
   } else {
-    Cube.findOne(build_query_id(req.params.id), function(err, cube) {
+    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
       if (err || !cube) {
         req.flash('danger', 'Cube not found');
         res.redirect('/404/');
@@ -657,7 +653,6 @@ router.get('/list/:id', function(req, res) {
             }
           }
         });
-
         res.render('cube/cube_list', {
           cube: cube,
           activeLink: 'list',
@@ -1508,11 +1503,10 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
       var image = carddb.imagedict[req.body.imagename.toLowerCase()];
       var name = req.body.name;
 
-      const filter = util.get_filter();
       if (name.length < 5) {
         req.flash('danger', 'Cube name should be at least 5 characters long.');
         res.redirect('/cube/overview/' + req.params.id);
-      } else if (filter.isProfane(req.body.name.length)) {
+      } else if (util.has_profanity(name)) {
         req.flash('danger', 'Cube name should not use profanity.');
         res.redirect('/cube/overview/' + req.params.id);
       } else {
@@ -1521,8 +1515,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
             req.flash('danger', 'Custom URL must contain only alphanumeric characters or underscores.');
             res.redirect('/cube/overview/' + req.params.id);
           } else {
-            let filter = util.get_filter();
-            if (filter.isProfane(req.body.urlAlias)) {
+            if (util.has_profanity(req.body.urlAlias)) {
               req.flash('danger', 'Custom URL may not contain profanity.');
               res.redirect('/cube/overview/' + req.params.id);
             } else {
@@ -1549,7 +1542,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
           cube.descriptionhtml = req.body.html;
           cube.name = name;
           cube.isListed = req.body.isListed ? true : false;
-          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias : null;
+          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias.toLowerCase() : null;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
@@ -1951,6 +1944,7 @@ router.get('/deckbuilder/:id', function(req, res) {
             if (!user || err) {
               res.render('cube/cube_deckbuilder', {
                 cube: cube,
+                cube_id: get_cube_id(cube),
                 owner: 'Unknown',
                 activeLink: 'playtest',
                 loginCallback: '/cube/draft/' + req.params.id,
@@ -1961,6 +1955,7 @@ router.get('/deckbuilder/:id', function(req, res) {
             } else {
               res.render('cube/cube_deckbuilder', {
                 cube: cube,
+                cube_id: get_cube_id(cube),
                 owner: user.username,
                 activeLink: 'playtest',
                 loginCallback: '/cube/draft/' + req.params.id,
@@ -2022,6 +2017,7 @@ router.get('/deck/:id', function(req, res) {
                 return res.render('cube/cube_deck', {
                   oldformat: true,
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
                   drafter: drafter_name,
@@ -2050,6 +2046,7 @@ router.get('/deck/:id', function(req, res) {
                 return res.render('cube/cube_deck', {
                   oldformat: false,
                   cube: cube,
+                  cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
                   drafter: drafter_name,

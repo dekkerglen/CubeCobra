@@ -53,13 +53,18 @@ function autocompleteByTree(inp, tree, images, submit_button) {
   inp.addEventListener("keydown", function(e) {
     var x = document.getElementById(this.id + "autocomplete-list");
     if (x) x = x.getElementsByTagName("div");
+    /* If there are no results continue without doing anything */
+    if (!x) return;
+
     if (e.keyCode == 40) {
+      e.preventDefault();
       /*If the arrow DOWN key is pressed,
       increase the currentFocus variable:*/
       currentFocus++;
       /*and and make the current item more visible:*/
       addActive(x);
     } else if (e.keyCode == 38) { //up
+      e.preventDefault();
       /*If the arrow UP key is pressed,
       decrease the currentFocus variable:*/
       currentFocus--;
@@ -71,6 +76,9 @@ function autocompleteByTree(inp, tree, images, submit_button) {
         /*and simulate a click on the "active" item:*/
         e.preventDefault();
         if (x) x[currentFocus].click();
+      } else {
+        /* The user is moving away from the input now hide the list*/
+        closeAllLists();
       }
     } else if (e.keyCode == 13) {
       /*If the ENTER key is pressed, prevent the form from being submitted,*/

@@ -22,37 +22,19 @@ Atom (optional): https://atom.io/
 
 ### Clone Project
 
-Clone the project into a folder of your choice. Then, you will need to add a folder adjacent to the project folder like this:
+Clone the project into a folder of your choice. Create a symbolic link from
+`../cubecobrasecrets` to `cubecobrasecrets.example`:
+
+  cd CubeCobra/..
+  ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+
+The resulting directory structure should look like this:
 
     .
     ├── CubeCobra               # Cloned repository
-    └── cubecobrasecrets        # Secrets folder    
+    └── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
         └── email.js            # Email secrets file
-        └── tcgplayer.js        # TCGPlayer API secrets file
-        └── secrets.js          # App settings secrets file
-        
-In email.js, you can paste the following, and replace the fields with any gmail account you have access to. You only need to fill out these fields with real information if you need to create user account validation emails.
-
-    module.exports =
-    {
-      username:'YOUR_EMAIL',
-      password:'YOUR_PASSWORD'
-    }
-
-In tcgplayer.js, you can paste the following. You only need to fill out these fields with real information if you need real card prices in your development environment.
-
-    module.exports =
-    {
-      Public_Key:'',
-      Private_Key:''
-    }
-    
-In secrets.js, you can paste the following. You need to give some value to this field, but it doesn't matter what.
-
-    module.exports =
-    {
-      session:'VALUE'
-    }
+        └── etc...
 
 Then, run the following commands in the root of the cloned repository:
 

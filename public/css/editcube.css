@@ -67,11 +67,23 @@
     width: 100%;
 }
 
+.view-style-select
+{
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
 @media (min-width: 768px) { 
 	.compare-col
 	{
 		width: 80%;
 	}
+    .view-style-select
+    {
+        width: 130px;
+		padding-right: 10px;
+		margin-bottom: 0;
+    }
 }
 
 @media (min-width: 992px) { 
