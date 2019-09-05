@@ -148,6 +148,7 @@ block cube_toolbar
 block cube_content
   br
   .container#cubelistarea
+  #react-root(style='display: none')
 
   //group context modal
   if user && user.id == cube.owner
@@ -397,3 +398,4 @@ block cube_content
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
   script(src='/js/editcube.js')
+  script(src='/js/list.bundle.js')
