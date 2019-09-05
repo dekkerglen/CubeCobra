@@ -1034,26 +1034,26 @@ function buildFiltersFromQsargs() {
 
 var updateCubeListeners = [];
 function updateCubeList() {
-  for (let listener of updateCubeListeners) {
-    listener(view, filteredCube());
-  }
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
   } else {
     $('#massEdit').text('Mass Edit');
   }
+  for (let listener of updateCubeListeners) {
+    listener(view, filteredCube());
+  }
   switch (view) {
     case 'table':
       renderTableView();
-      break;
-    case 'spoiler':
-      renderVisualSpoiler();
       break;
     case 'curve':
       renderCurveView();
       break;
     case 'list':
       renderListView();
+      break;
+    case 'spoiler':
+      $('#cubelistarea').html('');
       break;
   }
   autocard_hide_card();
@@ -1701,24 +1701,6 @@ function renderTableView() {
 
   res += '</div>';
   $('#cubelistarea').html(res);
-
-  autocard_init('autocard');
-  init_contextModal();
-  if (canEdit) {
-    init_groupcontextModal();
-  }
-}
-
-function renderVisualSpoiler() {
-  sorts[0] = document.getElementById('primarySortSelect').value;
-  sorts[1] = document.getElementById('secondarySortSelect').value;
-  var columns = sortIntoGroups(filteredCube(), sorts[0]);
-  Object.keys(columns).forEach(function(column_label, col_index) {
-    columns[column_label] = sortIntoGroups(columns[column_label], sorts[1]);
-  });
-
-  $('#cubelistarea').html('');
-  $('#react-root').show();
 
   autocard_init('autocard');
   init_contextModal();
