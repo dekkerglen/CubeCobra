@@ -7,7 +7,7 @@ const {
 
 (async () => {
 	mongoose.connect(config.database).then( async (db) => {
-		let cubes = await Cube.find({shortID:null}).sort({'date_updated': -1});
+		let cubes = await Cube.find({shortID:null})
 		for (let i = 0; i < 1; i++) {
 			let cube = cubes[i];
 			let short_id = await generate_short_id();
