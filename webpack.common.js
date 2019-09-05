@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   context: path.resolve(__dirname, 'src'),
   entry: {
-    list: [ './list.js' ],
+    cube_list: [ './cube_list.js' ],
   },
   output: {
     filename: '[name].bundle.js',

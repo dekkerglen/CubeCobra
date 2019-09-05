@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Container, Row, Col } from 'reactstrap';
-
-import Autocard from './components/Autocard';
+import VisualSpoiler from './components/VisualSpoiler';
 
 class CubeList extends Component {
   constructor(props) {
@@ -27,18 +25,6 @@ class CubeList extends Component {
     </>;
   }
 }
-
-const VisualSpoiler = ({ cards, ...props }) => (
-  <Container {...props}>
-    <Row>
-      <Col>
-        {
-          cards.map(({ index, details }) => <Autocard key={index} {...details} />)
-        }
-      </Col>
-    </Row>
-  </Container>
-);
 
 const wrapper = document.getElementById('react-root');
 wrapper ? ReactDOM.render(<CubeList />, wrapper) : false;
