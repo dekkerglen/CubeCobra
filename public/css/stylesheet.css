@@ -298,20 +298,21 @@ border-bottom: none;
     height:359px;
 }
 
-#contextModalImg:before, .samplepack .col-md-2 img:before {
+.defaultCardImage:before {
     content: ' ';
     display: block;
     position: absolute;
     background-image: url(/content/default_card.png);
 }
 
-#contextModalImg:before, .samplepack .col-md-2 img:before {
-    height: 359px;
-    width: 258px;
-}
-
-.samplepack .col-md-2 img:before {
+.defaultCardImage:before {
     height: 210px;
     width: 150px;
     background-size: 150px 210px;
+}
+
+#contextModalImg:before {
+    height: 359px;
+    width: 258px;
+    background-size: 258px 359px;
 }
