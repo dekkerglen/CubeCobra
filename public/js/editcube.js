@@ -285,6 +285,7 @@ if (canEdit) {
     updated.cardID = $('#contextModalVersionSelect').val();
     updated.cmc = $('#contextModalCMC').val();
     updated.type_line = $('#contextModalType').val().replace('-', '—');
+    updated.imgUrl = $('#contextModalImageURL').val();
 
     let data = {
       src: modalSelect,
@@ -897,6 +898,7 @@ function show_contextModal(card) {
     $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName=' + name + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
   $('#contextModalType').val(card.type_line);
+  $('#contextModalImageURL').val(card.imgUrl);
 
   fetch('/cube/api/getversions/' + card.cardID)
     .then(response => response.json())
