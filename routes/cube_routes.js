@@ -1541,7 +1541,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
           cube.descriptionhtml = req.body.html;
           cube.name = name;
           cube.isListed = req.body.isListed ? true : false;
-          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias : null;
+          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias.toLowerCase() : null;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
 
