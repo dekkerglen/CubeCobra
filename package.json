@@ -6,7 +6,7 @@
   "scripts": {
     "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",
     "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
-    "start": "nodemon & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
+    "start": "nodemon --ignore src --ignore public & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
     "test": "jest"
   },
   "author": "Gwen Dekker",
