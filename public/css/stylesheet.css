@@ -303,9 +303,6 @@ border-bottom: none;
     display: block;
     position: absolute;
     background-image: url(/content/default_card.png);
-}
-
-.defaultCardImage:before {
     height: 210px;
     width: 150px;
     background-size: 150px 210px;
