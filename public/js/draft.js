@@ -272,9 +272,9 @@ function renderDraft() {
     var packhtml = "";
     draft.packs[0][0].forEach(function(card, index) {
       if (card.details.card_flip) {
-        packhtml += '<a class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        packhtml += '<a class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="packcard defaultCardImage" data-id="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        packhtml += '<a class="autocard" card="' + card.details.image_url + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        packhtml += '<a class="autocard" card="' + card.details.image_url + '" href="#"><img class="packcard defaultCardImage" data-id="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#packarea').html(packhtml);
@@ -284,9 +284,9 @@ function renderDraft() {
     var pickshtml = "";
     col.forEach(function(card, index2) {
       if (card.details.card_flip) {
-        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="pickscard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" href="#"><img class="pickscard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#picksColumn' + index).html(pickshtml);
