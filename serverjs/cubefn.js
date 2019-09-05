@@ -23,30 +23,30 @@ function build_id_query(id) {
   };
 }
 
-function generate_short_id(callback) {
-  Cube.find({}, function(err, cubes) {
-    const short_ids = cubes.map(cube => cube.shortID);
-    const url_aliases = cubes.map(cube => cube.urlAlias);
+async function generate_short_id() {
+  let cubes = await Cube.find({});
 
-    const ids = cubes.map(cube => util.from_base_36(cube.shortID));
-    let max = Math.max(...ids);
+  const short_ids = cubes.map(cube => cube.shortID);
+  const url_aliases = cubes.map(cube => cube.urlAlias);
 
-    if (max < 0) {
-      max = 0;
-    }
+  const ids = cubes.map(cube => util.from_base_36(cube.shortID));
+  let max = Math.max(...ids);
 
-    let new_id = '';
-    while (true) {
-      max++;
-      new_id = util.to_base_36(max);
+  if (max < 0) {
+    max = 0;
+  }
 
-      if (!util.has_profanity(new_id) &&
-        !short_ids.includes(new_id) &&
-        !url_aliases.includes(new_id)) break;
-    }
+  let new_id = '';
+  while (true) {
+    max++;
+    new_id = util.to_base_36(max);
 
-    callback(new_id);
-  });
+    if (!util.has_profanity(new_id) &&
+      !short_ids.includes(new_id) &&
+      !url_aliases.includes(new_id)) break;
+  }
+
+  return new_id;
 }
 
 function intToLegality(val) {
