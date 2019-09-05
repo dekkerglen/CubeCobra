@@ -304,5 +304,5 @@ border-bottom: none;
     position: absolute;
     height: 359px;
     width: 258px;
-    background-image: url(https://upload.wikimedia.org/wikipedia/en/a/aa/Magic_the_gathering-card_back.jpg);
+    background-image: url(/content/default_card.png);
 }
