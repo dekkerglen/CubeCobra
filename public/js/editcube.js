@@ -286,6 +286,9 @@ if (canEdit) {
     updated.cmc = $('#contextModalCMC').val();
     updated.type_line = $('#contextModalType').val().replace('-', '—');
     updated.imgUrl = $('#contextModalImageURL').val();
+    if (updated.imgUrl === "") {
+        updated.imgUrl = null;
+    }
 
     let data = {
       src: modalSelect,
@@ -305,6 +308,11 @@ if (canEdit) {
         cube.forEach(function(card, index) {
           if (!found && card.index == data.src.index) {
             found = true;
+            Object.keys(updated).forEach(function(key) {
+              if (updated[key] === null) {
+                updated[key] = undefined;
+              }
+            });
             cube[index] = updated;
             cube[index].index = card.index;
             cube[index].details = json.card;

@@ -2179,6 +2179,11 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
               updated[key] = card[key];
             }
           });
+          Object.keys(updated).forEach(function(key) {
+            if (updated[key] === null) {
+              updated[key] = undefined;
+            }
+          });
           cube.cards[index] = updated;
         }
       });
