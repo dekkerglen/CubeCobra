@@ -3,30 +3,14 @@ import ReactDOM from 'react-dom';
 
 import { Container, Row, Col } from 'reactstrap';
 
+import Autocard from './components/Autocard';
+
 const VisualSpoiler = ({ cards }) => (
   <Container>
     <Row>
       <Col>
         {
-          cards.map(({ index, details }) =>
-            <a
-              key={index}
-              href="#"
-              className="autocard"
-              card={details.image_normal}
-              card_flip={details.image_flip}
-              card_tags={details.tags}
-            >
-              <img
-                cardIndex={index}
-                className="activateContextModal"
-                src={details.image_normal}
-                alt={details.name}
-                width={150}
-                height={210}
-              />
-            </a>
-          )
+          cards.map(({ index, details }) => <Autocard key={index} {...details} />)
         }
       </Col>
     </Row>
