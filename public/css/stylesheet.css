@@ -313,3 +313,9 @@ border-bottom: none;
     width: 258px;
     background-size: 258px 359px;
 }
+
+.visualSpoilerCardContainer {
+    display: inline-block;
+    width: 150px;
+    vertical-align: top;
+}
