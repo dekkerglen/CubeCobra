@@ -269,6 +269,10 @@ block cube_content
                 .input-group-prepend
                   span.input-group-text Type
                 input#contextModalType.form-control(type='text', value='2')
+              .input-group.mb-3
+                .input-group-prepend
+                  span.input-group-text Card Image URL
+                  input#contextModalImageURL.form-control(type='text', value='2')
               h5 Color Identity Override:
               .form-check.form-check-inline
                 input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1', disabled=!user || user.id != cube.owner)
@@ -296,10 +300,6 @@ block cube_content
                   span.tags
                   input.hidden-input(type='hidden')
                   input.main-input(maxlength="24")
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Custom Image URL
-                  input#contextModalImageURL.form-control(type='text', value='2')
 
         .modal-footer
           if user && user.id == cube.owner
