@@ -655,7 +655,6 @@ router.get('/list/:id', function(req, res) {
             }
           }
         });
-
         res.render('cube/cube_list', {
           cube: cube,
           activeLink: 'list',

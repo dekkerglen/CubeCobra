@@ -5,7 +5,7 @@ doctype html
 -   return cube._id;
 - }
 html
-	head
+	head  
 		meta(charset='UTF-8')
 		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
@@ -17,10 +17,7 @@ html
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
-		title
-			| Cube Cobra
-			if title
-				| : #{title}
+		title Cube Cobra
 		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup(style='position:absolute;z-index: 9999;')
