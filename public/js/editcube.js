@@ -1535,8 +1535,8 @@ function renderTableView() {
     }
   });
 
-  var res = '<div class="row even-cols" style="margin: 0 -17px">';
-  res += `<style>@media(min-width: 992px) { .color-column { max-width: ${100 / Object.keys(columns).length}%; } }</style>`;
+  var res = `<style>@media(min-width: 992px) { .even-cols { flex-wrap: nowrap } .color-column { width: ${100 / Object.keys(columns).length}% } }</style>`;
+  res += '<div class="row even-cols" style="margin: 0 -17px">';
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
@@ -1577,7 +1577,7 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<div class="color-column col-12 col-sm-6 col-md-3 col-lg-auto">';
+        res += '<div class="color-column col-6 col-md-3 col-lg-auto">';
         res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
