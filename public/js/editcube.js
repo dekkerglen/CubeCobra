@@ -308,6 +308,7 @@ if (canEdit) {
             cube[index] = updated;
             cube[index].index = card.index;
             cube[index].details = json.card;
+            cube[index].details.image_url = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
             cubeDict[cube[index].index] = cube[index];
           }
         });
