@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",
+    "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
     "start": "nodemon & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
     "test": "jest"
   },
@@ -54,6 +55,7 @@
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "reactstrap": "^8.0.1",
+    "terser-webpack-plugin": "^2.0.0",
     "webpack": "^4.39.3",
     "webpack-cli": "^3.3.8",
     "webpack-dev-server": "^3.8.0",
