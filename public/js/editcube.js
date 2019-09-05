@@ -1032,13 +1032,16 @@ function buildFiltersFromQsargs() {
   }
 }
 
+var updateCubeListeners = [];
 function updateCubeList() {
+  for (let listener of updateCubeListeners) {
+    listener(view, filteredCube());
+  }
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
   } else {
     $('#massEdit').text('Mass Edit');
   }
-  $('#react-root').hide();
   switch (view) {
     case 'table':
       renderTableView();
