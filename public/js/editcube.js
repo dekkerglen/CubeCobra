@@ -308,7 +308,7 @@ if (canEdit) {
             cube[index] = updated;
             cube[index].index = card.index;
             cube[index].details = json.card;
-            cube[index].details.image_url = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
+            cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
             cubeDict[cube[index].index] = cube[index];
           }
         });
@@ -792,9 +792,9 @@ function renderGroupContext() {
       price_foil += card.details.price_foil;
     }
     if (card.details.image_flip) {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
     } else {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
     }
     cardlist += '<a data-index="' + index + '" class="groupModalRm clickx" href="#">×</a><a>  ';
     cardlist += card.details.name;
@@ -860,7 +860,7 @@ function show_contextModal(card) {
   }
   $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
-  $('#contextModalImg').attr('src', card.details.image_url);
+  $('#contextModalImg').attr('src', card.details.display_image);
   $('#contextModalVersionSelect').html('');
   var statusHTML = "";
   var statuses = getLabels('Status');
@@ -1125,7 +1125,7 @@ function renderListView() {
         }
 
         //name col
-        res += '<td id="namecol' + cards[i].index + '" data-index="' + cards[i].index + '" class="nostretch tdcard autocard" card="' + cards[i].details.image_url + '"><div data-index="' + cards[i].index + '" class="tdname"><a data-index="' + cards[i].index + '">' + cards[i].details.name + '</a></div></td>';
+        res += '<td id="namecol' + cards[i].index + '" data-index="' + cards[i].index + '" class="nostretch tdcard autocard" card="' + cards[i].details.display_image + '"><div data-index="' + cards[i].index + '" class="tdname"><a data-index="' + cards[i].index + '">' + cards[i].details.name + '</a></div></td>';
 
         //version col
         res += '<td data-index="' + cards[i].index + '" class="nostretch">';
@@ -1492,9 +1492,9 @@ function renderCurveView() {
             res += '<a class="list-group-item list-group-heading">' + col_label + ' (' + groups[group_label][label][col_label].length + ')</a>';
             groups[group_label][label][col_label].forEach(function(card, index) {
               if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
               } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
               }
               res += card.details.name + '</a>';
             });
@@ -1678,9 +1678,9 @@ function renderTableView() {
 
             column.forEach(function(card, index) {
               if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
               } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_url + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
               }
               res += card.details.name + '</a>';
             });
@@ -1754,11 +1754,11 @@ function renderVisualSpoiler() {
         rowgroup.forEach(function(card, index) {
           res += '<div class="visualSpoilerCardContainer">';
           if (card.details.image_flip) {
-            res += '<a href="#" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
           } else {
-            res += '<a href="#" class="autocard" card="' + card.details.image_url + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
           }
-          res += '<img cardIndex="' + card.index + '" class="activateContextModal defaultCardImage" src="' + card.details.image_url + '" alt="' + card.details.name + '" width=150 height=210>';
+          res += '<img cardIndex="' + card.index + '" class="activateContextModal defaultCardImage" src="' + card.details.display_image + '" alt="' + card.details.name + '" width=150 height=210>';
           res += '</a>';
           res += '</div>';
         });

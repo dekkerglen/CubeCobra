@@ -634,7 +634,7 @@ router.get('/list/:id', function(req, res) {
       var pids = [];
       cube.cards.forEach(function(card, index) {
         card.details = carddb.carddict[card.cardID];
-        card.details.image_url = util.getCardImageURL(card);
+        card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
