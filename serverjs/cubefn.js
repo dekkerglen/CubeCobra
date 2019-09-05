@@ -24,7 +24,7 @@ function build_id_query(id) {
 }
 
 async function generate_short_id() {
-  let cubes = await Cube.find({}, [ '_id', 'shortID' ]);
+  let cubes = await Cube.find({}, [ 'shortID', 'urlAlias' ]);
 
   const short_ids = cubes.map(cube => cube.shortID);
   const url_aliases = cubes.map(cube => cube.urlAlias);
