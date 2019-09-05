@@ -158,9 +158,9 @@ function renderDraft() {
         lands++;
       }
       if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" href="#"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_url + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_url + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#deckColumn' + index).html(colhtml);

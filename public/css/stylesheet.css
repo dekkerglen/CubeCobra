@@ -314,7 +314,7 @@ border-bottom: none;
     background-size: 258px 359px;
 }
 
-.packcard.defaultCardImage:before, .pickscard.defaultCardImage:before {
+.packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
     height: 175px;
     width: 125px;
     background-size: 125px 175px;
