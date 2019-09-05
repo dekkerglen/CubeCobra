@@ -292,3 +292,8 @@ border-bottom: none;
 .form-check {
 	border: none;
 }
+
+#contextModalImg {
+    width:258px;
+    height:359px;
+}
