@@ -290,7 +290,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
     req.flash('danger', 'Blog body length must be greater than 10 characters.');
     res.redirect('/cube/blog/' + req.params.id);
   } else {
-    Cube.findOne(build_query_id(req.params.id), function(err, cube) {
+    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
       if (err || !cube) {
         req.flash('danger', 'Cube not found');
         res.redirect('/404/');
