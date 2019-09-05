@@ -306,3 +306,13 @@ border-bottom: none;
     width: 258px;
     background-image: url(/content/default_card.png);
 }
+
+.samplepack .col-md-2 img:before {
+    content: ' ';
+    display: block;
+    position: absolute;
+    height: 210px;
+    width: 150px;
+    background-image: url(/content/default_card.png);
+    background-size: 150px 210px;
+}
