@@ -192,7 +192,7 @@ function notPromoOrDigitalId(id) {
 }
 
 // Add Submit POST Route
-router.post('/add', ensureAuth, function(req, res) {
+router.post('/add', ensureAuth, async (req, res) => {
   if (req.body.name.length < 5) {
     req.flash('danger', 'Cube name should be at least 5 characters long.');
     res.redirect('/user/view/' + req.user._id);
@@ -200,42 +200,39 @@ router.post('/add', ensureAuth, function(req, res) {
     req.flash('danger', 'Cube name should not use profanity.');
     res.redirect('/user/view/' + req.user._id);
   } else {
-    User.findById(req.user._id, function(err, user) {
-      Cube.find({
-        owner: user._id
-      }, function(err, cubes) {
-        if (cubes.length < 24) {
-          generate_short_id(function(short_id) {
-            let cube = new Cube();
-            cube.shortID = short_id;
-            cube.name = req.body.name;
-            cube.owner = req.user._id;
-            cube.cards = [];
-            cube.decks = [];
-            cube.articles = [];
-            cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
-            cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
-            cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
-            cube.description = "This is a brand new cube!";
-            cube.owner_name = user.username;
-            cube.date_updated = Date.now();
-            cube.updated_string = cube.date_updated.toLocaleString("en-US");
-            cube = setCubeType(cube, carddb);
-            cube.save(function(err) {
-              if (err) {
-                console.log(err, req);
-              } else {
-                req.flash('success', 'Cube Added');
-                res.redirect('/cube/overview/' + cube.shortID);
-              }
-            });
-          });
+    let user = await User.findById(req.user._id);
+    let cubes = await Cube.find({
+      owner: user._id
+    });
+    if (cubes.length < 24) {
+      let short_id = await generate_short_id();
+      let cube = new Cube();
+      cube.shortID = short_id;
+      cube.name = req.body.name;
+      cube.owner = req.user._id;
+      cube.cards = [];
+      cube.decks = [];
+      cube.articles = [];
+      cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
+      cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
+      cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
+      cube.description = "This is a brand new cube!";
+      cube.owner_name = user.username;
+      cube.date_updated = Date.now();
+      cube.updated_string = cube.date_updated.toLocaleString("en-US");
+      cube = setCubeType(cube, carddb);
+      cube.save(function(err) {
+        if (err) {
+          console.log(err, req);
         } else {
-          req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
-          res.redirect('/user/view/' + req.user._id);
+          req.flash('success', 'Cube Added');
+          res.redirect('/cube/overview/' + cube.shortID);
         }
       });
-    });
+    } else {
+      req.flash('danger', 'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.');
+      res.redirect('/user/view/' + req.user._id);
+    }
   }
 });
 

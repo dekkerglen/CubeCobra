@@ -3,7 +3,7 @@ const shuffleSeed = require('shuffle-seed');
 function has_profanity(text) {
   if (!text) return false;
 
-	const Filter = require('bad-words');
+  const Filter = require('bad-words');
   let filter = new Filter();
   let removeWords = [
     'hell',
