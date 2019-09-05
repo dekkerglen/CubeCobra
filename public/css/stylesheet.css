@@ -297,3 +297,12 @@ border-bottom: none;
     width:258px;
     height:359px;
 }
+
+#contextModalImg:before {
+    content: ' ';
+    display: block;
+    position: absolute;
+    height: 359px;
+    width: 258px;
+    background-image: url(https://upload.wikimedia.org/wikipedia/en/a/aa/Magic_the_gathering-card_back.jpg);
+}
