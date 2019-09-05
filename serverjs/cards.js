@@ -8,7 +8,9 @@ var data = {
   cardnames: [],
   full_names: [],
   carddict: {},
-  nameToId: {}
+  nameToId: {},
+  normalizedName: card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(),
+  allIds: card => data.nameToId[data.normalizedName(card)]
 }
 fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
   data.carddict = JSON.parse(contents);

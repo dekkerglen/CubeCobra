@@ -1,0 +1,24 @@
+extends ../layout
+
+block content
+  link(rel='stylesheet', href='/css/autocomplete.css')
+  input(type='hidden', value=activeLink)
+  .cubenav
+    ul.nav.nav-tabs.nav-fill(style='padding-top:10px;')
+      li.nav-item
+        h6(href='#' style='color: #218937;padding:5px;') #{cube.name}
+          if cube.type
+            |  (#{cube.card_count} Card #{cube.type} Cube)
+      li.nav-item
+        a.nav-link(href='/cube/overview/'+cube_id, class=activeLink === 'overview' && 'active') Overview
+      li.nav-item
+        a.nav-link(href='/cube/list/'+cube_id, class=activeLink === 'list' && 'active') List
+      li.nav-item
+        a.nav-link(href='/cube/playtest/'+cube_id, class=activeLink === 'playtest' && 'active') Playtest
+      li.nav-item
+        a.nav-link(href='/cube/analysis/'+cube_id, class=activeLink === 'analysis' && 'active') Analysis
+      li.nav-item(style='padding-right:10px;')
+        a.nav-link(href='/cube/blog/'+cube_id, class=activeLink === 'blog' && 'active') Blog
+  block cube_toolbar
+  include ../flash
+  block cube_content
