@@ -1535,8 +1535,8 @@ function renderTableView() {
     }
   });
 
-  var res = '<div class="row even-cols" style="margin: 0 -17px">';
-  res += `<style>@media(min-width: 992px) { .color-column { max-width: ${100 / Object.keys(columns).length}%; } }</style>`;
+  var res = `<style>@media(min-width: 992px) { .even-cols { flex-wrap: nowrap } .color-column { width: ${100 / Object.keys(columns).length}% } }</style>`;
+  res += '<div class="row even-cols" style="margin: 0 -17px">';
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
