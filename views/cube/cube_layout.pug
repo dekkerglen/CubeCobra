@@ -10,6 +10,10 @@ block content
           if cube.type
             span.d-none.d-sm-inline
               |  (#{cube.card_count} Card #{cube.type} Cube)
+      li.nav-item
+        span.nav-link.text-sm-left.text-center
+          input#customImageDisplayToggle(type='checkbox')
+          label(for='customImageDisplayToggle') Show custom images
       .d-flex.flex-row.flex-wrap
         li.nav-item
           a.nav-link(href='/cube/overview/'+cube_id, class=activeLink === 'overview' && 'active') Overview

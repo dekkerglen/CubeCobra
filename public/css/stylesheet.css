@@ -325,3 +325,7 @@ border-bottom: none;
     width: 150px;
     vertical-align: top;
 }
+
+#customImageDisplayToggle {
+    margin-right: 6px;
+}
