@@ -27,7 +27,8 @@ block cube_content
             if cube.type
               a #{cube.card_count} Card #{cube.type} Cube
               br
-            a Approx: $#{price}
+            if cube.publicPrices
+              a Approx: $#{price}
             em
               h6 Designed by 
                 a(href='/user/view/'+owner) #{owner}
@@ -89,6 +90,9 @@ block cube_content
                   .form-check
                     input.form-check-input(name='isListed' type='checkbox', checked=cube.isListed)
                     label.form-check-label Public
+                  .form-check
+                    input.form-check-input(name='publicPrices' type='checkbox', checked=cube.publicPrices)
+                    label.form-check-label Display price information publicly
                   label.col-form-label Cube Image:
                   .card(style="width: 16rem;")
                     img#dynamicImage(src=cube.image_uri style='width: 100%;height: auto;')
