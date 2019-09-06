@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Container, Row, Col } from 'reactstrap';
 
-import Autocard from './Autocard';
+import AutocardImage from './AutocardImage';
 
 const VisualSpoiler = ({ cards, ...props }) => (
   <Container {...props}>
@@ -11,7 +11,7 @@ const VisualSpoiler = ({ cards, ...props }) => (
         {
           cards.map(({ index, details }) =>
             <div className="visualSpoilerCardContainer">
-              <Autocard key={index} index={index} {...details} />
+              <AutocardImage key={index} index={index} {...details} />
             </div>
           )
         }

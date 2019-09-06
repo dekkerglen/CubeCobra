@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Autocard = ({ index, display_image, image_flip, tags }) => (
+const AutocardImage = ({ index, display_image, image_flip, tags }) => (
   <a
     href="#"
     className="autocard"
@@ -19,4 +19,4 @@ const Autocard = ({ index, display_image, image_flip, tags }) => (
   </a>
 );
 
-export default Autocard;
+export default AutocardImage;
