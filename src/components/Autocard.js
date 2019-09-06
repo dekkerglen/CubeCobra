@@ -1,16 +1,16 @@
 import React from 'react';
 
-const Autocard = ({ image_normal, image_flip, tags }) => (
+const Autocard = ({ display_image, image_flip, tags }) => (
   <a
     href="#"
     className="autocard"
-    card={image_normal}
+    card={display_image}
     card_flip={image_flip}
     card_tags={tags}
   >
     <img
-      className="activateContextModal"
-      src={image_normal}
+      className="activateContextModal defaultCardImage"
+      src={display_image}
       alt={name}
       width={150}
       height={210}

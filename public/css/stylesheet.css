@@ -292,3 +292,36 @@ border-bottom: none;
 .form-check {
 	border: none;
 }
+
+#contextModalImg {
+    width:258px;
+    height:359px;
+}
+
+.defaultCardImage:before {
+    content: ' ';
+    display: block;
+    position: absolute;
+    background-image: url(/content/default_card.png);
+    height: 210px;
+    width: 150px;
+    background-size: 150px 210px;
+}
+
+#contextModalImg:before {
+    height: 359px;
+    width: 258px;
+    background-size: 258px 359px;
+}
+
+.packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
+    height: 175px;
+    width: 125px;
+    background-size: 125px 175px;
+}
+
+.visualSpoilerCardContainer {
+    display: inline-block;
+    width: 150px;
+    vertical-align: top;
+}
