@@ -248,7 +248,7 @@ block cube_content
             span(aria-hidden='true') ×
         .row.no-gutters
           .col-12.col-sm-4(style='padding: 4px;')
-            img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
+            img#contextModalImg.card-img.defaultCardImage(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
             .price-area
           .col-12.col-sm-8
             .modal-body
@@ -269,6 +269,10 @@ block cube_content
                 .input-group-prepend
                   span.input-group-text Type
                 input#contextModalType.form-control(type='text', value='2')
+              .input-group.mb-3
+                .input-group-prepend
+                  span.input-group-text Card Image URL
+                  input#contextModalImageURL.form-control(type='text', value='2')
               h5 Color Identity Override:
               .form-check.form-check-inline
                 input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1', disabled=!user || user.id != cube.owner)

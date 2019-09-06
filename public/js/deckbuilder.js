@@ -158,9 +158,9 @@ function renderDraft() {
         lands++;
       }
       if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" href="#"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#deckColumn' + index).html(colhtml);
@@ -171,9 +171,9 @@ function renderDraft() {
     var colhtml = "";
     col.forEach(function(card, index2) {
       if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#sideboardColumn' + index).html(colhtml);
@@ -345,7 +345,7 @@ function setupDrag(elmnt, fromdeck) {
       dragCard = deck.playersideboard[e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'), 1)[0];
     }
     //set drag element's inner html
-    dragElement.innerHTML = '<img src="' + dragCard.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+    dragElement.innerHTML = '<img src="' + dragCard.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
     dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
     dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
     autocard_hide_card();
