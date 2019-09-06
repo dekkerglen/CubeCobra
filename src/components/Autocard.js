@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Autocard = ({ display_image, image_flip, tags }) => (
+const Autocard = ({ index, display_image, image_flip, tags }) => (
   <a
     href="#"
     className="autocard"
@@ -10,6 +10,7 @@ const Autocard = ({ display_image, image_flip, tags }) => (
   >
     <img
       className="activateContextModal defaultCardImage"
+      cardIndex={index}
       src={display_image}
       alt={name}
       width={150}

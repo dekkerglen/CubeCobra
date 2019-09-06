@@ -11,7 +11,7 @@ const VisualSpoiler = ({ cards, ...props }) => (
         {
           cards.map(({ index, details }) =>
             <div className="visualSpoilerCardContainer">
-              <Autocard key={index} {...details} />
+              <Autocard key={index} index={index} {...details} />
             </div>
           )
         }
