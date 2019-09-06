@@ -1169,7 +1169,7 @@ router.get('/download/csv/:id', function(req, res) {
       res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
-      res.write('Name,CMC,Type,Color,Set,Status,Tags\r\n');
+      res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Tags\r\n');
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
           card.type_line = carddb.carddict[card.cardID].type;
@@ -1195,6 +1195,7 @@ router.get('/download/csv/:id', function(req, res) {
           res.write(',');
         }
         res.write('"' + carddb.carddict[card.cardID].set + '"' + ',');
+        res.write('"' + carddb.carddict[card.cardID].collector_number + '"' + ',');
         res.write(card.status + ',"');
         card.tags.forEach(function(tag, t_index) {
           if (t_index != 0) {
