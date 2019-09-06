@@ -1046,12 +1046,10 @@ function updateCubeList() {
     case 'table':
       renderTableView();
       break;
-    case 'curve':
-      renderCurveView();
-      break;
     case 'list':
       renderListView();
       break;
+    case 'curve':
     case 'spoiler':
       $('#cubelistarea').html('');
       break;
@@ -1434,93 +1432,6 @@ function renderListView() {
         updateCubeList();
       });
     });
-}
-
-function renderCurveView() {
-  sorts[0] = document.getElementById('primarySortSelect').value;
-  sorts[1] = document.getElementById('secondarySortSelect').value
-
-  var groups = sortIntoGroups(filteredCube(), sorts[0]);
-  var groupcounts = {};
-  Object.keys(groups).forEach(function(group_label, g_index) {
-    groups[group_label] = sortIntoGroups(groups[group_label], 'CNC');
-    groupcounts[group_label] = 0;
-    Object.keys(groups[group_label]).forEach(function(col_label, col_index) {
-      groups[group_label][col_label] = sortIntoGroups(groups[group_label][col_label], 'CMC2');
-      Object.keys(groups[group_label][col_label]).forEach(function(label, index) {
-        groups[group_label][col_label][label].sort(function(x, y) {
-          if (x.cmc < y.cmc) {
-            return -1;
-          }
-          if (x.cmc > y.cmc) {
-            return 1;
-          }
-          if (x.details.name < y.details.name) {
-            return -1;
-          }
-          if (x.details.name > y.details.name) {
-            return 1;
-          }
-          return 0;
-        });
-        groupcounts[group_label] += groups[group_label][col_label][label].length;
-      });
-    });
-  });
-
-
-  //var res = '<em>Curve View ignores secondary sort</em></br>';
-  var res = '';
-  Object.keys(groups).forEach(function(group_label, group_index) {
-    res += '<div class="card"><div class="card-header"><h5>' + group_label + ' (' + groupcounts[group_label] + ')</h5></div><div class="card-body">';
-
-    var labels = getLabels('CNC');
-    //creatures
-    labels.forEach(function(label, index) {
-      if (groups[group_label][label]) {
-        var labelCount = Object.values(groups[group_label][label]).map(function(group) {
-          return group ? group.length : 0;
-        }).reduce(function(sum, ct) {
-          return sum + ct;
-        }, 0);
-        res += '<h6 class="text-center">' + label + ' (' + labelCount + ')</h6>';
-        res += '<div class="row even-cols">';
-        var colWidth = Math.max(10, 100.0 / getLabels('CMC2').length);
-        getLabels('CMC2').forEach(function(col_label, col_index) {
-          res += '<div class="col-even" style="width: ' + colWidth + '%;">'
-          res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
-          if (groups[group_label][label][col_label]) {
-            res += '<a class="list-group-item list-group-heading">' + col_label + ' (' + groups[group_label][label][col_label].length + ')</a>';
-            groups[group_label][label][col_label].forEach(function(card, index) {
-              if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
-              } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
-              }
-              res += card.details.name + '</a>';
-            });
-          } else {
-            res += '<a class="list-group-item list-group-heading">' + col_label + ' (0)</a>';
-          }
-
-          res += '</div>'
-        });
-        res += '</div>'
-      }
-    });
-
-
-    //noncreatures
-
-    var group = groups[group_label];
-    res += '</div></div></br>';
-  });
-
-  res += '</div>';
-  $('#cubelistarea').html(res);
-
-  autocard_init('autocard');
-  init_contextModal();
 }
 
 function renderTableView() {

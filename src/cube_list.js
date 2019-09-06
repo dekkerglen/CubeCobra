@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import CurveView from './components/CurveView';
+import ListView from './components/ListView';
+import TableView from './components/TableView';
 import VisualSpoiler from './components/VisualSpoiler';
 
 class CubeList extends Component {
@@ -21,7 +24,10 @@ class CubeList extends Component {
   render() {
     let { view, cards } = this.state;
     return <>
-      <VisualSpoiler cards={cards} style={{ display: view === 'spoiler' ? 'block' : 'none' }} />;
+      <TableView cards={cards} style={{ display: view === 'table' ? 'block' : 'none' }} />
+      <VisualSpoiler cards={cards} style={{ display: view === 'spoiler' ? 'block' : 'none' }} />
+      <CurveView cards={cards} style={{ display: view === 'curve' ? 'block' : 'none' }} />
+      <ListView cards={cards} style={{ display: view === 'list' ? 'block' : 'none' }} />
     </>;
   }
 }
