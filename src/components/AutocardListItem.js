@@ -9,6 +9,7 @@ const AutocardListItem = card => {
       card={display_image}
       card_flip={image_flip}
       card_tags={tags}
+      cardindex={card.index}
     >
       {name}
     </a>

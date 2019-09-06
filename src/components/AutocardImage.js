@@ -10,7 +10,7 @@ const AutocardImage = ({ index, display_image, image_flip, tags }) => (
   >
     <img
       className="activateContextModal defaultCardImage"
-      cardIndex={index}
+      cardindex={index}
       src={display_image}
       alt={name}
       width={150}

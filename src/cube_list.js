@@ -24,7 +24,7 @@ class CubeList extends Component {
   render() {
     let { cubeView, cards } = this.state;
     return <>
-      <TableView cards={cards} style={{ display: cubeView === 'table' ? 'block' : 'none' }} />
+      <TableView cards={cards} style={{ display: cubeView === 'table' ? 'flex' : 'none' }} />
       <VisualSpoiler cards={cards} style={{ display: cubeView === 'spoiler' ? 'block' : 'none' }} />
       <CurveView cards={cards} style={{ display: cubeView === 'curve' ? 'block' : 'none' }} />
       <ListView cards={cards} style={{ display: cubeView === 'list' ? 'block' : 'none' }} />

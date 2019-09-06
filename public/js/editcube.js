@@ -1054,16 +1054,19 @@ function updateCubeList() {
     listener(view, filteredCube());
   }
   switch (view) {
-    case 'table':
-      renderTableView();
-      break;
     case 'list':
       renderListView();
       break;
+    case 'table':
     case 'curve':
     case 'spoiler':
       $('#cubelistarea').html('');
       break;
+  }
+  autocard_init('autocard');
+  init_contextModal();
+  if (canEdit) {
+    init_groupcontextModal();
   }
   autocard_hide_card();
   setFilterQsargs();
@@ -1443,192 +1446,6 @@ function renderListView() {
         updateCubeList();
       });
     });
-}
-
-function renderTableView() {
-  sorts[0] = document.getElementById('primarySortSelect').value;
-  sorts[1] = document.getElementById('secondarySortSelect').value;
-  var columns = sortIntoGroups(filteredCube(), sorts[0]);
-  Object.keys(columns).forEach(function(column_label, col_index) {
-    columns[column_label] = sortIntoGroups(columns[column_label], sorts[1]);
-  });
-
-  var count = 0;
-
-  Object.keys(columns).forEach(function(col, index) {
-    if (Object.keys(columns[col]).length > 0) {
-      count += 1;
-    }
-  });
-
-  var res = `<style>@media(min-width: 992px) { .even-cols { flex-wrap: nowrap } .color-column { width: ${100 / Object.keys(columns).length}% } }</style>`;
-  res += '<div class="row even-cols" style="margin: 0 -17px">';
-
-  Object.keys(columns).forEach(function(column_label, col_index) {
-    var column = columns[column_label];
-
-    if (Object.keys(column).length > 0) {
-      if (comparing) {
-        res += '<div class="col-even compare-col">';
-        let first_header = (col_index === 0) ? 'first-compare-header' : '';
-        res += '<div class="col-even compare-header ' + first_header + '">'
-        res += '<div class="row">'
-        res += '<div class="col">'
-        res += '<h6 class="text-center compare-title">' + column_label + '</h6>';
-        res += '</div>'
-        res += '</div>'
-
-        let in_both_count = 0,
-          only_a_count = 0,
-          only_b_count = 0;
-        Object.keys(column).forEach(function(rowgroup_label, index) {
-          let rowgroup = column[rowgroup_label];
-          rowgroup.forEach(function(card, index) {
-            if (in_both.includes(card.details.name)) in_both_count++;
-            else if (only_a.includes(card.details.name)) only_a_count++;
-            else if (only_b.includes(card.details.name)) only_b_count++;
-          });
-        });
-
-        res += '<div class="row no-gutters">'
-        res += '<div class="col">'
-        res += '<h6 class="text-center">In Both Cubes <br/>(' + in_both_count + ')</h6>'
-        res += '</div>'
-        res += '<div class="col">'
-        res += '<h6 class="text-center">Only in Base Cube <br/>(' + only_a_count + ')</h6>'
-        res += '</div>'
-        res += '<div class="col">'
-        res += '<h6 class="text-center">Only in Comparison Cube <br/>(' + only_b_count + ')</h6>'
-        res += '</div>'
-        res += '</div>'
-        res += '</div>'
-      } else {
-        res += '<div class="color-column col-6 col-md-3 col-lg-auto">';
-        res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
-      }
-
-      Object.keys(column).forEach(function(rowgroup_label, rowgroup_index) {
-        var rowgroup = column[rowgroup_label];
-        rowgroup.sort(function(x, y) {
-          if (x.cmc < y.cmc) {
-            return -1;
-          }
-          if (x.cmc > y.cmc) {
-            return 1;
-          }
-          if (x.details.name < y.details.name) {
-            return -1;
-          }
-          if (x.details.name > y.details.name) {
-            return 1;
-          }
-          return 0;
-        });
-
-        let i = 0;
-        // if we are comparing two cubes, cmc_sections has three columns, otherwise it has one column.
-        // the outer list has an item for each cmc. the middle list has an item for each column,
-        // and the inner lists contain the cards.
-        let cmc_sections = (!comparing) ? [
-          [
-            []
-          ]
-        ] : [
-          [
-            [],
-            [],
-            []
-          ]
-        ];
-        let cmc = rowgroup[0].cmc;
-        rowgroup.forEach(function(card, index) {
-          if (card.cmc != cmc) {
-            if (!comparing) cmc_sections.push([
-              []
-            ]);
-            else cmc_sections.push([
-              [],
-              [],
-              []
-            ]);
-            cmc = card.cmc;
-            i++;
-          }
-          if (comparing) {
-            if (in_both.includes(card.details.name)) cmc_sections[i][0].push(card);
-            else if (only_a.includes(card.details.name)) cmc_sections[i][1].push(card);
-            else if (only_b.includes(card.details.name)) cmc_sections[i][2].push(card);
-          } else cmc_sections[i][0].push(card);
-        });
-
-        res += '<ul class="list-group list-outline" style="padding:0px 0px;">';
-
-        if (comparing) {
-          let in_both_count = 0,
-            only_a_count = 0,
-            only_b_count = 0;
-          rowgroup.forEach(function(card, index) {
-            if (in_both.includes(card.details.name)) in_both_count++;
-            else if (only_a.includes(card.details.name)) only_a_count++;
-            else if (only_b.includes(card.details.name)) only_b_count++;
-          });
-
-          res += '<div class="list-group-item list-group-heading" primarysort="' + column_label + '" secondarysort="' + rowgroup_label + '">';
-          res += '<div class="row no-gutters">';
-          res += '<div class="col">' + rowgroup_label + '</div>';
-          res += '</div>';
-          res += '<div class="row no-gutters">';
-          res += '<div class="col">(' + in_both_count + ')</div>';
-          res += '<div class="col">(' + only_a_count + ')</div>';
-          res += '<div class="col">(' + only_b_count + ')</div>';
-          res += '</div>';
-          res += '</div>';
-        } else {
-          res += '<a '
-          if (canEdit) {
-            res += 'href="#"'
-          }
-          res += 'class="activateGroupContextModal list-group-item list-group-heading" primarysort="' + column_label + '" secondarysort="' + rowgroup_label + '">' + rowgroup_label + ' (' + rowgroup.length + ')</a>';
-
-        }
-
-        cmc_sections.forEach(function(section, section_index) {
-          res += '<div class="cmc-group row no-gutters">';
-
-          let col_size = (section.length === 3) ? '33' : '100';
-          section.forEach(function(column, column_index) {
-            res += '<div class="col" style="width: ' + col_size + '%;">';
-
-            column.forEach(function(card, index) {
-              if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
-              } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
-              }
-              res += card.details.name + '</a>';
-            });
-
-            res += '</div>'
-          });
-
-          res += '</div>'
-        });
-
-        res += '</ul>';
-      });
-
-      res += '</div>';
-    }
-  });
-
-  res += '</div>';
-  $('#cubelistarea').html(res);
-
-  autocard_init('autocard');
-  init_contextModal();
-  if (canEdit) {
-    init_groupcontextModal();
-  }
 }
 
 function updateFilters() {
