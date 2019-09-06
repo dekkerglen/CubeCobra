@@ -93,8 +93,13 @@ function addCardToCube(cube, card_details, idOverride) {
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
     type_line: card_details.type,
-    addedTmsp: new Date()
+    addedTmsp: new Date(),
+    imgUrl: undefined
   });
+}
+
+function getCardImageURL(card) {
+    return card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
 }
 
 var methods = {
@@ -115,6 +120,7 @@ var methods = {
   },
   binaryInsert,
   addCardToCube,
+  getCardImageURL,
   arraysEqual: function(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;

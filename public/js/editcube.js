@@ -285,6 +285,10 @@ if (canEdit) {
     updated.cardID = $('#contextModalVersionSelect').val();
     updated.cmc = $('#contextModalCMC').val();
     updated.type_line = $('#contextModalType').val().replace('-', '—');
+    updated.imgUrl = $('#contextModalImageURL').val();
+    if (updated.imgUrl === "") {
+        updated.imgUrl = null;
+    }
 
     let data = {
       src: modalSelect,
@@ -304,9 +308,15 @@ if (canEdit) {
         cube.forEach(function(card, index) {
           if (!found && card.index == data.src.index) {
             found = true;
+            Object.keys(updated).forEach(function(key) {
+              if (updated[key] === null) {
+                updated[key] = undefined;
+              }
+            });
             cube[index] = updated;
             cube[index].index = card.index;
             cube[index].details = json.card;
+            cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
             cubeDict[cube[index].index] = cube[index];
           }
         });
@@ -790,9 +800,9 @@ function renderGroupContext() {
       price_foil += card.details.price_foil;
     }
     if (card.details.image_flip) {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
     } else {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
     }
     cardlist += '<a data-index="' + index + '" class="groupModalRm clickx" href="#">×</a><a>  ';
     cardlist += card.details.name;
@@ -858,7 +868,7 @@ function show_contextModal(card) {
   }
   $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
-  $('#contextModalImg').attr('src', card.details.image_normal);
+  $('#contextModalImg').attr('src', card.details.display_image);
   $('#contextModalVersionSelect').html('');
   var statusHTML = "";
   var statuses = getLabels('Status');
@@ -897,6 +907,7 @@ function show_contextModal(card) {
     $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName=' + name + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
   }
   $('#contextModalType').val(card.type_line);
+  $('#contextModalImageURL').val(card.imgUrl);
 
   fetch('/cube/api/getversions/' + card.cardID)
     .then(response => response.json())
@@ -1122,7 +1133,7 @@ function renderListView() {
         }
 
         //name col
-        res += '<td id="namecol' + cards[i].index + '" data-index="' + cards[i].index + '" class="nostretch tdcard autocard" card="' + cards[i].details.image_normal + '"><div data-index="' + cards[i].index + '" class="tdname"><a data-index="' + cards[i].index + '">' + cards[i].details.name + '</a></div></td>';
+        res += '<td id="namecol' + cards[i].index + '" data-index="' + cards[i].index + '" class="nostretch tdcard autocard" card="' + cards[i].details.display_image + '"><div data-index="' + cards[i].index + '" class="tdname"><a data-index="' + cards[i].index + '">' + cards[i].details.name + '</a></div></td>';
 
         //version col
         res += '<td data-index="' + cards[i].index + '" class="nostretch">';
@@ -1489,9 +1500,9 @@ function renderCurveView() {
             res += '<a class="list-group-item list-group-heading">' + col_label + ' (' + groups[group_label][label][col_label].length + ')</a>';
             groups[group_label][label][col_label].forEach(function(card, index) {
               if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
               } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
               }
               res += card.details.name + '</a>';
             });
@@ -1535,8 +1546,8 @@ function renderTableView() {
     }
   });
 
-  var res = '<div class="row even-cols" style="margin: 0 -17px">';
-  res += `<style>@media(min-width: 992px) { .color-column { max-width: ${100 / Object.keys(columns).length}%; } }</style>`;
+  var res = `<style>@media(min-width: 992px) { .even-cols { flex-wrap: nowrap } .color-column { width: ${100 / Object.keys(columns).length}% } }</style>`;
+  res += '<div class="row even-cols" style="margin: 0 -17px">';
 
   Object.keys(columns).forEach(function(column_label, col_index) {
     var column = columns[column_label];
@@ -1577,7 +1588,7 @@ function renderTableView() {
         res += '</div>'
         res += '</div>'
       } else {
-        res += '<div class="color-column col-12 col-sm-6 col-md-3 col-lg-auto">';
+        res += '<div class="color-column col-6 col-md-3 col-lg-auto">';
         res += '<h6 class="text-center">' + column_label + '<br/>(' + columnLength(sorts[0], column_label) + ')</h6>';
       }
 
@@ -1675,9 +1686,9 @@ function renderTableView() {
 
             column.forEach(function(card, index) {
               if (card.details.image_flip) {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
               } else {
-                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+                res += '<a href="#" cardIndex="' + card.index + '" class="activateContextModal card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
               }
               res += card.details.name + '</a>';
             });
@@ -1749,13 +1760,15 @@ function renderVisualSpoiler() {
         });
 
         rowgroup.forEach(function(card, index) {
+          res += '<div class="visualSpoilerCardContainer">';
           if (card.details.image_flip) {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
           } else {
-            res += '<a href="#" class="autocard" card="' + card.details.image_normal + '" card_tags="' + card.tags + '">';
+            res += '<a href="#" class="autocard" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
           }
-          res += '<img cardIndex="' + card.index + '" class="activateContextModal" src="' + card.details.image_normal + '" alt="' + card.details.name + '" width=150 height=210>';
+          res += '<img cardIndex="' + card.index + '" class="activateContextModal defaultCardImage" src="' + card.details.display_image + '" alt="' + card.details.name + '" width=150 height=210>';
           res += '</a>';
+          res += '</div>';
         });
       });
 

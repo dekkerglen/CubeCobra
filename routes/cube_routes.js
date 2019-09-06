@@ -290,7 +290,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
     req.flash('danger', 'Blog body length must be greater than 10 characters.');
     res.redirect('/cube/blog/' + req.params.id);
   } else {
-    Cube.findOne(build_query_id(req.params.id), function(err, cube) {
+    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
       if (err || !cube) {
         req.flash('danger', 'Cube not found');
         res.redirect('/404/');
@@ -548,6 +548,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
             pids.push(card.details.tcgplayer_id);
           }
+          card.details.display_image = util.getCardImageURL(card);
         });
         cubeB.cards.forEach(function(card, index) {
           card.details = carddb.carddict[card.cardID];
@@ -557,6 +558,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
             pids.push(card.details.tcgplayer_id);
           }
+          card.details.display_image = util.getCardImageURL(card);
         });
         GetPrices(pids, function(price_dict) {
           cubeA.cards.forEach(function(card, index) {
@@ -634,6 +636,7 @@ router.get('/list/:id', function(req, res) {
       var pids = [];
       cube.cards.forEach(function(card, index) {
         card.details = carddb.carddict[card.cardID];
+        card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
@@ -1073,7 +1076,7 @@ function bulkUpload(req, res, list, cube) {
                 let set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'))
                 //if we've found a match, and it DOES need to be parsed with cubecobra syntax
                 let potentialIds = carddb.nameToId[name];
-                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == set);
               }
             } else {
               //does not have set info
@@ -1541,6 +1544,7 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
           cube.descriptionhtml = req.body.html;
           cube.name = name;
           cube.isListed = req.body.isListed ? true : false;
+          cube.publicPrices = req.body.publicPrices ? true : false;
           cube.urlAlias = req.body.urlAlias ? req.body.urlAlias.toLowerCase() : null;
           cube.date_updated = Date.now();
           cube.updated_string = cube.date_updated.toLocaleString("en-US");
@@ -2174,6 +2178,11 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
             if (!updated.hasOwnProperty(key)) {
               updated[key] = card[key];
+            }
+          });
+          Object.keys(updated).forEach(function(key) {
+            if (updated[key] === null) {
+              updated[key] = undefined;
             }
           });
           cube.cards[index] = updated;
