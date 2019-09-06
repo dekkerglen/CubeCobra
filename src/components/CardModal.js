@@ -99,7 +99,7 @@ class CardModal extends Component {
             </Col>
           </Row>
         </ModalBody>
-        <div class="modal-footer">
+        <ModalFooter>
           <a id="contextScryfallButton" href="#" target="_blank">
             <Button color="secondary">
               <span class="d-none d-sm-inline">View on Scryfall</span>
@@ -109,7 +109,7 @@ class CardModal extends Component {
           <a id="contextBuyButton" href="#" target="_blank">
             <Button color="secondary">Buy</Button>
           </a>
-        </div>
+        </ModalFooter>
       </Modal>
     );
   }
