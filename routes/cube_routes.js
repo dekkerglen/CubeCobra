@@ -1076,7 +1076,7 @@ function bulkUpload(req, res, list, cube) {
                 let set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'))
                 //if we've found a match, and it DOES need to be parsed with cubecobra syntax
                 let potentialIds = carddb.nameToId[name];
-                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == set);
               }
             } else {
               //does not have set info
