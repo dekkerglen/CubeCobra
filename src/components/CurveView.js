@@ -4,6 +4,46 @@ import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
 
+const TypeRow = ({ cardType, groups, count }) => (
+  <Fragment key={cardType}>
+    <Row className="mt-2">
+      <h6 className="ml-1">{cardType} ({count})</h6>
+    </Row>
+    <Row className="even-cols">
+      {
+        getLabels('CMC2').map(cmc =>
+          <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
+            <AutocardListGroup
+              heading={`${cmc} (${(groups[cmc] || []).length})`}
+              cards={groups[cmc] || []}
+            />
+          </div>
+        )
+      }
+    </Row>
+  </Fragment>
+);
+
+const ColorCard = ({ color, groups, count, typeCounts }) => (
+  <Card>
+    <CardHeader>
+      <h5>{color} {count}</h5>
+    </CardHeader>
+    <CardBody>
+      {
+        getLabels(sorts[1]).filter(cardType => groups[cardType]).map(cardType =>
+          <TypeRow
+            key={cardType}
+            cardType={cardType}
+            groups={groups[cardType]}
+            count={typeCounts[cardType]}
+          />
+        )
+      }
+    </CardBody>
+  </Card>
+);
+
 const CurveView = ({ cards, ...props }) => {
   sorts[0] = document.getElementById('primarySortSelect').value || 'Color Category';
   sorts[1] = document.getElementById('secondarySortSelect').value || 'Types-Multicolor';
@@ -44,34 +84,15 @@ const CurveView = ({ cards, ...props }) => {
       <Row>
         <Col>
           {
-            getLabels(sorts[0]).filter(color => groups[color]).map(color =>
-              <Card key={color}>
-                <CardHeader>
-                  <h5>{color} {colorCounts[color]}</h5>
-                </CardHeader>
-                <CardBody>
-                  {
-                    getLabels(sorts[1]).filter(cardType => groups[color][cardType]).map(cardType =>
-                      <Fragment key={cardType}>
-                        <h6>{cardType} ({typeCounts[color][cardType]})</h6>
-                        <Row className="even-cols">
-                          {
-                            getLabels('CMC2').map(cmc =>
-                              <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
-                                <AutocardListGroup
-                                  heading={`${cmc} (${(groups[color][cardType][cmc] || []).length})`}
-                                  cards={groups[color][cardType][cmc] || []}
-                                />
-                              </div>
-                            )
-                          }
-                        </Row>
-                      </Fragment>
-                    )
-                  }
-                </CardBody>
-              </Card>
-            )
+            getLabels(sorts[0]).filter(color => groups[color]).map(color => (
+              <ColorCard
+                key={color}
+                color={color}
+                groups={groups[color]}
+                count={colorCounts[color]}
+                typeCounts={typeCounts[color]}
+              />
+            ))
           }
         </Col>
       </Row>
