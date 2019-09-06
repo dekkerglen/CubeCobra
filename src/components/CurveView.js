@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 
-import { Card, CardHeader, CardBody, Col, Container, ListGroup, ListGroupHeading, ListGroupItem, Row } from 'reactstrap';
+import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
-import AutocardListItem from './AutocardListItem';
+import AutocardListGroup from './AutocardListGroup';
 
 const CurveView = ({ cards, ...props }) => {
   sorts[0] = document.getElementById('primarySortSelect').value || 'Color Category';
@@ -44,34 +44,30 @@ const CurveView = ({ cards, ...props }) => {
       <Row>
         <Col>
           {
-            getLabels(sorts[0]).map(color => !groups[color] ? <></> :
+            getLabels(sorts[0]).filter(color => groups[color]).map(color =>
               <Card key={color}>
                 <CardHeader>
                   <h5>{color} {colorCounts[color]}</h5>
                 </CardHeader>
                 <CardBody>
                   {
-                    getLabels(sorts[1]).map(cardType => !groups[color][cardType] ? <></> : <>
-                      <h6>{cardType} ({typeCounts[color][cardType]})</h6>
-                      <Row key={cardType} className="even-cols">
-                        {
-                          getLabels('CMC2').map(cmc => !groups[color][cardType][cmc] ? <></> :
-                            <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
-                              <ListGroup className="list-outline">
-                                <ListGroupItem className="list-group-heading">
-                                  {cmc} ({groups[color][cardType][cmc].length})
-                                </ListGroupItem>
-                                {
-                                  groups[color][cardType][cmc].map(card =>
-                                    (<AutocardListItem key={card.details.name} {...card} />)
-                                  )
-                                }
-                              </ListGroup>
-                            </div>
-                          )
-                        }
-                      </Row>
-                    </>)
+                    getLabels(sorts[1]).filter(cardType => groups[color][cardType]).map(cardType =>
+                      <Fragment key={cardType}>
+                        <h6>{cardType} ({typeCounts[color][cardType]})</h6>
+                        <Row className="even-cols">
+                          {
+                            getLabels('CMC2').map(cmc =>
+                              <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
+                                <AutocardListGroup
+                                  heading={`${cmc} (${(groups[color][cardType][cmc] || []).length})`}
+                                  cards={groups[color][cardType][cmc] || []}
+                                />
+                              </div>
+                            )
+                          }
+                        </Row>
+                      </Fragment>
+                    )
                   }
                 </CardBody>
               </Card>
