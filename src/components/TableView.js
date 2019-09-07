@@ -13,7 +13,6 @@ const TableView = ({ cards, ...props }) => {
     columnCounts[columnLabel] = columns[columnLabel].length;
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
   }
-  console.log('Style:', props.style);
 
   return (
     <Row {...props} style={{ ...props.style, margin: '0 -2px' }}>
