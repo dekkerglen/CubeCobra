@@ -3,6 +3,9 @@ extends cube_layout
 block cube_content
   link(rel='stylesheet' href='/css/draft.css')
   br
+  span#customImageDisplayMenuItem
+    input#customImageDisplayToggle(type='checkbox')
+    label(for='customImageDisplayToggle') Show custom images
   if oldformat
     .container
       h4 Drafted by #{drafter}

@@ -18,6 +18,9 @@ block cube_toolbar
 
 block cube_content
   br
+  span#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
+    input#customImageDisplayToggle(type='checkbox')
+    label(for='customImageDisplayToggle') Show custom images
   .card.card-hover#deckhover
     .card-header
       h4#deckName Deck
