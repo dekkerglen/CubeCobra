@@ -25,6 +25,7 @@ const TableView = ({ cards, ...props }) => {
               {
                 getLabels(sorts[1]).filter(label => column[label]).map(label =>
                   <AutocardListGroup
+                    key={label}
                     heading={`${label} (${column[label].length})`}
                     cards={column[label]}
                   />
