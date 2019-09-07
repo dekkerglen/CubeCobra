@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Container, Row, Col } from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
 
@@ -13,9 +13,10 @@ const TableView = ({ cards, ...props }) => {
     columnCounts[columnLabel] = columns[columnLabel].length;
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
   }
+  console.log('Style:', props.style);
 
   return (
-    <Row {...props} style={{ margin: '0 -2px' }}>
+    <Row {...props} style={{ ...props.style, margin: '0 -2px' }}>
       {
         getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
           let column = columns[columnLabel];
