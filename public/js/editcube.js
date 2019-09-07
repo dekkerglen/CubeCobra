@@ -342,6 +342,9 @@ if (canEdit) {
       $('#cubeSaveModal').modal('show');
     });
   });
+  $('#tagColors').click(function(e) {
+    $('#tagColorsModal').modal('show');
+  });
   $('#massEdit').click(function(e) {
     e.preventDefault();
     if (view == 'list') {

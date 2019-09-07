@@ -33,6 +33,8 @@ block cube_toolbar
             if user.id == cube.owner
               li.nav-item
                 a(href="#")#massEdit.nav-link Mass Edit
+              li.nav-item
+                a(href="#")#tagColors.nav-link Set Tag Colors
               li.nav-item.dropdown
                 a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
                 .dropdown-menu(aria-labelledby='bulkdropdown')
@@ -237,6 +239,22 @@ block cube_content
               input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
               input.btn.btn-secondary(type='submit',value='Buy all')
             button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
+
+  // Modal
+  #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
+      .modal-content
+        .modal-header
+          h5#contextModalTitle.modal-title Edit Tag Colors
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .row.no-gutters
+          .col
+
+        .modal-footer
+          button#contextRemoveButton.btn.btn-danger(type='button') Cancel
+          if user && user.id == cube.owner
+            button#contextModalSubmit.btn.btn-success(type='button') Save
 
   // Modal
   #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
