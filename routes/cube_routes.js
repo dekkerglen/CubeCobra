@@ -511,6 +511,12 @@ router.get('/blog/:id', function(req, res) {
                 activeLink: 'blog',
                 posts: blog_page,
                 pages: pages,
+                metadata: generateMeta(
+                  `Cube Cobra Blog: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/cube/blog/${req.params.id}`
+                ),
                 loginCallback: '/cube/blog/' + req.params.id
               });
             } else {
@@ -520,6 +526,12 @@ router.get('/blog/:id', function(req, res) {
                 owner: user.username,
                 activeLink: 'blog',
                 posts: blogs,
+                metadata: generateMeta(
+                  `Cube Cobra Blog: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/cube/blog/${req.params.id}`
+                ),
                 loginCallback: '/cube/blog/' + req.params.id
               });
             }
@@ -529,6 +541,12 @@ router.get('/blog/:id', function(req, res) {
               cube_id: cube_id,
               owner: user.username,
               activeLink: 'blog',
+              metadata: generateMeta(
+                `Cube Cobra Blog: ${cube.name}`,
+                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                cube.image_uri,
+                `https://cubecobra.com/cube/blog/${req.params.id}`
+              ),
               loginCallback: '/cube/blog/' + req.params.id
             });
           }
