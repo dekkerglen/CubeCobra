@@ -1540,6 +1540,12 @@ router.get('/draft/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: 'Unknown',
                   activeLink: 'playtest',
+                  metadata: generateMeta(
+                    `Cube Cobra Draft: ${cube.name}`,
+                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                    cube.image_uri,
+                    `https://cubecobra.com/cube/draft/${req.params.id}`
+                  ),
                   loginCallback: '/cube/draft/' + req.params.id,
                   draft_raw: JSON.stringify(draft)
                 });
@@ -1549,6 +1555,12 @@ router.get('/draft/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: user.username,
                   activeLink: 'playtest',
+                  metadata: generateMeta(
+                    `Cube Cobra Draft: ${cube.name}`,
+                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                    cube.image_uri,
+                    `https://cubecobra.com/cube/draft/${req.params.id}`
+                  ),
                   loginCallback: '/cube/draft/' + req.params.id,
                   draft_raw: JSON.stringify(draft)
                 });
@@ -1966,6 +1978,12 @@ router.get('/decks/:id', function(req, res) {
                 activeLink: 'playtest',
                 decks: deck_page,
                 pages: pages,
+                metadata: generateMeta(
+                  `Cube Cobra Decks: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/user/decks/${req.params.id}`
+                ),
                 loginCallback: '/user/decks/' + cubeid
               });
             } else {
@@ -1975,6 +1993,12 @@ router.get('/decks/:id', function(req, res) {
                 owner: owner_name,
                 activeLink: 'playtest',
                 decks: decks,
+                metadata: generateMeta(
+                  `Cube Cobra Decks: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/user/decks/${req.params.id}`
+                ),
                 loginCallback: '/user/decks/' + cubeid
               });
             }
@@ -1984,6 +2008,12 @@ router.get('/decks/:id', function(req, res) {
               cube_id: cubeid,
               owner: owner_name,
               activeLink: 'playtest',
+              metadata: generateMeta(
+                `Cube Cobra Decks: ${cube.name}`,
+                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                cube.image_uri,
+                `https://cubecobra.com/user/decks/${req.params.id}`
+              ),
               loginCallback: '/user/decks/' + cubeid,
               decks: []
             });
@@ -2023,6 +2053,12 @@ router.get('/deckbuilder/:id', function(req, res) {
                 cube_id: get_cube_id(cube),
                 owner: 'Unknown',
                 activeLink: 'playtest',
+                metadata: generateMeta(
+                  `Cube Cobra Draft: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/cube/draft/${req.params.id}`
+                ),
                 loginCallback: '/cube/draft/' + req.params.id,
                 deck_raw: JSON.stringify(deck),
                 basics_raw: JSON.stringify(getBasics(carddb)),
@@ -2034,6 +2070,12 @@ router.get('/deckbuilder/:id', function(req, res) {
                 cube_id: get_cube_id(cube),
                 owner: user.username,
                 activeLink: 'playtest',
+                metadata: generateMeta(
+                  `Cube Cobra Draft: ${cube.name}`,
+                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                  cube.image_uri,
+                  `https://cubecobra.com/cube/draft/${req.params.id}`
+                ),
                 loginCallback: '/cube/draft/' + req.params.id,
                 deck_raw: JSON.stringify(deck),
                 basics_raw: JSON.stringify(getBasics(carddb)),
@@ -2100,6 +2142,12 @@ router.get('/deck/:id', function(req, res) {
                   cards: player_deck,
                   bot_decks: bot_decks,
                   bots: bot_names,
+                  metadata: generateMeta(
+                    `Cube Cobra Deck: ${cube.name}`,
+                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                    cube.image_uri,
+                    `https://cubecobra.com/cube/deck/${req.params.id}`
+                  ),
                   loginCallback: '/cube/deck/' + req.params.id
                 });
               } else {
@@ -2129,6 +2177,12 @@ router.get('/deck/:id', function(req, res) {
                   deck: JSON.stringify(deck.playerdeck),
                   bot_decks: bot_decks,
                   bots: bot_names,
+                  metadata: generateMeta(
+                    `Cube Cobra Deck: ${cube.name}`,
+                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                    cube.image_uri,
+                    `https://cubecobra.com/cube/deck/${req.params.id}`
+                  ),
                   loginCallback: '/cube/deck/' + req.params.id
                 });
               }
