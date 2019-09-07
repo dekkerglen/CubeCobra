@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AutocardListItem = card => {
+const AutocardListItem = ({ card }) => {
   let { display_image, image_flip, name, tags } = card.details;
   return (
     <a

@@ -11,7 +11,7 @@ const AutocardListGroup = ({ cards, heading }) => (
     </ListGroupItem>
     {
       cards.map(card =>
-        (<AutocardListItem key={card.details.name} {...card} />)
+        (<AutocardListItem key={card.details.name} card={card} />)
       )
     }
   </ListGroup>
