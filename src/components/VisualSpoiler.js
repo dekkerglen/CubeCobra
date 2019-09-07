@@ -10,7 +10,7 @@ const VisualSpoiler = ({ cards, ...props }) => (
       <Col>
         {
           cards.map(({ index, details }) =>
-            <div className="visualSpoilerCardContainer">
+            <div key={index} className="visualSpoilerCardContainer">
               <AutocardImage key={index} index={index} {...details} />
             </div>
           )

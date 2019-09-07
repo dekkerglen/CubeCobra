@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Container, Row, Col } from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
 
@@ -15,7 +15,7 @@ const TableView = ({ cards, ...props }) => {
   }
 
   return (
-    <Row {...props} style={{ margin: '0 -2px' }}>
+    <Row {...props} style={{ ...props.style, margin: '0 -2px' }}>
       {
         getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
           let column = columns[columnLabel];
@@ -25,6 +25,7 @@ const TableView = ({ cards, ...props }) => {
               {
                 getLabels(sorts[1]).filter(label => column[label]).map(label =>
                   <AutocardListGroup
+                    key={label}
                     heading={`${label} (${column[label].length})`}
                     cards={column[label]}
                   />
