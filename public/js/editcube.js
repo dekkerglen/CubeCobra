@@ -287,7 +287,7 @@ if (canEdit) {
     updated.type_line = $('#contextModalType').val().replace('-', '—');
     updated.imgUrl = $('#contextModalImageURL').val();
     if (updated.imgUrl === "") {
-        updated.imgUrl = null;
+      updated.imgUrl = null;
     }
 
     let data = {
