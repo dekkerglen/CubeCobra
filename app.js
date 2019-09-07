@@ -65,6 +65,7 @@ app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/js', express.static(path.join(__dirname, 'dist')));
 
 let session_options = {
   secret: secrets.session,
