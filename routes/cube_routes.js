@@ -983,6 +983,7 @@ function bulkuploadCSV(req, res, cards, cube) {
     let split = util.CSVtoArray(card_raw);
     let name = split[0];
     let card = {
+      name: name,
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
       colors: split[3].split(''),
@@ -997,9 +998,9 @@ function bulkuploadCSV(req, res, cards, cube) {
       let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
       let nonPromo = potentialIds.find(notPromoOrDigitalId);
       let first = potentialIds[0];
-      card.id = matchingSet || nonPromo || first;
+      card.cardID = matchingSet || nonPromo || first;
       cube.cards.push(card);
-      changelog += addCardHtml(carddb.carddict[card.id]);
+      changelog += addCardHtml(carddb.carddict[card.cardID]);
     } else {
       missing += card.name + '\n';
     }
