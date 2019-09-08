@@ -371,7 +371,7 @@ if (canEdit) {
           'val': '#228c22',
         }, {
           'name': 'Turquoise',
-          'val': '#40e0d0',
+          'val': '#008081',
         }, {
           'name': 'Blue',
           'val': '#115da8',
@@ -396,7 +396,7 @@ if (canEdit) {
 
           html += '<div class="col">'
           html += '<select class="tag-color-select">'
-          html += '<option value="">None</option>'
+          html += '<option value="">No Color</option>'
           color_options.forEach(function(opt, index) {
             const sel = (opt.name.toLowerCase() === color) ? 'selected' : '';
             html += `<option value="${opt.val}" ${sel}>${opt.name}</option>`
@@ -406,8 +406,19 @@ if (canEdit) {
 
           html += '</div>'
         });
-
         $('#tagsColumn').html(html);
+
+        $('.tag-color-select').change(function() {
+          let $item = $(this).parent().parent().find('.tag-item');
+          if ($(this).val()) {
+            $item.css('background-color', $(this).val());
+            $item.css('color', '#ffffff');
+          } else {
+            $item.css('background-color', '');
+            $item.css('color', '');
+          }
+        });
+
         $('#tagColorsModal').modal('show');
       });
     });
