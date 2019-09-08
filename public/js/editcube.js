@@ -12,6 +12,7 @@ var filters = [];
 var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
+var show_tag_colors = false;
 
 var comparing = false;
 if ($('#in_both').length) {
@@ -454,6 +455,11 @@ $('#tagColors').click(function(e) {
       $('#tagColorsModal').modal('show');
     });
   });
+});
+
+$('#showTagColorsCheckbox').change(function(e) {
+  show_tag_colors = $(this).prop("checked");
+  updateCubeList();
 });
 
 if (canEdit) {

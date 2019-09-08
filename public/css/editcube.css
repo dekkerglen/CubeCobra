@@ -121,3 +121,9 @@
 {
   margin: 10px;
 }
+
+#showTagColors {
+  padding: 20px;
+  padding-left: 45px;
+  border-bottom: 1px solid #dee2e6;
+}
