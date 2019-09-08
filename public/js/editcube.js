@@ -22,11 +22,17 @@ if ($('#in_both').length) {
   view = 'table';
 }
 
-var cubeDict = {};
+var cubeDict = {}, hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
   card.index = index;
   cubeDict[index] = card;
+  if (!hasCustomImages && card.imgUrl !== undefined) {
+    hasCustomImages = true;
+    $("#customImageDisplayToggle").prop("checked", true);
+    $("#customImageDisplayMenuItem").show();
+  }
 });
 
 $('#compareButton').click(function(e) {
@@ -50,6 +56,15 @@ $('#addFilterButton').click(function(e) {
 });
 
 $('.updateButton').click(function(e) {
+  updateCubeList();
+});
+
+$('#customImageDisplayToggle').click(function(e) {
+  console.log("clicked");
+  var enabled = $(this).prop('checked'), display_image;
+  cube.forEach(function(card, index) {
+    adjustDisplayImage(card, enabled);
+  });
   updateCubeList();
 });
 

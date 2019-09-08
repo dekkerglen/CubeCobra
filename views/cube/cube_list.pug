@@ -45,6 +45,10 @@ block cube_toolbar
               a.dropdown-item(href='/cube/download/plaintext/'+cube_id) Card Names (.txt)
               a.dropdown-item(href='/cube/download/csv/'+cube_id) Comma Separated (.csv)
                 br
+          li.nav-item
+            span#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
+              input#customImageDisplayToggle(type='checkbox')
+              label(for='customImageDisplayToggle') Show Custom Images
     #accordion.accordion
       if user
         if user.id == cube.owner
@@ -399,6 +403,7 @@ block cube_content
         .modal-footer
           button.btn.btn-secondary(type='button', data-dismiss='modal') OK
 
+  script(src='/js/utils.js')
   script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
