@@ -76,43 +76,53 @@
 	border: 1px solid #dee2e6;
 }
 
-.tag-red {
+.tag-red,
+.tag-red .tdname {
   color: #ffffff;
   background-color: #8e1600;
 }
-.tag-brown {
+.tag-brown,
+.tag-brown .tdname {
   color: #ffffff;
   background-color: #654321;
 }
-.tag-orange {
+.tag-orange,
+.tag-orange .tdname {
   color: #ffffff;
   background-color: #ff7034;
 }
-.tag-yellow {
+.tag-yellow,
+.tag-yellow .tdname {
   color: #ffffff;
   background-color: #e0b83d;
 }
-.tag-green {
+.tag-green,
+.tag-green .tdname {
   color: #ffffff;
   background-color: #228c22;
 }
-.tag-turquoise {
+.tag-turquoise,
+.tag-turquoise .tdname {
   color: #ffffff;
   background-color: #008081;
 }
-.tag-blue {
+.tag-blue,
+.tag-blue .tdname {
   color: #ffffff;
   background-color: #115da8;
 }
-.tag-purple {
+.tag-purple,
+.tag-purple .tdname {
   color: #ffffff;
   background-color: #663399;
 }
-.tag-violet {
+.tag-violet,
+.tag-violet .tdname {
   color: #ffffff;
   background-color: #b200ed;
 }
-.tag-pink {
+.tag-pink,
+.tag-pink .tdname {
   color: #ffffff;
   background-color: #ff69b4;
 }
