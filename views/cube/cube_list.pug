@@ -287,23 +287,23 @@ block cube_content
               .input-group.mb-3
                 .input-group-prepend
                   span.input-group-text Version (Set and #)
-                select#contextModalVersionSelect.custom-select
+                select#contextModalVersionSelect.custom-select(disabled=!user || user.id != cube.owner)
               .input-group.mb-3
                 .input-group-prepend
                   span.input-group-text Status
-                select#contextModalStatusSelect.custom-select
+                select#contextModalStatusSelect.custom-select(disabled=!user || user.id != cube.owner)
               .input-group.mb-3
                 .input-group-prepend
                   span.input-group-text CMC
-                input#contextModalCMC.form-control(type='text', value='2')
+                input#contextModalCMC.form-control(type='text', value='2', disabled=!user || user.id != cube.owner)
               .input-group.mb-3
                 .input-group-prepend
                   span.input-group-text Type
-                input#contextModalType.form-control(type='text', value='2')
+                input#contextModalType.form-control(type='text', value='2', disabled=!user || user.id != cube.owner)
               .input-group.mb-3
                 .input-group-prepend
                   span.input-group-text Card Image URL
-                  input#contextModalImageURL.form-control(type='text', value='2')
+                  input#contextModalImageURL.form-control(type='text', value='2', disabled=!user || user.id != cube.owner)
               h5 Color Identity Override:
               .form-check.form-check-inline
                 input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1', disabled=!user || user.id != cube.owner)
@@ -330,7 +330,7 @@ block cube_content
                 .tags-input(data-name='tags-input')
                   span.tags
                   input.hidden-input(type='hidden')
-                  input.main-input(maxlength="24")
+                  input.main-input(maxlength="24" disabled=!user || user.id != cube.owner)
 
         .modal-footer
           if user && user.id == cube.owner
