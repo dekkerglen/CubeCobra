@@ -53,12 +53,7 @@ $('#customImageDisplayToggle').click(function(e) {
   var enabled = $(this).prop('checked'), display_image;
   deck.playerdeck.forEach(function(inner, index) {
     inner.forEach(function(card, index) {
-      if (enabled) {
-        display_image = card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
-      } else {
-        display_image = card.details.image_normal;
-      }
-      card.details.display_image = display_image;
+      adjustDisplayImage(card, enabled);
     });
   });
   renderDraft();
