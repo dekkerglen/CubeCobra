@@ -246,16 +246,15 @@ block cube_content
     .modal-dialog.modal-dialog-centered.modal-lg(role='document')
       .modal-content
         .modal-header
-          h5#contextModalTitle.modal-title Edit Tag Colors
+          h5#tagColorsTitle.modal-title Set Tag Colors
           button.close(type='button', data-dismiss='modal', aria-label='Close')
             span(aria-hidden='true') ×
-        .row.no-gutters
-          .col
+        #tagsColumn.col
 
         .modal-footer
-          button#contextRemoveButton.btn.btn-danger(type='button') Cancel
+          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
           if user && user.id == cube.owner
-            button#contextModalSubmit.btn.btn-success(type='button') Save
+            button#tagColorsSubmit.btn.btn-success(type='button') Save
 
   // Modal
   #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')

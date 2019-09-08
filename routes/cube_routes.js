@@ -1743,6 +1743,33 @@ router.get('/api/cubecardnames/:id', function(req, res) {
   });
 });
 
+router.get('/api/cubetagcolors/:id', function(req, res) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    tag_colors = {}
+    cube.cards.forEach(function(card, index) {
+      card.tags.forEach(function(tag, index) {
+        tag_colors[tag] = null;
+      });
+    });
+
+    let to_remove = [];
+    cube.tag_colors.forEach(function(item, index) {
+      if (Object.keys(tag_colors).includes(item.tag)) {
+        tag_colors[item.tag] = item.color;
+      } else {
+        to_remove.push(index);
+      }
+    });
+
+    // TODO remove to_remove and save
+
+    res.status(200).send({
+      success: 'true',
+      tag_colors: tag_colors,
+    });
+  });
+});
+
 router.get('/api/getcardfromcube/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube = split[0];

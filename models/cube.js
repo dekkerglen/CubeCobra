@@ -38,10 +38,10 @@ let cubeSchema = mongoose.Schema({
     imgUrl: String,
     details: {}
   }],
-  tag_colors: {
+  tag_colors: [{
     tag: String,
     color: String,
-  },
+  }],
   decks: [String],
   numDecks: Number,
   description: String,

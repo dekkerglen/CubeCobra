@@ -24,7 +24,7 @@
 	cursor: text;
 }
 
-.tags-input .tag, .autocard-tags .tag {
+.tags-input .tag, .autocard-tags .tag, .tag-item {
 	font-size: 85%;
 	padding: 0.5em .75em;
 	margin: .25em .1em;

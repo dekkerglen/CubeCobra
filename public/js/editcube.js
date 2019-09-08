@@ -342,9 +342,77 @@ if (canEdit) {
       $('#cubeSaveModal').modal('show');
     });
   });
+
   $('#tagColors').click(function(e) {
-    $('#tagColorsModal').modal('show');
+    fetch("/cube/api/cubetagcolors/" + $('#cubeID').val(), {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      res.json().then(data => {
+        let html = '';
+        let tag_colors = data.tag_colors;
+
+        let color_options = [{
+          'name': 'Red',
+          'val': '#8e1600',
+        }, {
+          'name': 'Brown',
+          'val': '#654321',
+        }, {
+          'name': 'Orange',
+          'val': '#ff7034',
+        }, {
+          'name': 'Yellow',
+          'val': '#e0b83d',
+        }, {
+          'name': 'Green',
+          'val': '#228c22',
+        }, {
+          'name': 'Turquoise',
+          'val': '#40e0d0',
+        }, {
+          'name': 'Blue',
+          'val': '#115da8',
+        }, {
+          'name': 'Purple',
+          'val': '#663399',
+        }, {
+          'name': 'Violet',
+          'val': '#b200ed',
+        }, {
+          'name': 'Pink',
+          'val': '#ff69b4',
+        }]
+
+        Object.keys(tag_colors).forEach(function(tag, index) {
+          let color = tag_colors[tag];
+          html += '<div class="row tag-color-row">'
+
+          html += '<div class="col">'
+          html += `<div class="tag-item">${tag}</div>`
+          html += '</div>'
+
+          html += '<div class="col">'
+          html += '<select class="tag-color-select">'
+          html += '<option value="">None</option>'
+          color_options.forEach(function(opt, index) {
+            const sel = (opt.name.toLowerCase() === color) ? 'selected' : '';
+            html += `<option value="${opt.val}" ${sel}>${opt.name}</option>`
+          })
+          html += '</select>'
+          html += '</div>'
+
+          html += '</div>'
+        });
+
+        $('#tagsColumn').html(html);
+        $('#tagColorsModal').modal('show');
+      });
+    });
   });
+
   $('#massEdit').click(function(e) {
     e.preventDefault();
     if (view == 'list') {
@@ -1047,6 +1115,7 @@ function buildFiltersFromQsargs() {
 }
 
 var updateCubeListeners = [];
+
 function updateCubeList() {
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
