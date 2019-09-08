@@ -18,7 +18,7 @@ const ColorCheck = ({ color, short, value, onChange }) => (
 );
 
 const CardModal = ({ card, versions, toggle, disabled, values, onChange, ...props }) => (
-  <Modal size="lg" labelledby="cardModalHeader" {...props}>
+  <Modal size="lg" labelledby="cardModalHeader" toggle={toggle} {...props}>
     <ModalHeader id="cardModalHeader" toggle={toggle}>
       {card.details.name}
     </ModalHeader>
