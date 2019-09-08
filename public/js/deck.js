@@ -17,6 +17,33 @@ window.onresize = function() {
   renderDraft();
 }
 
+var hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
+deck.forEach(function(inner, index) {
+  inner.forEach(function(card, index) {
+    if (!hasCustomImages && card.imgUrl !== undefined) {
+      hasCustomImages = true;
+      $("#customImageDisplayToggle").prop("checked", true);
+      $("#customImageDisplayMenuItem").show();
+    }
+  });
+});
+
+$('#customImageDisplayToggle').click(function(e) {
+  var enabled = $(this).prop('checked'), display_image;
+  deck.forEach(function(inner, index) {
+    inner.forEach(function(card, index) {
+      if (enabled) {
+        display_image = card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
+      } else {
+        display_image = card.details.image_normal;
+      }
+      card.details.display_image = display_image;
+    });
+  });
+  renderDraft();
+});
+
 
 function renderDraft() {
   setupColumns();
