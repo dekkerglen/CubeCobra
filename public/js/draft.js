@@ -22,6 +22,20 @@ window.onresize = function() {
   renderDraft();
 }
 
+var hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
+draft.packs.forEach(function(pack, index) {
+  pack.forEach(function(inner, index) {
+    inner.forEach(function(card, index) {
+      if (!hasCustomImages && card.imgUrl !== undefined) {
+        hasCustomImages = true;
+        $("#customImageDisplayToggle").prop("checked", true);
+        $("#customImageDisplayMenuItem").show();
+      }
+    });
+  });
+});
+
 $('#passpack').click(function(e) {
   passPack();
 });
