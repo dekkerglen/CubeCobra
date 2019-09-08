@@ -1,7 +1,8 @@
 import React from 'react';
 
 const AutocardListItem = ({ card }) => {
-  let { display_image, image_flip, name, tags } = card.details;
+  let { display_image, image_flip, name } = card.details;
+  let { tags } = card;
   return (
     <a
       href="#"
