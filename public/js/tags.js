@@ -22,7 +22,7 @@ function activateTags() {
     var tagsText = "";
     $(this).val().split(',').forEach(function(tag, index) {
       if (tag.trim() != "") {
-        tagsText += "<span class='tag'>" + tag.trim() + "<span tag-data='" + tag.trim() + "' class='close-tag'></span></span>";
+        tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + "<span tag-data='" + tag.trim() + "' class='close-tag'></span></span>";
       }
     });
     $(this).parent().find('.tags').html(tagsText);

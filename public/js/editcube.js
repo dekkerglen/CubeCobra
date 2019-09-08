@@ -28,6 +28,7 @@ cube.forEach(function(card, index) {
   card.index = index;
   cubeDict[index] = card;
 });
+var cubeTagColors = JSON.parse($('#cubeTagColors').val());
 
 $('#compareButton').click(function(e) {
   const id_a = $('#cubeID').val();
@@ -615,6 +616,20 @@ function updateCollapse() {
       updateCollapse();
     });
   });
+}
+
+function getTagColorClass(tag) {
+  console.log( tag )
+  console.log( cubeTagColors )
+  let res = ''
+  cubeTagColors.forEach(function(item, index) {
+    console.log( item.tag, tag, item.tag === tag )
+    if (item.tag === tag) {
+      res = `tag-${item.color}`;
+      return false
+    }
+  });
+  return res;
 }
 
 function GetColorIdentity(colors) {
