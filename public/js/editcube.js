@@ -354,63 +354,43 @@ if (canEdit) {
         let html = '';
         let tag_colors = data.tag_colors;
 
-        const color_options = [{
-          'name': 'Red',
-          'val': '#8e1600',
-        }, {
-          'name': 'Brown',
-          'val': '#654321',
-        }, {
-          'name': 'Orange',
-          'val': '#ff7034',
-        }, {
-          'name': 'Yellow',
-          'val': '#e0b83d',
-        }, {
-          'name': 'Green',
-          'val': '#228c22',
-        }, {
-          'name': 'Turquoise',
-          'val': '#008081',
-        }, {
-          'name': 'Blue',
-          'val': '#115da8',
-        }, {
-          'name': 'Purple',
-          'val': '#663399',
-        }, {
-          'name': 'Violet',
-          'val': '#b200ed',
-        }, {
-          'name': 'Pink',
-          'val': '#ff69b4',
-        }]
+        const tag_color_options = [
+          'Red',
+          'Brown',
+          'Orange',
+          'Yellow',
+          'Green',
+          'Turquoise',
+          'Blue',
+          'Purple',
+          'Violet',
+          'Pink',
+        ];
 
         Object.keys(tag_colors).forEach(function(tag, index) {
           let color = tag_colors[tag];
           html += '<div class="row tag-color-row">'
 
-          let tag_style = ''
+          let tag_class = ''
           if (color) {
-            let col = null;
-            color_options.forEach(function(opt, index) {
-              if (opt.name.toLowerCase() === color) col = opt.val;
+            tag_color_options.forEach(function(opt, index) {
+              if (opt.toLowerCase() === color) {
+                tag_class = `tag-${opt.toLowerCase()}`;
+                return false;
+              }
             });
-            if (col) {
-              tag_style = `style="background-color: ${col}; color: #ffffff;"`;
-            }
           }
 
           html += '<div class="col">'
-          html += `<div class="tag-item" ${tag_style}>${tag}</div>`
+          html += `<div class="tag-item ${tag_class}">${tag}</div>`
           html += '</div>'
 
           html += '<div class="col">'
           html += '<select class="tag-color-select">'
           html += '<option value="">No Color</option>'
-          color_options.forEach(function(opt, index) {
-            const sel = (opt.name.toLowerCase() === color) ? 'selected' : '';
-            html += `<option value="${opt.val}" ${sel}>${opt.name}</option>`
+          tag_color_options.forEach(function(opt, index) {
+            const sel = (opt.toLowerCase() === color) ? 'selected' : '';
+            html += `<option value="${opt}" ${sel}>${opt}</option>`
           })
           html += '</select>'
           html += '</div>'
@@ -421,12 +401,11 @@ if (canEdit) {
 
         $('.tag-color-select').change(function() {
           let $item = $(this).parent().parent().find('.tag-item');
+          tag_color_options.forEach(function(opt, index) {
+            $item.removeClass(`tag-${opt.toLowerCase()}`);
+          });
           if ($(this).val()) {
-            $item.css('background-color', $(this).val());
-            $item.css('color', '#ffffff');
-          } else {
-            $item.css('background-color', '');
-            $item.css('color', '');
+            $item.addClass(`tag-${$(this).val().toLowerCase()}`);
           }
         });
 
@@ -443,7 +422,7 @@ if (canEdit) {
     for (let i = 0; i < tags.length; i++) {
       let tag = $(tags[i]).html();
       let color = $(colors[i]).children('option:selected');
-      color = (color.val()) ? color.html().toLowerCase() : null;
+      color = (color.val()) ? color.val().toLowerCase() : null;
       data.push({
         tag,
         color

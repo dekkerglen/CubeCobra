@@ -65,3 +65,44 @@
     width: 100%;
     padding: 3px;
 }
+
+.tag-red {
+  color: #ffffff;
+  background-color: #8e1600;
+}
+.tag-brown {
+  color: #ffffff;
+  background-color: #654321;
+}
+.tag-orange {
+  color: #ffffff;
+  background-color: #ff7034;
+}
+.tag-yellow {
+  color: #ffffff;
+  background-color: #e0b83d;
+}
+.tag-green {
+  color: #ffffff;
+  background-color: #228c22;
+}
+.tag-turquoise {
+  color: #ffffff;
+  background-color: #008081;
+}
+.tag-blue {
+  color: #ffffff;
+  background-color: #115da8;
+}
+.tag-purple {
+  color: #ffffff;
+  background-color: #663399;
+}
+.tag-violet {
+  color: #ffffff;
+  background-color: #b200ed;
+}
+.tag-pink {
+  color: #ffffff;
+  background-color: #ff69b4;
+}
