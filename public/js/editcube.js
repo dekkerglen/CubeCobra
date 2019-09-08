@@ -485,6 +485,9 @@ if (canEdit) {
         'Content-Type': 'application/json'
       }
     }).then(res => {
+      if (show_tag_colors) {
+        updateCubeList();
+      }
       $('#tagColorsModal').modal('hide');
     });
   });
@@ -644,13 +647,26 @@ function updateCollapse() {
   });
 }
 
+function getCardTagColorClass(tags) {
+  let res = ''
+  cubeTagColors.every(function(item, index) {
+    if (tags.includes(item.tag)) {
+      res = `tag-${item.color}`;
+      return false;
+    }
+    return true;
+  });
+  return res;
+}
+
 function getTagColorClass(tag) {
   let res = ''
-  cubeTagColors.forEach(function(item, index) {
+  cubeTagColors.every(function(item, index) {
     if (item.tag === tag) {
       res = `tag-${item.color}`;
-      return false
+      return false;
     }
+    return true;
   });
   return res;
 }
@@ -1266,7 +1282,14 @@ function renderListView() {
       });
       res += '</thead>';
       for (i = 0; i < cards.length; i++) {
-        res += '<tr class="listviewrow ' + getCardColorClass(cards[i]) + '">';
+        res += '<tr class="listviewrow ' 
+        if (show_tag_colors) {
+          res += getCardTagColorClass(cards[i].tags);
+        } else {
+          res += getCardColorClass(cards[i]);
+        }
+        res += '">';
+
         //checkbox col
         if (cards[i].checked) {
           res += '<td class="nostretch"><input id="tdcheck' + cards[i].index + '" class="tdcheck" data-index="' + cards[i].index + '" type="checkbox" checked></td>';
