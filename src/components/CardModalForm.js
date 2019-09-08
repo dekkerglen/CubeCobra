@@ -18,6 +18,7 @@ class CardModalForm extends Component {
     this.openCardModal = this.openCardModal.bind(this);
     this.closeCardModal = this.closeCardModal.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.saveChanges = this.saveChanges.bind(this);
   }
 
   handleChange(event) {
@@ -42,6 +43,47 @@ class CardModalForm extends Component {
             }));
           }
         });
+    }
+  }
+
+  async saveChanges() {
+    let colors = ['W', 'U', 'B', 'R', 'G'].filter(color => this.state.formValues['color' + color]);
+    let updated = Object.assign(this.state.formValues, { colors });
+    for (let color of ['W', 'U', 'B', 'R', 'G']) {
+      delete updated['color' + color];
+    }
+    if (updated.imgUrl === '') {
+      updated.imgUrl = null;
+    }
+    updated.cardID = updated.version;
+
+    let card = this.state.card;
+
+    let response = await fetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
+      method: 'POST',
+      body: JSON.stringify({ src: card, updated }),
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    let json = await response.json();
+    if (json.success === 'true') {
+      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID);
+      let cardJson = await cardResponse.json();
+
+      let index = card.index;
+      let newCard = Object.assign(updated, {
+        index,
+        details: Object.assign(cardJson.card, {
+          display_image: updated.imgUrl,
+        }),
+      })
+
+      // magical incantation to get the global state right.
+      cube[index] = newCard;
+      cubeDict[cube[index].index] = newCard;
+      this.setState({ card: newCard, isOpen: false });
+      updateCubeList();
     }
   }
  
@@ -103,6 +145,7 @@ class CardModalForm extends Component {
           toggle={this.closeCardModal}
           isOpen={this.state.isOpen}
           disabled={!canEdit}
+          saveChanges={this.saveChanges}
           {...props}
         />
         {children}

@@ -19,7 +19,7 @@ const ColorCheck = ({ color, short, value, onChange }) => (
   </FormGroup>
 );
 
-const CardModal = ({ card, versions, toggle, disabled, values, onChange, ...props }) => {
+const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveChanges, ...props }) => {
   let tcgplayerLink = 'https://shop.tcgplayer.com/';
   if (card.details.tcgplayer_id) {
     tcgplayerLink += `product/productsearch?id=${card.details.tcgplayer_id}`;
@@ -138,7 +138,7 @@ const CardModal = ({ card, versions, toggle, disabled, values, onChange, ...prop
           Buy
         </ButtonLink>
         {disabled ? '' :
-          <Button color="success">
+          <Button color="success" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
           </Button>
