@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
@@ -52,20 +53,22 @@ class CubeList extends Component {
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
-          <CubeListNavbar
-            canEdit={canEdit}
-            cubeID={cubeID}
-            cubeView={cubeView}
-            changeCubeView={this.changeCubeView}
-            hasCustomImages={cards.some(card => card.imgUrl)}
-          />
           <TagContext.Provider defaultTags={defaultTags}>
-            {{
-              'table': <TableView cards={cards} />,
-              'spoiler': <VisualSpoiler cards={cards} />,
-              'curve': <CurveView cards={cards} />,
-              'list': <ListView cards={cards} />,
-            }[cubeView]}
+            <CardModalForm canEdit={canEdit}>
+              <CubeListNavbar
+                canEdit={canEdit}
+                cubeID={cubeID}
+                cubeView={cubeView}
+                changeCubeView={this.changeCubeView}
+                hasCustomImages={cards.some(card => card.imgUrl)}
+              />
+              {{
+                'table': <TableView cards={cards} />,
+                'spoiler': <VisualSpoiler cards={cards} />,
+                'curve': <CurveView cards={cards} />,
+                'list': <ListView cards={cards} />,
+              }[cubeView]}
+            </CardModalForm>
           </TagContext.Provider>
         </DisplayContext.Provider>
       </SortContext.Provider>

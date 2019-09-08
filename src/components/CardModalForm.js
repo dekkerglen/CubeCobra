@@ -92,7 +92,7 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { children, ...props } = this.props;
+    let { children, canEdit, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         <CardModal
@@ -102,6 +102,7 @@ class CardModalForm extends Component {
           versions={this.state.versions}
           toggle={this.closeCardModal}
           isOpen={this.state.isOpen}
+          disabled={!canEdit}
           {...props}
         />
         {children}
