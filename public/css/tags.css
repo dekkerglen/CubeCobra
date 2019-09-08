@@ -64,6 +64,18 @@
     padding: 3px;
 }
 
+.tag-sort-placeholder {
+  height: 44px;
+	background-color: #dee2e6;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.tag-sort-helper {
+	background-color: #ffffff;
+	border: 1px solid #dee2e6;
+}
+
 .tag-red {
   color: #ffffff;
   background-color: #8e1600;

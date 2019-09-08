@@ -400,6 +400,16 @@ if (canEdit) {
         });
         $('#tagsColumn').html(html);
 
+        $('#tagsColumn').sortable({
+          helper: function(e, item) {
+            let copy = $(item).clone();
+            $(copy).addClass('tag-sort-helper');
+            return copy;
+          },
+          forcePlaceholderSize: true,
+          placeholder: 'tag-sort-placeholder',
+        }).disableSelection();
+
         $('.tag-color-select').change(function() {
           let $item = $(this).parent().parent().find('.tag-item');
           tag_color_options.forEach(function(opt, index) {
