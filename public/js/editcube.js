@@ -354,7 +354,7 @@ if (canEdit) {
         let html = '';
         let tag_colors = data.tag_colors;
 
-        let color_options = [{
+        const color_options = [{
           'name': 'Red',
           'val': '#8e1600',
         }, {
@@ -390,8 +390,19 @@ if (canEdit) {
           let color = tag_colors[tag];
           html += '<div class="row tag-color-row">'
 
+          let tag_style = ''
+          if (color) {
+            let col = null;
+            color_options.forEach(function(opt, index) {
+              if (opt.name.toLowerCase() === color) col = opt.val;
+            });
+            if (col) {
+              tag_style = `style="background-color: ${col}; color: #ffffff;"`;
+            }
+          }
+
           html += '<div class="col">'
-          html += `<div class="tag-item">${tag}</div>`
+          html += `<div class="tag-item" ${tag_style}>${tag}</div>`
           html += '</div>'
 
           html += '<div class="col">'
@@ -421,6 +432,32 @@ if (canEdit) {
 
         $('#tagColorsModal').modal('show');
       });
+    });
+  });
+
+  $('#tagColorsSubmit').click(function(e) {
+    let data = [];
+    let tags = $('.tag-color-row .tag-item');
+    let colors = $('.tag-color-row .tag-color-select');
+
+    for (let i = 0; i < tags.length; i++) {
+      let tag = $(tags[i]).html();
+      let color = $(colors[i]).children('option:selected');
+      color = (color.val()) ? color.html().toLowerCase() : null;
+      data.push({
+        tag,
+        color
+      });
+    }
+
+    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      $('#tagColorsModal').modal('hide');
     });
   });
 
