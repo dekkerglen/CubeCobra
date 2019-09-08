@@ -619,11 +619,8 @@ function updateCollapse() {
 }
 
 function getTagColorClass(tag) {
-  console.log( tag )
-  console.log( cubeTagColors )
   let res = ''
   cubeTagColors.forEach(function(item, index) {
-    console.log( item.tag, tag, item.tag === tag )
     if (item.tag === tag) {
       res = `tag-${item.color}`;
       return false
