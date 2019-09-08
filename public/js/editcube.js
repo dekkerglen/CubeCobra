@@ -343,116 +343,6 @@ if (canEdit) {
       $('#cubeSaveModal').modal('show');
     });
   });
-
-  $('#tagColors').click(function(e) {
-    fetch("/cube/api/cubetagcolors/" + $('#cubeID').val(), {
-      method: "GET",
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      res.json().then(data => {
-        let html = '';
-        let tag_colors = data.tag_colors;
-
-        const tag_color_options = [
-          'Red',
-          'Brown',
-          'Orange',
-          'Yellow',
-          'Green',
-          'Turquoise',
-          'Blue',
-          'Purple',
-          'Violet',
-          'Pink',
-        ];
-
-        tag_colors.forEach(function(item, index) {
-          let tag = item.tag;
-          let color = item.color;
-
-          html += '<div class="row tag-color-row">'
-
-          let tag_class = ''
-          if (color) {
-            tag_color_options.forEach(function(opt, index) {
-              if (opt.toLowerCase() === color) {
-                tag_class = `tag-${opt.toLowerCase()}`;
-                return false;
-              }
-            });
-          }
-
-          html += '<div class="col">'
-          html += `<div class="tag-item ${tag_class}">${tag}</div>`
-          html += '</div>'
-
-          html += '<div class="col">'
-          html += '<select class="tag-color-select">'
-          html += '<option value="">No Color</option>'
-          tag_color_options.forEach(function(opt, index) {
-            const sel = (opt.toLowerCase() === color) ? 'selected' : '';
-            html += `<option value="${opt}" ${sel}>${opt}</option>`
-          })
-          html += '</select>'
-          html += '</div>'
-
-          html += '</div>'
-        });
-        $('#tagsColumn').html(html);
-
-        $('#tagsColumn').sortable({
-          helper: function(e, item) {
-            let copy = $(item).clone();
-            $(copy).addClass('tag-sort-helper');
-            return copy;
-          },
-          forcePlaceholderSize: true,
-          placeholder: 'tag-sort-placeholder',
-        }).disableSelection();
-
-        $('.tag-color-select').change(function() {
-          let $item = $(this).parent().parent().find('.tag-item');
-          tag_color_options.forEach(function(opt, index) {
-            $item.removeClass(`tag-${opt.toLowerCase()}`);
-          });
-          if ($(this).val()) {
-            $item.addClass(`tag-${$(this).val().toLowerCase()}`);
-          }
-        });
-
-        $('#tagColorsModal').modal('show');
-      });
-    });
-  });
-
-  $('#tagColorsSubmit').click(function(e) {
-    let data = [];
-    let tags = $('.tag-color-row .tag-item');
-    let colors = $('.tag-color-row .tag-color-select');
-
-    for (let i = 0; i < tags.length; i++) {
-      let tag = $(tags[i]).html();
-      let color = $(colors[i]).children('option:selected');
-      color = (color.val()) ? color.val().toLowerCase() : null;
-      data.push({
-        tag,
-        color
-      });
-    }
-
-    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      $('#tagColorsModal').modal('hide');
-    });
-  });
-
   $('#massEdit').click(function(e) {
     e.preventDefault();
     if (view == 'list') {
@@ -475,6 +365,115 @@ if (canEdit) {
     }
   });
 }
+
+$('#tagColors').click(function(e) {
+  fetch("/cube/api/cubetagcolors/" + $('#cubeID').val(), {
+    method: "GET",
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then(res => {
+    res.json().then(data => {
+      let html = '';
+      let tag_colors = data.tag_colors;
+
+      const tag_color_options = [
+        'Red',
+        'Brown',
+        'Orange',
+        'Yellow',
+        'Green',
+        'Turquoise',
+        'Blue',
+        'Purple',
+        'Violet',
+        'Pink',
+      ];
+
+      tag_colors.forEach(function(item, index) {
+        let tag = item.tag;
+        let color = item.color;
+
+        html += '<div class="row tag-color-row">'
+
+        let tag_class = ''
+        if (color) {
+          tag_color_options.forEach(function(opt, index) {
+            if (opt.toLowerCase() === color) {
+              tag_class = `tag-${opt.toLowerCase()}`;
+              return false;
+            }
+          });
+        }
+
+        html += '<div class="col">'
+        html += `<div class="tag-item ${tag_class}">${tag}</div>`
+        html += '</div>'
+
+        html += '<div class="col">'
+        html += '<select class="tag-color-select">'
+        html += '<option value="">No Color</option>'
+        tag_color_options.forEach(function(opt, index) {
+          const sel = (opt.toLowerCase() === color) ? 'selected' : '';
+          html += `<option value="${opt}" ${sel}>${opt}</option>`
+        })
+        html += '</select>'
+        html += '</div>'
+
+        html += '</div>'
+      });
+      $('#tagsColumn').html(html);
+
+      $('#tagsColumn').sortable({
+        helper: function(e, item) {
+          let copy = $(item).clone();
+          $(copy).addClass('tag-sort-helper');
+          return copy;
+        },
+        forcePlaceholderSize: true,
+        placeholder: 'tag-sort-placeholder',
+      }).disableSelection();
+
+      $('.tag-color-select').change(function() {
+        let $item = $(this).parent().parent().find('.tag-item');
+        tag_color_options.forEach(function(opt, index) {
+          $item.removeClass(`tag-${opt.toLowerCase()}`);
+        });
+        if ($(this).val()) {
+          $item.addClass(`tag-${$(this).val().toLowerCase()}`);
+        }
+      });
+
+      $('#tagColorsModal').modal('show');
+    });
+  });
+});
+
+$('#tagColorsSubmit').click(function(e) {
+  let data = [];
+  let tags = $('.tag-color-row .tag-item');
+  let colors = $('.tag-color-row .tag-color-select');
+
+  for (let i = 0; i < tags.length; i++) {
+    let tag = $(tags[i]).html();
+    let color = $(colors[i]).children('option:selected');
+    color = (color.val()) ? color.val().toLowerCase() : null;
+    data.push({
+      tag,
+      color
+    });
+  }
+
+  fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then(res => {
+    $('#tagColorsModal').modal('hide');
+  });
+});
 
 function cardsAreEquivalent(card, details) {
   if (card.cardID != details.cardID) {

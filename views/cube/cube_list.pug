@@ -29,18 +29,22 @@ block cube_toolbar
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navcompare" aria-controls="navcompare" aria-expanded="false" aria-label="Toggle navigation") Compare
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a(href="#")#massEdit.nav-link Mass Edit
-              li.nav-item
-                a(href="#")#tagColors.nav-link Set Tag Colors
-              li.nav-item.dropdown
-                a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
-                .dropdown-menu(aria-labelledby='bulkdropdown')
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
+          if user && user.id == cube.owner
+            li.nav-item
+              a(href="#")#massEdit.nav-link Mass Edit
+          li.nav-item
+            a(href="#")#tagColors.nav-link
+              if user && user.id == cube.owner
+                | Set Tag Colors
+              else
+                | View Tag Colors
+          if user && user.id == cube.owner
+            li.nav-item.dropdown
+              a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
+              .dropdown-menu(aria-labelledby='bulkdropdown')
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
           li.nav-item.dropdown
             a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
             .dropdown-menu(aria-labelledby='exportdropdown')
@@ -247,13 +251,21 @@ block cube_content
     .modal-dialog.modal-dialog-centered.modal-lg(role='document')
       .modal-content
         .modal-header
-          h5#tagColorsTitle.modal-title Set Tag Colors
+          h5#tagColorsTitle.modal-title
+            if user && user.id == cube.owner
+              | Set Tag Colors
+            else
+              | View Tag Colors
           button.close(type='button', data-dismiss='modal', aria-label='Close')
             span(aria-hidden='true') ×
         #tagsColumn.col
 
         .modal-footer
-          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
+          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close')
+            if user && user.id == cube.owner
+              | Cancel
+            else
+              | Close
           if user && user.id == cube.owner
             button#tagColorsSubmit.btn.btn-success(type='button') Save
 
