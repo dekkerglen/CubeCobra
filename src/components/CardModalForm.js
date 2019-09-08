@@ -19,6 +19,7 @@ class CardModalForm extends Component {
     this.closeCardModal = this.closeCardModal.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.saveChanges = this.saveChanges.bind(this);
+    this.queueRemoveCard = this.queueRemoveCard.bind(this);
   }
 
   handleChange(event) {
@@ -86,6 +87,17 @@ class CardModalForm extends Component {
       updateCubeList();
     }
   }
+
+  queueRemoveCard() {
+    // FIXME: Bring all this state inside React-world.
+    changes.push({
+      remove: this.state.card.details,
+    });
+    updateCollapse();
+    $('#navedit').collapse("show");
+    $('.warnings').collapse("hide");
+    this.setState({ isOpen: false });
+  }
  
   getCardVersions(card) {
     fetch('/cube/api/getversions/' + card.cardID)
@@ -146,6 +158,7 @@ class CardModalForm extends Component {
           isOpen={this.state.isOpen}
           disabled={!canEdit}
           saveChanges={this.saveChanges}
+          queueRemoveCard={this.queueRemoveCard}
           {...props}
         />
         {children}

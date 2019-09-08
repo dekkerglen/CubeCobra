@@ -19,7 +19,7 @@ const ColorCheck = ({ color, short, value, onChange }) => (
   </FormGroup>
 );
 
-const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveChanges, ...props }) => {
+const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveChanges, queueRemoveCard, ...props }) => {
   let tcgplayerLink = 'https://shop.tcgplayer.com/';
   if (card.details.tcgplayer_id) {
     tcgplayerLink += `product/productsearch?id=${card.details.tcgplayer_id}`;
@@ -124,8 +124,8 @@ const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveCha
         </Row>
       </ModalBody>
       <ModalFooter>
-        {disabled ? '' :
-          <Button color="danger">
+        {disabled ? '' : // FIXME: This button is still uncontrolled.
+          <Button color="danger" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
           </Button>
