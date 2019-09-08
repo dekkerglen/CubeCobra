@@ -21,6 +21,18 @@ window.onresize = function() {
   renderDraft();
 }
 
+var hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
+deck.playerdeck.forEach(function(inner, index) {
+  inner.forEach(function(card, index) {
+    if (!hasCustomImages && card.imgUrl !== undefined) {
+      hasCustomImages = true;
+      $("#customImageDisplayToggle").prop("checked", true);
+      $("#customImageDisplayMenuItem").show();
+    }
+  });
+});
+
 $('#addBasicsButton').click(function(e) {
   addCards(basics.Plains, $('#basicsWhite').val());
   addCards(basics.Island, $('#basicsBlue').val());
@@ -35,6 +47,16 @@ $('#addBasicsButton').click(function(e) {
 $('#saveDeckButton').click(function(e) {
   $('#deckraw').val(JSON.stringify(deck));
   $('#submitDeckForm').submit();
+});
+
+$('#customImageDisplayToggle').click(function(e) {
+  var enabled = $(this).prop('checked'), display_image;
+  deck.playerdeck.forEach(function(inner, index) {
+    inner.forEach(function(card, index) {
+      adjustDisplayImage(card, enabled);
+    });
+  });
+  renderDraft();
 });
 
 function addCards(card, amount) {

@@ -15,6 +15,10 @@ block cube_toolbar
             a#saveDeckButton.nav-link(href='#' ) Save Deck
           li.nav-item
             a.nav-link(href='#' data-toggle='modal', data-target='#basicsModal') Add Basic Lands
+          li.nav-item
+            span#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
+              input#customImageDisplayToggle(type='checkbox')
+              label(for='customImageDisplayToggle') Show Custom Images
 
 block cube_content
   br
@@ -159,5 +163,6 @@ block cube_content
         .modal-footer
           button#addBasicsButton.btn.btn-success(type='submit',value='Add') Add
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+  script(src='/js/utils.js')
   script(src='/js/deckbuilder.js')
 

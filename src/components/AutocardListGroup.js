@@ -4,11 +4,17 @@ import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
 
-const AutocardListGroup = ({ cards, heading }) => {
+const AutocardListGroup = ({ cards, heading, primary, secondary }) => {
   let groups = sortIntoGroups(cards, "CMC");
   return (
     <ListGroup className="list-outline">
-      <ListGroupItem className="list-group-heading">
+      <ListGroupItem
+        tag="a"
+        href="#"
+        className="list-group-heading activateGroupContextModal"
+        primarysort={primary}
+        secondarysort={secondary}
+      >
         {heading}
       </ListGroupItem>
       {

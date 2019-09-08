@@ -5,7 +5,6 @@ const {
 	generate_short_id,
 } = require('../serverjs/cubefn.js');
 
-/*
 (async () => {
 	mongoose.connect(config.database).then( async (db) => {
 		let cubes = await Cube.find({shortID:null}, [ '_id', 'shortID' ] );
@@ -20,6 +19,7 @@ const {
 	});
 })();
 
+/*
 (async () => {
 	mongoose.connect(config.database).then( async (db) => {
 		let cubes = await Cube.find({}, [ '_id', 'shortID' ] );

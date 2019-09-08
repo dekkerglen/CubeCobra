@@ -129,6 +129,7 @@ function convertExtraCard(card) {
   let newcard = {};
   newcard._id = card.id + '2';
   newcard.set = card.set;
+  newcard.collector_number = card.collector_number;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
   newcard.border_color = card.border_color;
@@ -192,6 +193,7 @@ function convertCard(card) {
 
   newcard._id = card.id;
   newcard.set = card.set;
+  newcard.collector_number = card.collector_number;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
   newcard.border_color = card.border_color;

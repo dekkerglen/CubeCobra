@@ -15,6 +15,9 @@ block cube_content
     .card.card-hover#deckhover
       .card-header
         h4 Drafted by #{drafter}
+        span#customImageDisplayMenuItem
+          input#customImageDisplayToggle(type='checkbox')
+          label(for='customImageDisplayToggle') Show Custom Images
       .card-body
         input#deckraw(type='hidden', name='deckraw', value=deck)
         #deckarea(style='margin: 3px;')
@@ -44,4 +47,5 @@ block cube_content
             if card.colorcategory == 'l'
               a.list-group-item.autocard.lands.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
 
+  script(src='/js/utils.js')
   script(src='/js/deck.js')
