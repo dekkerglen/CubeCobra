@@ -28,6 +28,8 @@ const TableView = ({ cards, ...props }) => {
                     key={label}
                     heading={`${label} (${column[label].length})`}
                     cards={column[label]}
+                    primary={columnLabel}
+                    secondary={label}
                   />
                 )
             }

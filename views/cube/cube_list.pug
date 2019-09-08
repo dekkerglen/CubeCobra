@@ -253,54 +253,55 @@ block cube_content
             .price-area
           .col-12.col-sm-8
             .modal-body
-              h5 Card Attributes
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Version (Set and #)
-                select#contextModalVersionSelect.custom-select
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Status
-                select#contextModalStatusSelect.custom-select
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text CMC
-                input#contextModalCMC.form-control(type='text', value='2')
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Type
-                input#contextModalType.form-control(type='text', value='2')
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Card Image URL
-                  input#contextModalImageURL.form-control(type='text', value='2')
-              h5 Color Identity Override:
-              .form-check.form-check-inline
-                input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1', disabled=!user || user.id != cube.owner)
-                label.form-check-label(for='contextModalCheckboxW')
-                  img(src='/content/symbols/w.png' alt='White' title='White')
-              .form-check.form-check-inline
-                input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2', disabled=!user || user.id != cube.owner)
-                label.form-check-label(for='contextModalCheckboxU')
-                  img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-              .form-check.form-check-inline
-                input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3', disabled=!user || user.id != cube.owner)
-                label.form-check-label(for='contextModalCheckboxB')
-                  img(src='/content/symbols/b.png' alt='Black' title='Black')
-              .form-check.form-check-inline
-                input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4', disabled=!user || user.id != cube.owner)
-                label.form-check-label(for='contextModalCheckboxR')
-                  img(src='/content/symbols/r.png' alt='Red' title='Red')
-              .form-check.form-check-inline
-                input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5', disabled=!user || user.id != cube.owner)
-                label.form-check-label(for='contextModalCheckboxG')
-                  img(src='/content/symbols/g.png' alt='Green' title='Green')
-              h5 Tags
-              .tags-area#contextTags
-                .tags-input(data-name='tags-input')
-                  span.tags
-                  input.hidden-input(type='hidden')
-                  input.main-input(maxlength="24")
+              fieldset(disabled=!user || user.id != cube.owner)
+                h5 Card Attributes
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text Version (Set and #)
+                  select#contextModalVersionSelect.custom-select
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text Status
+                  select#contextModalStatusSelect.custom-select
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text CMC
+                  input#contextModalCMC.form-control(type='text', value='2')
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text Type
+                  input#contextModalType.form-control(type='text', value='2')
+                .input-group.mb-3
+                  .input-group-prepend
+                    span.input-group-text Card Image URL
+                    input#contextModalImageURL.form-control(type='text', value='2')
+                h5 Color Identity Override:
+                .form-check.form-check-inline
+                  input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
+                  label.form-check-label(for='contextModalCheckboxW')
+                    img(src='/content/symbols/w.png' alt='White' title='White')
+                .form-check.form-check-inline
+                  input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
+                  label.form-check-label(for='contextModalCheckboxU')
+                    img(src='/content/symbols/u.png' alt='Blue' title='Blue')
+                .form-check.form-check-inline
+                  input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
+                  label.form-check-label(for='contextModalCheckboxB')
+                    img(src='/content/symbols/b.png' alt='Black' title='Black')
+                .form-check.form-check-inline
+                  input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
+                  label.form-check-label(for='contextModalCheckboxR')
+                    img(src='/content/symbols/r.png' alt='Red' title='Red')
+                .form-check.form-check-inline
+                  input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
+                  label.form-check-label(for='contextModalCheckboxG')
+                    img(src='/content/symbols/g.png' alt='Green' title='Green')
+                h5 Tags
+                .tags-area#contextTags
+                  .tags-input(data-name='tags-input')
+                    span.tags
+                    input.hidden-input(type='hidden')
+                    input.main-input(maxlength="24")
 
         .modal-footer
           if user && user.id == cube.owner
