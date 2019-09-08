@@ -368,8 +368,10 @@ if (canEdit) {
           'Pink',
         ];
 
-        Object.keys(tag_colors).forEach(function(tag, index) {
-          let color = tag_colors[tag];
+        tag_colors.forEach(function(item, index) {
+          let tag = item.tag;
+          let color = item.color;
+
           html += '<div class="row tag-color-row">'
 
           let tag_class = ''
