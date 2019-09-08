@@ -3,9 +3,6 @@ extends cube_layout
 block cube_content
   link(rel='stylesheet' href='/css/draft.css')
   br
-  span#customImageDisplayMenuItem
-    input#customImageDisplayToggle(type='checkbox')
-    label(for='customImageDisplayToggle') Show custom images
   if oldformat
     .container
       h4 Drafted by #{drafter}
@@ -18,6 +15,9 @@ block cube_content
     .card.card-hover#deckhover
       .card-header
         h4 Drafted by #{drafter}
+        span#customImageDisplayMenuItem
+          input#customImageDisplayToggle(type='checkbox')
+          label(for='customImageDisplayToggle') Show Custom Images
       .card-body
         input#deckraw(type='hidden', name='deckraw', value=deck)
         #deckarea(style='margin: 3px;')
