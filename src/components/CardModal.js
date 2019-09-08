@@ -1,118 +1,130 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-import { Button, Col, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
+import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
-class CardModal extends Component {
-  constructor(props) {
-    this.state = { open: false };
-  }
+const ColorCheck = ({ color, short, value, onChange }) => (
+  <FormGroup check inline>
+    <Label check>
+      <Input
+        type="checkbox"
+        id={`contextModalCheckbox${short.toUpperCase()}`}
+        name={`color${short.toUpperCase()}`}
+        checked={value}
+        onChange={onChange}
+      />
+      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
+    </Label>
+  </FormGroup>
+);
 
-  toggle() {
-    this.setState(({ open, ...rest }) => {
-      return { ...rest, open: !open };
-    });
-  }
-
-  render({ card }) {
-    return (
-      <Modal id="contextModal" labelledby="exampleModalCenterTitle">
-        <ModalHeader>
-          <h5 class="modal-title" id="contextModalTitle">Ambush Viper</h5>
-          <Button onClick={this.toggle} close className="ml-auto" />
-        </ModalHeader>
-        <ModalBody>
-          <Row>
-            <Col xs="12" sm="4">
-              <img class="defaultCardImage" id="contextModalImg" src={card.details.display_image} alt={card.name} />
-              <div class="price-area"></div>
-            </Col>
-            <Col xs="12" sm="8">
-              <h5>Card Attributes</h5>
-              <InputGroup>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Version (Set and #)</InputGroupText>
-                </InputGroupAddon>
-                <Input type="select" id="contextModalVersionSelect">
-                </Input>
-              </InputGroup>
-              <InputGroup>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Status</InputGroupText>
-                </InputGroupAddon>
-                <Input type="select" id="contextModalStatusSelect"></Input>
-              </InputGroup>
-              <InputGroup>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>CMC</InputGroupText>
-                </InputGroupAddon>
-                <Input id="contextModalCMC" type="text" value="2" />
-              </InputGroup>
-              <InputGroup>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Type</InputGroupText>
-                </InputGroupAddon>
-                <Input id="contextModalType" type="text" value="2" />
-              </InputGroup>
-              <InputGroup>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Card Image URL</InputGroupText>
-                </InputGroupAddon>
-                <Input id="contextModalImageURL" type="text" value="2" />
-              </InputGroup>
-
-              <h5>Color Identity Override:</h5>
-              <FormGroup check>
-                <Label check>
-                  <Input type="checkbox" id="contextModalCheckboxW" />
-                  <img src="/content/symbols/w.png" alt="White" title="White" />
-                </Label>
-              </FormGroup>
-              <FormGroup check>
-                <Label check>
-                  <Input type="checkbox" id="contextModalCheckboxU" />
-                  <img src="/content/symbols/u.png" alt="White" title="White" />
-                </Label>
-              </FormGroup>
-              <FormGroup check>
-                <Label check>
-                  <Input type="checkbox" id="contextModalCheckboxB" />
-                  <img src="/content/symbols/b.png" alt="White" title="White" />
-                </Label>
-              </FormGroup>
-              <FormGroup check>
-                <Label check>
-                  <Input type="checkbox" id="contextModalCheckboxR" />
-                  <img src="/content/symbols/r.png" alt="White" title="White" />
-                </Label>
-              </FormGroup>
-              <FormGroup check>
-                <Label check>
-                  <Input type="checkbox" id="contextModalCheckboxG" />
-                  <img src="/content/symbols/g.png" alt="White" title="White" />
-                </Label>
-              </FormGroup>
-
-              <h5>Tags</h5>
-              <div class="tags-area" id="contextTags">
-                <div class="tags-input" data-name="tags-input"><span class="tags"></span><input class="hidden-input" type="hidden" /><input class="main-input" maxlength="24" /></div>
+const CardModal = ({ card, versions, toggle, disabled, values, onChange, ...props }) => (
+  <Modal size="lg" labelledby="cardModalHeader" {...props}>
+    <ModalHeader id="cardModalHeader" toggle={toggle}>
+      {card.details.name}
+    </ModalHeader>
+    <ModalBody>
+      <Row>
+        <Col xs="12" sm="4">
+          <img className="w-100" src={card.imgUrl || card.details.image_normal} alt={card.name} />
+          <div className="price-area">
+            {!card.price ? '' :
+              <div className="card-price">
+                TCGPlayer Market: {card.price.toFixed(2)}
               </div>
-            </Col>
-          </Row>
-        </ModalBody>
-        <ModalFooter>
-          <a id="contextScryfallButton" href="#" target="_blank">
-            <Button color="secondary">
-              <span class="d-none d-sm-inline">View on Scryfall</span>
-              <span class="d-sm-none">Scryfall</span>
-            </Button>
-          </a>
-          <a id="contextBuyButton" href="#" target="_blank">
-            <Button color="secondary">Buy</Button>
-          </a>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+            }
+            {!card.price_foil ? '' :
+              <div className="card-price">
+                Foil TCGPlayer Market: {card.price_foil.toFixed(2)}
+              </div>
+            }
+          </div>
+        </Col>
+        <Col xs="12" sm="8">
+          <h5>Card Attributes</h5>
+          <fieldset disabled={disabled}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Version (Set and #)</InputGroupText>
+              </InputGroupAddon>
+              <Input type="select" id="cardModalVersionSelect" name="version" value={values.version} onChange={onChange}>
+                {
+                  versions.map(version => {
+                    let name = version.full_name.toUpperCase().substring(version.full_name.indexOf('[') + 1, version.full_name.indexOf(']'));
+                    return <option key={version._id} value={version._id}>{name}</option>;
+                  })
+                }
+              </Input>
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Status</InputGroupText>
+              </InputGroupAddon>
+              <Input type="select" name="status" value={values.status} onChange={onChange}>
+                {
+                  getLabels('Status').map(status =>
+                    <option key={status}>{status}</option>
+                  )
+                }
+              </Input>
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>CMC</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="cmc" value={values.cmc} onChange={onChange} />
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Type</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="type_line" value={values.type_line} onChange={onChange} />
+            </InputGroup>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Card Image URL</InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
+            </InputGroup>
+
+            <h5>Color Identity Override</h5>
+            <div className="mb-3">
+              {
+                [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']].map(color =>
+                  <ColorCheck
+                    key={color[1]}
+                    color={color[0]}
+                    short={color[1]}
+                    value={values['color' + color[1]]}
+                    onChange={onChange}
+                  />
+                )
+              }
+            </div>
+
+            <h5>Tags</h5>
+            <div className="tags-area" id="contextTags">
+              <div className="tags-input" data-name="tags-input">
+                <span className="tags"></span>
+                <input type="hidden" />
+                <input className="main-input" maxLength="24" />
+              </div>
+            </div>
+          </fieldset>
+        </Col>
+      </Row>
+    </ModalBody>
+    <ModalFooter>
+      <a id="contextScryfallButton" href="#" target="_blank">
+        <Button color="secondary">
+          <span className="d-none d-sm-inline">View on Scryfall</span>
+          <span className="d-sm-none">Scryfall</span>
+        </Button>
+      </a>
+      <a id="contextBuyButton" href="#" target="_blank">
+        <Button color="secondary">Buy</Button>
+      </a>
+    </ModalFooter>
+  </Modal>
+);
 
 export default CardModal;
