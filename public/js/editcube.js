@@ -436,7 +436,7 @@ $('#tagColors').click(function(e) {
         html += `<div class="tag-item ${tag_class}">${tag}</div>`
         html += '</div>'
 
-        if (canEdit) {
+        if (canEdit && !comparing) {
           html += '<div class="col">'
           html += '<select class="tag-color-select">'
           html += '<option value="">No Color</option>'
@@ -452,7 +452,7 @@ $('#tagColors').click(function(e) {
       });
       $('#tagsColumn').html(html);
 
-      if (canEdit) {
+      if (canEdit && !comparing) {
         $('#tagsColumn').sortable({
           helper: function(e, item) {
             let copy = $(item).clone();
@@ -465,7 +465,7 @@ $('#tagColors').click(function(e) {
       }
       $('#tagsColumn').disableSelection();
 
-      if (canEdit) {
+      if (canEdit && !comparing) {
         $('.tag-color-select').change(function() {
           let $item = $(this).parent().parent().find('.tag-item');
           tag_color_options.forEach(function(opt, index) {
@@ -487,7 +487,7 @@ $('#showTagColorsCheckbox').change(function(e) {
   updateCubeList();
 });
 
-if (canEdit) {
+if (canEdit && !comparing) {
   $('#tagColorsSubmit').click(function(e) {
     let data = [];
     let tags = $('.tag-color-row .tag-item');
