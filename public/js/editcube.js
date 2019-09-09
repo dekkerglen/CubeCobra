@@ -1643,12 +1643,9 @@ function updateFilters(filterText) {
   
 
   if (filterText) {
-    filters = [];
-    if (generateFilters(filterText)) {
-      let result = '<p><ul>';
-      filters.forEach(function(filter) {
-        result += '<li>';
-      });
+    new_filters = [];
+    if (generateFilters(filterText.toLowerCase(), new_filters)) {
+      filters = new_filters;
       updateCubeList();
     } else {
       //TODO: couldn't parse that query, display error?
@@ -1678,19 +1675,54 @@ let categoryMap = new Map([
   ['name', 'name']
 ]);
 
+function findEndingQuotePosition(filterText, num) {
+  if(!num) {
+    num = 1;
+  }
+  for(let i = 1; i < filterText.length; i++) {
+    if(filterText[i] == '(') num++;
+    else if (filterText[i] == ')') num--;
+    if (num === 0) { 
+      return i;
+    }
+  }
+  return false;
+}
+
 
 //converts filter scryfall syntax string to global filter objects
 //returns true if decoding was successful, and filter object is populated, or false otherwise
-function generateFilters(filterText) {
-  console.log('generateFilters called with: ' + filterText);
-  if(!filterText) {
-    console.log(filters);
-    return true;
-  }
+function generateFilters(filterText, node) {
+  if(!filterText) return;
+  console.log('generateFilters called with: "' + filterText + '"');
+  filterText = filterText.trim();
+  console.log(node);
 
   const operators = '>=|<=|<|>|:|='
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
+
+  if (filterText.indexOf('(') == 0) {
+    let pos = findEndingQuotePosition(filterText);
+    if(!pos) {
+      node = [];
+      return false;
+    }
+    console.log("pos: " + pos);
+    node.push([]);
+    //node[node.length -1].parent = node;
+    generateFilters(filterText.slice(1, pos), node[node.length-1]);
+    generateFilters(filterText.slice(pos+1), node);
+    return;
+  }
+
+  //set type of current array to or, if an or is encountered
+  if (filterText.indexOf('or') == 0) {
+    //node.parent.type = 'or';
+    node.type = 'or';
+    generateFilters(filterText.slice(2), node);
+    return;
+  }
 
   let not = false;
   if (filterText.search('-') == 0) {
@@ -1704,7 +1736,7 @@ function generateFilters(filterText) {
   //returns :,=,<, or >, or null
   let operand = filterTextSplit[0].match(operators_re);
   //remove operand from array, and store as plain string
-  console.log(operand);
+  console.log("operand is: " + operand);
   if(operand) {
     operand = operand[0];
   }
@@ -1715,6 +1747,7 @@ function generateFilters(filterText) {
 
   //if this is a string with operand, rather than a name
   if (operand) {
+    console.log('got an argument with operand: ' + operand);
     category = filterTextSplit[0].split(operators_re)[0];
   
     arg = '';
@@ -1732,36 +1765,38 @@ function generateFilters(filterText) {
       arg = filterTextSplit[0].split(operators_re)[1];
     }
   } else { //this argument is a name
+    console.log('got an argument without an operand');
     operand = 'none';
     category = 'name';
     arg = filterTextSplit[0];
   }
 
   if (!categoryMap.has(category)) {
-    filters = [];
+    node = [];
     return false;
   }
+
   category = categoryMap.get(category);
   
   //if this argument was parsed successfully
   if(arg && operand && category) {
     //cut this argument out of the string
     filterText = filterText.split(arg + (parens ? '"' : '') + ' ')[1];
-
     //convert category to singular name, avoid aliases in data object
 
     //add this argument to filters object
-    filters.push({
+    let obj = {
       arg: arg,
       operand: operand,
       category: category,
       not: not,
-    });
-    //recursively handle next argument
-    return generateFilters(filterText);
-    console.log('calling generate filters with text: ' + filterText);
+    };
+
+    node.push(obj);
+    generateFilters(filterText, node);
+    return;
   } else { //argument was not parsed successfully, abandon parsing
-    filters = [];
+    node = [];
     return false;
   }
 
