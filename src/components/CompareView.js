@@ -66,6 +66,10 @@ const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
   }
 
+  both = both.slice(0);
+  only_a = onlyA.slice(0);
+  only_b = onlyB.slice(0);
+
   return <>
     {
       getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
