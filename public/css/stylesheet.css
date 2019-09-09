@@ -150,10 +150,13 @@
     height: 100%;
     width: 100%;
     opacity: 0;
-    background: rgba(0,0,0,.25);
+    background: rgba(0,0,0,.1);
     top: 0;
     left: 0;
     position: absolute;
+}
+.tag-color.card-list-item:after {
+	background: rgba(255,255,255,.2);
 }
 
 .card-list-item:hover:after {
