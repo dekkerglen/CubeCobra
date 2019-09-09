@@ -18,7 +18,7 @@ var updatedb = require('./serverjs/updatecards.js');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(config.database, {useNewUrlParser: true});
+mongoose.connect(config.database);
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');

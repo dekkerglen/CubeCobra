@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",
-    "start": "nodemon",
+    "start": "node app",
     "test": "jest"
   },
   "author": "Gwen Dekker",

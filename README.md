@@ -29,7 +29,7 @@ Once your `.env` file is filled out, run the following commands in the root of t
 ```
 npm install    
 node force_update.js
-npm start
+nodemon
 ```
 
 You can now open up a browser and connect to the app through: http://localhost:5000
