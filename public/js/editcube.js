@@ -1,8 +1,3 @@
-var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>' +
-  '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
-  '#{items}</select><div class="input-group-append"><div class="input-group-text"><input type="checkbox" data-index="#{checkboxindex}" id="#{checkbox}"/><a style="padding-left: 5px">Not </a></div>' +
-  '<button class="btn btn-outline-secondary filter-button" data-index="#{buttonindex}" type="button">Remove</button></div></div>';
-var filterItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
 var listGranularity = 50;
 var listPosition = 0;
@@ -55,18 +50,17 @@ $('#compareButton').click(function(e) {
   if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
 });
 
-$('#addFilterButton').click(function(e) {
-  var filterType = $('#filterType').val();
-  filters.push({
-    category: filterType,
-    value: getLabels(filterType)[0],
-    not: false
-  });
-  updateFilters();
+$('#filterButton').click(function(e) {
+  var filterText = $('#filterInput').val();
+  console.log(filterText);
+  updateFilters(filterText);
 });
 
-$('.updateButton').click(function(e) {
-  updateCubeList();
+$('#filterInput').keyup(function(e) {
+  if (e.keyCode === 13 && $('#addInput').val().length == 0) {
+    e.preventDefault();
+    filterButton.click();
+  }
 });
 
 $('#customImageDisplayToggle').click(function(e) {
@@ -192,6 +186,7 @@ if (canEdit) {
       }
     }
 
+    //TODO: Remove this
     var filterobj = null;
     if (filters.length > 0) {
       filterobj = getFilterObj();
@@ -205,7 +200,7 @@ if (canEdit) {
 
     let data = {
       selected: groupSelect,
-      filters: filterobj,
+      //filters: filterobj,
       updated: updated,
     };
 
@@ -1644,74 +1639,136 @@ function renderListView() {
     });
 }
 
-function updateFilters() {
-  sort_categories = getSorts();
+function updateFilters(filterText) {
+  
 
-  if (filters.length <= 0) {
-    document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
-  } else {
-    var filterhtml = "";
-    filters.forEach(function(filter, index) {
-      var itemshtml = "";
-      var labels = getLabels(filter.category);
-      labels.forEach(function(label, l_index) {
-        itemshtml += filterItemTemplate.replace('#{value}', label).replace('#{label}', label);
+  if (filterText) {
+    filters = [];
+    if (generateFilters(filterText)) {
+      let result = '<p><ul>';
+      filters.forEach(function(filter) {
+        result += '<li>';
       });
-      filterhtml += filterTemplate.replace('#{items}', itemshtml)
-        .replace('#{filterID}', filter.category + index)
-        .replace('#{filterName}', filter.category)
-        .replace('#{index}', index)
-        .replace('#{buttonindex}', index)
-        .replace('#{checkbox}', 'checkbox' + filter.category + index)
-        .replace('#{filterindex}', index)
-        .replace('#{checkboxindex}', index);
-    });
-    $('#filterarea').html(filterhtml);
-
-    //setup filter control events
-    filters.forEach(function(filter, index) {
-      var element = document.getElementById(filter.category + index);
-      element.selectedIndex = getLabels(filter.category).indexOf(filter.value);
-      element.addEventListener('change', (e) => {
-        filters[e.target.getAttribute('data-index')].value = e.target.value;
-      });
-
-      element = document.getElementById('checkbox' + filter.category + index);
-      element.checked = filter.not;
-      element.addEventListener('change', (e) => {
-        filters[e.target.getAttribute('data-index')].not = e.target.checked;
-      });
-    });
-
-    filterRemoveButtons = document.getElementsByClassName('filter-button');
-    for (var i = 0; i < filterRemoveButtons.length; i++) {
-      filterRemoveButtons[i].addEventListener('click', (e) => {
-        filters.splice(e.target.getAttribute('data-index'), 1);
-        updateFilters();
-      })
+      updateCubeList();
+    } else {
+      //TODO: couldn't parse that query, display error?
     }
+  } else {
+    document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
   }
 }
 
-function buildFilterArea() {
-  sort_categories = getSorts();
-  var sorthtml = "";
-  sort_categories.forEach(function(category, index) {
-    sorthtml += filterItemTemplate.replace('#{value}', category).replace('#{label}', category);
-  });
+let categoryMap = new Map([
+  ['m', 'mana'],
+  ['mana',' mana'],
+  ['cmc',' cmc'],
+  ['c',' color'],
+  ['color',' color'],
+  ['ci',' identity'],
+  ['id',' identity'],
+  ['identity',' identity'],
+  ['t',' type'],
+  ['type',' type'],
+  ['o',' oracle'],
+  ['oracle',' oracle'],
+  ['pow',' power'],
+  ['power',' power'],
+  ['tou', 'toughness'],
+  ['toughness', 'toughness'],
+  ['name', 'name']
+]);
 
-  document.getElementById('filterType').innerHTML = sorthtml;
-  sorthtml += filterItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
-  document.getElementById('secondarySortSelect').innerHTML = sorthtml;
-  document.getElementById('primarySortSelect').innerHTML = sorthtml;
-  if (document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0) {
-    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort1").value);
-    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort2").value);
-  } else {
-    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
-    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
+
+//converts filter scryfall syntax string to global filter objects
+//returns true if decoding was successful, and filter object is populated, or false otherwise
+function generateFilters(filterText) {
+  console.log('generateFilters called with: ' + filterText);
+  if(!filterText) {
+    console.log(filters);
+    return true;
   }
 
+  const operators = '>=|<=|<|>|:|='
+  //split string based on list of operators
+  let operators_re = new RegExp('(?:' + operators + ')');
+
+  let not = false;
+  if (filterText.search('-') == 0) {
+    not = true;
+    filterText = filterText.slice(1);
+  }
+
+  //grab only first argument in string
+  let filterTextSplit = filterText.split(' ', 1);
+
+  //returns :,=,<, or >, or null
+  let operand = filterTextSplit[0].match(operators_re);
+  //remove operand from array, and store as plain string
+  console.log(operand);
+  if(operand) {
+    operand = operand[0];
+  }
+
+  let category = '';
+  let arg = '';
+  let parens = false;
+
+  //if this is a string with operand, rather than a name
+  if (operand) {
+    category = filterTextSplit[0].split(operators_re)[0];
+  
+    arg = '';
+    parens = false;
+    //if the first field contains a parentheses, and there are at least 2 parentheses, grab the arg from parentheses
+    console.log('checking for parens: ' + (filterText.search('"') > -1) + ' and for 2+ parens: ' + (filterText.split('"').length > 2));
+    if (filterText.search('"') > -1 && filterText.split('"').length > 2) {
+      //match first text inside quotes, ignoring escaped quotes
+      let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+      parens = true;
+      //replace escaped quotes with plain quotes
+      arg = filterText.match(quotes_re)[1].replace(/\\"/, '"');
+      console.log('parens arg is: ' + arg);
+    } else { //otherwise the arg is whatever is after the operator
+      arg = filterTextSplit[0].split(operators_re)[1];
+    }
+  } else { //this argument is a name
+    operand = 'none';
+    category = 'name';
+    arg = filterTextSplit[0];
+  }
+
+  if (!categoryMap.has(category)) {
+    filters = [];
+    return false;
+  }
+  category = categoryMap.get(category);
+  
+  //if this argument was parsed successfully
+  if(arg && operand && category) {
+    //cut this argument out of the string
+    filterText = filterText.split(arg + (parens ? '"' : '') + ' ')[1];
+
+    //convert category to singular name, avoid aliases in data object
+
+    //add this argument to filters object
+    filters.push({
+      arg: arg,
+      operand: operand,
+      category: category,
+      not: not,
+    });
+    //recursively handle next argument
+    return generateFilters(filterText);
+    console.log('calling generate filters with text: ' + filterText);
+  } else { //argument was not parsed successfully, abandon parsing
+    filters = [];
+    return false;
+  }
+
+}
+
+function buildFilterArea() {
+  //TODO: remove this
   updateFilters();
 }
 
@@ -1720,7 +1777,7 @@ window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
-  buildFiltersFromQsargs();
+  //buildFiltersFromQsargs();
   buildFilterArea();
   updateCubeList();
   activateTags();

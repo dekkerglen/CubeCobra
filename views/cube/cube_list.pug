@@ -127,10 +127,10 @@ block cube_toolbar
             .col
               .input-group.mb-3
                 .input-group-prepend
-                  span.input-group-text Filter Type
-                select#filterType.custom-select(aria-label='Example select with button addon')
+                  label.input-group-text(for='filterInput') Search
+                input.form-control#filterInput(type='text', placeholder='Use Scryfall Search Syntax')
                 .input-group-append
-                  button#addFilterButton.btn.btn-success(type='button') Add Filter
+                  button#filterButton.btn.btn-success(type='button') Filter
               h5 Filters
               #filterarea
           .row
