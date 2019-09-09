@@ -469,10 +469,10 @@ $('#tagColors').click(function(e) {
         $('.tag-color-select').change(function() {
           let $item = $(this).parent().parent().find('.tag-item');
           tag_color_options.forEach(function(opt, index) {
-            $item.removeClass(`tag-${opt.toLowerCase()}`);
+            $item.removeClass(`tag-color tag-${opt.toLowerCase()}`);
           });
           if ($(this).val()) {
-            $item.addClass(`tag-${$(this).val().toLowerCase()}`);
+            $item.addClass(`tag-color tag-${$(this).val().toLowerCase()}`);
           }
         });
       }
