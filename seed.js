@@ -20,7 +20,7 @@ seeder.connect('mongodb://localhost/nodecube', function() {
 
   // Clear specified collections
   seeder.clearModels(['Blog', 'CardRating', 'Deck', 'Draft', 'User'], function() {
- 
+
     // Populate databases, then close seeder
     seeder.populateModels(data, function() {
       seeder.disconnect();
@@ -29,8 +29,7 @@ seeder.connect('mongodb://localhost/nodecube', function() {
 });
 
 // Data array containing seed data - documents organized by Model
-var data = [
-  {
+var data = [{
     'model': 'User',
     'documents': users
   },
