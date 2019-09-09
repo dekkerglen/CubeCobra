@@ -392,6 +392,7 @@ $('#tagColors').click(function(e) {
     res.json().then(data => {
       let html = '';
       let tag_colors = data.tag_colors;
+      cubeTagColors = tag_colors;
 
       const tag_color_options = [
         'Red',
@@ -500,6 +501,7 @@ if (canEdit) {
         'Content-Type': 'application/json'
       }
     }).then(res => {
+      cubeTagColors = data;
       if (show_tag_colors) {
         updateCubeList();
       }
