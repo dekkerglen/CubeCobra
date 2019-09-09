@@ -121,7 +121,7 @@ block content
   input#only_a(type='hidden', name='only_a', value=only_a)
   input#only_b(type='hidden', name='only_b', value=only_b)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
-  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
+  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors.concat(cubeB.tag_colors)))
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
