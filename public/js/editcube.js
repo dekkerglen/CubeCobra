@@ -416,7 +416,7 @@ $('#tagColors').click(function(e) {
         if (color) {
           tag_color_options.forEach(function(opt, index) {
             if (opt.toLowerCase() === color) {
-              tag_class = `tag-${opt.toLowerCase()}`;
+              tag_class = `tag-color tag-${opt.toLowerCase()}`;
               return false;
             }
           });
@@ -666,7 +666,7 @@ function getCardTagColorClass(card) {
   let res = getCardColorClass(card);
   cubeTagColors.every(function(item, index) {
     if (card.tags.includes(item.tag)) {
-      res = `tag-${item.color}`;
+      res = `tag-color tag-${item.color}`;
       return false;
     }
     return true;
@@ -678,7 +678,7 @@ function getTagColorClass(tag) {
   let res = ''
   cubeTagColors.every(function(item, index) {
     if (item.tag === tag) {
-      res = `tag-${item.color}`;
+      res = `tag-color tag-${item.color}`;
       return false;
     }
     return true;

@@ -76,53 +76,37 @@
 	border: 1px solid #dee2e6;
 }
 
-.tag-red,
-.tag-red .tdname {
-  color: #ffffff;
-  background-color: #8e1600;
+.tag-color,
+.tag-color .tdname {
+  color: #ffffff !important;
 }
-.tag-brown,
-.tag-brown .tdname {
-  color: #ffffff;
-  background-color: #654321;
+.tag-red {
+  background-color: #8e1600 !important;
 }
-.tag-orange,
-.tag-orange .tdname {
-  color: #ffffff;
-  background-color: #ff7034;
+.tag-brown {
+  background-color: #654321 !important;
 }
-.tag-yellow,
-.tag-yellow .tdname {
-  color: #ffffff;
-  background-color: #e0b83d;
+.tag-orange {
+  background-color: #ff7034 !important;
 }
-.tag-green,
-.tag-green .tdname {
-  color: #ffffff;
-  background-color: #228c22;
+.tag-yellow {
+  background-color: #e0b83d !important;
 }
-.tag-turquoise,
-.tag-turquoise .tdname {
-  color: #ffffff;
-  background-color: #008081;
+.tag-green {
+  background-color: #228c22 !important;
 }
-.tag-blue,
-.tag-blue .tdname {
-  color: #ffffff;
-  background-color: #115da8;
+.tag-turquoise {
+  background-color: #008081 !important;
 }
-.tag-purple,
-.tag-purple .tdname {
-  color: #ffffff;
-  background-color: #663399;
+.tag-blue {
+  background-color: #115da8 !important;
 }
-.tag-violet,
-.tag-violet .tdname {
-  color: #ffffff;
-  background-color: #b200ed;
+.tag-purple {
+  background-color: #663399 !important;
 }
-.tag-pink,
-.tag-pink .tdname {
-  color: #ffffff;
-  background-color: #ff69b4;
+.tag-violet {
+  background-color: #b200ed !important;
+}
+.tag-pink {
+  background-color: #ff69b4 !important;
 }

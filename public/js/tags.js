@@ -82,6 +82,7 @@ function activateTags() {
           /*check if the item starts with the same letters as the text field value:*/
           /*create a DIV element for each matching element:*/
           b = document.createElement("DIV");
+          b.setAttribute("class", getTagColorClass(matches[i]));
           /*make the matching letters bold:*/
           b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
           b.innerHTML += matches[i].substr(val.length);
