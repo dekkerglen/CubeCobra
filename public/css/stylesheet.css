@@ -234,9 +234,23 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup_info {
+  background-color: #F8F9FA;
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
+	padding-top:10px;
+	padding-bottom:2px;
+}
+
 /* removes white corners from popup */
+#autocard_popup2,
 #autocard_popup {
-	border-radius: 10px 10px 0 0;
+	border-radius: 10px;
+	overflow: hidden;
+	background: #fff;
+}
+.deckcard, .packcard, .sideboardcard {
+	border-radius: 6px;
 	overflow: hidden;
 	background: #fff;
 }
