@@ -693,7 +693,7 @@ function getCardTagColorClass(card) {
 }
 
 function getTagColorClass(tag) {
-  let res = ''
+  let res = 'tag-no-color'
   cubeTagColors.every(function(item, index) {
     if (item.tag === tag) {
       if (item.color) {
