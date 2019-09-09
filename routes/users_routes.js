@@ -72,7 +72,11 @@ router.post('/lostpassword', function(req, res) {
             html: "A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href=\"https://cubecobra.com/user/passwordreset/" +
               passwordReset._id + "\">here</a>.<br> Your recovery code is: " + passwordReset.code +
               "<br> This link expires in 15 minutes." +
-              "<br> If you did not request a password reset, ignore this email."
+              "<br> If you did not request a password reset, ignore this email.",
+            text: "A password reset was requested for the account that belongs to this email.\nTo proceed, go to https://cubecobra.com/user/passwordreset/" +
+              passwordReset._id + "\nYour recovery code is: " + passwordReset.code +
+              "\nThis link expires in 15 minutes." +
+              "\nIf you did not request a password reset, ignore this email."
           }
 
           smtpTransport.sendMail(mail, function(err, response) {
@@ -253,7 +257,10 @@ router.post('/register', function(req, res) {
                         subject: "Confirm Account",
                         html: "Hi " + newUser.username +
                           ",</br> Thanks for joining! To confirm your email, click <a href=\"https://cubecobra.com/user/register/confirm/" +
-                          newUser._id + "\">here</a>."
+                          newUser._id + "\">here</a>.",
+                        text: "Hi " + newUser.username +
+                          ",\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/" +
+                          newUser._id
                       }
 
                       smtpTransport.sendMail(mail, function(error, response) {
