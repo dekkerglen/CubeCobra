@@ -23,7 +23,8 @@ if ($('#in_both').length) {
   view = 'table';
 }
 
-var cubeDict = {}, hasCustomImages = false;
+var cubeDict = {},
+  hasCustomImages = false;
 $("#customImageDisplayMenuItem").hide();
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
@@ -63,7 +64,8 @@ $('.updateButton').click(function(e) {
 
 $('#customImageDisplayToggle').click(function(e) {
   console.log("clicked");
-  var enabled = $(this).prop('checked'), display_image;
+  var enabled = $(this).prop('checked'),
+    display_image;
   cube.forEach(function(card, index) {
     adjustDisplayImage(card, enabled);
   });
@@ -1300,7 +1302,7 @@ function renderListView() {
       });
       res += '</thead>';
       for (i = 0; i < cards.length; i++) {
-        res += '<tr class="listviewrow ' 
+        res += '<tr class="listviewrow '
         if (show_tag_colors) {
           res += getCardTagColorClass(cards[i]);
         } else {

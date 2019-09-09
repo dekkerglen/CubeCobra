@@ -41,7 +41,8 @@ $('#passpack').click(function(e) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'), display_image;
+  var enabled = $(this).prop('checked'),
+    display_image;
   draft.packs.forEach(function(pack, index) {
     pack.forEach(function(inner, index) {
       inner.forEach(function(card, index) {
