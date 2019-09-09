@@ -18,6 +18,7 @@ const {
 		mongoose.disconnect();
 	});
 })();
+
 /*
 (async () => {
 	mongoose.connect(config.database).then( async (db) => {

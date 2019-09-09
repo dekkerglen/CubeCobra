@@ -29,16 +29,22 @@ block cube_toolbar
             a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navcompare" aria-controls="navcompare" aria-expanded="false" aria-label="Toggle navigation") Compare
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a(href="#")#massEdit.nav-link Mass Edit
-              li.nav-item.dropdown
-                a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
-                .dropdown-menu(aria-labelledby='bulkdropdown')
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
-                  a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
+          if user && user.id == cube.owner
+            li.nav-item
+              a(href="#")#massEdit.nav-link Mass Edit
+          li.nav-item
+            a(href="#")#tagColors.nav-link
+              if user && user.id == cube.owner
+                | Set Tag Colors
+              else
+                | View Tag Colors
+          if user && user.id == cube.owner
+            li.nav-item.dropdown
+              a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
+              .dropdown-menu(aria-labelledby='bulkdropdown')
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
+                a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
           li.nav-item.dropdown
             a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
             .dropdown-menu(aria-labelledby='exportdropdown')
@@ -143,6 +149,7 @@ block cube_toolbar
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
+  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
@@ -242,6 +249,36 @@ block cube_content
               input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
               input.btn.btn-secondary(type='submit',value='Buy all')
             button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
+
+  // Modal
+  #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
+      .modal-content
+        .modal-header
+          h5#tagColorsTitle.modal-title
+            if user && user.id == cube.owner
+              | Set Tag Colors
+            else
+              | View Tag Colors
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        #showTagColors
+          .form-check.form-check-inline
+            input#showTagColorsCheckbox.form-check-input(type='checkbox')
+            label.form-check-label(for='showTagColorsCheckbox') Show Tag Colors in Card List 
+          if user && user.id == cube.owner
+            div
+              span(style="font-style: italic;") (Drag the tags below into a priority order to use for cards that have more than one tag)
+        #tagsColumn.col
+
+        .modal-footer
+          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close')
+            if user && user.id == cube.owner
+              | Cancel
+            else
+              | Close
+          if user && user.id == cube.owner
+            button#tagColorsSubmit.btn.btn-success(type='button') Save
 
   // Modal
   #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')

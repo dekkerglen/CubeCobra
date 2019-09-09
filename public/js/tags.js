@@ -1,3 +1,5 @@
+var canEdit = $('#edittoken').val();
+
 function submitTag(current) {
   var tag = $(current).find('.main-input').val();
   $(current).find('.main-input').val('');
@@ -12,38 +14,44 @@ function submitTag(current) {
 }
 
 function activateTags() {
-  //focus tag text box when anywhere is clicked
-  $('.tags-area').off('click').on('click', function(e) {
-    $(this).find('.main-input').focus();
-  });
+  if (canEdit) {
+    //focus tag text box when anywhere is clicked
+    $('.tags-area').off('click').on('click', function(e) {
+      $(this).find('.main-input').focus();
+    });
+  }
 
   //if tags hidden area changes, update the tags
   $('.tags-area').find('.hidden-input').off('change').on('change', function(e) {
     var tagsText = "";
     $(this).val().split(',').forEach(function(tag, index) {
       if (tag.trim() != "") {
-        tagsText += "<span class='tag'>" + tag.trim() + "<span tag-data='" + tag.trim() + "' class='close-tag'></span></span>";
+        tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim();
+        if (canEdit) tagsText += "<span tag-data='" + tag.trim() + "' class='close-tag'></span>";
+        tagsText += "</span>";
       }
     });
     $(this).parent().find('.tags').html(tagsText);
 
-    //enable the close tags
-    $(this).parent().find('.tags').find('.close-tag').off('click').on('click', function(e) {
-      var remove = $(this).attr('tag-data').trim();
-      newtags = $(this).parent().parent().parent().find('.hidden-input').val().split(',').filter(function(element) {
-        return element.trim() !== remove;
-      });
+    if (canEdit) {
+      //enable the close tags
+      $(this).parent().find('.tags').find('.close-tag').off('click').on('click', function(e) {
+        var remove = $(this).attr('tag-data').trim();
+        newtags = $(this).parent().parent().parent().find('.hidden-input').val().split(',').filter(function(element) {
+          return element.trim() !== remove;
+        });
 
-      var tagsText = "";
-      newtags.forEach(function(tag, index) {
-        if (index != 0) {
-          tagsText += ', ';
-        }
-        tagsText += tag;
+        var tagsText = "";
+        newtags.forEach(function(tag, index) {
+          if (index != 0) {
+            tagsText += ', ';
+          }
+          tagsText += tag;
+        });
+        $(this).parent().parent().parent().find('.hidden-input').val(tagsText);
+        $(this).parent().parent().parent().find('.hidden-input').trigger('change');
       });
-      $(this).parent().parent().parent().find('.hidden-input').val(tagsText);
-      $(this).parent().parent().parent().find('.hidden-input').trigger('change');
-    });
+    }
   });
 
   //autocomplete for tags
@@ -74,6 +82,7 @@ function activateTags() {
           /*check if the item starts with the same letters as the text field value:*/
           /*create a DIV element for each matching element:*/
           b = document.createElement("DIV");
+          b.setAttribute("class", getTagColorClass(matches[i]));
           /*make the matching letters bold:*/
           b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
           b.innerHTML += matches[i].substr(val.length);

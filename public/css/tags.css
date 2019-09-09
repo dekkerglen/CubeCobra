@@ -24,20 +24,18 @@
 	cursor: text;
 }
 
-.tags-input .tag, .autocard-tags .tag {
+.tag {
+	background-color: #E9ECEF;
+}
+
+.tags-input .tag, .autocard-tags .tag, .tag-item {
 	font-size: 85%;
 	padding: 0.5em .75em;
 	margin: .25em .1em;
 	display: inline-block;
-	background-color: #E9ECEF;
 	border: 1px solid #DEE2E6;
 	transition: all .1s linear;
 	cursor: pointer;
-}
-
-.tags-input .tag:hover {
-	background-color: #F8F9FA;
-	color: #000000;
 }
 
 .tags-input .tag .close-tag::after {
@@ -64,4 +62,54 @@
     border-bottom-right-radius: 5px;
     width: 100%;
     padding: 3px;
+}
+
+.tag-sort-placeholder {
+  height: 44px;
+	background-color: #dee2e6;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.tag-sort-helper {
+	background-color: #ffffff;
+	border: 1px solid #dee2e6;
+}
+
+.tag-color,
+.tag-color .tdname {
+  color: #ffffff !important;
+}
+.tag-no-color {
+  color: black !important;
+}
+.tag-red {
+  background-color: #8e1600 !important;
+}
+.tag-brown {
+  background-color: #654321 !important;
+}
+.tag-orange {
+  background-color: #ff7034 !important;
+}
+.tag-yellow {
+  background-color: #e0b83d !important;
+}
+.tag-green {
+  background-color: #228c22 !important;
+}
+.tag-turquoise {
+  background-color: #008081 !important;
+}
+.tag-blue {
+  background-color: #115da8 !important;
+}
+.tag-purple {
+  background-color: #663399 !important;
+}
+.tag-violet {
+  background-color: #b200ed !important;
+}
+.tag-pink {
+  background-color: #ff69b4 !important;
 }

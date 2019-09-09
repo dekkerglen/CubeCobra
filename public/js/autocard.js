@@ -83,7 +83,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
     document.getElementById("autocard_popup_info").style.width = w + "px";
     let tagsText = '<div class="autocard-tags">';
     tags.forEach(function(tag, index) {
-      tagsText += "<span class='tag'>" + tag.trim() + "</span>";
+      tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + "</span>";
     });
     tagsText += '</div>';
     document.getElementById("autocard_popup_info").innerHTML = tagsText;

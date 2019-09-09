@@ -30,7 +30,8 @@ deck.forEach(function(inner, index) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'), display_image;
+  var enabled = $(this).prop('checked'),
+    display_image;
   deck.forEach(function(inner, index) {
     inner.forEach(function(card, index) {
       adjustDisplayImage(card, enabled);

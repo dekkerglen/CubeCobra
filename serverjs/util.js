@@ -99,7 +99,7 @@ function addCardToCube(cube, card_details, idOverride) {
 }
 
 function getCardImageURL(card) {
-    return card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
+  return card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
 }
 
 var methods = {

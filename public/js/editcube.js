@@ -12,6 +12,7 @@ var filters = [];
 var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
+var show_tag_colors = false;
 
 var comparing = false;
 if ($('#in_both').length) {
@@ -22,7 +23,8 @@ if ($('#in_both').length) {
   view = 'table';
 }
 
-var cubeDict = {}, hasCustomImages = false;
+var cubeDict = {},
+  hasCustomImages = false;
 $("#customImageDisplayMenuItem").hide();
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
@@ -32,6 +34,14 @@ cube.forEach(function(card, index) {
     hasCustomImages = true;
     $("#customImageDisplayToggle").prop("checked", true);
     $("#customImageDisplayMenuItem").show();
+  }
+});
+var cubeTagColors = JSON.parse($('#cubeTagColors').val());
+
+$('#compareInput').keypress(function(e) {
+  if (e.which == 13) {
+    $('#compareButton').click();
+    return false;
   }
 });
 
@@ -61,7 +71,8 @@ $('.updateButton').click(function(e) {
 
 $('#customImageDisplayToggle').click(function(e) {
   console.log("clicked");
-  var enabled = $(this).prop('checked'), display_image;
+  var enabled = $(this).prop('checked'),
+    display_image;
   cube.forEach(function(card, index) {
     adjustDisplayImage(card, enabled);
   });
@@ -302,7 +313,7 @@ if (canEdit) {
     updated.type_line = $('#contextModalType').val().replace('-', '—');
     updated.imgUrl = $('#contextModalImageURL').val();
     if (updated.imgUrl === "") {
-        updated.imgUrl = null;
+      updated.imgUrl = null;
     }
 
     let data = {
@@ -377,6 +388,139 @@ if (canEdit) {
     } else {
       $('#viewSelect').val('list').change();
     }
+  });
+}
+
+$('#tagColors').click(function(e) {
+  let b_id = $('#cubeB_ID').val();
+  let query = (b_id) ? `?b_id=${b_id}` : '';
+  fetch(`/cube/api/cubetagcolors/${$('#cubeID').val()}${query}`, {
+    method: "GET",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    query: {
+      b_id: $('#cubeB_ID').val(),
+    },
+  }).then(res => {
+    res.json().then(data => {
+      let html = '';
+      let tag_colors = data.tag_colors;
+      cubeTagColors = tag_colors;
+
+      const tag_color_options = [
+        'Red',
+        'Brown',
+        'Orange',
+        'Yellow',
+        'Green',
+        'Turquoise',
+        'Blue',
+        'Purple',
+        'Violet',
+        'Pink',
+      ];
+
+      tag_colors.forEach(function(item, index) {
+        let tag = item.tag;
+        let color = item.color;
+
+        html += '<div class="row tag-color-row">'
+
+        let tag_class = ''
+        if (color) {
+          tag_color_options.forEach(function(opt, index) {
+            if (opt.toLowerCase() === color) {
+              tag_class = `tag-color tag-${opt.toLowerCase()}`;
+              return false;
+            }
+          });
+        }
+
+        html += '<div class="col">'
+        html += `<div class="tag-item ${tag_class}">${tag}</div>`
+        html += '</div>'
+
+        if (canEdit && !comparing) {
+          html += '<div class="col">'
+          html += '<select class="tag-color-select">'
+          html += '<option value="">No Color</option>'
+          tag_color_options.forEach(function(opt, index) {
+            const sel = (opt.toLowerCase() === color) ? 'selected' : '';
+            html += `<option value="${opt}" ${sel}>${opt}</option>`
+          })
+          html += '</select>'
+          html += '</div>'
+        }
+
+        html += '</div>'
+      });
+      $('#tagsColumn').html(html);
+
+      if (canEdit && !comparing) {
+        $('#tagsColumn').sortable({
+          helper: function(e, item) {
+            let copy = $(item).clone();
+            $(copy).addClass('tag-sort-helper');
+            return copy;
+          },
+          forcePlaceholderSize: true,
+          placeholder: 'tag-sort-placeholder',
+        });
+      }
+      $('#tagsColumn').disableSelection();
+
+      if (canEdit && !comparing) {
+        $('.tag-color-select').change(function() {
+          let $item = $(this).parent().parent().find('.tag-item');
+          tag_color_options.forEach(function(opt, index) {
+            $item.removeClass(`tag-color tag-${opt.toLowerCase()}`);
+          });
+          if ($(this).val()) {
+            $item.addClass(`tag-color tag-${$(this).val().toLowerCase()}`);
+          }
+        });
+      }
+
+      $('#tagColorsModal').modal('show');
+    });
+  });
+});
+
+$('#showTagColorsCheckbox').change(function(e) {
+  show_tag_colors = $(this).prop("checked");
+  updateCubeList();
+});
+
+if (canEdit && !comparing) {
+  $('#tagColorsSubmit').click(function(e) {
+    let data = [];
+    let tags = $('.tag-color-row .tag-item');
+    let colors = $('.tag-color-row .tag-color-select');
+
+    for (let i = 0; i < tags.length; i++) {
+      let tag = $(tags[i]).html();
+      let color = $(colors[i]).children('option:selected');
+      color = (color.val()) ? color.val().toLowerCase() : null;
+      data.push({
+        tag,
+        color
+      });
+    }
+
+    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(res => {
+      cubeTagColors = data;
+      if (show_tag_colors) {
+        updateCubeList();
+      }
+      $('#tagColorsModal').modal('hide');
+    });
   });
 }
 
@@ -532,6 +676,34 @@ function updateCollapse() {
       updateCollapse();
     });
   });
+}
+
+function getCardTagColorClass(card) {
+  let res = getCardColorClass(card);
+  cubeTagColors.every(function(item, index) {
+    if (card.tags.includes(item.tag)) {
+      if (item.color) {
+        res = `tag-color tag-${item.color}`;
+        return false;
+      }
+    }
+    return true;
+  });
+  return res;
+}
+
+function getTagColorClass(tag) {
+  let res = 'tag-no-color'
+  cubeTagColors.every(function(item, index) {
+    if (item.tag === tag) {
+      if (item.color) {
+        res = `tag-color tag-${item.color}`;
+        return false;
+      }
+    }
+    return true;
+  });
+  return res;
 }
 
 function GetColorIdentity(colors) {
@@ -814,10 +986,11 @@ function renderGroupContext() {
     if (card.details.price_foil) {
       price_foil += card.details.price_foil;
     }
+    let color_class = (show_tag_colors) ? getCardTagColorClass(card) : getCardColorClass(card);
     if (card.details.image_flip) {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
     } else {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + getCardColorClass(card) + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
+      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
     }
     cardlist += '<a data-index="' + index + '" class="groupModalRm clickx" href="#">×</a><a>  ';
     cardlist += card.details.name;
@@ -1059,6 +1232,7 @@ function buildFiltersFromQsargs() {
 }
 
 var updateCubeListeners = [];
+
 function updateCubeList() {
   if (view == 'list') {
     $('#massEdit').text('Edit Selected');
@@ -1144,7 +1318,14 @@ function renderListView() {
       });
       res += '</thead>';
       for (i = 0; i < cards.length; i++) {
-        res += '<tr class="listviewrow ' + getCardColorClass(cards[i]) + '">';
+        res += '<tr class="listviewrow '
+        if (show_tag_colors) {
+          res += getCardTagColorClass(cards[i]);
+        } else {
+          res += getCardColorClass(cards[i]);
+        }
+        res += '">';
+
         //checkbox col
         if (cards[i].checked) {
           res += '<td class="nostretch"><input id="tdcheck' + cards[i].index + '" class="tdcheck" data-index="' + cards[i].index + '" type="checkbox" checked></td>';

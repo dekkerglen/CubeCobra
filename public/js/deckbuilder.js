@@ -50,7 +50,8 @@ $('#saveDeckButton').click(function(e) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'), display_image;
+  var enabled = $(this).prop('checked'),
+    display_image;
   deck.playerdeck.forEach(function(inner, index) {
     inner.forEach(function(card, index) {
       adjustDisplayImage(card, enabled);

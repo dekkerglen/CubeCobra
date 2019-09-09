@@ -4,9 +4,9 @@ import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
 
-const CompareGroup = ({ heading, onlyA, both, onlyB }) => {
-  let onlyACmc = sortIntoGroups(onlyA, "CMC");
+const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   let bothCmc = sortIntoGroups(both, "CMC");
+  let onlyACmc = sortIntoGroups(onlyA, "CMC");
   let onlyBCmc = sortIntoGroups(onlyB, "CMC");
 
   return (
@@ -32,20 +32,43 @@ const CompareGroup = ({ heading, onlyA, both, onlyB }) => {
   );
 }
 
-const CompareView = ({ cards, sorts, onlyA, both, onlyB, ...props }) => {
+const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
   let columns = sortIntoGroups(cards, sorts[0]);
   let columnCounts = {};
-  let onlyACounts = {};
   let bothCounts = {};
+  let onlyACounts = {};
   let onlyBCounts = {};
+
+  let both_copy = both.slice(0);
+  let only_a_copy = onlyA.slice(0);
+  let only_b_copy = onlyB.slice(0);
+
   for (let columnLabel of Object.keys(columns)) {
+
+    let onlyACount = 0, onlyBCount = 0, bothCount = 0;
+    for (let card of columns[columnLabel]) {
+      if (both_copy.includes(card.details.name)) {
+        bothCount++;
+        both_copy.splice(both_copy.indexOf(card.details.name), 1);
+      } else if (only_a_copy.includes(card.details.name)) {
+        onlyACount++;
+        only_a_copy.splice(only_a_copy.indexOf(card.details.name), 1);
+      } else if (only_b_copy.includes(card.details.name)) {
+        onlyBCount++;
+        only_b_copy.splice(only_b_copy.indexOf(card.details.name), 1);
+      }
+    }
+
     columnCounts[columnLabel] = columns[columnLabel].length;
-    onlyACounts[columnLabel] = columns[columnLabel].filter(card => onlyA.has(card.details.name)).length;
-    bothCounts[columnLabel] = columns[columnLabel].filter(card => both.has(card.details.name)).length;
-    onlyBCounts[columnLabel] = columns[columnLabel].filter(card => onlyB.has(card.details.name)).length;
+    bothCounts[columnLabel] = bothCount;
+    onlyACounts[columnLabel] = onlyACount;
+    onlyBCounts[columnLabel] = onlyBCount;
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
   }
-  console.log(onlyACounts);
+
+  both = both.slice(0);
+  only_a = onlyA.slice(0);
+  only_b = onlyB.slice(0);
 
   return <>
     {
@@ -75,15 +98,27 @@ const CompareView = ({ cards, sorts, onlyA, both, onlyB, ...props }) => {
               {
                 getLabels(sorts[1]).filter(label => column[label]).map(label => {
                   let group = column[label];
-                  let onlyAGroup = group.filter(card => onlyA.has(card.details.name));
-                  let bothGroup = group.filter(card => both.has(card.details.name));
-                  let onlyBGroup = group.filter(card => onlyB.has(card.details.name));
+                  let bothGroup = [], onlyAGroup = [], onlyBGroup = [];
+
+                  for (let card of group) {
+                    if (both.includes(card.details.name)) {
+                      bothGroup.push(card);
+                      both.splice(both.indexOf(card.details.name), 1);
+                    } else if (only_a.includes(card.details.name)) {
+                      onlyAGroup.push(card);
+                      only_a.splice(only_a.indexOf(card.details.name), 1);
+                    } else if (only_b.includes(card.details.name)) {
+                      onlyBGroup.push(card);
+                      only_b.splice(only_b.indexOf(card.details.name), 1);
+                    }
+                  }
+
                   return (
                     <CompareGroup
                       key={label}
                       heading={label}
-                      onlyA={onlyAGroup}
                       both={bothGroup}
+                      onlyA={onlyAGroup}
                       onlyB={onlyBGroup}
                     />
                   );

@@ -105,3 +105,25 @@
 {
 	background:#fbfbfb;
 }
+
+.tag-color-row
+{
+  padding-left:30px;
+  padding-right:30px;
+}
+
+.tag-color-row + .tag-color-row
+{
+  border-top: 1px solid #dee2e6;
+}
+
+.tag-color-select
+{
+  margin: 10px;
+}
+
+#showTagColors {
+  padding: 20px;
+  padding-left: 45px;
+  border-bottom: 1px solid #dee2e6;
+}

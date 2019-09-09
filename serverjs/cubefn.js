@@ -9,7 +9,7 @@ function get_cube_id(cube) {
 }
 
 function build_id_query(id) {
-  if (id.match(/^[0-9a-fA-F]{24}$/)) return {
+  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) return {
     _id: id
   };
   return {
@@ -24,7 +24,7 @@ function build_id_query(id) {
 }
 
 async function generate_short_id() {
-  let cubes = await Cube.find({}, [ 'shortID', 'urlAlias' ]);
+  let cubes = await Cube.find({}, ['shortID', 'urlAlias']);
 
   const short_ids = cubes.map(cube => cube.shortID);
   const url_aliases = cubes.map(cube => cube.urlAlias);

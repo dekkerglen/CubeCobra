@@ -66,6 +66,7 @@ app.set('view engine', 'pug');
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'dist')));
+app.use('/jquery-ui', express.static(__dirname + '/node_modules/jquery-ui-dist/'));
 
 let session_options = {
   secret: secrets.session,

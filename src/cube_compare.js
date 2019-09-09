@@ -30,4 +30,4 @@ class CubeCompare extends Component {
 }
 
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<CubeCompare onlyA={new Set(only_a)} onlyB={new Set(only_b)} both={new Set(in_both)} />, wrapper) : false;
+wrapper ? ReactDOM.render(<CubeCompare both={in_both} onlyA={only_a} onlyB={only_b} />, wrapper) : false;
