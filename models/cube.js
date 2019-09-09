@@ -23,7 +23,7 @@ let cubeSchema = mongoose.Schema({
     type: Boolean,
     default: true
   },
-  publicPrices: {
+  privatePrices: {
     type: Boolean,
     default: false
   },
