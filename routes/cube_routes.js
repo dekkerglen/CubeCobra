@@ -637,6 +637,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
                 cube: cubeA,
                 cubeB: cubeB,
                 cube_id: id_a,
+                cube_b_id: id_b,
                 title: `Comparing ${cubeA.name} to ${cubeB.name}`,
                 in_both: JSON.stringify(in_both.map(card => card.details.name)),
                 only_a: JSON.stringify(a_names),
@@ -1842,36 +1843,53 @@ router.post('/api/savetagcolors/:id', function(req, res) {
   });
 });
 
+function build_tag_colors(cube) {
+  let tag_colors = cube.tag_colors;
+  let tags = tag_colors.map(item => item.tag);
+  let not_found = tag_colors.map(item => item.tag);
+
+  cube.cards.forEach(function(card, index) {
+    card.tags.forEach(function(tag, index) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tag_colors.push({
+          tag,
+          color: null
+        });
+        tags.push(tag);
+      }
+      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
+    });
+  });
+
+  let tmp = [];
+  tag_colors.forEach(function(item, index) {
+    if (!not_found.includes(item.tag)) tmp.push(item);
+  });
+  tag_colors = tmp;
+
+  return tag_colors;
+}
+
 router.get('/api/cubetagcolors/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-
-    let tag_colors = cube.tag_colors;
+    let tag_colors = build_tag_colors(cube);
     let tags = tag_colors.map(item => item.tag);
-    let not_found = tag_colors.map(item => item.tag);
 
-    cube.cards.forEach(function(card, index) {
-      card.tags.forEach(function(tag, index) {
-        tag = tag.trim();
-        if (!tags.includes(tag)) {
-          tag_colors.push({
-            tag,
-            color: null
-          });
-          tags.push(tag);
+    Cube.findOne(build_id_query(req.query.b_id), function(err, cubeB) {
+      if (cubeB) {
+        let b_tag_colors = build_tag_colors(cubeB);
+        for (let b_tag of b_tag_colors) {
+          if (!tags.includes(b_tag.tag)) {
+            tag_colors.push(b_tag);
+          }
         }
-        if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
+      }
+
+      res.status(200).send({
+        success: 'true',
+        tag_colors: tag_colors,
       });
-    });
-
-    let tmp = [];
-    tag_colors.forEach(function(item, index) {
-      if (!not_found.includes(item.tag)) tmp.push(item);
-    });
-    tag_colors = tmp;
-
-    res.status(200).send({
-      success: 'true',
-      tag_colors: tag_colors,
     });
   });
 });

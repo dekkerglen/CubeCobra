@@ -392,11 +392,16 @@ if (canEdit) {
 }
 
 $('#tagColors').click(function(e) {
-  fetch("/cube/api/cubetagcolors/" + $('#cubeID').val(), {
+  let b_id = $('#cubeB_ID').val();
+  let query = (b_id) ? `?b_id=${b_id}` : '';
+  fetch(`/cube/api/cubetagcolors/${$('#cubeID').val()}${query}`, {
     method: "GET",
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    query: {
+      b_id: $('#cubeB_ID').val(),
+    },
   }).then(res => {
     res.json().then(data => {
       let html = '';
