@@ -38,6 +38,7 @@ const CompareView = ({ cards, sorts, onlyA, both, onlyB, ...props }) => {
   let onlyACounts = {};
   let bothCounts = {};
   let onlyBCounts = {};
+
   for (let columnLabel of Object.keys(columns)) {
     columnCounts[columnLabel] = columns[columnLabel].length;
     onlyACounts[columnLabel] = columns[columnLabel].filter(card => onlyA.has(card.details.name)).length;
@@ -45,7 +46,6 @@ const CompareView = ({ cards, sorts, onlyA, both, onlyB, ...props }) => {
     onlyBCounts[columnLabel] = columns[columnLabel].filter(card => onlyB.has(card.details.name)).length;
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
   }
-  console.log(onlyACounts);
 
   return <>
     {
