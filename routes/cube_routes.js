@@ -1284,6 +1284,48 @@ router.get('/download/csv/:id', function(req, res) {
   });
 });
 
+router.get('/download/forge/:id', function(req, res) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    } else {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      res.write('[metadata]\r\n');
+      res.write('Name=' + cube.name + '\r\n');
+      res.write('[Main]\r\n');
+      cube.cards.forEach(function(card, index) {
+        var name = carddb.carddict[card.cardID].name;
+        var set = carddb.carddict[card.cardID].set;
+        res.write('1 ' + name + '|' + set.toUpperCase() + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
+
+router.get('/download/xmage/:id', function(req, res) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    } else {
+      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
+      res.setHeader('Content-type', 'text/plain');
+      res.charset = 'UTF-8';
+      cube.cards.forEach(function(card, index) {
+        var name = carddb.carddict[card.cardID].name;
+        var set = carddb.carddict[card.cardID].set;
+        var collectorNumber = carddb.carddict[card.cardID].collector_number;
+        res.write('1 [' + set.toUpperCase() + ':' + collectorNumber + '] ' + name + '\r\n');
+      });
+      res.end();
+    }
+  });
+});
+
 router.get('/download/plaintext/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
