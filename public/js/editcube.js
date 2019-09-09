@@ -682,8 +682,10 @@ function getCardTagColorClass(card) {
   let res = getCardColorClass(card);
   cubeTagColors.every(function(item, index) {
     if (card.tags.includes(item.tag)) {
-      res = `tag-color tag-${item.color}`;
-      return false;
+      if (item.color) {
+        res = `tag-color tag-${item.color}`;
+        return false;
+      }
     }
     return true;
   });
@@ -694,8 +696,10 @@ function getTagColorClass(tag) {
   let res = ''
   cubeTagColors.every(function(item, index) {
     if (item.tag === tag) {
-      res = `tag-color tag-${item.color}`;
-      return false;
+      if (item.color) {
+        res = `tag-color tag-${item.color}`;
+        return false;
+      }
     }
     return true;
   });
