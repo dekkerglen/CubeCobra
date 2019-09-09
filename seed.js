@@ -18,13 +18,9 @@ seeder.connect('mongodb://localhost/nodecube', function() {
     modelPath + 'user.js'
   ]);
 
-  // Clear specified collections
-  seeder.clearModels(['Blog', 'CardRating', 'Deck', 'Draft', 'User'], function() {
-
-    // Populate databases, then close seeder
-    seeder.populateModels(data, function() {
-      seeder.disconnect();
-    });
+  // Populate databases, then close seeder
+  seeder.populateModels(data, function() {
+    seeder.disconnect();
   });
 });
 
