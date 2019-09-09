@@ -1851,10 +1851,14 @@ router.get('/api/cubetagcolors/:id', function(req, res) {
 
     cube.cards.forEach(function(card, index) {
       card.tags.forEach(function(tag, index) {
-        if (!tags.includes(tag)) tag_colors.push({
-          tag,
-          color: null
-        });
+        tag = tag.trim();
+        if (!tags.includes(tag)) {
+          tag_colors.push({
+            tag,
+            color: null
+          });
+          tags.push(tag);
+        }
         if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
       });
     });
