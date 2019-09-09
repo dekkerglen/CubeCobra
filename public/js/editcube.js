@@ -38,6 +38,13 @@ cube.forEach(function(card, index) {
 });
 var cubeTagColors = JSON.parse($('#cubeTagColors').val());
 
+$('#compareInput').keypress(function(e) {
+  if (e.which == 13) {
+    $('#compareButton').click();
+    return false;
+  }
+});
+
 $('#compareButton').click(function(e) {
   const id_a = $('#cubeID').val();
   let id_b = $('#compareInput').val();
