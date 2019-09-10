@@ -52,6 +52,7 @@ function filterCard(card, filters) {
 }
 
 function areArraysEqualSets(a1, a2) {
+    if(a1.length != a2.length) return false;
     let superSet = {};
     for (let i = 0; i < a1.length; i++) {
           const e = a1[i] + typeof a1[i];
@@ -77,6 +78,42 @@ function areArraysEqualSets(a1, a2) {
 
 function arrayContainsOtherArray (arr1, arr2) {
   return arr2.every(v => arr1.includes(v));
+}
+
+function parseManaCost (cost) {
+  cost = cost.toLowerCase();
+  let res = [];
+  for (let i = 0; i < cost.length; i++) {
+    if (cost[i] == '{') {
+      let str = cost.slice(i, i+3).toLowerCase();
+      if (str.search(/[wubrg]\/p/) > -1) {
+        res.push(cost[i+1] + '-p');
+        i = i+5;
+      } else if (str.search(/2\/[wubrg]/) > -1) {
+        res.push('2-' + cost[i+3]);
+        i = i+5;
+      } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
+        res.push(cost[i+1] + '-' + cost[i+3]);
+        i = i+5;
+      }
+    } else if (cost[i] == 'c') {
+      res.push('c');
+    } else if (cost[i] == 's') {
+      res.push('s');
+    } else if (cost[i].search(/[wubrg]/) > -1) {
+      res.push(cost[i]);
+    } else if (cost[i].search(/[0-9]/) > -1) {
+      let num = cost.slice(i).match(/[0-9]+/)[0];
+      if (num.length <= 2) {
+        res.push(num);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return res;
 }
 
 function filterApply(card, filter) {
@@ -106,6 +143,100 @@ function filterApply(card, filter) {
       case '>=':
         res = arrayContainsOtherArray(card.colors, colors) && card.colors.length >= colors.length;
         break;
+    }
+  }
+  if (filter.category == 'identity' && card.details.color_identity) {
+    let colors = filter.arg.split('').map( (element) => element.toUpperCase());
+    switch (filter.operand) {
+      case ':':
+      case '=':
+        res = areArraysEqualSets(card.details.color_identity, colors);
+        break;
+      case '<':
+        res = arrayContainsOtherArray(colors, card.details.color_identity) && card.details.color_identity.length < colors.length;
+        break;
+      case '>':
+        res = arrayContainsOtherArray(card.details.color_identity, colors) && card.details.color_identity.length > colors.length;
+        break;
+      case '<=':
+        res = arrayContainsOtherArray(colors, card.details.color_identity) && card.details.color_identity.length <= colors.length;
+        break;
+      case '>=':
+        res = arrayContainsOtherArray(card.details.color_identity, colors) && card.details.color_identity.length >= colors.length;
+        break;
+    }
+  }
+  if (filter.category == 'mana' && card.details.parsed_cost) {
+    let cost = parseManaCost(filter.arg);
+    res = areArraysEqualSets(card.details.parsed_cost, cost);
+  }
+  if (filter.category == 'cmc' && card.cmc) {
+    switch (filter.operand) {
+      case ':':
+      case '=':
+        res = filter.arg == card.cmc;
+        break;
+      case '<':
+        res = card.cmc < filter.arg;
+        break;
+      case '>':
+        res = card.cmc > filter.arg;
+        break;
+      case '<=':
+        res = card.cmc <= filter.arg;
+        break;
+      case '>=':
+        res = card.cmc >= filter.arg;
+        break;
+    }
+  }
+  if (filter.category == 'type' && card.details.type) {
+    if (card.details.type.toLowerCase().indexOf(filter.arg) > -1) {
+      res = true;
+    }
+  }
+  if (filter.category == 'power') {
+    if (card.details.power) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = filter.arg == card.details.power;
+          break;
+        case '<':
+          res = card.details.power < filter.arg;
+          break;
+        case '>':
+          res = card.details.power > filter.arg;
+          break;
+        case '<=':
+          res = card.details.power <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.power >= filter.arg;
+          break;
+      }
+    }
+  }
+  if (filter.category == 'toughness') {
+    if (card.details.toughness) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = filter.arg == card.details.toughness;
+          break;
+        case '<':
+          res = card.details.toughness < filter.arg;
+          break;
+        case '>':
+          res = card.details.toughness > filter.arg;
+          break;
+        case '<=':
+          res = card.details.toughness <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.toughness >= filter.arg;
+          break;
+      }
     }
   }
 

@@ -1726,7 +1726,6 @@ function tokenizeInput(filterText, tokens) {
 
   //find operand
   let operand = firstTerm[0].match(operators_re);
-  console.log(operand);
   if(operand) {
     operand = operand[0];
     token.operand = operand;
@@ -1757,7 +1756,6 @@ function tokenizeInput(filterText, tokens) {
     token.arg = firstTerm[0].split(')')[0];
   }
 
-  console.log('arg found: ' + token.arg);
 
   let category = '';
   //find category
@@ -1770,10 +1768,8 @@ function tokenizeInput(filterText, tokens) {
   if (!categoryMap.has(category)) {
     return false;
   }
-
   token.category = categoryMap.get(category);
   
-  console.log(token);
   if (token.operand && token.category && token.arg) {
     filterText = filterText.split(token.arg + (parens ? '"' : ''))[1];
     //replace any escaped quotes with normal quotes
@@ -1790,17 +1786,15 @@ function tokenizeInput(filterText, tokens) {
 //returns true if decoding was successful, and filter object is populated, or false otherwise
 function generateFilters(filterText) {
   let tokens = [];
-  tokenizeInput(filterText, tokens);
-  if(tokens) {
-    console.log(tokens);
+  
+  if (tokenizeInput(filterText, tokens)) {
+    if (verifyTokens(tokens)) {
+      filters = [parseTokens(tokens)];
+      updateCubeList();
+    }
   } else {
     return false;
   }
-  if(verifyTokens(tokens)) {
-    filters = [parseTokens(tokens)];
-    updateCubeList();
-  }
-  console.log(filters);
   //return result;
 }
 
