@@ -391,6 +391,11 @@ app.get('/404', function(req, res) {
   res.render('misc/404', {});
 });
 
+app.get('/c/:id', function(req, res)
+{
+  res.redirect('/cube/list/'+req.params.id);
+});
+
 //Route files
 let cubes = require('./routes/cube_routes');
 let users = require('./routes/users_routes');
