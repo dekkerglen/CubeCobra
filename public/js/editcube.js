@@ -1801,7 +1801,7 @@ function tokenizeInput(filterText, tokens) {
 
 //converts filter scryfall syntax string to global filter objects
 //returns true if decoding was successful, and filter object is populated, or false otherwise
-function generateFilters(filterText, node) {
+function generateFilters(filterText) {
   let tokens = [];
   tokenizeInput(filterText, tokens);
   if(tokens) {
@@ -1809,12 +1809,53 @@ function generateFilters(filterText, node) {
   } else {
     return false;
   }
-
-
-
-
-  let result = parseTokens(tokens);
+  let result = [];
+  if(verifyTokens(tokens)) {
+    result = parseTokens(tokens);
+  }
   console.log(result);
+  //return result;
+}
+
+const verifyTokens = (tokens) => {
+  let temp = tokens;
+  let inBounds = (num) => {
+    return num > -1 && num < temp.length;
+  }
+  let type = (i) => temp[i].type;
+  for (let i = 0; i < temp.length; i++) {
+    if (type(i) == 'open') {
+      console.log('checking open paren')
+      let closed = findClose(temp, i);
+      if (!closed) return false;
+      temp[closed].valid = true;
+    }
+    if (type(i) == 'close') {
+      console.log('checking close paren')
+      if(!temp[i].valid) return false;
+    }
+    if (type(i) == 'or') {
+      console.log('checking or')
+      if (!inBounds(i - 1) || !inBounds(i + 1)) return false;
+      if (!(type(i - 1) == 'close' || type(i - 1) == 'token')) return false;
+      if (!(type(i + 1) != 'open' || type(i + 1) != 'token')) return false;
+    }
+
+  }
+  return true;
+}
+
+const findClose = (tokens, pos) => {
+  if(!pos) pos = 0;
+  let num = 1;
+  for(let i = pos+1; i < tokens.length; i++) {
+    if(tokens[i].type == 'close') num--;
+    else if (tokens[i].type == 'open') num++;
+    if (num === 0) { 
+      return i;
+    }
+  }
+  return false;
 }
 
 const parseTokens = (tokens) => {
@@ -1822,24 +1863,13 @@ const parseTokens = (tokens) => {
   console.log(tokens);
   let peek = () => tokens[0];
   let consume = peek;
-  const findClose = () => {
-    num = 1;
-    for(let i = 1; i < tokens.length; i++) {
-      if(tokens[i].type == 'close') num--;
-      else if (tokens[i].type == 'open') num++;
-      if (num === 0) { 
-        return i;
-      }
-    }
-    return false;
-  }
 
   let result = [];
   if (peek().type == 'or') {
     return parseTokens(tokens.slice(1));
   }
   if (peek().type == 'open') {
-    let end = findClose();
+    let end = findClose(tokens);
     if(end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
     result.push(parseTokens(tokens.slice(1, end)));
     if(tokens.length > end + 1) result.push(parseTokens(tokens.slice(end+1)));
