@@ -7,71 +7,68 @@ block cube_toolbar
       .usercontrols
         nav.navbar.navbar-expand.navbar-light
           .collapse.navbar-collapse
-            ul.navbar-nav
+            ul.navbar-nav.flex-wrap
               li.nav-item
                 a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
               li.nav-item
                 a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube
 
 block cube_content
-  .container
-    br
+  .row
+    .col-md-4
+      .card.mt-3
+        .card-header
+          h3=cube.name
+        img.card-img-top.w-100(src=cube.image_uri)
+        em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+        .card-body
+          if cube.type
+            a #{cube.card_count} Card #{cube.type} Cube
+            br
+          if cube.privatePrices == false
+            a Approx: $#{price}
+          em
+            h6 Designed by 
+              a(href='/user/view/'+owner) #{owner}
+    .col
+      .card.mt-3
+        .card-header
+          h5.card-title Description
+        .card-body
+          if cube.descriptionhtml
+            p.card-text !{cube.descriptionhtml}
+          else
+            p.card-text #{cube.description}
+  if post
     .row
-      .col-md-4
-        .card(style='margin: 4px;')
-          .card-header
-            h3=cube.name
-          img.card-img-top(src=cube.image_uri style='width: 100%;height:auto;')
-          em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
-          .card-body
-            if cube.type
-              a #{cube.card_count} Card #{cube.type} Cube
-              br
-            if cube.privatePrices == false
-              a Approx: $#{price}
-            em
-              h6 Designed by 
-                a(href='/user/view/'+owner) #{owner}
       .col
-        .card(style='margin: 4px;')
-          .card-header
-            h5.card-title Description
-          .card-body
-            if cube.descriptionhtml
-              p.card-text !{cube.descriptionhtml}
-            else
-              p.card-text #{cube.description}
-    if post
-      br
-      .row
-        .col
-          .card
-            if post.changelist && post.html
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .row.no-gutters
-                .col-4(style='border-right: 1px solid #DFDFDF;')
-                  .card-body
-                    p.card-text !{post.changelist}
-                .col-8
-                  .card-body
-                    p.card-text !{post.html}
-            else if post.changelist
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .card-body
-                p.card-text !{post.changelist}
-            else
-              .card-header
-                h5.card-title=post.title
-                h6.card-subtitle.mb-2.text-muted=post.date_formatted
-              .card-body
-                p=post.body
-                if post.html
+        .card.mt-3
+          if post.changelist && post.html
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .row.no-gutters
+              .col-4(style='border-right: 1px solid #DFDFDF;')
+                .card-body
+                  p.card-text !{post.changelist}
+              .col-8
+                .card-body
                   p.card-text !{post.html}
-          br
+          else if post.changelist
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .card-body
+              p.card-text !{post.changelist}
+          else
+            .card-header
+              h5.card-title=post.title
+              h6.card-subtitle.mb-2.text-muted=post.date_formatted
+            .card-body
+              p=post.body
+              if post.html
+                p.card-text !{post.html}
+
   if user
     if user.id == cube.owner
       // edit overview modal

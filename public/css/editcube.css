@@ -67,21 +67,6 @@
     width: 100%;
 }
 
-.view-style-select
-{
-    margin-bottom: 1rem;
-    width: 100%;
-}
-
-@media (min-width: 768px) { 
-    .view-style-select
-    {
-        width: 130px;
-		padding-right: 10px;
-		margin-bottom: 0;
-    }
-}
-
 .compare-header
 {
 	margin-top:40px;

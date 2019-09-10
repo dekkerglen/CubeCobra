@@ -26,9 +26,10 @@ html
 		script(src='/bower_components/jquery/dist/jquery.js')
 		script(src='/jquery-ui/jquery-ui.min.js')
 	body
-		nav.navbar.navbar-expand-md.navbar-dark.bg-dark(style="padding-right:10rem")
-			a(href='/')
-				img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+		nav.navbar.navbar-expand-md.navbar-dark.bg-dark.flex-nowrap
+			div.text-truncate
+				a(href='/')
+					img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
 			button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
 				span.navbar-toggler-icon
 			#navbar.collapse.navbar-collapse

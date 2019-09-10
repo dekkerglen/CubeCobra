@@ -18,7 +18,7 @@ block cube_toolbar
       button.navbar-toggler(type='button' data-toggle='collapse' data-target='#user-controls-nav' aria-controls='user-controls-nav' aria-expanded='false' aria-label='Toggle User Controls')
         span.navbar-toggler-icon
       #user-controls-nav.collapse.navbar-collapse
-        ul.navbar-nav
+        ul.navbar-nav.ml-auto
           if user
             if user.id == cube.owner
               li.nav-item
@@ -159,7 +159,6 @@ block cube_toolbar
     input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])
 
 block cube_content
-  br
   .container#cubelistarea
   #react-root
 
