@@ -1700,18 +1700,33 @@ function tokenizeInput(filterText, tokens) {
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
-  if (filterText.indexOf('(') == 0 || filterText.indexOf(')') == 0) {
-    tokens.push(filterText[0]);
+  if (filterText.indexOf('(') == 0) {
+    if (findEndingQuotePosition(filterText, 0)) {
+      let token = {
+        type: 'open',
+      }
+      tokens.push(token);
+      return tokenizeInput(filterText.slice(1), tokens);
+    } else {
+      return false;
+    }
+  }
+
+  if (filterText.indexOf(')') == 0) {
+    let token = {
+      type: 'close'
+    }
+    tokens.push(token);
     return tokenizeInput(filterText.slice(1), tokens);
-    return;
   }
 
   if (filterText.indexOf('or ') == 0) {
-    tokens.push('or');
+    tokens.push({type: 'or'});
     return tokenizeInput(filterText.slice(2), tokens);
   }
 
   let token = {
+    type: 'token',
     not: false,
   };
 
@@ -1775,7 +1790,7 @@ function tokenizeInput(filterText, tokens) {
   if (token.operand && token.category && token.arg) {
     filterText = filterText.split(token.arg + (parens ? '"' : ''))[1];
     //replace any escaped quotes with normal quotes
-    if (parens) token.arg = token.arg.replace(/\\"/, '"');
+    if (parens) token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);
     return tokenizeInput(filterText, tokens);
   } else { 
@@ -1796,6 +1811,49 @@ function generateFilters(filterText, node) {
   }
 
 
+
+
+  let result = parseTokens(tokens);
+  console.log(result);
+}
+
+const parseTokens = (tokens) => {
+  console.log('called parseTokens with: ');
+  console.log(tokens);
+  let peek = () => tokens[0];
+  let consume = peek;
+  const findClose = () => {
+    num = 1;
+    for(let i = 1; i < tokens.length; i++) {
+      if(tokens[i].type == 'close') num--;
+      else if (tokens[i].type == 'open') num++;
+      if (num === 0) { 
+        return i;
+      }
+    }
+    return false;
+  }
+
+  let result = [];
+  if (peek().type == 'or') {
+    return parseTokens(tokens.slice(1));
+  }
+  if (peek().type == 'open') {
+    let end = findClose();
+    if(end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
+    result.push(parseTokens(tokens.slice(1, end)));
+    if(tokens.length > end + 1) result.push(parseTokens(tokens.slice(end+1)));
+    return result;
+  } else if (peek().type == 'token') {
+    if (tokens.length == 1) {
+      return consume();
+    } else {
+      if(tokens[1].type == 'or') result.type = 'or';
+      result.push(consume());
+      result.push(parseTokens(tokens.slice(1)));
+      return result;
+    }
+  }
 }
 
 function buildFilterArea() {
