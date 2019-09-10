@@ -63,6 +63,11 @@ $('#filterInput').keyup(function(e) {
   }
 });
 
+$('#resetButton').click(function(e) {
+  filters = [];
+  updateCubeList();
+});
+
 $('#customImageDisplayToggle').click(function(e) {
   console.log("clicked");
   var enabled = $(this).prop('checked'),
@@ -1151,33 +1156,14 @@ function columnLength(sort, label) {
   return res;
 }
 
-function getFilterObj() {
-  var filterobj = {};
-  filters.forEach(function(filter, index) {
-    if (!filterobj[filter.category]) {
-      filterobj[filter.category] = {
-        in: [],
-        out: []
-      };
-    }
-    if (filter.not) {
-      filterobj[filter.category].out.push(filter);
-    } else {
-      filterobj[filter.category].in.push(filter);
-    }
-  });
-  return filterobj;
-}
-
 function filteredCube() {
   if (filters.length == 0) {
     return cube;
   }
-  filterobj = getFilterObj();
 
   var res = [];
   cube.forEach(function(card, index) {
-    if (filterCard(card, filterobj)) {
+    if (filterCard(card, filters)) {
       res.push(card);
     }
   });
@@ -1809,11 +1795,11 @@ function generateFilters(filterText) {
   } else {
     return false;
   }
-  let result = [];
   if(verifyTokens(tokens)) {
-    result = parseTokens(tokens);
+    filters = [parseTokens(tokens)];
+    updateCubeList();
   }
-  console.log(result);
+  console.log(filters);
   //return result;
 }
 

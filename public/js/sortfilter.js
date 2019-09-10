@@ -31,37 +31,37 @@ function GetColorCategory(type, colors) {
   }
 }
 
-function filterCard(card, filterobj) {
-  //first filter out everything in this category
-  //then filter in everything that matches one of the ins
-
-  var filterout = false;
-  var filterin = false;
-  var hasFilterIn = false;
-  for (var category in filterobj) {
-    if (filterobj.hasOwnProperty(category)) {
-      filterobj[category].out.forEach(function(option, index) {
-        if (cardIsLabel(card, option.value, option.category)) {
-          filterout = true;
-        }
-      });
-      if (!filterout) {
-        filterobj[category].in.forEach(function(option, index) {
-          hasFilterIn = true;
-          if (cardIsLabel(card, option.value, option.category)) {
-            filterin = true;
-          }
-        });
-      }
+function filterCard(card, filters) {
+  console.log('filter card called with: ');
+  console.log('filters');
+  
+  if(filters.length == 1) {
+    if(filters[0].type == 'token') {
+      return filterApply(card, filters[0]);
+    } else {
+      return filterCard(card, filters[0]);
+    }
+  } else {
+    if(filters.type == 'or') {
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(filters[1]))
+    } else {
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(filters[1]))
     }
   }
-  if (filterout) {
-    return false;
+
+}
+
+function filterApply(card, filter) {
+  let res = null;
+  if (filter.category == 'name') {
+    res = card.details.name.toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (!hasFilterIn) {
-    return true;
+
+  if(filter.not) {
+    return !res;
+  } else {
+    return res;
   }
-  return filterin;
 }
 
 
