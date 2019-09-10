@@ -11,7 +11,8 @@ class CardModalForm extends Component {
       card: { details: {}, colors: [] },
       versions: [],
       isOpen: false,
-      formValues: {},
+      formValues: { tags: [] },
+      allTags: [],
     }
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
@@ -20,6 +21,27 @@ class CardModalForm extends Component {
     this.handleChange = this.handleChange.bind(this);
     this.saveChanges = this.saveChanges.bind(this);
     this.queueRemoveCard = this.queueRemoveCard.bind(this);
+    this.addTag = this.addTag.bind(this);
+    this.deleteTag = this.deleteTag.bind(this);
+  }
+
+  addTag(tag) {
+    this.setState({
+      formValues: Object.assign(this.state.formValues, {
+        tags: [].concat(this.state.formValues.tags, tag),
+      }),
+      allTags: [].concat(this.state.allTags, tag),
+    });
+  }
+
+  deleteTag(i) {
+    let newTags = this.state.formValues.tags.slice(0);
+    newTags.splice(i, 1);
+    this.setState({
+      formValues: Object.assign(this.state.formValues, {
+        tags: newTags,
+      }),
+    });
   }
 
   handleChange(event) {
@@ -57,6 +79,7 @@ class CardModalForm extends Component {
       updated.imgUrl = null;
     }
     updated.cardID = updated.version;
+    updated.tags = updated.tags.map(tag => tag.name).join(',');
 
     let card = this.state.card;
 
@@ -159,6 +182,9 @@ class CardModalForm extends Component {
           disabled={!canEdit}
           saveChanges={this.saveChanges}
           queueRemoveCard={this.queueRemoveCard}
+          addTag={this.addTag}
+          deleteTag={this.deleteTag}
+          allTags={this.state.allTags}
           {...props}
         />
         {children}
