@@ -1716,7 +1716,6 @@ function tokenizeInput(filterText, tokens) {
     not: false,
   };
 
-  console.log('created token');
   //find not
   if (filterText.indexOf('-') == 0) {
     token.not = true;
@@ -1727,6 +1726,7 @@ function tokenizeInput(filterText, tokens) {
 
   //find operand
   let operand = firstTerm[0].match(operators_re);
+  console.log(operand);
   if(operand) {
     operand = operand[0];
     token.operand = operand;
@@ -1746,16 +1746,14 @@ function tokenizeInput(filterText, tokens) {
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
   } else if (firstTerm[0].search(quoteOp_re) > -1 && filterText.split('"').length > 2) {
-    //check if there is a paren after an operatr
+    //check if there is a paren after an operator
     //TODO: make sure the closing paren isn't before the operator
     let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
-  } else if (operand != 'none'){
-    //it's just a plain word, ignore closing parens at end of word
+  } else if (token.operand != 'none'){
     token.arg = firstTerm[0].split(')')[0].split(operators_re)[1];
   } else {
-    //it's just a plain word, ignore closing parens at end of word
     token.arg = firstTerm[0].split(')')[0];
   }
 
