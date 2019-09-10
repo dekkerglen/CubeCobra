@@ -1643,19 +1643,19 @@ function updateFilters(filterText) {
 
 let categoryMap = new Map([
   ['m', 'mana'],
-  ['mana',' mana'],
-  ['cmc',' cmc'],
-  ['c',' color'],
-  ['color',' color'],
-  ['ci',' identity'],
-  ['id',' identity'],
-  ['identity',' identity'],
-  ['t',' type'],
-  ['type',' type'],
-  ['o',' oracle'],
-  ['oracle',' oracle'],
-  ['pow',' power'],
-  ['power',' power'],
+  ['mana','mana'],
+  ['cmc','cmc'],
+  ['c','color'],
+  ['color','color'],
+  ['ci','identity'],
+  ['id','identity'],
+  ['identity','identity'],
+  ['t','type'],
+  ['type','type'],
+  ['o','oracle'],
+  ['oracle','oracle'],
+  ['pow','power'],
+  ['power','power'],
   ['tou', 'toughness'],
   ['toughness', 'toughness'],
   ['name', 'name']
@@ -1751,6 +1751,9 @@ function tokenizeInput(filterText, tokens) {
     let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
+  } else if (operand != 'none'){
+    //it's just a plain word, ignore closing parens at end of word
+    token.arg = firstTerm[0].split(')')[0].split(operators_re)[1];
   } else {
     //it's just a plain word, ignore closing parens at end of word
     token.arg = firstTerm[0].split(')')[0];

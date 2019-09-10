@@ -33,7 +33,7 @@ function GetColorCategory(type, colors) {
 
 function filterCard(card, filters) {
   console.log('filter card called with: ');
-  console.log('filters');
+  console.log(filters);
   
   if(filters.length == 1) {
     if(filters[0].type == 'token') {
@@ -51,10 +51,62 @@ function filterCard(card, filters) {
 
 }
 
+function areArraysEqualSets(a1, a2) {
+    let superSet = {};
+    for (let i = 0; i < a1.length; i++) {
+          const e = a1[i] + typeof a1[i];
+          superSet[e] = 1;
+        }
+
+    for (let i = 0; i < a2.length; i++) {
+          const e = a2[i] + typeof a2[i];
+          if (!superSet[e]) {
+                  return false;
+                }
+          superSet[e] = 2;
+        }
+
+    for (let e in superSet) {
+          if (superSet[e] === 1) {
+                  return false;
+                }
+        }
+
+    return true;
+}
+
+function arrayContainsOtherArray (arr1, arr2) {
+  return arr2.every(v => arr1.includes(v));
+}
+
 function filterApply(card, filter) {
   let res = null;
   if (filter.category == 'name') {
-    res = card.details.name.toLowerCase().indexOf(filter.arg) > -1;
+    res = card.details.name_lower.indexOf(filter.arg) > -1;
+  }
+  if (filter.category == 'oracle' && card.details.oracle_text) {
+    res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
+  }
+  if (filter.category == 'color' && card.colors) {
+    let colors = filter.arg.split('').map( (element) => element.toUpperCase());
+    switch (filter.operand) {
+      case ':':
+      case '=':
+        res = areArraysEqualSets(card.colors, colors);
+        break;
+      case '<':
+        res = arrayContainsOtherArray(colors, card.colors) && card.colors.length < colors.length;
+        break;
+      case '>':
+        res = arrayContainsOtherArray(card.colors, colors) && card.colors.length > colors.length;
+        break;
+      case '<=':
+        res = arrayContainsOtherArray(colors, card.colors) && card.colors.length <= colors.length;
+        break;
+      case '>=':
+        res = arrayContainsOtherArray(card.colors, colors) && card.colors.length >= colors.length;
+        break;
+    }
   }
 
   if(filter.not) {
