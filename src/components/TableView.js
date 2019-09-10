@@ -20,7 +20,7 @@ const TableView = ({ cards, ...props }) => {
         getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
           let column = columns[columnLabel];
           return (
-            <Col key={columnLabel} xs="6" md="3" lg="auto" style={{ padding: '0 2px', width: `${100 / Math.min(Object.keys(columns).length, 8)}%` }}>
+            <Col key={columnLabel} xs="6" md="3" lg="auto" className="mt-3" style={{ padding: '0 2px', width: `${100 / Math.min(Object.keys(columns).length, 8)}%` }}>
               <h6 className="text-center">{columnLabel}<br />({columnCounts[columnLabel]})</h6>
               {
                 getLabels(sorts[1]).filter(label => column[label]).map(label =>

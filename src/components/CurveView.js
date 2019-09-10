@@ -80,23 +80,21 @@ const CurveView = ({ cards, ...props }) => {
   }
 
   return (
-    <Container {...props}>
-      <Row>
-        <Col>
-          {
-            getLabels(sorts[0]).filter(color => groups[color]).map(color => (
-              <ColorCard
-                key={color}
-                color={color}
-                groups={groups[color]}
-                count={colorCounts[color]}
-                typeCounts={typeCounts[color]}
-              />
-            ))
-          }
-        </Col>
-      </Row>
-    </Container>
+    <Row className="mt-3" {...props}>
+      <Col>
+        {
+          getLabels(sorts[0]).filter(color => groups[color]).map(color => (
+            <ColorCard
+              key={color}
+              color={color}
+              groups={groups[color]}
+              count={colorCounts[color]}
+              typeCounts={typeCounts[color]}
+            />
+          ))
+        }
+      </Col>
+    </Row>
   );
 }
 
