@@ -11,7 +11,6 @@ class CubeList extends Component {
     super(props);
 
     const cube = JSON.parse(document.getElementById('cuberaw').value);
-    const cards = cube.map((card, index) => Object.assign(card, { index }));
 
     this.state = {
       cards: [],
