@@ -1689,116 +1689,112 @@ function findEndingQuotePosition(filterText, num) {
   return false;
 }
 
-
-//converts filter scryfall syntax string to global filter objects
-//returns true if decoding was successful, and filter object is populated, or false otherwise
-function generateFilters(filterText, node) {
-  if(!filterText) return;
-  console.log('generateFilters called with: "' + filterText + '"');
+function tokenizeInput(filterText, tokens) {
+  console.log('tokeninzeInput called with: ' + filterText);
   filterText = filterText.trim();
-  console.log(node);
+  if (!filterText) {
+    return true;
+  }
 
   const operators = '>=|<=|<|>|:|='
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
-  if (filterText.indexOf('(') == 0) {
-    let pos = findEndingQuotePosition(filterText);
-    if(!pos) {
-      node = [];
-      return false;
-    }
-    console.log("pos: " + pos);
-    node.push([]);
-    //node[node.length -1].parent = node;
-    generateFilters(filterText.slice(1, pos), node[node.length-1]);
-    generateFilters(filterText.slice(pos+1), node);
+  if (filterText.indexOf('(') == 0 || filterText.indexOf(')') == 0) {
+    tokens.push(filterText[0]);
+    return tokenizeInput(filterText.slice(1), tokens);
     return;
   }
 
-  //set type of current array to or, if an or is encountered
-  if (filterText.indexOf('or') == 0) {
-    //node.parent.type = 'or';
-    node.type = 'or';
-    generateFilters(filterText.slice(2), node);
-    return;
+  if (filterText.indexOf('or ') == 0) {
+    tokens.push('or');
+    return tokenizeInput(filterText.slice(2), tokens);
   }
 
-  let not = false;
-  if (filterText.search('-') == 0) {
-    not = true;
+  let token = {
+    not: false,
+  };
+
+  console.log('created token');
+  //find not
+  if (filterText.indexOf('-') == 0) {
+    token.not = true;
     filterText = filterText.slice(1);
   }
 
-  //grab only first argument in string
-  let filterTextSplit = filterText.split(' ', 1);
+  let firstTerm = filterText.split(' ', 1);
 
-  //returns :,=,<, or >, or null
-  let operand = filterTextSplit[0].match(operators_re);
-  //remove operand from array, and store as plain string
-  console.log("operand is: " + operand);
+  //find operand
+  let operand = firstTerm[0].match(operators_re);
   if(operand) {
     operand = operand[0];
+    token.operand = operand;
+  } else {
+    token.operand = 'none';
   }
 
-  let category = '';
-  let arg = '';
+  let quoteOp_re = new RegExp('(?:' + operators + ')"');
   let parens = false;
 
-  //if this is a string with operand, rather than a name
-  if (operand) {
-    console.log('got an argument with operand: ' + operand);
-    category = filterTextSplit[0].split(operators_re)[0];
-  
-    arg = '';
-    parens = false;
-    //if the first field contains a parentheses, and there are at least 2 parentheses, grab the arg from parentheses
-    console.log('checking for parens: ' + (filterText.search('"') > -1) + ' and for 2+ parens: ' + (filterText.split('"').length > 2));
-    if (filterText.search('"') > -1 && filterText.split('"').length > 2) {
-      //match first text inside quotes, ignoring escaped quotes
-      let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
-      parens = true;
-      //replace escaped quotes with plain quotes
-      arg = filterText.match(quotes_re)[1].replace(/\\"/, '"');
-      console.log('parens arg is: ' + arg);
-    } else { //otherwise the arg is whatever is after the operator
-      arg = filterTextSplit[0].split(operators_re)[1];
-    }
-  } else { //this argument is a name
-    console.log('got an argument without an operand');
-    operand = 'none';
+  //find arg value
+  //if there are two quotes, and first char is quote
+  if (filterText.indexOf('"') == 0 && filterText.split('"').length > 2) {
+    //grab the quoted string, ignoring escaped quotes
+    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    //replace escaped quotes with plain quotes
+    token.arg = filterText.match(quotes_re)[1];
+    parens = true;
+  } else if (firstTerm[0].search(quoteOp_re) > -1 && filterText.split('"').length > 2) {
+    //check if there is a paren after an operatr
+    //TODO: make sure the closing paren isn't before the operator
+    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    token.arg = filterText.match(quotes_re)[1];
+    parens = true;
+  } else {
+    //it's just a plain word, ignore closing parens at end of word
+    token.arg = firstTerm[0].split(')')[0];
+  }
+
+  console.log('arg found: ' + token.arg);
+
+  let category = '';
+  //find category
+  if (token.operand == 'none') {
     category = 'name';
-    arg = filterTextSplit[0];
+  } else {
+    category = firstTerm[0].split(operators_re)[0];
   }
 
   if (!categoryMap.has(category)) {
-    node = [];
     return false;
   }
 
-  category = categoryMap.get(category);
+  token.category = categoryMap.get(category);
   
-  //if this argument was parsed successfully
-  if(arg && operand && category) {
-    //cut this argument out of the string
-    filterText = filterText.split(arg + (parens ? '"' : '') + ' ')[1];
-    //convert category to singular name, avoid aliases in data object
-
-    //add this argument to filters object
-    let obj = {
-      arg: arg,
-      operand: operand,
-      category: category,
-      not: not,
-    };
-
-    node.push(obj);
-    generateFilters(filterText, node);
-    return;
-  } else { //argument was not parsed successfully, abandon parsing
-    node = [];
+  console.log(token);
+  if (token.operand && token.category && token.arg) {
+    filterText = filterText.split(token.arg + (parens ? '"' : ''))[1];
+    //replace any escaped quotes with normal quotes
+    if (parens) token.arg = token.arg.replace(/\\"/, '"');
+    tokens.push(token);
+    return tokenizeInput(filterText, tokens);
+  } else { 
     return false;
   }
+
+}
+
+//converts filter scryfall syntax string to global filter objects
+//returns true if decoding was successful, and filter object is populated, or false otherwise
+function generateFilters(filterText, node) {
+  let tokens = [];
+  tokenizeInput(filterText, tokens);
+  if(tokens) {
+    console.log(tokens);
+  } else {
+    return false;
+  }
+
 
 }
 
