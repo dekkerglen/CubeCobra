@@ -17,6 +17,138 @@ const LabelRow = ({ htmlFor, label, children, ...props }) => (
   </FormGroup>
 )
 
+const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...props }) => (
+  <Card key={format} {...props}>
+    <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CardHeader>
+        <CardTitleH5>
+          Draft Custom Format: {format.title}
+        </CardTitleH5>
+      </CardHeader>
+      <CardBody>
+        <div className="description-area">{format.html}</div>
+        <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
+          <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
+            {rangeOptions(4, 11)}
+          </Input>
+        </LabelRow>
+      </CardBody>
+      <CardFooter>
+        <Input type="hidden" name="id" value={index} />
+        <Button type="submit" color="success" className="mr-2">
+          Start Draft
+        </Button>
+        {!canEdit ? '' : <>
+          <Button color="success" className="mr-2 editFormatButton" data-id={index}>
+            Edit
+          </Button>
+          <Button color="danger" id={`deleteToggler-${index}`}>Delete</Button>
+          <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
+            <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
+            <Button color="danger" onClick={deleteFormat}>
+              Yes, delete this format
+            </Button>
+          </UncontrolledCollapse>
+        </>}
+      </CardFooter>
+    </form>
+  </Card>
+);
+
+const StandardDraftCard = ({ cubeID }) => (
+  <Card className="mt-3">
+    <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CardHeader>
+        <CardTitleH5>Start a new draft</CardTitleH5>
+      </CardHeader>
+      <CardBody>
+        <LabelRow htmlFor="packs" label="Number of Packs">
+          <Input type="select" name="packs" id="packs" defaultValue="3">
+            {rangeOptions(1, 11)}
+          </Input>
+        </LabelRow>
+        <LabelRow htmlFor="cards" label="Cards per Pack">
+          <Input type="select" name="cards" id="cards" defaultValue="15">
+            {rangeOptions(5, 21)}
+          </Input>
+        </LabelRow>
+        <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
+          <Input type="select" name="seats" id="seats" defaultValue="8">
+            {rangeOptions(4, 11)}
+          </Input>
+        </LabelRow>
+      </CardBody>
+      <CardFooter>
+        <Input type="hidden" name="id" value="-1" />
+        <Button color="success">Start Draft</Button>
+      </CardFooter>
+    </form>
+  </Card>
+);
+
+const DecksCard = ({ decks, cubeID, ...props }) => (
+  <Card {...props}>
+    <CardHeader>
+      <CardTitleH5>Recent Decks</CardTitleH5>
+    </CardHeader>
+    <CardBody>
+      {decks.map(deck =>
+        <Fragment key={deck._id}>
+          <a href={`/cube/deck/${deck._id}`}>{deck.name}</a>
+          <br />
+        </Fragment>
+      )}
+    </CardBody>
+    <CardFooter>
+      <a href={`/cube/decks/${cubeID}`}>View all</a>
+    </CardFooter>
+  </Card>
+);
+
+class SamplePackCard extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { seed: '' };
+
+    this.changeSeed = this.changeSeed.bind(this);
+  }
+
+  changeSeed(e) {
+    this.setState({
+      seed: e.target.value,
+    });
+  }
+
+  render() {
+    const { cubeID, ...props } = this.props;
+    return (
+      <Card {...props}>
+        <CardHeader>
+          <CardTitleH5>View sample pack</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <LabelRow htmlFor="seed" label="Seed" className="mb-0">
+            <Input type="text" name="seed" id="seed" value={this.state.seed} onChange={this.changeSeed} />
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
+            View Random
+              </Button>
+          <Button
+            color="success"
+            disabled={!this.state.seed}
+            href={`/cube/samplepack/${cubeID}/${this.state.seed}`}
+          >
+            View Seeded
+              </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+}
+
 class CubePlaytest extends Component {
   constructor(props) {
     super(props);
@@ -27,6 +159,8 @@ class CubePlaytest extends Component {
       editModal: false,
     };
 
+    this.addFormat = this.addFormat.bind(this);
+    this.deleteFormat = this.deleteFormat.bind(this);
     this.handleChange = this.handleChange.bind(this);
   }
 
@@ -90,114 +224,25 @@ class CubePlaytest extends Component {
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="5">
           {decks.length == 0 ? '' :
-            <Card className="mt-3">
-              <CardHeader>
-                <CardTitleH5>Recent Decks</CardTitleH5>
-              </CardHeader>
-              <CardBody>
-                {decks.map(deck =>
-                  <Fragment key={deck._id}>
-                    <a href={`/cube/deck/${deck._id}`}>{deck.name}</a>
-                    <br />
-                  </Fragment>
-                )}
-              </CardBody>
-              <CardFooter>
-                <a href={`/cube/decks/${cubeID}`}>View all</a>
-              </CardFooter>
-            </Card>
+            <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />
           }
-          <Card className="mt-3">
-            <CardHeader>
-              <CardTitleH5>View sample pack</CardTitleH5>
-            </CardHeader>
-            <CardBody>
-              <LabelRow htmlFor="seed" label="Seed" className="mb-0">
-                <Input type="text" name="seed" id="seed" value={this.state.seed} onChange={this.handleChange} />
-              </LabelRow>
-            </CardBody>
-            <CardFooter>
-              <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
-                View Random
-              </Button>
-              <Button
-                color="success"
-                disabled={!this.state.seed}
-                href={`/cube/samplepack/${cubeID}/${this.state.seed}`}
-              >
-                View Seeded
-              </Button>
-            </CardFooter>
-          </Card>
+          <SamplePackCard cubeID={cubeID} className="mt-3" />
         </Col>
         <Col xs="12" md="6" xl="5">
           {!draftFormats ? '' :
             draftFormats.map((format, index) =>
-              <Card key={format} className="mt-3">
-                <form method="POST" action={`/cube/startdraft/${cubeID}`}>
-                  <CardHeader>
-                    <CardTitleH5>
-                      Draft Custom Format: {format.title}
-                    </CardTitleH5>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="description-area">{format.html}</div>
-                    <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
-                      <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-                        {rangeOptions(4, 11)}
-                      </Input>
-                    </LabelRow>
-                  </CardBody>
-                  <CardFooter>
-                    <Input type="hidden" name="id" value={index} />
-                    <Button type="submit" color="success" className="mr-2">
-                      Start Draft
-                    </Button>
-                    {!canEdit ? '' : <>
-                      <Button color="success" className="mr-2 editFormatButton" data-id={index}>
-                        Edit
-                      </Button>
-                      <Button color="danger" id={`deleteToggler-${index}`}>Delete</Button>
-                      <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
-                        <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-                        <Button color="danger" onClick={this.deleteFormat.bind(this, cubeID, index)}>
-                          Yes, delete this format
-                        </Button>
-                      </UncontrolledCollapse>
-                    </>}
-                  </CardFooter>
-                </form>
-              </Card>
+              <CustomDraftCard
+                key={format}
+                format={format}
+                index={index}
+                cubeID={cubeID}
+                canEdit={canEdit}
+                deleteFormat={this.deleteFormat.bind(this, cubeID, index)}
+                className="mt-3"
+              />
             )
           }
-          <Card className="mt-3">
-            <form method="POST" action={`/cube/startdraft/${cubeID}`}>
-              <CardHeader>
-                <CardTitleH5>Start a new draft</CardTitleH5>
-              </CardHeader>
-              <CardBody>
-                <LabelRow htmlFor="packs" label="Number of Packs">
-                  <Input type="select" name="packs" id="packs" defaultValue="3">
-                    {rangeOptions(1, 11)}
-                  </Input>
-                </LabelRow>
-                <LabelRow htmlFor="cards" label="Cards per Pack">
-                  <Input type="select" name="cards" id="cards" defaultValue="15">
-                    {rangeOptions(5, 21)}
-                  </Input>
-                </LabelRow>
-                <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
-                  <Input type="select" name="seats" id="seats" defaultValue="8">
-                    {rangeOptions(4, 11)}
-                  </Input>
-                </LabelRow>
-              </CardBody>
-              <CardFooter>
-                <Input type="hidden" name="id" value="-1" />
-                <Button color="success">Start Draft</Button>
-              </CardFooter>
-            </form>
-          </Card>
+          <StandardDraftCard cubeID={cubeID} className="mt-3" />
         </Col>
       </Row>
     </>;
