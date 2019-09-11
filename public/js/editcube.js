@@ -1712,6 +1712,10 @@ function tokenizeInput(filterText, tokens) {
     return tokenizeInput(filterText.slice(2), tokens);
   }
 
+  if (filterText.indexOf('and ') == 0 || (filterText.length == 3 && filterText.indexOf('and') == 0)) {
+    return tokenizeInput(filterText.slice(3), tokens);
+  }
+
   let token = {
     type: 'token',
     not: false,
