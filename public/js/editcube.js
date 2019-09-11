@@ -57,7 +57,7 @@ $('#filterButton').click(function(e) {
 });
 
 $('#filterInput').keyup(function(e) {
-  if (e.keyCode === 13 && $('#addInput').val().length == 0) {
+  if (e.keyCode === 13) {
     e.preventDefault();
     filterButton.click();
   }
