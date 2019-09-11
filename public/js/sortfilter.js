@@ -45,9 +45,9 @@ function filterCard(card, filters) {
     if(filters.type == 'or') {
       console.log(filters[0]);
       console.log(filters[1]);
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
     } else {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
     }
   }
 
