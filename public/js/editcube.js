@@ -1894,7 +1894,7 @@ function addSorts() {
   });
 
   //document.getElementById('filterType').innerHTML = sorthtml;
-  sorthtml += filterItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
+  sorthtml += sortItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
   document.getElementById('secondarySortSelect').innerHTML = sorthtml;
   document.getElementById('primarySortSelect').innerHTML = sorthtml;
   if (document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0) {
