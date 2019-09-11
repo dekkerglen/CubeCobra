@@ -1,4 +1,4 @@
-var filterItemTemplate = '<option value="#{value}">#{label}</option>';
+var sortItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
 var listGranularity = 50;
 var listPosition = 0;
@@ -1890,7 +1890,7 @@ function addSorts() {
   sort_categories = getSorts();
   var sorthtml = "";
   sort_categories.forEach(function(category, index) {
-    sorthtml += filterItemTemplate.replace('#{value}', category).replace('#{label}', category);
+    sorthtml += sortItemTemplate.replace('#{value}', category).replace('#{label}', category);
   });
 
   //document.getElementById('filterType').innerHTML = sorthtml;
