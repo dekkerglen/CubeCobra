@@ -1642,9 +1642,13 @@ router.post('/editoverview/:id', ensureAuth, function(req, res) {
         req.flash('danger', 'Cube name should not use profanity.');
         res.redirect('/cube/overview/' + req.params.id);
       } else {
+        let urlAliasMaxLength = 100;
         if (req.body.urlAlias && cube.urlAlias !== req.body.urlAlias) {
           if (!req.body.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {
             req.flash('danger', 'Custom URL must contain only alphanumeric characters or underscores.');
+            res.redirect('/cube/overview/' + req.params.id);
+          } else if (req.body.urlAlias.length > urlAliasMaxLength) {
+            req.flash('danger', 'Custom URL may not be longer than ' + urlAliasMaxLength + ' characters.');
             res.redirect('/cube/overview/' + req.params.id);
           } else {
             if (util.has_profanity(req.body.urlAlias)) {
