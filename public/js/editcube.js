@@ -1861,7 +1861,6 @@ function generateFilters(filterText) {
 }
 
 const verifyTokens = (tokens) => {
-  console.log(tokens);
   let temp = tokens;
   let inBounds = (num) => {
     return num > -1 && num < temp.length;
