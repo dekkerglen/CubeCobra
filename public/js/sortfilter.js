@@ -78,41 +78,6 @@ function arrayContainsOtherArray (arr1, arr2) {
   return arr2.every(v => arr1.includes(v));
 }
 
-function parseManaCost (cost) {
-  cost = cost.toLowerCase();
-  let res = [];
-  for (let i = 0; i < cost.length; i++) {
-    if (cost[i] == '{') {
-      let str = cost.slice(i, i+3).toLowerCase();
-      if (str.search(/[wubrg]\/p/) > -1) {
-        res.push(cost[i+1] + '-p');
-        i = i+5;
-      } else if (str.search(/2\/[wubrg]/) > -1) {
-        res.push('2-' + cost[i+3]);
-        i = i+5;
-      } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
-        res.push(cost[i+1] + '-' + cost[i+3]);
-        i = i+5;
-      }
-    } else if (cost[i] == 'c') {
-      res.push('c');
-    } else if (cost[i] == 's') {
-      res.push('s');
-    } else if (cost[i].search(/[wubrg]/) > -1) {
-      res.push(cost[i]);
-    } else if (cost[i].search(/[0-9]/) > -1) {
-      let num = cost.slice(i).match(/[0-9]+/)[0];
-      if (num.length <= 2) {
-        res.push(num);
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-  return res;
-}
 
 function filterApply(card, filter) {
   let res = null;
@@ -122,51 +87,48 @@ function filterApply(card, filter) {
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (filter.category == 'color' && card.colors) {
-    let colors = filter.arg.split('').map( (element) => element.toUpperCase());
+  if (filter.category == 'color' && card.details.colors) {
     switch (filter.operand) {
       case ':':
       case '=':
-        res = areArraysEqualSets(card.colors, colors);
+        res = areArraysEqualSets(card.details.colors, filter.arg);
         break;
       case '<':
-        res = arrayContainsOtherArray(colors, card.colors) && card.colors.length < colors.length;
+        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(card.colors, colors) && card.colors.length > colors.length;
+        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(colors, card.colors) && card.colors.length <= colors.length;
+        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(card.colors, colors) && card.colors.length >= colors.length;
+        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
         break;
     }
   }
-  if (filter.category == 'identity' && card.details.color_identity) {
-    let colors = filter.arg.split('').map( (element) => element.toUpperCase());
+  if (filter.category == 'identity' && card.colors) {
     switch (filter.operand) {
       case ':':
       case '=':
-        res = areArraysEqualSets(card.details.color_identity, colors);
+        res = areArraysEqualSets(card.colors, filter.arg);
         break;
       case '<':
-        res = arrayContainsOtherArray(colors, card.details.color_identity) && card.details.color_identity.length < colors.length;
+        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(card.details.color_identity, colors) && card.details.color_identity.length > colors.length;
+        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(colors, card.details.color_identity) && card.details.color_identity.length <= colors.length;
+        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(card.details.color_identity, colors) && card.details.color_identity.length >= colors.length;
+        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length >= filter.arg.length;
         break;
     }
   }
   if (filter.category == 'mana' && card.details.parsed_cost) {
-    let cost = parseManaCost(filter.arg);
-    res = areArraysEqualSets(card.details.parsed_cost, cost);
+    res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
   }
   if (filter.category == 'cmc' && card.cmc) {
     switch (filter.operand) {
