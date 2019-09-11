@@ -1,8 +1,3 @@
-var filterTemplate = '<div class="input-group mb-3 filter-item" data-index="#{index}"><div class="input-group-prepend"><span class="input-group-text">#{filterName}</span></div>' +
-  '<select class="custom-select" id="#{filterID}" data-index="#{filterindex}" aria-label="Example select with button addon">' +
-  '#{items}</select><div class="input-group-append"><div class="input-group-text"><input type="checkbox" data-index="#{checkboxindex}" id="#{checkbox}"/><a style="padding-left: 5px">Not </a></div>' +
-  '<button class="btn btn-outline-secondary filter-button" data-index="#{buttonindex}" type="button">Remove</button></div></div>';
-var filterItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
 var listGranularity = 50;
 var listPosition = 0;
@@ -55,17 +50,21 @@ $('#compareButton').click(function(e) {
   if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
 });
 
-$('#addFilterButton').click(function(e) {
-  var filterType = $('#filterType').val();
-  filters.push({
-    category: filterType,
-    value: getLabels(filterType)[0],
-    not: false
-  });
-  updateFilters();
+$('#filterButton').click(function(e) {
+  var filterText = $('#filterInput').val();
+  console.log(filterText);
+  updateFilters(filterText);
 });
 
-$('.updateButton').click(function(e) {
+$('#filterInput').keyup(function(e) {
+  if (e.keyCode === 13 && $('#addInput').val().length == 0) {
+    e.preventDefault();
+    filterButton.click();
+  }
+});
+
+$('#resetButton').click(function(e) {
+  filters = [];
   updateCubeList();
 });
 
@@ -192,6 +191,7 @@ if (canEdit) {
       }
     }
 
+    //TODO: Remove this
     var filterobj = null;
     if (filters.length > 0) {
       filterobj = getFilterObj();
@@ -205,7 +205,7 @@ if (canEdit) {
 
     let data = {
       selected: groupSelect,
-      filters: filterobj,
+      //filters: filterobj,
       updated: updated,
     };
 
@@ -1164,33 +1164,14 @@ function columnLength(sort, label) {
   return res;
 }
 
-function getFilterObj() {
-  var filterobj = {};
-  filters.forEach(function(filter, index) {
-    if (!filterobj[filter.category]) {
-      filterobj[filter.category] = {
-        in: [],
-        out: []
-      };
-    }
-    if (filter.not) {
-      filterobj[filter.category].out.push(filter);
-    } else {
-      filterobj[filter.category].in.push(filter);
-    }
-  });
-  return filterobj;
-}
-
 function filteredCube() {
   if (filters.length == 0) {
     return cube;
   }
-  filterobj = getFilterObj();
 
   var res = [];
   cube.forEach(function(card, index) {
-    if (filterCard(card, filterobj)) {
+    if (filterCard(card, filters)) {
       res.push(card);
     }
   });
@@ -1652,74 +1633,250 @@ function renderListView() {
     });
 }
 
-function updateFilters() {
-  sort_categories = getSorts();
+function updateFilters(filterText) {
+  
 
-  if (filters.length <= 0) {
-    document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
+  if (filterText) {
+    new_filters = [];
+    if (generateFilters(filterText.toLowerCase(), new_filters)) {
+      filters = new_filters;
+      updateCubeList();
+    } else {
+      //TODO: couldn't parse that query, display error?
+    }
   } else {
-    var filterhtml = "";
-    filters.forEach(function(filter, index) {
-      var itemshtml = "";
-      var labels = getLabels(filter.category);
-      labels.forEach(function(label, l_index) {
-        itemshtml += filterItemTemplate.replace('#{value}', label).replace('#{label}', label);
-      });
-      filterhtml += filterTemplate.replace('#{items}', itemshtml)
-        .replace('#{filterID}', filter.category + index)
-        .replace('#{filterName}', filter.category)
-        .replace('#{index}', index)
-        .replace('#{buttonindex}', index)
-        .replace('#{checkbox}', 'checkbox' + filter.category + index)
-        .replace('#{filterindex}', index)
-        .replace('#{checkboxindex}', index);
-    });
-    $('#filterarea').html(filterhtml);
+    document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
+  }
+}
 
-    //setup filter control events
-    filters.forEach(function(filter, index) {
-      var element = document.getElementById(filter.category + index);
-      element.selectedIndex = getLabels(filter.category).indexOf(filter.value);
-      element.addEventListener('change', (e) => {
-        filters[e.target.getAttribute('data-index')].value = e.target.value;
-      });
+let categoryMap = new Map([
+  ['m', 'mana'],
+  ['mana','mana'],
+  ['cmc','cmc'],
+  ['c','color'],
+  ['color','color'],
+  ['ci','identity'],
+  ['id','identity'],
+  ['identity','identity'],
+  ['t','type'],
+  ['type','type'],
+  ['o','oracle'],
+  ['oracle','oracle'],
+  ['pow','power'],
+  ['power','power'],
+  ['tou', 'toughness'],
+  ['toughness', 'toughness'],
+  ['name', 'name']
+]);
 
-      element = document.getElementById('checkbox' + filter.category + index);
-      element.checked = filter.not;
-      element.addEventListener('change', (e) => {
-        filters[e.target.getAttribute('data-index')].not = e.target.checked;
-      });
-    });
+function findEndingQuotePosition(filterText, num) {
+  if(!num) {
+    num = 1;
+  }
+  for(let i = 1; i < filterText.length; i++) {
+    if(filterText[i] == '(') num++;
+    else if (filterText[i] == ')') num--;
+    if (num === 0) { 
+      return i;
+    }
+  }
+  return false;
+}
 
-    filterRemoveButtons = document.getElementsByClassName('filter-button');
-    for (var i = 0; i < filterRemoveButtons.length; i++) {
-      filterRemoveButtons[i].addEventListener('click', (e) => {
-        filters.splice(e.target.getAttribute('data-index'), 1);
-        updateFilters();
-      })
+function tokenizeInput(filterText, tokens) {
+  console.log('tokeninzeInput called with: ' + filterText);
+  filterText = filterText.trim();
+  if (!filterText) {
+    return true;
+  }
+
+  const operators = '>=|<=|<|>|:|='
+  //split string based on list of operators
+  let operators_re = new RegExp('(?:' + operators + ')');
+
+  if (filterText.indexOf('(') == 0) {
+    if (findEndingQuotePosition(filterText, 0)) {
+      let token = {
+        type: 'open',
+      }
+      tokens.push(token);
+      return tokenizeInput(filterText.slice(1), tokens);
+    } else {
+      return false;
+    }
+  }
+
+  if (filterText.indexOf(')') == 0) {
+    let token = {
+      type: 'close'
+    }
+    tokens.push(token);
+    return tokenizeInput(filterText.slice(1), tokens);
+  }
+
+  if (filterText.indexOf('or ') == 0) {
+    tokens.push({type: 'or'});
+    return tokenizeInput(filterText.slice(2), tokens);
+  }
+
+  let token = {
+    type: 'token',
+    not: false,
+  };
+
+  //find not
+  if (filterText.indexOf('-') == 0) {
+    token.not = true;
+    filterText = filterText.slice(1);
+  }
+
+  let firstTerm = filterText.split(' ', 1);
+
+  //find operand
+  let operand = firstTerm[0].match(operators_re);
+  if(operand) {
+    operand = operand[0];
+    token.operand = operand;
+  } else {
+    token.operand = 'none';
+  }
+
+  let quoteOp_re = new RegExp('(?:' + operators + ')"');
+  let parens = false;
+
+  //find arg value
+  //if there are two quotes, and first char is quote
+  if (filterText.indexOf('"') == 0 && filterText.split('"').length > 2) {
+    //grab the quoted string, ignoring escaped quotes
+    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    //replace escaped quotes with plain quotes
+    token.arg = filterText.match(quotes_re)[1];
+    parens = true;
+  } else if (firstTerm[0].search(quoteOp_re) > -1 && filterText.split('"').length > 2) {
+    //check if there is a paren after an operator
+    //TODO: make sure the closing paren isn't before the operator
+    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    token.arg = filterText.match(quotes_re)[1];
+    parens = true;
+  } else if (token.operand != 'none'){
+    token.arg = firstTerm[0].split(')')[0].split(operators_re)[1];
+  } else {
+    token.arg = firstTerm[0].split(')')[0];
+  }
+
+
+  let category = '';
+  //find category
+  if (token.operand == 'none') {
+    category = 'name';
+  } else {
+    category = firstTerm[0].split(operators_re)[0];
+  }
+
+  if (!categoryMap.has(category)) {
+    return false;
+  }
+  token.category = categoryMap.get(category);
+  
+  if (token.operand && token.category && token.arg) {
+    filterText = filterText.split(token.arg + (parens ? '"' : ''))[1];
+    //replace any escaped quotes with normal quotes
+    if (parens) token.arg = token.arg.replace(/\\"/g, '"');
+    tokens.push(token);
+    return tokenizeInput(filterText, tokens);
+  } else { 
+    return false;
+  }
+
+}
+
+//converts filter scryfall syntax string to global filter objects
+//returns true if decoding was successful, and filter object is populated, or false otherwise
+function generateFilters(filterText) {
+  let tokens = [];
+  
+  if (tokenizeInput(filterText, tokens)) {
+    if (verifyTokens(tokens)) {
+      filters = [parseTokens(tokens)];
+      updateCubeList();
+    }
+  } else {
+    return false;
+  }
+  //return result;
+}
+
+const verifyTokens = (tokens) => {
+  let temp = tokens;
+  let inBounds = (num) => {
+    return num > -1 && num < temp.length;
+  }
+  let type = (i) => temp[i].type;
+  for (let i = 0; i < temp.length; i++) {
+    if (type(i) == 'open') {
+      console.log('checking open paren')
+      let closed = findClose(temp, i);
+      if (!closed) return false;
+      temp[closed].valid = true;
+    }
+    if (type(i) == 'close') {
+      console.log('checking close paren')
+      if(!temp[i].valid) return false;
+    }
+    if (type(i) == 'or') {
+      console.log('checking or')
+      if (!inBounds(i - 1) || !inBounds(i + 1)) return false;
+      if (!(type(i - 1) == 'close' || type(i - 1) == 'token')) return false;
+      if (!(type(i + 1) != 'open' || type(i + 1) != 'token')) return false;
+    }
+
+  }
+  return true;
+}
+
+const findClose = (tokens, pos) => {
+  if(!pos) pos = 0;
+  let num = 1;
+  for(let i = pos+1; i < tokens.length; i++) {
+    if(tokens[i].type == 'close') num--;
+    else if (tokens[i].type == 'open') num++;
+    if (num === 0) { 
+      return i;
+    }
+  }
+  return false;
+}
+
+const parseTokens = (tokens) => {
+  console.log('called parseTokens with: ');
+  console.log(tokens);
+  let peek = () => tokens[0];
+  let consume = peek;
+
+  let result = [];
+  if (peek().type == 'or') {
+    return parseTokens(tokens.slice(1));
+  }
+  if (peek().type == 'open') {
+    let end = findClose(tokens);
+    if(end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
+    result.push(parseTokens(tokens.slice(1, end)));
+    if(tokens.length > end + 1) result.push(parseTokens(tokens.slice(end+1)));
+    return result;
+  } else if (peek().type == 'token') {
+    if (tokens.length == 1) {
+      return consume();
+    } else {
+      if(tokens[1].type == 'or') result.type = 'or';
+      result.push(consume());
+      result.push(parseTokens(tokens.slice(1)));
+      return result;
     }
   }
 }
 
 function buildFilterArea() {
-  sort_categories = getSorts();
-  var sorthtml = "";
-  sort_categories.forEach(function(category, index) {
-    sorthtml += filterItemTemplate.replace('#{value}', category).replace('#{label}', category);
-  });
-
-  document.getElementById('filterType').innerHTML = sorthtml;
-  sorthtml += filterItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
-  document.getElementById('secondarySortSelect').innerHTML = sorthtml;
-  document.getElementById('primarySortSelect').innerHTML = sorthtml;
-  if (document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0) {
-    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort1").value);
-    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort2").value);
-  } else {
-    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
-    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
-  }
-
+  //TODO: remove this
   updateFilters();
 }
 
@@ -1728,7 +1885,7 @@ window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
-  buildFiltersFromQsargs();
+  //buildFiltersFromQsargs();
   buildFilterArea();
   updateCubeList();
   activateTags();
