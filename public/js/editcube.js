@@ -52,7 +52,6 @@ $('#compareButton').click(function(e) {
 
 $('#filterButton').click(function(e) {
   var filterText = $('#filterInput').val();
-  console.log(filterText);
   updateFilters(filterText);
 });
 
@@ -1638,12 +1637,7 @@ function updateFilters(filterText) {
 
   if (filterText) {
     new_filters = [];
-    if (generateFilters(filterText.toLowerCase(), new_filters)) {
-      filters = new_filters;
-      updateCubeList();
-    } else {
-      //TODO: couldn't parse that query, display error?
-    }
+    generateFilters(filterText.toLowerCase(), new_filters)
   } else {
     document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
   }
@@ -1684,7 +1678,6 @@ function findEndingQuotePosition(filterText, num) {
 }
 
 function tokenizeInput(filterText, tokens) {
-  console.log('tokeninzeInput called with: ' + filterText);
   filterText = filterText.trim();
   if (!filterText) {
     return true;
@@ -1714,9 +1707,13 @@ function tokenizeInput(filterText, tokens) {
     return tokenizeInput(filterText.slice(1), tokens);
   }
 
-  if (filterText.indexOf('or ') == 0) {
+  if (filterText.indexOf('or ') == 0 || (filterText.length == 2 && filterText.indexOf('or') == 0)) {
     tokens.push({type: 'or'});
     return tokenizeInput(filterText.slice(2), tokens);
+  }
+
+  if (filterText.indexOf('and ') == 0 || (filterText.length == 3 && filterText.indexOf('and') == 0)) {
+    return tokenizeInput(filterText.slice(3), tokens);
   }
 
   let token = {
@@ -1772,14 +1769,15 @@ function tokenizeInput(filterText, tokens) {
   } else {
     category = firstTerm[0].split(operators_re)[0];
   }
-
-  filterText = filterText.slice(token.operand == 'none' ? token.arg.length : token.arg.length + token.operand.length + category.length );
+  filterText = filterText.slice((token.operand == 'none' ? (token.arg.length) : (token.arg.length + token.operand.length + category.length)) + (parens ? 2 : 0));
 
   if (!categoryMap.has(category)) {
     return false;
   }
+
+
   token.category = categoryMap.get(category);
-  
+  token.arg = simplifyArg(token.arg, token.category);
   if (token.operand && token.category && token.arg) {
     //replace any escaped quotes with normal quotes
     if (parens) token.arg = token.arg.replace(/\\"/g, '"');
@@ -1791,6 +1789,58 @@ function tokenizeInput(filterText, tokens) {
 
 }
 
+const colorMap = new Map([
+  ['white', 'w'],
+  ['blue', 'u'],
+  ['black', 'b'],
+  ['red', 'r'],
+  ['green', 'g'],
+  ['colorless', 'c'],
+  ['azorius', 'uw'],
+  ['dimir', 'ub'],
+  ['rakdos', 'rb'],
+  ['gruul', 'rg'],
+  ['selesnya', 'gw'],
+  ['orzhov', 'bw'],
+  ['izzet', 'ur'],
+  ['golgari', 'gb'],
+  ['boros', 'wr'],
+  ['simic', 'ug'],
+  ['bant', 'gwu'],
+  ['esper', 'wub'],
+  ['grixis', 'ubr'],
+  ['jund', 'brg'],
+  ['naya', 'rgw'],
+  ['abzan', 'wbg'],
+  ['jeskai', 'urw'],
+  ['sultai', 'bgu'],
+  ['mardu', 'rwb'],
+  ['temur', 'rug']
+]);
+
+//change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
+function simplifyArg(arg, category) {
+  let res = '';
+  switch (category) {
+    case 'color':
+    case 'identity':
+      if(colorMap.has(arg)){
+        res = colorMap.get(arg);
+      } else {
+        res = arg;
+      }
+      res = res.split('').map( (element) => element.toUpperCase());
+      break;
+    case 'mana':
+      res = parseManaCost(arg)
+      break;
+    default:
+      res = arg;
+      break;
+  }
+  return res;
+}
+
 //converts filter scryfall syntax string to global filter objects
 //returns true if decoding was successful, and filter object is populated, or false otherwise
 function generateFilters(filterText) {
@@ -1799,12 +1849,15 @@ function generateFilters(filterText) {
   if (tokenizeInput(filterText, tokens)) {
     if (verifyTokens(tokens)) {
       filters = [parseTokens(tokens)];
+      //TODO: generate a filter string, and return better errors to user
+      document.getElementById('filterarea').innerHTML = '<p><em>Filter Applied.</em></p>';
       updateCubeList();
+    } else {
+      document.getElementById('filterarea').innerHTML = '<p><em>Invalid Filter String.</em></p>';
     }
   } else {
-    return false;
+    document.getElementById('filterarea').innerHTML = '<p><em>Invalid Filter String.</em></p>';
   }
-  //return result;
 }
 
 const verifyTokens = (tokens) => {
@@ -1813,26 +1866,108 @@ const verifyTokens = (tokens) => {
     return num > -1 && num < temp.length;
   }
   let type = (i) => temp[i].type;
+  let token = (i) => temp[i];
+
   for (let i = 0; i < temp.length; i++) {
     if (type(i) == 'open') {
-      console.log('checking open paren')
       let closed = findClose(temp, i);
       if (!closed) return false;
       temp[closed].valid = true;
     }
     if (type(i) == 'close') {
-      console.log('checking close paren')
       if(!temp[i].valid) return false;
     }
     if (type(i) == 'or') {
-      console.log('checking or')
       if (!inBounds(i - 1) || !inBounds(i + 1)) return false;
       if (!(type(i - 1) == 'close' || type(i - 1) == 'token')) return false;
       if (!(type(i + 1) != 'open' || type(i + 1) != 'token')) return false;
     }
+    if (type(i) == 'token') {
+      switch(token(i).category) {
+        case 'color':
+        case 'identity':
+          let verifyColors = (element) => {
+            return element.search(/^[WUBRGC]$/) < 0;
+          }
+          if (token(i).arg.every(verifyColors)) {
+            return false;
+          }
+          break;
+        case 'cmc':
+        case 'power':
+        case 'toughness':
+          if(token(i).arg.search(/^\d+$/) < 0) return false;
+          break;
+        case 'mana':
+          let verifyMana = (element) => {
+            element.search(/^(\d+|[wubrgscxyz]|{([wubrg2]\-[wubrg]|[wubrg]\-p)})$/) < 0;
+          }
+          if (token(i).arg.every(verifyMana)) {
+            return false;
+          }
+          break;
+      }
+    }
 
   }
   return true;
+}
+
+const hybridMap = new Map([
+  ['u-w', 'w-u'],
+  ['b-w', 'w-b'],
+  ['b-u', 'u-b'],
+  ['r-u', 'u-r'],
+  ['r-b', 'b-r'],
+  ['g-b', 'b-g'],
+  ['g-r', 'r-g'],
+  ['w-r', 'r-w'],
+  ['w-g', 'g-w'],
+  ['u-g', 'g-u']
+]);
+
+function parseManaCost (cost) {
+  let res = [];
+  for (let i = 0; i < cost.length; i++) {
+    if (cost[i] == '{') {
+      let str = cost.slice(i+1, i+4).toLowerCase();
+      if (str.search(/[wubrg]\/p/) > -1) {
+        res.push(cost[i+1] + '-p');
+        i = i+4;
+      } else if (str.search(/2\/[wubrg]/) > -1) {
+        res.push('2-' + cost[i+3]);
+        i = i+4;
+      } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
+        let symbol = cost[i+1] + '-' + cost[i+3];
+        if (hybridMap.has(symbol)) {
+          symbol = hybridMap.get(symbol);
+        }
+        res.push(symbol);
+        i = i+4;
+      } else if (str.search(/^[wubrgscxyz]}/) > -1 ) {
+        res.push(cost[i+1]);
+        i = i+2;
+      } else if (str.search(/^[0-9]+}/) > -1) {
+        let num = str.match(/[0-9]+/)[0];
+        if (num.length <= 2) {
+          res.push(num);
+        }
+        i = i + num.length + 1;
+      }
+    } else if (cost[i].search(/[wubrgscxyz]/) > -1) {
+      res.push(cost[i]);
+    } else if (cost[i].search(/[0-9]/) > -1) {
+      let num = cost.slice(i).match(/[0-9]+/)[0];
+      if (num.length <= 2) {
+        res.push(num);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return res;
 }
 
 const findClose = (tokens, pos) => {
@@ -1849,8 +1984,6 @@ const findClose = (tokens, pos) => {
 }
 
 const parseTokens = (tokens) => {
-  console.log('called parseTokens with: ');
-  console.log(tokens);
   let peek = () => tokens[0];
   let consume = peek;
 
