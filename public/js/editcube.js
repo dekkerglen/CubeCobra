@@ -1773,13 +1773,14 @@ function tokenizeInput(filterText, tokens) {
     category = firstTerm[0].split(operators_re)[0];
   }
 
+  filterText = filterText.slice(token.operand == 'none' ? token.arg.length : token.arg.length + token.operand.length + category.length );
+
   if (!categoryMap.has(category)) {
     return false;
   }
   token.category = categoryMap.get(category);
   
   if (token.operand && token.category && token.arg) {
-    filterText = filterText.split(token.arg + (parens ? '"' : ''))[1];
     //replace any escaped quotes with normal quotes
     if (parens) token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);

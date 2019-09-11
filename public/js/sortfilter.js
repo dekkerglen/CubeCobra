@@ -32,8 +32,6 @@ function GetColorCategory(type, colors) {
 }
 
 function filterCard(card, filters) {
-  console.log('filter card called with: ');
-  console.log(filters);
   
   if(filters.length == 1) {
     if(filters[0].type == 'token') {
@@ -43,9 +41,9 @@ function filterCard(card, filters) {
     }
   } else {
     if(filters.type == 'or') {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
     } else {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
     }
   }
 
