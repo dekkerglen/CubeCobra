@@ -1,3 +1,4 @@
+var filterItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
 var listGranularity = 50;
 var listPosition = 0;
@@ -54,6 +55,10 @@ $('#filterButton').click(function(e) {
   var filterText = $('#filterInput').val();
   console.log(filterText);
   updateFilters(filterText);
+});
+
+$('.updateButton').click(function(e) {
+  updateCubeList();
 });
 
 $('#filterInput').keyup(function(e) {
@@ -1877,8 +1882,28 @@ const parseTokens = (tokens) => {
 }
 
 function buildFilterArea() {
-  //TODO: remove this
+  //TODO: grab filters from url arg
   updateFilters();
+}
+
+function addSorts() {
+  sort_categories = getSorts();
+  var sorthtml = "";
+  sort_categories.forEach(function(category, index) {
+    sorthtml += filterItemTemplate.replace('#{value}', category).replace('#{label}', category);
+  });
+
+  //document.getElementById('filterType').innerHTML = sorthtml;
+  sorthtml += filterItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
+  document.getElementById('secondarySortSelect').innerHTML = sorthtml;
+  document.getElementById('primarySortSelect').innerHTML = sorthtml;
+  if (document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0) {
+    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort1").value);
+    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort2").value);
+  } else {
+     document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
+     document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
+  }
 }
 
 var prev_handler = window.onload;
@@ -1888,6 +1913,7 @@ window.onload = function() {
   }
   //buildFiltersFromQsargs();
   buildFilterArea();
+  addSorts();
   updateCubeList();
   activateTags();
 };
