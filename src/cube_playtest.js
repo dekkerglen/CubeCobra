@@ -1,16 +1,16 @@
 import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGroup, Input, Label, Row } from 'reactstrap';
+import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGroup, Input, Label, Row, UncontrolledAlert, UncontrolledCollapse } from 'reactstrap';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map(n => <option key={n}>{n}</option>);
 
 const CardTitleH5 = ({ ...props }) => <CardTitle tag="h5" className="mb-0" {...props} />;
 
-const LabelRow = ({ label, children, ...props }) => (
+const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>
-    <Label xs="4" md="6" lg="5" for={props['for']}>{label}</Label> 
+    <Label xs="4" md="6" lg="5" htmlFor={htmlFor}>{label}</Label> 
     <Col xs="8" md="6" lg="7">
       {children}
     </Col>
@@ -18,10 +18,75 @@ const LabelRow = ({ label, children, ...props }) => (
 )
 
 class CubePlaytest extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      alerts: [],
+      draftFormats: this.props.draftFormats,
+      editModal: false,
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  toggle() {
+    this.setState(({ modal, ...state }) => ({
+      ...state,
+      modal: !modal,
+    }))
+  }
+
+  addAlert(data) {
+    this.setState(({ alerts }) => ({
+      alerts: [].concat(alerts, data),
+    }));
+  }
+
+  addFormat(format) {
+    this.setState(({ draftFormats }) => ({
+      draftFormats: [].concat(draftFormats, format),
+    }))
+  }
+
+  deleteFormat(cube, formatID) {
+    console.log(formatID);
+    fetch(`/cube/format/remove/${cube};${formatID}`, {
+      method: 'DELETE',
+    }).then(response => {
+      this.addAlert({
+        color: 'success',
+        children: 'Format successfully deleted.',
+      });
+      this.setState(({ draftFormats }) => ({
+        draftFormats: [].concat(draftFormats.slice(0, formatID), draftFormats.slice(formatID + 1)),
+      }));
+    }, this.addAlert.bind(this, {
+      color: 'danger',
+      children: 'Failed to delete format.',
+    }));
+  }
+
+  handleChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
   render() {
     const { canEdit, decks, cubeID } = this.props;
+    const { alerts, draftFormats } = this.state;
 
     return <>
+      <div>
+        {alerts.map(data =>
+          <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
+        )}
+      </div>
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="5">
           {decks.length == 0 ? '' :
@@ -47,15 +112,19 @@ class CubePlaytest extends Component {
               <CardTitleH5>View sample pack</CardTitleH5>
             </CardHeader>
             <CardBody>
-              <LabelRow for="seed" label="Seed" className="mb-0">
-                <Input type="text" name="seed" id="seed" />
+              <LabelRow htmlFor="seed" label="Seed" className="mb-0">
+                <Input type="text" name="seed" id="seed" value={this.state.seed} onChange={this.handleChange} />
               </LabelRow>
             </CardBody>
             <CardFooter>
               <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
                 View Random
               </Button>
-              <Button color="success" href={`/cube/samplepack/${cubeID}`}>
+              <Button
+                color="success"
+                disabled={!this.state.seed}
+                href={`/cube/samplepack/${cubeID}/${this.state.seed}`}
+              >
                 View Seeded
               </Button>
             </CardFooter>
@@ -63,59 +132,71 @@ class CubePlaytest extends Component {
         </Col>
         <Col xs="12" md="6" xl="5">
           {!draftFormats ? '' :
-            draftFormats.map(format =>
-              <Card key={format._id} className="mt-3">
-                <CardHeader>
-                  <CardTitleH5>
-                    Draft Custom Format: {format.title}
-                  </CardTitleH5>
-                </CardHeader>
-                <CardBody>
-                  <div className="description-area">{format.html}</div>
-                  <LabelRow for={`seats-${format._id}`} label="Total Seats" className="mb-0">
-                    <Input type="select" name="seats" id={`seats-${format._id}`} defaultValue="8">
-                      {rangeOptions(4, 11)}
-                    </Input>
-                  </LabelRow>
-                </CardBody>
-                <CardFooter>
-                  <Button color="success" className="mr-2">Start Draft</Button>
-                  {!canEdit ? '' : <>
-                    <Button color="success" className="mr-2">Edit</Button>
-                    <Button color="danger" id="deleteToggler">Delete</Button>
-                    <UncontrolledCollapse toggler="#deleteToggler">
-                      Are you sure? This action cannot be undone.
-                      <Button color="danger">Yes, delete this format</Button>
-                    </UncontrolledCollapse>
-                  </>}
-                </CardFooter>
+            draftFormats.map((format, index) =>
+              <Card key={format} className="mt-3">
+                <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+                  <CardHeader>
+                    <CardTitleH5>
+                      Draft Custom Format: {format.title}
+                    </CardTitleH5>
+                  </CardHeader>
+                  <CardBody>
+                    <div className="description-area">{format.html}</div>
+                    <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
+                      <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
+                        {rangeOptions(4, 11)}
+                      </Input>
+                    </LabelRow>
+                  </CardBody>
+                  <CardFooter>
+                    <Input type="hidden" name="id" value={index} />
+                    <Button type="submit" color="success" className="mr-2">
+                      Start Draft
+                    </Button>
+                    {!canEdit ? '' : <>
+                      <Button color="success" className="mr-2 editFormatButton" data-id={index}>
+                        Edit
+                      </Button>
+                      <Button color="danger" id={`deleteToggler-${index}`}>Delete</Button>
+                      <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
+                        <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
+                        <Button color="danger" onClick={this.deleteFormat.bind(this, cubeID, index)}>
+                          Yes, delete this format
+                        </Button>
+                      </UncontrolledCollapse>
+                    </>}
+                  </CardFooter>
+                </form>
               </Card>
             )
           }
           <Card className="mt-3">
-            <CardHeader>
-              <CardTitleH5>Start a new draft</CardTitleH5>
-            </CardHeader>
-            <CardBody>
-              <LabelRow for="packs" label="Number of Packs">
-                <Input type="select" name="packs" id="packs" defaultValue="3">
-                  {rangeOptions(1, 11)}
-                </Input>
-              </LabelRow>
-              <LabelRow for="cards" label="Cards per Pack">
-                <Input type="select" name="cards" id="cards" defaultValue="15">
-                  {rangeOptions(5, 21)}
-                </Input>
-              </LabelRow>
-              <LabelRow for="seats" label="Total Seats" className="mb-0">
-                <Input type="select" name="seats" id="seats" defaultValue="8">
-                  {rangeOptions(4, 11)}
-                </Input>
-              </LabelRow>
-            </CardBody>
-            <CardFooter>
-              <Button color="success">Start Draft</Button>
-            </CardFooter>
+            <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+              <CardHeader>
+                <CardTitleH5>Start a new draft</CardTitleH5>
+              </CardHeader>
+              <CardBody>
+                <LabelRow htmlFor="packs" label="Number of Packs">
+                  <Input type="select" name="packs" id="packs" defaultValue="3">
+                    {rangeOptions(1, 11)}
+                  </Input>
+                </LabelRow>
+                <LabelRow htmlFor="cards" label="Cards per Pack">
+                  <Input type="select" name="cards" id="cards" defaultValue="15">
+                    {rangeOptions(5, 21)}
+                  </Input>
+                </LabelRow>
+                <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
+                  <Input type="select" name="seats" id="seats" defaultValue="8">
+                    {rangeOptions(4, 11)}
+                  </Input>
+                </LabelRow>
+              </CardBody>
+              <CardFooter>
+                <Input type="hidden" name="id" value="-1" />
+                <Button color="success">Start Draft</Button>
+              </CardFooter>
+            </form>
           </Card>
         </Col>
       </Row>
@@ -123,7 +204,7 @@ class CubePlaytest extends Component {
   }
 }
 
-const canEdit = document.getElementById('canEdit').value === 'true';
+const canEdit = document.getElementById('canEdit').hasAttribute('value');
 const decks = JSON.parse(document.getElementById('deckInput').value);
 const cubeID = document.getElementById('cubeID').value;
 const draftFormats = JSON.parse(document.getElementById('draftFormats').value);
