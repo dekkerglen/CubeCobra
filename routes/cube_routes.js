@@ -2520,11 +2520,9 @@ router.delete('/remove/:id', ensureAuth, function(req, res) {
     res.redirect('/' + req.params.id);
   }
 
-  let query = {
-    _id: req.params.id
-  };
+  let query = build_id_query(req.params.id)
 
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+  Cube.findOne(query, function(err, cube) {
     if (err || !cube || (cube.owner != req.user._id)) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
