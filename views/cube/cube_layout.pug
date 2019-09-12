@@ -4,12 +4,12 @@ block content
   link(rel='stylesheet', href='/css/autocomplete.css')
   input(type='hidden', value=activeLink)
   .cubenav
-    ul.nav.nav-tabs.nav-fill.d-flex.flex-column.flex-sm-row
-      li.nav-item
-        span.nav-link.text-sm-left.text-center(href='#' style='font-weight: 600;') #{cube.name}
-          if cube.type
-            span.d-none.d-sm-inline
-              |  (#{cube.card_count} Card #{cube.type} Cube)
+    ul.nav.nav-tabs.nav-fill.d-flex.flex-column.flex-sm-row.pt-2
+      li.nav-item.px-lg-4.px-3.text-sm-left.text-center.mt-auto.mb-2(style='font-weight: 600')
+        | #{cube.name}
+        if cube.type
+          span.d-none.d-sm-inline
+            |  (#{cube.card_count} Card #{cube.type} Cube)
       .d-flex.flex-row.flex-wrap
         li.nav-item
           a.nav-link(href='/cube/overview/'+cube_id, class=activeLink === 'overview' && 'active') Overview
