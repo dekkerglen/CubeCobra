@@ -1523,8 +1523,13 @@ router.post('/startdraft/:id', function(req, res) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
     } else {
-      params = JSON.parse(req.body.body);
-      if (params.id == -1) {
+      let params = {
+        id: parseInt(req.body.id),
+        seats: parseInt(req.body.seats),
+        packs: parseInt(req.body.packs),
+        cards: parseInt(req.body.cards),
+      };
+      if (req.body.id == -1) {
         //standard draft
         startStandardDraft(req, res, params, cube);
       } else {
@@ -2575,12 +2580,11 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
   }
 
   var cubeid = req.params.id.split(';')[0];
-  var id = req.params.id.split(';')[1];
+  var id = parseInt(req.params.id.split(';')[1]);
 
   Cube.findOne(build_id_query(cubeid), function(err, cube) {
-    if (err || (cube.owner != req.user._id)) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/404/');
+    if (err || !cube || cube.owner != req.user._id || id === NaN || id < 0 || id >= cube.draft_formats.length) {
+      res.sendStatus(401);
     } else {
       cube.draft_formats.splice(id, 1);
 
@@ -2589,11 +2593,10 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
       }, cube, function(err) {
         if (err) {
           console.log(err, req);
-          req.flash('danger', 'An error occured saving your custom format.');
-          res.redirect('/cube/playtest/' + req.params.id);
+          res.sendStatus(500);
+        } else {
+          res.sendStatus(200);
         }
-        req.flash('success', 'Format Removed');
-        res.send('Success');
       });
     }
   });
