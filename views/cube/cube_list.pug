@@ -153,6 +153,7 @@ block cube_toolbar
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
+  input#hideTagColors(type='hidden', name='hideTagColors', value=(user.hide_tag_colors === true).toString())
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts

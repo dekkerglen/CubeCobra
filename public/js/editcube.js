@@ -8,7 +8,7 @@ var filters = [];
 var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
-var show_tag_colors = false;
+var show_tag_colors = $('#hideTagColors').val() !== 'true';
 
 var comparing = false;
 if ($('#in_both').length) {
@@ -412,6 +412,9 @@ $('#tagColors').click(function(e) {
       let tag_colors = data.tag_colors;
       cubeTagColors = tag_colors;
 
+      show_tag_colors = data.show_tag_colors;
+      $('#showTagColorsCheckbox').prop("checked", show_tag_colors);
+
       const tag_color_options = [
         'Red',
         'Brown',
@@ -492,8 +495,18 @@ $('#tagColors').click(function(e) {
 });
 
 $('#showTagColorsCheckbox').change(function(e) {
-  show_tag_colors = $(this).prop("checked");
-  updateCubeList();
+  fetch("/cube/api/saveshowtagcolors", {
+    method: "POST",
+    body: JSON.stringify({
+      show_tag_colors: $(this).prop("checked"),
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then(res => {
+    show_tag_colors = $(this).prop("checked");
+    updateCubeList();
+  });
 });
 
 if (canEdit && !comparing) {
