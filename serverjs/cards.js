@@ -16,6 +16,7 @@ var data = {
       return carddict[id];
     }
     else{
+      console.log("Could not find: " + id);
       //placeholder card if we don't find the one due to a scryfall ID update bug
       return {
         // img: 
@@ -48,7 +49,7 @@ var data = {
   allIds: card => data.nameToId[data.normalizedName(card)]
 }
 fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-  data.carddict = JSON.parse(contents);
+  carddict = JSON.parse(contents);
   console.log("carddict loaded");
 });
 fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
@@ -106,7 +107,7 @@ fs.watchFile('private/names.json', (curr, prev) => {
 fs.watchFile('private/carddict.json', (curr, prev) => {
   console.log('File Changed: carddict');
   fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-    data.carddict = JSON.parse(contents);
+    carddict = JSON.parse(contents);
     console.log("carddict reloaded");
   });
 });
