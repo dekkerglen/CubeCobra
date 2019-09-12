@@ -9,6 +9,7 @@ var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
 var show_tag_colors = $('#hideTagColors').val() !== 'true';
+var urlFilterText = '';
 
 var comparing = false;
 if ($('#in_both').length) {
@@ -69,6 +70,7 @@ $('#filterInput').keyup(function(e) {
 
 $('#resetButton').click(function(e) {
   filters = [];
+  addUrlToFilter();
   updateCubeList();
 });
 
@@ -1195,46 +1197,20 @@ function filteredCube() {
   return res;
 }
 
-function setFilterQsargs() {
-  var qsargsToSet = {},
-    modifier;
-  filters.forEach(function(filter, index) {
-    if (!qsargsToSet[filter.category]) {
-      qsargsToSet[filter.category] = "";
-    }
-    modifier = "+";
-    if (filter.not) {
-      modifier = "-";
-    }
-    qsargsToSet[filter.category] += modifier + filter.value + ",";
-  });
-  var newUrl = window.location.href.split('?')[0];
-  if (!$.isEmptyObject(qsargsToSet)) {
-    newUrl += "?" + $.param(qsargsToSet);
+function addUrlToFilter(filterText) {
+  let params = new URLSearchParams(document.location.search);
+  params.delete('f');
+  if(filterText) {
+    params.append('f', filterText);
   }
-  window.history.pushState({}, '', newUrl);
+  let url = window.location.pathname + '?' + params.toString();
+  window.history.pushState({}, '', url);
 }
 
 function buildFiltersFromQsargs() {
-  var validCategories = getSorts(),
-    qsargs = new URLSearchParams(window.location.search),
-    qsargValues, value, valueIndex, qsargCategory;
-  for (qsargCategory of qsargs.keys()) {
-    if (!validCategories.includes(qsargCategory)) {
-      continue;
-    }
-    qsargValues = qsargs.get(qsargCategory).split(",");
-    for (valueIndex = 0; valueIndex < qsargValues.length; valueIndex++) {
-      value = qsargValues[valueIndex];
-      if (value.length > 0) {
-        filters.push({
-          category: qsargCategory,
-          value: value.substring(1),
-          not: value[0] === "-"
-        });
-      }
-    }
-  }
+  let params = new URLSearchParams(document.location.search);
+  updateFilters(params.get("f"));
+  
 }
 
 var updateCubeListeners = [];
@@ -1264,7 +1240,6 @@ function updateCubeList() {
     init_groupcontextModal();
   }
   autocard_hide_card();
-  setFilterQsargs();
 }
 
 function renderListView() {
@@ -1651,7 +1626,6 @@ function renderListView() {
 }
 
 function updateFilters(filterText) {
-  
 
   if (filterText) {
     new_filters = [];
@@ -1868,6 +1842,8 @@ function generateFilters(filterText) {
   if (tokenizeInput(filterText, tokens)) {
     if (verifyTokens(tokens)) {
       filters = [parseTokens(tokens)];
+      addUrlToFilter(filterText);
+      
       //TODO: generate a filter string, and return better errors to user
       document.getElementById('filterarea').innerHTML = '<p><em>Filter Applied.</em></p>';
       updateCubeList();
@@ -2028,11 +2004,6 @@ const parseTokens = (tokens) => {
   }
 }
 
-function buildFilterArea() {
-  //TODO: grab filters from url arg
-  updateFilters();
-}
-
 function addSorts() {
   sort_categories = getSorts();
   var sorthtml = "";
@@ -2058,8 +2029,7 @@ window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
-  //buildFiltersFromQsargs();
-  buildFilterArea();
+  buildFiltersFromQsargs();
   addSorts();
   updateCubeList();
   activateTags();
