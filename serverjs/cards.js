@@ -32,7 +32,7 @@ var data = {
         rarity: '',        
         legalities: { },
         oracle_text: '',
-        image_normal:'/content/default_card.png',
+        image_normal:'https://img.scryfall.com/errors/missing.jpg',
         cmc: 0,
         type: '',        
         colors: [],
