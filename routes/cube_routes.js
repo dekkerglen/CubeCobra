@@ -187,7 +187,7 @@ function replaceCardHtml(oldCard, newCard) {
 }
 
 function notPromoOrDigitalId(id) {
-  let card = carddb.carddict[id];
+  let card = carddb.cardFromId(id);
   return !card.promo && !card.digital && card.border_color != 'gold';
 }
 
@@ -213,9 +213,10 @@ router.post('/add', ensureAuth, async (req, res) => {
       cube.cards = [];
       cube.decks = [];
       cube.articles = [];
-      cube.image_uri = carddb.carddict[carddb.nameToId['doubling cube'][0]].art_crop;
-      cube.image_name = carddb.carddict[carddb.nameToId['doubling cube'][0]].full_name;
-      cube.image_artist = carddb.carddict[carddb.nameToId['doubling cube'][0]].artist;
+      var details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
+      cube.image_uri = details.art_crop;
+      cube.image_name = details.full_name;
+      cube.image_artist = details.artist;
       cube.description = "This is a brand new cube!";
       cube.owner_name = user.username;
       cube.date_updated = Date.now();
@@ -355,7 +356,7 @@ router.get('/overview/:id', function(req, res) {
     } else {
       var pids = [];
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.carddict[card.cardID];
+        card.details = carddb.cardFromId(card.cardID);
         if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
           pids.push(card.details.tcgplayer_id);
         }
@@ -571,7 +572,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
       } else {
         let pids = [];
         cubeA.cards.forEach(function(card, index) {
-          card.details = carddb.carddict[card.cardID];
+          card.details = carddb.cardFromId(card.cardID);
           if (!card.type_line) {
             card.type_line = card.details.type;
           }
@@ -581,7 +582,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           card.details.display_image = util.getCardImageURL(card);
         });
         cubeB.cards.forEach(function(card, index) {
-          card.details = carddb.carddict[card.cardID];
+          card.details = carddb.cardFromId(card.cardID);
           if (!card.type_line) {
             card.type_line = card.details.type;
           }
@@ -672,7 +673,7 @@ router.get('/list/:id', function(req, res) {
     } else {
       var pids = [];
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.carddict[card.cardID];
+        card.details = carddb.cardFromId(card.cardID);
         card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
@@ -718,7 +719,7 @@ router.get('/playtest/:id', function(req, res) {
       res.redirect('/404/');
     } else {
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.carddict[card.cardID];
+        card.details = carddb.cardFromId(card.cardID);
       });
       User.findById(cube.owner, function(err, user) {
         Deck.find({
@@ -955,10 +956,10 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
               for (let card of cards) {
                 let potentialIds = carddb.allIds(card);
                 if (potentialIds && potentialIds.length > 0) {
-                  let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+                  let matchingSet = potentialIds.find(id => carddb.cardFromId(id).set.toUpperCase() == card.set);
                   let nonPromo = potentialIds.find(notPromoOrDigitalId);
                   let selected = matchingSet || nonPromo || potentialIds[0];
-                  let details = carddb.carddict[selected];
+                  let details = carddb.cardFromId(selected);
                   added.push(details);
                   util.addCardToCube(cube, details);
                   changelog += addCardHtml(details);
@@ -1069,12 +1070,12 @@ function bulkuploadCSV(req, res, cards, cube) {
     let potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
-      let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
+      let matchingSet = potentialIds.find(id => carddb.cardFromId(id).set.toUpperCase() == card.set);
       let nonPromo = potentialIds.find(notPromoOrDigitalId);
       let first = potentialIds[0];
       card.cardID = matchingSet || nonPromo || first;
       cube.cards.push(card);
-      changelog += addCardHtml(carddb.carddict[card.cardID]);
+      changelog += addCardHtml(carddb.cardFromId(card.cardID));
     } else {
       missing += card.name + '\n';
     }
@@ -1151,7 +1152,7 @@ function bulkUpload(req, res, list, cube) {
                 let set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'))
                 //if we've found a match, and it DOES need to be parsed with cubecobra syntax
                 let potentialIds = carddb.nameToId[name];
-                selected = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == set);
+                selected = potentialIds.find(id => carddb.cardFromId(id).set.toUpperCase() == set);
               }
             } else {
               //does not have set info
@@ -1162,7 +1163,7 @@ function bulkUpload(req, res, list, cube) {
               }
             }
             if (selected) {
-              let details = carddb.carddict[selected];
+              let details = carddb.cardFromId(selected);
               util.addCardToCube(cube, details, details);
               added.push(details);
               changelog += addCardHtml(details);
@@ -1227,7 +1228,7 @@ router.get('/download/cubecobra/:id', function(req, res) {
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       cube.cards.forEach(function(card, index) {
-        res.write(carddb.carddict[card.cardID].full_name + '\r\n');
+        res.write(carddb.cardFromId(card.cardID).full_name + '\r\n');
       });
       res.end();
     }
@@ -1246,9 +1247,9 @@ router.get('/download/csv/:id', function(req, res) {
       res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Tags\r\n');
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
-          card.type_line = carddb.carddict[card.cardID].type;
+          card.type_line = carddb.cardFromId(card.cardID).type;
         }
-        var name = carddb.carddict[card.cardID].name;
+        var name = carddb.cardFromId(card.cardID).name;
         while (name.includes('"')) {
           name = name.replace('"', '-quote-');
         }
@@ -1268,8 +1269,8 @@ router.get('/download/csv/:id', function(req, res) {
           });
           res.write(',');
         }
-        res.write('"' + carddb.carddict[card.cardID].set + '"' + ',');
-        res.write('"' + carddb.carddict[card.cardID].collector_number + '"' + ',');
+        res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
+        res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
         res.write(card.status + ',"');
         card.tags.forEach(function(tag, t_index) {
           if (t_index != 0) {
@@ -1297,8 +1298,8 @@ router.get('/download/forge/:id', function(req, res) {
       res.write('Name=' + cube.name + '\r\n');
       res.write('[Main]\r\n');
       cube.cards.forEach(function(card, index) {
-        var name = carddb.carddict[card.cardID].name;
-        var set = carddb.carddict[card.cardID].set;
+        var name = carddb.cardFromId(card.cardID).name;
+        var set = carddb.cardFromId(card.cardID).set;
         res.write('1 ' + name + '|' + set.toUpperCase() + '\r\n');
       });
       res.end();
@@ -1316,9 +1317,9 @@ router.get('/download/xmage/:id', function(req, res) {
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       cube.cards.forEach(function(card, index) {
-        var name = carddb.carddict[card.cardID].name;
-        var set = carddb.carddict[card.cardID].set;
-        var collectorNumber = carddb.carddict[card.cardID].collector_number;
+        var name = carddb.cardFromId(card.cardID).name;
+        var set = carddb.cardFromId(card.cardID).set;
+        var collectorNumber = carddb.cardFromId(card.cardID).collector_number;
         res.write('1 [' + set.toUpperCase() + ':' + collectorNumber + '] ' + name + '\r\n');
       });
       res.end();
@@ -1336,7 +1337,7 @@ router.get('/download/plaintext/:id', function(req, res) {
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
       cube.cards.forEach(function(card, index) {
-        res.write(carddb.carddict[card.cardID].name + '\r\n');
+        res.write(carddb.cardFromId(card.cardID).name + '\r\n');
       });
       res.end();
     }
@@ -1558,7 +1559,7 @@ router.get('/draft/:id', function(req, res) {
       draft.packs.forEach(function(seat, index) {
         seat.forEach(function(pack, index2) {
           pack.forEach(function(card, index3) {
-            card.details = carddb.carddict[card.cardID];
+            card.details = carddb.cardFromId(card.cardID);
             if (!names.includes(card.details.name)) {
               names.push(card.details.name);
             }
@@ -1569,11 +1570,11 @@ router.get('/draft/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item.details = carddb.carddict[card.cardID];
+              item.details = carddb.cardFromId(card.cardID);
             }
           });
         } else {
-          card.details = carddb.carddict[card.cardID];
+          card.details = carddb.cardFromId(card.cardID);
         }
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
@@ -1733,12 +1734,12 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       for (let edit of edits) {
         if (edit.charAt(0) == '+') {
           //add id
-          var details = carddb.carddict[edit.substring(1)];
+          var details = carddb.cardFromId(edit.substring(1));
           if (!details) {
             console.log('Card not found: ' + edit, req);
           } else {
             util.addCardToCube(cube, details);
-            changelog += addCardHtml(carddb.carddict[edit.substring(1)]);
+            changelog += addCardHtml(carddb.cardFromId(edit.substring(1)));
           }
         } else if (edit.charAt(0) == '-') {
           //remove id
@@ -1752,13 +1753,13 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           });
           if (rm_index != -1) {
             cube.cards.splice(rm_index, 1);
-            changelog += removeCardHtml(carddb.carddict[edit.substring(1)]);
+            changelog += removeCardHtml(carddb.cardFromId(edit.substring(1)));
           } else {
             fail_remove.push(edit.substring(1));
           }
         } else if (edit.charAt(0) == '/') {
           var tmp_split = edit.substring(1).split('>');
-          var details = carddb.carddict[tmp_split[1]];
+          var details = carddb.cardFromId(tmp_split[1]);
           util.addCardToCube(cube, details);
 
           var rm_index = -1;
@@ -1771,10 +1772,10 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           });
           if (rm_index != -1) {
             cube.cards.splice(rm_index, 1);
-            changelog += replaceCardHtml(carddb.carddict[tmp_split[0]], carddb.carddict[tmp_split[1]]);
+            changelog += replaceCardHtml(carddb.cardFromId(tmp_split[0]), carddb.cardFromId(tmp_split[1]));
           } else {
             fail_remove.push(tmp_split[0]);
-            changelog += addCardHtml(carddb.carddict[tmp_split[1]]);
+            changelog += addCardHtml(carddb.cardFromId(tmp_split[1]));
           }
         }
       }
@@ -1798,11 +1799,11 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           if (fail_remove.length > 0) {
             var errors = ""
             fail_remove.forEach(function(fail, index) {
-              if (carddb.carddict[fail]) {
+              if (!carddb.cardFromId(fail).error) {
                 if (index != 0) {
                   errors += ", ";
                 }
-                errors += carddb.carddict[fail].name;
+                errors += carddb.cardFromId(fail).name;
               } else {
                 console.log('ERROR: Could not find the card with ID: ' + fail, req);
               }
@@ -1871,7 +1872,7 @@ router.get('/api/cubecardnames/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     var cardnames = [];
     cube.cards.forEach(function(item, index) {
-      util.binaryInsert(carddb.carddict[item.cardID].name, cardnames);
+      util.binaryInsert(carddb.cardFromId(item.cardID).name, cardnames);
     });
     var result = util.turnToTree(cardnames);
     res.status(200).send({
@@ -1967,8 +1968,8 @@ router.get('/api/getcardfromcube/:id', function(req, res) {
   Cube.findOne(build_id_query(cube), function(err, cube) {
     var found = false;
     cube.cards.forEach(function(card, index) {
-      if (!found && carddb.carddict[card.cardID].name_lower == cardname) {
-        card.details = carddb.carddict[card.cardID];
+      if (!found && carddb.cardFromId(card.cardID).name_lower == cardname) {
+        card.details = carddb.cardFromId(card.cardID);
         res.status(200).send({
           success: 'true',
           card: card.details
@@ -2164,11 +2165,11 @@ router.get('/deckbuilder/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item.details = carddb.carddict[card.cardID];
+              item.details = carddb.cardFromId(card.cardID);
             }
           });
         } else {
-          card.details = carddb.carddict[card.cardID];
+          card.details = carddb.cardFromId(card.cardID);
         }
       });
       Cube.findOne(build_id_query(deck.cube), function(err, cube) {
@@ -2245,15 +2246,15 @@ router.get('/deck/:id', function(req, res) {
               if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
                 //old format
                 deck.cards[0].forEach(function(card, index) {
-                  player_deck.push(carddb.carddict[card]);
+                  player_deck.push(carddb.cardFromId(card));
                 });
                 for (i = 1; i < deck.cards.length; i++) {
                   var bot_deck = [];
                   deck.cards[i].forEach(function(card, index) {
-                    if (!card[0].cardID && !carddb.carddict[card[0].cardID]) {
+                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID)) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.carddict[card[0].cardID]);
+                      bot_deck.push(carddb.cardFromId(card[0].cardID));
                     }
                   });
                   bot_decks.push(bot_deck);
@@ -2285,10 +2286,10 @@ router.get('/deck/:id', function(req, res) {
                 for (i = 0; i < deck.cards.length; i++) {
                   var bot_deck = [];
                   deck.cards[i].forEach(function(cardid, index) {
-                    if (!carddb.carddict[cardid]) {
+                    if (carddb.cardFromId(cardid).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.carddict[cardid]);
+                      bot_deck.push(carddb.cardFromId(cardid));
                     }
                   });
                   bot_decks.push(bot_deck);
@@ -2334,7 +2335,7 @@ router.get('/api/getcard/:name', function(req, res) {
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(notPromoOrDigitalId);
     let selected = nonPromo || potentialIds[0];
-    let card = carddb.carddict[selected];
+    let card = carddb.cardFromId(selected);
     res.status(200).send({
       success: 'true',
       card: card
@@ -2365,14 +2366,14 @@ router.get('/api/getimage/:name', function(req, res) {
 });
 
 router.get('/api/getcardfromid/:id', function(req, res) {
-  var card = carddb.carddict[req.params.id];
+  var card = carddb.cardFromId(req.params.id);
   //need to get the price of the card with the new version in here
   var tcg = [];
   if (card.tcgplayer_id) {
     tcg.push(card.tcgplayer_id);
   }
   GetPrices(tcg, function(price_dict) {
-    if (!card) {
+    if (card.error) {
       res.status(200).send({
         success: 'true'
       });
@@ -2393,8 +2394,8 @@ router.get('/api/getcardfromid/:id', function(req, res) {
 
 router.get('/api/getversions/:id', function(req, res) {
   cards = [];
-  carddb.nameToId[carddb.carddict[req.params.id].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
-    cards.push(carddb.carddict[id]);
+  carddb.nameToId[carddb.cardFromId(req.params.id).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
+    cards.push(carddb.cardFromId(id));
   });
   res.status(200).send({
     success: 'true',
@@ -2407,11 +2408,11 @@ router.post('/api/getversions', function(req, res) {
 
   req.body.forEach(function(cardid, index) {
     cards[cardid] = [];
-    carddb.nameToId[carddb.carddict[cardid].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
+    carddb.nameToId[carddb.cardFromId(cardid).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
       cards[cardid].push({
         id: id,
-        version: carddb.carddict[id].full_name.toUpperCase().substring(carddb.carddict[id].full_name.indexOf('[') + 1, carddb.carddict[id].full_name.indexOf(']')),
-        img: carddb.carddict[id].image_normal
+        version: carddb.cardFromId(id).full_name.toUpperCase().substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, carddb.cardFromId(id).full_name.indexOf(']')),
+        img: carddb.cardFromId(id).image_normal
       });
     });
   });
@@ -2427,7 +2428,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
       var found = false;
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
-          card.type_line = carddb.carddict[card.cardID].type;
+          card.type_line = carddb.cardFromId(card.cardID).type;
         }
         if (!found && cardsAreEquivalent(card, req.body.src, carddb)) {
           found = true;
@@ -2481,7 +2482,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
       var found = false;
       req.body.selected.forEach(function(select, index) {
         if (!cube.cards[select.index].type_line) {
-          cube.cards[select.index].type_line = carddb.carddict[cube.cards[select.index].cardID].type;
+          cube.cards[select.index].type_line = carddb.cardFromId(cube.cards[select.index].cardID).type;
         }
         if (cube.cards[select.index].details) {
           delete cube.cards[select.index].details;

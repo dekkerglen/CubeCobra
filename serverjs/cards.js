@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+var carddict = {};
+
 //read files
 var data = {
   cardtree: {},
@@ -7,7 +9,40 @@ var data = {
   cardimages: {},
   cardnames: [],
   full_names: [],
-  carddict: {},
+  cardFromId: function(id)
+  {
+    if(carddict[id])
+    {
+      return carddict[id];
+    }
+    else{
+      //placeholder card if we don't find the one due to a scryfall ID update bug
+      return {
+        // img: 
+        _id:id,
+        set:'',
+        collector_number:'',
+        promo: false,
+        digital: false,
+        full_name: 'Invalid Card',
+        name: 'Invalid Card',
+        name_lower: 'Invalid Card',
+        artist: '',
+        scryfall_uri: '',
+        rarity: '',        
+        legalities: { },
+        oracle_text: '',
+        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        cmc: 0,
+        type: '',        
+        colors: [],
+        color_identity: [],
+        parsed_cost: [],
+        colorcategory: 'c',
+        error:true
+      };
+    }
+  },
   nameToId: {},
   normalizedName: card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(),
   allIds: card => data.nameToId[data.normalizedName(card)]

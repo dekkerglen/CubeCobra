@@ -143,7 +143,7 @@ var methods = {
       }
     };
     cards.forEach(function(card, index) {
-      card.details = carddb.carddict[card.cardID];
+      card.details = carddb.cardFromId(card.cardID);
     });
     cards.forEach(function(card, index) {
       var type = {};
@@ -300,7 +300,7 @@ var methods = {
       FiveColor: 0
     };
     cards.forEach(function(card, index) {
-      card.details = carddb.carddict[card.cardID];
+      card.details = carddb.cardFromId(card.cardID);
     });
     cards.forEach(function(card, index) {
       if (card.details.colors.length === 2) {
@@ -453,7 +453,7 @@ var methods = {
     }
 
     cards.forEach(function(card, index) {
-      card.details = carddb.carddict[card.cardID];
+      card.details = carddb.cardFromId(card.cardID);
     });
     cards.forEach(function(card, index) {
       var category;
