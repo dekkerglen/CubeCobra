@@ -8,7 +8,7 @@ var filters = [];
 var groupSelect = null;
 var modalSelect = null;
 var view = $('#viewSelect').val();
-var show_tag_colors = $('#showTagColorsState').val() === 'true';
+var show_tag_colors = $('#hideTagColors').val() !== 'true';
 
 var comparing = false;
 if ($('#in_both').length) {

@@ -26,9 +26,9 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: false
   },
-  show_tag_colors: {
+  hide_tag_colors: {
     type: Boolean,
-    default: true
+    default: false
   },
   edit_token: String
 });
