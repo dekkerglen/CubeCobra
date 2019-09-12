@@ -355,6 +355,7 @@ router.get('/overview/:id', function(req, res) {
     } else {
       var pids = [];
       cube.cards.forEach(function(card, index) {
+        console.log(card);
         card.details = carddb.carddict[card.cardID];
         if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
           pids.push(card.details.tcgplayer_id);
