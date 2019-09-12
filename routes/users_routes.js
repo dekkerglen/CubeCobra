@@ -112,7 +112,6 @@ router.post('/lostpasswordreset', function(req, res) {
     min: 8,
     max: 24
   });
-  req.checkBody('password', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
   let errors = req.validationErrors();
 
   if (errors) {
@@ -557,7 +556,6 @@ router.post('/resetpassword', ensureAuth, function(req, res, next) {
     min: 8,
     max: 24
   });
-  req.checkBody('password2', 'Password must only contain alphanumeric characters, and only the following special characters: ! @ # $ % ^ &*').matches(/^[0-9a-zA-Z]*$/, "i");
 
   let errors = req.validationErrors();
 
