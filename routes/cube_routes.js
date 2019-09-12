@@ -1883,14 +1883,20 @@ router.get('/api/cubecardnames/:id', function(req, res) {
 });
 
 router.post('/api/saveshowtagcolors', function(req, res) {
-  req.user.hide_tag_colors = !req.body.show_tag_colors;
+  if (req.user) {
+    req.user.hide_tag_colors = !req.body.show_tag_colors;
 
-  req.user.save(function(err) {
-    if (err) console.log(err);
+    req.user.save(function(err) {
+      if (err) console.log(err);
+      res.status(200).send({
+        success: 'true',
+      });
+    });
+  } else {
     res.status(200).send({
       success: 'true',
     });
-  });
+  }
 });
 
 router.post('/api/savetagcolors/:id', function(req, res) {
@@ -1949,10 +1955,12 @@ router.get('/api/cubetagcolors/:id', function(req, res) {
         }
       }
 
+      let show_tag_colors = (req.user) ? !req.user.hide_tag_colors : true;
+
       res.status(200).send({
         success: 'true',
-        tag_colors: tag_colors,
-        show_tag_colors: !req.user.hide_tag_colors,
+        tag_colors,
+        show_tag_colors,
       });
     });
   });
