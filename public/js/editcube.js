@@ -1759,6 +1759,14 @@ function tokenizeInput(filterText, tokens) {
   let quoteOp_re = new RegExp('(?:' + operators + ')"');
   let parens = false;
 
+  //find category
+  let category = '';
+  if (token.operand == 'none') {
+    category = 'name';
+  } else {
+    category = firstTerm[0].split(operators_re)[0];
+  }
+
   //find arg value
   //if there are two quotes, and first char is quote
   if (filterText.indexOf('"') == 0 && filterText.split('"').length > 2) {
@@ -1774,19 +1782,12 @@ function tokenizeInput(filterText, tokens) {
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
   } else if (token.operand != 'none'){
-    token.arg = firstTerm[0].split(')')[0].split(operators_re)[1];
+    token.arg = firstTerm[0].slice(category.length + token.operand.length).split(')')[0];
   } else {
     token.arg = firstTerm[0].split(')')[0];
   }
 
 
-  let category = '';
-  //find category
-  if (token.operand == 'none') {
-    category = 'name';
-  } else {
-    category = firstTerm[0].split(operators_re)[0];
-  }
   filterText = filterText.slice((token.operand == 'none' ? (token.arg.length) : (token.arg.length + token.operand.length + category.length)) + (parens ? 2 : 0));
 
   if (!categoryMap.has(category)) {
