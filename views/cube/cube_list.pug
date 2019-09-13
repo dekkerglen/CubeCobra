@@ -264,6 +264,30 @@ block cube_content
             input#filterType.form-control(type='text', placeholder='Choose any card type, supertype, or subtypes to match')
           .input-group.mb-3
             .input-group-prepend
+              span.input-group-text Tag
+            input#filterTag.form-control(type='text', placeholder='Any text, e.g. "Zombie Testing"')            
+          .input-group.mb-3
+            .input-group-prepend
+              span.input-group-text Price
+            select.custom-select#filterPriceOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+            input#filterPrice.form-control(type='text', placeholder='Any decimal number, e.g. "3.50"')        
+          .input-group.mb-3
+            .input-group-prepend
+              span.input-group-text Foil Price
+            select.custom-select#filterPriceFoilOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+            input#filterPriceFoil.form-control(type='text', placeholder='Any decimal number, e.g. "3.50"')  
+          .input-group.mb-3
+            .input-group-prepend
               span.input-group-text Power
             select.custom-select#filterPowerOp
               option(value='=' selected='') equal to

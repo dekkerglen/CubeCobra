@@ -209,6 +209,73 @@ function filterApply(card, filter) {
       }
     }
   }
+  if(filter.category == 'tag') {
+    card.tags.forEach(function(val, index){
+      if(val.toLowerCase() == filter.arg)
+      {
+        res = true;
+      }
+    });
+  }
+
+  if(filter.category == 'price')
+  {    
+    var price = null;
+    if (card.details.price) {
+      price = card.details.price;
+    } else if (card.details.price_foil) {
+      price = card.details.price_foil;
+    }
+    if (price) {
+      switch(filter.operand)
+      {
+        case ':':
+        case '=':
+          res = filter.arg == price;
+          break;
+        case '<':
+          res = price < filter.arg;
+          break;
+        case '>':
+          res = price > filter.arg;
+          break;
+        case '<=':
+          res = price <= filter.arg;
+          break;
+        case '>=':
+          res = price >= filter.arg;
+          break;
+      }
+    }
+  }
+  if(filter.category == 'pricefoil')
+  {    
+    var price = null;
+    if (card.details.price_foil) {
+      price = card.details.price_foil;
+    }
+    if (price) {
+      switch(filter.operand)
+      {
+        case ':':
+        case '=':
+          res = filter.arg == price;
+          break;
+        case '<':
+          res = price < filter.arg;
+          break;
+        case '>':
+          res = price > filter.arg;
+          break;
+        case '<=':
+          res = price <= filter.arg;
+          break;
+        case '>=':
+          res = price >= filter.arg;
+          break;
+      }
+    }
+  }
 
   if(filter.not) {
     return !res;

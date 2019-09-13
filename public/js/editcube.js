@@ -199,12 +199,6 @@ if (canEdit) {
       }
     }
 
-    //TODO: Remove this
-    var filterobj = null;
-    if (filters.length > 0) {
-      filterobj = getFilterObj();
-    }
-
     groupSelect = JSON.parse(JSON.stringify(groupSelect));
 
     groupSelect.forEach(function(card, index) {
@@ -213,7 +207,6 @@ if (canEdit) {
 
     let data = {
       selected: groupSelect,
-      //filters: filterobj,
       updated: updated,
     };
 
@@ -328,6 +321,29 @@ if (canEdit) {
       src: modalSelect,
       updated: updated,
     };
+    fetch('/cube/api/getcardfromid/' + updated.cardID)
+      .then(response => response.json())
+      .then(function(json) {
+      var found = false;
+      cube.forEach(function(card, index) {
+        if (!found && card.index == data.src.index) {
+          found = true;
+          Object.keys(updated).forEach(function(key) {
+            if (updated[key] === null) {
+              updated[key] = undefined;
+            }
+          });
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
+          cubeDict[cube[index].index] = cube[index];
+        }
+      });
+
+      updateCubeList();
+      $('#contextModal').modal('hide');
+    });      
     fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify(data),
@@ -335,29 +351,6 @@ if (canEdit) {
         'Content-Type': 'application/json'
       }
     });
-    fetch('/cube/api/getcardfromid/' + updated.cardID)
-      .then(response => response.json())
-      .then(function(json) {
-        var found = false;
-        cube.forEach(function(card, index) {
-          if (!found && card.index == data.src.index) {
-            found = true;
-            Object.keys(updated).forEach(function(key) {
-              if (updated[key] === null) {
-                updated[key] = undefined;
-              }
-            });
-            cube[index] = updated;
-            cube[index].index = card.index;
-            cube[index].details = json.card;
-            cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
-            cubeDict[cube[index].index] = cube[index];
-          }
-        });
-
-        updateCubeList();
-        $('#contextModal').modal('hide');
-      });
   });
   $('#saveSortButton').click(function(e) {
     var temp_sorts = [];
@@ -602,6 +595,32 @@ $('#applyAdvancedFilterButton').click(function(e) {
   {
     str += ' t:'+$('#filterType').val();
   }
+
+  //tags
+  if($('#filterTag').val().length > 0)
+  {
+    str += ' tag:"'+$('#filterTag').val()+'"';
+  }
+
+  //price
+  if($('#filterPrice').val().length > 0)
+  {
+    str += ' p'+$('#filterPriceOp').val()+$('#filterPrice').val();
+  }
+  
+  //price foil 
+  if($('#filterPriceFoil').val().length > 0)
+  {
+    str += ' pf'+$('#filterPriceFoilOp').val()+$('#filterPriceFoil').val();
+  }
+
+  //status
+
+  //loyalty
+
+  //manacost type
+
+  //artist
 
   $('#filterInput').val(str);
   $('#filterModal').modal('hide');
@@ -1752,7 +1771,12 @@ let categoryMap = new Map([
   ['power','power'],
   ['tou', 'toughness'],
   ['toughness', 'toughness'],
-  ['name', 'name']
+  ['name', 'name'],
+  ['tag', 'tag'],
+  ['price','price'],
+  ['pricefoil','pricefoil'],
+  ['p','price'],
+  ['pf','pricefoil']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
