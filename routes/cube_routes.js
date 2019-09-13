@@ -62,6 +62,7 @@ function GetToken(callback) {
     request(options, function(error, response, body) {
       if (error) {
         console.log(error);
+        callback();
       } else {
         token = JSON.parse(body);
         token.expires = Tomorrow();
