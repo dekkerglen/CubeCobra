@@ -44,6 +44,7 @@ function filterCard(card, filterobj) {
         if (cardIsLabel(card, option.value, option.category)) {
           filterout = true;
         }
+<<<<<<< Updated upstream
       });
       if (!filterout) {
         filterobj[category].in.forEach(function(option, index) {
@@ -52,6 +53,131 @@ function filterCard(card, filterobj) {
             filterin = true;
           }
         });
+=======
+        break;
+      case '<':
+        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length < filter.arg.length;
+        break;
+      case '>':
+        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length > filter.arg.length;
+        break;
+      case '<=':
+        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length <= filter.arg.length;
+        break;
+      case '>=':
+        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length >= filter.arg.length;
+        break;
+    }
+  }
+  if (filter.category == 'mana' && card.details.parsed_cost) {
+    res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
+  }
+  if (filter.category == 'cmc' && card.cmc) {
+    switch (filter.operand) {
+      case ':':
+      case '=':
+        res = filter.arg == card.cmc;
+        break;
+      case '<':
+        res = card.cmc < filter.arg;
+        break;
+      case '>':
+        res = card.cmc > filter.arg;
+        break;
+      case '<=':
+        res = card.cmc <= filter.arg;
+        break;
+      case '>=':
+        res = card.cmc >= filter.arg;
+        break;
+    }
+  }
+  if (filter.category == 'type' && card.details.type) {
+    if (card.details.type.toLowerCase().indexOf(filter.arg) > -1) {
+      res = true;
+    }
+  }
+  if (filter.category == 'power') {
+    if (card.details.power) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = filter.arg == card.details.power;
+          break;
+        case '<':
+          res = card.details.power < filter.arg;
+          break;
+        case '>':
+          res = card.details.power > filter.arg;
+          break;
+        case '<=':
+          res = card.details.power <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.power >= filter.arg;
+          break;
+      }
+    }
+  }
+  if (filter.category == 'toughness') {
+    if (card.details.toughness) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = filter.arg == card.details.toughness;
+          break;
+        case '<':
+          res = card.details.toughness < filter.arg;
+          break;
+        case '>':
+          res = card.details.toughness > filter.arg;
+          break;
+        case '<=':
+          res = card.details.toughness <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.toughness >= filter.arg;
+          break;
+      }
+    }
+  }
+  if (filter.category == 'tag') {
+    res = card.tags.some(element => {
+      return element.toLowerCase() == filter.arg;
+    });
+  }
+  if (filter.category == 'status') {
+    if (card.status.toLowerCase() == filter.arg) {
+      res = true;
+    }
+  }
+
+  if (filter.category == 'price') {
+    var price = null;
+    if (card.details.price) {
+      price = card.details.price;
+    } else if (card.details.price_foil) {
+      price = card.details.price_foil;
+    }
+    if (price) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = filter.arg == price;
+          break;
+        case '<':
+          res = price < filter.arg;
+          break;
+        case '>':
+          res = price > filter.arg;
+          break;
+        case '<=':
+          res = price <= filter.arg;
+          break;
+        case '>=':
+          res = price >= filter.arg;
+          break;
+>>>>>>> Stashed changes
       }
     }
   }
