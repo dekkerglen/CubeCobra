@@ -1009,11 +1009,11 @@ function renderGroupContext() {
     }
     let color_class = (show_tag_colors) ? getCardTagColorClass(card) : getCardColorClass(card);
     if (card.details.image_flip) {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+      cardlist += '<li data-index="' + index + '" cardID="' + card.cardID + '" style="font-size: 15px;" class="groupModalRm card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
     } else {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
+      cardlist += '<li data-index="' + index + '" cardID="' + card.cardID + '" style="font-size: 15px;" class="groupModalRm card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
     }
-    cardlist += '<a data-index="' + index + '" class="groupModalRm clickx" href="#">×</a><a>  ';
+    cardlist += '×<a>  ';
     cardlist += card.details.name;
     cardlist += '</a></li>';
   });
