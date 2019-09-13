@@ -117,3 +117,8 @@
 .invalid-filter:focus {
   color: red;
 }
+
+#groupContextModalAreaContainer {
+  overflow: scroll;
+  height: 41.6em;
+}
