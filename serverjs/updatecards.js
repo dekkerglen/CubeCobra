@@ -131,6 +131,7 @@ function convertExtraCard(card) {
   newcard.set = card.set;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
+  newcard.set_type = card.set_type;
   newcard.border_color = card.border_color;
   newcard.full_name = name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.name = name;
@@ -194,6 +195,7 @@ function convertCard(card) {
   newcard.set = card.set;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
+  newcard.set_type = card.set_type;
   newcard.border_color = card.border_color;
   newcard.full_name = card.name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.name = card.name;

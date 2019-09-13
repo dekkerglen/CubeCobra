@@ -186,6 +186,11 @@ function replaceCardHtml(oldCard, newCard) {
   return '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' + cardHtml(oldCard) + ' &gt; ' + cardHtml(newCard) + '<br/>';
 }
 
+function notPromoOrDigitalOrTokenId(id) {
+  let card = carddb.carddict[id];
+  return !card.promo && !card.digital && card.border_color != 'gold' && card.set_type != 'token';
+}
+
 function notPromoOrDigitalId(id) {
   let card = carddb.carddict[id];
   return !card.promo && !card.digital && card.border_color != 'gold';
@@ -882,8 +887,8 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
                 let potentialIds = carddb.allIds(card);
                 if (potentialIds && potentialIds.length > 0) {
                   let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
-                  let nonPromo = potentialIds.find(notPromoOrDigitalId);
-                  let selected = matchingSet || nonPromo || potentialIds[0];
+                  let nonPromoOrToken = potentialIds.find(notPromoOrDigitalOrTokenId);
+                  let selected = matchingSet || nonPromoOrToken || potentialIds[0];
                   let details = carddb.carddict[selected];
                   added.push(details);
                   util.addCardToCube(cube, details);
@@ -994,9 +999,9 @@ function bulkuploadCSV(req, res, cards, cube) {
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
       let matchingSet = potentialIds.find(id => carddb.carddict[id].set.toUpperCase() == card.set);
-      let nonPromo = potentialIds.find(notPromoOrDigitalId);
+      let nonPromoOrToken = potentialIds.find(notPromoOrDigitalOrTokenId);
       let first = potentialIds[0];
-      card.id = matchingSet || nonPromo || first;
+      card.id = matchingSet || nonPromoOrToken || first;
       cube.cards.push(card);
       changelog += addCardHtml(carddb.carddict[card.id]);
     } else {
@@ -1081,8 +1086,8 @@ function bulkUpload(req, res, list, cube) {
               //does not have set info
               let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
               if (potentialIds && potentialIds.length > 0) {
-                let nonPromo = potentialIds.find(notPromoOrDigitalId);
-                selected = nonPromo || potentialIds[0];
+                let nonPromoOrToken = potentialIds.find(notPromoOrDigitalOrTokenId);
+                selected = nonPromoOrToken || potentialIds[0];
               }
             }
             if (selected) {
@@ -2073,8 +2078,8 @@ router.get('/api/getcard/:name', function(req, res) {
   console.log(req.params.name);
   let potentialIds = carddb.nameToId[req.params.name];
   if (potentialIds && potentialIds.length > 0) {
-    let nonPromo = potentialIds.find(notPromoOrDigitalId);
-    let selected = nonPromo || potentialIds[0];
+    let nonPromoOrToken = potentialIds.find(notPromoOrDigitalOrTokenId);
+    let selected = nonPromoOrToken || potentialIds[0];
     let card = carddb.carddict[selected];
     res.status(200).send({
       success: 'true',
