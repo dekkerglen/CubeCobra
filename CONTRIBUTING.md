@@ -33,8 +33,40 @@ Contributing to Cube Cobra does not entitle any contributor to compensation of a
 
 Issues are tagged with 'good first issue' if we think it's a good beginner task to tackle. Complete a few small changes to become familar with the codebase before diving into a huge feature.
 
-# Getting started
-### How to submit a contribution.
+# How we collaborate - asynchronous communication
+
+Our community of contributors is large, and growing fast. We don't have regularly
+scheduled working hours dedicated to Cube Cobra. Thus, we can't simply message each
+other on Discord to understand the current state of the project. Discord is
+a great tool for synchronous communication, but our project also requires
+a focus on asynchronous methods of communication. The goal is for the current state
+of the project, including features being worked on, issues not yet resolved,
+and near-term roadmap plans, to be fully discoverable by a passerby without
+needing to chat in realtime with anyone else.
+
+GitHub projects, issues, and pull requests serve this purpose beautifully. We
+treat the dekkerglen/CubeCobra repository as the source of truth about what
+work is complete, in progress, and not yet started. If you want to know
+whether someone is working on a feature, for example, or if anyone else has
+noticed the issue you're seeing, GitHub pull requests and issues are the first
+place you should look.
+
+## How we use GitHub issues
+
+when you notice a bug, first look for an existing issue. if exists, comment,
+    else open new
+when there's an important update related to a bug, for example you noticed
+    a new replication case, add a comment to the issue indicating that
+
+## How we use GitHub pull requests
+
+WIP
+checklists
+description
+when closed, make issues for hanging threads
+code review - line comments
+
+## How we use git branches
 
 The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
 
