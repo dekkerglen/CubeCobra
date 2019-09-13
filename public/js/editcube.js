@@ -200,12 +200,6 @@ if (canEdit) {
       }
     }
 
-    //TODO: Remove this
-    var filterobj = null;
-    if (filters.length > 0) {
-      filterobj = getFilterObj();
-    }
-
     groupSelect = JSON.parse(JSON.stringify(groupSelect));
 
     groupSelect.forEach(function(card, index) {
@@ -214,7 +208,6 @@ if (canEdit) {
 
     let data = {
       selected: groupSelect,
-      //filters: filterobj,
       updated: updated,
     };
 
