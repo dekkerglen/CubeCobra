@@ -62,6 +62,7 @@ function GetToken(callback) {
     request(options, function(error, response, body) {
       if (error) {
         console.log(error);
+        callback();
       } else {
         token = JSON.parse(body);
         token.expires = Tomorrow();
@@ -2460,8 +2461,11 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           message: 'Card not found'
         });
       } else {
-        cube = setCubeType(cube, carddb);
-        cube.save(function(err) {
+        cube = setCubeType(cube, carddb);  
+
+        Cube.updateOne({
+          _id: cube._id
+        }, cube, function(err) {
           if (err) {
             res.status(500).send({
               success: 'false',
@@ -2528,7 +2532,9 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
           }
         }
       });
-      cube.save(function(err) {
+      Cube.updateOne({
+        _id: cube._id
+      }, cube, function(err) {
         if (err) {
           res.status(500).send({
             success: 'false',

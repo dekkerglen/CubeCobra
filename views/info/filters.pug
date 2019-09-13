@@ -1,0 +1,29 @@
+extends ../layout
+
+block content
+  include ../flash
+  br
+  h4 Filter Syntax Guide
+  br
+  dl.row
+    dt.col-3 General
+    dd.col-9
+      p You can combine any number of filters together, using AND, or OR.
+      p t:instant or t:sorcery //cards that are either instants or sorceries
+      p t:instant t:tribal //cards that are both instants and tribal
+      p You can also use quotes to ignore spaces.
+      p goblin blood //cards whose names contain both blood and goblin
+      p "goblin blood" //cards whose names contain goblin blood
+      p o:destroy o:target o:creature //cards whose oracle text contains destroy and target and creature
+      p o:"destroy target creature" //cards whose oracle text contains destroy target creature
+      p You can also use parentheses
+      p t:instant OR (t:creature o:flash) //cards which are instants, or cards which are creatures with flash
+      p (t:artifact t:creature) OR (t:instant OR t:sorcery) //cards which are instants or sorceries, or cards which are artifact creatures.
+      p You can put - before anything to negate it.
+      p Examples:
+      p -c:w //cards that are not white
+      p -o:draw //cards which do not have draw in their oracle text
+      p -bob //cards which do not have bob in their names
+    dt.col-3 cat
+    dd.col-9
+      p text
