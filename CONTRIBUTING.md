@@ -55,14 +55,16 @@ place you should look.
 
 when you notice a bug, first look for an existing issue. if exists, comment,
     else open new
+if there is no issue for a given feature request or bug, it was discovered
+    either minutes ago or not at all.
 when there's an important update related to a bug, for example you noticed
     a new replication case, add a comment to the issue indicating that
 
 ## How we use GitHub pull requests
 
-WIP
+WIP - useful for sharing progress, incremental feedback
 checklists
-description
+description - makes review easier
 when closed, make issues for hanging threads
 code review - line comments
 
