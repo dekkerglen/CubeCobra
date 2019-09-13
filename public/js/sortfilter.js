@@ -88,11 +88,9 @@ function filterApply(card, filter) {
     res = card.status.toLowerCase() === filter.arg;
   }
   if (filter.category == 'tag') {
-    var lowerTags = [];
-    card.tags.forEach(function(tag) {
-      lowerTags.push(tag.toLowerCase());
+    res = card.tags.some(tag => {
+      return tag.toLowerCase() === filter.arg;
     });
-    res = lowerTags.indexOf(filter.arg) > -1;
   }
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
