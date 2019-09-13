@@ -84,6 +84,9 @@ function filterApply(card, filter) {
   if (filter.category == 'name') {
     res = card.details.name_lower.indexOf(filter.arg) > -1;
   }
+  if (filter.category == 'status') {
+    res = card.status.toLowerCase() === filter.arg;
+  }
   if (filter.category == 'tag') {
     var lowerTags = [];
     card.tags.forEach(function(tag) {

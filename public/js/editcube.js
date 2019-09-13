@@ -1659,7 +1659,8 @@ let categoryMap = new Map([
   ['tou', 'toughness'],
   ['toughness', 'toughness'],
   ['name', 'name'],
-  ['tag', 'tag']
+  ['tag', 'tag'],
+  ['status', 'status']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
