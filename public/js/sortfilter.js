@@ -217,6 +217,12 @@ function filterApply(card, filter) {
       }
     });
   }
+  if(filter.category == 'status') {
+    if(card.status.toLowerCase() == filter.arg)
+    {
+      res = true;
+    }
+  }
 
   if(filter.category == 'price')
   {    

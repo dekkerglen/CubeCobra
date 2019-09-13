@@ -615,6 +615,10 @@ $('#applyAdvancedFilterButton').click(function(e) {
   }
 
   //status
+  if($('#filterStatus').val().length > 0)
+  {
+    str += ' status:"'+$('#filterStatus').val()+'"';
+  }
 
   //loyalty
 
@@ -1776,7 +1780,9 @@ let categoryMap = new Map([
   ['price','price'],
   ['pricefoil','pricefoil'],
   ['p','price'],
-  ['pf','pricefoil']
+  ['pf','pricefoil'],
+  ['status','status'],
+  ['s','status']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
