@@ -357,6 +357,12 @@ app.get('/tos', function(req, res) {
   });
 });
 
+app.get('/filters', function(req, res) {
+  res.render('info/filters', {
+    loginCallback: '/filters'
+  });
+});
+
 app.get('/privacy', function(req, res) {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy'

@@ -127,16 +127,17 @@ block cube_toolbar
             .col
               .input-group.mb-3
                 .input-group-prepend
-                  label.input-group-text(for='filterInput') Search
+                  label.input-group-text(for='filterInput') Filter
                 input.form-control#filterInput(type='text', placeholder='Type Filters Here or Use Advanced Search below')
                 .input-group-append
-                  button#filterButton.btn.btn-success(type='button') Filter
+                  button#filterButton.btn.btn-success(type='button') Apply
               h5 Filters
               #filterarea
           .row
             .col
-              button#resetButton.btn.btn-success(type='button') Reset Filters
-              button#advancedSearchButton.btn.btn-success(type='button') Advanced Search
+              button#resetButton.mr-sm-2.btn.btn-success(type='button') Reset Filters
+              button#advancedSearchButton.mr-sm-2.btn.btn-success(type='button' data-toggle='modal', data-target='#filterModal') Advanced...
+              a#resetButton.mr-sm-2.btn.btn-success(href="/filters") Syntax Guide
               br
               br
       #navcompare.collapse(data-parent='#accordion')
@@ -163,6 +164,60 @@ block cube_toolbar
 block cube_content
   .container#cubelistarea
   #react-root
+
+  // Filter Modal
+  #filterModal.modal.fade(tabindex='-1', role='dialog')
+    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
+      .modal-content
+        .modal-header
+          h5.modal-title Advanced Filter
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body
+          .input-group.mb-3
+            .input-group-prepend
+              span#basic-addon1.input-group-text Card Name
+            input#filterName.form-control(type='text', placeholder='Any words in the name, e.g. "Fire"')       
+          .input-group.mb-3
+            .input-group-prepend
+              span#basic-addon1.input-group-text Oracle Text
+            input#filterOracle.form-control(type='text', placeholder='Any text, e.g. "Draw a card"')        
+          .input-group.mb-3
+            .input-group-prepend
+              span#basic-addon1.input-group-text CMC
+            select.custom-select#filterCMCOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+              option(value='!') not equal to
+            input#filterCMC.form-control(type='text', placeholder='Any value, e.g. "2"')       
+          .input-group.mb-3
+            .input-group-prepend
+              span#basic-addon1.input-group-text Power
+            select.custom-select#filterPowerOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+              option(value='!') not equal to
+            input#filterPower.form-control(type='text', placeholder='Any value, e.g. "2"')   
+          .input-group.mb-3
+            .input-group-prepend
+              span#basic-addon1.input-group-text Toughness
+            select.custom-select#filterToughnessOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+              option(value='!') not equal to
+            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')       
+        .modal-footer
+          button.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
+          button.btn.btn-success#applyAdvancedFilterButton(type='button') Apply
 
   //group context modal
   if user && user.id == cube.owner

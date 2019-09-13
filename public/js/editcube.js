@@ -53,8 +53,7 @@ $('#compareButton').click(function(e) {
 });
 
 $('#filterButton').click(function(e) {
-  var filterText = $('#filterInput').val();
-  updateFilters(filterText);
+  updateFilters($('#filterInput').val());
 });
 
 $('.updateButton').click(function(e) {
@@ -512,6 +511,66 @@ $('#showTagColorsCheckbox').change(function(e) {
     show_tag_colors = $(this).prop("checked");
     updateCubeList();
   });
+});
+
+
+$('#applyAdvancedFilterButton').click(function(e) {
+  console.log('click');
+  e.preventDefault();
+
+  var str = '';
+
+  if($('#filterName').val().length > 0)
+  {
+    str += 'n:'+$('#filterName').val();
+  }
+
+  if($('#filterOracle').val().length > 0)
+  {
+    var split = $('#filterOracle').val().split(' ');
+    split.forEach(function(val, index)
+    {
+      str += ' o:'+val;
+    });
+  }
+
+  if($('#filterCMC').val().length > 0)
+  {
+    if($('#filterCMCOp').val() == '!')
+    {
+      str += ' -cmc='+$('#filterCMC').val();
+    }
+    else
+    {
+     str += ' cmc'+$('#filterCMCOp').val()+$('#filterCMC').val();
+    }
+  }
+  if($('#filterPower').val().length > 0)
+  {
+    if($('#filterPowerOp').val() == '!')
+    {
+      str += ' -pow='+$('#filterPower').val();
+    }
+    else
+    {
+     str += ' pow'+$('#filterPowerOp').val()+$('#filterPower').val();
+    }
+  }
+  if($('#filterToughness').val().length > 0)
+  {
+    if($('#filterToughnessOp').val() == '!')
+    {
+      str += ' -tou='+$('#filterToughness').val();
+    }
+    else
+    {
+     str += ' tou'+$('#filterToughnessOp').val()+$('#filterToughness').val();
+    }
+  }
+
+  $('#filterInput').val(str);
+  $('#filterModal').modal('hide');
+  filterButton.click();
 });
 
 if (canEdit && !comparing) {
