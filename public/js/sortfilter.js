@@ -91,7 +91,11 @@ function filterApply(card, filter) {
     switch (filter.operand) {
       case ':':
       case '=':
-        res = areArraysEqualSets(card.details.colors, filter.arg);
+        if (filter.arg.length == 1 && filter.arg[0] == 'C') {
+          res = !card.details.colors.length;
+        } else {
+          res = areArraysEqualSets(card.details.colors, filter.arg);
+        }
         break;
       case '<':
         res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
@@ -111,7 +115,11 @@ function filterApply(card, filter) {
     switch (filter.operand) {
       case ':':
       case '=':
-        res = areArraysEqualSets(card.colors, filter.arg);
+        if (filter.arg.length == 1 && filter.arg[0] == 'C') {
+          res = !card.details.colors.length;
+        } else {
+          res = areArraysEqualSets(card.colors, filter.arg);
+        }
         break;
       case '<':
         res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length < filter.arg.length;
