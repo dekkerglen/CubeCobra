@@ -211,7 +211,7 @@ function filterApply(card, filter) {
   }
   if(filter.category == 'tag') {
     res = card.tags.some(element => {
-      return lement.toLowerCase() == filter.arg;
+      return element.toLowerCase() == filter.arg;
     });
   }
   if(filter.category == 'status') {
