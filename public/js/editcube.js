@@ -69,6 +69,9 @@ $('#filterInput').keyup(function(e) {
 });
 
 $('#resetButton').click(function(e) {
+  $('#filterInput').val('');
+  updateFilters('');
+
   filters = [];
   addUrlToFilter();
   updateCubeList();
@@ -1209,7 +1212,9 @@ function addUrlToFilter(filterText) {
 
 function buildFiltersFromQsargs() {
   let params = new URLSearchParams(document.location.search);
-  updateFilters(params.get("f"));
+  let f = params.get('f');
+  updateFilters(f);
+  $('#filterInput').val(f);
   
 }
 
@@ -1631,6 +1636,7 @@ function updateFilters(filterText) {
     new_filters = [];
     generateFilters(filterText.toLowerCase(), new_filters)
   } else {
+    $('#filterInput').removeClass('invalid-filter');
     document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
   }
 }
@@ -1846,12 +1852,15 @@ function generateFilters(filterText) {
       
       //TODO: generate a filter string, and return better errors to user
       document.getElementById('filterarea').innerHTML = '<p><em>Filter Applied.</em></p>';
+      $('#filterInput').removeClass('invalid-filter');
       updateCubeList();
     } else {
-      document.getElementById('filterarea').innerHTML = '<p><em>Invalid Filter String.</em></p>';
+      $('#filterInput').addClass('invalid-filter');
+      document.getElementById('filterarea').innerHTML = '<p class="invalid-filter"><em>Invalid Filter String.</em></p>';
     }
   } else {
-    document.getElementById('filterarea').innerHTML = '<p><em>Invalid Filter String.</em></p>';
+    $('#filterInput').addClass('invalid-filter');
+    document.getElementById('filterarea').innerHTML = '<p class="invalid-filter"><em>Invalid Filter String.</em></p>';
   }
 }
 

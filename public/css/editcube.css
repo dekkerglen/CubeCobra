@@ -112,3 +112,8 @@
   padding-left: 45px;
   border-bottom: 1px solid #dee2e6;
 }
+
+.invalid-filter,
+.invalid-filter:focus {
+  color: red;
+}
