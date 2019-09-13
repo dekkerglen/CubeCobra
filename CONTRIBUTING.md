@@ -59,6 +59,7 @@ if there is no issue for a given feature request or bug, it was discovered
     either minutes ago or not at all.
 when there's an important update related to a bug, for example you noticed
     a new replication case, add a comment to the issue indicating that
+assigning to issues - commenting - who owns this? time limit without progress?
 
 ## How we use GitHub pull requests
 
