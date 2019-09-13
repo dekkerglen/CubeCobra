@@ -568,6 +568,11 @@ $('#applyAdvancedFilterButton').click(function(e) {
     }
   }
 
+  //Color
+  //Color Identity
+  //Mana
+  //Type
+
   $('#filterInput').val(str);
   $('#filterModal').modal('hide');
   filterButton.click();
