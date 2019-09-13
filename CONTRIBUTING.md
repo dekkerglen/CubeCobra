@@ -20,10 +20,11 @@ The issues tab in github is kept up to date and tagged, but any contribution is 
 
 Be a decent person. Copy pasted from the linux code of conduct: In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-> Responsibilities
-> * Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
-> * Keep features small. For large features consider splitting into multiple pull requests to get consistent feedback.
-> * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
+> Characteristics of an ideal contributor
+> * Creates issues for changes and enhancements they wish to make.
+> * Discusses proposed changes transparently and listens to community feedback.
+> * Keeps pull requests small.
+> * Is welcoming to newcomers and encourages diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
 
 Contributing to Cube Cobra does not entitle any contributor to compensation of any kind. Contributions are made at will, with the goal of improving the tool for the entire community. Cube Cobra's hosting costs are paid through donations and affiliate links. These funds are managed solely by Gwen Dekker, who is solely in charge of hosting and managing the live site.
 
@@ -52,13 +53,9 @@ For Jade/PUG, you can use the following atom package: https://atom.io/packages/j
 For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
 
 # How to report a bug
-### Security Disclosures
 
-If you find a security vulnerability, do NOT open an issue. Send a private message to DEKKARU#2784 on discord instead. You can also email support@cubecobra.com.
+If you find a security vulnerability, do NOT open an issue. Send a private message to DEKKARU#2784 on discord instead. You can also email support@cubecobra.com. Bugs not related to security can be reported through GitHub issues.
 
-### Tell your contributors how to file a bug report.
-
-Create a new issue on github. Do not use the the github issue tracker for support help. Check out the discord channel instead. There is also a bug tracker discord channel if you would like to submit there first.
 
 # How to suggest a feature or enhancement
 ### Join the discord disscussion.
@@ -77,11 +74,4 @@ Private Message 'DEKKARU', the admin on Discord, to gain the contributor role an
 
 # Community feedback / product ideas
 
-Feedback from the community is collected and synthesized into roadmap ideas in a shared document [here](https://www.notion.so/CubeCobra-community-feedback-142b06cd81994a61bd850fb5bc817cc8). To gain read/write access, PM 'DEKKARU' or 'emmett9001' on Discord.
-
-### Commit Message Style
-
-Please keep commit messages brief and informative.
-### Labeling Conventions for new issues
-
-Please apply either 'Bug' or 'Enhancement'. If the feature is small and easy, please add the 'Good First Issue' tag as well.
+Feedback from the community is collected and synthesized into roadmap ideas in a shared document [here](https://www.notion.so/CubeCobra-community-feedback-142b06cd81994a61bd850fb5bc817cc8). To gain read/write access, PM 'DEKKARU' on Discord.
