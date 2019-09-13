@@ -210,11 +210,8 @@ function filterApply(card, filter) {
     }
   }
   if(filter.category == 'tag') {
-    card.tags.forEach(function(val, index){
-      if(val.toLowerCase() == filter.arg)
-      {
-        res = true;
-      }
+    res = card.tags.some(element => {
+      element.toLowerCase() == filter.arg;
     });
   }
   if(filter.category == 'status') {
@@ -256,10 +253,7 @@ function filterApply(card, filter) {
   }
   if(filter.category == 'pricefoil')
   {    
-    var price = null;
-    if (card.details.price_foil) {
-      price = card.details.price_foil;
-    }
+    var price = card.details.price_foil || null
     if (price) {
       switch(filter.operand)
       {
