@@ -513,7 +513,6 @@ $('#showTagColorsCheckbox').change(function(e) {
   });
 });
 
-
 $('#applyAdvancedFilterButton').click(function(e) {
   console.log('click');
   e.preventDefault();
@@ -569,9 +568,40 @@ $('#applyAdvancedFilterButton').click(function(e) {
   }
 
   //Color
+  var colorStr = '';
+  ['W','U','B','R','G','C'].forEach(function(val, index) {
+    if($('#filterColor' + val).prop('checked'))
+    {
+      colorStr += val;
+    }
+  });
+  if(colorStr.length > 0)
+  {
+    str += ' c' + $('#filterColorOp').val() + colorStr;
+  }
   //Color Identity
+  colorStr = '';
+  ['W','U','B','R','G','C'].forEach(function(val, index) {
+    if($('#filterColorIdentity' + val).prop('checked'))
+    {
+      colorStr += val;
+    }
+  });
+  if(colorStr.length > 0)
+  {
+    str += ' ci' + $('#filterColorIdentityOp').val() + colorStr;
+  }
   //Mana
+  if($('#filterMana').val().length > 0)
+  {
+    str += ' m:'+$('#filterMana').val();
+  }
+
   //Type
+  if($('#filterType').val().length > 0)
+  {
+    str += ' t:'+$('#filterType').val();
+  }
 
   $('#filterInput').val(str);
   $('#filterModal').modal('hide');
