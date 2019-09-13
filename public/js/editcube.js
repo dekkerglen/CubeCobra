@@ -78,7 +78,6 @@ $('#resetButton').click(function(e) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  console.log("clicked");
   var enabled = $(this).prop('checked'),
     display_image;
   cube.forEach(function(card, index) {
