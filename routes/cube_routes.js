@@ -2261,15 +2261,19 @@ router.get('/deck/:id', function(req, res) {
               if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
                 //old format
                 deck.cards[0].forEach(function(card, index) {
-                  player_deck.push(carddb.cardFromId(card));
+                  card.details = carddb.cardFromId(card);
+                  card.details.display_image = util.getCardImageURL(card);
+                  player_deck.push(card.details);
                 });
                 for (i = 1; i < deck.cards.length; i++) {
                   var bot_deck = [];
                   deck.cards[i].forEach(function(card, index) {
-                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID)) {
+                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.cardFromId(card[0].cardID));
+                      card.details = carddb.cardFromId(card[0].cardID);
+                      card.details.display_image = util.getCardImageURL(card);
+                      bot_deck.push(card.details);
                     }
                   });
                   bot_decks.push(bot_deck);
