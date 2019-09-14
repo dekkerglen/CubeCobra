@@ -250,9 +250,9 @@ class CubePlaytest extends Component {
 }
 
 const canEdit = document.getElementById('canEdit').hasAttribute('value');
-const decks = JSON.parse(document.getElementById('deckInput').value);
+const decks = JSON.parse(document.getElementById('deckInput').value || '[]');
 const cubeID = document.getElementById('cubeID').value;
-const draftFormats = JSON.parse(document.getElementById('draftFormats').value);
+const draftFormats = JSON.parse(document.getElementById('draftFormats').value || '[]');
 const element = <CubePlaytest canEdit={canEdit} decks={decks} cubeID={cubeID} draftFormats={draftFormats} />;
 const wrapper = document.getElementById('react-root');
 wrapper ? ReactDOM.render(element, wrapper) : false;
