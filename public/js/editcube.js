@@ -1200,6 +1200,8 @@ function show_contextModal(card) {
   $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src', card.details.display_image);
+  $("#contextModalImg").off("mouseover");
+  $("#contextModalImg").off("mouseout");
   if (card.details.image_flip !== undefined) {
     $('#contextModalImg').mouseover(function() {
       $(this).attr('src', card.details.image_flip);
