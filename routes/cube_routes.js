@@ -1573,7 +1573,8 @@ router.get('/draft/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item.details = carddb.cardFromId(card.cardID);
+              console.log(item);
+              item.details = carddb.cardFromId(item).cardID;
               item.details.display_image = util.getCardImageURL(item);
             }
           });
@@ -2178,12 +2179,13 @@ router.get('/deckbuilder/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
+              item = {cardID:item};
               item.details = carddb.cardFromId(item.cardID);
               item.details.display_image = util.getCardImageURL(item);
             }
           });
         } else {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = carddb.cardFromId(card);
           card.details.display_image = util.getCardImageURL(card);
         }
       });
