@@ -22,10 +22,8 @@ class SortContextProvider extends React.Component {
   componentDidMount() {
     for (const stage of ['primary', 'secondary']) {
       const select = document.getElementById(`${stage}SortSelect`);
-      console.log('select:', select);
       if (!select) continue;
       select.addEventListener('change', event => {
-        console.log(event.target.value);
         this.setState({
           [stage]: event.target.value,
         });
@@ -43,6 +41,11 @@ class SortContextProvider extends React.Component {
 const SortContext = {
   Provider: SortContextProvider,
   Consumer: SortContextRaw.Consumer,
+  Wrapped: Component => props => (
+    <SortContextRaw.Consumer>
+      { value => <Component {...value} {...props} /> }
+    </SortContextRaw.Consumer>
+  ),
 };
 
 export default SortContext;
