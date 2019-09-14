@@ -2178,7 +2178,7 @@ router.get('/deckbuilder/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item.details = carddb.cardFromId(card.cardID);
+              item.details = carddb.cardFromId(item.cardID);
               item.details.display_image = util.getCardImageURL(item);
             }
           });
