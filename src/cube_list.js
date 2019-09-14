@@ -14,7 +14,7 @@ class CubeList extends Component {
     const cube = JSON.parse(document.getElementById('cuberaw').value);
 
     this.state = {
-      cards: [],
+      cards: cube,
       cubeView: 'table',
     };
 
@@ -25,10 +25,12 @@ class CubeList extends Component {
     let { cubeView, cards } = this.state;
     return (
       <SortContext.Provider>
-        <TableView cards={cards} style={{ display: cubeView === 'table' ? undefined : 'none' }} />
-        <VisualSpoiler cards={cards} style={{ display: cubeView === 'spoiler' ? undefined : 'none' }} />
-        <CurveView cards={cards} style={{ display: cubeView === 'curve' ? undefined : 'none' }} />
-        <ListView cards={cards} style={{ display: cubeView === 'list' ? undefined : 'none' }} />
+        {{
+          'table': <TableView cards={cards} />,
+          'spoiler': <VisualSpoiler cards={cards} />,
+          'curve': <CurveView cards={cards} />,
+          'list': <ListView cards={cards} />,
+        }[cubeView]}
       </SortContext.Provider>
     );
   }

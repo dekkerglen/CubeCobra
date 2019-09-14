@@ -39,13 +39,16 @@
 	color: #218937;
 }
 
-.pagination>li>a {
+.pagination>li>a,
+.pagination>li>button {
 	background-color: white;
 	color: #5A4181;
 }
 
 .pagination>li>a:focus,
 .pagination>li>a:hover,
+.pagination>li>button:focus,
+.pagination>li>button:hover,
 .pagination>li>span:focus,
 .pagination>li>span:hover {
 	color: #5a5a5a;
@@ -53,13 +56,15 @@
 	border-color: #ddd;
 }
 
-.pagination>.active>a {
+.pagination>.active>a,
+.pagination>.active>button {
 	color: white;
 	background-color: #28A745 !Important;
 	border: solid 1px #28A745 !Important;
 }
 
-.pagination>.active>a:hover {
+.pagination>.active>a:hover,
+.pagination>.active>button:hover {
 	background-color: #28A745 !Important;
 	border: solid 1px #28A745;
 }

@@ -1352,16 +1352,7 @@ function updateCubeList() {
   for (let listener of updateCubeListeners) {
     listener(view, filteredCube());
   }
-  switch (view) {
-    case 'list':
-      renderListView();
-      break;
-    case 'table':
-    case 'curve':
-    case 'spoiler':
-      $('#cubelistarea').html('');
-      break;
-  }
+  $('#cubelistarea').html('');
   autocard_init('autocard');
   init_contextModal();
   if (canEdit) {
