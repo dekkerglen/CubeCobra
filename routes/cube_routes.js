@@ -2271,9 +2271,9 @@ router.get('/deck/:id', function(req, res) {
                     if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      card.details = carddb.cardFromId(card[0].cardID);
-                      card.details.display_image = util.getCardImageURL(card);
-                      bot_deck.push(card.details);
+                      var details = carddb.cardFromId(card[0].cardID);
+                      details.display_image = util.getCardImageURL({details});
+                      bot_deck.push(details);
                     }
                   });
                   bot_decks.push(bot_deck);
@@ -2316,7 +2316,7 @@ router.get('/deck/:id', function(req, res) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
                       var details = carddb.cardFromId(cardid);
-                      details.display_image = util.getCardImageURL(card);
+                      details.display_image = util.getCardImageURL({details});
                       bot_deck.push(details);
                     }
                   });
