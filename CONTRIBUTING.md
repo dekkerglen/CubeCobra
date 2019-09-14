@@ -99,7 +99,8 @@ to be aware of the details of our progress without requesting a detailed code
 review just yet.
 
 When we feel that a feature we're working on is "code complete", we open pull
-requests. These pull requests have descriptions that briefly summarize the
+requests. These pull requests have titles that reference the substantive
+changes they contain, descriptions that briefly summarize the
 changes, and sometimes include more detailed breakdowns of the architectural
 or coding approach. The goal of these descriptions is to aid in the code
 review process, making it easier for a community member with no prior
