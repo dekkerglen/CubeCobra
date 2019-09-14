@@ -2315,9 +2315,9 @@ router.get('/deck/:id', function(req, res) {
                     if (carddb.cardFromId(cardid).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      card.details = carddb.cardFromId(cardid);
-                      card.details.display_image = util.getCardImageURL(card);
-                      bot_deck.push(card.details);
+                      var details = carddb.cardFromId(cardid);
+                      details.display_image = util.getCardImageURL(card);
+                      bot_deck.push(details);
                     }
                   });
                   bot_decks.push(bot_deck);
