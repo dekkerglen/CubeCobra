@@ -87,6 +87,8 @@ $('#customImageDisplayToggle').click(function(e) {
 
 $('#viewSelect').change(function(e) {
   view = $('#viewSelect').val();
+  if (view === 'curve' ) $('#secondarySortCol').hide();
+  else $('#secondarySortCol').show();
   updateCubeList();
 });
 
