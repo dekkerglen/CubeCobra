@@ -22,8 +22,40 @@ window.onresize = function() {
   renderDraft();
 }
 
+var hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
+draft.packs.forEach(function(pack, index) {
+  pack.forEach(function(inner, index) {
+    inner.forEach(function(card, index) {
+      if (!hasCustomImages && card.imgUrl !== undefined) {
+        hasCustomImages = true;
+        $("#customImageDisplayToggle").prop("checked", true);
+        $("#customImageDisplayMenuItem").show();
+      }
+    });
+  });
+});
+
 $('#passpack').click(function(e) {
   passPack();
+});
+
+$('#customImageDisplayToggle').click(function(e) {
+  var enabled = $(this).prop('checked'),
+    display_image;
+  draft.packs.forEach(function(pack, index) {
+    pack.forEach(function(inner, index) {
+      inner.forEach(function(card, index) {
+        adjustDisplayImage(card, enabled);
+      });
+    });
+  });
+  draft.picks[0].forEach(function(slot, index) {
+    slot.forEach(function(card, index) {
+      adjustDisplayImage(card, enabled);
+    });
+  });
+  renderDraft();
 });
 
 function arrayRotate(arr, reverse) {
@@ -272,9 +304,9 @@ function renderDraft() {
     var packhtml = "";
     draft.packs[0][0].forEach(function(card, index) {
       if (card.details.card_flip) {
-        packhtml += '<a class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        packhtml += '<a class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="packcard defaultCardImage" data-id="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        packhtml += '<a class="autocard" card="' + card.details.image_normal + '" href="#"><img class="packcard" data-id="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        packhtml += '<a class="autocard" card="' + card.details.display_image + '" href="#"><img class="packcard defaultCardImage" data-id="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#packarea').html(packhtml);
@@ -284,9 +316,9 @@ function renderDraft() {
     var pickshtml = "";
     col.forEach(function(card, index2) {
       if (card.details.card_flip) {
-        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="pickscard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" href="#"><img class="pickscard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        pickshtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="pickscard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#picksColumn' + index).html(pickshtml);
@@ -411,7 +443,7 @@ function setupDrag(elmnt, frompack) {
       dragCard = draft.picks[0][e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'), 1)[0];
     }
     //set drag element's inner html
-    dragElement.innerHTML = '<img src="' + dragCard.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+    dragElement.innerHTML = '<img src="' + dragCard.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
     dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
     dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
     autocard_hide_card();

@@ -9,7 +9,7 @@ function get_cube_id(cube) {
 }
 
 function build_id_query(id) {
-  if (id.match(/^[0-9a-fA-F]{24}$/)) return {
+  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) return {
     _id: id
   };
   return {
@@ -24,7 +24,7 @@ function build_id_query(id) {
 }
 
 async function generate_short_id() {
-  let cubes = await Cube.find({}, [ 'shortID', 'urlAlias' ]);
+  let cubes = await Cube.find({}, ['shortID', 'urlAlias']);
 
   const short_ids = cubes.map(cube => cube.shortID);
   const url_aliases = cubes.map(cube => cube.urlAlias);
@@ -119,7 +119,8 @@ var methods = {
       var found = false;
       var options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
-        var card = carddb.carddict[option];
+        var card = carddb.cardFromId(option);        
+        card.display_image = util.getCardImageURL({details:card});
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
@@ -143,10 +144,10 @@ var methods = {
     var pauper = true;
     var type = legalityToInt('Standard');
     cube.cards.forEach(function(card, index) {
-      if (pauper && !carddb.carddict[card.cardID].legalities.Pauper) {
+      if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
         pauper = false;
       }
-      while (type > 0 && !carddb.carddict[card.cardID].legalities[intToLegality(type)]) {
+      while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
         type -= 1;
       }
     });
@@ -169,7 +170,7 @@ var methods = {
       var cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
       var mid = cardname;
       if (carddb.nameToId[cardname.toLowerCase()]) {
-        var card = carddb.carddict[carddb.nameToId[cardname.toLowerCase()][0]];
+        var card = carddb.cardFromId(carddb.nameToId[cardname.toLowerCase()][0]);
         if (card.image_flip) {
           mid = '<a class="autocard" card="' + card.image_normal + '" card_flip="' + card.image_flip + '">' + card.name + '</a>';
         } else {
@@ -191,7 +192,7 @@ var methods = {
       if (!seed) {
         seed = Date.now().toString();
       }
-      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.carddict[card.cardID]);
+      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.getCardDetails(card));
       callback(false, {
         seed,
         pack

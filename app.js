@@ -65,6 +65,8 @@ app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/js', express.static(path.join(__dirname, 'dist')));
+app.use('/jquery-ui', express.static(__dirname + '/node_modules/jquery-ui-dist/'));
 
 let session_options = {
   secret: secrets.session,
@@ -355,6 +357,12 @@ app.get('/tos', function(req, res) {
   });
 });
 
+app.get('/filters', function(req, res) {
+  res.render('info/filters', {
+    loginCallback: '/filters'
+  });
+});
+
 app.get('/privacy', function(req, res) {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy'
@@ -387,6 +395,11 @@ app.get('/donate', function(req, res) {
 
 app.get('/404', function(req, res) {
   res.render('misc/404', {});
+});
+
+app.get('/c/:id', function(req, res)
+{
+  res.redirect('/cube/list/'+req.params.id);
 });
 
 //Route files

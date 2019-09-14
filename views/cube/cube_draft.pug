@@ -13,6 +13,9 @@ block cube_content
   .card#packhover
     .card-header
       h4#packTitle
+      div#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
+        input#customImageDisplayToggle(type='checkbox')
+        label(for='customImageDisplayToggle') Show Custom Images
       h6#packSubtitle
         //.form-check
           input#autopass.form-check-input(type='checkbox', value='true' checked)
@@ -26,5 +29,6 @@ block cube_content
       h4 Picks
     .card-body
       #picksarea(style='margin: 3px;')
+  script(src='/js/utils.js')
   script(src='/js/draft.js')
 

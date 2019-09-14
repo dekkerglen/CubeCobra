@@ -100,7 +100,7 @@
 	color: black;
 	text-decoration: none;
 	padding: 5px 10px;
-	font-size: .75rem;
+	font-size: 9pt;
 	font-weight: 600;
 	border-bottom: 1px solid #bbb;
     margin-bottom: 0px;
@@ -130,122 +130,79 @@
 
 .card-list-item {
 	transition: .25s;
-	font-size: 11px;
+	font-size: 8.5pt;
 	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-.card-list-item:not(:hover){
-	padding: 3px 4px;
+
 	color: black;
+	padding: 3px 4px;
 	text-decoration: none;
 }
 .card-list-item:hover{
-	padding: 3px 4px;
 	color: black;
 	text-decoration: none;
 }
-
-
-.cmc-group:first-of-type .card-list-item:first-of-type{
-	border-top-width: 0;
+.card-list-item:after {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    background: rgba(0,0,0,.1);
+    top: 0;
+    left: 0;
+    position: absolute;
 }
-.cmc-group:last-of-type .card-list-item:last-of-type{
-	border-bottom-width: 0;
+.tag-color.card-list-item:after {
+	background: rgba(255,255,255,.2);
 }
 
-.white:not(:hover) {
-	background-color: #ffffeb;
+.card-list-item:hover:after {
+    opacity: 1;
 }
+
+@media(max-width: 991.98px) {
+	.card-list-item {
+		font-size: 10pt;
+	}
+	.list-group-item.list-group-heading {
+		font-size: 10pt;
+	}
+}
+
 .white {
 	border-color: #ffffeb;
+	background-color: #ffffeb;
 }
-
-.white:hover {
-	background-color: #dfdfcb;
-}
-
-.blue:not(:hover) {
-	background-color: #d4edff;
-}
-
 .blue {
 	border-color:#d4edff;
+	background-color: #d4edff;
 }
-
-.blue:hover {
-	background-color: #b4cddf;
-}
-
-.black:not(:hover) {
-	background-color: #e5dff2;
-}
-
 .black {
 	border-color: #e5dff2;
+	background-color: #e5dff2;
 }
-
-.black:hover {
-	background-color: #c5bfd2;
-}
-
-.red:not(:hover) {
-	background-color: #ffd8d4;
-}
-
 .red {
 	border-color: #ffd8d4;
-}
-
-.red:hover {
-	background-color: #E89DA3;
-}
-
-.green:not(:hover) {
-	background-color: #e9ffd4;
+	background-color: #ffd8d4;
 }
 .green {
 	border-color: #e9ffd4;
-}
-
-.green:hover {
-	background-color: #B5E5BA;
-}
-
-.multi:not(:hover) {
-	background-color: #fcf8a9;
+	background-color: #e9ffd4;
 }
 .multi {
 	border-color: #fcf8a9;
+	background-color: #fcf8a9;
 }
-
-.multi:hover {
-	background-color: #dcd889;
-}
-
-.colorless:not(:hover) {
-	background-color: #dcdae0;
-}
-
 .colorless {
 	border-color: #dcdae0;
+	background-color: #dcdae0;
 }
-
-.colorless:hover {
-	background-color: #bcbac0;
-}
-
-.lands:not(:hover) {
-	background-color: #ffdac4;
-}
-
 .lands {
 	border-color: #ffdac4;
-}
-
-.lands:hover {
-	background-color: #dfbaa4;
+	background-color: #ffdac4;
 }
 
 .dropdown-menu a:focus {
@@ -277,9 +234,23 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup_info {
+  background-color: #F8F9FA;
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
+	padding-top:10px;
+	padding-bottom:2px;
+}
+
 /* removes white corners from popup */
+#autocard_popup2,
 #autocard_popup {
-	border-radius: 10px 10px 0 0;
+	border-radius: 10px;
+	overflow: hidden;
+	background: #fff;
+}
+.deckcard, .packcard, .sideboardcard {
+	border-radius: 6px;
 	overflow: hidden;
 	background: #fff;
 }
@@ -290,4 +261,70 @@ border-bottom: none;
 
 .form-check {
 	border: none;
+}
+
+#contextModalImg {
+    width:258px;
+    height:359px;
+}
+
+.defaultCardImage:before {
+    content: ' ';
+    display: block;
+    position: absolute;
+    background-image: url(/content/default_card.png);
+    height: 210px;
+    width: 150px;
+    background-size: 150px 210px;
+}
+
+#contextModalImg:before {
+    height: 359px;
+    width: 258px;
+    background-size: 258px 359px;
+}
+
+.packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
+    height: 175px;
+    width: 125px;
+    background-size: 125px 175px;
+}
+
+.visualSpoilerCardContainer {
+    display: inline-block;
+    width: 150px;
+    vertical-align: top;
+}
+
+#customImageDisplayToggle {
+    margin-right: 6px;
+}
+
+#customImageDisplayMenuItem {
+    float: right;
+}
+
+#packTitle, .card-header h4 {
+    display: inline-block;
+}
+
+#syntax-accordion .card, #syntax-accordion {
+	width: 100%
+}
+#syntax-accordion .collapse,
+#syntax-accordion .collapsing {
+	padding: 0.75rem 1.25rem
+}
+code {
+	background: #eee
+}
+#syntax-accordion .card-header {
+	cursor: pointer;
+	transition: .25s;
+}
+#syntax-accordion .card-header:hover {
+	background: #dfdfdf;
+}
+#syntax-accordion .card-header button {
+	color:#000
 }

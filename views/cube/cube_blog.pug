@@ -12,7 +12,6 @@ block cube_toolbar
                 a.nav-link.newBlogButton(href='#' data-toggle='modal', data-target='#customDraftModal') Create new blog post
 
 block cube_content
-  br
   if pages
     hr
     nav(aria-label='pagination')
@@ -28,39 +27,28 @@ block cube_content
     hr
   if posts
     each post, i in posts
-      .card
-        if post.changelist && post.html
-          .card-header
+      .card.mt-3
+        .card-header
             h5.card-title=post.title
             h6.card-subtitle.mb-2.text-muted=post.date_formatted
-          .row.no-gutters
-            .col-4(style='border-right: 1px solid #DFDFDF;')
-              .card-body
+        .card-body
+          if post.changelist && post.html
+            .row.no-gutters
+              .col.col-12.col-4-md(style='border-right: 1px solid #DFDFDF;')
                 p.card-text
                   a !{post.changelist}
-            .col-8
-              .card-body
+              .col.col-12.col-4-sm
                 .card-text
                   a !{post.html}
-        else if post.changelist
-          .card-header
-            h5.card-title=post.title
-            h6.card-subtitle.mb-2.text-muted=post.date_formatted
-          .card-body
-            p.card-text
-              a !{post.changelist}
-            a
-        else
-          .card-header
-            h5.card-title=post.title
-            h6.card-subtitle.mb-2.text-muted=post.date_formatted
-          .card-body
+          else
+            if post.changelist
+              p.card-text
+                a !{post.changelist}
+            if post.body
+              p.card-text=post.body
             if post.html
-              p=post.body
               .card-text
                 a !{post.html}
-            else
-              p=post.body
         if user && user.id == cube.owner
           .card-footer
             span
@@ -71,7 +59,7 @@ block cube_content
               span
                 a Are you sure? This action cannot be undone.
                 button.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id=post._id ) Yes, delete this post
-      br
+
     if pages
       hr
       nav(aria-label='pagination')
