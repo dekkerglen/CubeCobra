@@ -151,7 +151,7 @@ non-technical users of Cube Cobra. Discord is a great way to get to know the
 needs and wants of the user base, and can inform plans for features and
 bugfixes.
 
-Another good use of Discord for contributors is stayng abreast of the current
+Another good use of Discord for contributors is staying abreast of the current
 state of the production server. If there are new bugs being reported
 frequently that require rapid response, a Discord "war room" can be the best
 way to handle these reports.
