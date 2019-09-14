@@ -87,6 +87,8 @@ $('#customImageDisplayToggle').click(function(e) {
 
 $('#viewSelect').change(function(e) {
   view = $('#viewSelect').val();
+  if (view === 'curve' ) $('#secondarySortCol').hide();
+  else $('#secondarySortCol').show();
   updateCubeList();
 });
 
@@ -1102,7 +1104,10 @@ function init_groupcontextModal() {
     e.preventDefault();
     var category1 = e.target.getAttribute("primarysort");
     var category2 = e.target.getAttribute("secondarysort");
-    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1], sorts[1])[category2];
+    var category3 = e.target.getAttribute("tertiarysort");
+    var second_sort = (view === 'curve') ? 'CNC' : sorts[1];
+    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1], second_sort)[category2];
+    if (view === 'curve') matches = sortIntoGroups(matches, 'CMC2')[category3];
     if (matches.length == 1) {
       show_contextModal(matches[0]);
     } else {
