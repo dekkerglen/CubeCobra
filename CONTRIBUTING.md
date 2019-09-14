@@ -38,11 +38,12 @@ Issues are tagged with 'good first issue' if we think it's a good beginner task 
 Our community of contributors is large, and growing fast. We don't have regularly
 scheduled working hours dedicated to Cube Cobra. Thus, we can't simply message each
 other on Discord to understand the current state of the project. Discord is
-a great tool for synchronous communication, but our project also requires
-a focus on asynchronous methods of communication. The goal is for the current state
-of the project, including features being worked on, issues not yet resolved,
-and near-term roadmap plans, to be fully discoverable by a passerby without
-needing to chat in realtime with anyone else.
+a great tool for synchronous communication, but it falls short at allowing
+community members to discover conversations they didn't participate in. Our project
+also requires a focus on asynchronous methods of communication. The goal is for
+the current state of the project, including features being worked on, issues not
+yet resolved, and near-term roadmap plans, to be fully discoverable by a passerby
+without needing to chat in realtime with anyone else.
 
 GitHub projects, issues, and pull requests serve this purpose beautifully. We
 treat the dekkerglen/CubeCobra repository as the source of truth about what
@@ -70,10 +71,8 @@ when learning about the group's thoughts on a given bug or feature request.
 When we notice a bug, we first look for an existing open issue that references the
 bug. If we find one, we comment on the issue or use a GitHub reaction emoji to
 indicate that we have also noticed the bug. If we don't find one, we open a new
-issue about the bug.
-
-When we notice a change in a bug's behavior, or a new case in which the bug
-can be replicated, we leave comments to that effect on the issue.
+issue about the bug. When we notice a change in a bug's behavior, or a new case in
+which the bug can be replicated, we leave comments to that effect on the issue.
 
 When we begin actively working on a feature, we comment to that effect on the
 corresponding issue. This comment of "I'm working on this" indicates to other
@@ -98,10 +97,6 @@ indicate that these are WIP in the description to avoid premature code reviews
 from the community. When we do this, we're communicating that we'd like others
 to be aware of the details of our progress without requesting a detailed code
 review just yet.
-
-Sometimes, WIP pull requests include checklists in their descriptions
-describing work remaining to be done. We use these checklists to indicate
-progress to observers and to keep track of it for ourselves.
 
 When we feel that a feature we're working on is "code complete", we open pull
 requests. These pull requests have descriptions that briefly summarize the
