@@ -2301,6 +2301,13 @@ router.get('/deck/:id', function(req, res) {
                   loginCallback: '/cube/deck/' + req.params.id
                 });
               } else {
+                deck.playerdeck.forEach(function(col, ind)
+                {
+                  col.forEach(function(card, index)
+                  {
+                    card.details.display_image = util.getCardImageURL(card);
+                  });
+                });
                 //new format
                 for (i = 0; i < deck.cards.length; i++) {
                   var bot_deck = [];
@@ -2308,7 +2315,9 @@ router.get('/deck/:id', function(req, res) {
                     if (carddb.cardFromId(cardid).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.cardFromId(cardid));
+                      card.details = carddb.cardFromId(cardid);
+                      card.details.display_image = util.getCardImageURL(card);
+                      bot_deck.push(card.details);
                     }
                   });
                   bot_decks.push(bot_deck);
