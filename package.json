@@ -8,6 +8,7 @@
     "beautify": "js-beautify -r *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "lint": "beautify-lint *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
+    "demo": "npm run-script build && sls deploy -f handler",
     "start": "nodemon --ignore src --ignore public & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
     "test": "jest"
   },
@@ -43,7 +44,6 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "sanitize-html": "^1.20.1",
-    "selenium-webdriver": "^4.0.0-alpha.4",
     "serve-favicon": "^2.5.0",
     "shuffle-seed": "^1.1.6",
     "website-scraper": "^4.0.1"
@@ -52,6 +52,8 @@
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
+    "aws-sdk": "^2.528.0",
+    "aws-serverless-express": "^3.3.6",
     "babel-loader": "^8.0.6",
     "chart.js": "^2.8.0",
     "jest": "^24.9.0",

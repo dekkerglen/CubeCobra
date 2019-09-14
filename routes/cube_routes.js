@@ -20,7 +20,7 @@ var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 var util = require('../serverjs/util.js');
-const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
+const tcgconfig = require('../secrets').tcgplayer;
 var mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const {
@@ -674,6 +674,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 })
 
 router.get('/list/:id', function(req, res) {
+  console.log('list_cube');
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');

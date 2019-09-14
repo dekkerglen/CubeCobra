@@ -12,11 +12,13 @@ const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
-const secrets = require('../cubecobrasecrets/secrets');
+const secrets = require('./secrets').session;
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(config.database);
+mongoose.connect(process.env.MONGODB_URL || config.database, {
+  useNewUrlParser: true,
+});
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');
@@ -31,8 +33,7 @@ db.on('error', function(err) {
 const app = express();
 
 var store = new mongoDBStore({
-  uri: 'mongodb://localhost:27017/nodecube',
-  databaseName: 'nodecube',
+  uri: process.env.MONGODB_URL || config.database,
   collection: 'session_data'
 }, function(err) {
   if (err) {
@@ -420,7 +421,11 @@ schedule.scheduleJob('0 0 * * *', function(){
 });
 */
 
-// Start server
-http.createServer(app).listen(5000, 'localhost', function() {
-  console.log('server started on port 5000...');
-});
+if (!process.env.LAMBDA_TASK_ROOT) {
+  // Start server
+  http.createServer(app).listen(5000, 'localhost', function() {
+    console.log('server started on port 5000...');
+  });
+}
+
+module.exports = app;

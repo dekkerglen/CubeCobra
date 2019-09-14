@@ -1,10 +1,13 @@
+const aws = require('aws-sdk');
 const fs = require('fs');
 var util = require('./util.js');
 
 var carddict = {};
 
+const s3 = new aws.S3();
+
 //read files
-var data = {
+const data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
@@ -81,82 +84,46 @@ var data = {
   normalizedName: card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(),
   allIds: card => data.nameToId[data.normalizedName(card)]
 }
-fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-  carddict = JSON.parse(contents);
-  console.log("carddict loaded");
-});
-fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
-  data.cardtree = JSON.parse(contents);
-  console.log("cardtree loaded");
-});
-fs.readFile('private/names.json', 'utf8', function(err, contents) {
-  data.cardnames = JSON.parse(contents);
-  console.log("names loaded");
-});
-fs.readFile('private/nameToId.json', 'utf8', function(err, contents) {
-  data.nameToId = JSON.parse(contents);
-  console.log("nameToId loaded");
-});
-fs.readFile('private/full_names.json', 'utf8', function(err, contents) {
-  data.full_names = JSON.parse(contents);
-  console.log("full_names loaded");
-});
-fs.readFile('private/imagedict.json', 'utf8', function(err, contents) {
-  data.imagedict = JSON.parse(contents);
-  console.log("imagedict loaded");
-});
-fs.watchFile('private/imagedict.json', (curr, prev) => {
-  console.log('File Changed: imagedict');
-  fs.readFile('private/imagedict.json', 'utf8', function(err, contents) {
-    data.imagedict = JSON.parse(contents);
-    console.log("imagedict reloaded");
-  });
-});
-fs.readFile('private/cardimages.json', 'utf8', function(err, contents) {
-  data.cardimages = JSON.parse(contents);
-  console.log("cardimages loaded");
-});
-fs.watchFile('private/cardimages.json', (curr, prev) => {
-  console.log('File Changed: cardimages');
-  fs.readFile('private/cardimages.json', 'utf8', function(err, contents) {
-    data.cardimages = JSON.parse(contents);
-    console.log("cardimages reloaded");
-  });
-});
-fs.watchFile('private/cardtree.json', (curr, prev) => {
-  console.log('File Changed: cardtree');
-  fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
-    data.cardtree = JSON.parse(contents);
-    console.log("cardtree reloaded");
-  });
-});
-fs.watchFile('private/names.json', (curr, prev) => {
-  console.log('File Changed: names');
-  fs.readFile('private/names.json', 'utf8', function(err, contents) {
-    data.cardnames = JSON.parse(contents);
-    console.log("names reloaded");
-  });
-});
-fs.watchFile('private/carddict.json', (curr, prev) => {
-  console.log('File Changed: carddict');
-  fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-    carddict = JSON.parse(contents);
-    console.log("carddict reloaded");
-  });
-});
-fs.watchFile('private/nameToId.json', (curr, prev) => {
-  console.log('File Changed: nameToId');
-  fs.readFile('private/nameToId.json', 'utf8', function(err, contents) {
-    data.nameToId = JSON.parse(contents);
-    console.log("nameToId reloaded");
-  });
-});
-fs.watchFile('private/full_names.json', (curr, prev) => {
-  console.log('File Changed: full_names');
-  fs.readFile('private/full_names.json', 'utf8', function(err, contents) {
-    data.full_names = JSON.parse(contents);
-    console.log("full_names reloaded");
-  });
-});
+
+const files = [
+  'carddict',
+  'cardtree',
+  'names',
+  'nameToId',
+  'full_names',
+  'imagedict',
+  'cardimages',
+];
+
+for (const file of files) {
+  if (process.env.LAMBDA_TASK_ROOT) {
+    // In an S3 Bucket
+    s3.getObject({
+      Bucket: process.env.CARDDB_BUCKET,
+      Key: `${file}.json`,
+    }, (err, response) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      console.log('body:', response.Body.slice(0, 400));
+      data[file] = JSON.parse(response.Body);
+    });
+  } else {
+    const path = `private/${file}.json`;
+    fs.readFile(path, 'utf8', function(err, contents) {
+      data[file] = JSON.parse(contents);
+      console.log(`${file} loaded`);
+    });
+    fs.watchFile(path, (curr, prev) => {
+      console.log(`File Changed: ${file}`);
+      fs.readFile(path, 'utf8', function(err, contents) {
+        data[file] = JSON.parse(contents);
+        console.log(`${file} reloaded`);
+      });
+    });
+  }
+}
 
 module.exports = data;

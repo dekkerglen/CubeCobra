@@ -1,0 +1,81 @@
+service: cubecobra
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+
+  environment:
+    NODE_ENV: production
+    MONGODB_URL: mongodb+srv://cubecobra:0cc6JkaUHJg707XT@cubecobra-e3mbh.mongodb.net/${self:custom.stage}?retryWrites=true&w=majority
+    CARDDB_BUCKET: cubecobra-carddb
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+        - s3:GetObject
+        - s3:GetObjectAcl
+      Resource:
+        - arn:aws:s3:::cubecobra-carddb
+        - arn:aws:s3:::cubecobra-carddb/*
+
+functions:
+  handler:
+    handler: lambda.handler
+    timeout: 15
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
+    layers:
+      - Ref: DepsLambdaLayer
+      - Ref: CanvasLambdaLayer
+      - Ref: Lib64LambdaLayer
+
+package:
+  exclude:
+    - '*.zip'
+    - __tests__/**
+    - canvas/**
+    - cubecobrasecrets.example/**
+    - deps/**
+    - node_modules/**
+    - one_shot_scripts/**
+    - package-lock.json
+    - public/bower_components/**
+    - private/**
+    - seeds/**
+    - src/**
+  include:
+    - public/bower_components/bootstrap/dist/**
+    - public/bower_components/jquery/dist/**
+
+layers:
+  deps:
+    path: deps
+    compatibleRuntimes:
+      - nodejs10.x
+    package:
+      exclude:
+        - nodejs/node_modules/**/aws-sdk/**
+        - nodejs/node_modules/**/canvas/**
+        - nodejs/node_modules/**/moment-timezone/builds/**
+        - nodejs/node_modules/**/moment/min/**
+  canvas:
+    path: canvas
+    compatibleRuntimes:
+      - nodejs10.x
+  lib64:
+    package:
+      artifact: canvas-lib64-layer.zip
+    compatibleRuntimes:
+      - nodejs10.x
+
+resources:
+  Resources:
+    S3BucketCarddb:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: cubecobra-carddb
+
+custom:
+  stage: ${opt:stage, self:provider.stage}

@@ -10,10 +10,6 @@ var imagedict = {};
 var cardimages = {};
 
 
-if (!fs.existsSync('private')) {
-  fs.mkdirSync('private');
-}
-
 function updateCardbase() {
   dict = {};
   names = [];
@@ -21,6 +17,10 @@ function updateCardbase() {
   nameToId = {};
   imagedict = {};
   cardimages = {};
+
+  if (!fs.existsSync('private')) {
+    fs.mkdirSync('private');
+  }
 
   var file = fs.createWriteStream('private/cards.json');
   var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
@@ -73,6 +73,9 @@ function saveAllCards(arr) {
     util.binaryInsert(card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), names);
     util.binaryInsert(card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), full_names);
   });
+  if (!fs.existsSync('private')) {
+    fs.mkdirSync('private');
+  }
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function(err) {
     if (err) {
       console.log("An error occured while writing names.json");
