@@ -191,7 +191,7 @@ var methods = {
       if (!seed) {
         seed = Date.now().toString();
       }
-      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.cardFromId(card.cardID));
+      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.getCardDetails(card));
       callback(false, {
         seed,
         pack

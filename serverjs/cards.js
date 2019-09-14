@@ -1,4 +1,5 @@
 const fs = require('fs');
+var util = require('./util.js');
 
 var carddict = {};
 
@@ -14,6 +15,44 @@ var data = {
     if(carddict[id])
     {
       return carddict[id];
+    }
+    else{
+      console.log("Could not find: " + id);
+      //placeholder card if we don't find the one due to a scryfall ID update bug
+      return {
+        // img: 
+        _id:id,
+        set:'',
+        collector_number:'',
+        promo: false,
+        digital: false,
+        full_name: 'Invalid Card',
+        name: 'Invalid Card',
+        name_lower: 'Invalid Card',
+        artist: '',
+        scryfall_uri: '',
+        rarity: '',        
+        legalities: { },
+        oracle_text: '',
+        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        cmc: 0,
+        type: '',        
+        colors: [],
+        color_identity: [],
+        parsed_cost: [],
+        colorcategory: 'c',
+        error:true
+      };
+    }
+  },
+  getCardDetails: function(card)
+  {
+    if(carddict[card.cardID])
+    {
+      var details = carddict[card.cardID];    
+      card.details = details;  
+      details.display_image = util.getCardImageURL(card);
+      return details;
     }
     else{
       console.log("Could not find: " + id);

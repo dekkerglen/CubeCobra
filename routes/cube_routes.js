@@ -721,6 +721,7 @@ router.get('/playtest/:id', function(req, res) {
     } else {
       cube.cards.forEach(function(card, index) {
         card.details = carddb.cardFromId(card.cardID);
+        card.details.display_image = util.getCardImageURL(card);
       });
       User.findById(cube.owner, function(err, user) {
         Deck.find({
@@ -1520,7 +1521,7 @@ function startStandardDraft(req, res, params, cube) {
 }
 
 router.post('/startdraft/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {    
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1564,6 +1565,7 @@ router.get('/draft/:id', function(req, res) {
             if (!names.includes(card.details.name)) {
               names.push(card.details.name);
             }
+            card.details.display_image = util.getCardImageURL(card);
           });
         });
       });
@@ -1572,10 +1574,12 @@ router.get('/draft/:id', function(req, res) {
           card.forEach(function(item, index2) {
             if (item) {
               item.details = carddb.cardFromId(card.cardID);
+              item.details.display_image = util.getCardImageURL(item);
             }
           });
         } else {
           card.details = carddb.cardFromId(card.cardID);
+          card.details.display_image = util.getCardImageURL(card);
         }
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
@@ -2175,10 +2179,12 @@ router.get('/deckbuilder/:id', function(req, res) {
           card.forEach(function(item, index2) {
             if (item) {
               item.details = carddb.cardFromId(card.cardID);
+              item.details.display_image = util.getCardImageURL(item);
             }
           });
         } else {
           card.details = carddb.cardFromId(card.cardID);
+          card.details.display_image = util.getCardImageURL(card);
         }
       });
       Cube.findOne(build_id_query(deck.cube), function(err, cube) {
