@@ -5,6 +5,7 @@ import CurveView from './components/CurveView';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
+import TagContext from './components/TagContext';
 import VisualSpoiler from './components/VisualSpoiler';
 
 class CubeList extends Component {
@@ -22,15 +23,22 @@ class CubeList extends Component {
   }
 
   render() {
-    let { cubeView, cards } = this.state;
+    const { cubeView, cards } = this.state;
+    const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
+    const defaultTags = [...defaultTagSet].map(tag => ({
+      id: tag,
+      text: tag,
+    }))
     return (
       <SortContext.Provider>
-        {{
-          'table': <TableView cards={cards} />,
-          'spoiler': <VisualSpoiler cards={cards} />,
-          'curve': <CurveView cards={cards} />,
-          'list': <ListView cards={cards} />,
-        }[cubeView]}
+        <TagContext.Provider defaultTags={defaultTags}>
+          {{
+            'table': <TableView cards={cards} />,
+            'spoiler': <VisualSpoiler cards={cards} />,
+            'curve': <CurveView cards={cards} />,
+            'list': <ListView cards={cards} />,
+          }[cubeView]}
+        </TagContext.Provider>
       </SortContext.Provider>
     );
   }

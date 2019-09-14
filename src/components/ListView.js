@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Col, Input, Pagination, PaginationItem, PaginationLink, Row, Table } from 'reactstrap';
 
 import SortContext from './SortContext';
+import TagInput from './TagInput';
 
 const colorCombos = [
   'C', 'W', 'U', 'B', 'R', 'G',
@@ -77,7 +78,7 @@ class ListViewRaw extends Component {
       [`tdstatus${index}`, card.status],
       [`tdcmc${index}`, card.cmc],
       [`tdcolors${index}`, (card.colors || ['C']).join('')],
-      [`tdtags${index}`, card.tags],
+      [`tags${index}`, (card.tags || []).map(tag => ({ id: tag, text: tag }))],
     ]));
 
     this.state = {
@@ -86,7 +87,6 @@ class ListViewRaw extends Component {
     };
 
     this.handleChange = this.handleChange.bind(this);
-    this.handleTagsChange = this.handleTagsChange.bind(this);
     this.checkAll = this.checkAll.bind(this);
   }
 
@@ -117,6 +117,32 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
+  addTag(cardIndex, tag) {
+    const name = `tags${cardIndex}`;
+    this.setState(state => ({
+      [name]: [...state[name], tag],
+    }));
+  }
+
+  deleteTag(cardIndex, tagIndex) {
+    const name = `tags${cardIndex}`;
+    this.setState(state => ({
+      [name]: this.state[name].filter((tag, i) => i !== tagIndex),
+    }));
+  }
+
+  reorderTag(cardIndex, tag, currIndex, newIndex) {
+    const name = `tags${cardIndex}`;
+    this.setState(state => {
+      const tags = [...state[name]];
+      tags.splice(currIndex, 1);
+      tags.splice(newIndex, 0, tag);
+      return {
+        [name]: tags,
+      };
+    });
+  }
+
   handleChange(event) {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -126,21 +152,9 @@ class ListViewRaw extends Component {
       [name]: value
     });
 
+    // See comment below; this should be restructured.
     if (name.startsWith('tdcheck')) {
       cube[parseInt(target.getAttribute('data-index'))].checked = value;
-    }
-  }
-
-  handleTagsChange(event) {
-    const target = event.target;
-    const value = target.value;
-    const index = target.getAttribute('data-index');
-    const inputName = `tdtags${index}`;
-
-    if (target.value.endsWith(this.state[inputName].value)) {
-      this.setState({
-        [inputName]: '',
-      });
     }
   }
 
@@ -173,13 +187,13 @@ class ListViewRaw extends Component {
         [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
           [].concat.apply([], getLabels(tertiary).filter(label3 => groups[label1][label2][label3]).map(label3 =>
             groups[label1][label2][label3].map(({ index, details, ...card }) =>
-              <tr key={index} className={show_tag_colors ? getCardTagColorClass(card) : getCardColorClass(card)}>
-                <td>
+              <tr key={index} className={/* global */ show_tag_colors ? getCardTagColorClass(card) : getCardColorClass(card)}>
+                <td className="align-middle">
                   <Input type="checkbox" name={`tdcheck${index}`} data-index={index} checked={this.state[`tdcheck${index}`]} onChange={this.handleChange} />
                 </td>
                 <td className="align-middle text-truncate">{details.name}</td>
                 <td>
-                  <Input type="select" bsSize="sm" name={`tdversion${index}`} value={this.state[`tdversion${index}`]} onChange={this.handleChange}>
+                  <Input type="select" bsSize="sm" className="w-100" name={`tdversion${index}`} value={this.state[`tdversion${index}`]} onChange={this.handleChange}>
                     {(this.state.versionDict[card.cardID] || []).map(version =>
                       <option key={version.id} value={version.id}>
                         {version.version}
@@ -198,7 +212,7 @@ class ListViewRaw extends Component {
                   </Input>
                 </td>
                 <td>
-                  <Input type="text" bsSize="sm" name={`tdcmc${index}`} value={this.state[`tdcmc${index}`]} onChange={this.handleChange} />
+                  <Input type="text" bsSize="sm" style={{ maxWidth: '3rem' }} name={`tdcmc${index}`} value={this.state[`tdcmc${index}`]} onChange={this.handleChange} />
                 </td>
                 <td>
                   <Input type="select" bsSize="sm" name={`tdcolors${index}`} value={this.state[`tdcolors${index}`]} onChange={this.handleChange}>
@@ -207,27 +221,13 @@ class ListViewRaw extends Component {
                     )}
                   </Input>
                 </td>
-                <td>
-                  {/* Tags still unmanaged... */}
-                  <div className="tags-area">
-                    <div className="tags-input" data-name="tags-input">
-                      <span className="tags" />
-                      <Input
-                        type="hidden"
-                        data-index={index}
-                        className="hidden-input tagsselect"
-                      />
-                      <Input
-                        type="text"
-                        bsSize="sm"
-                        maxLength="24"
-                        className="main-input"
-                        name={`tdtags${index}`}
-                        defaultValue={this.state[`tdtags${index}`]}
-                        onChange={this.handleChange}
-                      />
-                    </div>
-                  </div>
+                <td style={{ minWidth: '15rem' }}>
+                  <TagInput
+                    tags={this.state[`tags${index}`]}
+                    addTag={this.addTag.bind(this, index)}
+                    deleteTag={this.deleteTag.bind(this, index)}
+                    reorderTag={this.reorderTag.bind(this, index)}
+                  />
                 </td>
               </tr>
             )
@@ -240,7 +240,7 @@ class ListViewRaw extends Component {
         <PagedTable rows={rows} size="sm" {...props}>
           <thead>
             <tr>
-              <th>
+              <th className="align-middle">
                 <Input type="checkbox" onChange={this.checkAll} />
               </th>
               <th>Name</th>
