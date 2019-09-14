@@ -49,29 +49,122 @@ treat the dekkerglen/CubeCobra repository as the source of truth about what
 work is complete, in progress, and not yet started. If you want to know
 whether someone is working on a feature, for example, or if anyone else has
 noticed the issue you're seeing, GitHub pull requests and issues are the first
-place you should look.
+place you should look. We use GitHub this way because it has great support for
+discovering long-lived tickets even years after the fact. Put simply, it is
+a system of record. This practice, when adhered to vigilantly, leads to
+increased collective productivity and deacreased blocking between community
+members and development efforts.
 
 ## How we use GitHub issues
 
-when you notice a bug, first look for an existing issue. if exists, comment,
-    else open new
-if there is no issue for a given feature request or bug, it was discovered
-    either minutes ago or not at all.
-when there's an important update related to a bug, for example you noticed
-    a new replication case, add a comment to the issue indicating that
-assigning to issues - commenting - who owns this? time limit without progress?
+GitHub issues are the source of truth about known issues and planned features.
+If a planned feature doesn't have an open issue, it's not a planned feature.
+If a bug doesn't have an open issue, it's unknown and should have one.
+
+When we file issues, we include links to related issues and pull requests in
+the issue description. GitHub makes linking to related issues and pull
+requests easy by automatically expanding the text #1234 into a link to issue 1234.
+These links provide a trail of breadcrumbs for community members to follow
+when learning about the group's thoughts on a given bug or feature request.
+
+When we notice a bug, we first look for an existing open issue that references the
+bug. If we find one, we comment on the issue or use a GitHub reaction emoji to
+indicate that we have also noticed the bug. If we don't find one, we open a new
+issue about the bug.
+
+When we notice a change in a bug's behavior, or a new case in which the bug
+can be replicated, we leave comments to that effect on the issue.
+
+When we begin actively working on a feature, we comment to that effect on the
+corresponding issue. This comment of "I'm working on this" indicates to other
+community members that this feature is covered, and to find something else to
+work on. Since GitHub does not allow community members to assign themselves to
+issues, we comment in this manner to make it clear to the community what work
+is currently in progress, and who owns that work.
 
 ## How we use GitHub pull requests
 
-WIP - useful for sharing progress, incremental feedback
-checklists
-description - makes review easier
-when closed, make issues for hanging threads
-code review - line comments
+Pull requests are the primary way that we share our work, both finished and in
+progress, with each other. When we open pull requests, we're communicating to
+the community that we are actively working on code changes, and we have some
+code to show for it. Though pull requests are not the source of truth about
+bug/feature ownership (issues get that title), they are a very useful tool for
+keeping community members abreast of one's progress without sending an @-everyone
+message in Discord.
+
+When we're working on pull requests over the course of multiple days,
+sometimes we open `[WIP]` (work in progress) pull requests. We clearly
+indicate that these are WIP in the description to avoid premature code reviews
+from the community. When we do this, we're communicating that we'd like others
+to be aware of the details of our progress without requesting a detailed code
+review just yet.
+
+Sometimes, WIP pull requests include checklists in their descriptions
+describing work remaining to be done. We use these checklists to indicate
+progress to observers and to keep track of it for ourselves.
+
+When we feel that a feature we're working on is "code complete", we open pull
+requests. These pull requests have descriptions that briefly summarize the
+changes, and sometimes include more detailed breakdowns of the architectural
+or coding approach. The goal of these descriptions is to aid in the code
+review process, making it easier for a community member with no prior
+knowledge of the pull request to perform a review. We also comment on our own
+pull requests asking for code review, sometimes even tagging specific
+individuals from whom we'd like a review.
+
+When we notice open pull requests with comments indicating they're ready for
+review, we review each other's code. The primary goal of our code reviews is
+to ensure that the code does not break existing functionality. Some secondary
+goals include ensuring that the code fully satisfies the related feature
+request or fixes the related bug, or that it conforms to best practices for
+code efficiency and style.
+
+We review each other's code using the GitHub "review" workflow, especially its
+line-commenting feature. We leave comments on specific lines that we notice
+problems with. We also make liberal use of links - to lines of code, other
+issues and pull requests, or external documentation - to strengthen the points
+we bring up in our code reviews. We do this also to leave a trail of
+breadcrumbs explaining our thought process for future readers of the code review,
+including our future selves.
+
+When a pull request is closed or merged, there are sometimes threads left
+hanging that require more work to be done. When this happens, we open issues
+tracking that remaining work.
 
 ## How we use git branches
 
-The master branch is the branch that contains live code. The development branch is the branch with changes that are pending for the next update. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the development branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
+The `master` branch is deployed to the production server. The `development`
+branch contains the version of the code that will be deployed during the next release.
+During these releases, `development` is merged into `master`. `development` is
+considered working at all times. Thus, when we notice bugs or missing features on the
+`development` branch, we open issues tracking them.
+
+As a default, we work on branches based on `development`, and we open our pull
+requests against `development`.
+
+## How we use Discord
+
+Our community collaborates in an asynchronous manner because it minimizes
+blocking and conflicts between various threads of work. We manage our known
+bugs, feature requests, and work in progress using GitHub's asychronous tools.
+Even so, there are some times when it's useful to have access to synchronous
+communication with other community members.
+
+Our community's most important use for Discord is interaction with
+non-technical users of Cube Cobra. Discord is a great way to get to know the
+needs and wants of the user base, and can inform plans for features and
+bugfixes.
+
+Another good use of Discord for contributors is stayng abreast of the current
+state of the production server. If there are new bugs being reported
+frequently that require rapid response, a Discord "war room" can be the best
+way to handle these reports.
+
+Our community does not treat Discord as a system of record. Though it's not
+private, we assume that everything we type on Discord will either be read
+within a few minutes or not at all. Thus, when we have anything to say that we
+think someone might care about later than a few minutes from now, we put it in
+a GitHub issue, comment, or pull request.
 
 
 ### Code Style
@@ -96,10 +189,6 @@ If you find a security vulnerability, do NOT open an issue. Send a private messa
 ### Join the discord disscussion.
 
  https://discord.gg/Hn39bCU
-
-# Code review process
-
-This will be a learning process for all involved. Expect some comments and discussion on code style and implementation.
 
 # Community
 
