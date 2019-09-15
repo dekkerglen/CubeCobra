@@ -85,35 +85,6 @@ $('#customImageDisplayToggle').click(function(e) {
 });
 
 if (canEdit) {
-  $('#justAddButton').click(function(e) {
-    justAdd()
-  });
-  $('#removeButton').click(function(e) {
-    remove();
-  });
-  $('#saveChangesButton').click(function(e) {
-    $('#changelistBlog').val($('#editor').html());
-    var val = '';
-    changes.forEach(function(change, index) {
-      if (index != 0) {
-        val += ';';
-      }
-      if (change.add) {
-        val += '+' + change.add._id;
-      } else if (change.remove) {
-        val += '-' + change.remove._id;
-      } else if (change.replace) {
-        val += '/' + change.replace[0]._id + '>';
-        val += change.replace[1]._id;
-      }
-    });
-    $('#changelistFormBody').val(val);
-    document.getElementById("changelistForm").submit();
-  });
-  $('#discardAllButton').click(function(e) {
-    changes = [];
-    updateCollapse();
-  });
   $('#addInput').keyup(function(e) {
     if (e.keyCode === 13 && $('#addInput').val().length == 0) {
       e.preventDefault();

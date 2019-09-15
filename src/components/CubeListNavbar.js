@@ -13,60 +13,8 @@ import {
   UncontrolledAlert, UncontrolledCollapse, UncontrolledDropdown
 } from 'reactstrap';
 
+import EditCollapse from './EditCollapse';
 import SortContext from './SortContext';
-
-const EditCollapse = props =>
-  <UncontrolledCollapse {...props}>
-    <Container>
-      <Row className="collapse warnings">
-        <Col>
-          <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs="12" sm="6">
-          <Form inline className="mb-2">
-            <Input className="text" id="addInput" placeholder="Card to Add" />
-            <Button color="success" id="justAddButton">Just Add</Button>
-          </Form>
-        </Col>
-        <Col xs="12" sm="6">
-          <Form inline className="mb-2">
-            <Input className="text" id="removeInput" placeholder="Card to Remove" />
-            <Button color="success" id="removeButton">Remove/Replace</Button>
-          </Form>
-        </Col>
-      </Row>
-      <div className="collapse editForm">
-        <Form id="changeListForm" method="POST" action={`/cube/edit/${cubeID}`}>
-          <Row>
-            <Col>
-              <Label>Changelist:</Label>
-              <div className="editarea">
-                <p className="editlist" id="changelist" />
-              </div>
-            </Col>
-            <Col>
-              <FormGroup>
-                <Label>Blog Title:</Label>
-                <Input type="text" />
-              </FormGroup>
-              <FormGroup>
-                <Label>Body:</Label>
-                <Input type="textarea" />
-              </FormGroup>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button color="success" id="saveChangesButton">Save Changes</Button>
-              <Button color="danger" id="discardAllButton">Discard All</Button>
-            </Col>
-          </Row>
-        </Form>
-      </div>
-    </Container>
-  </UncontrolledCollapse>
 
 const FilterCollapse = props =>
   <UncontrolledCollapse {...props}>
