@@ -1569,19 +1569,12 @@ router.get('/draft/:id', function(req, res) {
           });
         });
       });
-      draft.picks.forEach(function(card, index) {
-        if (Array.isArray(card)) {
-          card.forEach(function(item, index2) {
-            if (item) {
-              console.log(item);
-              item.details = carddb.cardFromId(item).cardID;
-              item.details.display_image = util.getCardImageURL(item);
-            }
-          });
-        } else {
+      // TODO this only handles the user picks (item 0 of draft picks), so custom images won't work with bot picks.
+      draft.picks[0].forEach(function(col, index) {
+        col.forEach(function(card, index) {
           card.details = carddb.cardFromId(card.cardID);
           card.details.display_image = util.getCardImageURL(card);
-        }
+        });
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
         draft.ratings = ratings;
