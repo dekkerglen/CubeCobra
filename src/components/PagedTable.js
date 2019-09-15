@@ -49,7 +49,7 @@ class PagedTable extends Component {
 }
 
 PagedTable.defaultProps = {
-  pageSize: 40,
+  pageSize: 60,
 };
 
 export default PagedTable;

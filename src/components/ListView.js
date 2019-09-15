@@ -75,13 +75,24 @@ class ListViewRaw extends Component {
     const updated = { ...card };
     delete updated.details;
 
+    updated.cardID = this.state[`tdversion${index}`];
     updated.type_line = this.state[`tdtype${index}`];
     updated.status = this.state[`tdstatus${index}`];
     updated.cmc = this.state[`tdcmc${index}`];
     updated.tags = this.state[`tags${index}`].map(tagDict => tagDict.text);
 
-    let colorString = this.state[`tdcolors${index}`];
+    const colorString = this.state[`tdcolors${index}`];
     updated.colors = colorString === 'C' ? [] : [...colorString];
+
+    if (updated.cardID === card.cardID
+      && updated.type_line === card.type_line
+      && updated.status === card.status
+      && updated.cmc === card.cmc
+      && updated.colors.join('') === card.colors.join('')
+      && updated.tags.join(',') === card.tags.join(',')) {
+      // no need to sync
+      return;
+    }
 
     fetch(`/cube/api/updatecard/${cubeID}`, {
       method: 'POST',
@@ -95,6 +106,16 @@ class ListViewRaw extends Component {
     }).then(response => response.json()).catch(err => console.error(err)).then(json => {
       if (json.success === 'true') {
         cube[index] = { ...cube[index], ...updated };
+        if (updated.cardID !== card.cardID) {
+          // changed version
+          fetch(`/cube/api/getcardfromid/${updated.cardID}`).then(
+            response => response.json()
+          ).then(json => {
+            cube[index].details = json.card;
+            cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
+            cubeDict[cube[index].index] = cube[index];
+          });
+        }
       }
     });
   }
@@ -134,14 +155,19 @@ class ListViewRaw extends Component {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
+    const index = parseInt(target.getAttribute('data-index'));
 
     this.setState({
       [name]: value
     });
 
+    if (target.getAttribute('type') === 'select') {
+      this.syncCard(index);
+    }
+
     // See comment below; this should be restructured.
     if (name.startsWith('tdcheck')) {
-      cube[parseInt(target.getAttribute('data-index'))].checked = value;
+      cube[index].checked = value;
     }
   }
 
@@ -194,7 +220,9 @@ class ListViewRaw extends Component {
                 <td className="align-middle">
                   <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
                 </td>
-                <td className="align-middle text-truncate">{details.name}</td>
+                <td className="align-middle text-truncate autocard" card={details.display_image}>
+                  {details.name}
+                </td>
                 <td>
                   <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
                     {(this.state.versionDict[card.cardID] || []).map(version =>
