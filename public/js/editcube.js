@@ -1,4 +1,3 @@
-var sortItemTemplate = '<option value="#{value}">#{label}</option>';
 var canEdit = $('#edittoken').val();
 var listGranularity = 50;
 var listPosition = 0;
@@ -82,13 +81,6 @@ $('#customImageDisplayToggle').click(function(e) {
   cube.forEach(function(card, index) {
     adjustDisplayImage(card, enabled);
   });
-  updateCubeList();
-});
-
-$('#viewSelect').change(function(e) {
-  view = $('#viewSelect').val();
-  if (view === 'curve' ) $('#secondarySortCol').hide();
-  else $('#secondarySortCol').show();
   updateCubeList();
 });
 
@@ -369,27 +361,6 @@ if (canEdit) {
     }).then(res => {
       $('#cubeSaveModal').modal('show');
     });
-  });
-  $('#massEdit').click(function(e) {
-    e.preventDefault();
-    if (view == 'list') {
-      groupSelect = [];
-      cube.forEach(function(card, index) {
-        if (card.checked) {
-          groupSelect.push(card);
-        }
-      });
-      if (groupSelect.length == 0) {
-        $('#selectEmptyModal').modal('show');
-      } else if (groupSelect.length == 1) {
-        card = groupSelect[0];
-        show_contextModal(card);
-      } else {
-        show_groupContextModal();
-      }
-    } else {
-      $('#viewSelect').val('list').change();
-    }
   });
 }
 
@@ -877,8 +848,6 @@ function GetColorIdentity(colors) {
 
 function getSorts() {
   return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
-
-
 }
 
 function getLabels(sort) {
@@ -1751,33 +1720,12 @@ const parseTokens = (tokens) => {
   }
 }
 
-function addSorts() {
-  sort_categories = getSorts();
-  var sorthtml = "";
-  sort_categories.forEach(function(category, index) {
-    sorthtml += sortItemTemplate.replace('#{value}', category).replace('#{label}', category);
-  });
-
-  //document.getElementById('filterType').innerHTML = sorthtml;
-  sorthtml += sortItemTemplate.replace('#{value}', 'Unsorted').replace('#{label}', 'Unsorted');
-  document.getElementById('secondarySortSelect').innerHTML = sorthtml;
-  document.getElementById('primarySortSelect').innerHTML = sorthtml;
-  if (document.getElementById("sort1").value.length > 0 && document.getElementById("sort2").value.length > 0) {
-    document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort1").value);
-    document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf(document.getElementById("sort2").value);
-  } else {
-     document.getElementById('primarySortSelect').selectedIndex = sort_categories.indexOf('Color Category');
-     document.getElementById('secondarySortSelect').selectedIndex = sort_categories.indexOf('Types-Multicolor');
-  }
-}
-
 var prev_handler = window.onload;
 window.onload = function() {
   if (prev_handler) {
     prev_handler();
   }
   buildFiltersFromQsargs();
-  addSorts();
   updateCubeList();
   activateTags();
 };

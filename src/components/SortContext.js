@@ -13,10 +13,12 @@ class SortContextProvider extends React.Component {
     super(props);
 
     this.state = {
-      primary: document.getElementById('primarySortSelect').value || 'Color Category',
-      secondary: document.getElementById('secondarySortSelect').value || 'Types-Multicolor',
+      primary: document.getElementById('sort1').value || 'Color Category',
+      secondary: document.getElementById('sort2').value || 'Types-Multicolor',
       tertiary: 'CMC2',
     };
+
+    this.changeSort = this.changeSort.bind(this);
   }
 
   componentDidMount() {
@@ -31,9 +33,17 @@ class SortContextProvider extends React.Component {
     }
   }
 
+  changeSort(change) {
+    this.setState(change);
+  }
+
   render() {
+    const value = {
+      ...this.state,
+      changeSort: this.changeSort,
+    };
     return (
-      <SortContextRaw.Provider value={this.state} {...this.props} />
+      <SortContextRaw.Provider value={value} {...this.props} />
     );
   }
 }

@@ -1,6 +1,141 @@
 import React, { Component } from 'react';
 
-import { Collapse, DropdownItem, DropdownMenu, DropdownToggle, Input, Label, Nav, NavItem, NavLink, Navbar, NavbarToggler, UncontrolledDropdown } from 'reactstrap';
+import {
+  Button,
+  Collapse,
+  Col,
+  Container,
+  DropdownItem, DropdownMenu, DropdownToggle,
+  Form, FormGroup, Input, Label,
+  InputGroup, InputGroupAddon, InputGroupText,
+  Nav, NavItem, NavLink, Navbar, NavbarToggler,
+  Row,
+  UncontrolledAlert, UncontrolledCollapse, UncontrolledDropdown
+} from 'reactstrap';
+
+import SortContext from './SortContext';
+
+const EditCollapse = props =>
+  <UncontrolledCollapse {...props}>
+    <Container>
+      <Row className="collapse warnings">
+        <Col>
+          <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs="12" sm="6">
+          <Form inline className="mb-2">
+            <Input className="text" id="addInput" placeholder="Card to Add" />
+            <Button color="success" id="justAddButton">Just Add</Button>
+          </Form>
+        </Col>
+        <Col xs="12" sm="6">
+          <Form inline className="mb-2">
+            <Input className="text" id="removeInput" placeholder="Card to Remove" />
+            <Button color="success" id="removeButton">Remove/Replace</Button>
+          </Form>
+        </Col>
+      </Row>
+      <div className="collapse editForm">
+        <Form id="changeListForm" method="POST" action={`/cube/edit/${cubeID}`}>
+          <Row>
+            <Col>
+              <Label>Changelist:</Label>
+              <div className="editarea">
+                <p className="editlist" id="changelist" />
+              </div>
+            </Col>
+            <Col>
+              <FormGroup>
+                <Label>Blog Title:</Label>
+                <Input type="text" />
+              </FormGroup>
+              <FormGroup>
+                <Label>Body:</Label>
+                <Input type="textarea" />
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button color="success" id="saveChangesButton">Save Changes</Button>
+              <Button color="danger" id="discardAllButton">Discard All</Button>
+            </Col>
+          </Row>
+        </Form>
+      </div>
+    </Container>
+  </UncontrolledCollapse>
+
+const FilterCollapse = props =>
+  <UncontrolledCollapse {...props}>
+    <Container>
+      <Row>
+        <Col>
+          <InputGroup className="mb-3">
+            <InputGroupAddon addonType="prepend">
+              <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
+            </InputGroupAddon>
+            <Input type="text" id="filterInput" placeholder={'name:"Ambush Viper"'} />
+            <InputGroupAddon addonType="append">
+              <Button color="success" id="filterButton">Apply</Button>
+            </InputGroupAddon>
+          </InputGroup>
+          <h5>Filters</h5>
+          <div id="filterarea" />
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <Button color="success" id="resetButton" className="mr-sm-2 mb-3">Reset Filters</Button>
+          <Button color="success" id="advancedSearchButton" className="mr-sm-2 mb-3" data-toggle="#filterModal">
+            Advanced Search
+          </Button>
+          <Button color="success" className="mr-sm-2 mb-3" href="/filters">Syntax Guide</Button>
+        </Col>
+      </Row>
+    </Container>
+  </UncontrolledCollapse>;
+
+const SortCollapse = props =>
+  <UncontrolledCollapse {...props}>
+    <SortContext.Consumer>
+      {({ primary, secondary, changeSort }) =>
+        <Container>
+          <Row>
+            <Col xs="12" sm="6" className="mt-2">
+              <h6>Primary Sort</h6>
+              <Input type="select" value={primary} onChange={e => changeSort({ primary: e.target.value })}>
+                {getSorts().map(sort => <option key={sort}>{sort}</option>)}
+              </Input>
+            </Col>
+            <Col xs="12" sm="6" className="mt-2">
+              <h6>Secondary Sort</h6>
+              <Input type="select" value={secondary} onChange={e => changeSort({ secondary: e.target.value })}>
+                {getSorts().map(sort => <option key={sort}>{sort}</option>)}
+              </Input>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <p className="my-2"><em>
+                Cards will be appear as duplicates if they fit in multiple categories.
+                The counts will still only count each item once.
+              </em></p>
+            </Col>
+          </Row>
+          <Row className="mb-3">
+            {!canEdit ? '' :
+              <Col>
+                <Button color="success" id="saveSortButton">Save as Default Sort</Button>
+              </Col>
+            }
+          </Row>
+        </Container>
+      }
+    </SortContext.Consumer>
+  </UncontrolledCollapse>;
 
 class CubeListNavbar extends Component {
   constructor(props) {
@@ -10,6 +145,7 @@ class CubeListNavbar extends Component {
 
     this.toggle = this.toggle.bind(this);
     this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
+    this.handleMassEdit = this.handleMassEdit.bind(this);
   }
 
   toggle() {
@@ -22,6 +158,24 @@ class CubeListNavbar extends Component {
     const target = event.target;
     const value = target.value;
     this.props.changeCubeView(value);
+  }
+
+  handleMassEdit(event) {
+    // This is full of globals and needs to be restructured.
+    event.preventDefault();
+    if (this.props.cubeView === 'list') {
+      groupSelect = cube.filter(card => card.checked);
+      if (groupSelect.length === 0) {
+        $('#selectEmptyModal').modal('show');
+      } else if (groupSelect.length === 1) {
+        card = groupSelect[0];
+        show_contextModal(card);
+      } else {
+        show_groupContextModal();
+      }
+    } else {
+      this.props.changeCubeView('list');
+    }
   }
 
   render() {
@@ -60,7 +214,9 @@ class CubeListNavbar extends Component {
               </NavItem>
               {!canEdit ? '' :
                 <NavItem>
-                  <NavLink href="#" id="navbarMassEditLink">Mass Edit</NavLink>
+                  <NavLink href="#" onClick={this.handleMassEdit}>
+                    {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
+                  </NavLink>
                 </NavItem>
               }
               <NavItem>
@@ -96,6 +252,11 @@ class CubeListNavbar extends Component {
             </Nav>
           </Collapse>
         </Navbar>
+        {!canEdit ? '' :
+          <EditCollapse toggler="#navbarEditLink" />
+        }
+        <SortCollapse toggler="#navbarSortLink" />
+        <FilterCollapse toggler="#navbarFilterLink" />
       </div>
     );
   }

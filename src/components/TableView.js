@@ -5,7 +5,7 @@ import { Row, Col } from 'reactstrap';
 import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';
 
-const TableViewRaw = ({ cards, primary, secondary, ...props }) => {
+const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
   let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
   for (let columnLabel of Object.keys(columns)) {
