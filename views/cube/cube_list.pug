@@ -3,16 +3,6 @@ extends cube_layout
 block cube_toolbar
   link(rel='stylesheet' href='/css/tags.css')
   link(rel='stylesheet' href='/css/editcube.css')
-  #navcompare.collapse(data-parent='#accordion')
-    .container
-      .row
-        .col
-          form(autocomplete='off').form-inline
-            .mb-2
-              input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
-            button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
-            br
-            br
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)

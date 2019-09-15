@@ -85,6 +85,34 @@ const SortCollapse = props =>
     </SortContext.Consumer>
   </UncontrolledCollapse>;
 
+// FIXME: Bring into React
+function compare(event) {
+  event.preventDefault();
+  const id_a = $('#cubeID').val();
+  let id_b = $('#compareInput').val();
+  if (id_b.includes('/')) {
+    let parts = id_b.split('/');
+    id_b = parts[parts.length - 1];
+  }
+  if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
+}
+
+const CompareCollapse = props =>
+  <UncontrolledCollapse {...props}>
+    <Container>
+      <Row>
+        <Col>
+          <Form inline onSubmit={compare}>
+            <Input type="text" id="compareInput" className="mb-2 mr-2" placeholder="Comparison Cube ID"/>
+            <Button type="submit" color="success" className="mb-2">
+              Compare Cubes
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  </UncontrolledCollapse>
+
 class CubeListNavbar extends Component {
   constructor(props) {
     super(props);
@@ -205,6 +233,7 @@ class CubeListNavbar extends Component {
         }
         <SortCollapse toggler="#navbarSortLink" />
         <FilterCollapse toggler="#navbarFilterLink" />
+        <CompareCollapse toggler="#navbarCompareLink" />
       </div>
     );
   }

@@ -34,23 +34,6 @@ cube.forEach(function(card, index) {
 });
 var cubeTagColors = JSON.parse($('#cubeTagColors').val());
 
-$('#compareInput').keypress(function(e) {
-  if (e.which == 13) {
-    $('#compareButton').click();
-    return false;
-  }
-});
-
-$('#compareButton').click(function(e) {
-  const id_a = $('#cubeID').val();
-  let id_b = $('#compareInput').val();
-  if (id_b.includes('/')) {
-    let parts = id_b.split('/');
-    id_b = parts[parts.length - 1];
-  }
-  if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
-});
-
 $('#filterButton').click(function(e) {
   updateFilters($('#filterInput').val());
 });
