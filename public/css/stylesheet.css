@@ -301,14 +301,6 @@ border-bottom: none;
     vertical-align: top;
 }
 
-#customImageDisplayToggle {
-    margin-right: 6px;
-}
-
-#customImageDisplayMenuItem {
-    float: right;
-}
-
 #packTitle, .card-header h4 {
     display: inline-block;
 }
