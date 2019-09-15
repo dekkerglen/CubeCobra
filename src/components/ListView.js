@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 
-import { Col, Input, Pagination, PaginationItem, PaginationLink, Row, Table } from 'reactstrap';
+import { Col, Input, Row } from 'reactstrap';
 
+import PagedTable from './PagedTable';
 import SortContext from './SortContext';
 import TagInput from './TagInput';
 
@@ -12,60 +13,6 @@ const colorCombos = [
   'WUBR', 'WUBG', 'WURG', 'WBRG', 'UBRG',
   'WUBRG'
 ];
-
-class PagedTable extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = { page: 0 };
-
-    this.setPage = this.setPage.bind(this);
-  }
-
-  setPage(event) {
-    event.preventDefault();
-    this.setState({
-      page: parseInt(event.target.getAttribute('page')),
-    });
-  }
-
-  componentDidMount() {
-    activateTags();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.rows.length !== this.props.rows.length) {
-      this.setState({ page: 0 });
-    }
-  }
-
-  render() {
-    const { pageSize, rows, children, ...props } = this.props;
-    const { page } = this.state;
-    const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
-    const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
-
-    return <>
-      <Pagination aria-label="Table page" className="mt-3">
-        {validPages.map(page =>
-          <PaginationItem key={page} active={page === this.state.page}>
-            <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-              {page + 1}
-            </PaginationLink>
-          </PaginationItem>
-        )}
-      </Pagination>
-      <Table {...props}>
-        {children}
-        <tbody>{displayRows}</tbody>
-      </Table>
-    </>;
-  }
-}
-
-PagedTable.defaultProps = {
-  pageSize: 50,
-};
 
 class ListViewRaw extends Component {
   constructor(props) {
@@ -87,6 +34,7 @@ class ListViewRaw extends Component {
     };
 
     this.handleChange = this.handleChange.bind(this);
+    this.handleBlur = this.handleBlur.bind(this);
     this.checkAll = this.checkAll.bind(this);
   }
 
@@ -110,6 +58,9 @@ class ListViewRaw extends Component {
   }
 
   componentDidMount() {
+    /* global */
+    activateTags();
+
     this.updateVersions();
   }
 
@@ -117,11 +68,43 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
+  syncCard(index) {
+    /* globals */
+    const cubeID = document.getElementById('cubeID').value;
+    const card = cube[index];
+    const updated = { ...card };
+    delete updated.details;
+
+    updated.type_line = this.state[`tdtype${index}`];
+    updated.status = this.state[`tdstatus${index}`];
+    updated.cmc = this.state[`tdcmc${index}`];
+    updated.tags = this.state[`tags${index}`].map(tagDict => tagDict.text);
+
+    let colorString = this.state[`tdcolors${index}`];
+    updated.colors = colorString === 'C' ? [] : [...colorString];
+
+    fetch(`/cube/api/updatecard/${cubeID}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        src: card,
+        updated,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(response => response.json()).catch(err => console.error(err)).then(json => {
+      if (json.success === 'true') {
+        cube[index] = { ...cube[index], ...updated };
+      }
+    });
+  }
+
   addTag(cardIndex, tag) {
     const name = `tags${cardIndex}`;
     this.setState(state => ({
       [name]: [...state[name], tag],
     }));
+    this.syncCard(cardIndex);
   }
 
   deleteTag(cardIndex, tagIndex) {
@@ -129,6 +112,7 @@ class ListViewRaw extends Component {
     this.setState(state => ({
       [name]: this.state[name].filter((tag, i) => i !== tagIndex),
     }));
+    this.syncCard(cardIndex);
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
@@ -141,9 +125,12 @@ class ListViewRaw extends Component {
         [name]: tags,
       };
     });
+    this.syncCard(cardIndex);
   }
 
   handleChange(event) {
+    event.preventDefault();
+
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
@@ -158,11 +145,18 @@ class ListViewRaw extends Component {
     }
   }
 
+  handleBlur(event) {
+    const target = event.target;
+    const index = parseInt(target.getAttribute('data-index'));
+    this.syncCard(index);
+  }
+
   checkAll(event) {
     const target = event.target;
     const value = target.checked;
 
     // This breaks React invariants and we should figure out a different way to pass this data around.
+    // Currently necessary to get the group context modal to work.
     for (card of this.props.cards) {
       card.checked = value;
     }
@@ -182,6 +176,15 @@ class ListViewRaw extends Component {
       }
     }
 
+    const inputProps = (index, field) => ({
+      bsSize: 'sm',
+      name: `td${field}${index}`,
+      'data-index': index,
+      onChange: this.handleChange,
+      onBlur: this.handleBlur,
+      [props.type === 'checkbox' ? 'checked' : 'value']: this.state[`td${field}${index}`],
+    });
+
     const rows =
       [].concat.apply([], getLabels(primary).filter(label1 => groups[label1]).map(label1 =>
         [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
@@ -189,11 +192,11 @@ class ListViewRaw extends Component {
             groups[label1][label2][label3].map(({ index, details, ...card }) =>
               <tr key={index} className={/* global */ show_tag_colors ? getCardTagColorClass(card) : getCardColorClass(card)}>
                 <td className="align-middle">
-                  <Input type="checkbox" name={`tdcheck${index}`} data-index={index} checked={this.state[`tdcheck${index}`]} onChange={this.handleChange} />
+                  <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
                 </td>
                 <td className="align-middle text-truncate">{details.name}</td>
                 <td>
-                  <Input type="select" bsSize="sm" className="w-100" name={`tdversion${index}`} value={this.state[`tdversion${index}`]} onChange={this.handleChange}>
+                  <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
                     {(this.state.versionDict[card.cardID] || []).map(version =>
                       <option key={version.id} value={version.id}>
                         {version.version}
@@ -202,20 +205,20 @@ class ListViewRaw extends Component {
                   </Input>
                 </td>
                 <td>
-                  <Input type="text" bsSize="sm" name={`tdtype${index}`} value={this.state[`tdtype${index}`]} onChange={this.handleChange} />
+                  <Input {...inputProps(index, 'type')} type="text" />
                 </td>
                 <td>
-                  <Input type="select" bsSize="sm" name={`tdstatus${index}`} value={this.state[`tdstatus${index}`]} onChange={this.handleChange}>
+                  <Input {...inputProps(index, 'status')} type="select">
                     {getLabels('Status').map(status =>
                       <option key={status}>{status}</option>
                     )}
                   </Input>
                 </td>
                 <td>
-                  <Input type="text" bsSize="sm" style={{ maxWidth: '3rem' }} name={`tdcmc${index}`} value={this.state[`tdcmc${index}`]} onChange={this.handleChange} />
+                  <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
                 </td>
                 <td>
-                  <Input type="select" bsSize="sm" name={`tdcolors${index}`} value={this.state[`tdcolors${index}`]} onChange={this.handleChange}>
+                  <Input {...inputProps(index, 'colors')} type="select">
                     {colorCombos.map(combo =>
                       <option key={combo}>{combo}</option>
                     )}
@@ -241,7 +244,7 @@ class ListViewRaw extends Component {
           <thead>
             <tr>
               <th className="align-middle">
-                <Input type="checkbox" onChange={this.checkAll} />
+                <Input type="checkbox" className="d-block mx-auto" onChange={this.checkAll} />
               </th>
               <th>Name</th>
               <th>Version</th>

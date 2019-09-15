@@ -10,10 +10,11 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag }) => (
         tags={tags}
         suggestions={allSuggestions}
         handleAddition={tag => { addSuggestion(tag); addTag(tag); }}
-        handleDeletion={deleteTag}
+        handleDelete={deleteTag}
         handleDrag={reorderTag}
         placeholder="Tag..."
         maxLength={24}
+        autofocus={false}
       />
     )}
   </TagContext.Consumer>
