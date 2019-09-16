@@ -7,11 +7,12 @@ const AutocardListItem = ({ card }) => {
   return (
     <a
       href="#"
-      className={`activateContextModal card-list-item list-group-item autocard ${color_class}`}
+      className={`card-list-item list-group-item autocard ${color_class}`}
       card={display_image}
       card_flip={image_flip}
       card_tags={tags}
       cardindex={card.index}
+      onClick={/* global */ handleContextModal}
     >
       {name}
     </a>

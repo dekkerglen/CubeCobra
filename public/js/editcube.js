@@ -1194,13 +1194,15 @@ function show_contextModal(card) {
     });
 }
 
+function handleContextModal(e) {
+  e.preventDefault();
+  card = cubeDict[$(e.target).attr("cardindex")];
+  autocard_hide_card();
+  show_contextModal(card);
+}
+
 function init_contextModal() {
-  $('.activateContextModal').click(function(e) {
-    e.preventDefault();
-    card = cubeDict[$(this).attr("cardindex")];
-    autocard_hide_card();
-    show_contextModal(card);
-  });
+  $('.activateContextModal').click(handleContextModal);
 }
 
 function sortIntoGroups(cards, sort) {

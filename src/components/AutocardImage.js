@@ -9,12 +9,13 @@ const AutocardImage = ({ index, display_image, image_flip, tags }) => (
     card_tags={tags}
   >
     <img
-      className="activateContextModal defaultCardImage"
+      className="defaultCardImage"
       cardindex={index}
       src={display_image}
       alt={name}
       width={150}
       height={210}
+      onClick={/* global */ handleContextModal}
     />
   </a>
 );

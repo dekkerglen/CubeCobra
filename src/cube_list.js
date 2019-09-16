@@ -20,6 +20,18 @@ class CubeList extends Component {
     this.changeCubeView = this.changeCubeView.bind(this);
   }
 
+  componentDidMount() {
+    /* global */
+    init_groupcontextModal();
+    autocard_init('autocard');
+  }
+
+  componentDidUpdate() {
+    /* global */
+    init_groupcontextModal();
+    autocard_init('autocard');
+  }
+
   changeCubeView(cubeView) {
     this.setState({ cubeView });
   }

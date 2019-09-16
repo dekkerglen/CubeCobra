@@ -12,7 +12,7 @@ class CubeCompare extends Component {
 
   componentDidMount() {
     /* global */
-    init_contextModal();
+    init_groupcontextModal();
   }
 
   render() {
