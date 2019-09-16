@@ -12,6 +12,7 @@ import {
   UncontrolledDropdown
 } from 'reactstrap';
 
+import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import SortCollapse from './SortCollapse';
@@ -165,7 +166,16 @@ class CubeListNavbar extends Component {
               </UncontrolledDropdown>
               <NavItem className={hasCustomImages ? undefined : 'd-none'}>
                 <NavLink id="customImageDisplayMenuItem" className="d-flex align-items-baseline text-sm-left text-center">
-                  <Input type="checkbox" className="mr-1 ml-0 my-0 position-static d-block" id="customImageDisplayToggle" />
+                  <DisplayContext.Consumer>
+                    {({ showCustomImages, toggleShowCustomImages }) =>
+                      <Input
+                        type="checkbox"
+                        className="mr-1 ml-0 my-0 position-static d-block"
+                        checked={showCustomImages}
+                        onChange={toggleShowCustomImages}
+                      />
+                    }
+                  </DisplayContext.Consumer>
                   <Label for="customImageDisplayToggle" className="m-0">Show Custom Images</Label>
                 </NavLink>
               </NavItem>
