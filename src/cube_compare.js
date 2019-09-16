@@ -10,6 +10,11 @@ class CubeCompare extends Component {
     super(props);
   }
 
+  componentDidMount() {
+    /* global */
+    init_contextModal();
+  }
+
   render() {
     return (
       <SortContext.Provider>
