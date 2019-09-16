@@ -67,6 +67,8 @@ $('#customImageDisplayToggle').click(function(e) {
   updateCubeList();
 });
 
+var editListeners = [];
+
 if (canEdit) {
   $('#addInput').keyup(function(e) {
     if (e.keyCode === 13 && $('#addInput').val().length == 0) {
@@ -210,8 +212,8 @@ if (canEdit) {
     });
     updateCollapse();
     $('#groupContextModal').modal('hide');
-    $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
+    editListeners.forEach(listener => listener());
   });
   $('#contextRemoveButton').click(function(e) {
     changes.push({
@@ -219,8 +221,8 @@ if (canEdit) {
     })
     updateCollapse();
     $('#contextModal').modal('hide');
-    $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
+    editListeners.forEach(listener => listener());
   });
   $('#contextModalSubmit').click(function(e) {
     //if we typed a tag but didn't hit enter, register that tag

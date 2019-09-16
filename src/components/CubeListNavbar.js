@@ -58,6 +58,9 @@ class CubeListNavbar extends Component {
     this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
     this.handleMassEdit = this.handleMassEdit.bind(this);
     this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
+
+    /* global */
+    editListeners.push(() => this.setState({ openCollapse: 'edit' }));
   }
 
   toggle() {
