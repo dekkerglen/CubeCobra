@@ -190,7 +190,7 @@ class ListViewRaw extends Component {
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, ...props } = this.props;
+    const { cards, primary, secondary, tertiary, changeSort, ...props } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
       groups[label1] = {};
