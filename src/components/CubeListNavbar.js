@@ -9,7 +9,7 @@ import {
   Form, Input, Label,
   Nav, NavItem, NavLink, Navbar, NavbarToggler,
   Row,
-  UncontrolledCollapse, UncontrolledDropdown
+  UncontrolledDropdown
 } from 'reactstrap';
 
 import EditCollapse from './EditCollapse';
@@ -29,7 +29,7 @@ function compare(event) {
 }
 
 const CompareCollapse = props =>
-  <UncontrolledCollapse {...props}>
+  <Collapse {...props}>
     <Container>
       <Row>
         <Col>
@@ -42,17 +42,21 @@ const CompareCollapse = props =>
         </Col>
       </Row>
     </Container>
-  </UncontrolledCollapse>;
+  </Collapse>;
 
 class CubeListNavbar extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { isOpen: false };
+    this.state = {
+      isOpen: false,
+      openCollapse: null,
+    };
 
     this.toggle = this.toggle.bind(this);
     this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
     this.handleMassEdit = this.handleMassEdit.bind(this);
+    this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
   }
 
   toggle() {
@@ -85,6 +89,15 @@ class CubeListNavbar extends Component {
     }
   }
 
+  handleOpenCollapse(event) {
+    event.preventDefault();
+    const target = event.target;
+    const collapse = target.getAttribute('data-target');
+    this.setState(({ openCollapse }) => ({
+      openCollapse: openCollapse === collapse ? null : collapse,
+    }));
+  }
+
   render() {
     const { canEdit, cubeView, cubeID, hasCustomImages } = this.props;
     /* global */
@@ -107,17 +120,17 @@ class CubeListNavbar extends Component {
             <Nav className="ml-auto" navbar>
               {!canEdit ? '' :
                 <NavItem>
-                  <NavLink href="#" id="navbarEditLink">Add/Remove</NavLink>
+                  <NavLink href="#" data-target="edit" onClick={this.handleOpenCollapse}>Add/Remove</NavLink>
                 </NavItem>
               }
               <NavItem>
-                <NavLink href="#" id="navbarSortLink">Sort</NavLink>
+                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>Sort</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" id="navbarFilterLink">Filter</NavLink>
+                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>Filter</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" id="navbarCompareLink">Compare</NavLink>
+                <NavLink href="#" data-target="compare" onClick={this.handleOpenCollapse}>Compare</NavLink>
               </NavItem>
               {!canEdit ? '' :
                 <NavItem>
@@ -160,11 +173,11 @@ class CubeListNavbar extends Component {
           </Collapse>
         </Navbar>
         {!canEdit ? '' :
-          <EditCollapse toggler="#navbarEditLink" />
+          <EditCollapse isOpen={this.state.openCollapse === 'edit'} />
         }
-        <SortCollapse toggler="#navbarSortLink" />
-        <FilterCollapse toggler="#navbarFilterLink" />
-        <CompareCollapse toggler="#navbarCompareLink" />
+        <SortCollapse isOpen={this.state.openCollapse === 'sort'} />
+        <FilterCollapse isOpen={this.state.openCollapse === 'filter'} />
+        <CompareCollapse isOpen={this.state.openCollapse === 'compare'} />
       </div>
     );
   }

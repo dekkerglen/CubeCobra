@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Button, Col, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert, UncontrolledCollapse } from 'reactstrap';
+import { Button, Col, Collapse, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
 
 function saveChanges() {
   $('#changelistBlog').val($('#editor').html());
@@ -28,7 +28,7 @@ function discardAll() {
 }
 
 const EditCollapse = props =>
-  <UncontrolledCollapse {...props}>
+  <Collapse {...props}>
     <Container>
       <Row className="collapse warnings">
         <Col>
@@ -82,6 +82,6 @@ const EditCollapse = props =>
         </Form>
       </div>
     </Container>
-  </UncontrolledCollapse>;
+  </Collapse>;
 
 export default EditCollapse;

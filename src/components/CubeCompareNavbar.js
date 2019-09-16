@@ -12,14 +12,28 @@ class CubeCompareNavbar extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { isOpen: false };
+    this.state = {
+      isOpen: false,
+      openCollapse: null
+    };
 
     this.toggle = this.toggle.bind(this);
+    this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
   }
 
   toggle() {
+    event.preventDefault();
     this.setState(({ isOpen }) => ({
       isOpen: !isOpen
+    }));
+  }
+
+  handleOpenCollapse(event) {
+    event.preventDefault();
+    const target = event.target;
+    const collapse = target.getAttribute('data-target');
+    this.setState(({ openCollapse }) => ({
+      openCollapse: openCollapse === collapse ? null : collapse,
     }));
   }
 
@@ -31,10 +45,10 @@ class CubeCompareNavbar extends Component {
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav navbar>
               <NavItem>
-                <NavLink href="#" id="navbarSortLink">Sort</NavLink>
+                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>Sort</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" id="navbarFilterLink">Filter</NavLink>
+                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>Filter</NavLink>
               </NavItem>
               <NavItem>
                 <NavLink href="#" onClick={/* global */ tagColorsModal}>
@@ -44,8 +58,8 @@ class CubeCompareNavbar extends Component {
             </Nav>
           </Collapse>
         </Navbar>
-        <SortCollapse toggler="#navbarSortLink" />
-        <FilterCollapse toggler="#navbarFilterLink" />
+        <SortCollapse isOpen={this.state.openCollapse === 'sort'} />
+        <FilterCollapse isOpen={this.state.openCollapse === 'filter'} />
       </div>
     );
   }

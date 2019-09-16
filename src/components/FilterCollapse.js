@@ -1,9 +1,9 @@
 import React from 'react';
 
-import { Button, Col, Container, Input, InputGroup, InputGroupAddon, InputGroupText, Row, UncontrolledCollapse } from 'reactstrap';
+import { Button, Col, Collapse, Container, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
 
 const FilterCollapse = props =>
-  <UncontrolledCollapse {...props}>
+  <Collapse {...props}>
     <Container>
       <Row>
         <Col>
@@ -30,6 +30,6 @@ const FilterCollapse = props =>
         </Col>
       </Row>
     </Container>
-  </UncontrolledCollapse>;
+  </Collapse>;
 
 export default FilterCollapse;

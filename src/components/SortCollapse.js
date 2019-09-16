@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { Button, Col, Container, Input, Row, UncontrolledCollapse } from 'reactstrap';
+import { Button, Col, Collapse, Container, Input, Row } from 'reactstrap';
 
 import SortContext from './SortContext';
 
 const SortCollapse = props =>
-  <UncontrolledCollapse {...props}>
+  <Collapse {...props}>
     <SortContext.Consumer>
       {({ primary, secondary, changeSort }) =>
         <Container>
@@ -41,6 +41,6 @@ const SortCollapse = props =>
         </Container>
       }
     </SortContext.Consumer>
-  </UncontrolledCollapse>;
+  </Collapse>;
 
 export default SortCollapse;
