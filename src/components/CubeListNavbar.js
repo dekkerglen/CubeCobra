@@ -6,84 +6,15 @@ import {
   Col,
   Container,
   DropdownItem, DropdownMenu, DropdownToggle,
-  Form, FormGroup, Input, Label,
-  InputGroup, InputGroupAddon, InputGroupText,
+  Form, Input, Label,
   Nav, NavItem, NavLink, Navbar, NavbarToggler,
   Row,
-  UncontrolledAlert, UncontrolledCollapse, UncontrolledDropdown
+  UncontrolledCollapse, UncontrolledDropdown
 } from 'reactstrap';
 
 import EditCollapse from './EditCollapse';
-import SortContext from './SortContext';
-
-const FilterCollapse = props =>
-  <UncontrolledCollapse {...props}>
-    <Container>
-      <Row>
-        <Col>
-          <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
-            </InputGroupAddon>
-            <Input type="text" id="filterInput" placeholder={'name:"Ambush Viper"'} />
-            <InputGroupAddon addonType="append">
-              <Button color="success" id="filterButton">Apply</Button>
-            </InputGroupAddon>
-          </InputGroup>
-          <h5>Filters</h5>
-          <div id="filterarea" />
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Button color="success" id="resetButton" className="mr-sm-2 mb-3">Reset Filters</Button>
-          <Button color="success" id="advancedSearchButton" className="mr-sm-2 mb-3" data-toggle="#filterModal">
-            Advanced Search
-          </Button>
-          <Button color="success" className="mr-sm-2 mb-3" href="/filters">Syntax Guide</Button>
-        </Col>
-      </Row>
-    </Container>
-  </UncontrolledCollapse>;
-
-const SortCollapse = props =>
-  <UncontrolledCollapse {...props}>
-    <SortContext.Consumer>
-      {({ primary, secondary, changeSort }) =>
-        <Container>
-          <Row>
-            <Col xs="12" sm="6" className="mt-2">
-              <h6>Primary Sort</h6>
-              <Input type="select" value={primary} onChange={e => changeSort({ primary: e.target.value })}>
-                {getSorts().map(sort => <option key={sort}>{sort}</option>)}
-              </Input>
-            </Col>
-            <Col xs="12" sm="6" className="mt-2">
-              <h6>Secondary Sort</h6>
-              <Input type="select" value={secondary} onChange={e => changeSort({ secondary: e.target.value })}>
-                {getSorts().map(sort => <option key={sort}>{sort}</option>)}
-              </Input>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <p className="my-2"><em>
-                Cards will be appear as duplicates if they fit in multiple categories.
-                The counts will still only count each item once.
-              </em></p>
-            </Col>
-          </Row>
-          <Row className="mb-3">
-            {!canEdit ? '' :
-              <Col>
-                <Button color="success" id="saveSortButton">Save as Default Sort</Button>
-              </Col>
-            }
-          </Row>
-        </Container>
-      }
-    </SortContext.Consumer>
-  </UncontrolledCollapse>;
+import FilterCollapse from './FilterCollapse';
+import SortCollapse from './SortCollapse';
 
 // FIXME: Bring into React
 function compare(event) {
@@ -111,7 +42,7 @@ const CompareCollapse = props =>
         </Col>
       </Row>
     </Container>
-  </UncontrolledCollapse>
+  </UncontrolledCollapse>;
 
 class CubeListNavbar extends Component {
   constructor(props) {
