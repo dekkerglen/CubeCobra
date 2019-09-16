@@ -318,7 +318,7 @@ if (canEdit) {
   });
 }
 
-$('#tagColors').click(function(e) {
+function tagColorsModal() {
   let b_id = $('#cubeB_ID').val();
   let query = (b_id) ? `?b_id=${b_id}` : '';
   fetch(`/cube/api/cubetagcolors/${$('#cubeID').val()}${query}`, {
@@ -415,7 +415,9 @@ $('#tagColors').click(function(e) {
       $('#tagColorsModal').modal('show');
     });
   });
-});
+};
+
+$('#tagColors').click(tagColorsModal);
 
 $('#showTagColorsCheckbox').change(function(e) {
   fetch("/cube/api/saveshowtagcolors", {

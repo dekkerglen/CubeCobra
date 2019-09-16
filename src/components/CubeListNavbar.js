@@ -127,7 +127,7 @@ class CubeListNavbar extends Component {
                 </NavItem>
               }
               <NavItem>
-                <NavLink href="#" id="navbarTagColorsLink">
+                <NavLink href="#" onClick={/* global */ tagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </NavLink>
               </NavItem>
