@@ -150,8 +150,6 @@ class ListViewRaw extends Component {
   }
 
   handleChange(event) {
-    event.preventDefault();
-
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
@@ -183,12 +181,11 @@ class ListViewRaw extends Component {
 
     // This breaks React invariants and we should figure out a different way to pass this data around.
     // Currently necessary to get the group context modal to work.
-    for (card of this.props.cards) {
+    for (const card of this.props.cards) {
       card.checked = value;
     }
 
     const entries = this.props.cards.map(({ index }) => [`tdcheck${index}`, value]);
-    console.log(entries);
     this.setState(Object.fromEntries(entries));
   }
 
@@ -208,7 +205,7 @@ class ListViewRaw extends Component {
       'data-index': index,
       onChange: this.handleChange,
       onBlur: this.handleBlur,
-      [props.type === 'checkbox' ? 'checked' : 'value']: this.state[`td${field}${index}`],
+      [field === 'check' ? 'checked' : 'value']: this.state[`td${field}${index}`],
     });
 
     const rows =
