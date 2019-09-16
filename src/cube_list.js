@@ -15,10 +15,14 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
+      cards: this.props.defaultCards,
       cubeView: 'table',
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
+
+    /* global */
+    updateCubeListeners.push(cards => this.setState({ cards }));
   }
 
   componentDidMount() {
@@ -38,8 +42,8 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cards, canEdit } = this.props;
-    const { cubeView } = this.state;
+    const { defaultCards, canEdit } = this.props;
+    const { cards, cubeView } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
@@ -77,5 +81,5 @@ cube.forEach((card, index) => {
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value;
 const wrapper = document.getElementById('react-root');
-const element = <CubeList cards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

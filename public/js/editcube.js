@@ -34,27 +34,7 @@ cube.forEach(function(card, index) {
 });
 var cubeTagColors = JSON.parse($('#cubeTagColors').val());
 
-$('#filterButton').click(function(e) {
-  updateFilters($('#filterInput').val());
-});
-
 $('.updateButton').click(function(e) {
-  updateCubeList();
-});
-
-$('#filterInput').keyup(function(e) {
-  if (e.keyCode === 13) {
-    e.preventDefault();
-    filterButton.click();
-  }
-});
-
-$('#resetButton').click(function(e) {
-  $('#filterInput').val('');
-  updateFilters('');
-
-  filters = [];
-  addUrlToFilter();
   updateCubeList();
 });
 
@@ -442,7 +422,6 @@ $('#showTagColorsCheckbox').change(function(e) {
 });
 
 $('#applyAdvancedFilterButton').click(function(e) {
-  console.log('click');
   e.preventDefault();
 
   var str = '';
@@ -563,7 +542,7 @@ $('#applyAdvancedFilterButton').click(function(e) {
 
   $('#filterInput').val(str);
   $('#filterModal').modal('hide');
-  filterButton.click();
+  updateFilters(str);
 });
 
 if (canEdit && !comparing) {
@@ -1279,13 +1258,8 @@ function buildFiltersFromQsargs() {
 var updateCubeListeners = [];
 
 function updateCubeList() {
-  if (view == 'list') {
-    $('#massEdit').text('Edit Selected');
-  } else {
-    $('#massEdit').text('Mass Edit');
-  }
   for (let listener of updateCubeListeners) {
-    listener(view, filteredCube());
+    listener(filteredCube());
   }
   $('#cubelistarea').html('');
   autocard_init('autocard');
