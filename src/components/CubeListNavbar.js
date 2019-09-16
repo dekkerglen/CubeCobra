@@ -165,19 +165,19 @@ class CubeListNavbar extends Component {
                 </DropdownMenu>
               </UncontrolledDropdown>
               <NavItem className={hasCustomImages ? undefined : 'd-none'}>
-                <NavLink id="customImageDisplayMenuItem" className="d-flex align-items-baseline text-sm-left text-center">
-                  <DisplayContext.Consumer>
-                    {({ showCustomImages, toggleShowCustomImages }) =>
+                <DisplayContext.Consumer>
+                  {({ showCustomImages, toggleShowCustomImages }) =>
+                    <NavLink id="customImageDisplayMenuItem" className="d-flex align-items-baseline text-sm-left text-center">
                       <Input
                         type="checkbox"
                         className="mr-1 ml-0 my-0 position-static d-block"
                         checked={showCustomImages}
                         onChange={toggleShowCustomImages}
                       />
-                    }
-                  </DisplayContext.Consumer>
-                  <Label for="customImageDisplayToggle" className="m-0">Show Custom Images</Label>
-                </NavLink>
+                      <Label for="customImageDisplayToggle" className="m-0" onClick={toggleShowCustomImages}>Show Custom Images</Label>
+                    </NavLink>
+                  }
+                </DisplayContext.Consumer>
               </NavItem>
             </Nav>
           </Collapse>
