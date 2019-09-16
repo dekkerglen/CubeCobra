@@ -5,6 +5,7 @@ import React, { Component } from 'react';
 
 const DisplayContextRaw = React.createContext({
   showCustomImages: true,
+  tagColors: [],
 });
 
 class DisplayContextProvider extends React.Component {
@@ -13,9 +14,17 @@ class DisplayContextProvider extends React.Component {
 
     this.state = {
       showCustomImages: true,
+      showTagColors: /* global */ show_tag_colors,
+      tagColors: /* global */ cubeTagColors,
     };
 
     this.toggleShowCustomImages = this.toggleShowCustomImages.bind(this);
+
+    /* global */
+    tagColorsListeners.push(() => this.setState({
+      showTagColors: /* global */ show_tag_colors,
+      tagColors: /* global */ cubeTagColors,
+    }));
   }
 
   toggleShowCustomImages(value) {

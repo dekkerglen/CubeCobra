@@ -318,6 +318,8 @@ if (canEdit) {
   });
 }
 
+var tagColorsListeners = [];
+
 function tagColorsModal() {
   let b_id = $('#cubeB_ID').val();
   let query = (b_id) ? `?b_id=${b_id}` : '';
@@ -337,6 +339,8 @@ function tagColorsModal() {
 
       show_tag_colors = data.show_tag_colors;
       $('#showTagColorsCheckbox').prop("checked", show_tag_colors);
+
+      tagColorsListeners.forEach(listener => listener());
 
       const tag_color_options = [
         'Red',
@@ -430,6 +434,7 @@ $('#showTagColorsCheckbox').change(function(e) {
     }
   }).then(res => {
     show_tag_colors = $(this).prop("checked");
+    tagColorsListeners.forEach(listener => listener());
     updateCubeList();
   });
 });
@@ -583,6 +588,7 @@ if (canEdit && !comparing) {
       }
     }).then(res => {
       cubeTagColors = data;
+      tagColorsListeners.forEach(listener => listener());
       if (show_tag_colors) {
         updateCubeList();
       }

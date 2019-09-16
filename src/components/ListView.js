@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import { Col, Input, Row } from 'reactstrap';
 
+import DisplayContext from './DisplayContext';
 import PagedTable from './PagedTable';
 import SortContext from './SortContext';
 import TagInput from './TagInput';
@@ -190,7 +191,7 @@ class ListViewRaw extends Component {
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, changeSort, ...props } = this.props;
+    const { cards, primary, secondary, tertiary, changeSort, showTagColors, ...props } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
       groups[label1] = {};
@@ -213,7 +214,7 @@ class ListViewRaw extends Component {
         [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
           [].concat.apply([], getLabels(tertiary).filter(label3 => groups[label1][label2][label3]).map(label3 =>
             groups[label1][label2][label3].map(({ index, details, ...card }) =>
-              <tr key={index} className={/* global */ show_tag_colors ? getCardTagColorClass(card) : getCardColorClass(card)}>
+              <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
                 <td className="align-middle">
                   <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
                 </td>
@@ -286,6 +287,15 @@ class ListViewRaw extends Component {
   }
 }
 
-const ListView = SortContext.Wrapped(ListViewRaw);
+const ListView = props =>
+  <SortContext.Consumer>
+    {sortValue =>
+      <DisplayContext.Consumer>
+        {({ showTagColors }) =>
+          <ListViewRaw {...sortValue} showTagColors={showTagColors} {...props} />
+        }
+      </DisplayContext.Consumer>
+    }
+  </SortContext.Consumer>;
 
 export default ListView;
