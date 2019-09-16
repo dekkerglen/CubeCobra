@@ -183,7 +183,7 @@ class CubeListNavbar extends Component {
           </Collapse>
         </Navbar>
         {!canEdit ? '' :
-          <EditCollapse isOpen={this.state.openCollapse === 'edit'} />
+          <EditCollapse cubeID={cubeID} isOpen={this.state.openCollapse === 'edit'} />
         }
         <SortCollapse isOpen={this.state.openCollapse === 'sort'} />
         <FilterCollapse isOpen={this.state.openCollapse === 'filter'} />
