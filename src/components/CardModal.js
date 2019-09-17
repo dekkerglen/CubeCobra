@@ -46,12 +46,12 @@ const CardModal = ({
           <Col xs="12" sm="4">
             <img className="w-100" src={card.imgUrl || card.details.image_normal} alt={card.name} />
             <div className="price-area">
-              {!card.price ? '' :
+              {!card.details.price ? '' :
                 <div className="card-price">
                   TCGPlayer Market: {card.price.toFixed(2)}
                 </div>
               }
-              {!card.price_foil ? '' :
+              {!card.details.price_foil ? '' :
                 <div className="card-price">
                   Foil TCGPlayer Market: {card.price_foil.toFixed(2)}
                 </div>

@@ -62,23 +62,26 @@ class CardModalForm extends Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
-    this.setState(({ formValues, ...state }) => Object.assign(state, {
-      formValues: Object.assign(formValues, {
-        [name]: value
-      })
+    this.setState(({ formValues }) => ({
+      formValues: {
+        ...formValues,
+        [name]: value,
+      }
     }));
 
     if (name === 'version') {
-      fetch('/cube/api/getcardfromid/' + value)
-        .then(response => response.json())
-        .then(json => {
-          if (json.success) {
-            console.log(json);
-            this.setState(({ card, ...state }) => Object.assign(state, {
-              card: Object.assign(card, { details: json.card })
-            }));
+      // This should guarantee that version array is non-null.
+      if (this.state.versions.length > 0) {
+        this.setState(({ card }) => ({
+          card: {
+            ...card,
+            details: {
+              ...versions.find(c => c.cardID === value),
+              display_image: card.details.imgUrl || card.details.image_normal,
+            },
           }
-        });
+        })
+      }
     }
   }
 
@@ -120,12 +123,15 @@ class CardModalForm extends Component {
       let cardJson = await cardResponse.json().catch(err => console.error(err));
 
       let index = card.index;
-      let newCard = Object.assign(updated, {
+      let newCard = {
+        ...cube[index],
+        ...updated,
         index,
-        details: Object.assign(cardJson.card, {
+        details: {
+          ...cardJson.card,
           display_image: updated.imgUrl,
-        }),
-      })
+        },
+      };
 
       // magical incantation to get the global state right.
       cube[index] = newCard;
@@ -162,7 +168,7 @@ class CardModalForm extends Component {
   changeCardVersion(card) {
     this.setState({
       card,
-      version: [],
+      versions: [],
     });
   }
 
@@ -203,7 +209,7 @@ class CardModalForm extends Component {
           versions={this.state.versions}
           toggle={this.closeCardModal}
           isOpen={this.state.isOpen}
-          disabled={console.log(typeof canEdit, !canEdit) || !canEdit}
+          disabled={!canEdit}
           saveChanges={this.saveChanges}
           queueRemoveCard={this.queueRemoveCard}
           tagActions={{
