@@ -138,36 +138,37 @@ router.post('/lostpasswordreset', function(req, res) {
           if (!user) {
             req.flash('danger', 'No user with that email found! Are you sure you created an account?');
             res.render('user/passwordreset');
+            return;
           }
           if (req.body.password2 != req.body.password) {
             req.flash('danger', 'New passwords don\'t match');
             res.render('user/passwordreset');
-          } else {
-            bcrypt.genSalt(10, function(err, salt) {
-              if (err) {
-                console.error('Password reset genSalt error:', err);
-                res.sendStatus(500);
-                return;
-              }
-              bcrypt.hash(req.body.password2, salt, function(err, hash) {
-                if (err) {
-                  console.error('Password reset hashing error:', err);
-                  res.sendStatus(500);
-                } else {
-                  user.password = hash;
-                  user.save(function(err) {
-                    if (err) {
-                      console.error('Password reset user save error:', err)
-                      res.sendStatus(500);
-                    } else {
-                      req.flash('success', 'Password updated succesfully');
-                      return res.redirect('/user/login');
-                    }
-                  });
-                }
-              });
-            });
+            return;
           }
+          bcrypt.genSalt(10, function(err, salt) {
+            if (err) {
+              console.error('Password reset genSalt error:', err);
+              res.sendStatus(500);
+              return;
+            }
+            bcrypt.hash(req.body.password2, salt, function(err, hash) {
+              if (err) {
+                console.error('Password reset hashing error:', err);
+                res.sendStatus(500);
+              } else {
+                user.password = hash;
+                user.save(function(err) {
+                  if (err) {
+                    console.error('Password reset user save error:', err)
+                    res.sendStatus(500);
+                  } else {
+                    req.flash('success', 'Password updated succesfully');
+                    return res.redirect('/user/login');
+                  }
+                });
+              }
+            });
+          });
         });
       }
     });
