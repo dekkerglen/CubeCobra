@@ -16,6 +16,7 @@
   "license": "ISC",
   "browserslist": "> 1.0%, not dead, last 2 versions, not ie < 11",
   "dependencies": {
+    "aws-serverless-express": "^3.3.6",
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -53,7 +54,6 @@
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
     "aws-sdk": "^2.528.0",
-    "aws-serverless-express": "^3.3.6",
     "babel-loader": "^8.0.6",
     "chart.js": "^2.8.0",
     "jest": "^24.9.0",
