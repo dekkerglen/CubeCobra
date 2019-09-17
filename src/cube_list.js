@@ -14,9 +14,11 @@ class CubeList extends Component {
   constructor(props) {
     super(props);
 
+    const hash = window.location.hash.replace('#', '');
+    const options = ['table', 'curve', 'spoiler', 'list']
     this.state = {
       cards: this.props.defaultCards,
-      cubeView: 'table',
+      cubeView: options.includes(hash) ? hash : 'table',
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
@@ -38,6 +40,7 @@ class CubeList extends Component {
   }
 
   changeCubeView(cubeView) {
+    window.location.hash = `#${cubeView}`;
     this.setState({ cubeView });
   }
 
