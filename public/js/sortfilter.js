@@ -34,7 +34,7 @@ function GetColorCategory(type, colors) {
 }
 
 function filterCard(card, filters) {
-  
+
   if(filters.length == 1) {
     if(filters[0].type == 'token') {
       return filterApply(card, filters[0]);
@@ -118,7 +118,7 @@ function filterApply(card, filter) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = !card.details.colors.length;
+          res = !card.colors.length;
         } else {
           res = areArraysEqualSets(card.colors, filter.arg);
         }
@@ -222,7 +222,7 @@ function filterApply(card, filter) {
   }
 
   if(filter.category == 'price')
-  {    
+  {
     var price = null;
     if (card.details.price) {
       price = card.details.price;
@@ -252,7 +252,7 @@ function filterApply(card, filter) {
     }
   }
   if(filter.category == 'pricefoil')
-  {    
+  {
     var price = card.details.price_foil || null
     if (price) {
       switch(filter.operand)
