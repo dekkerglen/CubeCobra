@@ -3,7 +3,7 @@ import React from 'react';
 import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
-import TagsInput from './TagsInput';
+import TagInput from './TagInput';
 
 const ColorCheck = ({ color, short, value, onChange }) => (
   <FormGroup check inline>
@@ -20,7 +20,15 @@ const ColorCheck = ({ color, short, value, onChange }) => (
   </FormGroup>
 );
 
-const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveChanges, queueRemoveCard, addTag, deleteTag, allTags, ...props }) => {
+const CardModal = ({
+  card,  versions,
+  toggle,
+  disabled,
+  values, onChange,
+  saveChanges, queueRemoveCard,
+  tagActions,
+  ...props
+}) => {
   let tcgplayerLink = 'https://shop.tcgplayer.com/';
   if (card.details.tcgplayer_id) {
     tcgplayerLink += `product/productsearch?id=${card.details.tcgplayer_id}`;
@@ -113,7 +121,7 @@ const CardModal = ({ card, versions, toggle, disabled, values, onChange, saveCha
               </div>
 
               <h5>Tags</h5>
-              <TagsInput addTag={addTag} deleteTag={deleteTag} allTags={allTags} tags={values.tags} />
+              <TagInput tags={values.tags} readOnly={disabled} {...tagActions} />
             </fieldset>
           </Col>
         </Row>

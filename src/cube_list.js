@@ -82,7 +82,7 @@ cube.forEach((card, index) => {
   cubeDict[index] = card;
 });
 const cubeID = document.getElementById('cubeID').value;
-const canEdit = document.getElementById('canEdit').value;
+const canEdit = document.getElementById('canEdit').value === 'true';
 const wrapper = document.getElementById('react-root');
 const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

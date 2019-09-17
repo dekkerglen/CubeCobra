@@ -12,7 +12,6 @@ class CardModalForm extends Component {
       versions: [],
       isOpen: false,
       formValues: { tags: [] },
-      allTags: [],
     }
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
@@ -23,24 +22,38 @@ class CardModalForm extends Component {
     this.queueRemoveCard = this.queueRemoveCard.bind(this);
     this.addTag = this.addTag.bind(this);
     this.deleteTag = this.deleteTag.bind(this);
+    this.reorderTag = this.reorderTag.bind(this);
   }
 
   addTag(tag) {
-    this.setState({
-      formValues: Object.assign(this.state.formValues, {
-        tags: [].concat(this.state.formValues.tags, tag),
-      }),
-      allTags: [].concat(this.state.allTags, tag),
-    });
+    this.setState(({ formValues }) => ({
+      formValues: {
+        ...formValues,
+        tags: [...formValues.tags, tag],
+      },
+    }));
   }
 
-  deleteTag(i) {
-    let newTags = this.state.formValues.tags.slice(0);
-    newTags.splice(i, 1);
-    this.setState({
-      formValues: Object.assign(this.state.formValues, {
-        tags: newTags,
-      }),
+  deleteTag(tagIndex) {
+    this.setState(({ formValues }) => ({
+      formValues: {
+        ...formValues,
+        tags: formValues.tags.filter((tag, i) => i !== tagIndex),
+      }
+    }));
+  }
+
+  reorderTag(tag, currIndex, newIndex) {
+    this.setState(({ formValues }) => {
+      const tags = [...formValues.tags];
+      tags.splice(currIndex, 1);
+      tags.splice(newIndex, 0, tag);
+      return {
+        formValues: {
+          ...formValues,
+          tags,
+        },
+      };
     });
   }
 
@@ -70,18 +83,29 @@ class CardModalForm extends Component {
   }
 
   async saveChanges() {
-    let colors = ['W', 'U', 'B', 'R', 'G'].filter(color => this.state.formValues['color' + color]);
-    let updated = Object.assign(this.state.formValues, { colors });
-    for (let color of ['W', 'U', 'B', 'R', 'G']) {
+    let colors = [...'WUBRG'].filter(color => this.state.formValues['color' + color]);
+    let updated = { ...this.state.formValues, colors };
+    for (let color of [...'WUBRG']) {
       delete updated['color' + color];
     }
     if (updated.imgUrl === '') {
       updated.imgUrl = null;
     }
     updated.cardID = updated.version;
-    updated.tags = updated.tags.map(tag => tag.name).join(',');
+    delete updated.version;
+    updated.tags = updated.tags.map(tag => tag.text);
 
     let card = this.state.card;
+
+    if (updated.cardID === card.cardID
+      && updated.type_line === card.type_line
+      && updated.status === card.status
+      && updated.cmc === card.cmc
+      && updated.colors.join('') === card.colors.join('')
+      && updated.tags.join(',') === card.tags.join(',')) {
+      // no need to sync
+      return;
+    }
 
     let response = await fetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
       method: 'POST',
@@ -89,11 +113,11 @@ class CardModalForm extends Component {
       headers: {
         'Content-Type': 'application/json',
       }
-    })
-    let json = await response.json();
+    }).catch(err => console.error(err));
+    let json = await response.json().catch(err => console.error(err));
     if (json.success === 'true') {
-      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID);
-      let cardJson = await cardResponse.json();
+      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID).catch(err => console.error(err));
+      let cardJson = await cardResponse.json().catch(err => console.error(err));
 
       let index = card.index;
       let newCard = Object.assign(updated, {
@@ -152,7 +176,7 @@ class CardModalForm extends Component {
         cmc: card.cmc,
         type_line: card.type_line,
         imgUrl: card.imgUrl,
-        tags: card.tags,
+        tags: card.tags.map(tag => ({ id: tag, text: tag })),
         colorW: card.colors.includes('W'),
         colorU: card.colors.includes('U'),
         colorB: card.colors.includes('B'),
@@ -169,7 +193,7 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { children, canEdit, ...props } = this.props;
+    let { canEdit, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         <CardModal
@@ -179,12 +203,14 @@ class CardModalForm extends Component {
           versions={this.state.versions}
           toggle={this.closeCardModal}
           isOpen={this.state.isOpen}
-          disabled={!canEdit}
+          disabled={console.log(typeof canEdit, !canEdit) || !canEdit}
           saveChanges={this.saveChanges}
           queueRemoveCard={this.queueRemoveCard}
-          addTag={this.addTag}
-          deleteTag={this.deleteTag}
-          allTags={this.state.allTags}
+          tagActions={{
+            addTag: this.addTag,
+            deleteTag: this.deleteTag,
+            reorderTag: this.reorderTag,
+          }}
           {...props}
         />
         {children}
