@@ -627,6 +627,12 @@ $('#applyAdvancedFilterButton').click(function(e) {
 
   //artist
 
+  // rarity
+  if($('#filterRarity').val().length > 0)
+  {
+    str += ' r'+$('#filterRarityOp').val()+$('#filterRarity').val();
+  }
+
   $('#filterInput').val(str);
   $('#filterModal').modal('hide');
   filterButton.click();
@@ -1788,7 +1794,9 @@ let categoryMap = new Map([
   ['p','price'],
   ['pf','pricefoil'],
   ['status','status'],
-  ['stat','status']
+  ['stat','status'],
+  ['r', 'rarity'],
+  ['rarity', 'rarity']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -2039,6 +2047,9 @@ const verifyTokens = (tokens) => {
           if (token(i).arg.every(verifyMana)) {
             return false;
           }
+          break;
+        case 'rarity':
+          if (token(i).arg.search(/^(common|uncommon|rare|mythic)$/) < 0) return false;
           break;
       }
     }

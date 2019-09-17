@@ -1,6 +1,7 @@
 
 
 var price_buckets = [.25, .5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
+var rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
 function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
@@ -274,6 +275,29 @@ function filterApply(card, filter) {
           res = price >= filter.arg;
           break;
       }
+    }
+  }
+  if(filter.category == 'rarity')
+  {
+    let rarity = card.details.rarity;
+    switch(filter.operand)
+    {
+      case ':':
+      case '=':
+        res = rarity == filter.arg;
+        break;
+      case '<':
+        res = rarity_order.indexOf(rarity) < rarity_order.indexOf(filter.arg);
+        break;
+      case '>':
+        res = rarity_order.indexOf(rarity) > rarity_order.indexOf(filter.arg);
+        break;
+      case '<=':
+        res = rarity_order.indexOf(rarity) <= rarity_order.indexOf(filter.arg);
+        break;
+      case '>=':
+        res = rarity_order.indexOf(rarity) >= rarity_order.indexOf(filter.arg);
+        break;
     }
   }
 

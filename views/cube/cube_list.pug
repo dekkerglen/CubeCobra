@@ -317,7 +317,17 @@ block cube_content
               option(value='<=') less than or equal to
               option(value='>=') greater than or equal to
               option(value='!') not equal to
-            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')       
+            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')
+          .input-group.mb-3
+            .input-group-prepend
+              span.input-group-text Rarity
+            select.custom-select#filterRarityOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+            input#filterRarity.form-control(type='text', placeholder='Any rarity, e.g. "common"')
         .modal-footer
           button.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
           button.btn.btn-success#applyAdvancedFilterButton(type='button') Apply
