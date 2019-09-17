@@ -396,7 +396,7 @@ router.get('/view/:id', function(req, res) {
       }, function(err, user2) {
         if (!user2) {
           req.flash('danger', 'User not found');
-          res.redirect('/404/' + req.params.id);
+          res.status(404).render('misc/404', {});
         } else {
           res.redirect('/user/view/' + user2._id);
         }
