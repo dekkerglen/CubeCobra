@@ -53,11 +53,11 @@ For HTML class names, please use all lower case name, with tokens separated by d
 ### Development Server
 
 The development server can be accessed at: http://162.243.163.51/
-This server runs off the master branch, uses http instead of https, and has it's own database. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue.
+This server runs off the master branch, uses http instead of https, and has it's own database. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
 
 # Release Schedule
 
-Releases are created every two weeks, on friday night. There is a feature freeze 3 days before the release where no 'feature-request' pull requests will be approved, only bugfixes. This is to prevent regression on the live server. 
+Releases are created every two weeks, on friday night. There is a feature freeze 3 days before the release where no feature pull requests will be approved, only bugfixes. This goes into affect the Tuesday before a release. This is to prevent regression on the live server. 
 
 # How to report a bug
 ### Security Disclosures
