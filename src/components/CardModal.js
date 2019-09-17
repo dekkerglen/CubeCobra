@@ -3,6 +3,7 @@ import React from 'react';
 import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
+import ImageFallback from './ImageFallback';
 import TagInput from './TagInput';
 
 const ColorCheck = ({ color, short, value, onChange }) => (
@@ -44,7 +45,12 @@ const CardModal = ({
       <ModalBody>
         <Row>
           <Col xs="12" sm="4">
-            <img className="w-100" src={card.imgUrl || card.details.image_normal} alt={card.name} />
+            <ImageFallback
+              className="w-100"
+              src={card.details.display_image}
+              fallbackSrc="/content/default_card.png"
+              alt={card.name}
+            />
             <div className="price-area">
               {!card.details.price ? '' :
                 <div className="card-price">

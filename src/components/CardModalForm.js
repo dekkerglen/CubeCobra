@@ -80,7 +80,7 @@ class CardModalForm extends Component {
               display_image: card.details.imgUrl || card.details.image_normal,
             },
           }
-        })
+        }));
       }
     }
   }
@@ -104,6 +104,7 @@ class CardModalForm extends Component {
       && updated.type_line === card.type_line
       && updated.status === card.status
       && updated.cmc === card.cmc
+      && updated.imgUrl === card.imgUrl
       && updated.colors.join('') === card.colors.join('')
       && updated.tags.join(',') === card.tags.join(',')) {
       // no need to sync
@@ -129,7 +130,7 @@ class CardModalForm extends Component {
         index,
         details: {
           ...cardJson.card,
-          display_image: updated.imgUrl,
+          display_image: updated.imgUrl || cardJson.card.image_normal,
         },
       };
 
