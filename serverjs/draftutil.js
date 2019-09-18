@@ -12,7 +12,7 @@ var methods = {
       colors.push('R');
       colors.push('G');
     }
-    util.shuffle(colors);
+    colors = util.shuffle(colors);
     for (i = 0; i < params.seats - 1; i++) {
       var colorcombo = [colors.pop(), colors.pop()];
       draftbots.push(colorcombo);
