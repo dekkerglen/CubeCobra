@@ -1,6 +1,7 @@
 
 
 var price_buckets = [.25, .5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
+var rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
 function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
@@ -34,7 +35,7 @@ function GetColorCategory(type, colors) {
 }
 
 function filterCard(card, filters) {
-  
+
   if(filters.length == 1) {
     if(filters[0].type == 'token') {
       return filterApply(card, filters[0]);
@@ -118,7 +119,7 @@ function filterApply(card, filter) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = !card.details.colors.length;
+          res = !card.colors.length;
         } else {
           res = areArraysEqualSets(card.colors, filter.arg);
         }
@@ -222,7 +223,7 @@ function filterApply(card, filter) {
   }
 
   if(filter.category == 'price')
-  {    
+  {
     var price = null;
     if (card.details.price) {
       price = card.details.price;
@@ -252,7 +253,7 @@ function filterApply(card, filter) {
     }
   }
   if(filter.category == 'pricefoil')
-  {    
+  {
     var price = card.details.price_foil || null
     if (price) {
       switch(filter.operand)
@@ -274,6 +275,29 @@ function filterApply(card, filter) {
           res = price >= filter.arg;
           break;
       }
+    }
+  }
+  if(filter.category == 'rarity')
+  {
+    let rarity = card.details.rarity;
+    switch(filter.operand)
+    {
+      case ':':
+      case '=':
+        res = rarity == filter.arg;
+        break;
+      case '<':
+        res = rarity_order.indexOf(rarity) < rarity_order.indexOf(filter.arg);
+        break;
+      case '>':
+        res = rarity_order.indexOf(rarity) > rarity_order.indexOf(filter.arg);
+        break;
+      case '<=':
+        res = rarity_order.indexOf(rarity) <= rarity_order.indexOf(filter.arg);
+        break;
+      case '>=':
+        res = rarity_order.indexOf(rarity) >= rarity_order.indexOf(filter.arg);
+        break;
     }
   }
 

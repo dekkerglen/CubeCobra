@@ -2,32 +2,40 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import CompareView from './components/CompareView';
+import CubeCompareNavbar from './components/CubeCompareNavbar';
+import SortContext from './components/SortContext';
 
 class CubeCompare extends Component {
   constructor(props) {
     super(props);
 
-    const cube = JSON.parse(document.getElementById('cuberaw').value);
-    const cards = cube.map((card, index) => Object.assign(card, { index }));
-
     this.state = {
-      cards: [],
-      sorts: ['Color Category', 'Types-Multicolor'],
+      cards: this.props.defaultCards,
     };
 
-    updateCubeListeners.push((_, cards) => this.setState({
-      cards,
-      sorts: [
-        document.getElementById('primarySortSelect').value,
-        document.getElementById('secondarySortSelect').value,
-      ],
-    }));
+    /* global */
+    updateCubeListeners.push(cards => this.setState({ cards }));
+  }
+
+  componentDidMount() {
+    /* global */
+    init_groupcontextModal();
   }
 
   render() {
-    return <CompareView cards={this.state.cards} sorts={this.state.sorts} {...this.props} />;
+    const { defaultCards, ...props} = this.props;
+    const { cards } = this.state;
+    return (
+      <SortContext.Provider>
+        <CubeCompareNavbar />
+        <CompareView cards={cards} {...props} />
+      </SortContext.Provider>
+    );
   }
 }
 
+const cube = JSON.parse(document.getElementById('cuberaw').value);
+const cards = cube.map((card, index) => Object.assign(card, { index }));
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<CubeCompare both={in_both} onlyA={only_a} onlyB={only_b} />, wrapper) : false;
+const element = <CubeCompare defaultCards={cards} both={in_both} onlyA={only_a} onlyB={only_b} />
+wrapper ? ReactDOM.render(element, wrapper) : false;
