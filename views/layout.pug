@@ -17,7 +17,7 @@ html
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
-		title Cube Cobra
+		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
 		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup(style='position:absolute;z-index: 9999;')
