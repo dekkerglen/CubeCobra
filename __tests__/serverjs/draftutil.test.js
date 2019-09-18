@@ -5,33 +5,20 @@ test("it can get the correct number of draft bots", () => {
     seats: 5
   };
   const result = methods.getDraftBots(params);
-
-  // The number of bots should be number of seats - 1
-  expect(result.length).toBe(4);
+  expect(result.length).toBe(params.seats - 1);
 });
 
 test("it can get bots with the correct properties", () => {
+  const allColors = ["W", "U", "B", "R", "G"];
   const params = {
-    seats: 2
+    seats: 2,
   };
   const result = methods.getDraftBots(params);
 
-  // Bots should have two random colors selected
   expect(result[0].length).toBe(2);
-  expect(
-    result[0][0] == "W" ||
-      result[0][0] == "U" ||
-      result[0][0] == "B" ||
-      result[0][0] == "R" ||
-      result[0][0] == "G"
-  ).toBe(true);
-  expect(
-    result[0][1] == "W" ||
-      result[0][1] == "U" ||
-      result[0][1] == "B" ||
-      result[0][1] == "R" ||
-      result[0][1] == "G"
-  ).toBe(true);
+  expect(allColors.includes(result[0][0])).toBe(true);
+  expect(allColors.includes(result[0][1])).toBe(true);
+  expect(result[0][0] === result[0][1]).toBe(false);
 });
 
 test("it returns the index of the first instance of a tag from a list of cards", () => {
