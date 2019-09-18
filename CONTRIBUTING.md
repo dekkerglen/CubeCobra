@@ -111,6 +111,14 @@ knowledge of the pull request to perform a review. We also comment on our own
 pull requests asking for code review, sometimes even tagging specific
 individuals from whom we'd like a review.
 
+Our pull requests have automated checks run against them, including code style
+linting and unit tests. When we request reviews on pull requests, we ensure
+that these checks are passing beforehand. When we add new functionality in a
+pull request, we also add new tests exercising that functionality in the same
+pull request. When we fix a bug in a pull request, we also add a unit test or
+adjust an existing one in the same pull request to prove that the bug has been
+fixed.
+
 When we notice open pull requests with comments indicating they're ready for
 review, we review each other's code. The primary goal of our code reviews is
 to ensure that the code does not break existing functionality. Some secondary
