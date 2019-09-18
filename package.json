@@ -2,6 +2,7 @@
   "name": "cubepro",
   "version": "1.0.0",
   "description": "Cube management app",
+  "private": true,
   "main": "app.js",
   "scripts": {
     "beautify": "js-beautify --config .js-beautify.json -r *.js {config,models,routes,serverjs,views,public/js}/**/*.js",

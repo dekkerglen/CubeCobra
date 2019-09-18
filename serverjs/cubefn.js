@@ -119,7 +119,8 @@ var methods = {
       var found = false;
       var options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
-        var card = carddb.cardFromId(option);
+        var card = carddb.cardFromId(option);        
+        card.display_image = util.getCardImageURL({details:card});
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
@@ -191,7 +192,7 @@ var methods = {
       if (!seed) {
         seed = Date.now().toString();
       }
-      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.cardFromId(card.cardID));
+      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.getCardDetails(card));
       callback(false, {
         seed,
         pack

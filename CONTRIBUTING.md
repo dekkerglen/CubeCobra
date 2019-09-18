@@ -33,6 +33,9 @@ Contributing to Cube Cobra does not entitle any contributor to compensation of a
 
 Issues are tagged with 'good first issue' if we think it's a good beginner task to tackle. Complete a few small changes to become familar with the codebase before diving into a huge feature.
 
+The master branch is the branch with changes that are pending for the next update. The release branches are forked from the master branch, and the latest release branch is the branch the server runs off of. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the master branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
+
+
 # How we collaborate - asynchronous communication
 
 Our community of contributors is large, and growing fast. We don't have regularly
@@ -162,7 +165,6 @@ within a few minutes or not at all. Thus, when we have anything to say that we
 think someone might care about later than a few minutes from now, we put it in
 a GitHub issue, comment, or pull request.
 
-
 ### Code Style
 
 Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Please refer to the following guidelines with respect to each language.
@@ -175,6 +177,15 @@ For Javascript please make sure your code is formatted using the JS Beautify sta
 
 For Jade/PUG, you can use the following atom package: https://atom.io/packages/jade-beautify
 For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
+
+### Development Server
+
+The development server can be accessed at: http://162.243.163.51/
+This server runs off the master branch, uses http instead of https, and has it's own database. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
+
+# Release Schedule
+
+Releases are created every two weeks, on friday night. There is a feature freeze 3 days before the release where no feature pull requests will be approved, only bugfixes. This goes into affect the Tuesday before a release. This is to prevent regression on the live server. 
 
 # How to report a bug
 

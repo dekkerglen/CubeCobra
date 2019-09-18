@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import CurveView from './components/CurveView';
 import ListView from './components/ListView';
+import SortContext from './components/SortContext';
 import TableView from './components/TableView';
 import VisualSpoiler from './components/VisualSpoiler';
 
@@ -22,12 +23,14 @@ class CubeList extends Component {
 
   render() {
     let { cubeView, cards } = this.state;
-    return <>
-      <TableView cards={cards} style={{ display: cubeView === 'table' ? undefined : 'none' }} />
-      <VisualSpoiler cards={cards} style={{ display: cubeView === 'spoiler' ? undefined : 'none' }} />
-      <CurveView cards={cards} style={{ display: cubeView === 'curve' ? undefined : 'none' }} />
-      <ListView cards={cards} style={{ display: cubeView === 'list' ? undefined : 'none' }} />
-    </>;
+    return (
+      <SortContext.Provider>
+        <TableView cards={cards} style={{ display: cubeView === 'table' ? undefined : 'none' }} />
+        <VisualSpoiler cards={cards} style={{ display: cubeView === 'spoiler' ? undefined : 'none' }} />
+        <CurveView cards={cards} style={{ display: cubeView === 'curve' ? undefined : 'none' }} />
+        <ListView cards={cards} style={{ display: cubeView === 'list' ? undefined : 'none' }} />
+      </SortContext.Provider>
+    );
   }
 }
 

@@ -18,7 +18,6 @@ block cube_content
   input#draftFormats(type='hidden', value=cube.draft_formats)
   #react-root
   script(src='/js/cube_playtest.bundle.js')
-
   if user
     if user.id == cube.owner
       // edit overview modal

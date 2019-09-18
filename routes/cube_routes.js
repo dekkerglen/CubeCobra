@@ -62,6 +62,7 @@ function GetToken(callback) {
     request(options, function(error, response, body) {
       if (error) {
         console.log(error);
+        callback();
       } else {
         token = JSON.parse(body);
         token.expires = Tomorrow();
@@ -720,6 +721,7 @@ router.get('/playtest/:id', function(req, res) {
     } else {
       cube.cards.forEach(function(card, index) {
         card.details = carddb.cardFromId(card.cardID);
+        card.details.display_image = util.getCardImageURL(card);
       });
       User.findById(cube.owner, function(err, user) {
         Deck.find({
@@ -1519,7 +1521,7 @@ function startStandardDraft(req, res, params, cube) {
 }
 
 router.post('/startdraft/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {    
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.redirect('/404/');
@@ -1563,19 +1565,16 @@ router.get('/draft/:id', function(req, res) {
             if (!names.includes(card.details.name)) {
               names.push(card.details.name);
             }
+            card.details.display_image = util.getCardImageURL(card);
           });
         });
       });
-      draft.picks.forEach(function(card, index) {
-        if (Array.isArray(card)) {
-          card.forEach(function(item, index2) {
-            if (item) {
-              item.details = carddb.cardFromId(card.cardID);
-            }
-          });
-        } else {
+      // TODO this only handles the user picks (item 0 of draft picks), so custom images won't work with bot picks.
+      draft.picks[0].forEach(function(col, index) {
+        col.forEach(function(card, index) {
           card.details = carddb.cardFromId(card.cardID);
-        }
+          card.details.display_image = util.getCardImageURL(card);
+        });
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
         draft.ratings = ratings;
@@ -2173,11 +2172,14 @@ router.get('/deckbuilder/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item.details = carddb.cardFromId(card.cardID);
+              item = {cardID:item};
+              item.details = carddb.cardFromId(item.cardID);
+              item.details.display_image = util.getCardImageURL(item);
             }
           });
         } else {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = carddb.cardFromId(card);
+          card.details.display_image = util.getCardImageURL(card);
         }
       });
       Cube.findOne(build_id_query(deck.cube), function(err, cube) {
@@ -2254,15 +2256,19 @@ router.get('/deck/:id', function(req, res) {
               if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
                 //old format
                 deck.cards[0].forEach(function(card, index) {
-                  player_deck.push(carddb.cardFromId(card));
+                  card.details = carddb.cardFromId(card);
+                  card.details.display_image = util.getCardImageURL(card);
+                  player_deck.push(card.details);
                 });
                 for (i = 1; i < deck.cards.length; i++) {
                   var bot_deck = [];
                   deck.cards[i].forEach(function(card, index) {
-                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID)) {
+                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.cardFromId(card[0].cardID));
+                      var details = carddb.cardFromId(card[0].cardID);
+                      details.display_image = util.getCardImageURL({details});
+                      bot_deck.push(details);
                     }
                   });
                   bot_decks.push(bot_deck);
@@ -2290,6 +2296,13 @@ router.get('/deck/:id', function(req, res) {
                   loginCallback: '/cube/deck/' + req.params.id
                 });
               } else {
+                deck.playerdeck.forEach(function(col, ind)
+                {
+                  col.forEach(function(card, index)
+                  {
+                    card.details.display_image = util.getCardImageURL(card);
+                  });
+                });
                 //new format
                 for (i = 0; i < deck.cards.length; i++) {
                   var bot_deck = [];
@@ -2297,7 +2310,9 @@ router.get('/deck/:id', function(req, res) {
                     if (carddb.cardFromId(cardid).error) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
-                      bot_deck.push(carddb.cardFromId(cardid));
+                      var details = carddb.cardFromId(cardid);
+                      details.display_image = util.getCardImageURL({details});
+                      bot_deck.push(details);
                     }
                   });
                   bot_decks.push(bot_deck);
@@ -2460,8 +2475,11 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           message: 'Card not found'
         });
       } else {
-        cube = setCubeType(cube, carddb);
-        cube.save(function(err) {
+        cube = setCubeType(cube, carddb);  
+
+        Cube.updateOne({
+          _id: cube._id
+        }, cube, function(err) {
           if (err) {
             res.status(500).send({
               success: 'false',
@@ -2528,7 +2546,9 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
           }
         }
       });
-      cube.save(function(err) {
+      Cube.updateOne({
+        _id: cube._id
+      }, cube, function(err) {
         if (err) {
           res.status(500).send({
             success: 'false',

@@ -3,8 +3,9 @@ import React, { Fragment } from 'react';
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
+import SortContext from './SortContext';
 
-const TypeRow = ({ cardType, groups, count }) => (
+const TypeRow = ({ cardType, groups, count, primary }) => (
   <Fragment key={cardType}>
     <Row className="mt-2">
       <h6 className="ml-1">{cardType} ({count})</h6>
@@ -16,6 +17,9 @@ const TypeRow = ({ cardType, groups, count }) => (
             <AutocardListGroup
               heading={`${cmc} (${(groups[cmc] || []).length})`}
               cards={groups[cmc] || []}
+              primary={primary}
+              secondary={cardType}
+              tertiary={cmc}
             />
           </div>
         )
@@ -24,19 +28,20 @@ const TypeRow = ({ cardType, groups, count }) => (
   </Fragment>
 );
 
-const ColorCard = ({ color, groups, count, typeCounts }) => (
+const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
   <Card>
     <CardHeader>
       <h5>{color} {count}</h5>
     </CardHeader>
     <CardBody>
       {
-        getLabels(sorts[1]).filter(cardType => groups[cardType]).map(cardType =>
+        getLabels('CNC').filter(cardType => groups[cardType]).map(cardType =>
           <TypeRow
             key={cardType}
             cardType={cardType}
             groups={groups[cardType]}
             count={typeCounts[cardType]}
+            primary={primary}
           />
         )
       }
@@ -44,17 +49,14 @@ const ColorCard = ({ color, groups, count, typeCounts }) => (
   </Card>
 );
 
-const CurveView = ({ cards, ...props }) => {
-  sorts[0] = document.getElementById('primarySortSelect').value || 'Color Category';
-  sorts[1] = document.getElementById('secondarySortSelect').value || 'Types-Multicolor';
-
+const CurveViewRaw = ({ cards, primary, ...props }) => {
   // We call the groups color and type even though they might be other sorts.
-  let groups = sortIntoGroups(cards, sorts[0]);
+  let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};
   let typeCounts = {};
 
   for (let color of Object.keys(groups)) {
-    groups[color] = sortIntoGroups(groups[color], sorts[1]);
+    groups[color] = sortIntoGroups(groups[color], 'CNC');
     colorCounts[color] = 0;
     typeCounts[color] = {};
     for (let cardType of Object.keys(groups[color])) {
@@ -83,13 +85,14 @@ const CurveView = ({ cards, ...props }) => {
     <Row className="mt-3" {...props}>
       <Col>
         {
-          getLabels(sorts[0]).filter(color => groups[color]).map(color => (
+          getLabels(primary).filter(color => groups[color]).map(color => (
             <ColorCard
               key={color}
               color={color}
               groups={groups[color]}
               count={colorCounts[color]}
               typeCounts={typeCounts[color]}
+              primary={color}
             />
           ))
         }
@@ -97,5 +100,7 @@ const CurveView = ({ cards, ...props }) => {
     </Row>
   );
 }
+
+const CurveView = SortContext.Wrapped(CurveViewRaw);
 
 export default CurveView;

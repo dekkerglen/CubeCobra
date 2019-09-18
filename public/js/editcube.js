@@ -53,8 +53,7 @@ $('#compareButton').click(function(e) {
 });
 
 $('#filterButton').click(function(e) {
-  var filterText = $('#filterInput').val();
-  updateFilters(filterText);
+  updateFilters($('#filterInput').val());
 });
 
 $('.updateButton').click(function(e) {
@@ -78,7 +77,6 @@ $('#resetButton').click(function(e) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  console.log("clicked");
   var enabled = $(this).prop('checked'),
     display_image;
   cube.forEach(function(card, index) {
@@ -89,6 +87,8 @@ $('#customImageDisplayToggle').click(function(e) {
 
 $('#viewSelect').change(function(e) {
   view = $('#viewSelect').val();
+  if (view === 'curve' ) $('#secondarySortCol').hide();
+  else $('#secondarySortCol').show();
   updateCubeList();
 });
 
@@ -200,12 +200,6 @@ if (canEdit) {
       }
     }
 
-    //TODO: Remove this
-    var filterobj = null;
-    if (filters.length > 0) {
-      filterobj = getFilterObj();
-    }
-
     groupSelect = JSON.parse(JSON.stringify(groupSelect));
 
     groupSelect.forEach(function(card, index) {
@@ -214,7 +208,6 @@ if (canEdit) {
 
     let data = {
       selected: groupSelect,
-      //filters: filterobj,
       updated: updated,
     };
 
@@ -329,6 +322,29 @@ if (canEdit) {
       src: modalSelect,
       updated: updated,
     };
+    fetch('/cube/api/getcardfromid/' + updated.cardID)
+      .then(response => response.json())
+      .then(function(json) {
+      var found = false;
+      cube.forEach(function(card, index) {
+        if (!found && card.index == data.src.index) {
+          found = true;
+          Object.keys(updated).forEach(function(key) {
+            if (updated[key] === null) {
+              updated[key] = undefined;
+            }
+          });
+          cube[index] = updated;
+          cube[index].index = card.index;
+          cube[index].details = json.card;
+          cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
+          cubeDict[cube[index].index] = cube[index];
+        }
+      });
+
+      updateCubeList();
+      $('#contextModal').modal('hide');
+    });      
     fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify(data),
@@ -336,29 +352,6 @@ if (canEdit) {
         'Content-Type': 'application/json'
       }
     });
-    fetch('/cube/api/getcardfromid/' + updated.cardID)
-      .then(response => response.json())
-      .then(function(json) {
-        var found = false;
-        cube.forEach(function(card, index) {
-          if (!found && card.index == data.src.index) {
-            found = true;
-            Object.keys(updated).forEach(function(key) {
-              if (updated[key] === null) {
-                updated[key] = undefined;
-              }
-            });
-            cube[index] = updated;
-            cube[index].index = card.index;
-            cube[index].details = json.card;
-            cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
-            cubeDict[cube[index].index] = cube[index];
-          }
-        });
-
-        updateCubeList();
-        $('#contextModal').modal('hide');
-      });
   });
   $('#saveSortButton').click(function(e) {
     var temp_sorts = [];
@@ -512,6 +505,131 @@ $('#showTagColorsCheckbox').change(function(e) {
     show_tag_colors = $(this).prop("checked");
     updateCubeList();
   });
+});
+
+$('#applyAdvancedFilterButton').click(function(e) {
+  console.log('click');
+  e.preventDefault();
+
+  var str = '';
+
+  if($('#filterName').val().length > 0)
+  {
+    str += 'n:'+$('#filterName').val();
+  }
+
+  if($('#filterOracle').val().length > 0)
+  {
+    var split = $('#filterOracle').val().split(' ');
+    split.forEach(function(val, index)
+    {
+      str += ' o:'+val;
+    });
+  }
+
+  if($('#filterCMC').val().length > 0)
+  {
+    if($('#filterCMCOp').val() == '!')
+    {
+      str += ' -cmc='+$('#filterCMC').val();
+    }
+    else
+    {
+     str += ' cmc'+$('#filterCMCOp').val()+$('#filterCMC').val();
+    }
+  }
+  if($('#filterPower').val().length > 0)
+  {
+    if($('#filterPowerOp').val() == '!')
+    {
+      str += ' -pow='+$('#filterPower').val();
+    }
+    else
+    {
+     str += ' pow'+$('#filterPowerOp').val()+$('#filterPower').val();
+    }
+  }
+  if($('#filterToughness').val().length > 0)
+  {
+    if($('#filterToughnessOp').val() == '!')
+    {
+      str += ' -tou='+$('#filterToughness').val();
+    }
+    else
+    {
+     str += ' tou'+$('#filterToughnessOp').val()+$('#filterToughness').val();
+    }
+  }
+
+  //Color
+  var colorStr = '';
+  ['W','U','B','R','G','C'].forEach(function(val, index) {
+    if($('#filterColor' + val).prop('checked'))
+    {
+      colorStr += val;
+    }
+  });
+  if(colorStr.length > 0)
+  {
+    str += ' c' + $('#filterColorOp').val() + colorStr;
+  }
+  //Color Identity
+  colorStr = '';
+  ['W','U','B','R','G','C'].forEach(function(val, index) {
+    if($('#filterColorIdentity' + val).prop('checked'))
+    {
+      colorStr += val;
+    }
+  });
+  if(colorStr.length > 0)
+  {
+    str += ' ci' + $('#filterColorIdentityOp').val() + colorStr;
+  }
+  //Mana
+  if($('#filterMana').val().length > 0)
+  {
+    str += ' m:'+$('#filterMana').val();
+  }
+
+  //Type
+  if($('#filterType').val().length > 0)
+  {
+    str += ' t:'+$('#filterType').val();
+  }
+
+  //tags
+  if($('#filterTag').val().length > 0)
+  {
+    str += ' tag:"'+$('#filterTag').val()+'"';
+  }
+
+  //price
+  if($('#filterPrice').val().length > 0)
+  {
+    str += ' p'+$('#filterPriceOp').val()+$('#filterPrice').val();
+  }
+  
+  //price foil 
+  if($('#filterPriceFoil').val().length > 0)
+  {
+    str += ' pf'+$('#filterPriceFoilOp').val()+$('#filterPriceFoil').val();
+  }
+
+  //status
+  if($('#filterStatus').val().length > 0)
+  {
+    str += ' stat:"'+$('#filterStatus').val()+'"';
+  }
+
+  //loyalty
+
+  //manacost type
+
+  //artist
+
+  $('#filterInput').val(str);
+  $('#filterModal').modal('hide');
+  filterButton.click();
 });
 
 if (canEdit && !comparing) {
@@ -986,7 +1104,10 @@ function init_groupcontextModal() {
     e.preventDefault();
     var category1 = e.target.getAttribute("primarysort");
     var category2 = e.target.getAttribute("secondarysort");
-    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1], sorts[1])[category2];
+    var category3 = e.target.getAttribute("tertiarysort");
+    var second_sort = (view === 'curve') ? 'CNC' : sorts[1];
+    var matches = sortIntoGroups(sortIntoGroups(filteredCube(), sorts[0])[category1], second_sort)[category2];
+    if (view === 'curve') matches = sortIntoGroups(matches, 'CMC2')[category3];
     if (matches.length == 1) {
       show_contextModal(matches[0]);
     } else {
@@ -1010,11 +1131,11 @@ function renderGroupContext() {
     }
     let color_class = (show_tag_colors) ? getCardTagColorClass(card) : getCardColorClass(card);
     if (card.details.image_flip) {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
+      cardlist += '<li data-index="' + index + '" cardID="' + card.cardID + '" style="font-size: 15px;" class="groupModalRm card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" card_tags="' + card.tags + '">';
     } else {
-      cardlist += '<li cardID="' + card.cardID + '" style="font-size: 15px;" class="card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
+      cardlist += '<li data-index="' + index + '" cardID="' + card.cardID + '" style="font-size: 15px;" class="groupModalRm card-list-item list-group-item autocard ' + color_class + '" card="' + card.details.display_image + '" card_tags="' + card.tags + '">';
     }
-    cardlist += '<a data-index="' + index + '" class="groupModalRm clickx" href="#">×</a><a>  ';
+    cardlist += '×<a>  ';
     cardlist += card.details.name;
     cardlist += '</a></li>';
   });
@@ -1079,6 +1200,8 @@ function show_contextModal(card) {
   $('.price-area').html(priceHtml);
   $('#contextModalTitle').html(card.details.name);
   $('#contextModalImg').attr('src', card.details.display_image);
+  $("#contextModalImg").off("mouseover");
+  $("#contextModalImg").off("mouseout");
   if (card.details.image_flip !== undefined) {
     $('#contextModalImg').mouseover(function() {
       $(this).attr('src', card.details.image_flip);
@@ -1658,7 +1781,14 @@ let categoryMap = new Map([
   ['power','power'],
   ['tou', 'toughness'],
   ['toughness', 'toughness'],
-  ['name', 'name']
+  ['name', 'name'],
+  ['tag', 'tag'],
+  ['price','price'],
+  ['pricefoil','pricefoil'],
+  ['p','price'],
+  ['pf','pricefoil'],
+  ['status','status'],
+  ['stat','status']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
