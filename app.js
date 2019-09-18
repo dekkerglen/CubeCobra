@@ -410,8 +410,8 @@ app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
 
-app.get('*', function(req, res) {
-  res.redirect('/404');
+app.use(function(req, res) {
+  res.status(404).render('misc/404', {});
 });
 
 /*
