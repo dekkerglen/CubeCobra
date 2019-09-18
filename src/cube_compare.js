@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
+import DynamicFlash from './components/DynamicFlash';
 import SortContext from './components/SortContext';
 
 class CubeCompare extends Component {
@@ -28,6 +29,7 @@ class CubeCompare extends Component {
     return (
       <SortContext.Provider>
         <CubeCompareNavbar />
+        <DynamicFlash />
         <CompareView cards={cards} {...props} />
       </SortContext.Provider>
     );
