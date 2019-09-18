@@ -60,6 +60,7 @@
     "react-dom": "^16.9.0",
     "react-tag-input": "^6.4.1",
     "reactstrap": "^8.0.1",
+    "sinon": "^7.4.2",
     "terser-webpack-plugin": "^2.0.0",
     "webpack": "^4.39.3",
     "webpack-cli": "^3.3.8",
