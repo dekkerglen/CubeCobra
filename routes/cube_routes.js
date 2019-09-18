@@ -1521,7 +1521,7 @@ function startStandardDraft(req, res, params, cube) {
 }
 
 router.post('/startdraft/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {    
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});
@@ -2172,7 +2172,9 @@ router.get('/deckbuilder/:id', function(req, res) {
         if (Array.isArray(card)) {
           card.forEach(function(item, index2) {
             if (item) {
-              item = {cardID:item};
+              item = {
+                cardID: item
+              };
               item.details = carddb.cardFromId(item.cardID);
               item.details.display_image = util.getCardImageURL(item);
             }
@@ -2267,7 +2269,9 @@ router.get('/deck/:id', function(req, res) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
                       var details = carddb.cardFromId(card[0].cardID);
-                      details.display_image = util.getCardImageURL({details});
+                      details.display_image = util.getCardImageURL({
+                        details
+                      });
                       bot_deck.push(details);
                     }
                   });
@@ -2296,10 +2300,8 @@ router.get('/deck/:id', function(req, res) {
                   loginCallback: '/cube/deck/' + req.params.id
                 });
               } else {
-                deck.playerdeck.forEach(function(col, ind)
-                {
-                  col.forEach(function(card, index)
-                  {
+                deck.playerdeck.forEach(function(col, ind) {
+                  col.forEach(function(card, index) {
                     card.details.display_image = util.getCardImageURL(card);
                   });
                 });
@@ -2311,7 +2313,9 @@ router.get('/deck/:id', function(req, res) {
                       console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
                     } else {
                       var details = carddb.cardFromId(cardid);
-                      details.display_image = util.getCardImageURL({details});
+                      details.display_image = util.getCardImageURL({
+                        details
+                      });
                       bot_deck.push(details);
                     }
                   });
@@ -2475,7 +2479,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           message: 'Card not found'
         });
       } else {
-        cube = setCubeType(cube, carddb);  
+        cube = setCubeType(cube, carddb);
 
         Cube.updateOne({
           _id: cube._id

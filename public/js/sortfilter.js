@@ -1,5 +1,3 @@
-
-
 var price_buckets = [.25, .5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
 var rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
@@ -36,14 +34,14 @@ function GetColorCategory(type, colors) {
 
 function filterCard(card, filters) {
 
-  if(filters.length == 1) {
-    if(filters[0].type == 'token') {
+  if (filters.length == 1) {
+    if (filters[0].type == 'token') {
       return filterApply(card, filters[0]);
     } else {
       return filterCard(card, filters[0]);
     }
   } else {
-    if(filters.type == 'or') {
+    if (filters.type == 'or') {
       return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
     } else {
       return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
@@ -53,31 +51,31 @@ function filterCard(card, filters) {
 }
 
 function areArraysEqualSets(a1, a2) {
-    if(a1.length != a2.length) return false;
-    let superSet = {};
-    for (let i = 0; i < a1.length; i++) {
-          const e = a1[i] + typeof a1[i];
-          superSet[e] = 1;
-        }
+  if (a1.length != a2.length) return false;
+  let superSet = {};
+  for (let i = 0; i < a1.length; i++) {
+    const e = a1[i] + typeof a1[i];
+    superSet[e] = 1;
+  }
 
-    for (let i = 0; i < a2.length; i++) {
-          const e = a2[i] + typeof a2[i];
-          if (!superSet[e]) {
-                  return false;
-                }
-          superSet[e] = 2;
-        }
+  for (let i = 0; i < a2.length; i++) {
+    const e = a2[i] + typeof a2[i];
+    if (!superSet[e]) {
+      return false;
+    }
+    superSet[e] = 2;
+  }
 
-    for (let e in superSet) {
-          if (superSet[e] === 1) {
-                  return false;
-                }
-        }
+  for (let e in superSet) {
+    if (superSet[e] === 1) {
+      return false;
+    }
+  }
 
-    return true;
+  return true;
 }
 
-function arrayContainsOtherArray (arr1, arr2) {
+function arrayContainsOtherArray(arr1, arr2) {
   return arr2.every(v => arr1.includes(v));
 }
 
@@ -210,20 +208,18 @@ function filterApply(card, filter) {
       }
     }
   }
-  if(filter.category == 'tag') {
+  if (filter.category == 'tag') {
     res = card.tags.some(element => {
       return element.toLowerCase() == filter.arg;
     });
   }
-  if(filter.category == 'status') {
-    if(card.status.toLowerCase() == filter.arg)
-    {
+  if (filter.category == 'status') {
+    if (card.status.toLowerCase() == filter.arg) {
       res = true;
     }
   }
 
-  if(filter.category == 'price')
-  {
+  if (filter.category == 'price') {
     var price = null;
     if (card.details.price) {
       price = card.details.price;
@@ -231,8 +227,7 @@ function filterApply(card, filter) {
       price = card.details.price_foil;
     }
     if (price) {
-      switch(filter.operand)
-      {
+      switch (filter.operand) {
         case ':':
         case '=':
           res = filter.arg == price;
@@ -252,12 +247,10 @@ function filterApply(card, filter) {
       }
     }
   }
-  if(filter.category == 'pricefoil')
-  {
+  if (filter.category == 'pricefoil') {
     var price = card.details.price_foil || null
     if (price) {
-      switch(filter.operand)
-      {
+      switch (filter.operand) {
         case ':':
         case '=':
           res = filter.arg == price;
@@ -277,11 +270,9 @@ function filterApply(card, filter) {
       }
     }
   }
-  if(filter.category == 'rarity')
-  {
+  if (filter.category == 'rarity') {
     let rarity = card.details.rarity;
-    switch(filter.operand)
-    {
+    switch (filter.operand) {
       case ':':
       case '=':
         res = rarity == filter.arg;
@@ -301,7 +292,7 @@ function filterApply(card, filter) {
     }
   }
 
-  if(filter.not) {
+  if (filter.not) {
     return !res;
   } else {
     return res;

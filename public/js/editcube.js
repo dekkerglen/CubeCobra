@@ -253,26 +253,26 @@ if (canEdit) {
     fetch('/cube/api/getcardfromid/' + updated.cardID)
       .then(response => response.json())
       .then(function(json) {
-      var found = false;
-      cube.forEach(function(card, index) {
-        if (!found && card.index == data.src.index) {
-          found = true;
-          Object.keys(updated).forEach(function(key) {
-            if (updated[key] === null) {
-              updated[key] = undefined;
-            }
-          });
-          cube[index] = updated;
-          cube[index].index = card.index;
-          cube[index].details = json.card;
-          cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
-          cubeDict[cube[index].index] = cube[index];
-        }
-      });
+        var found = false;
+        cube.forEach(function(card, index) {
+          if (!found && card.index == data.src.index) {
+            found = true;
+            Object.keys(updated).forEach(function(key) {
+              if (updated[key] === null) {
+                updated[key] = undefined;
+              }
+            });
+            cube[index] = updated;
+            cube[index].index = card.index;
+            cube[index].details = json.card;
+            cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
+            cubeDict[cube[index].index] = cube[index];
+          }
+        });
 
-      updateCubeList();
-      $('#contextModal').modal('hide');
-    });      
+        updateCubeList();
+        $('#contextModal').modal('hide');
+      });
     fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify(data),
@@ -426,112 +426,87 @@ $('#applyAdvancedFilterButton').click(function(e) {
 
   var str = '';
 
-  if($('#filterName').val().length > 0)
-  {
-    str += 'n:'+$('#filterName').val();
+  if ($('#filterName').val().length > 0) {
+    str += 'n:' + $('#filterName').val();
   }
 
-  if($('#filterOracle').val().length > 0)
-  {
+  if ($('#filterOracle').val().length > 0) {
     var split = $('#filterOracle').val().split(' ');
-    split.forEach(function(val, index)
-    {
-      str += ' o:'+val;
+    split.forEach(function(val, index) {
+      str += ' o:' + val;
     });
   }
 
-  if($('#filterCMC').val().length > 0)
-  {
-    if($('#filterCMCOp').val() == '!')
-    {
-      str += ' -cmc='+$('#filterCMC').val();
-    }
-    else
-    {
-     str += ' cmc'+$('#filterCMCOp').val()+$('#filterCMC').val();
+  if ($('#filterCMC').val().length > 0) {
+    if ($('#filterCMCOp').val() == '!') {
+      str += ' -cmc=' + $('#filterCMC').val();
+    } else {
+      str += ' cmc' + $('#filterCMCOp').val() + $('#filterCMC').val();
     }
   }
-  if($('#filterPower').val().length > 0)
-  {
-    if($('#filterPowerOp').val() == '!')
-    {
-      str += ' -pow='+$('#filterPower').val();
-    }
-    else
-    {
-     str += ' pow'+$('#filterPowerOp').val()+$('#filterPower').val();
+  if ($('#filterPower').val().length > 0) {
+    if ($('#filterPowerOp').val() == '!') {
+      str += ' -pow=' + $('#filterPower').val();
+    } else {
+      str += ' pow' + $('#filterPowerOp').val() + $('#filterPower').val();
     }
   }
-  if($('#filterToughness').val().length > 0)
-  {
-    if($('#filterToughnessOp').val() == '!')
-    {
-      str += ' -tou='+$('#filterToughness').val();
-    }
-    else
-    {
-     str += ' tou'+$('#filterToughnessOp').val()+$('#filterToughness').val();
+  if ($('#filterToughness').val().length > 0) {
+    if ($('#filterToughnessOp').val() == '!') {
+      str += ' -tou=' + $('#filterToughness').val();
+    } else {
+      str += ' tou' + $('#filterToughnessOp').val() + $('#filterToughness').val();
     }
   }
 
   //Color
   var colorStr = '';
-  ['W','U','B','R','G','C'].forEach(function(val, index) {
-    if($('#filterColor' + val).prop('checked'))
-    {
+  ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(val, index) {
+    if ($('#filterColor' + val).prop('checked')) {
       colorStr += val;
     }
   });
-  if(colorStr.length > 0)
-  {
+  if (colorStr.length > 0) {
     str += ' c' + $('#filterColorOp').val() + colorStr;
   }
   //Color Identity
   colorStr = '';
-  ['W','U','B','R','G','C'].forEach(function(val, index) {
-    if($('#filterColorIdentity' + val).prop('checked'))
-    {
+  ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(val, index) {
+    if ($('#filterColorIdentity' + val).prop('checked')) {
       colorStr += val;
     }
   });
-  if(colorStr.length > 0)
-  {
+  if (colorStr.length > 0) {
     str += ' ci' + $('#filterColorIdentityOp').val() + colorStr;
   }
   //Mana
-  if($('#filterMana').val().length > 0)
-  {
-    str += ' m:'+$('#filterMana').val();
+  if ($('#filterMana').val().length > 0) {
+    str += ' m:' + $('#filterMana').val();
   }
 
   //Type
-  if($('#filterType').val().length > 0)
-  {
-    str += ' t:'+$('#filterType').val();
+  if ($('#filterType').val().length > 0) {
+    str += ' t:' + $('#filterType').val();
   }
 
   //tags
-  if($('#filterTag').val().length > 0)
-  {
-    str += ' tag:"'+$('#filterTag').val()+'"';
+  if ($('#filterTag').val().length > 0) {
+    str += ' tag:"' + $('#filterTag').val() + '"';
   }
 
   //price
-  if($('#filterPrice').val().length > 0)
-  {
-    str += ' p'+$('#filterPriceOp').val()+$('#filterPrice').val();
+  if ($('#filterPrice').val().length > 0) {
+    str += ' p' + $('#filterPriceOp').val() + $('#filterPrice').val();
   }
-  
+
   //price foil 
-  if($('#filterPriceFoil').val().length > 0)
-  {
-    str += ' pf'+$('#filterPriceFoilOp').val()+$('#filterPriceFoil').val();
+  if ($('#filterPriceFoil').val().length > 0) {
+    str += ' pf' + $('#filterPriceFoilOp').val() + $('#filterPriceFoil').val();
   }
 
   //status
-  if($('#filterStatus').val().length > 0)
-  {
-    str += ' stat:"'+$('#filterStatus').val()+'"';
+  if ($('#filterStatus').val().length > 0) {
+    str += ' stat:"' + $('#filterStatus').val() + '"';
   }
 
   //loyalty
@@ -541,9 +516,8 @@ $('#applyAdvancedFilterButton').click(function(e) {
   //artist
 
   // rarity
-  if($('#filterRarity').val().length > 0)
-  {
-    str += ' r'+$('#filterRarityOp').val()+$('#filterRarity').val();
+  if ($('#filterRarity').val().length > 0) {
+    str += ' r' + $('#filterRarityOp').val() + $('#filterRarity').val();
   }
 
   $('#filterInput').val(str);
@@ -1246,7 +1220,7 @@ function filteredCube() {
 function addUrlToFilter(filterText) {
   let params = new URLSearchParams(document.location.search);
   params.delete('f');
-  if(filterText) {
+  if (filterText) {
     params.append('f', filterText);
   }
   let url = window.location.pathname + '?' + params.toString();
@@ -1258,7 +1232,7 @@ function buildFiltersFromQsargs() {
   let f = params.get('f');
   updateFilters(f);
   $('#filterInput').val(f);
-  
+
 }
 
 var updateCubeListeners = [];
@@ -1289,41 +1263,41 @@ function updateFilters(filterText) {
 
 let categoryMap = new Map([
   ['m', 'mana'],
-  ['mana','mana'],
-  ['cmc','cmc'],
-  ['c','color'],
-  ['color','color'],
-  ['ci','identity'],
-  ['id','identity'],
-  ['identity','identity'],
-  ['t','type'],
-  ['type','type'],
-  ['o','oracle'],
-  ['oracle','oracle'],
-  ['pow','power'],
-  ['power','power'],
+  ['mana', 'mana'],
+  ['cmc', 'cmc'],
+  ['c', 'color'],
+  ['color', 'color'],
+  ['ci', 'identity'],
+  ['id', 'identity'],
+  ['identity', 'identity'],
+  ['t', 'type'],
+  ['type', 'type'],
+  ['o', 'oracle'],
+  ['oracle', 'oracle'],
+  ['pow', 'power'],
+  ['power', 'power'],
   ['tou', 'toughness'],
   ['toughness', 'toughness'],
   ['name', 'name'],
   ['tag', 'tag'],
-  ['price','price'],
-  ['pricefoil','pricefoil'],
-  ['p','price'],
-  ['pf','pricefoil'],
-  ['status','status'],
-  ['stat','status'],
+  ['price', 'price'],
+  ['pricefoil', 'pricefoil'],
+  ['p', 'price'],
+  ['pf', 'pricefoil'],
+  ['status', 'status'],
+  ['stat', 'status'],
   ['r', 'rarity'],
   ['rarity', 'rarity']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
-  if(!num) {
+  if (!num) {
     num = 1;
   }
-  for(let i = 1; i < filterText.length; i++) {
-    if(filterText[i] == '(') num++;
+  for (let i = 1; i < filterText.length; i++) {
+    if (filterText[i] == '(') num++;
     else if (filterText[i] == ')') num--;
-    if (num === 0) { 
+    if (num === 0) {
       return i;
     }
   }
@@ -1361,7 +1335,9 @@ function tokenizeInput(filterText, tokens) {
   }
 
   if (filterText.indexOf('or ') == 0 || (filterText.length == 2 && filterText.indexOf('or') == 0)) {
-    tokens.push({type: 'or'});
+    tokens.push({
+      type: 'or'
+    });
     return tokenizeInput(filterText.slice(2), tokens);
   }
 
@@ -1384,7 +1360,7 @@ function tokenizeInput(filterText, tokens) {
 
   //find operand
   let operand = firstTerm[0].match(operators_re);
-  if(operand) {
+  if (operand) {
     operand = operand[0];
     token.operand = operand;
   } else {
@@ -1416,7 +1392,7 @@ function tokenizeInput(filterText, tokens) {
     let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
-  } else if (token.operand != 'none'){
+  } else if (token.operand != 'none') {
     token.arg = firstTerm[0].slice(category.length + token.operand.length).split(')')[0];
   } else {
     token.arg = firstTerm[0].split(')')[0];
@@ -1437,7 +1413,7 @@ function tokenizeInput(filterText, tokens) {
     if (parens) token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);
     return tokenizeInput(filterText, tokens);
-  } else { 
+  } else {
     return false;
   }
 
@@ -1478,12 +1454,12 @@ function simplifyArg(arg, category) {
   switch (category) {
     case 'color':
     case 'identity':
-      if(colorMap.has(arg)){
+      if (colorMap.has(arg)) {
         res = colorMap.get(arg);
       } else {
         res = arg;
       }
-      res = res.split('').map( (element) => element.toUpperCase());
+      res = res.split('').map((element) => element.toUpperCase());
       break;
     case 'mana':
       res = parseManaCost(arg)
@@ -1499,12 +1475,12 @@ function simplifyArg(arg, category) {
 //returns true if decoding was successful, and filter object is populated, or false otherwise
 function generateFilters(filterText) {
   let tokens = [];
-  
+
   if (tokenizeInput(filterText, tokens)) {
     if (verifyTokens(tokens)) {
       filters = [parseTokens(tokens)];
       addUrlToFilter(filterText);
-      
+
       //TODO: generate a filter string, and return better errors to user
       document.getElementById('filterarea').innerHTML = '<p><em>Filter Applied.</em></p>';
       $('#filterInput').removeClass('invalid-filter');
@@ -1534,7 +1510,7 @@ const verifyTokens = (tokens) => {
       temp[closed].valid = true;
     }
     if (type(i) == 'close') {
-      if(!temp[i].valid) return false;
+      if (!temp[i].valid) return false;
     }
     if (type(i) == 'or') {
       if (!inBounds(i - 1) || !inBounds(i + 1)) return false;
@@ -1542,7 +1518,7 @@ const verifyTokens = (tokens) => {
       if (!(type(i + 1) != 'open' || type(i + 1) != 'token')) return false;
     }
     if (type(i) == 'token') {
-      switch(token(i).category) {
+      switch (token(i).category) {
         case 'color':
         case 'identity':
           let verifyColors = (element) => {
@@ -1555,7 +1531,7 @@ const verifyTokens = (tokens) => {
         case 'cmc':
         case 'power':
         case 'toughness':
-          if(token(i).arg.search(/^\d+$/) < 0) return false;
+          if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
         case 'mana':
           let verifyMana = (element) => {
@@ -1588,27 +1564,27 @@ const hybridMap = new Map([
   ['u-g', 'g-u']
 ]);
 
-function parseManaCost (cost) {
+function parseManaCost(cost) {
   let res = [];
   for (let i = 0; i < cost.length; i++) {
     if (cost[i] == '{') {
-      let str = cost.slice(i+1, i+4).toLowerCase();
+      let str = cost.slice(i + 1, i + 4).toLowerCase();
       if (str.search(/[wubrg]\/p/) > -1) {
-        res.push(cost[i+1] + '-p');
-        i = i+4;
+        res.push(cost[i + 1] + '-p');
+        i = i + 4;
       } else if (str.search(/2\/[wubrg]/) > -1) {
-        res.push('2-' + cost[i+3]);
-        i = i+4;
+        res.push('2-' + cost[i + 3]);
+        i = i + 4;
       } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
-        let symbol = cost[i+1] + '-' + cost[i+3];
+        let symbol = cost[i + 1] + '-' + cost[i + 3];
         if (hybridMap.has(symbol)) {
           symbol = hybridMap.get(symbol);
         }
         res.push(symbol);
-        i = i+4;
-      } else if (str.search(/^[wubrgscxyz]}/) > -1 ) {
-        res.push(cost[i+1]);
-        i = i+2;
+        i = i + 4;
+      } else if (str.search(/^[wubrgscxyz]}/) > -1) {
+        res.push(cost[i + 1]);
+        i = i + 2;
       } else if (str.search(/^[0-9]+}/) > -1) {
         let num = str.match(/[0-9]+/)[0];
         if (num.length <= 2) {
@@ -1633,12 +1609,12 @@ function parseManaCost (cost) {
 }
 
 const findClose = (tokens, pos) => {
-  if(!pos) pos = 0;
+  if (!pos) pos = 0;
   let num = 1;
-  for(let i = pos+1; i < tokens.length; i++) {
-    if(tokens[i].type == 'close') num--;
+  for (let i = pos + 1; i < tokens.length; i++) {
+    if (tokens[i].type == 'close') num--;
     else if (tokens[i].type == 'open') num++;
-    if (num === 0) { 
+    if (num === 0) {
       return i;
     }
   }
@@ -1655,15 +1631,15 @@ const parseTokens = (tokens) => {
   }
   if (peek().type == 'open') {
     let end = findClose(tokens);
-    if(end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
+    if (end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
     result.push(parseTokens(tokens.slice(1, end)));
-    if(tokens.length > end + 1) result.push(parseTokens(tokens.slice(end+1)));
+    if (tokens.length > end + 1) result.push(parseTokens(tokens.slice(end + 1)));
     return result;
   } else if (peek().type == 'token') {
     if (tokens.length == 1) {
       return consume();
     } else {
-      if(tokens[1].type == 'or') result.type = 'or';
+      if (tokens[1].type == 'or') result.type = 'or';
       result.push(consume());
       result.push(parseTokens(tokens.slice(1)));
       return result;
