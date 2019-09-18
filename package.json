@@ -12,7 +12,7 @@
   },
   "author": "Gwen Dekker",
   "license": "ISC",
-  "browserslist": "> 1.0%, not dead",
+  "browserslist": "> 1.0%, not dead, last 2 versions, not ie < 11",
   "dependencies": {
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
@@ -42,15 +42,14 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "sanitize-html": "^1.20.1",
-    "selenium-webdriver": "^4.0.0-alpha.5",
+    "selenium-webdriver": "^4.0.0-alpha.4",
     "serve-favicon": "^2.5.0",
     "shuffle-seed": "^1.1.6",
-    "website-scraper": "^4.2.0"
+    "website-scraper": "^4.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.0",
-    "@babel/polyfill": "^7.6.0",
-    "@babel/preset-env": "^7.6.0",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.6",
     "chart.js": "^2.8.0",
@@ -63,7 +62,7 @@
     "react-dom": "^16.9.0",
     "react-tag-input": "^6.4.1",
     "reactstrap": "^8.0.1",
-    "terser-webpack-plugin": "^2.0.1",
+    "terser-webpack-plugin": "^2.0.0",
     "webpack": "^4.39.3",
     "webpack-cli": "^3.3.8",
     "webpack-dev-server": "^3.8.0",
