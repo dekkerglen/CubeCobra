@@ -3,157 +3,11 @@ extends cube_layout
 block cube_toolbar
   link(rel='stylesheet' href='/css/tags.css')
   link(rel='stylesheet' href='/css/editcube.css')
-  //edit controls
-  .usercontrols
-    nav.navbar.navbar-expand-md.navbar-light
-      .view-style-select
-        label.sr-only(for='viewSelect') Cube View Style
-        select#viewSelect.form-control
-          option(selected='' value='table') Table View
-          option(value='spoiler') Visual Spoiler
-          if user
-            if user.id == cube.owner
-              option(value='list') List View
-          option(value='curve') Curve View
-      button.navbar-toggler(type='button' data-toggle='collapse' data-target='#user-controls-nav' aria-controls='user-controls-nav' aria-expanded='false' aria-label='Toggle User Controls')
-        span.navbar-toggler-icon
-      #user-controls-nav.collapse.navbar-collapse
-        ul.navbar-nav.ml-auto
-          if user
-            if user.id == cube.owner
-              li.nav-item
-                a.nav-link(href='#', data-toggle="collapse" data-target="#navedit" aria-controls="navedit" aria-expanded="false" aria-label="Toggle navigation") Add/Remove
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navcompare" aria-controls="navcompare" aria-expanded="false" aria-label="Toggle navigation") Compare
-          if user && user.id == cube.owner
-            li.nav-item
-              a(href="#")#massEdit.nav-link Mass Edit
-          li.nav-item
-            a(href="#")#tagColors.nav-link
-              if user && user.id == cube.owner
-                | Set Tag Colors
-              else
-                | View Tag Colors
-          if user && user.id == cube.owner
-            li.nav-item.dropdown
-              a#bulkdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Bulk Upload
-              .dropdown-menu(aria-labelledby='bulkdropdown')
-                a.dropdown-item(href='#', data-toggle='modal', data-target='#pasteBulkModal') Paste Text
-                a.dropdown-item(href='#', data-toggle='modal', data-target='#uploadBulkModal') Upload File
-                a.dropdown-item(href='#', data-toggle='modal', data-target='#importModal') Import from Cubetutor
-          li.nav-item.dropdown
-            a#exportdropdown.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Export
-            .dropdown-menu(aria-labelledby='exportdropdown')
-              a.dropdown-item(href='/cube/download/plaintext/'+cube_id) Card Names (.txt)
-              a.dropdown-item(href='/cube/download/csv/'+cube_id) Comma Separated (.csv)
-              a.dropdown-item(href='/cube/download/forge/'+cube_id) Forge (.dck)
-              a.dropdown-item(href='/cube/download/xmage/'+cube_id) XMage (.dck)
-                br
-          li.nav-item
-            span#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
-              input#customImageDisplayToggle(type='checkbox')
-              label(for='customImageDisplayToggle') Show Custom Images
-    #accordion.accordion
-      if user
-        if user.id == cube.owner
-          #navedit.collapse(data-parent='#accordion')
-            .container
-              .row.collapse.warnings
-                .col
-                  .alert.alert-danger(role='alert') Invalid input: card not recognized.
-              .row
-                .col
-                  form(autocomplete='off').form-inline
-                    .mb-2.autocomplete
-                      input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
-                    button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
-                .col
-                  form.form-inline
-                    .mb-2.autocomplete
-                      input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
-                    button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
-              .collapse.editForm
-                form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
-                  .row
-                    .col
-                      br
-                      label Changelist:
-                      .editarea
-                        p.editlist#changelist
-                      br
-                      input#changelistFormBody(type='hidden', name='body')
-                      input#changelistBlog(type='hidden', name='blog')
-                    .col
-                      br
-                      #form-group
-                        label Blog Title:
-                        input.form-control(maxlength='200' name='title', type='text' value='Cube Updated - Automatic Post')
-                      #form-group
-                        label Body:
-                        include ../texteditor
-                  .row
-                    .col
-                      input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
-                      input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
-                      br
-                      br
-      #navsort.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              h5 Primary Sort
-              select#primarySortSelect.custom-select
-              br
-              p
-                em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
-            .col
-              #secondarySortCol
-                h5 Secondary Sort
-                select#secondarySortSelect.custom-select
-          .row
-            .col
-              button.updateButton.btn.btn-success(type='button') Update Table
-              a
-              if user && user.id == cube.owner
-                button#saveSortButton.btn.btn-success(type='button') Save as Default Sort
-              br
-              br
-      #navfilter.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              .input-group.mb-3
-                .input-group-prepend
-                  label.input-group-text(for='filterInput') Filter
-                input.form-control#filterInput(type='text', placeholder='Type Filters Here or Use Advanced Search below')
-                .input-group-append
-                  button#filterButton.btn.btn-success(type='button') Apply
-              h5 Filters
-              #filterarea
-          .row
-            .col
-              button#resetButton.mr-sm-2.btn.btn-success(type='button') Reset Filters
-              button#advancedSearchButton.mr-sm-2.btn.btn-success(type='button' data-toggle='modal', data-target='#filterModal') Advanced...
-              a#resetButton.mr-sm-2.btn.btn-success(href="/filters") Syntax Guide
-              br
-              br
-      #navcompare.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              form(autocomplete='off').form-inline
-                .mb-2
-                  input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
-                button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
-                br
-                br
+  link(rel='stylesheet' href='/css/texteditor.css')
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
+  input#canEdit(type='hidden', name='canEdit', value=(user && user.id == cube.owner).toString())
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
   input#hideTagColors(type='hidden', name='hideTagColors', value=(!!user && user.hide_tag_colors === true).toString())
   if user && user.id == cube.owner
@@ -317,7 +171,17 @@ block cube_content
               option(value='<=') less than or equal to
               option(value='>=') greater than or equal to
               option(value='!') not equal to
-            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')       
+            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')
+          .input-group.mb-3
+            .input-group-prepend
+              span.input-group-text Rarity
+            select.custom-select#filterRarityOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+            input#filterRarity.form-control(type='text', placeholder='Any rarity, e.g. "common"')
         .modal-footer
           button.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
           button.btn.btn-success#applyAdvancedFilterButton(type='button') Apply
@@ -602,6 +466,7 @@ block cube_content
           button.btn.btn-secondary(type='button', data-dismiss='modal') OK
 
   script(src='/js/utils.js')
+  script(src='/js/autocard.js')
   script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
