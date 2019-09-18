@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
+import DisplayContext from './components/DisplayContext';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
@@ -12,18 +14,36 @@ class CubeList extends Component {
   constructor(props) {
     super(props);
 
-    const cube = JSON.parse(document.getElementById('cuberaw').value);
-
     this.state = {
-      cards: cube,
+      cards: this.props.defaultCards,
       cubeView: 'table',
     };
 
-    updateCubeListeners.push((cubeView, cards) => this.setState({ cubeView, cards }));
+    this.changeCubeView = this.changeCubeView.bind(this);
+
+    /* global */
+    updateCubeListeners.push(cards => this.setState({ cards }));
+  }
+
+  componentDidMount() {
+    /* global */
+    init_groupcontextModal();
+    autocard_init('autocard');
+  }
+
+  componentDidUpdate() {
+    /* global */
+    init_groupcontextModal();
+    autocard_init('autocard');
+  }
+
+  changeCubeView(cubeView) {
+    this.setState({ cubeView });
   }
 
   render() {
-    const { cubeView, cards } = this.state;
+    const { defaultCards, canEdit } = this.props;
+    const { cards, cubeView } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
@@ -31,18 +51,35 @@ class CubeList extends Component {
     }))
     return (
       <SortContext.Provider>
-        <TagContext.Provider defaultTags={defaultTags}>
-          {{
-            'table': <TableView cards={cards} />,
-            'spoiler': <VisualSpoiler cards={cards} />,
-            'curve': <CurveView cards={cards} />,
-            'list': <ListView cards={cards} />,
-          }[cubeView]}
-        </TagContext.Provider>
+        <DisplayContext.Provider>
+          <CubeListNavbar
+            canEdit={canEdit}
+            cubeID={cubeID}
+            cubeView={cubeView}
+            changeCubeView={this.changeCubeView}
+            hasCustomImages={cards.some(card => card.imgUrl)}
+          />
+          <TagContext.Provider defaultTags={defaultTags}>
+            {{
+              'table': <TableView cards={cards} />,
+              'spoiler': <VisualSpoiler cards={cards} />,
+              'curve': <CurveView cards={cards} />,
+              'list': <ListView cards={cards} />,
+            }[cubeView]}
+          </TagContext.Provider>
+        </DisplayContext.Provider>
       </SortContext.Provider>
     );
   }
 }
 
+const cube = JSON.parse(document.getElementById('cuberaw').value);
+cube.forEach((card, index) => {
+  card.index = index;
+  cubeDict[index] = card;
+});
+const cubeID = document.getElementById('cubeID').value;
+const canEdit = document.getElementById('canEdit').value;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<CubeList />, wrapper) : false;
+const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
+wrapper ? ReactDOM.render(element, wrapper) : false;
