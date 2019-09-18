@@ -5,6 +5,7 @@ import CurveView from './components/CurveView';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
+import TagContext from './components/TagContext';
 import VisualSpoiler from './components/VisualSpoiler';
 
 class CubeList extends Component {
@@ -14,7 +15,7 @@ class CubeList extends Component {
     const cube = JSON.parse(document.getElementById('cuberaw').value);
 
     this.state = {
-      cards: [],
+      cards: cube,
       cubeView: 'table',
     };
 
@@ -22,13 +23,22 @@ class CubeList extends Component {
   }
 
   render() {
-    let { cubeView, cards } = this.state;
+    const { cubeView, cards } = this.state;
+    const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
+    const defaultTags = [...defaultTagSet].map(tag => ({
+      id: tag,
+      text: tag,
+    }))
     return (
       <SortContext.Provider>
-        <TableView cards={cards} style={{ display: cubeView === 'table' ? undefined : 'none' }} />
-        <VisualSpoiler cards={cards} style={{ display: cubeView === 'spoiler' ? undefined : 'none' }} />
-        <CurveView cards={cards} style={{ display: cubeView === 'curve' ? undefined : 'none' }} />
-        <ListView cards={cards} style={{ display: cubeView === 'list' ? undefined : 'none' }} />
+        <TagContext.Provider defaultTags={defaultTags}>
+          {{
+            'table': <TableView cards={cards} />,
+            'spoiler': <VisualSpoiler cards={cards} />,
+            'curve': <CurveView cards={cards} />,
+            'list': <ListView cards={cards} />,
+          }[cubeView]}
+        </TagContext.Provider>
       </SortContext.Provider>
     );
   }
