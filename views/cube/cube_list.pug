@@ -7,7 +7,7 @@ block cube_toolbar
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
-  input#canEdit(type='hidden', name='canEdit', value=(user && user.id == cube.owner).toString())
+  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
   input#hideTagColors(type='hidden', name='hideTagColors', value=(!!user && user.hide_tag_colors === true).toString())
   if user && user.id == cube.owner
@@ -304,84 +304,6 @@ block cube_content
               | Close
           if user && user.id == cube.owner
             button#tagColorsSubmit.btn.btn-success(type='button') Save
-
-  // Modal
-  #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-      .modal-content
-        .modal-header
-          h5#contextModalTitle.modal-title Ambush Viper
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .row.no-gutters
-          .col-12.col-sm-4(style='padding: 4px;')
-            img#contextModalImg.card-img.defaultCardImage(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-            .price-area
-          .col-12.col-sm-8
-            .modal-body
-              fieldset(disabled=!user || user.id != cube.owner)
-                h5 Card Attributes
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Version (Set and #)
-                  select#contextModalVersionSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Status
-                  select#contextModalStatusSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text CMC
-                  input#contextModalCMC.form-control(type='text', value='2')
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Type
-                  input#contextModalType.form-control(type='text', value='2')
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Card Image URL
-                  input#contextModalImageURL.form-control(type='text', value='2')
-                h5 Color Identity Override:
-                .form-check.form-check-inline
-                  input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                  label.form-check-label(for='contextModalCheckboxW')
-                    img(src='/content/symbols/w.png' alt='White' title='White')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                  label.form-check-label(for='contextModalCheckboxU')
-                    img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                  label.form-check-label(for='contextModalCheckboxB')
-                    img(src='/content/symbols/b.png' alt='Black' title='Black')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                  label.form-check-label(for='contextModalCheckboxR')
-                    img(src='/content/symbols/r.png' alt='Red' title='Red')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                  label.form-check-label(for='contextModalCheckboxG')
-                    img(src='/content/symbols/g.png' alt='Green' title='Green')
-                h5 Tags
-                .tags-area#contextTags
-                  .tags-input(data-name='tags-input')
-                    span.tags
-                    input.hidden-input(type='hidden')
-                    input.main-input(maxlength="24")
-
-        .modal-footer
-          if user && user.id == cube.owner
-            button#contextRemoveButton.btn.btn-danger(type='button')
-              span.d-none.d-sm-inline Remove from cube
-              span.d-sm-none Remove
-          a#contextScryfallButton(href="#", target="_blank")
-            button.btn.btn-secondary(type='button')
-              span.d-none.d-sm-inline View on Scryfall
-              span.d-sm-none Scryfall
-          a#contextBuyButton(href="#", target="_blank")
-            button.btn.btn-secondary(type='button') Buy
-          if user && user.id == cube.owner
-            button#contextModalSubmit.btn.btn-success(type='button') Save
 
   // Paste bulk Modal
   #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')

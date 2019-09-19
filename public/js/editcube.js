@@ -62,21 +62,6 @@ if (canEdit) {
       remove();
     }
   });
-  $('#contextModalVersionSelect').change(function(e) {
-    fetch('/cube/api/getcardfromid/' + e.target.value)
-      .then(response => response.json())
-      .then(function(json) {
-        $('#contextModalImg').attr('src', json.card.image_normal);
-        var priceHtml = '';
-        if (json.card.price) {
-          priceHtml += '<div class="card-price"><a>TCGPlayer Market: $' + json.card.price.toFixed(2) + '</a></div>';
-        }
-        if (json.card.price_foil) {
-          priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $' + json.card.price_foil.toFixed(2) + '</a></div>';
-        }
-        $('.price-area').html(priceHtml);
-      });
-  });
   $('#groupContextModalSubmit').click(function(e) {
 
     //if we typed a tag but didn't hit enter, register that tag
@@ -194,92 +179,6 @@ if (canEdit) {
     $('#groupContextModal').modal('hide');
     $('.warnings').collapse("hide");
     editListeners.forEach(listener => listener());
-  });
-  $('#contextRemoveButton').click(function(e) {
-    changes.push({
-      remove: modalSelect.details
-    })
-    updateCollapse();
-    $('#contextModal').modal('hide');
-    $('.warnings').collapse("hide");
-    editListeners.forEach(listener => listener());
-  });
-  $('#contextModalSubmit').click(function(e) {
-    //if we typed a tag but didn't hit enter, register that tag
-    if ($('#contextTags').find('.main-input').val().length > 0) {
-      var tag = $('#contextTags').find('.main-input').val();
-      $('#contextTags').find('.main-input').val('');
-      var val = $('#contextTags').find('.hidden-input').val();
-      if (val.length > 0) {
-        val += ', ' + tag;
-      } else {
-        val = tag;
-      }
-      $('#contextTags').find('.hidden-input').val(val);
-      $('#contextTags').find('.hidden-input').trigger('change');
-    }
-
-    updated = {};
-
-    tags_split = $('#contextTags').find('.hidden-input').val().split(',');
-    tags_split.forEach(function(tag, index) {
-      tags_split[index] = tags_split[index].trim();
-    });
-    while (tags_split.includes("")) {
-      tags_split.splice(tags_split.indexOf(""), 1);
-    }
-    updated.tags = tags_split;
-    updated.colors = [];
-
-    ['W', 'U', 'B', 'R', 'G'].forEach(function(color, index) {
-      if ($('#contextModalCheckbox' + color).prop('checked')) {
-        updated.colors.push(color);
-      }
-    });
-
-    updated.status = $('#contextModalStatusSelect').val();
-    updated.cardID = $('#contextModalVersionSelect').val();
-    updated.cmc = $('#contextModalCMC').val();
-    updated.type_line = $('#contextModalType').val().replace('-', '—');
-    updated.imgUrl = $('#contextModalImageURL').val();
-    if (updated.imgUrl === "") {
-      updated.imgUrl = null;
-    }
-
-    let data = {
-      src: modalSelect,
-      updated: updated,
-    };
-    fetch('/cube/api/getcardfromid/' + updated.cardID)
-      .then(response => response.json())
-      .then(function(json) {
-      var found = false;
-      cube.forEach(function(card, index) {
-        if (!found && card.index == data.src.index) {
-          found = true;
-          Object.keys(updated).forEach(function(key) {
-            if (updated[key] === null) {
-              updated[key] = undefined;
-            }
-          });
-          cube[index] = updated;
-          cube[index].index = card.index;
-          cube[index].details = json.card;
-          cube[index].details.display_image = updated.imgUrl !== undefined ? updated.imgUrl : json.card.image_normal;
-          cubeDict[cube[index].index] = cube[index];
-        }
-      });
-
-      updateCubeList();
-      $('#contextModal').modal('hide');
-    });      
-    fetch("/cube/api/updatecard/" + $('#cubeID').val(), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
   });
 }
 
@@ -1089,98 +988,6 @@ function show_groupContextModal() {
   $('#groupContextModal').modal('show');
 }
 
-function show_contextModal(card) {
-  modalSelect = card;
-  var priceHtml = '';
-  if (card.details.price) {
-    priceHtml += '<div class="card-price"><a>TCGPlayer Market: $' + card.details.price.toFixed(2) + '</a></div>';
-  }
-  if (card.details.price_foil) {
-    priceHtml += '<div class="card-price"><a>Foil TCGPlayer Market: $' + card.details.price_foil.toFixed(2) + '</a></div>';
-  }
-  $('.price-area').html(priceHtml);
-  $('#contextModalTitle').html(card.details.name);
-  $('#contextModalImg').attr('src', card.details.display_image);
-  $("#contextModalImg").off("mouseover");
-  $("#contextModalImg").off("mouseout");
-  if (card.details.image_flip !== undefined) {
-    $('#contextModalImg').mouseover(function() {
-      $(this).attr('src', card.details.image_flip);
-    });
-    $('#contextModalImg').mouseout(function() {
-      $(this).attr('src', card.details.display_image);
-    });
-  }
-  $('#contextModalVersionSelect').html('');
-  var statusHTML = "";
-  var statuses = getLabels('Status');
-  statuses.forEach(function(status, index) {
-    if (card.status == status) {
-      statusHTML += '<option selected value="' + status + '">' + status + '</option>';
-    } else {
-      statusHTML += '<option value="' + status + '">' + status + '</option>';
-    }
-  });
-  $('#contextModalStatusSelect').html(statusHTML);
-
-  var tagsText = "";
-  card.tags.forEach(function(tag, index) {
-    if (index != 0) {
-      tagsText += ', ';
-    }
-    tagsText += tag;
-  });
-  $('#contextTags').find('.hidden-input').val(tagsText);
-  $('#contextTags').find('.hidden-input').trigger("change");
-
-  $('#contextModalCMC').val(card.cmc);
-  ['W', 'U', 'B', 'R', 'G'].forEach(function(color, index) {
-    $('#contextModalCheckbox' + color).prop('checked', card.colors.includes(color));
-  });
-
-  $('#contextScryfallButton').attr('href', card.details.scryfall_uri);
-  if (card.details.tcgplayer_id) {
-    $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/product/productsearch?id=' + card.details.tcgplayer_id + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-  } else {
-    var name = card.details.name.replace('?', '-q-');
-    while (name.includes('//')) {
-      name = name.replace('//', '-slash-');
-    }
-    $('#contextBuyButton').attr('href', 'https://shop.tcgplayer.com/productcatalog/product/show?ProductName=' + name + '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra');
-  }
-  $('#contextModalType').val(card.type_line);
-  $('#contextModalImageURL').val(card.imgUrl);
-
-  fetch('/cube/api/getversions/' + card.cardID)
-    .then(response => response.json())
-    .then(function(json) {
-      var versionHTML = "";
-
-      json.cards.forEach(function(version, index) {
-        var name = version.full_name.toUpperCase().substring(version.full_name.indexOf('[') + 1, version.full_name.indexOf(']'));
-        if (version._id == card.cardID) {
-          versionHTML += '<option selected value="' + version._id + '">' + name + '</option>';
-        } else {
-          versionHTML += '<option value="' + version._id + '">' + name + '</option>';
-        }
-      });
-      $('#contextModalVersionSelect').html(versionHTML);
-
-      $('#contextModal').modal('show');
-    });
-}
-
-function handleContextModal(e) {
-  e.preventDefault();
-  card = cubeDict[$(e.target).attr("cardindex")];
-  autocard_hide_card();
-  show_contextModal(card);
-}
-
-function init_contextModal() {
-  $('.activateContextModal').click(handleContextModal);
-}
-
 function sortIntoGroups(cards, sort) {
   var groups = {};
   var labels = getLabels(sort);
@@ -1252,7 +1059,6 @@ function updateCubeList() {
   }
   $('#cubelistarea').html('');
   autocard_init('autocard');
-  init_contextModal();
   if (canEdit) {
     init_groupcontextModal();
   }
