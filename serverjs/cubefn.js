@@ -77,17 +77,6 @@ function legalityToInt(legality) {
   }
 }
 
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 function cardsAreEquivalent(card, details) {
   if (card.cardID != details.cardID) {
     return false;
@@ -101,10 +90,10 @@ function cardsAreEquivalent(card, details) {
   if (card.type_line != details.type_line) {
     return false;
   }
-  if (!arraysEqual(card.tags, details.tags)) {
+  if (!util.arraysEqual(card.tags, details.tags)) {
     return false;
   }
-  if (!arraysEqual(card.colors, details.colors)) {
+  if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
 
