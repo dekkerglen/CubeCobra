@@ -1,5 +1,3 @@
-var sinon = require("sinon");
-
 const util = require("../../serverjs/util");
 
 beforeEach(() => {
