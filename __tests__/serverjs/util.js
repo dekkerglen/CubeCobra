@@ -112,3 +112,24 @@ test("addCardToCube allows card id to be overridden", () => {
     const result = testCube.cards[0];
     expect(result.cardID).toBe(idOverride);
 });
+
+test("getCardImageURL returns imgUrl when defined", () => {
+    const testCard = {
+        details: {
+            image_normal: "normal ol image"
+        },
+        imgUrl: "an image url"
+    };
+    const result = util.getCardImageURL(testCard);
+    expect(result).toBe(testCard.imgUrl);
+});
+
+test("getCardImageURL falls back to image_normal", () => {
+    const testCard = {
+        details: {
+            image_normal: "normal ol image"
+        }
+    };
+    const result = util.getCardImageURL(testCard);
+    expect(result).toBe(testCard.details.image_normal);
+});
