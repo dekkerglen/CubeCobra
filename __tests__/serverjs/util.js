@@ -93,3 +93,22 @@ test("addCardToCube adds a well-formed object", () => {
     expect(result.addedTmsp).toBe(addedTmsp);
     expect(result.imgUrl).toBe(undefined);
 });
+
+test("addCardToCube allows card id to be overridden", () => {
+    var testCube = {
+        "cards": []
+    };
+    var initialLength = testCube.cards.length;
+    const testCard = {
+        color_identity: "W",
+        cmc: 1,
+        _id: "abcdef",
+        type: "creature"
+    };
+    const addedTmsp = new Date();
+    const idOverride = "new id ___";
+    util.addCardToCube(testCube, testCard, idOverride, addedTmsp);
+    expect(testCube.cards.length).toBe(initialLength + 1);
+    const result = testCube.cards[0];
+    expect(result.cardID).toBe(idOverride);
+});
