@@ -139,7 +139,7 @@ class CubeListNavbar extends Component {
                 <NavLink href="#" data-target="compare" onClick={this.handleOpenCollapse}>Compare</NavLink>
               </NavItem>
               {!canEdit ? '' :
-                <NavItem className="d-none d-lg-block">
+                <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
                   <NavLink href="#" onClick={this.handleMassEdit}>
                     {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
                   </NavLink>
