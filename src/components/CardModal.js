@@ -54,12 +54,12 @@ const CardModal = ({
             <div className="price-area">
               {!card.details.price ? '' :
                 <div className="card-price">
-                  TCGPlayer Market: {card.price.toFixed(2)}
+                  TCGPlayer Market: {card.details.price.toFixed(2)}
                 </div>
               }
               {!card.details.price_foil ? '' :
                 <div className="card-price">
-                  Foil TCGPlayer Market: {card.price_foil.toFixed(2)}
+                  Foil TCGPlayer Market: {card.details.price_foil.toFixed(2)}
                 </div>
               }
             </div>
