@@ -18,7 +18,7 @@ test("shuffle returns an array when called with a seed", () => {
     expect(result.length).toBe(arrayToShuffle.length);
 });
 
-test("turnToTree", () => {
+test("turnToTree returns a valid prefix tree", () => {
     const arrayToTree = ["tes", "trail", "another"];
     const result = util.turnToTree(arrayToTree);
     expect(Object.keys(result).length).toBe(2);
