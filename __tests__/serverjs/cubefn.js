@@ -48,6 +48,37 @@ test("build_id_query returns a boolean query when passed a non-alphanumeric stri
     expect(condition[1].urlAlias).toBe(testId);
 });
 
+test("cardsAreEquivalent returns true for two equivalent cards", () => {
+    const testCard1 = {
+        cardID: "abcdef",
+        status: "Owned",
+        cmc: 1,
+        type_line: "Creature - Hound",
+        tags: ["New"],
+        colors: ["W"],
+        randomField: "y"
+    };
+    const testCard2 = JSON.parse(JSON.stringify(testCard1));
+    const result = cubefn.cardsAreEquivalent(testCard1, testCard2);
+    expect(result).toBe(true);
+});
+
+test("cardsAreEquivalent returns false for two nonequivalent cards", () => {
+    const testCard1 = {
+        cardID: "abcdef",
+        status: "Owned",
+        cmc: 1,
+        type_line: "Creature - Hound",
+        tags: ["New"],
+        colors: ["W"],
+        randomField: "y"
+    };
+    const testCard2 = JSON.parse(JSON.stringify(testCard1));
+    testCard2.cmc = 2;
+    const result = cubefn.cardsAreEquivalent(testCard1, testCard2);
+    expect(result).toBe(false);
+});
+
 test("intToLegality", () => {
     expect(cubefn.intToLegality(0)).toBe("Vintage");
     expect(cubefn.intToLegality(1)).toBe("Legacy");
