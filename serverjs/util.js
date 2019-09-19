@@ -85,7 +85,7 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
-function addCardToCube(cube, card_details, idOverride) {
+function addCardToCube(cube, card_details, idOverride, addedTmspOverride) {
   cube.cards.push({
     tags: ['New'],
     status: "Not Owned",
@@ -93,7 +93,7 @@ function addCardToCube(cube, card_details, idOverride) {
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
     type_line: card_details.type,
-    addedTmsp: new Date(),
+    addedTmsp: addedTmspOverride === undefined ? new Date() : addedTmspOverride,
     imgUrl: undefined
   });
 }
