@@ -12,6 +12,7 @@ block cube_toolbar
                 a.nav-link.newBlogButton(href='#' data-toggle='modal', data-target='#customDraftModal') Create new blog post
 
 block cube_content
+  include ../flash
   if pages
     hr
     nav(aria-label='pagination')

@@ -5,6 +5,7 @@ import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
+import DynamicFlash from './components/DynamicFlash';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
@@ -62,6 +63,7 @@ class CubeList extends Component {
                 changeCubeView={this.changeCubeView}
                 hasCustomImages={cards.some(card => card.imgUrl)}
               />
+              <DynamicFlash />
               {{
                 'table': <TableView cards={cards} />,
                 'spoiler': <VisualSpoiler cards={cards} />,
