@@ -10,20 +10,17 @@ var data = {
   cardimages: {},
   cardnames: [],
   full_names: [],
-  cardFromId: function(id)
-  {
-    if(carddict[id])
-    {
+  cardFromId: function(id) {
+    if (carddict[id]) {
       return carddict[id];
-    }
-    else{
+    } else {
       console.log("Could not find: " + id);
       //placeholder card if we don't find the one due to a scryfall ID update bug
       return {
         // img: 
-        _id:id,
-        set:'',
-        collector_number:'',
+        _id: id,
+        set: '',
+        collector_number: '',
         promo: false,
         digital: false,
         full_name: 'Invalid Card',
@@ -31,37 +28,34 @@ var data = {
         name_lower: 'Invalid Card',
         artist: '',
         scryfall_uri: '',
-        rarity: '',        
-        legalities: { },
+        rarity: '',
+        legalities: {},
         oracle_text: '',
-        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        image_normal: 'https://img.scryfall.com/errors/missing.jpg',
         cmc: 0,
-        type: '',        
+        type: '',
         colors: [],
         color_identity: [],
         parsed_cost: [],
         colorcategory: 'c',
-        error:true
+        error: true
       };
     }
   },
-  getCardDetails: function(card)
-  {
-    if(carddict[card.cardID])
-    {
-      var details = carddict[card.cardID];    
-      card.details = details;  
+  getCardDetails: function(card) {
+    if (carddict[card.cardID]) {
+      var details = carddict[card.cardID];
+      card.details = details;
       details.display_image = util.getCardImageURL(card);
       return details;
-    }
-    else{
+    } else {
       console.log("Could not find: " + id);
       //placeholder card if we don't find the one due to a scryfall ID update bug
       return {
         // img: 
-        _id:id,
-        set:'',
-        collector_number:'',
+        _id: id,
+        set: '',
+        collector_number: '',
         promo: false,
         digital: false,
         full_name: 'Invalid Card',
@@ -69,17 +63,17 @@ var data = {
         name_lower: 'Invalid Card',
         artist: '',
         scryfall_uri: '',
-        rarity: '',        
-        legalities: { },
+        rarity: '',
+        legalities: {},
         oracle_text: '',
-        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        image_normal: 'https://img.scryfall.com/errors/missing.jpg',
         cmc: 0,
-        type: '',        
+        type: '',
         colors: [],
         color_identity: [],
         parsed_cost: [],
         colorcategory: 'c',
-        error:true
+        error: true
       };
     }
   },

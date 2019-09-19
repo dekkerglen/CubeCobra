@@ -397,9 +397,8 @@ app.get('/404', function(req, res) {
   res.render('misc/404', {});
 });
 
-app.get('/c/:id', function(req, res)
-{
-  res.redirect('/cube/list/'+req.params.id);
+app.get('/c/:id', function(req, res) {
+  res.redirect('/cube/list/' + req.params.id);
 });
 
 //Route files
