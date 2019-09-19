@@ -33,7 +33,7 @@ html
 						img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
 				button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
 					span.navbar-toggler-icon
-			#navbar.collapse.navbar-collapse
+			#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
 				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
 						.input-group.mt-2.mb-sm-2
@@ -55,7 +55,9 @@ html
 						li.nav-item
 							a.nav-link.d-none.d-lg-block(href="#", data-toggle='modal', data-target='#cubeModal') New Cube
 						li.nav-item
-							a.nav-link(href="/user/view/"+user.id) Your Profile
+							a.nav-link(href="/user/view/"+user.id)
+								span.d-none.d-lg-inline Your
+								|  Profile
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 								|  #{user.username}  
