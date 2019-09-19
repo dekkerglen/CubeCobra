@@ -28,7 +28,7 @@ function from_base_36(str) {
   return parseInt(str, 36);
 }
 
-function add_word(obj, word) {
+function addWordToTree(obj, word) {
   if (word.length <= 0) {
     return;
   } else if (word.length == 1) {
@@ -45,7 +45,7 @@ function add_word(obj, word) {
     if (!obj[character]) {
       obj[character] = {};
     }
-    add_word(obj[character], word)
+    addWordToTree(obj[character], word)
   }
 }
 
@@ -113,8 +113,7 @@ var methods = {
   turnToTree: function(arr) {
     var res = {};
     arr.forEach(function(item, index) {
-      //add_word(cardnames, card);
-      add_word(res, item);
+      addWordToTree(res, item);
     });
     return res;
   },
