@@ -9,9 +9,11 @@ function get_cube_id(cube) {
 }
 
 function build_id_query(id) {
-  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) return {
-    _id: id
-  };
+  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
+    return {
+      _id: id
+    };
+  }
   return {
     $or: [{
         shortID: id.toLowerCase(),
