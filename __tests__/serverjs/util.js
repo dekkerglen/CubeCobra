@@ -153,3 +153,36 @@ test("CSVtoArray returns an array of the correct length when commas are included
     const result = util.CSVtoArray(testCSV);
     expect(result.length).toBe(3);
 });
+
+test("generate_edit_token does not generate the same token on sequential calls", () => {
+    const firstResult = util.generate_edit_token();
+    const secondResult = util.generate_edit_token();
+    expect(firstResult).not.toBe(secondResult);
+});
+
+test("to_base_36 returns the base36 representation of its input", () => {
+    const testInput = 69;
+    const expected = testInput.toString(36);
+    const result = util.to_base_36(testInput);
+    expect(result).toBe(expected);
+});
+
+test("from_base_36 returns the base10 int representation of its input", () => {
+    const testInt = 69;
+    const testInput = testInt.toString(36);
+    const expected = parseInt(testInput, 36);
+    const result = util.from_base_36(testInput);
+    expect(result).toBe(expected);
+});
+
+test("has_profanity returns true for strings containing profanity", () => {
+    const testString = "the quick brown fox jumped over the lazy ass dog";
+    const result = util.has_profanity(testString);
+    expect(result).toBe(true);
+});
+
+test("has_profanity returns false for strings not containing profanity", () => {
+    const testString = "the quick brown fox jumped over the lazy dog";
+    const result = util.has_profanity(testString);
+    expect(result).toBe(false);
+});
