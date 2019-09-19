@@ -3,7 +3,7 @@ import { WithContext as ReactTags } from 'react-tag-input';
 
 import TagContext from './TagContext';
 
-const TagInput = ({ tags, addTag, deleteTag, reorderTag }) => (
+const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
   <TagContext.Consumer>
     {({ allSuggestions, addSuggestion }) => (
       <ReactTags
@@ -15,6 +15,7 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag }) => (
         placeholder="Tag..."
         maxLength={24}
         autofocus={false}
+        {...props}
       />
     )}
   </TagContext.Consumer>

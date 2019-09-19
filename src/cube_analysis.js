@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
 import CurveAnalysis from './components/CurveAnalysis';
+import DynamicFlash from './components/DynamicFlash';
 import MulticoloredAnalysis from './components/MulticoloredAnalysis';
 import TypeAnalysis from './components/TypeAnalysis';
 
@@ -28,7 +29,8 @@ class CubeAnalysis extends Component {
         {text}
       </NavLink>
     );
-    return (
+    return <>
+      <DynamicFlash />
       <Row className="mt-3">
         <Col xs="12" lg="2">
           <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
@@ -38,12 +40,14 @@ class CubeAnalysis extends Component {
           </Nav>
         </Col>
         <Col xs="12" lg="10">
-          <CurveAnalysis curve={curve} style={{ display: active === 'curve' ? undefined : 'none' }} />
-          <TypeAnalysis typeByColor={typeByColor} style={{ display: active === 'type' ? 'flex' : 'none' }} />
-          <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} style={{ display: active === 'multi' ? 'flex' : 'none' }} />
+          {{
+            curve: <CurveAnalysis curve={curve} />,
+            type: <TypeAnalysis typeByColor={typeByColor} />,
+            multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
+          }[active]}
         </Col>
       </Row>
-    );
+    </>;
   }
 }
 
