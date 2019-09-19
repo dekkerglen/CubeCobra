@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import CardModalForm from './components/CardModalForm';
 import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
 import SortContext from './components/SortContext';
@@ -28,7 +29,9 @@ class CubeCompare extends Component {
     return (
       <SortContext.Provider>
         <CubeCompareNavbar />
-        <CompareView cards={cards} {...props} />
+        <CardModalForm>
+          <CompareView cards={cards} {...props} />
+        </CardModalForm>
       </SortContext.Provider>
     );
   }

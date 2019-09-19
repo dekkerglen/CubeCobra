@@ -268,11 +268,6 @@ border-bottom: none;
 	border: none;
 }
 
-#contextModalImg {
-    width:258px;
-    height:359px;
-}
-
 .defaultCardImage:before {
     content: ' ';
     display: block;
@@ -281,12 +276,6 @@ border-bottom: none;
     height: 210px;
     width: 150px;
     background-size: 150px 210px;
-}
-
-#contextModalImg:before {
-    height: 359px;
-    width: 258px;
-    background-size: 258px 359px;
 }
 
 .packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
