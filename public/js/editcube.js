@@ -180,23 +180,6 @@ if (canEdit) {
     $('.warnings').collapse("hide");
     editListeners.forEach(listener => listener());
   });
-  $('#saveSortButton').click(function(e) {
-    var temp_sorts = [];
-    temp_sorts[0] = document.getElementById('primarySortSelect').value;
-    temp_sorts[1] = document.getElementById('secondarySortSelect').value;
-    let data = {
-      sorts: temp_sorts,
-    };
-    fetch("/cube/api/savesorts/" + $('#cubeID').val(), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      $('#cubeSaveModal').modal('show');
-    });
-  });
 }
 
 var tagColorsListeners = [];
