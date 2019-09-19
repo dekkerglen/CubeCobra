@@ -67,3 +67,29 @@ test("binaryInsert does not fail when input array is unsorted", () => {
     util.binaryInsert(testValue, testArray);
     expect(testArray.length).toBe(initialLength + 1);
 });
+
+test("addCardToCube adds a well-formed object", () => {
+    var testCube = {
+        "cards": []
+    };
+    var initialLength = testCube.cards.length;
+    const testCard = {
+        color_identity: "W",
+        cmc: 1,
+        _id: "abcdef",
+        type: "creature"
+    };
+    const addedTmsp = new Date();
+    util.addCardToCube(testCube, testCard, undefined, addedTmsp);
+    expect(testCube.cards.length).toBe(initialLength + 1);
+    const result = testCube.cards[0];
+    expect(result.tags.length).toBe(1);
+    expect(result.tags[0]).toBe("New");
+    expect(result.status).toBe("Not Owned");
+    expect(result.colors).toBe(testCard.color_identity);
+    expect(result.cmc).toBe(testCard.cmc);
+    expect(result.cardID).toBe(testCard._id);
+    expect(result.type_line).toBe(testCard.type);
+    expect(result.addedTmsp).toBe(addedTmsp);
+    expect(result.imgUrl).toBe(undefined);
+});
