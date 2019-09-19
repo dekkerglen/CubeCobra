@@ -147,3 +147,9 @@ test("arraysEqual returns false for unequal arrays", () => {
     const result = util.arraysEqual(testArrayA, testArrayB);
     expect(result).toBe(false);
 });
+
+test("CSVtoArray returns an array of the correct length when commas are included in values", () => {
+    const testCSV = '"a,g","b","c"';
+    const result = util.CSVtoArray(testCSV);
+    expect(result.length).toBe(3);
+});
