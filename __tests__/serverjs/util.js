@@ -133,3 +133,17 @@ test("getCardImageURL falls back to image_normal", () => {
     const result = util.getCardImageURL(testCard);
     expect(result).toBe(testCard.details.image_normal);
 });
+
+test("arraysEqual returns true for equal arrays", () => {
+    const testArrayA = [1, 2, 3, 4];
+    const testArrayB = [1, 2, 3, 4];
+    const result = util.arraysEqual(testArrayA, testArrayB);
+    expect(result).toBe(true);
+});
+
+test("arraysEqual returns false for unequal arrays", () => {
+    const testArrayA = [1, 2, 3, 5];
+    const testArrayB = [1, 2, 3, 4];
+    const result = util.arraysEqual(testArrayA, testArrayB);
+    expect(result).toBe(false);
+});
