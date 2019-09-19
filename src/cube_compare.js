@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import CardModalForm from './components/CardModalForm';
 import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
 import DynamicFlash from './components/DynamicFlash';
@@ -30,7 +31,9 @@ class CubeCompare extends Component {
       <SortContext.Provider>
         <CubeCompareNavbar />
         <DynamicFlash />
-        <CompareView cards={cards} {...props} />
+        <CardModalForm>
+          <CompareView cards={cards} {...props} />
+        </CardModalForm>
       </SortContext.Provider>
     );
   }
