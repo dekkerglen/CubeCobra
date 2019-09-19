@@ -62,7 +62,6 @@ function intToLegality(val) {
     case 3:
       return 'Standard';
   }
-  return cube;
 }
 
 function legalityToInt(legality) {
