@@ -152,7 +152,7 @@ class CubeListNavbar extends Component {
                     {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                   </DropdownItem>
                   <DisplayContext.Consumer>
-                    {({ showCustomImages, toggleShowCustomImages }) => !canEdit ? '' :
+                    {({ showCustomImages, toggleShowCustomImages }) => !hasCustomImages ? '' :
                       <DropdownItem onClick={toggleShowCustomImages}>
                         {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
                       </DropdownItem>
