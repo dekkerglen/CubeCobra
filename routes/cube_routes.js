@@ -192,6 +192,10 @@ function notPromoOrDigitalId(id) {
   return !card.promo && !card.digital && card.border_color != 'gold';
 }
 
+function abbreviate(name) {
+  return name.length < 20 ? name : name.slice(0, 20) + '…';
+}
+
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
   if (req.body.name.length < 5) {
@@ -395,7 +399,7 @@ router.get('/overview/:id', function(req, res) {
               res.render('cube/cube_overview', {
                 cube: cube,
                 cube_id: cube_id,
-                title: `${cube.name}: Overview`,
+                title: `${abbreviate(cube.name)} - Overview`,
                 activeLink: 'overview',
                 num_cards: cube.cards.length,
                 author: 'unknown',
@@ -413,7 +417,7 @@ router.get('/overview/:id', function(req, res) {
               res.render('cube/cube_overview', {
                 cube: cube,
                 cube_id: cube_id,
-                title: `${cube.name}: Overview`,
+                title: `${abbreviate(cube.name)} - Overview`,
                 activeLink: 'overview',
                 num_cards: cube.cards.length,
                 owner: user.username,
@@ -511,6 +515,7 @@ router.get('/blog/:id', function(req, res) {
                 cube_id: cube_id,
                 owner: user.username,
                 activeLink: 'blog',
+                title: `${abbreviate(cube.name)} - Blog`,
                 posts: blog_page,
                 pages: pages,
                 metadata: generateMeta(
@@ -527,6 +532,7 @@ router.get('/blog/:id', function(req, res) {
                 cube_id: cube_id,
                 owner: user.username,
                 activeLink: 'blog',
+                title: `${abbreviate(cube.name)} - Blog`,
                 posts: blogs,
                 metadata: generateMeta(
                   `Cube Cobra Blog: ${cube.name}`,
@@ -543,6 +549,7 @@ router.get('/blog/:id', function(req, res) {
               cube_id: cube_id,
               owner: user.username,
               activeLink: 'blog',
+              title: `${abbreviate(cube.name)} - Blog`,
               metadata: generateMeta(
                 `Cube Cobra Blog: ${cube.name}`,
                 (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -698,7 +705,7 @@ router.get('/list/:id', function(req, res) {
           cube: cube,
           activeLink: 'list',
           cube_id: req.params.id,
-          title: `${cube.name}: List`,
+          title: `${abbreviate(cube.name)} - List`,
           cube_raw: JSON.stringify(cube.cards),
           metadata: generateMeta(
             `Cube Cobra List: ${cube.name}`,
@@ -735,6 +742,7 @@ router.get('/playtest/:id', function(req, res) {
               cube: cube,
               cube_id: req.params.id,
               activeLink: 'playtest',
+              title: `${abbreviate(cube.name)} - Playtest`,
               author: 'unknown',
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
@@ -751,6 +759,7 @@ router.get('/playtest/:id', function(req, res) {
               cube: cube,
               cube_id: req.params.id,
               activeLink: 'playtest',
+              title: `${abbreviate(cube.name)} - Playtest`,
               owner: user.username,
               decks: decklinks,
               cube_raw: JSON.stringify(cube),
@@ -787,6 +796,7 @@ router.get('/analysis/:id', function(req, res) {
             cube_id: req.params.id,
             owner: user.username,
             activeLink: 'analysis',
+            title: `${abbreviate(cube.name)} - Analysis`,
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
@@ -804,6 +814,7 @@ router.get('/analysis/:id', function(req, res) {
             cube_id: req.params.id,
             owner: user.username,
             activeLink: 'analysis',
+            title: `${abbreviate(cube.name)} - Analysis`,
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
@@ -835,6 +846,7 @@ router.get('/samplepack/:id', function(req, res) {
           res.render('cube/cube_samplepack', {
             cube,
             cube_id: req.params.id,
+            title: `${abbreviate(cube.name)} - Sample Pack`,
             pack: pack.pack,
             seed: pack.seed,
             activeLink: 'playtest',
@@ -865,6 +877,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
       } else {
         res.render('cube/cube_samplepack', {
           cube,
+          title: `${abbreviate(cube.name)} - Sample Pack`,
           pack: pack.pack,
           seed: pack.seed,
           cube_id: req.params.id,
@@ -983,6 +996,7 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
                 res.render('cube/bulk_upload', {
                   missing: missing,
                   cube_id: req.params.id,
+                  title: `${abbreviate(cube.name)} - Bulk Upload`,
                   added: JSON.stringify(added),
                   cube: cube,
                   user: {
@@ -1097,6 +1111,7 @@ function bulkuploadCSV(req, res, cards, cube) {
     res.render('cube/bulk_upload', {
       missing: missing,
       cube_id: get_cube_id(cube),
+      title: `${abbreviate(cube.name)} - Bulk Upload`,
       added: JSON.stringify(added),
       cube: cube,
       user: {
@@ -1189,6 +1204,7 @@ function bulkUpload(req, res, list, cube) {
           res.render('cube/bulk_upload', {
             missing: missing,
             cube_id: get_cube_id(cube),
+            title: `${abbreviate(cube.name)} - Bulk Upload`,
             added: JSON.stringify(added),
             cube: cube,
             user: {
@@ -1590,6 +1606,7 @@ router.get('/draft/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: 'Unknown',
                   activeLink: 'playtest',
+                  title: `${abbreviate(cube.name)} - Draft`,
                   metadata: generateMeta(
                     `Cube Cobra Draft: ${cube.name}`,
                     (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -1605,6 +1622,7 @@ router.get('/draft/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: user.username,
                   activeLink: 'playtest',
+                  title: `${abbreviate(cube.name)} - Draft`,
                   metadata: generateMeta(
                     `Cube Cobra Draft: ${cube.name}`,
                     (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2114,6 +2132,7 @@ router.get('/decks/:id', function(req, res) {
                 cube_id: cubeid,
                 owner: owner_name,
                 activeLink: 'playtest',
+                title: `${abbreviate(cube.name)} - Draft Decks`,
                 decks: deck_page,
                 pages: pages,
                 metadata: generateMeta(
@@ -2130,6 +2149,7 @@ router.get('/decks/:id', function(req, res) {
                 cube_id: cubeid,
                 owner: owner_name,
                 activeLink: 'playtest',
+                title: `${abbreviate(cube.name)} - Draft Decks`,
                 decks: decks,
                 metadata: generateMeta(
                   `Cube Cobra Decks: ${cube.name}`,
@@ -2196,6 +2216,7 @@ router.get('/deckbuilder/:id', function(req, res) {
                 cube_id: get_cube_id(cube),
                 owner: 'Unknown',
                 activeLink: 'playtest',
+                title: `${abbreviate(cube.name)} - Deckbuilder`,
                 metadata: generateMeta(
                   `Cube Cobra Draft: ${cube.name}`,
                   (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2213,6 +2234,7 @@ router.get('/deckbuilder/:id', function(req, res) {
                 cube_id: get_cube_id(cube),
                 owner: user.username,
                 activeLink: 'playtest',
+                title: `${abbreviate(cube.name)} - Deckbuilder`,
                 metadata: generateMeta(
                   `Cube Cobra Draft: ${cube.name}`,
                   (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2287,6 +2309,7 @@ router.get('/deck/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
+                  title: `${abbreviate(cube.name)} - ${drafter_name}'s deck`,
                   drafter: drafter_name,
                   cards: player_deck,
                   bot_decks: bot_decks,
@@ -2331,6 +2354,7 @@ router.get('/deck/:id', function(req, res) {
                   cube_id: get_cube_id(cube),
                   owner: owner_name,
                   activeLink: 'playtest',
+                  title: `${abbreviate(cube.name)} - ${drafter_name}'s deck`,
                   drafter: drafter_name,
                   deck: JSON.stringify(deck.playerdeck),
                   bot_decks: bot_decks,
@@ -2457,7 +2481,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         if (!card.type_line) {
           card.type_line = carddb.cardFromId(card.cardID).type;
         }
-        if (!found && cardsAreEquivalent(card, req.body.src, carddb)) {
+        if (!found && req.body.src && cardsAreEquivalent(card, req.body.src, carddb)) {
           found = true;
           var updated = req.body.updated;
           Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {

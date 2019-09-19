@@ -13,6 +13,7 @@
   },
   "author": "Gwen Dekker",
   "license": "ISC",
+  "browserslist": "> 1.0%, not dead, last 2 versions, not ie < 11",
   "dependencies": {
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
@@ -21,6 +22,7 @@
     "cheerio": "^1.0.0-rc.3",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.2.0",
+    "core-js": "^2.6.9",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
     "express-messages": "^1.0.1",
