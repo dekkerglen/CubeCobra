@@ -192,6 +192,8 @@ var methods = {
   generate_short_id,
   build_id_query,
   get_cube_id,
+  intToLegality,
+  legalityToInt
 };
 
 module.exports = methods;
