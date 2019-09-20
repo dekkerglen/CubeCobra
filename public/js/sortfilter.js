@@ -79,7 +79,6 @@ function arrayContainsOtherArray(arr1, arr2) {
   return arr2.every(v => arr1.includes(v));
 }
 
-
 function filterApply(card, filter) {
   let res = null;
   if (filter.category == 'name') {
@@ -351,7 +350,11 @@ function cardIsLabel(card, label, sort) {
       case 'Five Color':
         return card.colors.length == 5;
     }
-  } else if (sort == 'CMC') {
+  } else if (sort == 'CMC') {    
+    if(isNaN(card.cmc))
+    {
+      card.cmc = parseInt(card.cmc);
+    }
     if (card.cmc >= 8) {
       return label == '8+';
     }
