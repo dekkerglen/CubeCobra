@@ -28,7 +28,7 @@ function from_base_36(str) {
   return parseInt(str, 36);
 }
 
-function add_word(obj, word) {
+function addWordToTree(obj, word) {
   if (word.length <= 0) {
     return;
   } else if (word.length == 1) {
@@ -45,7 +45,7 @@ function add_word(obj, word) {
     if (!obj[character]) {
       obj[character] = {};
     }
-    add_word(obj[character], word)
+    addWordToTree(obj[character], word)
   }
 }
 
@@ -85,7 +85,7 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
-function addCardToCube(cube, card_details, idOverride) {
+function addCardToCube(cube, card_details, idOverride, addedTmspOverride) {
   cube.cards.push({
     tags: ['New'],
     status: "Not Owned",
@@ -93,7 +93,7 @@ function addCardToCube(cube, card_details, idOverride) {
     cmc: card_details.cmc,
     cardID: idOverride === undefined ? card_details._id : idOverride,
     type_line: card_details.type,
-    addedTmsp: new Date(),
+    addedTmsp: addedTmspOverride === undefined ? new Date() : addedTmspOverride,
     imgUrl: undefined
   });
 }
@@ -113,8 +113,7 @@ var methods = {
   turnToTree: function(arr) {
     var res = {};
     arr.forEach(function(item, index) {
-      //add_word(cardnames, card);
-      add_word(res, item);
+      addWordToTree(res, item);
     });
     return res;
   },
