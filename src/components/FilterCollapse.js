@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import { Button, Col, Collapse, Container, Form, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
 
+import Filter from '../util/Filter';
 import Hash from '../util/Hash';
 
 class FilterCollapse extends Component {
@@ -16,15 +17,17 @@ class FilterCollapse extends Component {
     this.handleApply = this.handleApply.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleReset = this.handleReset.bind(this);
+
+    this.updateFilters();
   }
 
   updateFilters() {
     const { filterInput } = this.state;
     const tokens = [];
-    const valid = /* global */ tokenizeInput(filterInput, tokens);
-    if (!valid || !verifyTokens(tokens)) return;
+    const valid = Filter.tokenizeInput(filterInput, tokens);
+    if (!valid || !Filter.verifyTokens(tokens)) return;
 
-    const filters = [/* global */ parseTokens(tokens)];
+    const filters = [Filter.parseTokens(tokens)];
     this.props.setFilter(filters);
     Hash.set('f', filterInput);
   }
@@ -60,8 +63,7 @@ class FilterCollapse extends Component {
     const { filter, setFilter, ...props } = this.props;
     const { filterInput } = this.state;
     const tokens = [];
-    /* global */
-    const valid = tokenizeInput(filterInput, tokens);
+    const valid = Filter.tokenizeInput(filterInput, tokens);
     return (
       <Collapse {...props}>
         <Container>

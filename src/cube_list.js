@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import Filter from './util/Filter';
+
 import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
@@ -18,7 +20,6 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
-      cards: this.props.defaultCards,
       cubeView: 'table',
       openCollapse: null,
       filter: [],
@@ -27,9 +28,6 @@ class CubeList extends Component {
     this.changeCubeView = this.changeCubeView.bind(this);
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
     this.setFilter = this.setFilter.bind(this);
-
-    /* global */
-    updateCubeListeners.push(cards => this.setState({ cards }));
 
     /* global */
     editListeners.push(() => this.setState({ openCollapse: 'edit' }));
@@ -60,14 +58,14 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cubeID, canEdit } = this.props;
-    const { cards, cubeView, openCollapse, filter } = this.state;
+    const { cards, cubeID, canEdit } = this.props;
+    const { cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
       text: tag,
     }))
-    const filteredCards = filter.length > 0 ? cards.filter(card => /* global */ filterCard(card, filter)) : cards;
+    const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
@@ -108,5 +106,5 @@ cube.forEach((card, index) => {
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = <CubeList cards={cube} canEdit={canEdit} cubeID={cubeID} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
