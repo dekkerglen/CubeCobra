@@ -186,7 +186,7 @@ class GroupModal extends Component {
   }
 
   render() {
-    const { cubeID, canEdit, children, ...props } = this.props;
+    const { cubeID, canEdit, setOpenCollapse, children, ...props } = this.props;
     const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
     const tcgplayerMassEntryUrl =
       'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
