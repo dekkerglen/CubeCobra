@@ -2,13 +2,25 @@ import React from 'react';
 
 import { FormGroup, Input, Label } from 'reactstrap';
 
-const ColorCheck = ({ color, short, value, onChange }) => (
+export const ColorChecks = ({ prefix, values, onChange }) =>
+  [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']].map(color =>
+    <ColorCheck
+      key={color[1]}
+      prefix={prefix}
+      color={color[0]}
+      short={color[1]}
+      value={values[`${prefix || 'color'}${color[1]}`]}
+      onChange={onChange}
+    />
+  );
+
+const ColorCheck = ({ prefix, color, short, value, onChange }) => (
   <FormGroup check inline>
     <Label check>
       <Input
         type="checkbox"
         id={`contextModalCheckbox${short.toUpperCase()}`}
-        name={`color${short.toUpperCase()}`}
+        name={`${prefix || 'color'}${short.toUpperCase()}`}
         checked={value}
         onChange={onChange}
       />

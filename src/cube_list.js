@@ -83,6 +83,7 @@ class CubeList extends Component {
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
+                {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
                 {{
                   'table': <TableView cards={filteredCards} />,
                   'spoiler': <VisualSpoiler cards={filteredCards} />,
