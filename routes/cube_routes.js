@@ -833,7 +833,8 @@ router.get('/analysis/:id', function(req, res) {
 });
 
 router.get('/samplepack/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+  res.redirect('/cube/samplepack/'+req.params.id+'/'+Date.now().toString());
+  /*Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});
@@ -861,7 +862,7 @@ router.get('/samplepack/:id', function(req, res) {
         }
       });
     }
-  });
+  });*/
 });
 
 router.get('/samplepack/:id/:seed', function(req, res) {
