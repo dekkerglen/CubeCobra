@@ -810,7 +810,6 @@ function updateCubeList() {
   for (let listener of updateCubeListeners) {
     listener(filteredCube());
   }
-  $('#cubelistarea').html('');
   autocard_init('autocard');
   autocard_hide_card();
 }
