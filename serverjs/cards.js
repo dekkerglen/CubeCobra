@@ -84,17 +84,32 @@ function initializeCardDb(dataRoot) {
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
-  fs.readFile(dataRoot + '/carddict.json', 'utf8', function(err, contents) {
-    carddict = JSON.parse(contents);
-    console.log("carddict loaded");
+  var carddictPromise = new Promise((resolve, reject) => {
+    fs.readFile(dataRoot + '/carddict.json', 'utf8', function(err, contents) {
+      console.log("loading carddict");
+      carddict = JSON.parse(contents);
+      console.log("carddict loaded");
+      if (err) {
+        reject(err)
+      } else {
+        resolve(contents)
+      };
+    });
   });
   fs.readFile(dataRoot + '/cardtree.json', 'utf8', function(err, contents) {
     data.cardtree = JSON.parse(contents);
     console.log("cardtree loaded");
   });
-  fs.readFile(dataRoot + '/names.json', 'utf8', function(err, contents) {
-    data.cardnames = JSON.parse(contents);
-    console.log("names loaded");
+  var cardnamesPromise = new Promise((resolve, reject) => {
+    fs.readFile(dataRoot + '/names.json', 'utf8', function(err, contents) {
+      data.cardnames = JSON.parse(contents);
+      console.log("names loaded");
+      if (err) {
+        reject(err)
+      } else {
+        resolve(contents)
+      };
+    });
   });
   fs.readFile(dataRoot + '/nameToId.json', 'utf8', function(err, contents) {
     data.nameToId = JSON.parse(contents);
@@ -161,6 +176,7 @@ function initializeCardDb(dataRoot) {
       console.log("full_names reloaded");
     });
   });
+  return Promise.all([carddictPromise, cardnamesPromise]);
 }
 
 data.cardFromId = cardFromId;
