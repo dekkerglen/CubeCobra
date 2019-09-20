@@ -53,16 +53,12 @@ class CubeListNavbarRaw extends Component {
 
     this.state = {
       isOpen: false,
-      openCollapse: null,
     };
 
     this.toggle = this.toggle.bind(this);
     this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
     this.handleMassEdit = this.handleMassEdit.bind(this);
     this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
-
-    /* global */
-    editListeners.push(() => this.setState({ openCollapse: 'edit' }));
   }
 
   toggle() {
@@ -96,9 +92,8 @@ class CubeListNavbarRaw extends Component {
     event.preventDefault();
     const target = event.target;
     const collapse = target.getAttribute('data-target');
-    this.setState(({ openCollapse }) => ({
-      openCollapse: openCollapse === collapse ? null : collapse,
-    }));
+    const { setOpenCollapse } = this.props;
+    setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
   render() {
@@ -180,11 +175,11 @@ class CubeListNavbarRaw extends Component {
           </Collapse>
         </Navbar>
         {!canEdit ? '' :
-          <EditCollapse cubeID={cubeID} isOpen={this.state.openCollapse === 'edit'} />
+          <EditCollapse cubeID={cubeID} isOpen={this.props.openCollapse === 'edit'} />
         }
-        <SortCollapse isOpen={this.state.openCollapse === 'sort'} />
-        <FilterCollapse isOpen={this.state.openCollapse === 'filter'} />
-        <CompareCollapse isOpen={this.state.openCollapse === 'compare'} />
+        <SortCollapse isOpen={this.props.openCollapse === 'sort'} />
+        <FilterCollapse isOpen={this.props.openCollapse === 'filter'} />
+        <CompareCollapse isOpen={this.props.openCollapse === 'compare'} />
       </div>
     );
   }

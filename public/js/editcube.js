@@ -4,9 +4,6 @@ var listPosition = 0;
 var changes = [];
 var sorts = [];
 var filters = [];
-var groupSelect = null;
-var modalSelect = null;
-var view = $('#viewSelect').val();
 var show_tag_colors = $('#hideTagColors').val() !== 'true';
 var urlFilterText = '';
 
@@ -61,17 +58,6 @@ if (canEdit) {
       e.preventDefault();
       remove();
     }
-  });
-  $('#groupContextRemoveButton').click(function(e) {
-    groupSelect.forEach(function(card, index) {
-      changes.push({
-        remove: card.details
-      })
-    });
-    updateCollapse();
-    $('#groupContextModal').modal('hide');
-    $('.warnings').collapse("hide");
-    editListeners.forEach(listener => listener());
   });
 }
 
@@ -837,9 +823,6 @@ function updateCubeList() {
   }
   $('#cubelistarea').html('');
   autocard_init('autocard');
-  if (canEdit) {
-    init_groupcontextModal();
-  }
   autocard_hide_card();
 }
 

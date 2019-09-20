@@ -44,6 +44,7 @@ class GroupModal extends Component {
     this.deleteTag = this.deleteTag.bind(this);
     this.reorderTag = this.reorderTag.bind(this);
     this.handleApply = this.handleApply.bind(this);
+    this.handleRemoveAll = this.handleRemoveAll.bind(this);
 
     this.tagActions = {
       addTag: this.addTag,
@@ -174,6 +175,18 @@ class GroupModal extends Component {
     }
   }
 
+  handleRemoveAll(event) {
+    event.preventDefault();
+    /* global */
+    changes = changes.concat(this.state.cards.map(card => ({
+      remove: card.details,
+    })));
+    editListeners.forEach(listener => listener());
+    updateCollapse();
+    this.props.setOpenCollapse(() => 'edit');
+    this.close();
+  }
+
   render() {
     const { cubeID, canEdit, children, ...props } = this.props;
     const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
@@ -270,7 +283,7 @@ class GroupModal extends Component {
           </Row>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger">Remove all from cube</Button>
+          <Button color="danger" onClick={this.handleRemoveAll}>Remove all from cube</Button>
           <Button color="secondary">Buy all</Button>
           <Button color="success" onClick={this.handleApply}>Apply to all</Button>
         </ModalFooter>

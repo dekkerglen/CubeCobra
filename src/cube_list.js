@@ -20,12 +20,17 @@ class CubeList extends Component {
     this.state = {
       cards: this.props.defaultCards,
       cubeView: 'table',
+      openCollapse: null,
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
+    this.setOpenCollapse = this.setOpenCollapse.bind(this);
 
     /* global */
     updateCubeListeners.push(cards => this.setState({ cards }));
+
+    /* global */
+    editListeners.push(() => this.setState({ openCollapse: 'edit' }));
   }
 
   componentDidMount() {
@@ -42,9 +47,15 @@ class CubeList extends Component {
     this.setState({ cubeView });
   }
 
+  setOpenCollapse(collapseFunction) {
+    this.setState(({ openCollapse }) => ({
+      openCollapse: collapseFunction(openCollapse),
+    }));
+  }
+
   render() {
     const { cubeID, canEdit } = this.props;
-    const { cards, cubeView } = this.state;
+    const { cards, cubeView, openCollapse } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
@@ -55,12 +66,14 @@ class CubeList extends Component {
         <DisplayContext.Provider>
           <TagContext.Provider defaultTags={defaultTags}>
             <CardModalForm canEdit={canEdit}>
-              <GroupModal cubeID={cubeID} canEdit={canEdit}>
+              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                 <CubeListNavbar
                   canEdit={canEdit}
                   cubeID={cubeID}
                   cubeView={cubeView}
                   changeCubeView={this.changeCubeView}
+                  openCollapse={openCollapse}
+                  setOpenCollapse={this.setOpenCollapse}
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
