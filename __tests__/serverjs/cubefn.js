@@ -79,34 +79,6 @@ test("cardsAreEquivalent returns false for two nonequivalent cards", () => {
   expect(result).toBe(false);
 });
 
-test("generate_short_id", () => {
-  expect(true).toBe(false);
-});
-
-test("getBasics", () => {
-  expect(true).toBe(false);
-});
-
-test("selectionContainsCard", () => {
-  expect(true).toBe(false);
-});
-
-test("setCubeType", () => {
-  expect(true).toBe(false);
-});
-
-test("sanitize", () => {
-  expect(true).toBe(false);
-});
-
-test("addAutocard", () => {
-  expect(true).toBe(false);
-});
-
-test("generatePack", () => {
-  expect(true).toBe(false);
-});
-
 test("intToLegality", () => {
   expect(cubefn.intToLegality(0)).toBe("Vintage");
   expect(cubefn.intToLegality(1)).toBe("Legacy");
