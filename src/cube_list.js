@@ -57,7 +57,7 @@ class CubeList extends Component {
         <DisplayContext.Provider>
           <TagContext.Provider defaultTags={defaultTags}>
             <CardModalForm canEdit={canEdit}>
-              <GroupModal canEdit={canEdit}>
+              <GroupModal cubeID={cubeID} canEdit={canEdit}>
                 <CubeListNavbar
                   canEdit={canEdit}
                   cubeID={cubeID}

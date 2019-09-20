@@ -15,7 +15,7 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
             tag="a"
             href="#"
             className="list-group-heading"
-            onClick={openGroupModal.bind(null, cards)}
+            onClick={e => { e.preventDefault(); openGroupModal(cards); }}
             primarysort={primary}
             secondarysort={secondary}
             tertiarysort={tertiary}

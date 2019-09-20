@@ -2521,50 +2521,57 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   });
 });
 
-router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
+router.post('/api/updatecards/:id', ensureAuth, function (req, res) {
+  const { selected, updated } = req.body;
+  if ((updated.cmc && typeof updated.cmc !== 'number')
+    || (updated.status && typeof updated.status !== 'string')
+    || (updated.type_line && typeof updated.type_line !== 'string')
+    || (updated.colors && !Array.isArray(updated.colors))
+    || (updated.tags && !Array.isArray(updated.tags))
+  ) {
+    res.status(400).send({
+      success: 'false',
+      message: 'Failed input validation',
+    });
+    return;
+  }
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (cube.owner === String(req.user._id)) {
-      var found = false;
-      req.body.selected.forEach(function(select, index) {
-        if (!cube.cards[select.index].type_line) {
-          cube.cards[select.index].type_line = carddb.cardFromId(cube.cards[select.index].cardID).type;
+      for (const { index } of selected) {
+        if (typeof index !== 'number') { continue; }
+        const card = cube.cards[index];
+        if (!card.type_line) {
+          card.type_line = carddb.cardFromId(card.cardID).type;
         }
-        if (cube.cards[select.index].details) {
-          delete cube.cards[select.index].details;
+        if (card.details) {
+          delete card.details;
         }
-        if (req.body.updated.status) {
-          cube.cards[select.index].status = req.body.updated.status;
+        if (updated.status) {
+          card.status = updated.status;
         }
-        if (req.body.updated.cmc) {
-          cube.cards[select.index].cmc = req.body.updated.cmc;
+        if (updated.cmc) {
+          card.cmc = updated.cmc;
         }
-        if (req.body.updated.type_line) {
-          cube.cards[select.index].type_line = req.body.updated.type_line;
+        if (updated.type_line) {
+          card.type_line = updated.type_line;
         }
-        if (req.body.updated.colors) {
-          cube.cards[select.index].colors = req.body.updated.colors;
+        if (updated.colors) {
+          card.colors = updated.colors.filter(color => [...'WUBRG'].includes(color));
         }
-        if (req.body.updated.tags) {
-          cube.cards[select.index].tags.forEach(function(tag, ind) {
-            cube.cards[select.index].tags[ind] = tag.trim();
-          });
-          if (req.body.updated.addTags) {
-            req.body.updated.tags.forEach(function(newtag, tag_ind) {
-              if (!cube.cards[select.index].tags.includes(newtag)) {
-                cube.cards[select.index].tags.push(newtag);
-              }
-            });
-          } else {
-            //remove the tags
-            req.body.updated.tags.forEach(function(tag, tag_in) {
-              var temp = cube.cards[index].tags.indexOf(tag);
-              if (temp > -1) {
-                cube.cards[index].tags.splice(temp, 1);
-              }
-            });
+        if (updated.colorC) {
+          card.colors = [];
+        }
+        if (updated.tags) {
+          if (updated.addTags) {
+            card.tags = [...card.tags, ...updated.tags.filter(tag =>
+              typeof tag === 'string' && !card.tags.includes(tag)
+            )];
+          }
+          if (updated.deleteTags) {
+            card.tags = card.tags.filter(tag => !updated.tags.includes(tag));
           }
         }
-      });
+      }
       Cube.updateOne({
         _id: cube._id
       }, cube, function(err) {

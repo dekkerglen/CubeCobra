@@ -5,8 +5,9 @@ import {
   Row, Col,
   Form, FormGroup, Input, Label,
   InputGroup, InputGroupAddon, InputGroupText,
-  ListGroup, ListGroupItem,
+  ListGroup,
   Modal, ModalBody, ModalFooter, ModalHeader,
+  UncontrolledAlert,
 } from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
@@ -21,9 +22,12 @@ class GroupModal extends Component {
     this.state = {
       isOpen: false,
       cards: [],
+      alerts: [],
       status: '',
       cmc: '',
       type_line: '',
+      addTags: false,
+      deleteTags: false,
       tags: [],
     };
 
@@ -38,6 +42,7 @@ class GroupModal extends Component {
     this.addTag = this.addTag.bind(this);
     this.deleteTag = this.deleteTag.bind(this);
     this.reorderTag = this.reorderTag.bind(this);
+    this.handleApply = this.handleApply.bind(this);
 
     this.tagActions = {
       addTag: this.addTag,
@@ -50,6 +55,12 @@ class GroupModal extends Component {
     this.setState({
       isOpen: true,
       cards,
+      status: '',
+      cmc: '',
+      type_line: '',
+      addTags: false,
+      deleteTags: false,
+      tags: [],
     });
   }
 
@@ -57,13 +68,26 @@ class GroupModal extends Component {
     this.setState({ isOpen: false });
   }
 
+  error(message) {
+    this.setState(({ alerts }) => ({
+      alerts: [...alerts, {
+        color: 'danger',
+        message,
+      }],
+    }));
+  }
+
   handleChange(event) {
     const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
+    const extra = {};
+    if (name === 'addTags') { extra.deleteTags = false; };
+    if (name === 'deleteTags') { extra.addTags = false; };
 
     this.setState({
       [name]: value,
+      ...extra,
     });
   }
 
@@ -97,9 +121,58 @@ class GroupModal extends Component {
     });
   }
 
+  async handleApply(event) {
+    event.preventDefault();
+    const { cards, status, cmc, type_line, colorC, addTags, deleteTags } = this.state;
+    const { cubeID } = this.props;
+    const tags = this.state.tags.map(tag => tag.text);
+
+    const selected = cards.map(card => ({ index: card.index }));
+    const colors = [...'WUBRG'].filter(color => this.state[`color${color}`]);
+    const updated = {
+      status: status || undefined,
+      cmc: parseInt(cmc) || undefined,
+      type_line: type_line || undefined,
+      colors: colors.length > 0 ? colors : undefined,
+      colorC: colorC || undefined,
+      tags: tags || undefined,
+      addTags, deleteTags,
+    };
+    const response = await fetch(`/cube/api/updatecards/${cubeID}`, {
+      method: 'POST',
+      body: JSON.stringify({ selected, updated }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch(err => this.error(err));
+    const json = await response.json().catch(err => this.error(err));
+    if (json.success === 'true') {
+      // Make shallow copy of each card.
+      const updatedCards = cards.map(card => ({ ...card }));
+      for (const card of updatedCards) {
+        if (status) { card.status = status; }
+        if (cmc) { card.cmc = cmc; }
+        if (type_line) { card.type_line = type_line; }
+        if (addTags) {
+          card.tags = [...card.tags, tags.filter(tag => !card.tags.includes(tag))];
+        }
+        if (deleteTags) {
+          card.tags = card.tags.filter(tag => !tags.includes(tag));
+        }
+
+        if (colors) { card.colors = [...colors]; }
+        if (colorC) { card.colors = []; }
+        cube[card.index] = card;
+        cubeDict[card.index] = card;
+      }
+
+      this.close();
+    }
+  }
+
   render() {
-    const { canEdit, children, ...props } = this.props;
-    const { isOpen, cards, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
+    const { cubeID, canEdit, children, ...props } = this.props;
+    const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
 
     if (!canEdit) {
       return <>{children}</>;
@@ -113,8 +186,11 @@ class GroupModal extends Component {
       <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>
         <ModalHeader toggle={this.close}>Edit Selected</ModalHeader>
         <ModalBody>
+          {alerts.map(({ color, message }) =>
+            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
+          )}
           <Row>
-            <Col xs="4">
+            <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
               <ListGroup className="list-outline">
                 {cards.map(card =>
                   <AutocardListItem key={card.index} card={card} noCardModal>
@@ -140,7 +216,7 @@ class GroupModal extends Component {
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>
-                <InputGroup className="mb-3">
+                <InputGroup className="mb-2">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>CMC</InputGroupText>
                   </InputGroupAddon>
@@ -173,13 +249,13 @@ class GroupModal extends Component {
                 <FormGroup tag="fieldset">
                   <FormGroup check>
                     <Label check>
-                      <Input type="radio" name="addTags" value={addTags} onChange={this.handleChange} />{' '}
+                      <Input type="radio" name="addTags" checked={addTags} onChange={this.handleChange} />{' '}
                       Add tags to all
                     </Label>
                   </FormGroup>
                   <FormGroup check>
                     <Label check>
-                      <Input type="radio" name="deleteTags" value={deleteTags} onChange={this.handleChange} />{' '}
+                      <Input type="radio" name="deleteTags" checked={deleteTags} onChange={this.handleChange} />{' '}
                       Delete tags from all
                     </Label>
                   </FormGroup>
@@ -192,7 +268,7 @@ class GroupModal extends Component {
         <ModalFooter>
           <Button color="danger">Remove all from cube</Button>
           <Button color="secondary">Buy all</Button>
-          <Button color="success">Apply to all</Button>
+          <Button color="success" onClick={this.handleApply}>Apply to all</Button>
         </ModalFooter>
       </Modal>
     </>;
