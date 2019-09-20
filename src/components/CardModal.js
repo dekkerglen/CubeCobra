@@ -3,23 +3,9 @@ import React from 'react';
 import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
+import ColorCheck from './ColorCheck';
 import ImageFallback from './ImageFallback';
 import TagInput from './TagInput';
-
-const ColorCheck = ({ color, short, value, onChange }) => (
-  <FormGroup check inline>
-    <Label check>
-      <Input
-        type="checkbox"
-        id={`contextModalCheckbox${short.toUpperCase()}`}
-        name={`color${short.toUpperCase()}`}
-        checked={value}
-        onChange={onChange}
-      />
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
-    </Label>
-  </FormGroup>
-);
 
 const CardModal = ({
   card,  versions,

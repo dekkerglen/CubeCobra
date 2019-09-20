@@ -6,6 +6,7 @@ import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
+import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
@@ -56,20 +57,22 @@ class CubeList extends Component {
         <DisplayContext.Provider>
           <TagContext.Provider defaultTags={defaultTags}>
             <CardModalForm canEdit={canEdit}>
-              <CubeListNavbar
-                canEdit={canEdit}
-                cubeID={cubeID}
-                cubeView={cubeView}
-                changeCubeView={this.changeCubeView}
-                hasCustomImages={cards.some(card => card.imgUrl)}
-              />
-              <DynamicFlash />
-              {{
-                'table': <TableView cards={cards} />,
-                'spoiler': <VisualSpoiler cards={cards} />,
-                'curve': <CurveView cards={cards} />,
-                'list': <ListView cards={cards} />,
-              }[cubeView]}
+              <GroupModal canEdit={canEdit}>
+                <CubeListNavbar
+                  canEdit={canEdit}
+                  cubeID={cubeID}
+                  cubeView={cubeView}
+                  changeCubeView={this.changeCubeView}
+                  hasCustomImages={cards.some(card => card.imgUrl)}
+                />
+                <DynamicFlash />
+                {{
+                  'table': <TableView cards={cards} />,
+                  'spoiler': <VisualSpoiler cards={cards} />,
+                  'curve': <CurveView cards={cards} />,
+                  'list': <ListView cards={cards} />,
+                }[cubeView]}
+              </GroupModal>
             </CardModalForm>
           </TagContext.Provider>
         </DisplayContext.Provider>
