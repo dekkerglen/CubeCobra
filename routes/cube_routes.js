@@ -890,7 +890,7 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
           'Content-Type': 'image/png',
           'Content-Length': image.length
         });
-        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'gzip'));
       });
     }
   });
