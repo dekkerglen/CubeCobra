@@ -350,9 +350,8 @@ function cardIsLabel(card, label, sort) {
       case 'Five Color':
         return card.colors.length == 5;
     }
-  } else if (sort == 'CMC') {    
-    if(isNaN(card.cmc))
-    {
+  } else if (sort == 'CMC') {
+    if (isNaN(card.cmc)) {
       card.cmc = parseInt(card.cmc);
     }
     if (card.cmc >= 8) {
