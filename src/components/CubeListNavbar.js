@@ -108,18 +108,20 @@ class CubeListNavbar extends Component {
     return (
       <div className="usercontrols">
         <Navbar expand="md" className="navbar-light">
-          <div className="view-style-select">
-            <Label className="sr-only" for="viewSelect">Cube View Style</Label>
-            <Input type="select" id="viewSelect" value={cubeView} onChange={this.handleChangeCubeView}>
-              <option value="table">Table View</option>
-              <option value="spoiler">Visual Spoiler</option>
-              {!canEdit ? '' :
-                <option value="list">List View</option>
-              }
-              <option value="curve">Curve View</option>
-            </Input>
+          <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
+            <div className="view-style-select">
+              <Label className="sr-only" for="viewSelect">Cube View Style</Label>
+              <Input type="select" id="viewSelect" value={cubeView} onChange={this.handleChangeCubeView}>
+                <option value="table">Table View</option>
+                <option value="spoiler">Visual Spoiler</option>
+                {!canEdit ? '' :
+                  <option value="list">List View</option>
+                }
+                <option value="curve">Curve View</option>
+              </Input>
+            </div>
+            <NavbarToggler onClick={this.toggle} />
           </div>
-          <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav className="ml-auto" navbar>
               {!canEdit ? '' :
@@ -137,51 +139,44 @@ class CubeListNavbar extends Component {
                 <NavLink href="#" data-target="compare" onClick={this.handleOpenCollapse}>Compare</NavLink>
               </NavItem>
               {!canEdit ? '' :
-                <NavItem>
+                <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
                   <NavLink href="#" onClick={this.handleMassEdit}>
                     {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
                   </NavLink>
                 </NavItem>
               }
-              <NavItem>
-                <NavLink href="#" onClick={/* global */ tagColorsModal}>
-                  {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
-                </NavLink>
-              </NavItem>
-              {!canEdit ? '' :
-                <UncontrolledDropdown nav inNavbar>
-                  <DropdownToggle nav caret>Bulk Upload</DropdownToggle>
-                  <DropdownMenu right>
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>Display</DropdownToggle>
+                <DropdownMenu right>
+                  <DropdownItem onClick={/* global */ tagColorsModal}>
+                    {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
+                  </DropdownItem>
+                  <DisplayContext.Consumer>
+                    {({ showCustomImages, toggleShowCustomImages }) => !hasCustomImages ? '' :
+                      <DropdownItem onClick={toggleShowCustomImages}>
+                        {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
+                      </DropdownItem>
+                    }
+                  </DisplayContext.Consumer>
+                </DropdownMenu>
+              </UncontrolledDropdown>
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>{canEdit ? 'Import/Export' : 'Export'}</DropdownToggle>
+                <DropdownMenu right>
+                  {!canEdit ? '' : <>
+                    <DropdownItem disabled>Export</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#pasteBulkModal">Paste Text</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#uploadBulkModal">Upload File</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#importModal">Import from CubeTutor</DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-              }
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>Export</DropdownToggle>
-                <DropdownMenu right>
+                    <DropdownItem divider />
+                    <DropdownItem disabled>Import</DropdownItem>
+                  </>}
                   <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
                   <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
                   <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
                   <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
                 </DropdownMenu>
               </UncontrolledDropdown>
-              <NavItem className={hasCustomImages ? undefined : 'd-none'}>
-                <DisplayContext.Consumer>
-                  {({ showCustomImages, toggleShowCustomImages }) =>
-                    <NavLink id="customImageDisplayMenuItem" className="d-flex align-items-baseline text-sm-left text-center">
-                      <Input
-                        type="checkbox"
-                        className="mr-1 ml-0 my-0 position-static d-block"
-                        checked={showCustomImages}
-                        onChange={toggleShowCustomImages}
-                      />
-                      <Label for="customImageDisplayToggle" className="m-0" onClick={toggleShowCustomImages}>Show Custom Images</Label>
-                    </NavLink>
-                  }
-                </DisplayContext.Consumer>
-              </NavItem>
             </Nav>
           </Collapse>
         </Navbar>

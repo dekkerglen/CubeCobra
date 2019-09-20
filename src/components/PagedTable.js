@@ -40,10 +40,12 @@ class PagedTable extends Component {
           </PaginationItem>
         )}
       </Pagination>
-      <Table {...props}>
-        {children}
-        <tbody>{displayRows}</tbody>
-      </Table>
+      <div className="table-responsive">
+        <Table {...props}>
+          {children}
+          <tbody>{displayRows}</tbody>
+        </Table>
+      </div>
     </>;
   }
 }
