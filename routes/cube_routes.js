@@ -1076,7 +1076,7 @@ function bulkuploadCSV(req, res, cards, cube) {
       name: name,
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
-      colors: split[3].split(''),
+      colors: split[3].split('').filter(c => [...'WUBRG'].includes(c)),
       set: split[4].toUpperCase(),
       collector_number: split[5],
       status: split[6],
@@ -1277,16 +1277,7 @@ router.get('/download/csv/:id', function(req, res) {
         res.write('"' + name + '"' + ',');
         res.write(card.cmc + ',');
         res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
-        if (card.colors.length == 0) {
-          res.write('C,');
-        } else if (card.type_line.toLowerCase().includes('land')) {
-          res.write('L,');
-        } else {
-          card.colors.forEach(function(color, c_index) {
-            res.write(color);
-          });
-          res.write(',');
-        }
+        res.write(card.colors.join('') + ',');
         res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
         res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
         res.write(card.status + ',"');
