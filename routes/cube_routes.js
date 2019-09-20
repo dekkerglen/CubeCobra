@@ -2521,13 +2521,16 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   });
 });
 
-router.post('/api/updatecards/:id', ensureAuth, function (req, res) {
-  const { selected, updated } = req.body;
-  if ((updated.cmc && typeof updated.cmc !== 'number')
-    || (updated.status && typeof updated.status !== 'string')
-    || (updated.type_line && typeof updated.type_line !== 'string')
-    || (updated.colors && !Array.isArray(updated.colors))
-    || (updated.tags && !Array.isArray(updated.tags))
+router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
+  const {
+    selected,
+    updated
+  } = req.body;
+  if ((updated.cmc && typeof updated.cmc !== 'number') ||
+    (updated.status && typeof updated.status !== 'string') ||
+    (updated.type_line && typeof updated.type_line !== 'string') ||
+    (updated.colors && !Array.isArray(updated.colors)) ||
+    (updated.tags && !Array.isArray(updated.tags))
   ) {
     res.status(400).send({
       success: 'false',
@@ -2537,8 +2540,12 @@ router.post('/api/updatecards/:id', ensureAuth, function (req, res) {
   }
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (cube.owner === String(req.user._id)) {
-      for (const { index } of selected) {
-        if (typeof index !== 'number') { continue; }
+      for (const {
+          index
+        } of selected) {
+        if (typeof index !== 'number') {
+          continue;
+        }
         const card = cube.cards[index];
         if (!card.type_line) {
           card.type_line = carddb.cardFromId(card.cardID).type;
