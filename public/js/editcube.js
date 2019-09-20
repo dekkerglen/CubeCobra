@@ -819,9 +819,6 @@ function updateFilters(filterText) {
   if (filterText) {
     new_filters = [];
     generateFilters(filterText.toLowerCase(), new_filters)
-  } else {
-    $('#filterInput').removeClass('invalid-filter');
-    document.getElementById('filterarea').innerHTML = '<p><em>No active filters.</em></p>';
   }
 }
 

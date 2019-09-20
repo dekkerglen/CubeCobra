@@ -21,10 +21,12 @@ class CubeList extends Component {
       cards: this.props.defaultCards,
       cubeView: 'table',
       openCollapse: null,
+      filter: [],
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
+    this.setFilter = this.setFilter.bind(this);
 
     /* global */
     updateCubeListeners.push(cards => this.setState({ cards }));
@@ -53,14 +55,19 @@ class CubeList extends Component {
     }));
   }
 
+  setFilter(filter) {
+    this.setState({ filter });
+  }
+
   render() {
     const { cubeID, canEdit } = this.props;
-    const { cards, cubeView, openCollapse } = this.state;
+    const { cards, cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
       text: tag,
     }))
+    const filteredCards = filter.length > 0 ? cards.filter(card => /* global */ filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
@@ -74,14 +81,15 @@ class CubeList extends Component {
                   changeCubeView={this.changeCubeView}
                   openCollapse={openCollapse}
                   setOpenCollapse={this.setOpenCollapse}
+                  setFilter={this.setFilter}
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
                 {{
-                  'table': <TableView cards={cards} />,
-                  'spoiler': <VisualSpoiler cards={cards} />,
-                  'curve': <CurveView cards={cards} />,
-                  'list': <ListView cubeID={cubeID} cards={cards} />,
+                  'table': <TableView cards={filteredCards} />,
+                  'spoiler': <VisualSpoiler cards={filteredCards} />,
+                  'curve': <CurveView cards={filteredCards} />,
+                  'list': <ListView cubeID={cubeID} cards={filteredCards} />,
                 }[cubeView]}
               </GroupModal>
             </CardModalForm>
