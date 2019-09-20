@@ -203,6 +203,7 @@ class CardModalForm extends Component {
     let { canEdit, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
+        {children}
         <CardModal
           values={this.state.formValues}
           onChange={this.handleChange}
@@ -220,7 +221,6 @@ class CardModalForm extends Component {
           }}
           {...props}
         />
-        {children}
       </CardModalContext.Provider>
     );
   }

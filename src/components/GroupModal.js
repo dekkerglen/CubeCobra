@@ -36,6 +36,7 @@ class GroupModal extends Component {
     }
 
     this.open = this.open.bind(this);
+    this.setCards = this.setCards.bind(this);
     this.close = this.close.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleRemoveCard = this.handleRemoveCard.bind(this);
@@ -51,10 +52,9 @@ class GroupModal extends Component {
     };
   }
 
-  open(cards) {
+  open() {
     this.setState({
       isOpen: true,
-      cards,
       status: '',
       cmc: '',
       type_line: '',
@@ -62,6 +62,10 @@ class GroupModal extends Component {
       deleteTags: false,
       tags: [],
     });
+  }
+
+  setCards(cards) {
+    this.setState({ cards });
   }
 
   close() {
@@ -180,7 +184,7 @@ class GroupModal extends Component {
 
     const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
     return <>
-      <GroupModalContext.Provider value={{ openGroupModal: this.open }}>
+      <GroupModalContext.Provider value={{ groupModalCards: cards, openGroupModal: this.open, setGroupModalCards: this.setCards }}>
         {children}
       </GroupModalContext.Provider>
       <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>

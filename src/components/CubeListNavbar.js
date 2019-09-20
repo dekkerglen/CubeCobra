@@ -12,9 +12,11 @@ import {
   UncontrolledDropdown
 } from 'reactstrap';
 
+import CardModalContext from './CardModalContext';
 import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
+import GroupModalContext from './GroupModalContext';
 import SortCollapse from './SortCollapse';
 
 // FIXME: Bring into React
@@ -45,7 +47,7 @@ const CompareCollapse = props =>
     </Container>
   </Collapse>;
 
-class CubeListNavbar extends Component {
+class CubeListNavbarRaw extends Component {
   constructor(props) {
     super(props);
 
@@ -78,15 +80,12 @@ class CubeListNavbar extends Component {
   handleMassEdit(event) {
     // This is full of globals and needs to be restructured.
     event.preventDefault();
+    const cards = this.props.groupModalCards;
     if (this.props.cubeView === 'list') {
-      groupSelect = cube.filter(card => card.checked);
-      if (groupSelect.length === 0) {
-        $('#selectEmptyModal').modal('show');
-      } else if (groupSelect.length === 1) {
-        card = groupSelect[0];
-        show_contextModal(card);
-      } else {
-        show_groupContextModal();
+      if (cards.length === 1) {
+        this.props.openCardModal(cards[0]);
+      } else if (cards.length > 1) {
+        this.props.openGroupModal();
       }
     } else {
       this.props.changeCubeView('list');
@@ -190,5 +189,19 @@ class CubeListNavbar extends Component {
     );
   }
 }
+
+const CubeListNavbar = props =>
+  <GroupModalContext.Consumer>
+    {({ groupModalCards, setGroupModalCards, openGroupModal }) =>
+      <CardModalContext.Consumer>
+        {openCardModal =>
+          <CubeListNavbarRaw
+            {...{ groupModalCards, setGroupModalCards, openGroupModal, openCardModal }}
+            {...props}
+          />
+        }
+      </CardModalContext.Consumer>
+    }
+  </GroupModalContext.Consumer>
 
 export default CubeListNavbar;

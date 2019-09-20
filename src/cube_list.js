@@ -30,13 +30,11 @@ class CubeList extends Component {
 
   componentDidMount() {
     /* global */
-    init_groupcontextModal();
     autocard_init('autocard');
   }
 
   componentDidUpdate() {
     /* global */
-    init_groupcontextModal();
     autocard_init('autocard');
   }
 
@@ -45,7 +43,7 @@ class CubeList extends Component {
   }
 
   render() {
-    const { defaultCards, canEdit } = this.props;
+    const { cubeID, canEdit } = this.props;
     const { cards, cubeView } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
@@ -70,7 +68,7 @@ class CubeList extends Component {
                   'table': <TableView cards={cards} />,
                   'spoiler': <VisualSpoiler cards={cards} />,
                   'curve': <CurveView cards={cards} />,
-                  'list': <ListView cards={cards} />,
+                  'list': <ListView cubeID={cubeID} cards={cards} />,
                 }[cubeView]}
               </GroupModal>
             </CardModalForm>

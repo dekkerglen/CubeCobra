@@ -10,12 +10,12 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
   return (
     <ListGroup className="list-outline">
       <GroupModalContext.Consumer>
-        {({ openGroupModal }) =>
+        {({ openGroupModal, setGroupModalCards }) =>
           <ListGroupItem
             tag="a"
             href="#"
             className="list-group-heading"
-            onClick={e => { e.preventDefault(); openGroupModal(cards); }}
+            onClick={e => { e.preventDefault(); setGroupModalCards(cards); openGroupModal(); }}
             primarysort={primary}
             secondarysort={secondary}
             tertiarysort={tertiary}
