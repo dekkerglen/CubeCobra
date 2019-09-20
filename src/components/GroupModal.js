@@ -26,14 +26,11 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
+      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
       addTags: false,
       deleteTags: false,
       tags: [],
     };
-
-    for (const color of [...'WUBRGC']) {
-      this.state[`color${color}`] = false;
-    }
 
     this.open = this.open.bind(this);
     this.setCards = this.setCards.bind(this);
@@ -59,6 +56,7 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
+      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
       addTags: false,
       deleteTags: false,
       tags: [],
