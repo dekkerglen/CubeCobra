@@ -190,6 +190,9 @@ class GroupModal extends Component {
   render() {
     const { cubeID, canEdit, children, ...props } = this.props;
     const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
+    const tcgplayerMassEntryUrl =
+      'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
+      '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
 
     if (!canEdit) {
       return <>{children}</>;
@@ -284,7 +287,10 @@ class GroupModal extends Component {
         </ModalBody>
         <ModalFooter>
           <Button color="danger" onClick={this.handleRemoveAll}>Remove all from cube</Button>
-          <Button color="secondary">Buy all</Button>
+          <Form method="POST" action={tcgplayerMassEntryUrl} inline>
+            <Input type="hidden" name="c" value={cards.map(({ details }) => `1 ${details.name}`).join('||')} />
+            <Button type="submit" color="secondary">Buy all</Button>
+          </Form>
           <Button color="success" onClick={this.handleApply}>Apply to all</Button>
         </ModalFooter>
       </Modal>

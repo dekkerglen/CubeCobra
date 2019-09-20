@@ -741,17 +741,6 @@ function getCardColorClass(card) {
   }
 }
 
-function createMassEntry(cards) {
-  var res = "";
-  cards.forEach(function(card, index) {
-    if (index != 0) {
-      res += '||';
-    }
-    res += '1 ' + card.details.name;
-  });
-  return res;
-}
-
 function sortIntoGroups(cards, sort) {
   var groups = {};
   var labels = getLabels(sort);
