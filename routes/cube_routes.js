@@ -857,8 +857,8 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `https://www.cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `https://www.cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`
+            `http://162.243.163.51/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+            `http://162.243.163.51/cube/samplepack/${req.params.id}/${pack.seed}`
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
