@@ -41,7 +41,18 @@ test("normalizedName normalizes unicode correctly", () => {
   expect(result).toBe(expected);
 });
 
-test("allIds", () => {});
+test("allIds correctly maps a cardname to an ID", () => {
+  expect.assertions(2);
+  var promise = carddb.initializeCardDb(fixturesPath);
+  return promise.then(function() {
+    const expected = "ee4d196e-7ce4-4dc1-9d58-102a89aca2a4";
+    const result = carddb.allIds({
+      "name": "Rankle, Master of Pranks"
+    });
+    expect(result.length).toBe(1);
+    expect(result[0]).toBe(expected);
+  });
+});
 
 test("loadJSONFile loads a JSON file into the correct attribute", () => {
   expect.assertions(1);
