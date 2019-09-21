@@ -25,9 +25,9 @@ var placeholderCard = {
   error: true
 };
 
-beforeEach(() => {});
-
-afterEach(() => {});
+afterEach(() => {
+  carddb.unloadCardDb();
+});
 
 test("initializeCardDb loads files properly", () => {
   expect.assertions(6);

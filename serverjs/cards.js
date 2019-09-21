@@ -10,6 +10,15 @@ var data = {
   nameToId: {},
   _carddict: {}
 };
+var fileToAttribute = {
+  'carddict.json': '_carddict',
+  'cardtree.json': 'cardtree',
+  'names.json': 'cardnames',
+  'nameToId.json': 'nameToId',
+  'full_names.json': 'full_names',
+  'imagedict.json': 'imagedict',
+  'cardimages.json': 'cardimages'
+};
 
 function getPlaceholderCard(_id) {
   //placeholder card if we don't find the one due to a scryfall ID update bug
@@ -84,15 +93,6 @@ function initializeCardDb(dataRoot, skipWatchers) {
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
-  var fileToAttribute = {
-    'carddict.json': '_carddict',
-    'cardtree.json': 'cardtree',
-    'names.json': 'cardnames',
-    'nameToId.json': 'nameToId',
-    'full_names.json': 'full_names',
-    'imagedict.json': 'imagedict',
-    'cardimages.json': 'cardimages'
-  };
   var promises = [],
     filepath, attribute;
   for (var filename in fileToAttribute) {
@@ -106,6 +106,14 @@ function initializeCardDb(dataRoot, skipWatchers) {
   return Promise.all(promises);
 }
 
+function unloadCardDb() {
+  var attribute;
+  for (var filename in fileToAttribute) {
+    attribute = fileToAttribute[filename];
+    delete data[attribute];
+  }
+}
+
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;
 data.normalizedName = card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -113,5 +121,6 @@ data.allIds = card => data.nameToId[data.normalizedName(card)];
 data.initializeCardDb = initializeCardDb;
 data.loadJSONFile = loadJSONFile;
 data.getPlaceholderCard = getPlaceholderCard;
+data.unloadCardDb = unloadCardDb;
 
 module.exports = data;
