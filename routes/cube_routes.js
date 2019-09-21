@@ -858,10 +858,10 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `http://162.243.163.51/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `http://162.243.163.51/cube/samplepack/${req.params.id}/${pack.seed}`,            
-             CARD_WIDTH * 5,
-             CARD_HEIGHT * 3
+            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+            CARD_WIDTH * 5,
+            CARD_HEIGHT * 3
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
@@ -871,7 +871,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
 });
 
 router.get('/samplepackimage/:id/:seed', function(req, res) {
-  req.params.seed = req.params.seed.replace('.png','');
+  req.params.seed = req.params.seed.replace('.png', '');
   generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
     if (err) {
       req.flash('danger', 'Pack could not be created');
@@ -893,8 +893,8 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
           'Content-Type': 'image/png',
           'Content-Encoding': 'gzip'
         });
-        zlib.gzip(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'), function (_, result) { 
-          res.end(result);                 
+        zlib.gzip(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'), function(_, result) {
+          res.end(result);
         });
       });
     }
