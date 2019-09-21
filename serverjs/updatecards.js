@@ -55,6 +55,20 @@ function addCardToCatalog(card, isExtra) {
   util.binaryInsert(normaliedFullName, full_names);
 }
 
+function writeJSONFile(filepath, data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filepath, data, 'utf8', function(err) {
+      if (err) {
+        console.log("An error occured while writing " + filepath);
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(contents);
+      }
+    });
+  });
+}
+
 function saveAllCards(arr) {
   var normalizedName, normalizedFullName;
   arr.forEach(function(card, index) {
@@ -63,47 +77,14 @@ function saveAllCards(arr) {
     }
     addCardToCatalog(convertCard(card));
   });
-  fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function(err) {
-    if (err) {
-      console.log("An error occured while writing names.json");
-      console.log(err);
-    }
+  writeJSONFile('private/names.json', JSON.stringify(names)).then(function() {
     var cardtree = util.turnToTree(names);
-
-    fs.writeFile('private/cardtree.json', JSON.stringify(cardtree), 'utf8', function(err) {
-      if (err) {
-        console.log("An error occured while writing cardtree.json");
-        console.log(err);
-      }
-      fs.writeFile('private/carddict.json', JSON.stringify(dict), 'utf8', function(err) {
-        if (err) {
-          console.log("An error occured while writing carddict.json");
-          console.log(err);
-        }
-        fs.writeFile('private/nameToId.json', JSON.stringify(nameToId), 'utf8', function(err) {
-          if (err) {
-            console.log("An error occured while writing nameToId.json");
-            console.log(err);
-          }
-
-          fs.writeFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names)), 'utf8', function(err) {
-            if (err) {
-              console.log("An error occured while writing full_names.json");
-              console.log(err);
-            }
-
-            fs.writeFile('private/imagedict.json', JSON.stringify(imagedict), 'utf8', function(err) {
-              if (err) {
-                console.log("An error occured while writing imagedict.json");
-                console.log(err);
-              }
-
-              fs.writeFile('private/cardimages.json', JSON.stringify(cardimages), 'utf8', function(err) {
-                if (err) {
-                  console.log("An error occured while writing cardimages.json");
-                  console.log(err);
-                }
-
+    writeJSONFile('private/cardtree.json', JSON.stringify(cardtree)).then(function() {
+      writeJSONFile('private/carddict.json', JSON.stringify(dict)).then(function() {
+        writeJSONFile('private/nameToId.json', JSON.stringify(nameToId)).then(function() {
+          writeJSONFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))).then(function() {
+            writeJSONFile('private/imagedict.json', JSON.stringify(imagedict)).then(function() {
+              writeJSONFile('private/cardimages.json', JSON.stringify(cardimages)).then(function() {
                 console.log("All JSON files saved.");
               });
             });
