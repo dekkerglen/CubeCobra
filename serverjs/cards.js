@@ -11,36 +11,39 @@ var data = {
   _carddict: {}
 };
 
+function getPlaceholderCard(_id) {
+  //placeholder card if we don't find the one due to a scryfall ID update bug
+  return {
+    _id: _id,
+    set: '',
+    collector_number: '',
+    promo: false,
+    digital: false,
+    full_name: 'Invalid Card',
+    name: 'Invalid Card',
+    name_lower: 'Invalid Card',
+    artist: '',
+    scryfall_uri: '',
+    rarity: '',
+    legalities: {},
+    oracle_text: '',
+    image_normal: 'https://img.scryfall.com/errors/missing.jpg',
+    cmc: 0,
+    type: '',
+    colors: [],
+    color_identity: [],
+    parsed_cost: [],
+    colorcategory: 'c',
+    error: true
+  }
+}
+
 function cardFromId(id) {
   if (data._carddict[id]) {
     return data._carddict[id];
   } else {
     console.log("Could not find: " + id);
-    //placeholder card if we don't find the one due to a scryfall ID update bug
-    return {
-      // img: 
-      _id: id,
-      set: '',
-      collector_number: '',
-      promo: false,
-      digital: false,
-      full_name: 'Invalid Card',
-      name: 'Invalid Card',
-      name_lower: 'Invalid Card',
-      artist: '',
-      scryfall_uri: '',
-      rarity: '',
-      legalities: {},
-      oracle_text: '',
-      image_normal: 'https://img.scryfall.com/errors/missing.jpg',
-      cmc: 0,
-      type: '',
-      colors: [],
-      color_identity: [],
-      parsed_cost: [],
-      colorcategory: 'c',
-      error: true
-    };
+    return getPlaceholderCard(id);
   }
 }
 
@@ -52,32 +55,9 @@ function getCardDetails(card) {
     return details;
   } else {
     console.log("Could not find: " + id);
-    //placeholder card if we don't find the one due to a scryfall ID update bug
-    return {
-      // img: 
-      _id: id,
-      set: '',
-      collector_number: '',
-      promo: false,
-      digital: false,
-      full_name: 'Invalid Card',
-      name: 'Invalid Card',
-      name_lower: 'Invalid Card',
-      artist: '',
-      scryfall_uri: '',
-      rarity: '',
-      legalities: {},
-      oracle_text: '',
-      image_normal: 'https://img.scryfall.com/errors/missing.jpg',
-      cmc: 0,
-      type: '',
-      colors: [],
-      color_identity: [],
-      parsed_cost: [],
-      colorcategory: 'c',
-      error: true
-    };
-  }
+    return getPlaceholderCard(id);
+  };
+}
 }
 
 function loadJSONFile(filename, attribute) {
