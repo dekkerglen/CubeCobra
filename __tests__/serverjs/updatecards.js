@@ -5,7 +5,7 @@ beforeEach(() => {
   // delete /private
 });
 
-test("updateCardBase", () => {
+test("updateCardBase creates the expected files", () => {
   expect.assertions(7);
   var promise = new Promise((resolve, reject) => {
     process.nextTick(() => {
