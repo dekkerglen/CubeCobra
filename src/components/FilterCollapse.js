@@ -42,67 +42,53 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
 const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'rarity'];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'rarity'];
 
-class AdvancedFilterModal extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {};
-  }
-
-  render() {
-    const { isOpen, toggle, apply, onChange, ...props } = this.props;
-    const values = this.state;
-
-    return (
-      <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
-        <ModalHeader toggle={toggle}>Advanced Filters</ModalHeader>
-        <ModalBody>
-          <TextField name="name" humanName="Card Name" placeholder={'Any words in the name, e.g. "Fire"'} value={values.name} onChange={onChange} />
-          <TextField name="oracle" humanName="Oracle Text" placeholder={'Any text, e.g. "Draw a card"'} value={values.oracle} onChange={onChange} />
-          <NumericField name="cmc" humanName="CMC" placeholder={'Any value, e.g. "2"'} value={values.cmc} onChange={onChange} />
-          <hr />
-          <h6>Color:</h6>
-          <ColorChecks prefix="color" values={values} onChange={onChange} />
-          <Input type="select" name="colorOp" value={values.colorOp} onChange={onChange}>
-            <option value="=">Exactly these colors</option>
-            <option value=">=">Including these colors</option>
-            <option value="<=">At most these colors</option>
-          </Input>
-          <hr />
-          <ColorChecks prefix="colorIdentity" values={values} onChange={onChange} />
-          <Input type="select" name="colorIdentityOp" value={values.colorIdentityOp} onChange={onChange}>
-            <option value="=">Exactly these colors</option>
-            <option value=">=">Including these colors</option>
-            <option value="<=">At most these colors</option>
-          </Input>
-          <hr />
-          <TextField name="mana" humanName="Mana Cost" placeholder={'Any mana cost, e.g. "{1}{W}"'} value={values.mana} onChange={onChange} />
-          <TextField name="type" humanName="Type Line" placeholder={'Choose any card type, supertype, or subtypes to match'} value={values.type_line} onChange={onChange} />
-          <TextField name="tag" humanName="Tag" placeholder={'Any text, e.g. "Zombie Testing"'} value={values.tag} onChange={onChange} />
-          <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Status</InputGroupText>
-            </InputGroupAddon>
-            <Input type="select" name="status" value={values.status} onChange={onChange}>
-              {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map(status =>
-                <option key={status}>{status}</option>
-              )}
-            </Input>
-          </InputGroup>
-          <NumericField name="price" humanName="Price" placeholder={'Any decimal number, e.g. "3.50"'} />
-          <NumericField name="priceFoil" humanName="Foil Price" placeholder={'Any decimal number, e.g. "14.00"'} />
-          <NumericField name="power" humanName="Power" placeholder={'Any value, e.g. "2"'} />
-          <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} />
-          <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} />
-        </ModalBody>
-        <ModalFooter>
-          <Button color="danger" aria-label="Close" onClick={toggle}>Cancel</Button>
-          <Button color="success" onClick={apply}>Apply</Button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) =>
+  <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
+    <ModalHeader toggle={toggle}>Advanced Filters</ModalHeader>
+    <ModalBody>
+      <TextField name="name" humanName="Card Name" placeholder={'Any words in the name, e.g. "Fire"'} value={values.name} onChange={onChange} />
+      <TextField name="oracle" humanName="Oracle Text" placeholder={'Any text, e.g. "Draw a card"'} value={values.oracle} onChange={onChange} />
+      <NumericField name="cmc" humanName="CMC" placeholder={'Any value, e.g. "2"'} value={values.cmc} onChange={onChange} />
+      <hr />
+      <h6>Color:</h6>
+      <ColorChecks prefix="color" values={values} onChange={onChange} />
+      <Input type="select" name="colorOp" value={values.colorOp} onChange={onChange}>
+        <option value="=">Exactly these colors</option>
+        <option value=">=">Including these colors</option>
+        <option value="<=">At most these colors</option>
+      </Input>
+      <hr />
+      <ColorChecks prefix="colorIdentity" values={values} onChange={onChange} />
+      <Input type="select" name="colorIdentityOp" value={values.colorIdentityOp} onChange={onChange}>
+        <option value="=">Exactly these colors</option>
+        <option value=">=">Including these colors</option>
+        <option value="<=">At most these colors</option>
+      </Input>
+      <hr />
+      <TextField name="mana" humanName="Mana Cost" placeholder={'Any mana cost, e.g. "{1}{W}"'} value={values.mana} onChange={onChange} />
+      <TextField name="type" humanName="Type Line" placeholder={'Choose any card type, supertype, or subtypes to match'} value={values.type_line} onChange={onChange} />
+      <TextField name="tag" humanName="Tag" placeholder={'Any text, e.g. "Zombie Testing"'} value={values.tag} onChange={onChange} />
+      <InputGroup className="mb-3">
+        <InputGroupAddon addonType="prepend">
+          <InputGroupText>Status</InputGroupText>
+        </InputGroupAddon>
+        <Input type="select" name="status" value={values.status} onChange={onChange}>
+          {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map(status =>
+            <option key={status}>{status}</option>
+          )}
+        </Input>
+      </InputGroup>
+      <NumericField name="price" humanName="Price" placeholder={'Any decimal number, e.g. "3.50"'} />
+      <NumericField name="priceFoil" humanName="Foil Price" placeholder={'Any decimal number, e.g. "14.00"'} />
+      <NumericField name="power" humanName="Power" placeholder={'Any value, e.g. "2"'} />
+      <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} />
+      <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} />
+    </ModalBody>
+    <ModalFooter>
+      <Button color="danger" aria-label="Close" onClick={toggle}>Cancel</Button>
+      <Button color="success" onClick={apply}>Apply</Button>
+    </ModalFooter>
+  </Modal>;
 
 class FilterCollapse extends Component {
   constructor(props) {
@@ -111,6 +97,7 @@ class FilterCollapse extends Component {
     this.state = {
       advancedOpen: false,
       filterInput: Hash.get('f', ''),
+      ...Object.fromEntries(allFields.map(n => [n, ''])),
       ...Object.fromEntries(numFields.map(n => [n + 'Op', '='])),
     };
 
