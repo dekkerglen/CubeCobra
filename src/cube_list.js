@@ -21,7 +21,7 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
-      cubeView: 'table',
+      cubeView: Hash.get('view', 'table'),
       openCollapse: Hash.get('f', false) ? 'filter' : null,
       filter: [],
     };
@@ -45,6 +45,11 @@ class CubeList extends Component {
   }
 
   changeCubeView(cubeView) {
+    if (cubeView === 'table') {
+      Hash.del('view')
+    } else {
+      Hash.set('view', cubeView);
+    }
     this.setState({ cubeView });
   }
 

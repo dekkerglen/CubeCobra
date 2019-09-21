@@ -12,8 +12,14 @@ export function set(key, value) {
 
 export function del(key) {
   const params = new URLSearchParams(window.location.hash.slice(1));
-  params.del(key);
-  window.location.hash = params.toString();
+  params.delete(key);
+  const str = params.toString();
+  if (!str) {
+    // Remove hash symbol from URL.
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  } else {
+    window.location.hash = str;
+  }
 }
 
 export default { get, set, del };
