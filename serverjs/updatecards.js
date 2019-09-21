@@ -16,13 +16,6 @@ if (!fs.existsSync('private')) {
 }
 
 function updateCardbase() {
-  dict = {};
-  names = [];
-  full_names = [];
-  nameToId = {};
-  imagedict = {};
-  cardimages = {};
-
   var file = fs.createWriteStream('private/cards.json');
   var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
     let stream = response.pipe(file);
