@@ -1,6 +1,6 @@
 const generateMeta = require("../../serverjs/meta");
 
-test("generateMeta", () => {
+test("generateMeta returns the expected object", () => {
   const title = "the title",
     description = "the description",
     image = "a real image url",
