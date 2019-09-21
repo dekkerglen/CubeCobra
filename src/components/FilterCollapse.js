@@ -156,10 +156,12 @@ class FilterCollapse extends Component {
     const valid = Filter.tokenizeInput(filterInput, tokens);
     if (!valid || !Filter.verifyTokens(tokens)) return;
 
-    const filters = [Filter.parseTokens(tokens)];
-    // TODO: Copy to advanced filter boxes.
-    this.props.setFilter(filters);
-    Hash.set('f', filterInput);
+    if (tokens.length > 0) {
+      const filters = [Filter.parseTokens(tokens)];
+      // TODO: Copy to advanced filter boxes.
+      this.props.setFilter(filters);
+      Hash.set('f', filterInput);
+    }
   }
 
   handleChange(event) {
