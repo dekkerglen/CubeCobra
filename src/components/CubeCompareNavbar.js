@@ -14,7 +14,6 @@ class CubeCompareNavbar extends Component {
 
     this.state = {
       isOpen: false,
-      openCollapse: null
     };
 
     this.toggle = this.toggle.bind(this);
@@ -32,12 +31,12 @@ class CubeCompareNavbar extends Component {
     event.preventDefault();
     const target = event.target;
     const collapse = target.getAttribute('data-target');
-    this.setState(({ openCollapse }) => ({
-      openCollapse: openCollapse === collapse ? null : collapse,
-    }));
+    const { setOpenCollapse } = this.props;
+    setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
   render() {
+    const { cards, openCollapse, filter, setFilter } = this.props;
     return (
       <div className="usercontrols">
         <Navbar expand="md" className="navbar-light">
@@ -58,8 +57,8 @@ class CubeCompareNavbar extends Component {
             </Nav>
           </Collapse>
         </Navbar>
-        <SortCollapse isOpen={this.state.openCollapse === 'sort'} />
-        <FilterCollapse isOpen={this.state.openCollapse === 'filter'} />
+        <SortCollapse isOpen={openCollapse === 'sort'} />
+        <FilterCollapse filter={filter} setFilter={setFilter} numCards={cards.length} isOpen={this.props.openCollapse === 'filter'} />
       </div>
     );
   }
