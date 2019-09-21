@@ -363,7 +363,6 @@ const parseTokens = (tokens) => {
 }
 
 function filterCard(card, filters) {
-
   if (filters.length == 1) {
     if (filters[0].type == 'token') {
       return filterApply(card, filters[0]);

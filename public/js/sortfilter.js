@@ -31,6 +31,19 @@ function GetColorCategory(type, colors) {
   }
 }
 
+//returns the price bucket label at the index designating the upper bound
+//at index == 0, returns < lowest
+//at index == length, returs >= highest
+function price_bucket_label(index) {
+  if (index == 0) {
+    return '< $' + price_buckets[0];
+  } else if (index == price_buckets.length) {
+    return '>= $' + price_buckets[price_buckets.length - 1];
+  } else {
+    return '$' + price_buckets[i - 1] + ' - $' + (price_buckets[i] - .01);
+  }
+}
+
 function cardIsLabel(card, label, sort) {
   if (sort == 'Color Category') {
     return GetColorCategory(card.type_line, card.colors) == label;
@@ -70,6 +83,9 @@ function cardIsLabel(card, label, sort) {
         return card.colors.length == 5;
     }
   } else if (sort == 'CMC') {
+    if (isNaN(card.cmc)) {
+      card.cmc = parseInt(card.cmc);
+    }
     if (card.cmc >= 8) {
       return label == '8+';
     }
@@ -279,19 +295,6 @@ function cardIsLabel(card, label, sort) {
     } else {
       return label == "No Price Available";
     }
-  }
-}
-
-//returns the price bucket label at the index designating the upper bound
-//at index == 0, returns < lowest
-//at index == length, returs >= highest
-function price_bucket_label(index) {
-  if (index == 0) {
-    return '< $' + price_buckets[0];
-  } else if (index == price_buckets.length) {
-    return '>= $' + price_buckets[price_buckets.length - 1];
-  } else {
-    return '$' + price_buckets[i - 1] + ' - $' + (price_buckets[i] - .01);
   }
 }
 
