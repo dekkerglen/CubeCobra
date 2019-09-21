@@ -173,6 +173,16 @@ block cube_content
             input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')
           .input-group.mb-3
             .input-group-prepend
+              span.input-group-text Loyalty
+            select.custom-select#filterLoyaltyOp
+              option(value='=' selected='') equal to
+              option(value='<') less than
+              option(value='>') greater than
+              option(value='<=') less than or equal to
+              option(value='>=') greater than or equal to
+            input#filterLoyalty.form-control(type='text', placeholder='Any value, e.g. "3"')
+          .input-group.mb-3
+            .input-group-prepend
               span.input-group-text Rarity
             select.custom-select#filterRarityOp
               option(value='=' selected='') equal to

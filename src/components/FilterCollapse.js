@@ -83,6 +83,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         <NumericField name="priceFoil" humanName="Foil Price" placeholder={'Any decimal number, e.g. "14.00"'} />
         <NumericField name="power" humanName="Power" placeholder={'Any value, e.g. "2"'} />
         <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} />
+        <NumericField name="loyalty" humanName="Loyalty" placeholder={'Any value, e.g. "3"'} />
         <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} />
       </ModalBody>
       <ModalFooter>

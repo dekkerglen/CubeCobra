@@ -26,7 +26,9 @@ let categoryMap = new Map([
   ['status', 'status'],
   ['stat', 'status'],
   ['r', 'rarity'],
-  ['rarity', 'rarity']
+  ['rarity', 'rarity'],
+  ['loy', 'loyalty'],
+  ['loyalty', 'loyalty'],
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -246,6 +248,7 @@ const verifyTokens = (tokens) => {
         case 'cmc':
         case 'power':
         case 'toughness':
+        case 'loyalty':
           if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
         case 'mana':
@@ -532,6 +535,28 @@ function filterApply(card, filter) {
           break;
         case '>=':
           res = card.details.toughness >= filter.arg;
+          break;
+      }
+    }
+  }
+  if (filter.category == 'loyalty') {
+    if (card.details.loyalty) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = card.details.loyalty == filter.arg;
+          break;
+        case '<':
+          res = card.details.loyalty < filter.arg;
+          break;
+        case '>':
+          res = card.details.loyalty > filter.arg;
+          break;
+        case '<=':
+          res = card.details.loyalty <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.loyalty >= filter.arg;
           break;
       }
     }
