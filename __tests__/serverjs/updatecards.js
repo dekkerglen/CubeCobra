@@ -12,13 +12,13 @@ afterEach(() => {
 
 test("updateCardbase creates the expected files", () => {
   expect.assertions(7);
-  var promise = new Promise((resolve, reject) => {
+  var noopPromise = new Promise((resolve, reject) => {
     process.nextTick(() => {
       resolve();
     });
   });
   var downloadMock = jest.fn();
-  downloadMock.mockReturnValue(promise);
+  downloadMock.mockReturnValue(noopPromise);
   updatecards.downloadDefaultCards = downloadMock;
   return updatecards.updateCardbase('__tests__/fixtures/cards_small.json').then(function() {
     expect(fs.existsSync('private/cardtree.json')).toBe(true);

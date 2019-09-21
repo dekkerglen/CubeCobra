@@ -10,8 +10,6 @@ var full_names = [];
 var imagedict = {};
 var cardimages = {};
 
-
-
 function downloadDefaultCards() {
   var file = fs.createWriteStream('private/cards.json');
   var promise = new Promise((resolve, reject) => {
@@ -68,7 +66,7 @@ function addCardToCatalog(card, isExtra) {
   util.binaryInsert(normalizedFullName, full_names);
 }
 
-function writeJSONFile(filepath, data) {
+function writeFile(filepath, data) {
   return new Promise((resolve, reject) => {
     fs.writeFile(filepath, data, 'utf8', function(err) {
       if (err) {
@@ -91,13 +89,13 @@ function saveAllCards(arr) {
     addCardToCatalog(convertCard(card));
   });
   var pendingWrites = [];
-  pendingWrites.push(writeJSONFile('private/names.json', JSON.stringify(names)));
-  pendingWrites.push(writeJSONFile('private/cardtree.json', JSON.stringify(util.turnToTree(names))));
-  pendingWrites.push(writeJSONFile('private/carddict.json', JSON.stringify(dict)));
-  pendingWrites.push(writeJSONFile('private/nameToId.json', JSON.stringify(nameToId)));
-  pendingWrites.push(writeJSONFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))));
-  pendingWrites.push(writeJSONFile('private/imagedict.json', JSON.stringify(imagedict)));
-  pendingWrites.push(writeJSONFile('private/cardimages.json', JSON.stringify(cardimages)));
+  pendingWrites.push(writeFile('private/names.json', JSON.stringify(names)));
+  pendingWrites.push(writeFile('private/cardtree.json', JSON.stringify(util.turnToTree(names))));
+  pendingWrites.push(writeFile('private/carddict.json', JSON.stringify(dict)));
+  pendingWrites.push(writeFile('private/nameToId.json', JSON.stringify(nameToId)));
+  pendingWrites.push(writeFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))));
+  pendingWrites.push(writeFile('private/imagedict.json', JSON.stringify(imagedict)));
+  pendingWrites.push(writeFile('private/cardimages.json', JSON.stringify(cardimages)));
   var allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(function() {
     console.log("All JSON files saved.");
