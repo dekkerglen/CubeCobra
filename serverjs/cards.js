@@ -35,7 +35,7 @@ function getPlaceholderCard(_id) {
     parsed_cost: [],
     colorcategory: 'c',
     error: true
-  }
+  };
 }
 
 function cardFromId(id) {
@@ -57,7 +57,6 @@ function getCardDetails(card) {
     console.log("Could not find: " + id);
     return getPlaceholderCard(id);
   };
-}
 }
 
 function loadJSONFile(filename, attribute) {
@@ -111,5 +110,6 @@ data.normalizedName = card => card.name.toLowerCase().normalize("NFD").replace(/
 data.allIds = card => data.nameToId[data.normalizedName(card)];
 data.initializeCardDb = initializeCardDb;
 data.loadJSONFile = loadJSONFile;
+data.getPlaceholderCard = getPlaceholderCard;
 
 module.exports = data;
