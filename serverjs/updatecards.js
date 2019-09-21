@@ -29,10 +29,13 @@ function downloadDefaultCards() {
   return promise;
 }
 
-function updateCardbase() {
-  downloadDefaultCards().then(function() {
+function updateCardbase(filepath) {
+  if (filepath === undefined) {
+    filepath = 'private/cards.json';
+  }
+  return module.exports.downloadDefaultCards().then(function() {
     console.log("Running save");
-    var contents = fs.readFileSync('private/cards.json');
+    var contents = fs.readFileSync(filepath);
     var cards = JSON.parse(contents);
     saveAllCards(cards);
     console.log("Finished cardbase update...");
@@ -260,5 +263,6 @@ function convertCard(card) {
 }
 
 module.exports = {
-  updateCardbase: updateCardbase
+  updateCardbase: updateCardbase,
+  downloadDefaultCards: downloadDefaultCards
 };
