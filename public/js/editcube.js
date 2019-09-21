@@ -392,6 +392,9 @@ $('#applyAdvancedFilterButton').click(function(e) {
   }
 
   //loyalty
+  if ($('#filterLoyalty').val().length > 0) {
+    str += ' loy' + $('#filterLoyaltyOp').val() + $('#filterLoyalty').val();
+  }
 
   //manacost type
 
@@ -1076,7 +1079,9 @@ let categoryMap = new Map([
   ['status', 'status'],
   ['stat', 'status'],
   ['r', 'rarity'],
-  ['rarity', 'rarity']
+  ['rarity', 'rarity'],
+  ['loy', 'loyalty'],
+  ['loyalty', 'loyalty']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -1320,6 +1325,7 @@ const verifyTokens = (tokens) => {
         case 'cmc':
         case 'power':
         case 'toughness':
+        case 'loyalty':
           if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
         case 'mana':
