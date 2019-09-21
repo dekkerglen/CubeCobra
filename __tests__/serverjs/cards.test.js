@@ -42,6 +42,20 @@ test("initializeCardDb loads files properly", () => {
   });
 });
 
+test("unloadCardDb unloads the card database correctly", () => {
+  expect.assertions(6);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    carddb.unloadCardDb();
+    expect(carddb.cardtree).toBe(undefined);
+    expect(carddb.imagedict).toBe(undefined);
+    expect(carddb.cardimages).toBe(undefined);
+    expect(carddb.cardnames).toBe(undefined);
+    expect(carddb.full_names).toBe(undefined);
+    expect(carddb.nameToId).toBe(undefined);
+  });
+});
+
 test("cardFromId returns a well-formed card object", () => {
   expect.assertions(1);
   const _id = "ee4d196e-7ce4-4dc1-9d58-102a89aca2a4";
