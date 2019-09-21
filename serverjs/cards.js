@@ -94,6 +94,13 @@ function loadJSONFile(filename, attribute) {
   });
 }
 
+function registerFileWatcher(filename, attribute) {
+  fs.watchFile(filename, (curr, prev) => {
+    console.log('File Changed: imagedict');
+    loadJSONFile(filename, attribute)
+  });
+}
+
 function initializeCardDb(dataRoot) {
   if (dataRoot === undefined) {
     dataRoot = "private";
@@ -107,60 +114,14 @@ function initializeCardDb(dataRoot) {
     'imagedict.json': 'imagedict',
     'cardimages.json': 'cardimages'
   };
-  var promises = [];
+  var promises = [],
+    filepath, attribute;
   for (var filename in fileToAttribute) {
-    promises.push(loadJSONFile(dataRoot + '/' + filename, fileToAttribute[filename]));
+    filepath = dataRoot + '/' + filename;
+    attribute = fileToAttribute[filename];
+    promises.push(loadJSONFile(filepath, attribute));
+    registerFileWatcher(filepath, attribute);
   }
-
-  fs.watchFile(dataRoot + '/imagedict.json', (curr, prev) => {
-    console.log('File Changed: imagedict');
-    fs.readFile(dataRoot + '/imagedict.json', 'utf8', function(err, contents) {
-      data.imagedict = JSON.parse(contents);
-      console.log("imagedict reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/cardimages.json', (curr, prev) => {
-    console.log('File Changed: cardimages');
-    fs.readFile(dataRoot + '/cardimages.json', 'utf8', function(err, contents) {
-      data.cardimages = JSON.parse(contents);
-      console.log("cardimages reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/cardtree.json', (curr, prev) => {
-    console.log('File Changed: cardtree');
-    fs.readFile(dataRoot + '/cardtree.json', 'utf8', function(err, contents) {
-      data.cardtree = JSON.parse(contents);
-      console.log("cardtree reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/names.json', (curr, prev) => {
-    console.log('File Changed: names');
-    fs.readFile(dataRoot + '/names.json', 'utf8', function(err, contents) {
-      data.cardnames = JSON.parse(contents);
-      console.log("names reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/carddict.json', (curr, prev) => {
-    console.log('File Changed: carddict');
-    fs.readFile(dataRoot + '/carddict.json', 'utf8', function(err, contents) {
-      carddict = JSON.parse(contents);
-      console.log("carddict reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/nameToId.json', (curr, prev) => {
-    console.log('File Changed: nameToId');
-    fs.readFile(dataRoot + '/nameToId.json', 'utf8', function(err, contents) {
-      data.nameToId = JSON.parse(contents);
-      console.log("nameToId reloaded");
-    });
-  });
-  fs.watchFile(dataRoot + '/full_names.json', (curr, prev) => {
-    console.log('File Changed: full_names');
-    fs.readFile(dataRoot + '/full_names.json', 'utf8', function(err, contents) {
-      data.full_names = JSON.parse(contents);
-      console.log("full_names reloaded");
-    });
-  });
   return Promise.all(promises);
 }
 
