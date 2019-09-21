@@ -118,7 +118,15 @@ resources:
             - ErrorCachingMinTTL: 5
               ErrorCode: 500
 
+plugins:
+  - serverless-apigw-binary
+
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
   carddbBucket: cubecobra-${self:custom.stage}-carddb
+  apigwBinary:
+    types:
+      - image/png
+      - image/jpeg
+      - application/zip
