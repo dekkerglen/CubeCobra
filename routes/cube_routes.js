@@ -5,6 +5,7 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
+const zlib = require('zlib');
 var {
   addAutocard,
   generatePack,
@@ -857,8 +858,8 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `http://162.243.163.51/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `http://162.243.163.51/cube/samplepack/${req.params.id}/${pack.seed}`
+            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
@@ -888,9 +889,11 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
       }).then(function(image) {
         res.writeHead(200, {
           'Content-Type': 'image/png',
-          'Content-Length': image.length
+          'Content-Encoding': 'gzip'
         });
-        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'utf8'));
+        zlib.gzip(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'), function (_, result) { 
+          res.end(result);                 
+        });
       });
     }
   });
