@@ -68,7 +68,9 @@ function saveAllCards(arr) {
     let card_images = {
       image_normal: card.image_normal
     };
-    if (card.image_flip) card_images.image_flip = card.image_flip;
+    if (card.image_flip) {
+      card_images.image_flip = card.image_flip;
+    }
     cardimages[normalizedName] = card_images;
 
     //only add if it doesn't exist, this makes the default the newest edition
