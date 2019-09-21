@@ -22,7 +22,25 @@ test("initializeCardDb loads files properly", () => {
 
 test("cardFromId", () => {});
 test("getCardDetails", () => {});
-test("normalizedName", () => {});
+
+test("normalizedName normalized ascii correctly", () => {
+  const rawName = "Garruk, Primal Hunter";
+  const expected = "garruk, primal hunter";
+  const result = carddb.normalizedName({
+    "name": rawName
+  });
+  expect(result).toBe(expected);
+});
+
+test("normalizedName normalizes unicode correctly", () => {
+  const rawName = "Ætherspouts";
+  const expected = "ætherspouts";
+  const result = carddb.normalizedName({
+    "name": rawName
+  });
+  expect(result).toBe(expected);
+});
+
 test("allIds", () => {});
 
 test("loadJSONFile loads a JSON file into the correct attribute", () => {
