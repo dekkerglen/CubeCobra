@@ -62,4 +62,30 @@ test("loadJSONFile loads a JSON file into the correct attribute", () => {
   });
 });
 
-test("getPlaceholderCard", () => {});
+test("getPlaceholderCard", () => {
+  const _id = "abckggght";
+  const expected = {
+    _id: _id,
+    set: '',
+    collector_number: '',
+    promo: false,
+    digital: false,
+    full_name: 'Invalid Card',
+    name: 'Invalid Card',
+    name_lower: 'Invalid Card',
+    artist: '',
+    scryfall_uri: '',
+    rarity: '',
+    legalities: {},
+    oracle_text: '',
+    image_normal: 'https://img.scryfall.com/errors/missing.jpg',
+    cmc: 0,
+    type: '',
+    colors: [],
+    color_identity: [],
+    parsed_cost: [],
+    colorcategory: 'c',
+    error: true
+  };
+  expect(carddb.getPlaceholderCard(_id)).toEqual(expected);
+});
