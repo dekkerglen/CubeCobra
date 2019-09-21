@@ -134,19 +134,23 @@ block content
       .card
         #power-toughness-syntax.card-header(data-toggle="collapse" data-target="#collapseSeven" aria-expanded="true" aria-controls="collapseSeven")
           button(class="btn btn-link" type="button" )
-            h5 Power and Toughness
+            h5 Power, Toughness, and Loyalty
         #collapseSeven.collapse(aria-labelledby="power-toughness-syntax" data-parent="#syntax-accordion")
           p You can use #[code pow:] or #[code power:] to search for cards with certain powers.
           p You can use #[code tou:] or #[code toughness:] to search for cards with certain toughness.
+          p You can use #[code loy:] or #[coode loyalty:] to search for cards with certain starting loyalty.
           p Operators supported: #[code :], #[code =], #[code <], #[code >], #[code <=], #[code >=].
           p #[strong Examples:]
           table.table
             tr
-              td(scope="col") #[code pow>7] 
+              td(scope="col") #[code pow>7]
               td(scope="col") Cards with greater than 7 power.
             tr
-              td(scope="col") #[code pow<5 tou<5] 
+              td(scope="col") #[code pow<5 tou<5]
               td(scope="col") Cards with both less than 5 power, and less than 5 toughness.
+            tr
+              td(scope="col") #[code loy:3 or loy:4]
+                td(scope="col") Cards with a starting loyalty of 3 or 4.
       .card
         #rarity-syntax.card-header(data-toggle="collapse" data-target="#collapseEight" aria-expanded="true" aria-controls="collapseEight")
           button(class="btn btn-link" type="button" )

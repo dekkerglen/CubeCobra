@@ -207,6 +207,28 @@ function filterApply(card, filter) {
       }
     }
   }
+  if (filter.category == 'loyalty') {
+    if (card.details.loyalty) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = card.details.loyalty == filter.arg;
+          break;
+        case '<':
+          res = card.details.loyalty < filter.arg;
+          break;
+        case '>':
+          res = card.details.loyalty > filter.arg;
+          break;
+        case '<=':
+          res = card.details.loyalty <= filter.arg;
+          break;
+        case '>=':
+          res = card.details.loyalty >= filter.arg;
+          break;
+      }
+    }
+  }
   if (filter.category == 'tag') {
     res = card.tags.some(element => {
       return element.toLowerCase() == filter.arg;
