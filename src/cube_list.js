@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import Filter from './util/Filter';
+import Hash from './util/Hash';
 
 import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
@@ -21,7 +22,7 @@ class CubeList extends Component {
 
     this.state = {
       cubeView: 'table',
-      openCollapse: null,
+      openCollapse: Hash.get('f', false) ? 'filter' : null,
       filter: [],
     };
 
