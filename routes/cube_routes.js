@@ -859,7 +859,9 @@ router.get('/samplepack/:id/:seed', function(req, res) {
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
             `http://162.243.163.51/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `http://162.243.163.51/cube/samplepack/${req.params.id}/${pack.seed}`
+            `http://162.243.163.51/cube/samplepack/${req.params.id}/${pack.seed}`,            
+             CARD_WIDTH * 5,
+             CARD_HEIGHT * 3
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
