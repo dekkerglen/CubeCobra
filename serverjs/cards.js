@@ -1,19 +1,19 @@
 const fs = require('fs');
 var util = require('./util.js');
 
-var carddict = {};
 var data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
   cardnames: [],
   full_names: [],
-  nameToId: {}
+  nameToId: {},
+  _carddict: {}
 };
 
 function cardFromId(id) {
-  if (carddict[id]) {
-    return carddict[id];
+  if (data._carddict[id]) {
+    return data._carddict[id];
   } else {
     console.log("Could not find: " + id);
     //placeholder card if we don't find the one due to a scryfall ID update bug
@@ -45,8 +45,8 @@ function cardFromId(id) {
 }
 
 function getCardDetails(card) {
-  if (carddict[card.cardID]) {
-    var details = carddict[card.cardID];
+  if (data._carddict[card.cardID]) {
+    var details = data._carddict[card.cardID];
     card.details = details;
     details.display_image = util.getCardImageURL(card);
     return details;
@@ -80,59 +80,39 @@ function getCardDetails(card) {
   }
 }
 
+function loadJSONFile(filename, attribute) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filename, 'utf8', function(err, contents) {
+      data[attribute] = JSON.parse(contents);
+      console.log(attribute + " loaded");
+      if (err) {
+        reject(err)
+      } else {
+        resolve(contents)
+      }
+    });
+  });
+}
+
 function initializeCardDb(dataRoot) {
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
-  var carddictPromise = new Promise((resolve, reject) => {
-    fs.readFile(dataRoot + '/carddict.json', 'utf8', function(err, contents) {
-      console.log("loading carddict");
-      carddict = JSON.parse(contents);
-      console.log("carddict loaded");
-      if (err) {
-        reject(err)
-      } else {
-        resolve(contents)
-      };
-    });
-  });
-  fs.readFile(dataRoot + '/cardtree.json', 'utf8', function(err, contents) {
-    data.cardtree = JSON.parse(contents);
-    console.log("cardtree loaded");
-  });
-  var cardnamesPromise = new Promise((resolve, reject) => {
-    fs.readFile(dataRoot + '/names.json', 'utf8', function(err, contents) {
-      data.cardnames = JSON.parse(contents);
-      console.log("names loaded");
-      if (err) {
-        reject(err)
-      } else {
-        resolve(contents)
-      };
-    });
-  });
-  fs.readFile(dataRoot + '/nameToId.json', 'utf8', function(err, contents) {
-    data.nameToId = JSON.parse(contents);
-    console.log("nameToId loaded");
-  });
-  fs.readFile(dataRoot + '/full_names.json', 'utf8', function(err, contents) {
-    data.full_names = JSON.parse(contents);
-    console.log("full_names loaded");
-  });
-  fs.readFile(dataRoot + '/imagedict.json', 'utf8', function(err, contents) {
-    data.imagedict = JSON.parse(contents);
-    console.log("imagedict loaded");
-  });
+  var promises = [];
+  promises.push(loadJSONFile(dataRoot + '/carddict.json', '_carddict'));
+  promises.push(loadJSONFile(dataRoot + '/cardtree.json', 'cardtree'));
+  promises.push(loadJSONFile(dataRoot + '/names.json', 'cardnames'));
+  promises.push(loadJSONFile(dataRoot + '/nameToId.json', 'nameToId'));
+  promises.push(loadJSONFile(dataRoot + '/full_names.json', 'full_names'));
+  promises.push(loadJSONFile(dataRoot + '/imagedict.json', 'imagedict'));
+  promises.push(loadJSONFile(dataRoot + '/cardimages.json', 'cardimages'));
+
   fs.watchFile(dataRoot + '/imagedict.json', (curr, prev) => {
     console.log('File Changed: imagedict');
     fs.readFile(dataRoot + '/imagedict.json', 'utf8', function(err, contents) {
       data.imagedict = JSON.parse(contents);
       console.log("imagedict reloaded");
     });
-  });
-  fs.readFile(dataRoot + '/cardimages.json', 'utf8', function(err, contents) {
-    data.cardimages = JSON.parse(contents);
-    console.log("cardimages loaded");
   });
   fs.watchFile(dataRoot + '/cardimages.json', (curr, prev) => {
     console.log('File Changed: cardimages');
@@ -176,7 +156,7 @@ function initializeCardDb(dataRoot) {
       console.log("full_names reloaded");
     });
   });
-  return Promise.all([carddictPromise, cardnamesPromise]);
+  return Promise.all(promises);
 }
 
 data.cardFromId = cardFromId;
