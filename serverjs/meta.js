@@ -1,4 +1,4 @@
-const generateMeta = function(title, description, image, url) {
+const generateMeta = function(title, description, image, url, width, height) {
   return [{
     property: 'og:title',
     content: title
@@ -11,6 +11,12 @@ const generateMeta = function(title, description, image, url) {
   }, {
     property: 'og:url',
     content: url
+  }, {
+    property: 'og:image:width',
+    content: width ? width : ''
+  }, {
+    property: 'og:image:height',
+    content: height ? height : ''
   }, {
     property: 'twitter:card',
     content: 'summary_large_image'

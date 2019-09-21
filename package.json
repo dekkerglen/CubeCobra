@@ -46,7 +46,8 @@
     "selenium-webdriver": "^4.0.0-alpha.4",
     "serve-favicon": "^2.5.0",
     "shuffle-seed": "^1.1.6",
-    "website-scraper": "^4.0.1"
+    "website-scraper": "^4.0.1",
+    "zlib": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
