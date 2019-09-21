@@ -110,5 +110,6 @@ data.getCardDetails = getCardDetails;
 data.normalizedName = card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 data.allIds = card => data.nameToId[data.normalizedName(card)];
 data.initializeCardDb = initializeCardDb;
+data.loadJSONFile = loadJSONFile;
 
 module.exports = data;
