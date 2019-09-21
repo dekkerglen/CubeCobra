@@ -77,22 +77,19 @@ function saveAllCards(arr) {
     }
     addCardToCatalog(convertCard(card));
   });
-  writeJSONFile('private/names.json', JSON.stringify(names)).then(function() {
-    var cardtree = util.turnToTree(names);
-    writeJSONFile('private/cardtree.json', JSON.stringify(cardtree)).then(function() {
-      writeJSONFile('private/carddict.json', JSON.stringify(dict)).then(function() {
-        writeJSONFile('private/nameToId.json', JSON.stringify(nameToId)).then(function() {
-          writeJSONFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))).then(function() {
-            writeJSONFile('private/imagedict.json', JSON.stringify(imagedict)).then(function() {
-              writeJSONFile('private/cardimages.json', JSON.stringify(cardimages)).then(function() {
-                console.log("All JSON files saved.");
-              });
-            });
-          });
-        });
-      });
-    });
-  });
+  var pendingWrites = [];
+  pendingWrites.push(writeJSONFile('private/names.json', JSON.stringify(names)));
+  pendingWrites.push(writeJSONFile('private/cardtree.json', JSON.stringify(util.turnToTree(names))));
+  pendingWrites.push(writeJSONFile('private/carddict.json', JSON.stringify(dict)));
+  pendingWrites.push(writeJSONFile('private/nameToId.json', JSON.stringify(nameToId)));
+  pendingWrites.push(writeJSONFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))));
+  pendingWrites.push(writeJSONFile('private/imagedict.json', JSON.stringify(imagedict)));
+  pendingWrites.push(writeJSONFile('private/cardimages.json', JSON.stringify(cardimages)));
+  var allWritesPromise = Promise.all(pendingWrites);
+  allWritesPromise.then(function() {
+    console.log("All JSON files saved.");
+  })
+  return allWritesPromise;
 }
 
 function convertExtraCard(card) {
