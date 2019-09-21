@@ -75,7 +75,50 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.carddbBucket}
+    CloudFront:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          IPV6Enabled: true
+          HttpVersion: http2
+          Comment: !Join [ '--', [!Ref 'AWS::StackName', ' CloudFront']]
+          PriceClass: PriceClass_100
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+          Origins:
+          - Id: APIGOrigin
+            DomainName: !Join
+              - ""
+              - - !Ref ApiGatewayRestApi
+                - .execute-api.${self:custom.region}.amazonaws.com
+            OriginPath: /${self:custom.stage}
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+          DefaultCacheBehavior:
+            AllowedMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+            CachedMethods: ["GET", "HEAD", "OPTIONS"]
+            ForwardedValues:
+              Headers:
+                - Access-Control-Request-Headers
+                - Access-Control-Request-Method
+                - Origin
+                - Authorization
+                # - Host APIG needs to use SNI
+              QueryString: true
+            TargetOriginId: APIGOrigin
+            ViewerProtocolPolicy: https-only
+            Compress: true
+            DefaultTTL: 0
+          CustomErrorResponses:
+            - ErrorCachingMinTTL: 0
+              ErrorCode: 400
+            - ErrorCachingMinTTL: 1
+              ErrorCode: 403
+            - ErrorCachingMinTTL: 5
+              ErrorCode: 500
 
 custom:
   stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
   carddbBucket: cubecobra-${self:custom.stage}-carddb
