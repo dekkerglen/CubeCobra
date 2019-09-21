@@ -834,35 +834,7 @@ router.get('/analysis/:id', function(req, res) {
 });
 
 router.get('/samplepack/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      generatePack(req.params.id, carddb, false, function(err, pack) {
-        if (err) {
-          req.flash('danger', 'Pack could not be created');
-          res.status(404).render('misc/404', {});
-        } else {
-          res.render('cube/cube_samplepack', {
-            cube,
-            cube_id: req.params.id,
-            title: `${abbreviate(cube.name)} - Sample Pack`,
-            pack: pack.pack,
-            seed: pack.seed,
-            activeLink: 'playtest',
-            metadata: generateMeta(
-              `Cube Cobra Random Sample Pack: ${cube.name}`,
-              (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/samplepack/${req.params.id}`
-            ),
-            loginCallback: '/cube/samplepack/' + req.params.id
-          });
-        }
-      });
-    }
-  });
+  res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
 });
 
 router.get('/samplepack/:id/:seed', function(req, res) {
@@ -886,8 +858,10 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}`,
-            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`
+            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+            CARD_WIDTH * 5,
+            CARD_HEIGHT * 3
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
         });
@@ -897,6 +871,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
 });
 
 router.get('/samplepackimage/:id/:seed', function(req, res) {
+  req.params.seed = req.params.seed.replace('.png', '');
   generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
     if (err) {
       req.flash('danger', 'Pack could not be created');
@@ -915,8 +890,7 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
         Canvas
       }).then(function(image) {
         res.writeHead(200, {
-          'Content-Type': 'image/png',
-          'Content-Length': image.length
+          'Content-Type': 'image/png'
         });
         res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
       });

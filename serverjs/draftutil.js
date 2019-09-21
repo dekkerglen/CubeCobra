@@ -21,6 +21,9 @@ var methods = {
   },
   indexOfTag: function(cards, tag) {
     tag = tag.toLowerCase();
+    if (tag == '*') {
+      return 0;
+    }
     for (var i = 0; i < cards.length; i++) {
       if (cards[i].tags && cards[i].tags.length > 0) {
         for (var j = 0; j < cards[i].tags.length; j++) {
