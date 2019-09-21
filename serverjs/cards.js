@@ -107,7 +107,6 @@ for (const file of files) {
         return;
       }
 
-      console.log('body:', response.Body.slice(0, 400));
       data[file] = JSON.parse(response.Body);
     });
   } else {
