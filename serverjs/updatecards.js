@@ -1,4 +1,5 @@
 var util = require('./util.js');
+var carddb = require('./cards.js');
 const fs = require('fs');
 const https = require('https');
 
@@ -36,25 +37,30 @@ function updateCardbase() {
 }
 
 function saveAllCards(arr) {
+  var normalizedName, normalizedFullName;
   arr.forEach(function(card, index) {
     if (card.layout == 'transform') {
       var extraCard = convertExtraCard(card);
       dict[extraCard._id] = extraCard;
-      imagedict[extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = {
+      normalizedFullName = extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      normalizedName = carddb.normalizedName(extraCard);
+      imagedict[normalizedFullName] = {
         uri: extraCard.art_crop,
         artist: extraCard.artist
       }
       //only add if it doesn't exist, this makes the default the newest edition
-      if (!nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]) {
-        nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = [];
+      if (!nameToId[normalizedName]) {
+        nameToId[normalizedName] = [];
       }
-      nameToId[extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].push(extraCard._id);
-      util.binaryInsert(extraCard.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), names);
-      util.binaryInsert(extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), full_names);
+      nameToId[normalizedName].push(extraCard._id);
+      util.binaryInsert(normalizedName, names);
+      util.binaryInsert(normaliedFullName, full_names);
     }
+    normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    normalizedName = carddb.normalizedName(card);
     card = convertCard(card);
     dict[card._id] = card;
-    imagedict[card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = {
+    imagedict[normalizedFullName] = {
       uri: card.art_crop,
       artist: card.artist
     }
@@ -63,15 +69,15 @@ function saveAllCards(arr) {
       image_normal: card.image_normal
     };
     if (card.image_flip) card_images.image_flip = card.image_flip;
-    cardimages[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = card_images;
+    cardimages[normalizedName] = card_images;
 
     //only add if it doesn't exist, this makes the default the newest edition
-    if (!nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")]) {
-      nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = [];
+    if (!nameToId[normalizedName]) {
+      nameToId[normalizedName] = [];
     }
-    nameToId[card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].push(card._id);
-    util.binaryInsert(card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), names);
-    util.binaryInsert(card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), full_names);
+    nameToId[normalizedName].push(card._id);
+    util.binaryInsert(normalizedName, names);
+    util.binaryInsert(normalizedFullName, full_names);
   });
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function(err) {
     if (err) {
