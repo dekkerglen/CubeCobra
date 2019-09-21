@@ -198,7 +198,7 @@ class FilterCollapse extends Component {
   }
 
   render() {
-    const { filter, setFilter, ...props } = this.props;
+    const { filter, setFilter, numCards, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens);
@@ -229,9 +229,11 @@ class FilterCollapse extends Component {
                 </InputGroup>
               </Form>
               <h5>Filters</h5>
-              {!filter || filter.length === 0 ? <p><em>No active filters.</em></p> :
-                filter.map(f => <div>{JSON.stringify(f)}</div>)
-              }
+              <p>
+                {!filter || filter.length === 0 ? <em>No filters applied.</em> :
+                  <em>Filters applied: {numCards} total results.</em>
+                }
+              </p>
             </Col>
           </Row>
           <Row>

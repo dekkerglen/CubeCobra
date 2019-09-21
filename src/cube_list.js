@@ -85,7 +85,9 @@ class CubeList extends Component {
                   changeCubeView={this.changeCubeView}
                   openCollapse={openCollapse}
                   setOpenCollapse={this.setOpenCollapse}
+                  filter={filter}
                   setFilter={this.setFilter}
+                  cards={filteredCards}
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
