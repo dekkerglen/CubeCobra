@@ -139,6 +139,10 @@ class FilterCollapse extends Component {
 
   updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
+    if (filterInput === '') {
+      this.props.setFilter([]);
+      return;
+    }
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens);
     if (!valid || !Filter.verifyTokens(tokens)) return;
