@@ -30,3 +30,15 @@ test("updateCardbase creates the expected files", () => {
     expect(fs.existsSync('private/full_names.json')).toBe(true);
   });
 });
+
+test("addCardToCatalog", () => {
+  // make internal members public, verify that they have been populated
+});
+
+test("saveAllCards", () => {
+  // do in test what updateCardbase does before call to saveAllCards
+  // use that as input to saveallcards for test
+});
+
+test("convertCard", () => {});
+test("convertExtraCard", () => {});
