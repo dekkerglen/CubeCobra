@@ -857,7 +857,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
           metadata: generateMeta(
             'Cube Cobra Sample Pack',
             `A sample pack from ${cube.name}`,
-            `https://www.cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}`,
+            `https://www.cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
             `https://www.cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`
           ),
           loginCallback: '/cube/samplepack/' + req.params.id
@@ -868,6 +868,7 @@ router.get('/samplepack/:id/:seed', function(req, res) {
 });
 
 router.get('/samplepackimage/:id/:seed', function(req, res) {
+  req.params.seed = req.params.seed.replace('.png','');
   generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
     if (err) {
       req.flash('danger', 'Pack could not be created');
