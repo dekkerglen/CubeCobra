@@ -54,8 +54,8 @@ function getCardDetails(card) {
     details.display_image = util.getCardImageURL(card);
     return details;
   } else {
-    console.log("Could not find: " + id);
-    return getPlaceholderCard(id);
+    console.log("Could not find: " + card.cardID);
+    return getPlaceholderCard(card.cardID);
   };
 }
 
