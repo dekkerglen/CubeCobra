@@ -31,7 +31,7 @@ afterEach(() => {});
 
 test("initializeCardDb loads files properly", () => {
   expect.assertions(6);
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     expect(Object.keys(carddb.cardtree).length).toBe(firstLetterCount);
     expect(Object.keys(carddb.imagedict).length).toBe(fixtureCardCount);
@@ -77,7 +77,7 @@ test("cardFromId returns a well-formed card object", () => {
     "toughness": "3",
     "type": "Legendary Creature — Faerie Rogue"
   };
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.cardFromId(_id);
     expect(result).toEqual(expected);
@@ -89,7 +89,7 @@ test("cardFromId returns a placeholder card object when given a nonexistent ID",
   const _id = "not real";
   var expected = placeholderCard;
   expected._id = _id;
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.cardFromId(_id);
     expect(result).toEqual(expected);
@@ -132,7 +132,7 @@ test("getCardDetails returns a well-formed card object", () => {
     "toughness": "3",
     "type": "Legendary Creature — Faerie Rogue"
   };
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.getCardDetails({
       "cardID": _id
@@ -146,7 +146,7 @@ test("getCardDetails returns a placeholder card object when given a nonexistent 
   const _id = "not real";
   var expected = placeholderCard;
   expected._id = _id;
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.getCardDetails({
       "cardID": _id
@@ -175,7 +175,7 @@ test("normalizedName normalizes unicode correctly", () => {
 
 test("allIds correctly maps a cardname to an ID", () => {
   expect.assertions(2);
-  var promise = carddb.initializeCardDb(fixturesPath);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const expected = "ee4d196e-7ce4-4dc1-9d58-102a89aca2a4";
     const result = carddb.allIds({

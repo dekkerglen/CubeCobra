@@ -75,12 +75,12 @@ function loadJSONFile(filename, attribute) {
 
 function registerFileWatcher(filename, attribute) {
   fs.watchFile(filename, (curr, prev) => {
-    console.log('File Changed: imagedict');
+    console.log('File Changed: ' + filename);
     loadJSONFile(filename, attribute)
   });
 }
 
-function initializeCardDb(dataRoot) {
+function initializeCardDb(dataRoot, skipWatchers) {
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
@@ -99,7 +99,9 @@ function initializeCardDb(dataRoot) {
     filepath = dataRoot + '/' + filename;
     attribute = fileToAttribute[filename];
     promises.push(loadJSONFile(filepath, attribute));
-    registerFileWatcher(filepath, attribute);
+    if (skipWatchers !== true) {
+      registerFileWatcher(filepath, attribute);
+    }
   }
   return Promise.all(promises);
 }
