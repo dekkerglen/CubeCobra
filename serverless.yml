@@ -99,6 +99,8 @@ resources:
             AllowedMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
             CachedMethods: ["GET", "HEAD", "OPTIONS"]
             ForwardedValues:
+              Cookies:
+                Forward: all
               Headers:
                 - Access-Control-Request-Headers
                 - Access-Control-Request-Method
