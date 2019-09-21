@@ -36,35 +36,15 @@ function updateCardbase() {
   });
 }
 
-function saveAllCards(arr) {
-  var normalizedName, normalizedFullName;
-  arr.forEach(function(card, index) {
-    if (card.layout == 'transform') {
-      var extraCard = convertExtraCard(card);
-      dict[extraCard._id] = extraCard;
-      normalizedFullName = extraCard.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      normalizedName = carddb.normalizedName(extraCard);
-      imagedict[normalizedFullName] = {
-        uri: extraCard.art_crop,
-        artist: extraCard.artist
-      }
-      //only add if it doesn't exist, this makes the default the newest edition
-      if (!nameToId[normalizedName]) {
-        nameToId[normalizedName] = [];
-      }
-      nameToId[normalizedName].push(extraCard._id);
-      util.binaryInsert(normalizedName, names);
-      util.binaryInsert(normaliedFullName, full_names);
-    }
-    normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    normalizedName = carddb.normalizedName(card);
-    card = convertCard(card);
-    dict[card._id] = card;
-    imagedict[normalizedFullName] = {
-      uri: card.art_crop,
-      artist: card.artist
-    }
-
+function addCardToCatalog(card, isExtra) {
+  dict[card._id] = card;
+  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedName = carddb.normalizedName(card);
+  imagedict[normalizedFullName] = {
+    uri: card.art_crop,
+    artist: card.artist
+  }
+  if (isExtra !== true) {
     let card_images = {
       image_normal: card.image_normal
     };
@@ -72,14 +52,23 @@ function saveAllCards(arr) {
       card_images.image_flip = card.image_flip;
     }
     cardimages[normalizedName] = card_images;
+  }
+  //only add if it doesn't exist, this makes the default the newest edition
+  if (!nameToId[normalizedName]) {
+    nameToId[normalizedName] = [];
+  }
+  nameToId[normalizedName].push(card._id);
+  util.binaryInsert(normalizedName, names);
+  util.binaryInsert(normaliedFullName, full_names);
+}
 
-    //only add if it doesn't exist, this makes the default the newest edition
-    if (!nameToId[normalizedName]) {
-      nameToId[normalizedName] = [];
+function saveAllCards(arr) {
+  var normalizedName, normalizedFullName;
+  arr.forEach(function(card, index) {
+    if (card.layout == 'transform') {
+      addCardToCatalog(convertExtraCard(card), true);
     }
-    nameToId[normalizedName].push(card._id);
-    util.binaryInsert(normalizedName, names);
-    util.binaryInsert(normalizedFullName, full_names);
+    addCardToCatalog(convertCard(card));
   });
   fs.writeFile('private/names.json', JSON.stringify(names), 'utf8', function(err) {
     if (err) {
