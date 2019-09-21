@@ -11,9 +11,6 @@ var imagedict = {};
 var cardimages = {};
 
 
-if (!fs.existsSync('private')) {
-  fs.mkdirSync('private');
-}
 
 function downloadDefaultCards() {
   var file = fs.createWriteStream('private/cards.json');
@@ -32,6 +29,9 @@ function downloadDefaultCards() {
 function updateCardbase(filepath) {
   if (filepath === undefined) {
     filepath = 'private/cards.json';
+  }
+  if (!fs.existsSync('private')) {
+    fs.mkdirSync('private');
   }
   return module.exports.downloadDefaultCards().then(function() {
     console.log("Running save");
