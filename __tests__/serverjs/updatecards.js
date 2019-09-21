@@ -1,11 +1,16 @@
+const rimraf = require("rimraf");
 const updatecards = require("../../serverjs/updatecards");
 const fs = require('fs');
 
 beforeEach(() => {
-  // delete /private
+  rimraf.sync("private");
 });
 
-test("updateCardBase creates the expected files", () => {
+afterEach(() => {
+  rimraf.sync("private");
+});
+
+test("updateCardbase creates the expected files", () => {
   expect.assertions(7);
   var promise = new Promise((resolve, reject) => {
     process.nextTick(() => {
