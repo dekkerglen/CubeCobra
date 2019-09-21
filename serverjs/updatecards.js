@@ -62,7 +62,7 @@ function addCardToCatalog(card, isExtra) {
   }
   nameToId[normalizedName].push(card._id);
   util.binaryInsert(normalizedName, names);
-  util.binaryInsert(normaliedFullName, full_names);
+  util.binaryInsert(normalizedFullName, full_names);
 }
 
 function writeJSONFile(filepath, data) {
@@ -73,7 +73,7 @@ function writeJSONFile(filepath, data) {
         console.log(err);
         reject(err);
       } else {
-        resolve(contents);
+        resolve(data);
       }
     });
   });
