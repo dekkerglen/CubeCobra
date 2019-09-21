@@ -98,14 +98,19 @@ function initializeCardDb(dataRoot) {
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
+  var fileToAttribute = {
+    'carddict.json': '_carddict',
+    'cardtree.json': 'cardtree',
+    'names.json': 'cardnames',
+    'nameToId.json': 'nameToId',
+    'full_names.json': 'full_names',
+    'imagedict.json': 'imagedict',
+    'cardimages.json': 'cardimages'
+  };
   var promises = [];
-  promises.push(loadJSONFile(dataRoot + '/carddict.json', '_carddict'));
-  promises.push(loadJSONFile(dataRoot + '/cardtree.json', 'cardtree'));
-  promises.push(loadJSONFile(dataRoot + '/names.json', 'cardnames'));
-  promises.push(loadJSONFile(dataRoot + '/nameToId.json', 'nameToId'));
-  promises.push(loadJSONFile(dataRoot + '/full_names.json', 'full_names'));
-  promises.push(loadJSONFile(dataRoot + '/imagedict.json', 'imagedict'));
-  promises.push(loadJSONFile(dataRoot + '/cardimages.json', 'cardimages'));
+  for (var filename in fileToAttribute) {
+    promises.push(loadJSONFile(dataRoot + '/' + filename, fileToAttribute[filename]));
+  }
 
   fs.watchFile(dataRoot + '/imagedict.json', (curr, prev) => {
     console.log('File Changed: imagedict');
