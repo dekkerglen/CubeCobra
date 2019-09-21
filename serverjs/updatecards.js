@@ -15,17 +15,27 @@ if (!fs.existsSync('private')) {
   fs.mkdirSync('private');
 }
 
-function updateCardbase() {
+function downloadDefaultCards() {
   var file = fs.createWriteStream('private/cards.json');
-  var request = https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
-    let stream = response.pipe(file);
-    stream.on('finish', function() {
-      var contents = fs.readFileSync('private/cards.json');
-      // Define to JSON type
-      var cards = JSON.parse(contents);
-      saveAllCards(cards);
-      console.log("Finished cardbase update...");
-    });
+  var promise = new Promise((resolve, reject) => {
+    https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
+      let stream = response.pipe(file);
+      stream.on('finish', function() {
+        console.log("resolved");
+        resolve();
+      });
+    })
+  });
+  return promise;
+}
+
+function updateCardbase() {
+  downloadDefaultCards().then(function() {
+    console.log("Running save");
+    var contents = fs.readFileSync('private/cards.json');
+    var cards = JSON.parse(contents);
+    saveAllCards(cards);
+    console.log("Finished cardbase update...");
   });
 }
 
