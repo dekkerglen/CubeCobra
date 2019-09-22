@@ -1,5 +1,6 @@
 const rimraf = require("rimraf");
 const updatecards = require("../../serverjs/updatecards");
+const carddb = require("../../serverjs/cards");
 const examplecards = require("../../fixtures/examplecards");
 const fs = require('fs');
 const cardsFixturePath = 'fixtures/cards_small.json';
@@ -110,8 +111,50 @@ test("updateCardbase creates the expected files", () => {
   });
 });
 
-test("addCardToCatalog", () => {
-  // make internal members public, verify that they have been populated
+test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
+  const card = convertedExampleCard;
+  updatecards.addCardToCatalog(card);
+  var catalog = updatecards.catalog;
+  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedName = carddb.normalizedName(card);
+  const expectedImagedictStructure = {
+    uri: card.art_crop,
+    artist: card.artist
+  };
+  const expectedCardimagesStructure = {
+    image_normal: card.image_normal
+  };
+  expect(Object.keys(catalog.dict).length).toBe(1);
+  expect(catalog.dict[card._id]).toEqual(card);
+  expect(Object.keys(catalog.imagedict).length).toBe(1);
+  expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
+  expect(Object.keys(catalog.cardimages).length).toBe(1);
+  expect(catalog.cardimages[normalizedName]).toEqual(expectedCardimagesStructure);
+  expect(Object.keys(catalog.nameToId).length).toBe(1);
+  expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.names).length).toBe(1);
+  expect(Object.keys(catalog.full_names).length).toBe(1);
+});
+
+test("addCardToCatalog successfully adds a double-faced card's information to the internal structures", () => {
+  const card = convertedExampleDoubleFacedCardFlipFace;
+  updatecards.addCardToCatalog(card, true);
+  var catalog = updatecards.catalog;
+  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedName = carddb.normalizedName(card);
+  const expectedImagedictStructure = {
+    uri: card.art_crop,
+    artist: card.artist
+  };
+  expect(Object.keys(catalog.dict).length).toBe(1);
+  expect(catalog.dict[card._id]).toEqual(card);
+  expect(Object.keys(catalog.imagedict).length).toBe(1);
+  expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
+  expect(Object.keys(catalog.cardimages).length).toBe(0);
+  expect(Object.keys(catalog.nameToId).length).toBe(1);
+  expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.names).length).toBe(1);
+  expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
 test("initializeCatalog clears the updatecards structures", () => {
