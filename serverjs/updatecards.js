@@ -22,7 +22,6 @@ function downloadDefaultCards() {
     https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
       let stream = response.pipe(file);
       stream.on('finish', function() {
-        console.log("resolved");
         resolve();
       });
     })
@@ -34,8 +33,10 @@ function updateCardbase(filepath) {
   if (filepath === undefined) {
     filepath = 'private/cards.json';
   }
+  if (!fs.existsSync('private')) {
+    fs.mkdirSync('private');
+  }
   return module.exports.downloadDefaultCards().then(function() {
-    console.log("Running save");
     var contents = fs.readFileSync(filepath);
     var cards = JSON.parse(contents);
     saveAllCards(cards);
