@@ -114,10 +114,26 @@ test("addCardToCatalog", () => {
   // make internal members public, verify that they have been populated
 });
 
-test("saveAllCards", () => {
+test("initializeCatalog clears the updatecards structures", () => {
+  expect.assertions(6);
   var contents = fs.readFileSync(cardsFixturePath);
   var cards = JSON.parse(contents);
-  updatecards.saveAllCards(cards).then(function() {
+  return updatecards.saveAllCards(cards).then(function() {
+    updatecards.initializeCatalog();
+    expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
+    expect(updatecards.catalog.names.length).toBe(0);
+    expect(updatecards.catalog.nameToId.length).toBe(0);
+    expect(updatecards.catalog.full_names.length).toBe(0);
+    expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
+    expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
+  });
+});
+
+test("saveAllCards creates the expected files", () => {
+  expect.assertions(7);
+  var contents = fs.readFileSync(cardsFixturePath);
+  var cards = JSON.parse(contents);
+  return updatecards.saveAllCards(cards).then(function() {
     expect(fs.existsSync('private/cardtree.json')).toBe(true);
     expect(fs.existsSync('private/imagedict.json')).toBe(true);
     expect(fs.existsSync('private/cardimages.json')).toBe(true);

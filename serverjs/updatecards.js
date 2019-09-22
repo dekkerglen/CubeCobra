@@ -274,6 +274,7 @@ function convertCard(card, isExtra) {
 
 module.exports = {
   initializeCatalog: initializeCatalog,
+  catalog: _catalog,
   updateCardbase: updateCardbase,
   downloadDefaultCards: downloadDefaultCards,
   saveAllCards: saveAllCards,
