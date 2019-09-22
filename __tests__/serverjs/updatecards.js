@@ -36,6 +36,39 @@ const convertedExampleCard = {
   colorcategory: 'r'
 };
 
+const convertedExampleDoubleFacedCardFlipFace = {
+  color_identity: ['G'],
+  set: 'dka',
+  collector_number: '125',
+  promo: false,
+  digital: false,
+  border_color: 'black',
+  name: 'Moonscarred Werewolf',
+  name_lower: 'moonscarred werewolf',
+  full_name: 'Moonscarred Werewolf [dka-125]',
+  artist: 'Cynthia Sheppard',
+  scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
+  rarity: 'common',
+  oracle_text: undefined,
+  _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
+  cmc: 0,
+  legalities: {
+    Legacy: false,
+    Modern: false,
+    Standard: false,
+    Pauper: false
+  },
+  parsed_cost: [],
+  colors: ['G'],
+  type: 'Creature — Werewolf',
+  tcgplayer_id: 57617,
+  power: '2',
+  image_small: undefined,
+  image_normal: undefined,
+  art_crop: undefined,
+  colorcategory: 'g'
+};
+
 const convertFnToAttribute = {
   "convertName": "name",
   "convertId": "_id",
@@ -95,13 +128,20 @@ for (var convertFn in convertFnToAttribute) {
   attribute = convertFnToAttribute[convertFn];
   test(convertFn + " properly converts a card's " + attribute, () => {
     const result = updatecards[convertFn](examplecards.exampleCard);
-    expect(result).toEqual(convertedExampleCard[attribute]);
+    expect(result).toBe(convertedExampleCard[attribute]);
   });
 }
 
-/*
-test("convertCard with isExtra", () => {
-  // XXX requires DFC
-  //const result = updatecards.convertCard(exampleCard, true);
+test("convertCard returns a correctly converted card object", () => {
+  const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
+  expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
-*/
+
+var attribute;
+for (var convertFn in convertFnToAttribute) {
+  attribute = convertFnToAttribute[convertFn];
+  test(convertFn + " properly converts a card's " + attribute, () => {
+    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
+    expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
+  });
+}

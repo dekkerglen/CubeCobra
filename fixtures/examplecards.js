@@ -81,6 +81,125 @@ const exampleCard = {
   }
 }
 
+const exampleDoubleFacedCard = {
+  object: 'card',
+  id: '6f35e364-81d9-4888-993b-acc7a53d963c',
+  oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
+  multiverse_ids: [262694, 262659],
+  mtgo_id: 43357,
+  mtgo_foil_id: 43358,
+  tcgplayer_id: 57617,
+  name: 'Scorned Villager // Moonscarred Werewolf',
+  lang: 'en',
+  released_at: '2012-02-03',
+  uri: 'https://api.scryfall.com/cards/6f35e364-81d9-4888-993b-acc7a53d963c',
+  scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
+  layout: 'transform',
+  highres_image: true,
+  cmc: 2,
+  type_line: 'Creature — Human Werewolf // Creature — Werewolf',
+  color_identity: ['G'],
+  card_faces: [{
+      object: 'card_face',
+      name: 'Scorned Villager',
+      mana_cost: '{1}{G}',
+      cmc: 0,
+      type_line: 'Creature — Human Werewolf',
+      oracle_text: '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.',
+      colors: ['G'],
+      power: '1',
+      toughness: '1',
+      flavor_text: '"My village\'s fear drove me into the wild . . ."',
+      artist: 'Cynthia Sheppard',
+      artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
+      illustration_id: '0d4098f2-0d18-47a0-b79e-0875511dde0c',
+      image_uris: [{
+        small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        large: 'https://img.scryfall.com/cards/large/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        png: 'https://img.scryfall.com/cards/png/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+        art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        border_crop: 'https://img.scryfall.com/cards/border_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188'
+      }]
+    },
+    {
+      object: 'card_face',
+      name: 'Moonscarred Werewolf',
+      mana_cost: '',
+      cmc: 0,
+      type_line: 'Creature — Werewolf',
+      oracle_text: 'Vigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewol f.  ',
+      colors: ['G'],
+      color_indicator: ['G'],
+      power: '2',
+      toughness: '2',
+      flavor_text: '". . . and I will bring the fury of the wild back to my village."',
+      artist: 'Cynthia Sheppard',
+      artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
+      illustration_id: 'd91819c2-9961-4c71-a27a-9e6c1b469d7e',
+      image_uris: [{
+        small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        large: 'https://img.scryfall.com/cards/large/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        png: 'https://img.scryfall.com/cards/png/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+        art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        border_crop: 'https://img.scryfall.com/cards/border_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188'
+      }]
+    }
+  ],
+  legalities: {
+    standard: 'not_legal',
+    future: 'not_legal',
+    modern: 'legal',
+    legacy: 'legal',
+    pauper: 'legal',
+    vintage: 'legal',
+    penny: 'legal',
+    commander: 'legal',
+    brawl: 'not_legal',
+    duel: 'legal',
+    oldschool: 'not_legal'
+  },
+  games: ['mtgo', 'paper'],
+  reserved: false,
+  foil: true,
+  nonfoil: true,
+  oversized: false,
+  promo: false,
+  reprint: false,
+  variation: false,
+  set: 'dka',
+  set_name: 'Dark Ascension',
+  set_type: 'expansion',
+  set_uri: 'https://api.scryfall.com/sets/8052750a-aaf2-46fc-b46d-633f14124017',
+  set_search_uri: 'https://api.scryfall.com/cards/search?order=set&q=e%3Adka&unique=prints',
+  scryfall_set_uri: 'https://scryfall.com/sets/dka?utm_source=api',
+  rulings_uri: 'https://api.scryfall.com/cards/6f35e364-81d9-4888-993b-acc7a53d963c/rulings',
+  prints_search_uri: 'https://api.scryfall.com/cards/search?order=released&q=oracleid%3A52855f90-19c1-46c9-8eed-88b3c1722bb0&unique=prints',
+  collector_number: '125',
+  digital: false,
+  rarity: 'common',
+  card_back_id: '0aeebaf5-8c7d-4636-9e82-8c27447861f7',
+  artist: 'Cynthia Sheppard',
+  artist_ids: ['9dfbdd58-65e6-40cf-951a-80e141061939'],
+  border_color: 'black',
+  frame: '2003',
+  frame_effect: 'sunmoondfc',
+  frame_effects: ['sunmoondfc'],
+  full_art: false,
+  textless: false,
+  booster: true,
+  story_spotlight: false,
+  edhrec_rank: 4758,
+  related_uris: {
+    gatherer: 'https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=262694',
+    tcgplayer_decks: 'https://decks.tcgplayer.com/magic/deck/search?contains=Scorned+Villager&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall & utm_source = scryfall ',
+    edhrec: 'https://edhrec.com/route/?cc=Scorned+Villager',
+    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Scorned+Villager'
+  }
+};
+
 module.exports = {
-  exampleCard: exampleCard
+  exampleCard: exampleCard,
+  exampleDoubleFacedCard: exampleDoubleFacedCard
 }
