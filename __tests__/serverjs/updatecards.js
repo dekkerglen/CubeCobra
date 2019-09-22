@@ -38,6 +38,7 @@ test("addCardToCatalog", () => {
 test("saveAllCards", () => {
   // do in test what updateCardbase does before call to saveAllCards
   // use that as input to saveallcards for test
+  // requires an unload function to be run before every test
 });
 
 test("convertCard", () => {});
