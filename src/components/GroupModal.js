@@ -192,15 +192,18 @@ class GroupModal extends Component {
       'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
       '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
 
+    const contextChildren =
+      <GroupModalContext.Provider value={{ groupModalCards: cards, openGroupModal: this.open, setGroupModalCards: this.setCards }}>
+        {children}
+      </GroupModalContext.Provider>;
+
     if (!canEdit) {
-      return <>{children}</>;
+      return contextChildren;
     }
 
     const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
     return <>
-      <GroupModalContext.Provider value={{ groupModalCards: cards, openGroupModal: this.open, setGroupModalCards: this.setCards }}>
-        {children}
-      </GroupModalContext.Provider>
+      {contextChildren}
       <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>
         <ModalHeader toggle={this.close}>Edit Selected</ModalHeader>
         <ModalBody>
