@@ -164,12 +164,12 @@ class CubeListNavbar extends Component {
                 <DropdownToggle nav caret>{canEdit ? 'Import/Export' : 'Export'}</DropdownToggle>
                 <DropdownMenu right>
                   {!canEdit ? '' : <>
-                    <DropdownItem disabled>Export</DropdownItem>
+                    <DropdownItem disabled>Import</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#pasteBulkModal">Paste Text</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#uploadBulkModal">Upload File</DropdownItem>
                     <DropdownItem data-toggle="modal" data-target="#importModal">Import from CubeTutor</DropdownItem>
                     <DropdownItem divider />
-                    <DropdownItem disabled>Import</DropdownItem>
+                    <DropdownItem disabled>Export</DropdownItem>
                   </>}
                   <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
                   <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
