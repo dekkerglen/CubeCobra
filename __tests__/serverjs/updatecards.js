@@ -82,6 +82,7 @@ const convertFnToAttribute = {
 
 beforeEach(() => {
   rimraf.sync("private");
+  updatecards.initializeCatalog();
 });
 
 afterEach(() => {
@@ -114,9 +115,17 @@ test("addCardToCatalog", () => {
 });
 
 test("saveAllCards", () => {
-  // do in test what updateCardbase does before call to saveAllCards
-  // use that as input to saveallcards for test
-  // requires an unload function to be run before every test
+  var contents = fs.readFileSync(cardsFixturePath);
+  var cards = JSON.parse(contents);
+  updatecards.saveAllCards(cards).then(function() {
+    expect(fs.existsSync('private/cardtree.json')).toBe(true);
+    expect(fs.existsSync('private/imagedict.json')).toBe(true);
+    expect(fs.existsSync('private/cardimages.json')).toBe(true);
+    expect(fs.existsSync('private/names.json')).toBe(true);
+    expect(fs.existsSync('private/carddict.json')).toBe(true);
+    expect(fs.existsSync('private/nameToId.json')).toBe(true);
+    expect(fs.existsSync('private/full_names.json')).toBe(true);
+  });
 });
 
 test("convertCard returns a correctly converted card object", () => {
