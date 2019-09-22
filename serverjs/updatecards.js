@@ -105,62 +105,80 @@ function saveAllCards(arr) {
 
 function convertCard(card, isExtra) {
   var faceAttributeSource;
+  let newcard = {};
+  var name;
+  newcard.colors = [];
+  newcard.color_identity = [];
+  newcard.color_identity = newcard.color_identity.concat(card.color_identity);
   if (isExtra) {
     faceAttributeSource = card.card_faces[1];
-  } else {
-    if (card.card_faces) {
-      faceAttributeSource = card.card_faces[0];
-    } else {
-      faceAttributeSource = card;
-    }
-  }
-  if (isExtra) {
-    var name = card.name.substring(card.name.indexOf('/') + 2).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  } else {
-    if (card.name.includes('/') && card.layout != 'split') {
-      card.name = card.name.substring(0, card.name.indexOf('/')).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-  }
-  let newcard = {};
-  newcard._id = card.id;
-  if (isExtra) {
-    newcard._id += '2';
-  }
-  newcard.set = card.set;
-  newcard.collector_number = card.collector_number;
-  newcard.promo = card.promo;
-  newcard.digital = card.digital;
-  newcard.border_color = card.border_color;
-  newcard.full_name = name + ' [' + card.set + '-' + card.collector_number + ']';
-  if (isExtra) {
-    newcard.name = name;
-  } else {
-    newcard.name = card.name;
-  }
-  if (isExtra) {
+    name = card.name.substring(card.name.indexOf('/') + 2).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    newcard._id = card.id + '2';
     newcard.name_lower = name.toLowerCase();
-  } else {
-    newcard.name_lower = card.name.toLowerCase();
-  }
-  newcard.artist = card.artist;
-  newcard.scryfall_uri = card.scryfall_uri;
-  newcard.rarity = card.rarity;
-  newcard.oracle_text = card.oracle_text;
-  if (isExtra) {
     newcard.legalities = {
       Legacy: false,
       Modern: false,
       Standard: false,
       Pauper: false,
     };
+    newcard.type = card.type_line.substring(card.type_line.indexOf('/') + 2).trim();
+    newcard.parsed_cost = [];
+    newcard.colors = newcard.colors.concat(card.card_faces[1].colors);
+    newcard.cmc = 0;
   } else {
+    if (card.card_faces) {
+      faceAttributeSource = card.card_faces[0];
+    } else {
+      faceAttributeSource = card;
+    }
+    name = card.name;
+    if (card.name.includes('/') && card.layout != 'split') {
+      name = card.name.substring(0, card.name.indexOf('/')).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    newcard._id = card.id;
+    newcard.name_lower = name.toLowerCase();
     newcard.legalities = {
       Legacy: card.legalities.legacy == 'legal',
       Modern: card.legalities.modern == 'legal',
       Standard: card.legalities.standard == 'legal',
       Pauper: card.legalities.pauper == 'legal'
     };
+    if (card.type_line.includes('//')) {
+      newcard.type = card.type_line.substring(0, card.type_line.indexOf('/'));
+    } else {
+      newcard.type = card.type_line;
+    }
+    if (newcard.type == 'Artifact — Contraption') {
+      newcard.type = 'Artifact Contraption';
+    }
+    if (!card.card_faces || card.layout == 'flip') {
+      newcard.colors = newcard.colors.concat(card.colors);
+      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).toLowerCase().split('}{').reverse();
+    } else if (card.layout == 'split') {
+      newcard.colors = newcard.colors.concat(card.colors);
+      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).replace(' // ', '{split}').toLowerCase().split('}{').reverse();
+    } else if (card.card_faces[0].colors) {
+      newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
+      newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1, card.card_faces[0].mana_cost.length - 2).toLowerCase().split('}{').reverse();
+    }
+    if (newcard.parsed_cost) {
+      newcard.parsed_cost.forEach(function(item, index) {
+        newcard.parsed_cost[index] = item.replace('/', '-');
+      });
+    }
+    newcard.cmc = card.cmc;
   }
+  newcard.set = card.set;
+  newcard.collector_number = card.collector_number;
+  newcard.promo = card.promo;
+  newcard.digital = card.digital;
+  newcard.border_color = card.border_color;
+  newcard.name = name;
+  newcard.full_name = name + ' [' + card.set + '-' + card.collector_number + ']';
+  newcard.artist = card.artist;
+  newcard.scryfall_uri = card.scryfall_uri;
+  newcard.rarity = card.rarity;
+  newcard.oracle_text = card.oracle_text;
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;
   }
@@ -181,44 +199,6 @@ function convertCard(card, isExtra) {
     newcard.image_small = card.image_uris.small;
     newcard.image_normal = card.image_uris.normal;
     newcard.art_crop = card.image_uris.art_crop;
-  }
-  newcard.cmc = isExtra ? 0 : card.cmc;
-  if (isExtra) {
-    newcard.type = card.type_line.substring(card.type_line.indexOf('/') + 2).trim();
-  } else {
-    if (card.type_line.includes('//')) {
-      newcard.type = card.type_line.substring(0, card.type_line.indexOf('/'));
-    } else {
-      newcard.type = card.type_line;
-    }
-  }
-  if (!isExtra) {
-    if (newcard.type == 'Artifact — Contraption') {
-      newcard.type = 'Artifact Contraption';
-    }
-  }
-  newcard.colors = [];
-  newcard.color_identity = [];
-  newcard.color_identity = newcard.color_identity.concat(card.color_identity);
-  if (isExtra) {
-    newcard.parsed_cost = [];
-    newcard.colors = newcard.colors.concat(card.card_faces[1].colors);
-  } else {
-    if (!card.card_faces || card.layout == 'flip') {
-      newcard.colors = newcard.colors.concat(card.colors);
-      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).toLowerCase().split('}{').reverse();
-    } else if (card.layout == 'split') {
-      newcard.colors = newcard.colors.concat(card.colors);
-      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).replace(' // ', '{split}').toLowerCase().split('}{').reverse();
-    } else if (card.card_faces[0].colors) {
-      newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
-      newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1, card.card_faces[0].mana_cost.length - 2).toLowerCase().split('}{').reverse();
-    }
-    if (newcard.parsed_cost) {
-      newcard.parsed_cost.forEach(function(item, index) {
-        newcard.parsed_cost[index] = item.replace('/', '-');
-      });
-    }
   }
   if (newcard.type.toLowerCase().includes('land')) {
     newcard.colorcategory = 'l';
