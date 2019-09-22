@@ -197,6 +197,6 @@ const CubeListNavbar = props =>
         }
       </CardModalContext.Consumer>
     }
-  </GroupModalContext.Consumer>
+  </GroupModalContext.Consumer>;
 
 export default CubeListNavbar;
