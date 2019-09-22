@@ -34,9 +34,6 @@ function updateCardbase(filepath) {
   if (filepath === undefined) {
     filepath = 'private/cards.json';
   }
-  if (!fs.existsSync('private')) {
-    fs.mkdirSync('private');
-  }
   return module.exports.downloadDefaultCards().then(function() {
     console.log("Running save");
     var contents = fs.readFileSync(filepath);
@@ -93,6 +90,9 @@ function saveAllCards(arr) {
     }
     addCardToCatalog(convertCard(card));
   });
+  if (!fs.existsSync('private')) {
+    fs.mkdirSync('private');
+  }
   var pendingWrites = [];
   pendingWrites.push(writeFile('private/names.json', JSON.stringify(_catalog.names)));
   pendingWrites.push(writeFile('private/cardtree.json', JSON.stringify(util.turnToTree(_catalog.names))));
