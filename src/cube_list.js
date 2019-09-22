@@ -6,6 +6,7 @@ import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
+import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
@@ -19,23 +20,26 @@ class CubeList extends Component {
     this.state = {
       cards: this.props.defaultCards,
       cubeView: 'table',
+      openCollapse: null,
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
+    this.setOpenCollapse = this.setOpenCollapse.bind(this);
 
     /* global */
     updateCubeListeners.push(cards => this.setState({ cards }));
+
+    /* global */
+    editListeners.push(() => this.setState({ openCollapse: 'edit' }));
   }
 
   componentDidMount() {
     /* global */
-    init_groupcontextModal();
     autocard_init('autocard');
   }
 
   componentDidUpdate() {
     /* global */
-    init_groupcontextModal();
     autocard_init('autocard');
   }
 
@@ -43,9 +47,15 @@ class CubeList extends Component {
     this.setState({ cubeView });
   }
 
+  setOpenCollapse(collapseFunction) {
+    this.setState(({ openCollapse }) => ({
+      openCollapse: collapseFunction(openCollapse),
+    }));
+  }
+
   render() {
-    const { defaultCards, canEdit } = this.props;
-    const { cards, cubeView } = this.state;
+    const { cubeID, canEdit } = this.props;
+    const { cards, cubeView, openCollapse } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
@@ -56,20 +66,24 @@ class CubeList extends Component {
         <DisplayContext.Provider>
           <TagContext.Provider defaultTags={defaultTags}>
             <CardModalForm canEdit={canEdit}>
-              <CubeListNavbar
-                canEdit={canEdit}
-                cubeID={cubeID}
-                cubeView={cubeView}
-                changeCubeView={this.changeCubeView}
-                hasCustomImages={cards.some(card => card.imgUrl)}
-              />
-              <DynamicFlash />
-              {{
-                'table': <TableView cards={cards} />,
-                'spoiler': <VisualSpoiler cards={cards} />,
-                'curve': <CurveView cards={cards} />,
-                'list': <ListView cards={cards} />,
-              }[cubeView]}
+              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
+                <CubeListNavbar
+                  canEdit={canEdit}
+                  cubeID={cubeID}
+                  cubeView={cubeView}
+                  changeCubeView={this.changeCubeView}
+                  openCollapse={openCollapse}
+                  setOpenCollapse={this.setOpenCollapse}
+                  hasCustomImages={cards.some(card => card.imgUrl)}
+                />
+                <DynamicFlash />
+                {{
+                  'table': <TableView cards={cards} />,
+                  'spoiler': <VisualSpoiler cards={cards} />,
+                  'curve': <CurveView cards={cards} />,
+                  'list': <ListView cubeID={cubeID} cards={cards} />,
+                }[cubeView]}
+              </GroupModal>
             </CardModalForm>
           </TagContext.Provider>
         </DisplayContext.Provider>

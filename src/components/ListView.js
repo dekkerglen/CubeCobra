@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Col, Input, Row } from 'reactstrap';
 
 import DisplayContext from './DisplayContext';
+import GroupModalContext from './GroupModalContext';
 import PagedTable from './PagedTable';
 import SortContext from './SortContext';
 import TagInput from './TagInput';
@@ -150,6 +151,10 @@ class ListViewRaw extends Component {
     this.syncCard(cardIndex);
   }
 
+  getChecked() {
+    return this.props.cards.filter(({ index }) => this.state[`tdcheck${index}`]);
+  }
+
   handleChange(event) {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -164,9 +169,14 @@ class ListViewRaw extends Component {
       this.syncCard(index);
     }
 
-    // See comment below; this should be restructured.
     if (name.startsWith('tdcheck')) {
-      cube[index].checked = value;
+      let checked = this.getChecked();
+      if (value && !checked.some(card => card.index === index)) {
+        checked.push(this.props.cards.find(card => card.index === index));
+      } else if (!value) {
+        checked = checked.filter(card => card.index !== index);
+      }
+      this.props.setGroupModalCards(checked);
     }
   }
 
@@ -180,18 +190,14 @@ class ListViewRaw extends Component {
     const target = event.target;
     const value = target.checked;
 
-    // This breaks React invariants and we should figure out a different way to pass this data around.
-    // Currently necessary to get the group context modal to work.
-    for (const card of this.props.cards) {
-      card.checked = value;
-    }
-
     const entries = this.props.cards.map(({ index }) => [`tdcheck${index}`, value]);
     this.setState(Object.fromEntries(entries));
+
+    this.props.setGroupModalCards(this.props.cards);
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, changeSort, showTagColors, ...props } = this.props;
+    const { cards, primary, secondary, tertiary, changeSort, showTagColors } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
       groups[label1] = {};
@@ -266,7 +272,7 @@ class ListViewRaw extends Component {
 
     return (
       <form className="form-inline">
-        <PagedTable rows={rows} size="sm" {...props}>
+        <PagedTable rows={rows} size="sm">
           <thead>
             <tr>
               <th className="align-middle">
@@ -292,7 +298,15 @@ const ListView = props =>
     {sortValue =>
       <DisplayContext.Consumer>
         {({ showTagColors }) =>
-          <ListViewRaw {...sortValue} showTagColors={showTagColors} {...props} />
+          <GroupModalContext.Consumer>
+            {({ setGroupModalCards, openGroupModal }) =>
+              <ListViewRaw
+                {...sortValue}
+                {...{ showTagColors, setGroupModalCards, openGroupModal }}
+                {...props}
+              />
+            }
+          </GroupModalContext.Consumer>
         }
       </DisplayContext.Consumer>
     }

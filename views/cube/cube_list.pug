@@ -17,7 +17,6 @@ block cube_toolbar
     input#sort2(type='hidden', value=cube.default_sorts[1])
 
 block cube_content
-  .container#cubelistarea
   #react-root
 
   // Filter Modal
@@ -195,95 +194,6 @@ block cube_content
         .modal-footer
           button.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
           button.btn.btn-success#applyAdvancedFilterButton(type='button') Apply
-
-  //group context modal
-  if user && user.id == cube.owner
-    #groupContextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-      .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-        .modal-content
-          .modal-header
-            h5.modal-title Edit Selected
-            button.close(type='button', data-dismiss='modal', aria-label='Close')
-              span(aria-hidden='true') ×
-          .row.no-gutters
-            .col-4#groupContextModalAreaContainer(style='padding: 4px;')
-              #groupContextModalArea
-              .price-area
-            .col-8
-              .modal-body
-                .controls
-                  h5 Set Status of All
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Status
-                    select#groupContextModalStatusSelect.custom-select(aria-label='Example select with button addon')
-                      option(selected='')
-                      option(value='Not Owned') Not Owned
-                      option(value='Ordered') Ordered
-                      option(value='Owned') Owned
-                      option(value='Premium Owned') Premium Owned
-                  h5 Override Attribute on All
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text CMC
-                    input#groupContextModalCMC.form-control(type='text', value='2')
-                  .input-group.mb-3
-                    .input-group-prepend
-                      span.input-group-text Type
-                    input#groupContextModalType.form-control(type='text', value='2')
-                  h5 Color Identity Override:
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                    label.form-check-label(for='groupContextModalCheckboxW')
-                      img(src='/content/symbols/w.png' alt='White' title='White')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                    label.form-check-label(for='groupContextModalCheckboxU')
-                      img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                    label.form-check-label(for='groupContextModalCheckboxB')
-                      img(src='/content/symbols/b.png' alt='Black' title='Black')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                    label.form-check-label(for='groupContextModalCheckboxR')
-                      img(src='/content/symbols/r.png' alt='Red' title='Red')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                    label.form-check-label(for='groupContextModalCheckboxG')
-                      img(src='/content/symbols/g.png' alt='Green' title='Green')
-                  .form-check.form-check-inline
-                    input#groupContextModalCheckboxC.form-check-input(type='checkbox', value='option6')
-                    label.form-check-label(for='groupContextModalCheckboxC')
-                      img(src='/content/symbols/c.png' alt='Colorless' title='Colorless')
-                  br
-                  em Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting only colorless will cause the selected cards' color identity to be set to colorless.
-                  br
-                  br
-                  h5 Edit Tags
-                  .form-check
-                    input#groupContextAdd.form-check-input(type='radio', name='nameType', value='~', checked='')
-                    label.form-check-label(for='groupContextAdd') Add tags to All
-                  .form-check
-                    input#groupContextRemove.form-check-input(type='radio', name='nameType', value='=')
-                    label.form-check-label(for='groupContextRemove') Remove tags from All
-                  br
-                  .tags-area#groupContextTags
-                    .tags-input(data-name='tags-input')
-                      span.tags
-                      input.hidden-input(type='hidden')
-                      input.main-input(maxlength="24")
-                br
-                br
-                p
-                  em TCGplayer currently does not support mass entry while preserving card versions, be sure to verify any card versions after using 'Buy all'.
-
-          .modal-footer
-            button#groupContextRemoveButton.btn.btn-danger(type='button') Remove all from cube
-            form#groupContextBuyForm(method='POST', action='#', target="_blank")
-              input#groupContextBuyHidden.form-control.col-sm-9(name='c', type='hidden')
-              input.btn.btn-secondary(type='submit',value='Buy all')
-            button#groupContextModalSubmit.btn.btn-success(type='button') Apply to all
 
   // Modal
   #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
