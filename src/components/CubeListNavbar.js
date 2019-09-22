@@ -97,7 +97,7 @@ class CubeListNavbarRaw extends Component {
   }
 
   render() {
-    const { canEdit, cubeView, cubeID, hasCustomImages } = this.props;
+    const { canEdit, cubeView, cubeID, hasCustomImages, filter, setFilter, cards } = this.props;
     /* global */
     return (
       <div className="usercontrols">
@@ -178,7 +178,7 @@ class CubeListNavbarRaw extends Component {
           <EditCollapse cubeID={cubeID} isOpen={this.props.openCollapse === 'edit'} />
         }
         <SortCollapse isOpen={this.props.openCollapse === 'sort'} />
-        <FilterCollapse isOpen={this.props.openCollapse === 'filter'} />
+        <FilterCollapse filter={filter} setFilter={setFilter} numCards={cards.length} isOpen={this.props.openCollapse === 'filter'} />
         <CompareCollapse isOpen={this.props.openCollapse === 'compare'} />
       </div>
     );

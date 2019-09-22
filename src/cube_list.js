@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import Filter from './util/Filter';
+import Hash from './util/Hash';
+
 import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
@@ -18,16 +21,14 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
-      cards: this.props.defaultCards,
-      cubeView: 'table',
-      openCollapse: null,
+      cubeView: Hash.get('view', 'table'),
+      openCollapse: Hash.get('f', false) ? 'filter' : null,
+      filter: [],
     };
 
     this.changeCubeView = this.changeCubeView.bind(this);
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
-
-    /* global */
-    updateCubeListeners.push(cards => this.setState({ cards }));
+    this.setFilter = this.setFilter.bind(this);
 
     /* global */
     editListeners.push(() => this.setState({ openCollapse: 'edit' }));
@@ -44,6 +45,11 @@ class CubeList extends Component {
   }
 
   changeCubeView(cubeView) {
+    if (cubeView === 'table') {
+      Hash.del('view')
+    } else {
+      Hash.set('view', cubeView);
+    }
     this.setState({ cubeView });
   }
 
@@ -53,14 +59,19 @@ class CubeList extends Component {
     }));
   }
 
+  setFilter(filter) {
+    this.setState({ filter });
+  }
+
   render() {
-    const { cubeID, canEdit } = this.props;
-    const { cards, cubeView, openCollapse } = this.state;
+    const { cards, cubeID, canEdit } = this.props;
+    const { cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
       text: tag,
     }))
+    const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
@@ -74,14 +85,18 @@ class CubeList extends Component {
                   changeCubeView={this.changeCubeView}
                   openCollapse={openCollapse}
                   setOpenCollapse={this.setOpenCollapse}
+                  filter={filter}
+                  setFilter={this.setFilter}
+                  cards={filteredCards}
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
+                {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
                 {{
-                  'table': <TableView cards={cards} />,
-                  'spoiler': <VisualSpoiler cards={cards} />,
-                  'curve': <CurveView cards={cards} />,
-                  'list': <ListView cubeID={cubeID} cards={cards} />,
+                  'table': <TableView cards={filteredCards} />,
+                  'spoiler': <VisualSpoiler cards={filteredCards} />,
+                  'curve': <CurveView cards={filteredCards} />,
+                  'list': <ListView cubeID={cubeID} cards={filteredCards} />,
                 }[cubeView]}
               </GroupModal>
             </CardModalForm>
@@ -100,5 +115,5 @@ cube.forEach((card, index) => {
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = <CubeList cards={cube} canEdit={canEdit} cubeID={cubeID} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
