@@ -56,6 +56,11 @@ class EditCollapse extends Component {
     this.handlePostChange = this.handlePostChange.bind(this);
   }
 
+  componentDidUpdate() {
+    /* global */
+    updateCollapse();
+  }
+
   handlePostChange(event) {
     this.setState({ postContent: event.target.value });
   }
