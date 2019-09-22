@@ -39,8 +39,8 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>;
 
-const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'rarity'];
-const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'rarity'];
+const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) =>
   <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
@@ -79,12 +79,12 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             )}
           </Input>
         </InputGroup>
-        <NumericField name="price" humanName="Price" placeholder={'Any decimal number, e.g. "3.50"'} />
-        <NumericField name="priceFoil" humanName="Foil Price" placeholder={'Any decimal number, e.g. "14.00"'} />
-        <NumericField name="power" humanName="Power" placeholder={'Any value, e.g. "2"'} />
-        <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} />
-        <NumericField name="loyalty" humanName="Loyalty" placeholder={'Any value, e.g. "3"'} />
-        <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} />
+        <NumericField name="price" humanName="Price" placeholder={'Any decimal number, e.g. "3.50"'} value={values.price} onChange={onChange} />
+        <NumericField name="priceFoil" humanName="Foil Price" placeholder={'Any decimal number, e.g. "14.00"'} value={values.priceFoil} onChange={onChange} />
+        <NumericField name="power" humanName="Power" placeholder={'Any value, e.g. "2"'} value={values.power} onChange={onChange} />
+        <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} value={values.toughness} onChange={onChange} />
+        <NumericField name="loyalty" humanName="Loyalty" placeholder={'Any value, e.g. "3"'} value={values.loyalty} onChange={onChange} />
+        <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} value={values.rarity} onChange={onChange} />
       </ModalBody>
       <ModalFooter>
         <Button color="danger" aria-label="Close" onClick={toggle}>Cancel</Button>
