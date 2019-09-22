@@ -3,12 +3,18 @@ var carddb = require('./cards.js');
 const fs = require('fs');
 const https = require('https');
 
-var dict = {};
-var names = [];
-var nameToId = {};
-var full_names = [];
-var imagedict = {};
-var cardimages = {};
+var _catalog = {};
+
+function initializeCatalog() {
+  _catalog.dict = {};
+  _catalog.names = [];
+  _catalog.nameToId = [];
+  _catalog.full_names = [];
+  _catalog.imagedict = {};
+  _catalog.cardimages = {};
+};
+
+initializeCatalog();
 
 function downloadDefaultCards() {
   var file = fs.createWriteStream('private/cards.json');
@@ -41,10 +47,10 @@ function updateCardbase(filepath) {
 }
 
 function addCardToCatalog(card, isExtra) {
-  dict[card._id] = card;
+  _catalog.dict[card._id] = card;
   const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const normalizedName = carddb.normalizedName(card);
-  imagedict[normalizedFullName] = {
+  _catalog.imagedict[normalizedFullName] = {
     uri: card.art_crop,
     artist: card.artist
   }
@@ -55,15 +61,15 @@ function addCardToCatalog(card, isExtra) {
     if (card.image_flip) {
       card_images.image_flip = card.image_flip;
     }
-    cardimages[normalizedName] = card_images;
+    _catalog.cardimages[normalizedName] = card_images;
   }
   //only add if it doesn't exist, this makes the default the newest edition
-  if (!nameToId[normalizedName]) {
-    nameToId[normalizedName] = [];
+  if (!_catalog.nameToId[normalizedName]) {
+    _catalog.nameToId[normalizedName] = [];
   }
-  nameToId[normalizedName].push(card._id);
-  util.binaryInsert(normalizedName, names);
-  util.binaryInsert(normalizedFullName, full_names);
+  _catalog.nameToId[normalizedName].push(card._id);
+  util.binaryInsert(normalizedName, _catalog.names);
+  util.binaryInsert(normalizedFullName, _catalog.full_names);
 }
 
 function writeFile(filepath, data) {
@@ -88,13 +94,13 @@ function saveAllCards(arr) {
     addCardToCatalog(convertCard(card));
   });
   var pendingWrites = [];
-  pendingWrites.push(writeFile('private/names.json', JSON.stringify(names)));
-  pendingWrites.push(writeFile('private/cardtree.json', JSON.stringify(util.turnToTree(names))));
-  pendingWrites.push(writeFile('private/carddict.json', JSON.stringify(dict)));
-  pendingWrites.push(writeFile('private/nameToId.json', JSON.stringify(nameToId)));
-  pendingWrites.push(writeFile('private/full_names.json', JSON.stringify(util.turnToTree(full_names))));
-  pendingWrites.push(writeFile('private/imagedict.json', JSON.stringify(imagedict)));
-  pendingWrites.push(writeFile('private/cardimages.json', JSON.stringify(cardimages)));
+  pendingWrites.push(writeFile('private/names.json', JSON.stringify(_catalog.names)));
+  pendingWrites.push(writeFile('private/cardtree.json', JSON.stringify(util.turnToTree(_catalog.names))));
+  pendingWrites.push(writeFile('private/carddict.json', JSON.stringify(_catalog.dict)));
+  pendingWrites.push(writeFile('private/nameToId.json', JSON.stringify(_catalog.nameToId)));
+  pendingWrites.push(writeFile('private/full_names.json', JSON.stringify(util.turnToTree(_catalog.full_names))));
+  pendingWrites.push(writeFile('private/imagedict.json', JSON.stringify(_catalog.imagedict)));
+  pendingWrites.push(writeFile('private/cardimages.json', JSON.stringify(_catalog.cardimages)));
   var allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(function() {
     console.log("All JSON files saved.");
@@ -267,8 +273,10 @@ function convertCard(card, isExtra) {
 }
 
 module.exports = {
+  initializeCatalog: initializeCatalog,
   updateCardbase: updateCardbase,
   downloadDefaultCards: downloadDefaultCards,
+  saveAllCards: saveAllCards,
   convertCard: convertCard,
   convertName: convertName,
   convertId: convertId,
