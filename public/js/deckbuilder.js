@@ -172,13 +172,19 @@ function renderDraft() {
 
   var lands = 0;
   var cards = 0;
+  var creatures = 0;
   //fill up deck
   deck.playerdeck.forEach(function(col, index) {
     var colhtml = "";
+    var i = 0;
     col.forEach(function(card, index2) {
+      i= i+1;
       cards++;
       if (card.details.type.toLowerCase().includes('land')) {
         lands++;
+      }
+      if (card.details.type.toLowerCase().includes('creature')){
+        creatures++;
       }
       if (card.details.card_flip) {
         colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
@@ -186,19 +192,27 @@ function renderDraft() {
         colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
+    if (i>0){
+     colhtml = '<p style="text-align:center;margin:0">' + i.toString()  + '</p>' + colhtml;
+    }
     $('#deckColumn' + index).html(colhtml);
   });
-  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands)')
+  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands, '+ creatures + ' creatures)')
   //fill up sideboard
   deck.playersideboard.forEach(function(col, index) {
-    var colhtml = "";
+    var colhtml ='';
+    var i = 0;
     col.forEach(function(card, index2) {
+      i= i+1;
       if (card.details.card_flip) {
         colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-      } else {
+      } else {        
         colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
+    if (i > 0){
+      colhtml = '<p style=text-align:center>' + i.toString()  + '</p>' + colhtml;
+    }
     $('#sideboardColumn' + index).html(colhtml);
   });
 
