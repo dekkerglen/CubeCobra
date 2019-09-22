@@ -175,45 +175,22 @@ function renderDraft() {
   var creatures = 0;
   //fill up deck
   deck.playerdeck.forEach(function(col, index) {
-    var colhtml = "";
-    var i = 0;
     col.forEach(function(card, index2) {
-      i= i+1;
       cards++;
       if (card.details.type.toLowerCase().includes('land')) {
         lands++;
       }
-      if (card.details.type.toLowerCase().includes('creature')){
+      if (card.details.type.toLowerCase().includes('creature')) {
         creatures++;
       }
-      if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-      } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-      }
     });
-    if (i>0){
-     colhtml = '<p style="text-align:center;margin:0">' + i.toString()  + '</p>' + colhtml;
-    }
-    $('#deckColumn' + index).html(colhtml);
+
+    $('#deckColumn' + index).html(getCardColumnHtml(col, index));
   });
-  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands, '+ creatures + ' creatures)')
+  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands, ' + creatures + ' creatures)')
   //fill up sideboard
   deck.playersideboard.forEach(function(col, index) {
-    var colhtml ='';
-    var i = 0;
-    col.forEach(function(card, index2) {
-      i= i+1;
-      if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-      } else {        
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" href="#"><img class="sideboardcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-      }
-    });
-    if (i > 0){
-      colhtml = '<p style=text-align:center>' + i.toString()  + '</p>' + colhtml;
-    }
-    $('#sideboardColumn' + index).html(colhtml);
+    $('#sideboardColumn' + index).html(getCardColumnHtml(col, index, true));
   });
 
   autocard_init('autocard');
@@ -316,6 +293,30 @@ function drawHover(e) {
     }
     document.getElementById('deckColumn' + x).setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * deck.playerdeck[x].length) + 'px;');
   }
+}
+
+function getCardColumnHtml(col, index, isSideboard = false) {
+  var colhtml = '';
+  var imageClass = '';
+
+  if (isSideboard) {
+    imageClass = "sideboardcard";
+  } else {
+    imageClass = "deckcard defaultCardImage";
+  }
+
+  col.forEach(function(card, index2) {
+    colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image;
+    if (card.details.card_flip) {
+      colhtml += '" card_flip="' + card.details.image_flip;
+    }
+    colhtml += '" href="#"><img class="' + imageClass + '" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+  });
+
+  if (col.length > 0) {
+    colhtml = '<p style=text-align:center;margin:0>' + col.length.toString() + '</p>' + colhtml;
+  }
+  return colhtml;
 }
 
 function removeHover() {
