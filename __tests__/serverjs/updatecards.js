@@ -2,6 +2,7 @@ const rimraf = require("rimraf");
 const updatecards = require("../../serverjs/updatecards");
 const examplecards = require("../../fixtures/examplecards");
 const fs = require('fs');
+const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
   color_identity: ['R'],
@@ -97,7 +98,7 @@ test("updateCardbase creates the expected files", () => {
   var downloadMock = jest.fn();
   downloadMock.mockReturnValue(noopPromise);
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase('fixtures/cards_small.json').then(function() {
+  return updatecards.updateCardbase(cardsFixturePath).then(function() {
     expect(fs.existsSync('private/cardtree.json')).toBe(true);
     expect(fs.existsSync('private/imagedict.json')).toBe(true);
     expect(fs.existsSync('private/cardimages.json')).toBe(true);

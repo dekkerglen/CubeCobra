@@ -81,7 +81,6 @@ function writeFile(filepath, data) {
 }
 
 function saveAllCards(arr) {
-  var normalizedName, normalizedFullName;
   arr.forEach(function(card, index) {
     if (card.layout == 'transform') {
       addCardToCatalog(convertCard(card, true), true);
