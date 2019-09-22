@@ -269,5 +269,13 @@ function convertCard(card, isExtra) {
 
 module.exports = {
   updateCardbase: updateCardbase,
-  downloadDefaultCards: downloadDefaultCards
+  downloadDefaultCards: downloadDefaultCards,
+  convertCard: convertCard,
+  convertName: convertName,
+  convertId: convertId,
+  convertLegalities: convertLegalities,
+  convertType: convertType,
+  convertColors: convertColors,
+  convertParsedCost: convertParsedCost,
+  convertCmc: convertCmc
 };
