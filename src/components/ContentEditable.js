@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 class ContentEditable extends Component {
   constructor(props) {
@@ -9,7 +11,7 @@ class ContentEditable extends Component {
     this.elementRef = React.createRef();
   }
 
-  shouldComponentUpdate(nextProps){
+  shouldComponentUpdate(nextProps) {
     return nextProps.value !== this.elementRef.current.innerHTML;
   }
 
@@ -31,7 +33,11 @@ class ContentEditable extends Component {
   }
 
   render() {
-    const { onChange, value, ...props } = this.props;
+    const {
+      onChange,
+      value,
+      ...props
+    } = this.props;
     return (
       <div
         contentEditable

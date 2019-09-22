@@ -22,4 +22,8 @@ export function del(key) {
   }
 }
 
-export default { get, set, del };
+export default {
+  get,
+  set,
+  del
+};

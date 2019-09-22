@@ -1,11 +1,21 @@
 import React from 'react';
 
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
+import {
+  Col,
+  ListGroup,
+  ListGroupItem,
+  Row
+} from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
 import SortContext from './SortContext';
 
-const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
+const CompareGroup = ({
+  heading,
+  both,
+  onlyA,
+  onlyB
+}) => {
   let bothCmc = sortIntoGroups(both, "CMC");
   let onlyACmc = sortIntoGroups(onlyA, "CMC");
   let onlyBCmc = sortIntoGroups(onlyB, "CMC");
@@ -33,45 +43,55 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 }
 
-const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
-  let columns = sortIntoGroups(cards, primary);
-  let columnCounts = {};
-  let bothCounts = {};
-  let onlyACounts = {};
-  let onlyBCounts = {};
+const CompareViewRaw = ({
+cards,
+primary,
+secondary,
+both,
+onlyA,
+onlyB,
+...props
+}) => {
+let columns = sortIntoGroups(cards, primary);
+let columnCounts = {};
+let bothCounts = {};
+let onlyACounts = {};
+let onlyBCounts = {};
 
-  let both_copy = both.slice(0);
-  let only_a_copy = onlyA.slice(0);
-  let only_b_copy = onlyB.slice(0);
+let both_copy = both.slice(0);
+let only_a_copy = onlyA.slice(0);
+let only_b_copy = onlyB.slice(0);
 
-  for (let columnLabel of Object.keys(columns)) {
+for (let columnLabel of Object.keys(columns)) {
 
-    let onlyACount = 0, onlyBCount = 0, bothCount = 0;
-    for (let card of columns[columnLabel]) {
-      if (both_copy.includes(card.details.name)) {
-        bothCount++;
-        both_copy.splice(both_copy.indexOf(card.details.name), 1);
-      } else if (only_a_copy.includes(card.details.name)) {
-        onlyACount++;
-        only_a_copy.splice(only_a_copy.indexOf(card.details.name), 1);
-      } else if (only_b_copy.includes(card.details.name)) {
-        onlyBCount++;
-        only_b_copy.splice(only_b_copy.indexOf(card.details.name), 1);
-      }
+  let onlyACount = 0,
+    onlyBCount = 0,
+    bothCount = 0;
+  for (let card of columns[columnLabel]) {
+    if (both_copy.includes(card.details.name)) {
+      bothCount++;
+      both_copy.splice(both_copy.indexOf(card.details.name), 1);
+    } else if (only_a_copy.includes(card.details.name)) {
+      onlyACount++;
+      only_a_copy.splice(only_a_copy.indexOf(card.details.name), 1);
+    } else if (only_b_copy.includes(card.details.name)) {
+      onlyBCount++;
+      only_b_copy.splice(only_b_copy.indexOf(card.details.name), 1);
     }
-
-    columnCounts[columnLabel] = columns[columnLabel].length;
-    bothCounts[columnLabel] = bothCount;
-    onlyACounts[columnLabel] = onlyACount;
-    onlyBCounts[columnLabel] = onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
 
-  both = both.slice(0);
-  only_a = onlyA.slice(0);
-  only_b = onlyB.slice(0);
+  columnCounts[columnLabel] = columns[columnLabel].length;
+  bothCounts[columnLabel] = bothCount;
+  onlyACounts[columnLabel] = onlyACount;
+  onlyBCounts[columnLabel] = onlyBCount;
+  columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
+}
 
-  return <>
+both = both.slice(0);
+only_a = onlyA.slice(0);
+only_b = onlyB.slice(0);
+
+return <>
     {
       getLabels(primary).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
         let column = columns[columnLabel];
@@ -127,10 +147,10 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
               }
             </Col>
           </Row>
-        );
-      })
-    }
-  </>;
+);
+})
+}
+</>;
 }
 
 const CompareView = props =>

@@ -1,7 +1,9 @@
 /* Holds general display settings. */
 /* Should eventually hold tag colors, etc. */
 
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 const DisplayContextRaw = React.createContext({
   showCustomImages: true,
@@ -28,7 +30,9 @@ class DisplayContextProvider extends React.Component {
   }
 
   toggleShowCustomImages(value) {
-    this.setState(({ showCustomImages }) => ({
+    this.setState(({
+      showCustomImages
+    }) => ({
       showCustomImages: !showCustomImages,
     }));
   }

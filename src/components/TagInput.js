@@ -1,9 +1,17 @@
 import React from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
+import {
+  WithContext as ReactTags
+} from 'react-tag-input';
 
 import TagContext from './TagContext';
 
-const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
+const TagInput = ({
+  tags,
+  addTag,
+  deleteTag,
+  reorderTag,
+  ...props
+}) => (
   <TagContext.Consumer>
     {({ allSuggestions, addSuggestion }) => (
       <ReactTags

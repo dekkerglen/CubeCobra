@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 class ImageFallback extends Component {
   constructor(props) {
@@ -13,16 +15,24 @@ class ImageFallback extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.src !== this.props.src) {
-      this.setState({ fallback: false });
+      this.setState({
+        fallback: false
+      });
     }
   }
 
   handleError(event) {
-    this.setState({ fallback: true });
+    this.setState({
+      fallback: true
+    });
   }
 
   render() {
-    const { src, fallbackSrc, ...props } = this.props;
+    const {
+      src,
+      fallbackSrc,
+      ...props
+    } = this.props;
 
     return (
       <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />

@@ -1,6 +1,12 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
-import { Col, Input, Row } from 'reactstrap';
+import {
+  Col,
+  Input,
+  Row
+} from 'reactstrap';
 
 import DisplayContext from './DisplayContext';
 import GroupModalContext from './GroupModalContext';
@@ -20,14 +26,20 @@ class ListViewRaw extends Component {
   constructor(props) {
     super(props);
 
-    const cardValues = [].concat.apply([], this.props.cards.map(({ index, ...card }) => [
+    const cardValues = [].concat.apply([], this.props.cards.map(({
+      index,
+      ...card
+    }) => [
       [`tdcheck${index}`, false],
       [`tdversion${index}`, card.cardID],
       [`tdtype${index}`, card.type_line],
       [`tdstatus${index}`, card.status],
       [`tdcmc${index}`, card.cmc],
       [`tdcolors${index}`, (card.colors || ['C']).join('')],
-      [`tags${index}`, (card.tags || []).map(tag => ({ id: tag, text: tag }))],
+      [`tags${index}`, (card.tags || []).map(tag => ({
+        id: tag,
+        text: tag
+      }))],
     ]));
 
     this.state = {
@@ -52,8 +64,13 @@ class ListViewRaw extends Component {
           'Content-Type': 'application/json',
         },
       }).then(response => response.json()).then(json => {
-        this.setState(({ versionDict }) => ({
-          versionDict: { ...versionDict, ...json.dict }
+        this.setState(({
+          versionDict
+        }) => ({
+          versionDict: {
+            ...versionDict,
+            ...json.dict
+          }
         }));
       });
     }
@@ -74,7 +91,9 @@ class ListViewRaw extends Component {
     /* globals */
     const cubeID = document.getElementById('cubeID').value;
     const card = cube[index];
-    const updated = { ...card };
+    const updated = {
+      ...card
+    };
     delete updated.details;
 
     updated.cardID = this.state[`tdversion${index}`];
@@ -86,12 +105,12 @@ class ListViewRaw extends Component {
     const colorString = this.state[`tdcolors${index}`];
     updated.colors = colorString === 'C' ? [] : [...colorString];
 
-    if (updated.cardID === card.cardID
-      && updated.type_line === card.type_line
-      && updated.status === card.status
-      && updated.cmc === card.cmc
-      && updated.colors.join('') === card.colors.join('')
-      && updated.tags.join(',') === card.tags.join(',')) {
+    if (updated.cardID === card.cardID &&
+      updated.type_line === card.type_line &&
+      updated.status === card.status &&
+      updated.cmc === card.cmc &&
+      updated.colors.join('') === card.colors.join('') &&
+      updated.tags.join(',') === card.tags.join(',')) {
       // no need to sync
       return;
     }
@@ -107,7 +126,10 @@ class ListViewRaw extends Component {
       },
     }).then(response => response.json()).catch(err => console.error(err)).then(json => {
       if (json.success === 'true') {
-        cube[index] = { ...cube[index], ...updated };
+        cube[index] = {
+          ...cube[index],
+          ...updated
+        };
         if (updated.cardID !== card.cardID) {
           // changed version
           fetch(`/cube/api/getcardfromid/${updated.cardID}`).then(
@@ -152,7 +174,9 @@ class ListViewRaw extends Component {
   }
 
   getChecked() {
-    return this.props.cards.filter(({ index }) => this.state[`tdcheck${index}`]);
+    return this.props.cards.filter(({
+      index
+    }) => this.state[`tdcheck${index}`]);
   }
 
   handleChange(event) {
@@ -190,14 +214,23 @@ class ListViewRaw extends Component {
     const target = event.target;
     const value = target.checked;
 
-    const entries = this.props.cards.map(({ index }) => [`tdcheck${index}`, value]);
+    const entries = this.props.cards.map(({
+      index
+    }) => [`tdcheck${index}`, value]);
     this.setState(Object.fromEntries(entries));
 
     this.props.setGroupModalCards(this.props.cards);
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, changeSort, showTagColors } = this.props;
+    const {
+      cards,
+      primary,
+      secondary,
+      tertiary,
+      changeSort,
+      showTagColors
+    } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
       groups[label1] = {};
@@ -215,12 +248,13 @@ class ListViewRaw extends Component {
       [field === 'check' ? 'checked' : 'value']: this.state[`td${field}${index}`],
     });
 
-    const rows =
-      [].concat.apply([], getLabels(primary).filter(label1 => groups[label1]).map(label1 =>
-        [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
-          [].concat.apply([], getLabels(tertiary).filter(label3 => groups[label1][label2][label3]).map(label3 =>
-            groups[label1][label2][label3].map(({ index, details, ...card }) =>
-              <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
+    const rows = [].concat.apply([], getLabels(primary).filter(label1 => groups[label1]).map(label1 => [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 => [].concat.apply([], getLabels(tertiary).filter(label3 => groups[label1][label2][label3]).map(label3 =>
+      groups[label1][label2][label3].map(({
+          index,
+          details,
+          ...card
+        }) =>
+        <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
                 <td className="align-middle">
                   <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
                 </td>
@@ -265,10 +299,8 @@ class ListViewRaw extends Component {
                   />
                 </td>
               </tr>
-            )
-          ))
-        ))
-      ));
+      )
+    ))))));
 
     return (
       <form className="form-inline">

@@ -1,6 +1,16 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
-import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
+import {
+  Button,
+  Col,
+  Collapse,
+  Container,
+  Input,
+  Row,
+  UncontrolledAlert
+} from 'reactstrap';
 
 import SortContext from './SortContext';
 
@@ -16,13 +26,21 @@ class SortCollapseRaw extends Component {
   }
 
   addAlert(color, message) {
-    this.setState(({ alerts }) => ({
-      alerts: [...alerts, { color, message }]
+    this.setState(({
+      alerts
+    }) => ({
+      alerts: [...alerts, {
+        color,
+        message
+      }]
     }));
   }
 
   handleSave() {
-    const { primary, secondary } = this.props;
+    const {
+      primary,
+      secondary
+    } = this.props;
 
     fetch("/cube/api/savesorts/" + $('#cubeID').val(), {
       method: "POST",
@@ -40,7 +58,12 @@ class SortCollapseRaw extends Component {
   }
 
   render() {
-    const { primary, secondary, changeSort, ...props } = this.props;
+    const {
+      primary,
+      secondary,
+      changeSort,
+      ...props
+    } = this.props;
     return (
       <Collapse {...props}>
         <Container>

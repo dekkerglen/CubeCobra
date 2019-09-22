@@ -1,11 +1,21 @@
 import React from 'react';
 
-import { Container, Row, Col } from 'reactstrap';
+import {
+  Container,
+  Row,
+  Col
+} from 'reactstrap';
 
 import AutocardImage from './AutocardImage';
 import SortContext from './SortContext';
 
-const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, ...props }) => {
+const VisualSpoilerRaw = ({
+  cards,
+  primary,
+  secondary,
+  tertiary,
+  ...props
+}) => {
   const groups = {};
   for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
     groups[label1] = {};

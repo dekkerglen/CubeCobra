@@ -1,6 +1,21 @@
 import React from 'react';
 
-import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import {
+  Button,
+  Col,
+  Form,
+  FormGroup,
+  Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row
+} from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
 import ColorCheck from './ColorCheck';
@@ -8,11 +23,14 @@ import ImageFallback from './ImageFallback';
 import TagInput from './TagInput';
 
 const CardModal = ({
-  card,  versions,
+  card,
+  versions,
   toggle,
   disabled,
-  values, onChange,
-  saveChanges, queueRemoveCard,
+  values,
+  onChange,
+  saveChanges,
+  queueRemoveCard,
   tagActions,
   ...props
 }) => {

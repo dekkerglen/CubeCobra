@@ -1,6 +1,8 @@
 /* Encapsulates the as-yet-unmanaged sorting behavior for cube lists. */
 
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 const SortContextRaw = React.createContext({
   primary: 'Color Category',

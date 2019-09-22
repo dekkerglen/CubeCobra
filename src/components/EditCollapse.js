@@ -1,6 +1,21 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
-import { Button, Card, CardHeader, Col, Collapse, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
+import {
+  Button,
+  Card,
+  CardHeader,
+  Col,
+  Collapse,
+  Container,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  Row,
+  UncontrolledAlert
+} from 'reactstrap';
 
 import ContentEditable from './ContentEditable';
 
@@ -12,7 +27,8 @@ function clickToolbar(event) {
   } else if (command == 'AC') {
     card = /* global */ prompt('Enter the card name here: ', '');
     document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + "</a>");
-    /* global */ autocard_init('autocard');
+    /* global */
+    autocard_init('autocard');
   } else document.execCommand(command, false, null);
 }
 
@@ -62,11 +78,16 @@ class EditCollapse extends Component {
   }
 
   handlePostChange(event) {
-    this.setState({ postContent: event.target.value });
+    this.setState({
+      postContent: event.target.value
+    });
   }
 
   render() {
-    const { cubeID, ...props } = this.props;
+    const {
+      cubeID,
+      ...props
+    } = this.props;
     return (
       <Collapse {...props}>
         <Container>

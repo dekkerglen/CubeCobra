@@ -4,7 +4,13 @@ import CardModalContext from './CardModalContext';
 import DisplayContext from './DisplayContext';
 import ImageFallback from './ImageFallback';
 
-const AutocardImage = ({ index, display_image, image_normal, image_flip, tags }) => (
+const AutocardImage = ({
+  index,
+  display_image,
+  image_normal,
+  image_flip,
+  tags
+}) => (
   <DisplayContext.Consumer>
     {({ showCustomImages }) =>
       <CardModalContext.Consumer>

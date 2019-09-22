@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 import CardModal from './CardModal';
 import CardModalContext from './CardModalContext';
@@ -8,10 +10,15 @@ class CardModalForm extends Component {
     super(props);
 
     this.state = {
-      card: { details: {}, colors: [] },
+      card: {
+        details: {},
+        colors: []
+      },
       versions: [],
       isOpen: false,
-      formValues: { tags: [] },
+      formValues: {
+        tags: []
+      },
     }
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
@@ -26,7 +33,9 @@ class CardModalForm extends Component {
   }
 
   addTag(tag) {
-    this.setState(({ formValues }) => ({
+    this.setState(({
+      formValues
+    }) => ({
       formValues: {
         ...formValues,
         tags: [...formValues.tags, tag],
@@ -35,7 +44,9 @@ class CardModalForm extends Component {
   }
 
   deleteTag(tagIndex) {
-    this.setState(({ formValues }) => ({
+    this.setState(({
+      formValues
+    }) => ({
       formValues: {
         ...formValues,
         tags: formValues.tags.filter((tag, i) => i !== tagIndex),
@@ -44,7 +55,9 @@ class CardModalForm extends Component {
   }
 
   reorderTag(tag, currIndex, newIndex) {
-    this.setState(({ formValues }) => {
+    this.setState(({
+      formValues
+    }) => {
       const tags = [...formValues.tags];
       tags.splice(currIndex, 1);
       tags.splice(newIndex, 0, tag);
@@ -62,7 +75,9 @@ class CardModalForm extends Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
-    this.setState(({ formValues }) => ({
+    this.setState(({
+      formValues
+    }) => ({
       formValues: {
         ...formValues,
         [name]: value,
@@ -72,7 +87,9 @@ class CardModalForm extends Component {
     if (name === 'version') {
       // This should guarantee that version array is non-null.
       if (this.state.versions.length > 0) {
-        this.setState(({ card }) => ({
+        this.setState(({
+          card
+        }) => ({
           card: {
             ...card,
             details: {
@@ -87,7 +104,10 @@ class CardModalForm extends Component {
 
   async saveChanges() {
     let colors = [...'WUBRG'].filter(color => this.state.formValues['color' + color]);
-    let updated = { ...this.state.formValues, colors };
+    let updated = {
+      ...this.state.formValues,
+      colors
+    };
     for (let color of [...'WUBRG']) {
       delete updated['color' + color];
     }
@@ -100,20 +120,23 @@ class CardModalForm extends Component {
 
     let card = this.state.card;
 
-    if (updated.cardID === card.cardID
-      && updated.type_line === card.type_line
-      && updated.status === card.status
-      && updated.cmc === card.cmc
-      && updated.imgUrl === card.imgUrl
-      && updated.colors.join('') === card.colors.join('')
-      && updated.tags.join(',') === card.tags.join(',')) {
+    if (updated.cardID === card.cardID &&
+      updated.type_line === card.type_line &&
+      updated.status === card.status &&
+      updated.cmc === card.cmc &&
+      updated.imgUrl === card.imgUrl &&
+      updated.colors.join('') === card.colors.join('') &&
+      updated.tags.join(',') === card.tags.join(',')) {
       // no need to sync
       return;
     }
 
     let response = await fetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
       method: 'POST',
-      body: JSON.stringify({ src: card, updated }),
+      body: JSON.stringify({
+        src: card,
+        updated
+      }),
       headers: {
         'Content-Type': 'application/json',
       }
@@ -137,7 +160,10 @@ class CardModalForm extends Component {
       // magical incantation to get the global state right.
       cube[index] = newCard;
       cubeDict[cube[index].index] = newCard;
-      this.setState({ card: newCard, isOpen: false });
+      this.setState({
+        card: newCard,
+        isOpen: false
+      });
       updateCubeList();
     }
   }
@@ -150,9 +176,11 @@ class CardModalForm extends Component {
     updateCollapse();
     $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
-    this.setState({ isOpen: false });
+    this.setState({
+      isOpen: false
+    });
   }
- 
+
   getCardVersions(card) {
     fetch('/cube/api/getversions/' + card.cardID)
       .then(response => response.json())
@@ -183,7 +211,10 @@ class CardModalForm extends Component {
         cmc: card.cmc,
         type_line: card.type_line,
         imgUrl: card.imgUrl,
-        tags: card.tags.map(tag => ({ id: tag, text: tag })),
+        tags: card.tags.map(tag => ({
+          id: tag,
+          text: tag
+        })),
         colorW: card.colors.includes('W'),
         colorU: card.colors.includes('U'),
         colorB: card.colors.includes('B'),
@@ -196,11 +227,17 @@ class CardModalForm extends Component {
   }
 
   closeCardModal() {
-    this.setState({ isOpen: false });
+    this.setState({
+      isOpen: false
+    });
   }
 
   render() {
-    let { canEdit, children, ...props } = this.props;
+    let {
+      canEdit,
+      children,
+      ...props
+    } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         {children}

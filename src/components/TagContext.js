@@ -1,7 +1,11 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 const TagContextRaw = React.createContext({
-  addSuggestion: () => { console.error('Error: No TagContext!'); },
+  addSuggestion: () => {
+    console.error('Error: No TagContext!');
+  },
   allSuggestions: [],
 });
 
@@ -17,7 +21,9 @@ class TagContextProvider extends Component {
   }
 
   addTag(tag) {
-    this.setState(({ tags }) =>
+    this.setState(({
+        tags
+      }) =>
       tags.indexOf(tags) >= 0 ? {} : {
         tags: [...tags, tag],
       }

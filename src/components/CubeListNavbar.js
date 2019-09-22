@@ -1,13 +1,23 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 import {
   Button,
   Collapse,
   Col,
   Container,
-  DropdownItem, DropdownMenu, DropdownToggle,
-  Form, Input, Label,
-  Nav, NavItem, NavLink, Navbar, NavbarToggler,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Form,
+  Input,
+  Label,
+  Nav,
+  NavItem,
+  NavLink,
+  Navbar,
+  NavbarToggler,
   Row,
   UncontrolledDropdown
 } from 'reactstrap';
@@ -62,7 +72,9 @@ class CubeListNavbarRaw extends Component {
   }
 
   toggle() {
-    this.setState(({ isOpen }) => ({
+    this.setState(({
+      isOpen
+    }) => ({
       isOpen: !isOpen
     }));
   }
@@ -92,12 +104,22 @@ class CubeListNavbarRaw extends Component {
     event.preventDefault();
     const target = event.target;
     const collapse = target.getAttribute('data-target');
-    const { setOpenCollapse } = this.props;
+    const {
+      setOpenCollapse
+    } = this.props;
     setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
   render() {
-    const { canEdit, cubeView, cubeID, hasCustomImages, filter, setFilter, cards } = this.props;
+    const {
+      canEdit,
+      cubeView,
+      cubeID,
+      hasCustomImages,
+      filter,
+      setFilter,
+      cards
+    } = this.props;
     /* global */
     return (
       <div className="usercontrols">

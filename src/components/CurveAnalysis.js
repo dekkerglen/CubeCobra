@@ -1,9 +1,17 @@
 import React from 'react';
-import { Bar } from 'react-chartjs-2';
+import {
+  Bar
+} from 'react-chartjs-2';
 
-import { Col, Row } from 'reactstrap';
+import {
+  Col,
+  Row
+} from 'reactstrap';
 
-const CurveAnalysis = ({ curve, ...props }) => {
+const CurveAnalysis = ({
+  curve,
+  ...props
+}) => {
   const data = {
     labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9+'],
     datasets: [

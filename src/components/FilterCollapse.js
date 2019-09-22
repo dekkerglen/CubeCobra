@@ -1,21 +1,40 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 import {
   Button,
-  Col, Container, Row,
+  Col,
+  Container,
+  Row,
   Collapse,
-  Form, Input, Label,
-  InputGroup, InputGroupAddon,
+  Form,
+  Input,
+  Label,
+  InputGroup,
+  InputGroupAddon,
   InputGroupText,
-  Modal, ModalBody, ModalFooter, ModalHeader,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
 } from 'reactstrap';
 
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
 
-import { ColorChecks } from './ColorCheck';
+import {
+  ColorChecks
+} from './ColorCheck';
 
-const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) =>
+const TextField = ({
+    name,
+    humanName,
+    placeholder,
+    value,
+    onChange,
+    ...props
+  }) =>
   <InputGroup className="mb-3" {...props}>
     <InputGroupAddon addonType="prepend">
       <InputGroupText>{humanName}</InputGroupText>
@@ -23,7 +42,15 @@ const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>;
 
-const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, ...props }) =>
+const NumericField = ({
+    name,
+    humanName,
+    placeholder,
+    valueOp,
+    value,
+    onChange,
+    ...props
+  }) =>
   <InputGroup className="mb-3" {...props}>
     <InputGroupAddon addonType="prepend">
       <InputGroupText>{humanName}</InputGroupText>
@@ -42,7 +69,14 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
 const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 
-const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) =>
+const AdvancedFilterModal = ({
+    isOpen,
+    toggle,
+    apply,
+    values,
+    onChange,
+    ...props
+  }) =>
   <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
     <Form onSubmit={e => { e.preventDefault(); apply(); }}>
       <ModalHeader toggle={toggle}>Advanced Filters</ModalHeader>
@@ -166,7 +200,10 @@ class FilterCollapse extends Component {
 
     if (name !== 'filterInput') {
       // Advanced Filter change. Render to filter input.
-      const newState = { ...this.state, [name]: value };
+      const newState = {
+        ...this.state,
+        [name]: value
+      };
       const tokens = [];
       for (const name of allFields) {
         if (newState[name]) {
@@ -189,20 +226,30 @@ class FilterCollapse extends Component {
   }
 
   handleKeyDown(event) {
-    if (event.keyCode === 13 /* ENTER */) {
+    if (event.keyCode === 13 /* ENTER */ ) {
       event.preventDefault();
       this.updateFilters();
     }
   }
 
   handleReset(event) {
-    this.setState({ filterInput: '' });
+    this.setState({
+      filterInput: ''
+    });
     this.props.setFilter([]);
   }
 
   render() {
-    const { filter, setFilter, numCards, ...props } = this.props;
-    const { filterInput, advancedOpen } = this.state;
+    const {
+      filter,
+      setFilter,
+      numCards,
+      ...props
+    } = this.props;
+    const {
+      filterInput,
+      advancedOpen
+    } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens);
     return (

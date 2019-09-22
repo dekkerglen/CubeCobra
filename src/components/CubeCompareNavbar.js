@@ -1,8 +1,14 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 import {
   Collapse,
-  Nav, NavItem, NavLink, Navbar, NavbarToggler,
+  Nav,
+  NavItem,
+  NavLink,
+  Navbar,
+  NavbarToggler,
 } from 'reactstrap';
 
 import FilterCollapse from './FilterCollapse';
@@ -22,7 +28,9 @@ class CubeCompareNavbar extends Component {
 
   toggle() {
     event.preventDefault();
-    this.setState(({ isOpen }) => ({
+    this.setState(({
+      isOpen
+    }) => ({
       isOpen: !isOpen
     }));
   }
@@ -31,12 +39,19 @@ class CubeCompareNavbar extends Component {
     event.preventDefault();
     const target = event.target;
     const collapse = target.getAttribute('data-target');
-    const { setOpenCollapse } = this.props;
+    const {
+      setOpenCollapse
+    } = this.props;
     setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
   render() {
-    const { cards, openCollapse, filter, setFilter } = this.props;
+    const {
+      cards,
+      openCollapse,
+      filter,
+      setFilter
+    } = this.props;
     return (
       <div className="usercontrols">
         <Navbar expand="md" className="navbar-light">

@@ -1,6 +1,10 @@
 import React from 'react';
 
-import { Col, Row, Table } from 'reactstrap';
+import {
+  Col,
+  Row,
+  Table
+} from 'reactstrap';
 
 const white = ['White', 'w'];
 const blue = ['Blue', 'u'];
@@ -43,7 +47,10 @@ const gold = [
   ]],
 ];
 
-const MulticoloredAnalysis = ({ multicoloredCounts, ...props }) => (
+const MulticoloredAnalysis = ({
+  multicoloredCounts,
+  ...props
+}) => (
   <Row {...props}>
     {gold.map(([numColors, combos]) => (
       <Col key={numColors} xs="12" sm="6" md="auto">

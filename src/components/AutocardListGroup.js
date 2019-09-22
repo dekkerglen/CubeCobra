@@ -1,11 +1,22 @@
 import React from 'react';
 
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
+import {
+  Col,
+  ListGroup,
+  ListGroupItem,
+  Row
+} from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
 import GroupModalContext from './GroupModalContext';
 
-const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => {
+const AutocardListGroup = ({
+  cards,
+  heading,
+  primary,
+  secondary,
+  tertiary
+}) => {
   let groups = sortIntoGroups(cards, "CMC");
   return (
     <ListGroup className="list-outline">

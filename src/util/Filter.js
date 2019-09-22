@@ -652,4 +652,9 @@ function filterApply(card, filter) {
   }
 }
 
-export default { tokenizeInput, verifyTokens, parseTokens, filterCard };
+export default {
+  tokenizeInput,
+  verifyTokens,
+  parseTokens,
+  filterCard
+};

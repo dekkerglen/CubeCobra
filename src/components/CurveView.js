@@ -1,11 +1,25 @@
-import React, { Fragment } from 'react';
+import React, {
+  Fragment
+} from 'react';
 
-import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Col,
+  Container,
+  Row
+} from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';
 
-const TypeRow = ({ cardType, groups, count, primary }) => (
+const TypeRow = ({
+  cardType,
+  groups,
+  count,
+  primary
+}) => (
   <Fragment key={cardType}>
     <Row className="mt-2">
       <h6 className="ml-1">{cardType} ({count})</h6>
@@ -28,7 +42,13 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
   </Fragment>
 );
 
-const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
+const ColorCard = ({
+  color,
+  groups,
+  count,
+  typeCounts,
+  primary
+}) => (
   <Card>
     <CardHeader>
       <h5>{color} {count}</h5>
@@ -49,7 +69,11 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
   </Card>
 );
 
-const CurveViewRaw = ({ cards, primary, ...props }) => {
+const CurveViewRaw = ({
+  cards,
+  primary,
+  ...props
+}) => {
   // We call the groups color and type even though they might be other sorts.
   let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};

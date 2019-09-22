@@ -1,13 +1,26 @@
 import React from 'react';
 
-import { Button } from 'reactstrap';
+import {
+  Button
+} from 'reactstrap';
 
 import CardModalContext from './CardModalContext';
 import DisplayContext from './DisplayContext';
 
-const AutocardListItem = ({ card, noCardModal, children }) => {
-  let { display_image, image_normal, image_flip, name } = card.details;
-  let { tags } = card;
+const AutocardListItem = ({
+  card,
+  noCardModal,
+  children
+}) => {
+  let {
+    display_image,
+    image_normal,
+    image_flip,
+    name
+  } = card.details;
+  let {
+    tags
+  } = card;
   return (
     <DisplayContext.Consumer>
       {({ showCustomImages, showTagColors }) => {

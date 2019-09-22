@@ -1,12 +1,23 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
 import {
   Button,
-  Row, Col,
-  Form, FormGroup, Input, Label,
-  InputGroup, InputGroupAddon, InputGroupText,
+  Row,
+  Col,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
   ListGroup,
-  Modal, ModalBody, ModalFooter, ModalHeader,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   UncontrolledAlert,
 } from 'reactstrap';
 
@@ -64,15 +75,21 @@ class GroupModal extends Component {
   }
 
   setCards(cards) {
-    this.setState({ cards });
+    this.setState({
+      cards
+    });
   }
 
   close() {
-    this.setState({ isOpen: false });
+    this.setState({
+      isOpen: false
+    });
   }
 
   error(message) {
-    this.setState(({ alerts }) => ({
+    this.setState(({
+      alerts
+    }) => ({
       alerts: [...alerts, {
         color: 'danger',
         message,
@@ -85,8 +102,12 @@ class GroupModal extends Component {
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
     const extra = {};
-    if (name === 'addTags') { extra.deleteTags = false; };
-    if (name === 'deleteTags') { extra.addTags = false; };
+    if (name === 'addTags') {
+      extra.deleteTags = false;
+    };
+    if (name === 'deleteTags') {
+      extra.addTags = false;
+    };
 
     this.setState({
       [name]: value,
@@ -98,39 +119,61 @@ class GroupModal extends Component {
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
     console.log('handle', target);
-    this.setState(({ cards }) => ({
+    this.setState(({
+      cards
+    }) => ({
       cards: cards.filter(c => c.index !== parseInt(index)),
     }));
   }
 
   addTag(tag) {
-    this.setState(({ tags }) => ({
+    this.setState(({
+      tags
+    }) => ({
       tags: [...tags, tag],
     }));
   }
 
   deleteTag(tagIndex) {
-    this.setState(({ tags }) => ({
+    this.setState(({
+      tags
+    }) => ({
       tags: tags.filter((tag, i) => i !== tagIndex),
     }));
   }
 
   reorderTag(tag, currIndex, newIndex) {
-    this.setState(({ tags }) => {
+    this.setState(({
+      tags
+    }) => {
       const copy = [...tags];
       copy.splice(currIndex, 1);
       copy.splice(newIndex, 0, tag);
-      return { tags: copy };
+      return {
+        tags: copy
+      };
     });
   }
 
   async handleApply(event) {
     event.preventDefault();
-    const { cards, status, cmc, type_line, colorC, addTags, deleteTags } = this.state;
-    const { cubeID } = this.props;
+    const {
+      cards,
+      status,
+      cmc,
+      type_line,
+      colorC,
+      addTags,
+      deleteTags
+    } = this.state;
+    const {
+      cubeID
+    } = this.props;
     const tags = this.state.tags.map(tag => tag.text);
 
-    const selected = cards.map(card => ({ index: card.index }));
+    const selected = cards.map(card => ({
+      index: card.index
+    }));
     const colors = [...'WUBRG'].filter(color => this.state[`color${color}`]);
     const updated = {
       status: status || undefined,
@@ -139,11 +182,15 @@ class GroupModal extends Component {
       colors: colors.length > 0 ? colors : undefined,
       colorC: colorC || undefined,
       tags: tags || undefined,
-      addTags, deleteTags,
+      addTags,
+      deleteTags,
     };
     const response = await fetch(`/cube/api/updatecards/${cubeID}`, {
       method: 'POST',
-      body: JSON.stringify({ selected, updated }),
+      body: JSON.stringify({
+        selected,
+        updated
+      }),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -151,11 +198,19 @@ class GroupModal extends Component {
     const json = await response.json().catch(err => this.error(err));
     if (json.success === 'true') {
       // Make shallow copy of each card.
-      const updatedCards = cards.map(card => ({ ...card }));
+      const updatedCards = cards.map(card => ({
+        ...card
+      }));
       for (const card of updatedCards) {
-        if (status) { card.status = status; }
-        if (cmc) { card.cmc = cmc; }
-        if (type_line) { card.type_line = type_line; }
+        if (status) {
+          card.status = status;
+        }
+        if (cmc) {
+          card.cmc = cmc;
+        }
+        if (type_line) {
+          card.type_line = type_line;
+        }
         if (addTags) {
           card.tags = [...card.tags, tags.filter(tag => !card.tags.includes(tag))];
         }
@@ -163,8 +218,12 @@ class GroupModal extends Component {
           card.tags = card.tags.filter(tag => !tags.includes(tag));
         }
 
-        if (colors) { card.colors = [...colors]; }
-        if (colorC) { card.colors = []; }
+        if (colors) {
+          card.colors = [...colors];
+        }
+        if (colorC) {
+          card.colors = [];
+        }
         cube[card.index] = card;
         cubeDict[card.index] = card;
       }
@@ -186,8 +245,24 @@ class GroupModal extends Component {
   }
 
   render() {
-    const { cubeID, canEdit, setOpenCollapse, children, ...props } = this.props;
-    const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
+    const {
+      cubeID,
+      canEdit,
+      setOpenCollapse,
+      children,
+      ...props
+    } = this.props;
+    const {
+      isOpen,
+      cards,
+      alerts,
+      status,
+      cmc,
+      type_line,
+      addTags,
+      deleteTags,
+      tags
+    } = this.state;
     const tcgplayerMassEntryUrl =
       'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
       '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
@@ -201,7 +276,14 @@ class GroupModal extends Component {
       return contextChildren;
     }
 
-    const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
+    const checkColors = [
+      ['White', 'W'],
+      ['Blue', 'U'],
+      ['Black', 'B'],
+      ['Red', 'R'],
+      ['Green', 'G'],
+      ['Colorless', 'C']
+    ];
     return <>
       {contextChildren}
       <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>
@@ -294,8 +376,8 @@ class GroupModal extends Component {
           </Form>
           <Button color="success" onClick={this.handleApply}>Apply to all</Button>
         </ModalFooter>
-      </Modal>
-    </>;
+      </Modal> <
+      />;
   }
 }
 

@@ -1,6 +1,10 @@
 import React from 'react';
 
-import { Col, Row, Table } from 'reactstrap';
+import {
+  Col,
+  Row,
+  Table
+} from 'reactstrap';
 
 const types = ['Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Total']
 
@@ -15,7 +19,10 @@ const colors = [
   ['Total', 'Total', 'Total'],
 ];
 
-const TypeAnalysis = ({ typeByColor, ...props }) => (
+const TypeAnalysis = ({
+  typeByColor,
+  ...props
+}) => (
   <Row {...props}>
     <Col>
       <h4 className="d-lg-block d-none">Type Breakdown</h4>

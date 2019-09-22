@@ -15,7 +15,7 @@
         "wrap_line_length": "0",
         "indent_inner_html": false,
         "comma_first": false,
-        "e4x": false,
+        "e4x": true,
         "indent_empty_lines": false
     }
 }

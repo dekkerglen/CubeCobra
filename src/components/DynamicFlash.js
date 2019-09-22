@@ -1,6 +1,10 @@
-import React, { Component } from 'react';
+import React, {
+  Component
+} from 'react';
 
-import { UncontrolledAlert } from 'reactstrap';
+import {
+  UncontrolledAlert
+} from 'reactstrap';
 
 const colorMap = {
   info: 'info',
@@ -24,10 +28,11 @@ class DynamicFlash extends Component {
       {[].concat.apply([], Object.keys(this.state.messages).map(type =>
         this.state.messages[type].map((message, index) =>
           <UncontrolledAlert className="mb-0 mt-3" key={type + index} color={type}>{message}</UncontrolledAlert>
-        )
-      ))}
-    </>;
-  }
+  )
+))
+} <
+/>;
+}
 }
 
 export default DynamicFlash;

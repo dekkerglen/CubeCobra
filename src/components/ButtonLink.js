@@ -1,8 +1,14 @@
 import React from 'react';
 
-import { Button } from 'reactstrap';
+import {
+  Button
+} from 'reactstrap';
 
-const ButtonLink = ({ href, children, ...props }) => (
+const ButtonLink = ({
+  href,
+  children,
+  ...props
+}) => (
   <a href={href}>
     <Button {...props}>{children}</Button>
   </a>
