@@ -21,6 +21,7 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
+      cards: this.props.defaultCards,
       cubeView: Hash.get('view', 'table'),
       openCollapse: Hash.get('f', false) ? 'filter' : null,
       filter: [],
@@ -32,6 +33,8 @@ class CubeList extends Component {
 
     /* global */
     editListeners.push(() => this.setState({ openCollapse: 'edit' }));
+    /* global, should be moved into a context */
+    updateCubeListeners.push(cards => this.setState({ cards }));
   }
 
   componentDidMount() {
@@ -64,8 +67,8 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cards, cubeID, canEdit } = this.props;
-    const { cubeView, openCollapse, filter } = this.state;
+    const { cubeID, canEdit } = this.props;
+    const { cards, cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
@@ -115,5 +118,5 @@ cube.forEach((card, index) => {
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeList cards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
