@@ -132,7 +132,7 @@ for (var convertFn in convertFnToAttribute) {
   });
 }
 
-test("convertCard returns a correctly converted card object", () => {
+test("convertCard returns a correctly converted double-faced card object", () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
@@ -140,7 +140,7 @@ test("convertCard returns a correctly converted card object", () => {
 var attribute;
 for (var convertFn in convertFnToAttribute) {
   attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a card's " + attribute, () => {
+  test(convertFn + " properly converts a double-faced card's " + attribute, () => {
     const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
     expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
   });
