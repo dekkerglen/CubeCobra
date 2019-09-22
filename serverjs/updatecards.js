@@ -103,6 +103,67 @@ function saveAllCards(arr) {
   return allWritesPromise;
 }
 
+function convertCmc(card, isExtra) {
+  if (isExtra) {
+    return 0;
+  }
+  return card.cmc;
+}
+
+function convertLegalities(card, isExtra) {
+  if (isExtra) {
+    return {
+      Legacy: false,
+      Modern: false,
+      Standard: false,
+      Pauper: false,
+    };
+  } else {
+    return {
+      Legacy: card.legalities.legacy == 'legal',
+      Modern: card.legalities.modern == 'legal',
+      Standard: card.legalities.standard == 'legal',
+      Pauper: card.legalities.pauper == 'legal'
+    };
+  }
+}
+
+function convertParsedCost(card, isExtra) {
+  if (isExtra) {
+    return [];
+  } else {
+    var parsed_cost;
+    if (!card.card_faces || card.layout == 'flip') {
+      parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).toLowerCase().split('}{').reverse();
+    } else if (card.layout == 'split') {
+      parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).replace(' // ', '{split}').toLowerCase().split('}{').reverse();
+    } else if (card.card_faces[0].colors) {
+      parsed_cost = card.card_faces[0].mana_cost.substr(1, card.card_faces[0].mana_cost.length - 2).toLowerCase().split('}{').reverse();
+    }
+    if (parsed_cost) {
+      parsed_cost.forEach(function(item, index) {
+        parsed_cost[index] = item.replace('/', '-');
+      });
+    }
+    return parsed_cost;
+  }
+}
+
+function convertColors(card, isExtra) {
+  var colors = [];
+  if (isExtra) {
+    return colors.concat(card.card_faces[1].colors);
+  } else {
+    if (!card.card_faces || card.layout == 'flip') {
+      return newcard.colors.concat(card.colors);
+    } else if (card.layout == 'split') {
+      return newcard.colors.concat(card.colors);
+    } else if (card.card_faces[0].colors) {
+      return newcard.colors.concat(card.card_faces[0].colors);
+    }
+  }
+}
+
 function convertCard(card, isExtra) {
   var faceAttributeSource;
   let newcard = {};
@@ -115,16 +176,7 @@ function convertCard(card, isExtra) {
     name = card.name.substring(card.name.indexOf('/') + 2).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     newcard._id = card.id + '2';
     newcard.name_lower = name.toLowerCase();
-    newcard.legalities = {
-      Legacy: false,
-      Modern: false,
-      Standard: false,
-      Pauper: false,
-    };
     newcard.type = card.type_line.substring(card.type_line.indexOf('/') + 2).trim();
-    newcard.parsed_cost = [];
-    newcard.colors = newcard.colors.concat(card.card_faces[1].colors);
-    newcard.cmc = 0;
   } else {
     if (card.card_faces) {
       faceAttributeSource = card.card_faces[0];
@@ -137,12 +189,6 @@ function convertCard(card, isExtra) {
     }
     newcard._id = card.id;
     newcard.name_lower = name.toLowerCase();
-    newcard.legalities = {
-      Legacy: card.legalities.legacy == 'legal',
-      Modern: card.legalities.modern == 'legal',
-      Standard: card.legalities.standard == 'legal',
-      Pauper: card.legalities.pauper == 'legal'
-    };
     if (card.type_line.includes('//')) {
       newcard.type = card.type_line.substring(0, card.type_line.indexOf('/'));
     } else {
@@ -151,22 +197,6 @@ function convertCard(card, isExtra) {
     if (newcard.type == 'Artifact — Contraption') {
       newcard.type = 'Artifact Contraption';
     }
-    if (!card.card_faces || card.layout == 'flip') {
-      newcard.colors = newcard.colors.concat(card.colors);
-      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).toLowerCase().split('}{').reverse();
-    } else if (card.layout == 'split') {
-      newcard.colors = newcard.colors.concat(card.colors);
-      newcard.parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).replace(' // ', '{split}').toLowerCase().split('}{').reverse();
-    } else if (card.card_faces[0].colors) {
-      newcard.colors = newcard.colors.concat(card.card_faces[0].colors);
-      newcard.parsed_cost = card.card_faces[0].mana_cost.substr(1, card.card_faces[0].mana_cost.length - 2).toLowerCase().split('}{').reverse();
-    }
-    if (newcard.parsed_cost) {
-      newcard.parsed_cost.forEach(function(item, index) {
-        newcard.parsed_cost[index] = item.replace('/', '-');
-      });
-    }
-    newcard.cmc = card.cmc;
   }
   newcard.set = card.set;
   newcard.collector_number = card.collector_number;
@@ -179,6 +209,10 @@ function convertCard(card, isExtra) {
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
   newcard.oracle_text = card.oracle_text;
+  newcard.cmc = convertCmc(card, isExtra);
+  newcard.legalities = convertLegalities(card, isExtra);
+  newcard.parsed_cost = convertParsedCost(card, isExtra);
+  newcard.colors = convertColors(card, isExtra);
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;
   }
