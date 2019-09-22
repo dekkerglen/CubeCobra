@@ -19,6 +19,7 @@ var {
 var analytics = require('../serverjs/analytics.js');
 var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
+carddb.initializeCardDb();
 var util = require('../serverjs/util.js');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 var mergeImages = require('merge-images');
