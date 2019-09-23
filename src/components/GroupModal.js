@@ -202,6 +202,11 @@ class GroupModal extends Component {
       return contextChildren;
     }
 
+    const accumulator = (total, card) => total + (card.details.price || 0)
+    const accumulatorFoil = (total, card) => total + (card.details.price_foil || 0)
+    const totalPrice = cards.length ? cards.reduce(accumulator, 0): 0
+    const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0): 0
+    
     const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
     return <>
       {contextChildren}
@@ -286,6 +291,9 @@ class GroupModal extends Component {
               </Form>
             </Col>
           </Row>
+          <Row><Col xs='4'><div className="card-price">Total Price: ${totalPrice.toFixed(2)}</div><div className="card-price">
+            Total Foil Price: ${totalPriceFoil.toFixed(2)}
+          </div></Col></Row>
         </ModalBody>
         <ModalFooter>
           <Button color="danger" onClick={this.handleRemoveAll}>Remove all from cube</Button>
