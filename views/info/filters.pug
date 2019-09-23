@@ -84,11 +84,11 @@ block content
       .card
         #card-text-syntax.card-header(data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour")
           button(class="btn btn-link" type="button" )
-            h5 Card Text
+            h5 Card Text and Set
         #collapseFour.collapse(aria-labelledby="card-text-syntax" data-parent="#syntax-accordion")
-          p You can use #[code o:] or #[code oracle:] to search oracle text.
+          p You can use #[code o:] or #[code oracle:] to search oracle text, and #[code s:] or #[code set:] to search for a specific set code.
           p Operators Supported: #[code :], #[code =].
-          p This searches the full oracle text, including reminder text.
+          p This searches the full oracle text, including reminder text. The set code can be either upper or lower case.
           p #[strong Examples:]
           table.table
             tr
@@ -96,7 +96,10 @@ block content
               td(scope="col") Cards with oracle text draw a card.
             tr
               td(scope="col") #[code o:"token with Sacrifice"] 
-              td(scope="col") Cards with oracle text #[code token with  Sacrifice].
+              td(scope="col") Cards with oracle text #[code token with Sacrifice].
+            tr
+              td(scope="col") #[code s:war]
+              td(scope="col") Cards from War of the Spark.
       .card
         #mana-cost-syntax.card-header(data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive")
           button(class="btn btn-link" type="button" )

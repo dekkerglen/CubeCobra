@@ -1,5 +1,5 @@
 const carddb = require("../../serverjs/cards");
-const fixturesPath = "__tests__/fixtures";
+const fixturesPath = "fixtures";
 const firstLetterCount = 21;
 const fixtureCardCount = 100;
 var placeholderCard = {

@@ -13,6 +13,8 @@ let categoryMap = new Map([
   ['type', 'type'],
   ['o', 'oracle'],
   ['oracle', 'oracle'],
+  ['s', 'set'],
+  ['set', 'set'],
   ['pow', 'power'],
   ['power', 'power'],
   ['tou', 'toughness'],
@@ -492,6 +494,11 @@ function filterApply(card, filter) {
   }
   if (filter.category == 'type' && card.details.type) {
     if (card.details.type.toLowerCase().indexOf(filter.arg) > -1) {
+      res = true;
+    }
+  }
+  if (filter.category == 'set' && card.details.set) {
+    if (card.details.set.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
       res = true;
     }
   }
