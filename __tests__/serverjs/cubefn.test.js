@@ -1,6 +1,5 @@
-var sinon = require("sinon");
-
 const cubefn = require("../../serverjs/cubefn");
+let Cube = require('../../models/cube');
 
 beforeEach(() => {});
 
@@ -95,7 +94,25 @@ test("legalityToInt returns the expected values", () => {
   expect(cubefn.legalityToInt("not a format")).toBe(undefined);
 });
 
-test("generate_short_id", () => {});
+test("generate_short_id returns a valid short ID", async () => {
+  var dummyModel = {
+    "shortID": "abcdef",
+    "urlAlias": "a real alias"
+  };
+  var queryMockPromise = new Promise((resolve, reject) => {
+    process.nextTick(() => {
+      resolve([dummyModel]);
+    });
+  });
+  var queryMock = jest.fn();
+  queryMock.mockReturnValue(queryMockPromise);
+  var initialCubeFind = Cube.find;
+  Cube.find = queryMock;
+  var result = await cubefn.generate_short_id();
+  expect(result).toBe(false);
+  Cube.find = initialCubeFind;
+});
+
 test("selectionContainsCard", () => {});
 test("setCubeType", () => {});
 test("sanitize", () => {});
