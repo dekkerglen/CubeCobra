@@ -163,10 +163,11 @@ class GroupModal extends Component {
           card.tags = card.tags.filter(tag => !tags.includes(tag));
         }
 
-        if (colors) { card.colors = [...colors]; }
+        if (colors.length > 0) { card.colors = [...colors]; }
         if (colorC) { card.colors = []; }
         cube[card.index] = card;
         cubeDict[card.index] = card;
+        /* global */ updateCubeList();
       }
 
       this.close();

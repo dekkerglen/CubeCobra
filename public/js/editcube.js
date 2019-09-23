@@ -766,7 +766,10 @@ function columnLength(sort, label) {
   return res;
 }
 
+var updateCubeListeners = [];
+
 function updateCubeList() {
+  updateCubeListeners.forEach(listener => listener(cube));
   autocard_init('autocard');
   autocard_hide_card();
 }
