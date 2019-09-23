@@ -79,7 +79,7 @@ test("cardsAreEquivalent returns false for two nonequivalent cards", () => {
   expect(result).toBe(false);
 });
 
-test("intToLegality", () => {
+test("intToLegality returns the expected values", () => {
   expect(cubefn.intToLegality(0)).toBe("Vintage");
   expect(cubefn.intToLegality(1)).toBe("Legacy");
   expect(cubefn.intToLegality(2)).toBe("Modern");
@@ -87,10 +87,17 @@ test("intToLegality", () => {
   expect(cubefn.intToLegality(4)).toBe(undefined);
 });
 
-test("legalityToInt", () => {
+test("legalityToInt returns the expected values", () => {
   expect(cubefn.legalityToInt("Vintage")).toBe(0);
   expect(cubefn.legalityToInt("Legacy")).toBe(1);
   expect(cubefn.legalityToInt("Modern")).toBe(2);
   expect(cubefn.legalityToInt("Standard")).toBe(3);
   expect(cubefn.legalityToInt("not a format")).toBe(undefined);
 });
+
+test("generate_short_id", () => {});
+test("selectionContainsCard", () => {});
+test("setCubeType", () => {});
+test("sanitize", () => {});
+test("addAutocard", () => {});
+test("generatePack", () => {});
