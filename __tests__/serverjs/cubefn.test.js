@@ -96,7 +96,7 @@ test("legalityToInt returns the expected values", () => {
 
 test("generate_short_id returns a valid short ID", async () => {
   var dummyModel = {
-    "shortID": "abcdef",
+    "shortID": "1x",
     "urlAlias": "a real alias"
   };
   var queryMockPromise = new Promise((resolve, reject) => {
@@ -109,7 +109,7 @@ test("generate_short_id returns a valid short ID", async () => {
   var initialCubeFind = Cube.find;
   Cube.find = queryMock;
   var result = await cubefn.generate_short_id();
-  expect(result).toBe(false);
+  expect(result).toBe("1y");
   Cube.find = initialCubeFind;
 });
 
