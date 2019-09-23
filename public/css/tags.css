@@ -76,7 +76,8 @@
 }
 
 .tag-color,
-.tag-color .tdname {
+.tag-color .tdname,
+.tag-color > a {
   color: #ffffff !important;
 }
 .tag-no-color {
