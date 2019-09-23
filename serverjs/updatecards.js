@@ -8,7 +8,7 @@ var _catalog = {};
 function initializeCatalog() {
   _catalog.dict = {};
   _catalog.names = [];
-  _catalog.nameToId = [];
+  _catalog.nameToId = {};
   _catalog.full_names = [];
   _catalog.imagedict = {};
   _catalog.cardimages = {};
