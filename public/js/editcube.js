@@ -457,6 +457,12 @@ function updateCollapse() {
 
   $('#changelist').html(val);
 
+  if (val.length > 0) {
+    $('.editForm').collapse("show");
+  } else {
+    $('.editForm').collapse("hide")
+  }
+
   autocard_init('dynamic-autocard');
   changes.forEach(function(change, index) {
     var clickx = document.getElementById("clickx" + index);
