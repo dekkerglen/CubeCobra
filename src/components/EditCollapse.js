@@ -56,6 +56,11 @@ class EditCollapse extends Component {
     this.handlePostChange = this.handlePostChange.bind(this);
   }
 
+  componentDidMount() {
+    /* global */
+    updateCollapse();
+  }
+
   componentDidUpdate() {
     /* global */
     updateCollapse();
@@ -77,7 +82,7 @@ class EditCollapse extends Component {
           </Row>
           <Row>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2">
+              <Form inline className="mb-2" onSubmit={e => e.preventDefault()}>
                 <div className="autocomplete">
                   <Input type="text" className="mr-2" id="addInput" placeholder="Card to Add" autoComplete="off" />
                 </div>
@@ -85,7 +90,7 @@ class EditCollapse extends Component {
               </Form>
             </Col>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2">
+              <Form inline className="mb-2" onSubmit={e => e.preventDefault()}>
                 <div className="autocomplete">
                   <Input type="text" className="mr-2" id="removeInput" placeholder="Card to Remove" autoComplete="off" />
                 </div>
