@@ -165,7 +165,7 @@ test("initializeCatalog clears the updatecards structures", () => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
-    expect(updatecards.catalog.nameToId.length).toBe(0);
+    expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
     expect(updatecards.catalog.full_names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
     expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
