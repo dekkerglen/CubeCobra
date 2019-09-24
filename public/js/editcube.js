@@ -699,8 +699,7 @@ function getLabels(sort) {
     }
     labels.push("No Price Available");
     return labels;
-  } else if (sort == 'Unsorted')
-  {
+  } else if (sort == 'Unsorted') {
     return ['All'];
   }
 }

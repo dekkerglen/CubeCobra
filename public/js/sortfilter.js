@@ -295,8 +295,7 @@ function cardIsLabel(card, label, sort) {
     } else {
       return label == "No Price Available";
     }
-  } else if(sort == 'Unsorted')
-  {
+  } else if (sort == 'Unsorted') {
     return label == 'All';
   }
 }
