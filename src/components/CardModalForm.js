@@ -150,6 +150,7 @@ class CardModalForm extends Component {
     updateCollapse();
     $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
+    this.props.setOpenCollapse(() => 'edit');
     this.setState({ isOpen: false });
   }
  
