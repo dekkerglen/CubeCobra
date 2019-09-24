@@ -82,19 +82,19 @@ class EditCollapse extends Component {
           </Row>
           <Row>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2" onSubmit={e => e.preventDefault()}>
+              <Form inline className="mb-2" onSubmit={e => { e.preventDefault(); /* global */ justAdd(); }}>
                 <div className="autocomplete">
-                  <Input type="text" className="mr-2" id="addInput" placeholder="Card to Add" autoComplete="off" />
+                  <Input type="text" className="mr-2" id="addInput" placeholder="Card to Add" autoComplete="off" data-lpignore />
                 </div>
-                <Button color="success" onClick={/* global */ justAdd}>Just Add</Button>
+                <Button color="success" type="submit">Just Add</Button>
               </Form>
             </Col>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2" onSubmit={e => e.preventDefault()}>
+              <Form inline className="mb-2" onSubmit={e => { e.preventDefault(); /* global */ remove(); }}>
                 <div className="autocomplete">
-                  <Input type="text" className="mr-2" id="removeInput" placeholder="Card to Remove" autoComplete="off" />
+                  <Input type="text" className="mr-2" id="removeInput" placeholder="Card to Remove" autoComplete="off" data-lpignore />
                 </div>
-                <Button color="success" onClick={/* global */ remove}>Remove/Replace</Button>
+                <Button color="success" type="submit">Remove/Replace</Button>
               </Form>
             </Col>
           </Row>
