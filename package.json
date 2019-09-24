@@ -50,15 +50,15 @@
     "zlib": "^1.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.6",
     "chart.js": "^2.8.0",
     "jest": "^24.9.0",
     "js-beautify": "^1.10.2",
     "react": "^16.9.0",
-    "react-chartjs-2": "^2.7.6",
+    "react-chartjs-2": "^2.8.0",
     "react-dnd": "^5.0.0",
     "react-dnd-html5-backend": "^3.0.2",
     "react-dom": "^16.9.0",

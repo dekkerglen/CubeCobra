@@ -525,7 +525,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
+  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor', 'Unsorted'];
 }
 
 function getLabels(sort) {
@@ -699,6 +699,9 @@ function getLabels(sort) {
     }
     labels.push("No Price Available");
     return labels;
+  } else if (sort == 'Unsorted')
+  {
+    return ['All'];
   }
 }
 

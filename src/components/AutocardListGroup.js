@@ -29,7 +29,12 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
           <Row key={cmc} noGutters className="cmc-group">
             <Col>
               {
-                groups[cmc].map(card =>
+                groups[cmc].sort(function(a,b)
+                {
+                  var textA = a.details.name.toUpperCase();
+                  var textB =  b.details.name.toUpperCase();
+                  return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                }).map(card =>
                   (<AutocardListItem key={card.details.name} card={card} />)
                 )
               }
