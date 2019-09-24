@@ -1059,7 +1059,7 @@ function bulkuploadCSV(req, res, cards, cube) {
       set: split[4].toUpperCase(),
       collector_number: split[5],
       status: split[6],
-      tags: split[7].split(',')
+      tags: split[7] && split[7].length > 0 ? split[7].split(',') : [],
     };
 
     let potentialIds = carddb.allIds(card);
