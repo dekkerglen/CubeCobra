@@ -2461,7 +2461,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           });
           Object.keys(updated).forEach(function(key) {
             if (updated[key] === null) {
-              updated[key] = undefined;
+              delete updated[key];
             }
           });
           cube.cards[index] = updated;
@@ -2477,6 +2477,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
 
         cube.save(function(err) {
           if (err) {
+            console.error(err);
             res.status(500).send({
               success: 'false',
               message: 'Error saving cube'

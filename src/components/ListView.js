@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 import { Input } from 'reactstrap';
 
-import { fromEntries } from '../util/Util';
+import { arraysEqual, fromEntries } from '../util/Util';
 
 import DisplayContext from './DisplayContext';
 import GroupModalContext from './GroupModalContext';
@@ -76,28 +76,20 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
-  syncCard(index) {
+  syncCard(index, updated) {
     /* globals */
     const cubeID = document.getElementById('cubeID').value;
     const card = cube[index];
-    const updated = { ...card };
+
+    updated = { ...card, ...updated };
     delete updated.details;
-
-    updated.cardID = this.state[`tdversion${index}`];
-    updated.type_line = this.state[`tdtype${index}`];
-    updated.status = this.state[`tdstatus${index}`];
-    updated.cmc = this.state[`tdcmc${index}`];
-    updated.tags = this.state[`tags${index}`].map(tagDict => tagDict.text);
-
-    const colorString = this.state[`tdcolors${index}`];
-    updated.colors = colorString === 'C' ? [] : [...colorString];
 
     if (updated.cardID === card.cardID
       && updated.type_line === card.type_line
       && updated.status === card.status
       && updated.cmc === card.cmc
-      && updated.colors.join('') === card.colors.join('')
-      && updated.tags.join(',') === card.tags.join(',')) {
+      && arraysEqual(updated.colors, card.colors)
+      && arraysEqual(updated.tags, card.tags)) {
       // no need to sync
       return;
     }
@@ -130,31 +122,31 @@ class ListViewRaw extends Component {
 
   addTag(cardIndex, tag) {
     const name = `tags${cardIndex}`;
-    this.setState(state => ({
-      [name]: [...state[name], tag],
-    }));
-    this.syncCard(cardIndex);
+    const newTags = [...this.state[name], tag];
+    this.setState({
+      [name]: newTags,
+    });
+    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
   }
 
   deleteTag(cardIndex, tagIndex) {
     const name = `tags${cardIndex}`;
-    this.setState(state => ({
-      [name]: this.state[name].filter((tag, i) => i !== tagIndex),
-    }));
-    this.syncCard(cardIndex);
+    const newTags = this.state[name].filter((tag, i) => i !== tagIndex);
+    this.setState({
+      [name]: newTags,
+    });
+    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
     const name = `tags${cardIndex}`;
-    this.setState(state => {
-      const tags = [...state[name]];
-      tags.splice(currIndex, 1);
-      tags.splice(newIndex, 0, tag);
-      return {
-        [name]: tags,
-      };
+    const newTags = [...this.state[name]];
+    newTags.splice(currIndex, 1);
+    newTags.splice(newIndex, 0, tag);
+    this.setState({
+      [name]: newTags,
     });
-    this.syncCard(cardIndex);
+    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
   }
 
   getChecked() {
@@ -171,8 +163,13 @@ class ListViewRaw extends Component {
       [name]: value
     });
 
-    if (target.getAttribute('type') === 'select') {
-      this.syncCard(index);
+    if (target.tagName.toLowerCase() === 'select') {
+      const updated = {
+        cardID: name.startsWith('tdversion') ? value : undefined,
+        status: name.startsWith('tdstatus') ? value : undefined,
+      };
+      console.log(updated);
+      this.syncCard(index, updated);
     }
 
     if (name.startsWith('tdcheck')) {
@@ -189,7 +186,18 @@ class ListViewRaw extends Component {
   handleBlur(event) {
     const target = event.target;
     const index = parseInt(target.getAttribute('data-index'));
-    this.syncCard(index);
+
+    const colorString = this.state[`tdcolors${index}`];
+    const updated = {
+      cardID: this.state[`tdversion${index}`],
+      type_line: this.state[`tdtype${index}`],
+      status: this.state[`tdstatus${index}`],
+      cmc: this.state[`tdcmc${index}`],
+      tags: this.state[`tags${index}`].map(tagDict => tagDict.text),
+      colors: colorString === 'C' ? [] : [...colorString],
+    };
+
+    this.syncCard(index, updated);
   }
 
   checkAll(event) {
