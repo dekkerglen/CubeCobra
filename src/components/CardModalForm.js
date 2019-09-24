@@ -201,7 +201,7 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { canEdit, children, ...props } = this.props;
+    let { canEdit, setOpenCollapse, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         {children}
