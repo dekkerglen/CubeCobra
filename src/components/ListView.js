@@ -218,7 +218,7 @@ class ListViewRaw extends Component {
           groups[label1][label2].sort(function(a,b)
           {
             const textA = a.details.name.toUpperCase();
-            var textB =  b.details.name.toUpperCase();
+            const textB =  b.details.name.toUpperCase();
             return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
           }).map(({ index, details, ...card }) =>
             <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
