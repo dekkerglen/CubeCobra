@@ -53,7 +53,7 @@ block cube_content
         if user && user.id == cube.owner
           .card-footer
             span
-              button.btn.btn-success.editBlogButton(role='button' data-id=post._id) Edit
+              button.btn.btn-success.mr-2.editBlogButton(role='button' data-id=post._id) Edit
               a
               a.btn.btn-danger(data-toggle='collapse', href='#collapsepost'+i, role='button') Delete
             .collapse(id='collapsepost'+i)
