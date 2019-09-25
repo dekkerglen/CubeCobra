@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
@@ -6,6 +6,9 @@ import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';
 
 const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+  /* Initialize autocard anytime the DOM is updated. */
+  useEffect(() => /* global */ autocard_init('autocard'));
+
   let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
   for (let columnLabel of Object.keys(columns)) {
