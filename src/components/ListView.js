@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Col, Input, Row } from 'reactstrap';
+import { Input } from 'reactstrap';
 
 import DisplayContext from './DisplayContext';
 import GroupModalContext from './GroupModalContext';
@@ -63,10 +63,14 @@ class ListViewRaw extends Component {
     /* global */
     activateTags();
 
+    /* global */
+    autocard_init('autocard');
     this.updateVersions();
   }
 
   componentDidUpdate() {
+    /* global */
+    autocard_init('autocard');
     this.updateVersions();
   }
 
