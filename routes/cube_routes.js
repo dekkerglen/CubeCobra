@@ -2450,6 +2450,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         if (!found && req.body.src && cardsAreEquivalent(card, req.body.src, carddb)) {
           found = true;
           var updated = req.body.updated;
+          console.log(updated);
           Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
             if (!updated.hasOwnProperty(key)) {
               updated[key] = card[key];
@@ -2461,6 +2462,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
             }
           });
           cube.cards[index] = updated;
+          console.log(cube.cards[index]);
         }
       });
       if (!found) {
@@ -2471,9 +2473,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
       } else {
         cube = setCubeType(cube, carddb);
 
-        Cube.updateOne({
-          _id: cube._id
-        }, cube, function(err) {
+        cube.save(function(err) {
           if (err) {
             res.status(500).send({
               success: 'false',
@@ -2554,9 +2554,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
           }
         }
       }
-      Cube.updateOne({
-        _id: cube._id
-      }, cube, function(err) {
+      cube.save(function(err) {
         if (err) {
           res.status(500).send({
             success: 'false',
