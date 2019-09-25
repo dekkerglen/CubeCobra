@@ -217,7 +217,7 @@ class ListViewRaw extends Component {
         [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
           groups[label1][label2].sort(function(a,b)
           {
-            var textA = a.details.name.toUpperCase();
+            const textA = a.details.name.toUpperCase();
             var textB =  b.details.name.toUpperCase();
             return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
           }).map(({ index, details, ...card }) =>
