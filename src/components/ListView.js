@@ -204,10 +204,7 @@ class ListViewRaw extends Component {
     const { cards, primary, secondary, tertiary, changeSort, showTagColors } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
-      groups[label1] = {};
-      for (const [label2, secondaryGroup] of Object.entries(sortIntoGroups(primaryGroup, secondary))) {
-        groups[label1][label2] = sortIntoGroups(secondaryGroup, tertiary);
-      }
+      groups[label1] = sortIntoGroups(primaryGroup, secondary);
     }
 
     const inputProps = (index, field) => ({
@@ -222,55 +219,58 @@ class ListViewRaw extends Component {
     const rows =
       [].concat.apply([], getLabels(primary).filter(label1 => groups[label1]).map(label1 =>
         [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
-          [].concat.apply([], getLabels(tertiary).filter(label3 => groups[label1][label2][label3]).map(label3 =>
-            groups[label1][label2][label3].map(({ index, details, ...card }) =>
-              <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
-                <td className="align-middle">
-                  <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
-                </td>
-                <td className="align-middle text-truncate autocard" card={details.display_image}>
-                  {details.name}
-                </td>
-                <td>
-                  <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
-                    {(this.state.versionDict[card.cardID] || []).map(version =>
-                      <option key={version.id} value={version.id}>
-                        {version.version}
-                      </option>
-                    )}
-                  </Input>
-                </td>
-                <td>
-                  <Input {...inputProps(index, 'type')} type="text" />
-                </td>
-                <td>
-                  <Input {...inputProps(index, 'status')} type="select">
-                    {getLabels('Status').map(status =>
-                      <option key={status}>{status}</option>
-                    )}
-                  </Input>
-                </td>
-                <td>
-                  <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
-                </td>
-                <td>
-                  <Input {...inputProps(index, 'colors')} type="select">
-                    {colorCombos.map(combo =>
-                      <option key={combo}>{combo}</option>
-                    )}
-                  </Input>
-                </td>
-                <td style={{ minWidth: '15rem' }}>
-                  <TagInput
-                    tags={this.state[`tags${index}`]}
-                    addTag={this.addTag.bind(this, index)}
-                    deleteTag={this.deleteTag.bind(this, index)}
-                    reorderTag={this.reorderTag.bind(this, index)}
-                  />
-                </td>
-              </tr>
-            )
-          ))
+          groups[label1][label2].sort(function(a,b)
+          {
+            const textA = a.details.name.toUpperCase();
+            const textB =  b.details.name.toUpperCase();
+            return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+          }).map(({ index, details, ...card }) =>
+            <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
+              <td className="align-middle">
+                <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
+              </td>
+              <td className="align-middle text-truncate autocard" card={details.display_image}>
+                {details.name}
+              </td>
+              <td>
+                <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
+                  {(this.state.versionDict[card.cardID] || []).map(version =>
+                    <option key={version.id} value={version.id}>
+                      {version.version}
+                    </option>
+                  )}
+                </Input>
+              </td>
+              <td>
+                <Input {...inputProps(index, 'type')} type="text" />
+              </td>
+              <td>
+                <Input {...inputProps(index, 'status')} type="select">
+                  {getLabels('Status').map(status =>
+                    <option key={status}>{status}</option>
+                  )}
+                </Input>
+              </td>
+              <td>
+                <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
+              </td>
+              <td>
+                <Input {...inputProps(index, 'colors')} type="select">
+                  {colorCombos.map(combo =>
+                    <option key={combo}>{combo}</option>
+                  )}
+                </Input>
+              </td>
+              <td style={{ minWidth: '15rem' }}>
+                <TagInput
+                  tags={this.state[`tags${index}`]}
+                  addTag={this.addTag.bind(this, index)}
+                  deleteTag={this.deleteTag.bind(this, index)}
+                  reorderTag={this.reorderTag.bind(this, index)}
+                />
+              </td>
+            </tr>
+          )
         ))
       ));
 
