@@ -134,9 +134,14 @@
 }
 
 .card-list-item {
-	transition: .25s;
+    transition: .25s;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+.card-list-item a {
 	font-size: 8.5pt;
-	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -159,6 +164,7 @@
     top: 0;
     left: 0;
     position: absolute;
+    pointer-events: none;
 }
 .tag-color.card-list-item:after {
 	background: rgba(255,255,255,.2);
@@ -166,6 +172,15 @@
 
 .card-list-item:hover:after {
     opacity: 1;
+}
+
+button.close.float-none {
+    font-size: 1.25rem;
+}
+
+button.close.float-none span {
+    line-height: 0.9;
+    vertical-align: top;
 }
 
 @media(max-width: 991.98px) {

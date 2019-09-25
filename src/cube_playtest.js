@@ -28,7 +28,7 @@ const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...prop
         </CardTitleH5>
       </CardHeader>
       <CardBody>
-        <div className="description-area">{format.html}</div>
+        <div className="description-area" dangerouslySetInnerHTML={{__html: format.html}}/>
         <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
           <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
             {rangeOptions(4, 11)}

@@ -150,6 +150,7 @@ class CardModalForm extends Component {
     updateCollapse();
     $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
+    this.props.setOpenCollapse(() => 'edit');
     this.setState({ isOpen: false });
   }
  
@@ -200,9 +201,10 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { canEdit, children, ...props } = this.props;
+    let { canEdit, setOpenCollapse, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
+        {children}
         <CardModal
           values={this.state.formValues}
           onChange={this.handleChange}
@@ -220,7 +222,6 @@ class CardModalForm extends Component {
           }}
           {...props}
         />
-        {children}
       </CardModalContext.Provider>
     );
   }
