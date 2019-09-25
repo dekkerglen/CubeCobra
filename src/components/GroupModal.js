@@ -10,6 +10,8 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
+import { fromEntries } from '../util/Util';
+
 import AutocardListItem from './AutocardListItem';
 import ColorCheck from './ColorCheck';
 import GroupModalContext from './GroupModalContext';
@@ -26,7 +28,7 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
-      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
+      ...fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
       addTags: false,
       deleteTags: false,
       tags: [],
@@ -56,7 +58,7 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
-      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
+      ...fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
       addTags: false,
       deleteTags: false,
       tags: [],
