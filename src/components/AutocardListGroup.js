@@ -32,7 +32,7 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
                 groups[cmc].sort(function(a,b)
                 {
                   const textA = a.details.name.toUpperCase();
-                  var textB =  b.details.name.toUpperCase();
+                  const textB =  b.details.name.toUpperCase();
                   return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
                 }).map(card =>
                   (<AutocardListItem key={card.details.name} card={card} />)
