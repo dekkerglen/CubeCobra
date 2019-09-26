@@ -39,7 +39,7 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>;
 
-const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'set', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'set', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity', 'artist'];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) =>
@@ -86,6 +86,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} value={values.toughness} onChange={onChange} />
         <NumericField name="loyalty" humanName="Loyalty" placeholder={'Any value, e.g. "3"'} value={values.loyalty} onChange={onChange} />
         <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} value={values.rarity} onChange={onChange} />
+        <TextField name="artist" humanName="Artist" placeholder={'Any text, e.g. "seb"'} value={values.artist} onChange={onChange} />
       </ModalBody>
       <ModalFooter>
         <Button color="danger" aria-label="Close" onClick={toggle}>Cancel</Button>
