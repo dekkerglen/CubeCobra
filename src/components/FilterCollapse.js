@@ -12,6 +12,7 @@ import {
 
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
+import { fromEntries } from '../util/Util';
 
 import { ColorChecks } from './ColorCheck';
 
@@ -101,8 +102,8 @@ class FilterCollapse extends Component {
     this.state = {
       advancedOpen: false,
       filterInput: Hash.get('f', ''),
-      ...Object.fromEntries(allFields.map(n => [n, ''])),
-      ...Object.fromEntries(numFields.map(n => [n + 'Op', '='])),
+      ...fromEntries(allFields.map(n => [n, ''])),
+      ...fromEntries(numFields.map(n => [n + 'Op', '='])),
     };
 
     this.toggleAdvanced = this.toggleAdvanced.bind(this);

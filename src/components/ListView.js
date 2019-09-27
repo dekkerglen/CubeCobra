@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import { Input } from 'reactstrap';
 
+import { fromEntries } from '../util/Util';
+
 import DisplayContext from './DisplayContext';
 import GroupModalContext from './GroupModalContext';
 import PagedTable from './PagedTable';
@@ -31,7 +33,7 @@ class ListViewRaw extends Component {
     ]));
 
     this.state = {
-      ...Object.fromEntries(cardValues),
+      ...fromEntries(cardValues),
       versionDict: {},
     };
 
@@ -195,7 +197,7 @@ class ListViewRaw extends Component {
     const value = target.checked;
 
     const entries = this.props.cards.map(({ index }) => [`tdcheck${index}`, value]);
-    this.setState(Object.fromEntries(entries));
+    this.setState(fromEntries(entries));
 
     this.props.setGroupModalCards(this.props.cards);
   }
