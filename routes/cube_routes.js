@@ -581,7 +581,9 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
       } else {
         let pids = [];
         cubeA.cards.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = {
+            ...carddb.cardFromId(card.cardID)
+          };
           if (!card.type_line) {
             card.type_line = card.details.type;
           }
@@ -682,7 +684,9 @@ router.get('/list/:id', function(req, res) {
     } else {
       var pids = [];
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.cardFromId(card.cardID);
+        card.details = {
+          ...carddb.cardFromId(card.cardID)
+        };
         card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
