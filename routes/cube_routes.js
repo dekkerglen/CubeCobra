@@ -1443,7 +1443,7 @@ function startCustomDraft(req, res, params, cube) {
             var tag = format[j][k][Math.floor(Math.random() * format[j][k].length)];
             var index = draftutil.indexOfTag(cardpool, tag);
             //slice out the first card with the index, or error out
-            if (index != -1) {
+            if (index != -1 && cardpool.length > 0) {
               draft.packs[i][j][k] = cardpool.splice(index, 1)[0];
             } else {
               fail = true;
