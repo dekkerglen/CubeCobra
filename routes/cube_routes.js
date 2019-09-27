@@ -30,8 +30,8 @@ const {
 } = require('canvas');
 Canvas.Image = Image;
 
-const CARD_HEIGHT = 204;
-const CARD_WIDTH = 146;
+const CARD_HEIGHT = 680;
+const CARD_WIDTH = 488;
 
 //grabbing sortfilter.cardIsLabel from client-side
 var sortfilter = require('../public/js/sortfilter.js');
@@ -883,7 +883,7 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
     } else {
       var srcArray = pack.pack.map((card, index) => {
         return {
-          src: card.image_small,
+          src: card.image_normal,
           x: CARD_WIDTH * (index % 5),
           y: CARD_HEIGHT * Math.floor(index / 5)
         }
