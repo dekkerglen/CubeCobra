@@ -140,14 +140,16 @@ app.get('/', function(req, res) {
 
   if (req.user) user_id = req.user._id;
   Cube.find({
-    'card_count': {
-      $gt: 200
-    },
     $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
+      $and: [{
+        'card_count': {
+          $gt: 200
+        }
+      }, {
+        'isListed': true
+      }]
+    },
+    {
       'owner': user_id
     }]
   }).sort({
