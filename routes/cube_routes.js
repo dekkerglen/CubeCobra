@@ -2351,7 +2351,7 @@ router.get('/api/getcard/:name', function(req, res) {
   while (req.params.name.includes('-slash-')) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
-  console.log(req.params.name);
+
   let potentialIds = carddb.nameToId[req.params.name];
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(notPromoOrDigitalId);
@@ -2475,9 +2475,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
       } else {
         cube = setCubeType(cube, carddb);
 
-        Cube.updateOne({
-          _id: cube._id
-        }, cube, function(err) {
+        cube.save(function(err) {
           if (err) {
             res.status(500).send({
               success: 'false',
@@ -2491,7 +2489,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         });
       }
     } else {
-      console.log('Not authorized')
       res.status(400).send({
         success: 'false',
         message: 'Not Authorized'
@@ -2558,9 +2555,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
           }
         }
       }
-      Cube.updateOne({
-        _id: cube._id
-      }, cube, function(err) {
+      cube.save(function(err) {
         if (err) {
           res.status(500).send({
             success: 'false',
