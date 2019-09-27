@@ -59,7 +59,7 @@ class GroupModal extends Component {
       cmc: '',
       type_line: '',
       ...fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
-      addTags: false,
+      addTags: true,
       deleteTags: false,
       tags: [],
     });
