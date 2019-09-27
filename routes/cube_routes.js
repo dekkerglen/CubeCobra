@@ -2347,7 +2347,7 @@ router.get('/api/getcard/:name', function(req, res) {
   while (req.params.name.includes('-slash-')) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
-  console.log(req.params.name);
+
   let potentialIds = carddb.nameToId[req.params.name];
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(notPromoOrDigitalId);
@@ -2450,7 +2450,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         if (!found && req.body.src && cardsAreEquivalent(card, req.body.src, carddb)) {
           found = true;
           var updated = req.body.updated;
-          console.log(updated);
           Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
             if (!updated.hasOwnProperty(key)) {
               updated[key] = card[key];
@@ -2462,7 +2461,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
             }
           });
           cube.cards[index] = updated;
-          console.log(cube.cards[index]);
         }
       });
       if (!found) {
@@ -2487,7 +2485,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         });
       }
     } else {
-      console.log('Not authorized')
       res.status(400).send({
         success: 'false',
         message: 'Not Authorized'
