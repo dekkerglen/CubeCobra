@@ -310,8 +310,6 @@ test("getBasics returns the expected set of basic lands", () => {
   const result = cubefn.getBasics(carddb);
   expect(result).toEqual(expected);
   basicLands.forEach(function(name) {
-    console.log(result[name].details);
-    console.log(expected[name].details);
     expect(result[name].details).toEqual(expected[name].details);
   });
 
