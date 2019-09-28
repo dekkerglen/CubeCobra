@@ -785,15 +785,18 @@ test("addAutocard", () => {});
 test("selectionContainsCard", () => {});
 
 test("generatePack generates a valid pack of cards", () => {
-  expect.assertions(1);
-  const seed = new Date();
+  expect.assertions(16);
+  const seed = 1569704729;
   var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-  var expected = {};
   Cube.findOne.yields(null, exampleCube);
   var callback = sinon.stub();
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     cubefn.generatePack('', carddb, seed, callback);
-    sinon.assert.calledWith(callback, expected)
+    var argument = callback.getCall(0).args[1];
+    argument.pack.forEach(function(card) {
+      expect(card).toEqual(examplePack.pack[argument.pack.indexOf(card)]);
+    });
+    expect(argument.seed).toBe(seed);
   });
 });
