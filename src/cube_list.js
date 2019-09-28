@@ -79,7 +79,7 @@ class CubeList extends Component {
       <SortContext.Provider>
         <DisplayContext.Provider>
           <TagContext.Provider defaultTags={defaultTags}>
-            <CardModalForm canEdit={canEdit}>
+            <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
               <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                 <CubeListNavbar
                   canEdit={canEdit}

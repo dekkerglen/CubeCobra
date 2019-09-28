@@ -31,6 +31,9 @@ let categoryMap = new Map([
   ['rarity', 'rarity'],
   ['loy', 'loyalty'],
   ['loyalty', 'loyalty'],
+  ['a', 'artist'],
+  ['art', 'artist'],
+  ['artist', 'artist']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -264,6 +267,8 @@ const verifyTokens = (tokens) => {
         case 'rarity':
           if (token(i).arg.search(/^(common|uncommon|rare|mythic)$/) < 0) return false;
           break;
+        case 'artist':
+          return true;
       }
     }
 
@@ -650,6 +655,9 @@ function filterApply(card, filter) {
         res = rarity_order.indexOf(rarity) >= rarity_order.indexOf(filter.arg);
         break;
     }
+  }
+  if (filter.category == 'artist') {
+    res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
 
   if (filter.not) {

@@ -581,7 +581,9 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
       } else {
         let pids = [];
         cubeA.cards.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = {
+            ...carddb.cardFromId(card.cardID)
+          };
           if (!card.type_line) {
             card.type_line = card.details.type;
           }
@@ -682,7 +684,9 @@ router.get('/list/:id', function(req, res) {
     } else {
       var pids = [];
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.cardFromId(card.cardID);
+        card.details = {
+          ...carddb.cardFromId(card.cardID)
+        };
         card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
@@ -1055,7 +1059,7 @@ function bulkuploadCSV(req, res, cards, cube) {
       set: split[4].toUpperCase(),
       collector_number: split[5],
       status: split[6],
-      tags: split[7].split(',')
+      tags: split[7] && split[7].length > 0 ? split[7].split(',') : [],
     };
 
     let potentialIds = carddb.allIds(card);
@@ -1439,7 +1443,7 @@ function startCustomDraft(req, res, params, cube) {
             var tag = format[j][k][Math.floor(Math.random() * format[j][k].length)];
             var index = draftutil.indexOfTag(cardpool, tag);
             //slice out the first card with the index, or error out
-            if (index != -1) {
+            if (index != -1 && cardpool.length > 0) {
               draft.packs[i][j][k] = cardpool.splice(index, 1)[0];
             } else {
               fail = true;
@@ -2347,7 +2351,7 @@ router.get('/api/getcard/:name', function(req, res) {
   while (req.params.name.includes('-slash-')) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
-  console.log(req.params.name);
+
   let potentialIds = carddb.nameToId[req.params.name];
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(notPromoOrDigitalId);
@@ -2457,7 +2461,7 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           });
           Object.keys(updated).forEach(function(key) {
             if (updated[key] === null) {
-              updated[key] = undefined;
+              delete updated[key];
             }
           });
           cube.cards[index] = updated;
@@ -2471,10 +2475,9 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
       } else {
         cube = setCubeType(cube, carddb);
 
-        Cube.updateOne({
-          _id: cube._id
-        }, cube, function(err) {
+        cube.save(function(err) {
           if (err) {
+            console.error(err);
             res.status(500).send({
               success: 'false',
               message: 'Error saving cube'
@@ -2487,7 +2490,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         });
       }
     } else {
-      console.log('Not authorized')
       res.status(400).send({
         success: 'false',
         message: 'Not Authorized'
@@ -2554,9 +2556,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
           }
         }
       }
-      Cube.updateOne({
-        _id: cube._id
-      }, cube, function(err) {
+      cube.save(function(err) {
         if (err) {
           res.status(500).send({
             success: 'false',

@@ -54,6 +54,13 @@ class EditCollapse extends Component {
     };
 
     this.handlePostChange = this.handlePostChange.bind(this);
+    this.handleAdd = this.handleAdd.bind(this);
+    this.handleRemoveReplace = this.handleRemoveReplace.bind(this);
+  }
+
+  componentDidMount() {
+    /* global */
+    updateCollapse();
   }
 
   componentDidUpdate() {
@@ -63,6 +70,22 @@ class EditCollapse extends Component {
 
   handlePostChange(event) {
     this.setState({ postContent: event.target.value });
+  }
+
+  handleAdd(event) {
+    event.preventDefault();
+    /* global */ justAdd();
+    document.getElementById('addInput').focus();
+  }
+
+  handleRemoveReplace(event) {
+    event.preventDefault();
+    const addInput = document.getElementById('addInput');
+    const removeInput = document.getElementById('removeInput');
+    const replace = addInput.value.length > 0;
+    /* global */ remove();
+    /* If replace, put focus back in addInput; otherwise leave it here. */
+    (replace ? addInput : removeInput).focus();
   }
 
   render() {
@@ -77,19 +100,35 @@ class EditCollapse extends Component {
           </Row>
           <Row>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2">
+              <Form inline className="mb-2" onSubmit={this.handleAdd}>
                 <div className="autocomplete">
-                  <Input type="text" className="mr-2" id="addInput" placeholder="Card to Add" autoComplete="off" />
+                  <Input
+                    type="text"
+                    className="mr-2"
+                    id="addInput"
+                    placeholder="Card to Add"
+                    data-button="justAddButton"
+                    autoComplete="off"
+                    data-lpignore
+                  />
                 </div>
-                <Button color="success" onClick={/* global */ justAdd}>Just Add</Button>
+                <Button color="success" type="submit" id="justAddButton">Just Add</Button>
               </Form>
             </Col>
             <Col xs="12" sm="auto">
-              <Form inline className="mb-2">
+              <Form inline className="mb-2" onSubmit={this.handleRemoveReplace}>
                 <div className="autocomplete">
-                  <Input type="text" className="mr-2" id="removeInput" placeholder="Card to Remove" autoComplete="off" />
+                  <Input
+                    type="text"
+                    className="mr-2"
+                    id="removeInput"
+                    placeholder="Card to Remove"
+                    data-button="removeButton"
+                    autoComplete="off"
+                    data-lpignore
+                  />
                 </div>
-                <Button color="success" onClick={/* global */ remove}>Remove/Replace</Button>
+                <Button color="success" type="submit" id="removeButton">Remove/Replace</Button>
               </Form>
             </Col>
           </Row>

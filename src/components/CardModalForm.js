@@ -71,16 +71,20 @@ class CardModalForm extends Component {
 
     if (name === 'version') {
       // This should guarantee that version array is non-null.
-      if (this.state.versions.length > 0) {
+      const { versions } = this.state;
+      const newDetails = versions.find(version => version._id === value);
+      if (versions.length > 0 && newDetails) {
         this.setState(({ card }) => ({
           card: {
             ...card,
             details: {
-              ...versions.find(c => c.cardID === value),
-              display_image: card.details.imgUrl || card.details.image_normal,
+              ...newDetails,
+              display_image: card.imgUrl || newDetails.image_normal,
             },
           }
         }));
+      } else {
+        console.error('Can\'t find version');
       }
     }
   }
@@ -150,6 +154,7 @@ class CardModalForm extends Component {
     updateCollapse();
     $('#navedit').collapse("show");
     $('.warnings').collapse("hide");
+    this.props.setOpenCollapse(() => 'edit');
     this.setState({ isOpen: false });
   }
  
@@ -200,7 +205,7 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { canEdit, children, ...props } = this.props;
+    let { canEdit, setOpenCollapse, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         {children}

@@ -457,6 +457,12 @@ function updateCollapse() {
 
   $('#changelist').html(val);
 
+  if (val.length > 0) {
+    $('.editForm').collapse("show");
+  } else {
+    $('.editForm').collapse("hide")
+  }
+
   autocard_init('dynamic-autocard');
   changes.forEach(function(change, index) {
     var clickx = document.getElementById("clickx" + index);
@@ -525,7 +531,7 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor'];
+  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor', 'Unsorted'];
 }
 
 function getLabels(sort) {
@@ -699,6 +705,8 @@ function getLabels(sort) {
     }
     labels.push("No Price Available");
     return labels;
+  } else if (sort == 'Unsorted') {
+    return ['All'];
   }
 }
 

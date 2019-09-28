@@ -16,6 +16,9 @@ block cube_toolbar
     input#sort1(type='hidden', value=cube.default_sorts[0])
     input#sort2(type='hidden', value=cube.default_sorts[1])
 
+  include ../dynamic_flash
+
+
 block cube_content
   #react-root
 
@@ -313,4 +316,6 @@ block cube_content
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
   script(src='/js/editcube.js')
+  // FIXME: this can be removed once edit collapse is in React.
+  script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
   script(src='/js/cube_list.bundle.js')

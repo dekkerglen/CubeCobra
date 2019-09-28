@@ -99,6 +99,7 @@ test("updateCardbase creates the expected files", () => {
   });
   var downloadMock = jest.fn();
   downloadMock.mockReturnValue(noopPromise);
+  var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
   return updatecards.updateCardbase(cardsFixturePath).then(function() {
     expect(fs.existsSync('private/cardtree.json')).toBe(true);
@@ -109,6 +110,7 @@ test("updateCardbase creates the expected files", () => {
     expect(fs.existsSync('private/nameToId.json')).toBe(true);
     expect(fs.existsSync('private/full_names.json')).toBe(true);
   });
+  updatecards.downloadDefaultCards = initialDownloadDefaultCards;
 });
 
 test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
@@ -165,7 +167,7 @@ test("initializeCatalog clears the updatecards structures", () => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
-    expect(updatecards.catalog.nameToId.length).toBe(0);
+    expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
     expect(updatecards.catalog.full_names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
     expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
