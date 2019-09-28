@@ -323,13 +323,15 @@ test("getBasics returns the expected set of basic lands", () => {
 test("selectionContainsCard", () => {});
 
 test("setCubeType correctly sets the type and card_count of its input cube", () => {
-  expect.assertions(2);
+  expect.assertions(4);
   var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     var result = cubefn.setCubeType(exampleCube, carddb);
     expect(result.card_count).toBe(exampleCube.cards.length);
     expect(result.type).toBe("Vintage");
+    expect(exampleCube.card_count).toBe(exampleCube.cards.length);
+    expect(exampleCube.type).toBe("Vintage");
   });
 });
 
