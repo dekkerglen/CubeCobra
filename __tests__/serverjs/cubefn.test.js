@@ -326,7 +326,6 @@ test("getBasics returns the expected set of basic lands", () => {
   carddb.nameToId = initialNameToId;
 });
 
-test("selectionContainsCard", () => {});
 
 test("setCubeType correctly sets the type and card_count of its input cube", () => {
   expect.assertions(4);
@@ -343,8 +342,9 @@ test("setCubeType correctly sets the type and card_count of its input cube", () 
 
 test("sanitize", () => {});
 test("addAutocard", () => {});
+test("selectionContainsCard", () => {});
 
-test("generatePack", () => {
+test("generatePack generates a valid pack of cards", () => {
   expect.assertions(1);
   const seed = new Date();
   var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
