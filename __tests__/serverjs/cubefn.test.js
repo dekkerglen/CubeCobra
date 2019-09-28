@@ -169,7 +169,6 @@ test("getBasics returns the expected set of basic lands", () => {
   carddb.nameToId = initialNameToId;
 });
 
-
 test("setCubeType correctly sets the type and card_count of its input cube", () => {
   expect.assertions(4);
   var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
