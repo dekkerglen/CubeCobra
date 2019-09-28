@@ -695,3 +695,7 @@ const exampleCube = {
   "card_count": 52,
   "__v": 0
 };
+
+module.exports = {
+  exampleCube: exampleCube
+};

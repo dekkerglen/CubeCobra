@@ -1,6 +1,9 @@
 const cubefn = require("../../serverjs/cubefn");
 const carddb = require("../../serverjs/cards");
+const cubefixture = require("../../fixtures/examplecube");
 let Cube = require('../../models/cube');
+
+const fixturesPath = "fixtures";
 
 const exampleBasics = {
   "plains": {
@@ -318,7 +321,18 @@ test("getBasics returns the expected set of basic lands", () => {
 });
 
 test("selectionContainsCard", () => {});
-test("setCubeType", () => {});
+
+test("setCubeType correctly sets the type and card_count of its input cube", () => {
+  expect.assertions(2);
+  var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    var result = cubefn.setCubeType(exampleCube, carddb);
+    expect(result.card_count).toBe(exampleCube.cards.length);
+    expect(result.type).toBe("Vintage");
+  });
+});
+
 test("sanitize", () => {});
 test("addAutocard", () => {});
 test("generatePack", () => {});
