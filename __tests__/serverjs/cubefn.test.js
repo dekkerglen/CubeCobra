@@ -342,7 +342,6 @@ test("setCubeType correctly sets the type and card_count of its input cube", () 
 
 test("sanitize", () => {});
 test("addAutocard", () => {});
-test("selectionContainsCard", () => {});
 
 test("generatePack generates a valid pack of cards", () => {
   expect.assertions(16);
