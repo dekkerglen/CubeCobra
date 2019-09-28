@@ -1,3 +1,4 @@
+var sinon = require("sinon");
 const cubefn = require("../../serverjs/cubefn");
 const carddb = require("../../serverjs/cards");
 const cubefixture = require("../../fixtures/examplecube");
@@ -163,9 +164,14 @@ const exampleBasics = {
   }
 };
 
-beforeEach(() => {});
+beforeEach(() => {
+  sinon.stub(Cube, "findOne");
+});
 
-afterEach(() => {});
+afterEach(() => {
+  Cube.findOne.restore();
+  carddb.unloadCardDb();
+});
 
 test("get_cube_id returns urlAlias when defined", () => {
   const testCube = {
@@ -337,4 +343,17 @@ test("setCubeType correctly sets the type and card_count of its input cube", () 
 
 test("sanitize", () => {});
 test("addAutocard", () => {});
-test("generatePack", () => {});
+
+test("generatePack", () => {
+  expect.assertions(1);
+  const seed = new Date();
+  var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+  var expected = {};
+  Cube.findOne.yields(null, exampleCube);
+  var callback = sinon.stub();
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    cubefn.generatePack('', carddb, seed, callback);
+    sinon.assert.calledWith(callback, expected)
+  });
+});
