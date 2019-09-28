@@ -353,8 +353,8 @@ test("generatePack generates a valid pack of cards", () => {
   return promise.then(function() {
     cubefn.generatePack('', carddb, seed, callback);
     var argument = callback.getCall(0).args[1];
-    argument.pack.forEach(function(card) {
-      expect(card).toEqual(cubefixture.examplePack.pack[argument.pack.indexOf(card)]);
+    argument.pack.forEach(function(card, index) {
+      expect(card).toEqual(cubefixture.examplePack.pack[index]);
     });
     expect(argument.seed).toBe(seed);
   });
