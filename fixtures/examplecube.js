@@ -1,701 +1,873 @@
 const exampleCube = {
-  "isListed": true,
-  "privatePrices": false,
-  "decks": [],
-  "default_sorts": [],
-  "cards": [{
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "34bc9bb0-5ec1-400f-89e7-b450980a3391",
-      "type_line": "Creature — Human Warrior",
-      "addedTmsp": "2019-09-24T20:43:50.553Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "d17c057f-cb1b-4895-831a-fb35c75d3845",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.553Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "d3e33835-a293-4a1f-85d5-8ac22360ef35",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.553Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "629e37d1-c0f3-44f2-926e-41eb3687c1d9",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.553Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "4ed5790a-3354-49c2-89b6-3fc0de8dcc7c",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.554Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "48d73cb5-22ac-43df-9c4b-0c860bb80b3e",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.555Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "1b9e6c5c-4bc4-4f41-8c2c-f5b8c97c53c5",
-      "type_line": "Creature — Zombie Imp",
-      "addedTmsp": "2019-09-24T20:43:50.555Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "6179f847-e334-4f7f-9a4e-0013942a394f",
-      "type_line": "Creature — Vampire Wizard",
-      "addedTmsp": "2019-09-24T20:43:50.555Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "63870c81-63bf-4a9a-aeb5-74c6eaded9f1",
-      "type_line": "Creature — Vampire Spirit",
-      "addedTmsp": "2019-09-24T20:43:50.556Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "acdc31d5-6726-453e-94e0-69d2fe9447af",
-      "type_line": "Enchantment Creature — Insect",
-      "addedTmsp": "2019-09-24T20:43:50.556Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "94f7a441-bf2d-46fb-a7b6-9bd6137f86d9",
-      "type_line": "Creature — Human Wizard",
-      "addedTmsp": "2019-09-24T20:43:50.556Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "71db3698-a45c-4eaf-87e6-30502c0c10f4",
-      "type_line": "Creature — Vampire Warrior",
-      "addedTmsp": "2019-09-24T20:43:50.557Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "cf2ad186-4d85-4628-ae84-3c58c88d34cb",
-      "type_line": "Creature — Vampire ",
-      "addedTmsp": "2019-09-24T20:43:50.557Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "f62fd592-4910-417d-a500-e7029f3d119f",
-      "type_line": "Creature — Human Pirate",
-      "addedTmsp": "2019-09-24T20:43:50.557Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "864930ce-7c56-4ad2-9b90-57b10e5a0842",
-      "type_line": "Creature — Nightmare Horror",
-      "addedTmsp": "2019-09-24T20:43:50.557Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "9675b8ea-47f9-440e-9535-de879da53f76",
-      "type_line": "Creature — Faerie Rogue",
-      "addedTmsp": "2019-09-24T20:43:50.558Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "170693f5-13db-4191-99b1-e527ffb5b88e",
-      "type_line": "Creature — Rat",
-      "addedTmsp": "2019-09-24T20:43:50.558Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "2a0d7998-2f3d-43b8-a0be-6ff7e5c83223",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.558Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "ea19eb5e-0d70-42e6-bda2-b13757e08ca6",
-      "type_line": "Creature — Elemental",
-      "addedTmsp": "2019-09-24T20:43:50.558Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "93d2c4d1-6205-404a-b03d-995b90a3a33a",
-      "type_line": "Creature — Vampire Shaman",
-      "addedTmsp": "2019-09-24T20:43:50.559Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "ece050ad-788e-4451-b773-ca42c37549d2",
-      "type_line": "Creature — Minion",
-      "addedTmsp": "2019-09-24T20:43:50.559Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "9eb8ea7b-dfac-47bf-b608-efd54e4fe0f1",
-      "type_line": "Creature — Zombie Warrior",
-      "addedTmsp": "2019-09-24T20:43:50.561Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "bffaad78-97ff-431f-bfb0-e96c7558f974",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.562Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "9695f390-f791-4d64-90b2-731d6d37df1c",
-      "type_line": "Creature — Specter",
-      "addedTmsp": "2019-09-24T20:43:50.563Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "98370735-5303-40d4-9e80-cdb40dee18e2",
-      "type_line": "Creature — Zombie Warrior",
-      "addedTmsp": "2019-09-24T20:43:50.564Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54",
-      "type_line": "Legendary Creature — Human Cleric ",
-      "addedTmsp": "2019-09-24T20:43:50.564Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "66d80dd1-b944-4cb2-8578-b4dbcabbbc1e",
-      "type_line": "Creature — Human Shaman",
-      "addedTmsp": "2019-09-24T20:43:50.564Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "566be83c-14a8-42ca-b9e5-51b486dc7849",
-      "type_line": "Creature — Imp",
-      "addedTmsp": "2019-09-24T20:43:50.565Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "9ba96d96-8d9e-47c8-ab39-17479564aadf",
-      "type_line": "Creature — Vampire Shaman",
-      "addedTmsp": "2019-09-24T20:43:50.565Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "2ff15389-10a1-49d7-b1c2-d7a13e151612",
-      "type_line": "Creature — Demon",
-      "addedTmsp": "2019-09-24T20:43:50.565Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "13896468-e3d0-4bcb-b09e-b5c187aecb03",
-      "type_line": "Creature — Vampire ",
-      "addedTmsp": "2019-09-24T20:43:50.566Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "8242fade-754c-4404-b3fb-f3cccf84b3b6",
-      "type_line": "Creature — Demon",
-      "addedTmsp": "2019-09-24T20:43:50.568Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "17a278d0-f601-4d57-bc3d-2972f8602a69",
-      "type_line": "Legendary Creature — Vampire Warrior",
-      "addedTmsp": "2019-09-24T20:43:50.569Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "5b3a4f2a-57ea-4fa0-a76f-3e215a36d1f4",
-      "type_line": "Creature — Human Assassin",
-      "addedTmsp": "2019-09-24T20:43:50.569Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "44c4476d-58f9-420d-9545-f5d580c589de",
-      "type_line": "Creature — Horror",
-      "addedTmsp": "2019-09-24T20:43:50.569Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "f4846664-4463-4521-bb3f-3a4d00fa418d",
-      "type_line": "Creature — Beast Horror",
-      "addedTmsp": "2019-09-24T20:43:50.570Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "be358357-2abe-4ead-bb18-76cad8274489",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.570Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "8be01b8d-e0ef-44d1-ac97-39bb5a0e76be",
-      "type_line": "Creature — Demon",
-      "addedTmsp": "2019-09-24T20:43:50.570Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "f271addb-e267-4397-b181-f1eaeabbfe71",
-      "type_line": "Creature — Demon",
-      "addedTmsp": "2019-09-24T20:43:50.571Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "aca8d295-e8e9-4213-bc9b-f1acf57fb520",
-      "type_line": "Legendary Creature — Vampire Shaman",
-      "addedTmsp": "2019-09-24T20:43:50.571Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "b06078ce-f534-4e16-9a70-d51620a33eb2",
-      "type_line": "Creature — Zombie",
-      "addedTmsp": "2019-09-24T20:43:50.571Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "5fa6d385-6b8e-45ad-83dc-b477799c05a5",
-      "type_line": "Creature — Giant",
-      "addedTmsp": "2019-09-24T20:43:50.572Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "cdd32ec2-02a8-41fc-bf45-c9585bb2b3ee",
-      "type_line": "Creature — Wurm",
-      "addedTmsp": "2019-09-24T20:43:50.572Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 7,
-      "cardID": "cedd44eb-f381-46e1-bcb0-88416b4ce33d",
-      "type_line": "Creature — Zombie Fish",
-      "addedTmsp": "2019-09-24T20:43:50.572Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 7,
-      "cardID": "bbd672c9-46ae-4d2b-93d9-16271d2f71ff",
-      "type_line": "Legendary Creature — Praetor",
-      "addedTmsp": "2019-09-24T20:43:50.573Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 8,
-      "cardID": "cf2a5c2e-7fe1-45eb-b01c-891ab961186f",
-      "type_line": "Legendary Creature — Demon",
-      "addedTmsp": "2019-09-24T20:43:50.573Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "ac506c17-adc8-49c6-9d8d-43db7cb1ec9d",
-      "type_line": "Legendary Planeswalker — Liliana",
-      "addedTmsp": "2019-09-24T20:43:50.573Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "96bb667b-7240-4072-beb7-9a803c9eabe3",
-      "type_line": "Legendary Planeswalker — Liliana",
-      "addedTmsp": "2019-09-24T20:43:50.573Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "40d8f490-f04d-4d59-9ab0-a977527fd529",
-      "type_line": "Legendary Planeswalker — Liliana",
-      "addedTmsp": "2019-09-24T20:43:50.574Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "53b2d6e9-2a43-4ebe-9ae8-944375b46cce",
-      "type_line": "Legendary Planeswalker — Nixilis",
-      "addedTmsp": "2019-09-24T20:43:50.574Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "bc8475bd-bdd4-421c-ace7-c6262f7405ce",
-      "type_line": "Instant",
-      "addedTmsp": "2019-09-24T20:43:50.574Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "5dba0068-c63f-4699-b630-a56b26ad8239",
-      "type_line": "Instant",
-      "addedTmsp": "2019-09-24T20:43:50.574Z"
-    }
-  ],
-  "tag_colors": [],
-  "shortID": "1",
-  "name": "hgehrgiuhaerg",
-  "owner": "5d671c495c4dcdeca1a2f7c8",
-  "image_uri": "https://img.scryfall.com/cards/art_crop/front/3/d/3d946df5-f206-4241-bb55-97db67dc793c.jpg?1562546549",
-  "image_name": "Doubling Cube [10e-321]",
-  "image_artist": "Mark Tedin",
-  "description": "This is a brand new cube!",
-  "owner_name": "sensitiveemmett",
-  "date_updated": "2019-09-24T20:45:40.832Z",
-  "updated_string": "9/24/2019, 8:45:40 PM",
-  "type": "Legacy",
-  "card_count": 52,
-  "__v": 0
+    "isListed" : true,
+    "privatePrices" : false,
+    "decks" : [ ],
+    "default_sorts" : [ ],
+    "cards" : [
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "0dbf3260-b956-40da-abc7-764781c9f26f",
+            "type_line" : "Creature — Human Knight",
+            "addedTmsp" : "2019-09-28T20:58:35.089Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "a8924faa-d5f5-4119-9fa1-be0789a5655d",
+            "type_line" : "Creature — Faerie ",
+            "addedTmsp" : "2019-09-28T20:58:35.092Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [ ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "84128e98-87d6-4c2f-909b-9435a7833e63",
+            "type_line" : "Artifact",
+            "addedTmsp" : "2019-09-28T20:58:35.093Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "bd6ccd0b-5279-431f-b65a-7fdbdffd1a90",
+            "type_line" : "Creature — Human Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.093Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "21c6e2cf-3799-4d5b-99c2-feeec15580ec",
+            "type_line" : "Legendary Creature — Elf Noble",
+            "addedTmsp" : "2019-09-28T20:58:35.093Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 7,
+            "cardID" : "49875f7a-31b9-4276-b971-8ead1e18fc81",
+            "type_line" : "Creature — Giant ",
+            "addedTmsp" : "2019-09-28T20:58:35.094Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "b0b03278-9ce8-4698-a8ca-135668384718",
+            "type_line" : "Creature — Human Knight",
+            "addedTmsp" : "2019-09-28T20:58:35.094Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "ff984a4c-1818-4f8f-a9d7-fce57e77937d",
+            "type_line" : "Creature — Giant ",
+            "addedTmsp" : "2019-09-28T20:58:35.094Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "d42a57b2-fbe9-4024-a593-f6dc711a2e9d",
+            "type_line" : "Creature — Faerie Rogue ",
+            "addedTmsp" : "2019-09-28T20:58:35.095Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "6f1383eb-aa7d-4d3b-bee4-8cffba9ae846",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.095Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "9954b9bb-21e7-40af-aaa7-b2001b8d1d45",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.096Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "aca10c34-010a-4a9f-a747-2592c4d58c5d",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.100Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "12b8c2e6-5256-4e7e-8d7d-4b386419780a",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.100Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "4113eeed-9399-4b59-a6d9-7d40190853c5",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.101Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "dd45820e-39be-448e-b446-44f3ebab555e",
+            "type_line" : "Creature — Human Noble",
+            "addedTmsp" : "2019-09-28T20:58:35.102Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 5,
+            "cardID" : "0cfe592d-7733-4f26-a395-3042817cc831",
+            "type_line" : "Creature — Troll",
+            "addedTmsp" : "2019-09-28T20:58:35.103Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [ ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "ec1f1041-f667-4b73-b1f2-e5bcae84095e",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.103Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "8a20f78f-32c6-4ba4-8389-1fde32ea42e4",
+            "type_line" : "Creature — Human Peasant ",
+            "addedTmsp" : "2019-09-28T20:58:35.104Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "d2804de2-5b13-493c-87ac-e59b3bb569a4",
+            "type_line" : "Sorcery",
+            "addedTmsp" : "2019-09-28T20:58:35.104Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "4e6d15f8-7ebc-43b7-b8fd-00555e74bcb0",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.104Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 6,
+            "cardID" : "939b8bcc-b9ac-4d8c-9db4-2bf91a853f03",
+            "type_line" : "Legendary Artifact — Equipment",
+            "addedTmsp" : "2019-09-28T20:58:35.105Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "13b553f1-8107-42a8-841a-91adf71cff72",
+            "type_line" : "Creature — Human Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.105Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "157f343d-8583-4827-a77d-d916e6a5caa1",
+            "type_line" : "Legendary Creature — Merfolk Wizard",
+            "addedTmsp" : "2019-09-28T20:58:35.105Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G",
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 5,
+            "cardID" : "1bff641e-aad3-414f-ad5b-8d32c734efa9",
+            "type_line" : "Sorcery",
+            "addedTmsp" : "2019-09-28T20:58:35.106Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [ ],
+            "status" : "Not Owned",
+            "cmc" : 0,
+            "cardID" : "57645743-27fa-4a75-9511-acfc32dd349a",
+            "type_line" : "Land",
+            "addedTmsp" : "2019-09-28T20:58:35.106Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "fbe0da77-7b53-41cc-b6e6-eed5092d38c5",
+            "type_line" : "Creature — Faerie Wizard ",
+            "addedTmsp" : "2019-09-28T20:58:35.106Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "77d54dca-d09b-49a6-a446-8144a7db6711",
+            "type_line" : "Creature — Treefolk Druid",
+            "addedTmsp" : "2019-09-28T20:58:35.107Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "ed03df49-7ea7-40ca-96d6-3907d75cc8e3",
+            "type_line" : "Creature — Faerie ",
+            "addedTmsp" : "2019-09-28T20:58:35.107Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 6,
+            "cardID" : "2f907f50-c02e-4348-a2d0-6697705e4047",
+            "type_line" : "Creature — Troll Noble",
+            "addedTmsp" : "2019-09-28T20:58:35.107Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "5e66e70e-354e-4c3c-9d5d-90f0bf1b857d",
+            "type_line" : "Creature — Human Knight",
+            "addedTmsp" : "2019-09-28T20:58:35.108Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "515aded7-16fc-498e-9736-f4853e6d5a72",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.108Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "489ae8ac-8329-49f0-a301-875f7ba37c97",
+            "type_line" : "Creature — Human Berserker ",
+            "addedTmsp" : "2019-09-28T20:58:35.108Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "40fb4518-406b-4673-afd9-61a9440e3335",
+            "type_line" : "Artifact",
+            "addedTmsp" : "2019-09-28T20:58:35.109Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "6a16f907-93df-419e-8a65-ee96938e4143",
+            "type_line" : "Creature — Zombie Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.109Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "e73b89ce-fdb2-4730-b87c-e23aa131be24",
+            "type_line" : "Legendary Creature — Human Wizard",
+            "addedTmsp" : "2019-09-28T20:58:35.110Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "bb6b2759-c315-42cb-8842-dc4f0f42c01d",
+            "type_line" : "Creature — Human Warrior ",
+            "addedTmsp" : "2019-09-28T20:58:35.110Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B",
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 6,
+            "cardID" : "ea9f8dd7-b774-40c5-9e67-3eb87bb72541",
+            "type_line" : "Legendary Planeswalker — Garruk",
+            "addedTmsp" : "2019-09-28T20:58:35.110Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "d0960ccb-6952-4398-aa94-816e6fb04c2d",
+            "type_line" : "Creature — Human Peasant ",
+            "addedTmsp" : "2019-09-28T20:58:35.111Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "d274723a-27f3-49ec-ade0-d0b5e0e87d84",
+            "type_line" : "Creature — Bird",
+            "addedTmsp" : "2019-09-28T20:58:35.111Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "2728180c-c24d-4deb-a901-ae90232ad45d",
+            "type_line" : "Artifact",
+            "addedTmsp" : "2019-09-28T20:58:35.111Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "c38c9120-ac20-4f81-b8d8-9d490cc2a913",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.112Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 6,
+            "cardID" : "5ee91fd2-794f-4c6a-8ce6-3bd2b12f95bb",
+            "type_line" : "Creature — Archon",
+            "addedTmsp" : "2019-09-28T20:58:35.112Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "dda18da1-1ba4-421c-8980-a94984a5e12a",
+            "type_line" : "Creature — Faerie",
+            "addedTmsp" : "2019-09-28T20:58:35.112Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "cdb80c03-53a5-4142-a630-bcf489d6383d",
+            "type_line" : "Creature — Faerie ",
+            "addedTmsp" : "2019-09-28T20:58:35.113Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R",
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.114Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "eb96078d-8632-4e7e-93ae-c4c86c530d19",
+            "type_line" : "Creature — Human Knight",
+            "addedTmsp" : "2019-09-28T20:58:35.116Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "257a84d3-bc4e-4bb3-a435-6d243929bd8c",
+            "type_line" : "Sorcery",
+            "addedTmsp" : "2019-09-28T20:58:35.118Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "40ef45e3-b12a-403e-823c-44f4c95543e8",
+            "type_line" : "Creature — Human Wizard",
+            "addedTmsp" : "2019-09-28T20:58:35.118Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "896e5f61-6074-458d-9e8c-aff99fda75d7",
+            "type_line" : "Enchantment — Aura",
+            "addedTmsp" : "2019-09-28T20:58:35.119Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "052ab231-6575-4682-9208-13ac6b9d7910",
+            "type_line" : "Legendary Creature — Human Noble",
+            "addedTmsp" : "2019-09-28T20:58:35.119Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B",
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 6,
+            "cardID" : "072648c6-a3ee-4db7-877e-67a5fab46272",
+            "type_line" : "Creature — Serpent",
+            "addedTmsp" : "2019-09-28T20:58:35.120Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 5,
+            "cardID" : "b6a1b6c9-8e66-475b-807b-4dd6e88b366a",
+            "type_line" : "Creature — Unicorn ",
+            "addedTmsp" : "2019-09-28T20:58:35.120Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "341110e5-577d-45ee-bf62-53373a331c87",
+            "type_line" : "Creature — Beast Noble ",
+            "addedTmsp" : "2019-09-28T20:58:35.120Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "039c20ab-13c4-426a-888c-9093340a85a0",
+            "type_line" : "Creature — Human Peasant ",
+            "addedTmsp" : "2019-09-28T20:58:35.121Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 1,
+            "cardID" : "8182c9e0-861e-4736-997b-e79e62a2fec5",
+            "type_line" : "Creature — Merfolk Wizard ",
+            "addedTmsp" : "2019-09-28T20:58:35.121Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "9eef0851-c2bb-4b11-b9c2-c659abadd0d9",
+            "type_line" : "Artifact",
+            "addedTmsp" : "2019-09-28T20:58:35.122Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "236b40cd-c359-41cc-b530-d7d6fbbe33bf",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.122Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "49c98e70-e8fe-4fea-b1d0-e7560780fda9",
+            "type_line" : "Creature — Zombie Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.122Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "c389e04c-b009-4468-b760-5dd588cff9b9",
+            "type_line" : "Creature — Elf Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.123Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "adc82c1f-3584-49d0-b39f-87d97d9153fc",
+            "type_line" : "Creature — Human Knight",
+            "addedTmsp" : "2019-09-28T20:58:35.123Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G",
+                "U"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 3,
+            "cardID" : "95da027e-34c1-4098-827d-1647693ad8f4",
+            "type_line" : "Legendary Planeswalker — Oko",
+            "addedTmsp" : "2019-09-28T20:58:35.123Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "G"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "f2ca07ab-32e9-477c-a263-721a03f778ff",
+            "type_line" : "Instant",
+            "addedTmsp" : "2019-09-28T20:58:35.124Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "b104f257-b3aa-4e7e-987c-7358b6ca7b12",
+            "type_line" : "Creature — Dragon",
+            "addedTmsp" : "2019-09-28T20:58:35.124Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "B"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 2,
+            "cardID" : "6d747619-3057-4973-aec7-a0e4674e94f7",
+            "type_line" : "Creature — Human Knight ",
+            "addedTmsp" : "2019-09-28T20:58:35.124Z"
+        },
+        {
+            "tags" : [
+                "New"
+            ],
+            "colors" : [
+                "R",
+                "W"
+            ],
+            "status" : "Not Owned",
+            "cmc" : 4,
+            "cardID" : "505532ef-3791-4253-8a2a-b6f02ef45ab4",
+            "type_line" : "Enchantment",
+            "addedTmsp" : "2019-09-28T20:58:35.125Z"
+        }
+    ],
+    "tag_colors" : [ ],
+    "shortID" : "2",
+    "name" : "lkjglkejrge",
+    "owner" : "5d671c495c4dcdeca1a2f7c8",
+    "description" : "This is a brand new cube!",
+    "owner_name" : "sensitiveemmett",
+    "date_updated" : "2019-09-28T20:58:35.088Z",
+    "updated_string" : "9/28/2019, 8:58:35 PM",
+    "type" : "Vintage",
+    "card_count" : 65,
+    "__v" : 0
 };
 
 module.exports = {
-  exampleCube: exampleCube
+    exampleCube: exampleCube
 };
