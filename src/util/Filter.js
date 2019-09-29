@@ -427,7 +427,7 @@ function filterApply(card, filter, inCube) {
   let cmc = inCube ? card.cmc : card.details.cmc;
   let colors = inCube ? card.colors : card.details.color_identity;
   if (filter.category == 'name') {
-    res = card.details.name_lower.indexOf(filter.arg) > -1;
+    res = card.details.name_lower.indexOf(filter.arg.toLowerCase()) > -1;
   }
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;

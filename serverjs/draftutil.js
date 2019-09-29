@@ -40,7 +40,7 @@ var methods = {
       'name': {
         $in: names
       }
-    }, function(err, ratings) {
+    }, function (err, ratings) {
       var dict = {};
       if (ratings) {
         ratings.forEach(function(rating, index) {
