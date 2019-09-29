@@ -25,24 +25,15 @@ function makeFilter(filterText) {
   }
 
   const tokens = [];
-  const valid = Filter.tokenizeInput(filterText, tokens);
-  if (!valid || tokens.length === 0 || !Filter.verifyTokens(tokens)) {
-    return [];
-  }
+  const valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
 
-  return [Filter.parseTokens(tokens)];
+  return {
+    err: !valid,
+    filter: [Filter.parseTokens(tokens)],
+  };
 }
 
-function topCards(req, res) {
-  if (!req.query.filter) {
-    res.sendStatus(400);
-  }
-
-  const filter = makeFilter(req.query.filter);
-  if (filter.length === 0) {
-    res.sendStatus(400);
-  }
-
+function topCards(filter, res) {
   const cards = matchingCards(filter);
   const nameMap = new Map();
   for (const card of cards) {
@@ -58,7 +49,6 @@ function topCards(req, res) {
     let nonPromo = possible.find(card => !card.promo && !card.digital && card.border_color != 'gold');
     return nonPromo || possible[0];
   });
-
 
   return CardRating.find({
     'name': {
@@ -79,13 +69,26 @@ function topCards(req, res) {
 }
 
 router.get('/api/topcards', (req, res) => {
-  topCards(req, res).then(({ data }) => {
+  if (!req.query.f) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const { err, filter } = makeFilter(req.query.f);
+  if (err) {
+    res.sendStatus(400);
+    return;
+  }
+
+  topCards(filter, res).then(({ data }) => {
     res.status(200).send({ data });
   });
 });
 
 router.get('/topcards', (req, res) => {
-  topCards(req, res).then(({ data }) => {
+  const { err, filter } = makeFilter(req.query.f);
+
+  topCards(filter, res).then(({ data }) => {
     res.render('tool/topcards', { data });
   });
 });

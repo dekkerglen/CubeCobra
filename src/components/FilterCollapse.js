@@ -12,6 +12,7 @@ import {
 
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
+import Query from '../util/Query';
 import { fromEntries } from '../util/Util';
 
 import { ColorChecks } from './ColorCheck';
@@ -102,7 +103,7 @@ class FilterCollapse extends Component {
 
     this.state = {
       advancedOpen: false,
-      filterInput: Hash.get('f', ''),
+      filterInput: this.store().get('f', ''),
       ...fromEntries(allFields.map(n => [n, ''])),
       ...fromEntries(numFields.map(n => [n + 'Op', '='])),
     };
@@ -118,6 +119,10 @@ class FilterCollapse extends Component {
 
   componentDidMount() {
     this.updateFilters();
+  }
+
+  store() {
+    return this.props.useQuery ? Query : Hash;
   }
 
   toggleAdvanced() {
@@ -146,7 +151,7 @@ class FilterCollapse extends Component {
   updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
-      this.props.setFilter([]);
+      this.props.setFilter([], '');
       return;
     }
     const tokens = [];
@@ -156,8 +161,8 @@ class FilterCollapse extends Component {
     if (tokens.length > 0) {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
-      this.props.setFilter(filters);
-      Hash.set('f', filterInput);
+      this.props.setFilter(filters, filterInput);
+      this.store().set('f', filterInput);
     }
   }
 
@@ -200,11 +205,11 @@ class FilterCollapse extends Component {
 
   handleReset(event) {
     this.setState({ filterInput: '' });
-    this.props.setFilter([]);
+    this.props.setFilter([], '');
   }
 
   render() {
-    const { filter, setFilter, numCards, ...props } = this.props;
+    const { filter, setFilter, numCards, useQuery, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens);
@@ -237,7 +242,7 @@ class FilterCollapse extends Component {
               <h5>Filters</h5>
               <p>
                 {!filter || filter.length === 0 ? <em>No filters applied.</em> :
-                  <em>Filters applied: {numCards} total results.</em>
+                  <em>Filters applied{typeof numCards !== 'undefined' ? `: ${numCards} total results.` : '.'}</em>
                 }
               </p>
             </Col>

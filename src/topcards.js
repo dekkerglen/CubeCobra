@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import Query from './util/Query';
+
 import FilterCollapse from './components/FilterCollapse';
 import PagedTable from './components/PagedTable';
 
@@ -13,19 +15,22 @@ class TopCards extends Component {
     super(props);
 
     this.state = {
-      filter: '',
+      filter: [],
       data: this.props.defaultData.sort(compare) || [],
     };
 
     this.setFilter = this.setFilter.bind(this);
   }
 
-  setFilter(filter) {
-    this.setState({ filter });
+  setFilter(filter, filterInput) {
+    const params = new URLSearchParams([['f', filterInput]]);
+    fetch('/tool/api/topcards?' + params.toString()).then(response => response.json()).then(json => {
+      this.setState({ data: json.data.sort(compare) });
+    }).catch(err => console.error(err));
   }
 
   render() {
-    const rows = data.map(([name, img, rating]) => rating === null ? [] :
+    const rows = this.state.data.map(([name, img, rating]) => rating === null ? [] :
       <tr key={name}>
         <td>{name}</td>
         <td>{rating === null ? 'None' : (rating * 100).toFixed(0)}</td>
@@ -33,7 +38,7 @@ class TopCards extends Component {
     ).flat();
     return <>
       <div className="usercontrols pt-3">
-        <FilterCollapse isOpen={true} filter={this.state.filter} setFilter={this.setFilter} />
+        <FilterCollapse isOpen={true} filter={this.state.filter} setFilter={this.setFilter} useQuery />
       </div>
       <PagedTable rows={rows}>
         <thead>
