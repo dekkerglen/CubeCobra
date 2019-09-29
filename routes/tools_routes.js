@@ -1,4 +1,5 @@
 const express = require('express');
+const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
 const Filter = require('../dist/util/Filter');
@@ -6,6 +7,21 @@ const Filter = require('../dist/util/Filter');
 const CardRating = require('../models/cardrating');
 
 const router = express.Router();
+
+const MAX_RESULTS = 300;
+
+/* Gets k sorted minimum elements of arr. */
+/* Modifies arr. */
+function sortLimit(arr, k, keyF) {
+  keyF = keyF || (x => x);
+  const compareF = (x, y) => keyF(x) - keyF(y);
+  if (k < arr.length) {
+    quickselect(arr, k, 0, arr.length - 1, compareF);
+  }
+  const result = arr.slice(0, k);
+  result.sort(compareF);
+  return result;
+}
 
 function matchingCards(filter) {
   const cards = carddb.allCards();
@@ -53,16 +69,16 @@ function topCards(filter, res) {
     'name': {
       $in: names,
     },
-  }).catch(err => {
-    console.error(err);
-    res.sendStatus(500);
   }).then(ratings => {
     const ratingDict = new Map(ratings.map(r => [r.name, r.value]));
+    const fullData = versions.map(v => [v.name, v.image_normal, ratingDict.get(v.name) || null]);
+    const nonNullData = fullData.filter(x => x[2] !== null);
+    const data = sortLimit(nonNullData, MAX_RESULTS, x => -(x[2] === null ? -1 : x[2]));
     return {
       ratings,
       versions,
       names,
-      data: versions.map(v => [v.name, v.image_normal, ratingDict.get(v.name) || null]),
+      data,
     };
   });
 }
@@ -76,6 +92,9 @@ router.get('/api/topcards', (req, res) => {
 
   topCards(filter, res).then(({ data }) => {
     res.status(200).send({ data });
+  }).catch(err => {
+    console.error(err);
+    res.sendStatus(500);
   });
 });
 
@@ -88,6 +107,9 @@ router.get('/topcards', (req, res) => {
 
   topCards(filter, res).then(({ data }) => {
     res.render('tool/topcards', { data });
+  }).catch(err => {
+    console.error(err);
+    res.sendStatus(500);
   });
 });
 

@@ -156,6 +156,7 @@ class FilterCollapse extends Component {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
+      this.store().del('f');
       return;
     }
     const tokens = [];
@@ -197,6 +198,7 @@ class FilterCollapse extends Component {
   handleReset(event) {
     this.setState({ filterInput: '' });
     this.props.setFilter([], '');
+    this.store().del('f');
   }
 
   render() {
