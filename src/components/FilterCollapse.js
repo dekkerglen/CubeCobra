@@ -137,7 +137,11 @@ class FilterCollapse extends Component {
     for (const name of allFields) {
       if (this.state[name]) {
         const op = numFields.includes(name) ? (this.state[name + 'Op'] || '=') : ':';
-        tokens.push(name + op + this.state[name]);
+        let value = this.state[name].replace('"', '\"');
+        if (value.indexOf(' ') > -1) {
+          value = `"${value}"`;
+        }
+        tokens.push(`${name}${op}${value}`);
       }
     }
     const filterInput = tokens.join(' ');
@@ -171,19 +175,6 @@ class FilterCollapse extends Component {
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
     const extra = {};
-
-    if (name !== 'filterInput') {
-      // Advanced Filter change. Render to filter input.
-      const newState = { ...this.state, [name]: value };
-      const tokens = [];
-      for (const name of allFields) {
-        if (newState[name]) {
-          const op = numFields.includes(name) ? (newState[name + 'Op'] || '=') : ':';
-          tokens.push(name + op + newState[name]);
-        }
-      }
-      extra.filterInput = tokens.join(' ');
-    }
 
     this.setState({
       [name]: value,

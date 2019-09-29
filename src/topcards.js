@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import Query from './util/Query';
-
 import FilterCollapse from './components/FilterCollapse';
 import PagedTable from './components/PagedTable';
 
@@ -38,6 +36,7 @@ class TopCards extends Component {
     ).flat();
     return <>
       <div className="usercontrols pt-3">
+        <h4 className="mx-3 mb-3">Top Cards</h4>
         <FilterCollapse isOpen={true} filter={this.state.filter} setFilter={this.setFilter} useQuery />
       </div>
       <PagedTable rows={rows}>
@@ -52,7 +51,7 @@ class TopCards extends Component {
   }
 }
 
-const data = JSON.parse(document.getElementById('topcards').value || '[]');
+const data = JSON.parse(document.getElementById('topcards').value);
 const wrapper = document.getElementById('react-root');
 const element = <TopCards defaultData={data} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

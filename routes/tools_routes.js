@@ -1,7 +1,6 @@
 const express = require('express');
 
 const carddb = require('../serverjs/cards');
-const { fromEntries } = require('../serverjs/util');
 const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
@@ -20,8 +19,8 @@ function matchingCards(filter) {
 }
 
 function makeFilter(filterText) {
-  if (filterText === '') {
-    return [];
+  if (filterText.trim() === '') {
+    return { err: false, filter: [] };
   }
 
   const tokens = [];
@@ -29,7 +28,7 @@ function makeFilter(filterText) {
 
   return {
     err: !valid,
-    filter: [Filter.parseTokens(tokens)],
+    filter: valid ? [Filter.parseTokens(tokens)] : [],
   };
 }
 
@@ -69,7 +68,7 @@ function topCards(filter, res) {
 }
 
 router.get('/api/topcards', (req, res) => {
-  if (!req.query.f) {
+  if (typeof req.query.f === 'undefined') {
     res.sendStatus(400);
     return;
   }
@@ -87,6 +86,10 @@ router.get('/api/topcards', (req, res) => {
 
 router.get('/topcards', (req, res) => {
   const { err, filter } = makeFilter(req.query.f);
+
+  if (err) {
+    req.flash('Invalid filter.');
+  }
 
   topCards(filter, res).then(({ data }) => {
     res.render('tool/topcards', { data });
