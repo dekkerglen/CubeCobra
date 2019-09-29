@@ -36,7 +36,10 @@ function matchingCards(filter) {
 
 function makeFilter(filterText) {
   if (!filterText || filterText.trim() === '') {
-    return { err: false, filter: [] };
+    return {
+      err: false,
+      filter: []
+    };
   }
 
   const tokens = [];
@@ -84,14 +87,21 @@ function topCards(filter, res) {
 }
 
 router.get('/api/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
+  const {
+    err,
+    filter
+  } = makeFilter(req.query.f);
   if (err) {
     res.sendStatus(400);
     return;
   }
 
-  topCards(filter, res).then(({ data }) => {
-    res.status(200).send({ data });
+  topCards(filter, res).then(({
+    data
+  }) => {
+    res.status(200).send({
+      data
+    });
   }).catch(err => {
     console.error(err);
     res.sendStatus(500);
@@ -99,14 +109,21 @@ router.get('/api/topcards', (req, res) => {
 });
 
 router.get('/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
+  const {
+    err,
+    filter
+  } = makeFilter(req.query.f);
 
   if (err) {
     req.flash('Invalid filter.');
   }
 
-  topCards(filter, res).then(({ data }) => {
-    res.render('tool/topcards', { data });
+  topCards(filter, res).then(({
+    data
+  }) => {
+    res.render('tool/topcards', {
+      data
+    });
   }).catch(err => {
     console.error(err);
     res.sendStatus(500);
