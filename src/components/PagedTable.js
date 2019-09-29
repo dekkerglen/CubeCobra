@@ -31,15 +31,17 @@ class PagedTable extends Component {
     const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
 
     return <>
-      <Pagination aria-label="Table page" className="mt-3">
-        {validPages.map(page =>
-          <PaginationItem key={page} active={page === this.state.page}>
-            <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-              {page + 1}
-            </PaginationLink>
-          </PaginationItem>
-        )}
-      </Pagination>
+      {validPages.length === 1 ? '' :
+        <Pagination aria-label="Table page" className="mt-3">
+          {validPages.map(page =>
+            <PaginationItem key={page} active={page === this.state.page}>
+              <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
+                {page + 1}
+              </PaginationLink>
+            </PaginationItem>
+          )}
+        </Pagination>
+      }
       <div className="table-responsive">
         <Table {...props}>
           {children}

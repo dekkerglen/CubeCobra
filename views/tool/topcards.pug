@@ -1,0 +1,7 @@
+extends ../layout
+
+block content
+  include ../flash
+  input(type='hidden', id='topcards', value=JSON.stringify(data))
+  #react-root
+  script(src='/js/topcards.bundle.js')

@@ -1,0 +1,53 @@
+import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
+
+import FilterCollapse from './components/FilterCollapse';
+import PagedTable from './components/PagedTable';
+
+const compare = ([_a, _b, x], [_c, _d, y]) => {
+  return (y || 0) - (x || 0);
+}
+
+class TopCards extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      filter: '',
+      data: this.props.defaultData.sort(compare) || [],
+    };
+
+    this.setFilter = this.setFilter.bind(this);
+  }
+
+  setFilter(filter) {
+    this.setState({ filter });
+  }
+
+  render() {
+    const rows = data.map(([name, img, rating]) => rating === null ? [] :
+      <tr key={name}>
+        <td>{name}</td>
+        <td>{rating === null ? 'None' : (rating * 100).toFixed(0)}</td>
+      </tr>
+    ).flat();
+    return <>
+      <div className="usercontrols pt-3">
+        <FilterCollapse isOpen={true} filter={this.state.filter} setFilter={this.setFilter} />
+      </div>
+      <PagedTable rows={rows}>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+      </PagedTable>
+    </>;
+  }
+}
+
+const data = JSON.parse(document.getElementById('topcards').value || '[]');
+const wrapper = document.getElementById('react-root');
+const element = <TopCards defaultData={data} />;
+wrapper ? ReactDOM.render(element, wrapper) : false;
