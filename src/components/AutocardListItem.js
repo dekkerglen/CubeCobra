@@ -28,7 +28,7 @@ const AutocardListItem = ({ card, noCardModal, children }) => {
                 <a
                   href={noCardModal ? undefined : '#'}
                   className="d-block w-100"
-                  onAuxClick={noCardModal ? undefined : e => { e.preventDefault(); if (e.button == 1) { window.open(Affiliate.getTCGLink(card)); }}}
+                  onAuxClick={noCardModal ? undefined : e => { e.preventDefault(); handleAuxEvent(e, card) }}
                   onClick={noCardModal ? undefined : e => { e.preventDefault(); openCardModal(card); }}
                 >
                   {name}
@@ -42,6 +42,11 @@ const AutocardListItem = ({ card, noCardModal, children }) => {
       }
     </DisplayContext.Consumer>
   );
+}
+
+function handleAuxEvent(event, card)
+{
+  if (event.button == 1) { window.open(Affiliate.getTCGLink(card)); }
 }
 
 export default AutocardListItem;
