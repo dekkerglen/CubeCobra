@@ -19,7 +19,7 @@ function matchingCards(filter) {
 }
 
 function makeFilter(filterText) {
-  if (filterText.trim() === '') {
+  if (!filterText || filterText.trim() === '') {
     return { err: false, filter: [] };
   }
 
@@ -68,11 +68,6 @@ function topCards(filter, res) {
 }
 
 router.get('/api/topcards', (req, res) => {
-  if (typeof req.query.f === 'undefined') {
-    res.sendStatus(400);
-    return;
-  }
-
   const { err, filter } = makeFilter(req.query.f);
   if (err) {
     res.sendStatus(400);
