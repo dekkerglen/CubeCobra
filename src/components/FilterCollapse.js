@@ -159,8 +159,8 @@ class FilterCollapse extends Component {
       return;
     }
     const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens);
-    if (!valid || !Filter.verifyTokens(tokens)) return;
+    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    if (!valid) return;
 
     if (tokens.length > 0) {
       const filters = [Filter.parseTokens(tokens)];
@@ -203,7 +203,7 @@ class FilterCollapse extends Component {
     const { filter, setFilter, numCards, useQuery, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens);
+    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     return (
       <Collapse {...props}>
         <Container>

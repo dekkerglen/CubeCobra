@@ -22,6 +22,7 @@ class TopCards extends Component {
 
   setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
+    this.setState({ filter });
     fetch('/tool/api/topcards?' + params.toString()).then(response => response.json()).then(json => {
       this.setState({ data: json.data.sort(compare) });
     }).catch(err => console.error(err));
@@ -37,7 +38,13 @@ class TopCards extends Component {
     return <>
       <div className="usercontrols pt-3">
         <h4 className="mx-3 mb-3">Top Cards</h4>
-        <FilterCollapse isOpen={true} filter={this.state.filter} setFilter={this.setFilter} useQuery />
+        <FilterCollapse
+          isOpen={true}
+          filter={this.state.filter}
+          setFilter={this.setFilter}
+          numCards={rows.length}
+          useQuery
+        />
       </div>
       <PagedTable rows={rows}>
         <thead>
