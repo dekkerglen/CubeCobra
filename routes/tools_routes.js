@@ -27,7 +27,7 @@ function matchingCards(filter) {
   const cards = carddb.allCards();
   if (filter.length > 0) {
     return cards.filter(card => Filter.filterCard({
-      details: card
+      details: card,
     }, filter, /* inCube */ false));
   } else {
     return cards;
@@ -38,7 +38,7 @@ function makeFilter(filterText) {
   if (!filterText || filterText.trim() === '') {
     return {
       err: false,
-      filter: []
+      filter: [],
     };
   }
 
@@ -74,9 +74,9 @@ function topCards(filter, res) {
     },
   }).then(ratings => {
     const ratingDict = new Map(ratings.map(r => [r.name, r.value]));
-    const fullData = versions.map(v => [v.name, v.image_normal, ratingDict.get(v.name) || null]);
-    const nonNullData = fullData.filter(x => x[2] !== null);
-    const data = sortLimit(nonNullData, MAX_RESULTS, x => -(x[2] === null ? -1 : x[2]));
+    const fullData = versions.map(v => [v.name, v.image_normal, v.image_flip || null, ratingDict.get(v.name) || null]);
+    const nonNullData = fullData.filter(x => x[3] !== null);
+    const data = sortLimit(nonNullData, MAX_RESULTS, x => -(x[3] === null ? -1 : x[3]));
     return {
       ratings,
       versions,
@@ -89,7 +89,7 @@ function topCards(filter, res) {
 router.get('/api/topcards', (req, res) => {
   const {
     err,
-    filter
+    filter,
   } = makeFilter(req.query.f);
   if (err) {
     res.sendStatus(400);
@@ -97,10 +97,10 @@ router.get('/api/topcards', (req, res) => {
   }
 
   topCards(filter, res).then(({
-    data
+    data,
   }) => {
     res.status(200).send({
-      data
+      data,
     });
   }).catch(err => {
     console.error(err);
@@ -111,7 +111,7 @@ router.get('/api/topcards', (req, res) => {
 router.get('/topcards', (req, res) => {
   const {
     err,
-    filter
+    filter,
   } = makeFilter(req.query.f);
 
   if (err) {
@@ -119,10 +119,10 @@ router.get('/topcards', (req, res) => {
   }
 
   topCards(filter, res).then(({
-    data
+    data,
   }) => {
     res.render('tool/topcards', {
-      data
+      data,
     });
   }).catch(err => {
     console.error(err);
