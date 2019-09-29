@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
-const config = require('../config/database');
 const {
 	generate_short_id,
 } = require('../serverjs/cubefn.js');
