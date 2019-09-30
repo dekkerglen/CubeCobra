@@ -153,7 +153,7 @@ var methods = {
   },
   sanitize: function(html) {
     return sanitizeHtml(html, {
-      allowedTags: ['div', 'p', 'strike', 'strong', 'b', 'i', 'em', 'u', 'a', 'h5', 'h6', 'ul', 'ol', 'li', 'span'],
+      allowedTags: ['div', 'p', 'strike', 'strong', 'b', 'i', 'em', 'u', 'a', 'h5', 'h6', 'ul', 'ol', 'li', 'span', 'br'],
       selfClosing: ['br']
     });
   },
