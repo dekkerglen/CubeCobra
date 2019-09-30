@@ -13,6 +13,10 @@ let PasswordReset = require('../models/passwordreset')
 let Cube = require('../models/cube')
 let Deck = require('../models/deck')
 
+const {
+  ensureAuth
+} = require('./middleware');
+
 // For consistency between different forms, validate username through this function.
 function checkUsernameValid(req) {
   req.checkBody('username', 'Username is required').notEmpty();
@@ -712,18 +716,8 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
   });
 });
 
-function ensureAuth(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  } else {
-    req.flash('danger', 'Please login to view this content');
-    res.redirect('/user/login');
-  }
-}
-
 function addMinutes(date, minutes) {
   return new Date(new Date(date).getTime() + minutes * 60000);
 }
-
 
 module.exports = router;
