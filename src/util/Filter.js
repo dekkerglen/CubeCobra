@@ -579,7 +579,7 @@ function filterApply(card, filter) {
     });
   }
   if (filter.category == 'status') {
-    if (card.status.toLowerCase() == filter.arg) {
+    if (card.status == filter.arg) {
       res = true;
     }
   }
