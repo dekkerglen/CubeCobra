@@ -12,13 +12,16 @@ block cube_toolbar
                 a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
               li.nav-item
                 a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube
-
 block cube_content
   .row
     .col-md-4
       .card.mt-3
         .card-header
-          h3=cube.name
+          .row
+            .col-md-6
+              h3=cube.name
+            .col.md-6.pr-1
+              a.nav-link(href='#', class="float-right") RSS
         img.card-img-top.w-100(src=cube.image_uri)
         em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
         .card-body
