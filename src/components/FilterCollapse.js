@@ -163,7 +163,7 @@ class FilterCollapse extends Component {
 
   handleChange(event) {
     const target = event.target;
-    var value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
+    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
     const extra = {};
 
