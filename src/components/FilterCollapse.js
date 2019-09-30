@@ -76,8 +76,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             <InputGroupText>Status</InputGroupText>
           </InputGroupAddon>
           <Input type="select" name="status" value={values.status} onChange={onChange}>
-            {['', '\"Not Owned\"', 'Ordered', 'Owned', '\"Premium Owned\"'].map(status =>
-              <option key={ status }>{status.replace(/[""]+/g, '')}</option>
+            {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map(status =>
+              <option key={ status }>{status}</option>
             )}
           </Input>
         </InputGroup>
@@ -131,6 +131,10 @@ class FilterCollapse extends Component {
     const tokens = [];
     for (const name of allFields) {
       if (this.state[name]) {
+        if (name == "status")
+        {
+          this.state[name] = "\"" + this.state[name] + "\"";
+        }
         const op = numFields.includes(name) ? (this.state[name + 'Op'] || '=') : ':';
         tokens.push(name + op + this.state[name]);
       }
