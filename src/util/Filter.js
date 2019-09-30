@@ -575,11 +575,11 @@ function filterApply(card, filter) {
   }
   if (filter.category == 'tag') {
     res = card.tags.some(element => {
-      return element.toLowerCase() == filter.arg;
+      return element.toLowerCase() == filter.arg.toLowerCase();
     });
   }
   if (filter.category == 'status') {
-    if (card.status == filter.arg) {
+    if (card.status.toLowerCase() == filter.arg.toLowerCase()) {
       res = true;
     }
   }
