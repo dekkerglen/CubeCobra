@@ -3,6 +3,7 @@ import React from 'react';
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import AutocardListItem from './AutocardListItem';
+import SortContext from './SortContext';
 
 const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   let bothCmc = sortIntoGroups(both, "CMC");
@@ -32,8 +33,8 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 }
 
-const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
-  let columns = sortIntoGroups(cards, sorts[0]);
+const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
+  let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
   let bothCounts = {};
   let onlyACounts = {};
@@ -63,7 +64,7 @@ const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
     bothCounts[columnLabel] = bothCount;
     onlyACounts[columnLabel] = onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
+    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
 
   both = both.slice(0);
@@ -72,7 +73,7 @@ const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
 
   return <>
     {
-      getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
+      getLabels(primary).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
         let column = columns[columnLabel];
         return (
           <Row key={columnLabel} {...props}>
@@ -96,7 +97,7 @@ const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
                 </Row>
               </div>
               {
-                getLabels(sorts[1]).filter(label => column[label]).map(label => {
+                getLabels(secondary).filter(label => column[label]).map(label => {
                   let group = column[label];
                   let bothGroup = [], onlyAGroup = [], onlyBGroup = [];
 
@@ -131,5 +132,10 @@ const CompareView = ({ cards, sorts, both, onlyA, onlyB, ...props }) => {
     }
   </>;
 }
+
+const CompareView = props =>
+  <SortContext.Consumer>
+    {({ primary, secondary }) => <CompareViewRaw primary={primary} secondary={secondary} {...props} />}
+  </SortContext.Consumer>;
 
 export default CompareView;

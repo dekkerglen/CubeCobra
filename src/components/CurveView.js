@@ -1,8 +1,9 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
+import SortContext from './SortContext';
 
 const TypeRow = ({ cardType, groups, count, primary }) => (
   <Fragment key={cardType}>
@@ -48,11 +49,12 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
   </Card>
 );
 
-const CurveView = ({ cards, ...props }) => {
-  sorts[0] = document.getElementById('primarySortSelect').value || 'Color Category';
+const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+  /* Initialize autocard anytime the DOM is updated. */
+  useEffect(() => /* global */ autocard_init('autocard'));
 
   // We call the groups color and type even though they might be other sorts.
-  let groups = sortIntoGroups(cards, sorts[0]);
+  let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};
   let typeCounts = {};
 
@@ -86,7 +88,7 @@ const CurveView = ({ cards, ...props }) => {
     <Row className="mt-3" {...props}>
       <Col>
         {
-          getLabels(sorts[0]).filter(color => groups[color]).map(color => (
+          getLabels(primary).filter(color => groups[color]).map(color => (
             <ColorCard
               key={color}
               color={color}
@@ -101,5 +103,7 @@ const CurveView = ({ cards, ...props }) => {
     </Row>
   );
 }
+
+const CurveView = SortContext.Wrapped(CurveViewRaw);
 
 export default CurveView;

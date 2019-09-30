@@ -9,6 +9,13 @@ block content
 				a.nav-link.active(href='/user/view/'+user_limited.id) Cubes
 			li.nav-item(style='padding-right:10px;')
 				a.nav-link(href='/user/decks/'+user_limited.id) Decks
+	if user && user.id == user_limited.id
+		.usercontrols
+			nav.navbar.navbar-light
+				ul.navbar-nav
+					li.nav-item
+						a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+
 	include ../flash
 
 	if user_limited.about
@@ -17,8 +24,7 @@ block content
 			.card-body
 				h5 About:
 				p=user_limited.about
-				if user
-					if user.id == user_limited.id
+				if user && user.id == user_limited.id
 					a.btn.btn-success(href='/user/account') Update
 	br
 	.row

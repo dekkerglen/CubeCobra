@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGroup, Input, Label, Row, UncontrolledAlert, UncontrolledCollapse } from 'reactstrap';
 
+import DynamicFlash from './components/DynamicFlash';
+
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map(n => <option key={n}>{n}</option>);
 
@@ -26,7 +28,7 @@ const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...prop
         </CardTitleH5>
       </CardHeader>
       <CardBody>
-        <div className="description-area">{format.html}</div>
+        <div className="description-area" dangerouslySetInnerHTML={{__html: format.html}}/>
         <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
           <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
             {rangeOptions(4, 11)}
@@ -216,11 +218,10 @@ class CubePlaytest extends Component {
     const { alerts, draftFormats } = this.state;
 
     return <>
-      <div>
-        {alerts.map(data =>
-          <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
-        )}
-      </div>
+      <DynamicFlash />
+      {alerts.map(data =>
+        <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
+      )}
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="5">
           {decks.length == 0 ? '' :

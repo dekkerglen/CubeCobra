@@ -1,29 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
 import AutocardListGroup from './AutocardListGroup';
+import SortContext from './SortContext';
 
-const TableView = ({ cards, ...props }) => {
-  sorts[0] = document.getElementById('primarySortSelect').value || 'Color Category';
-  sorts[1] = document.getElementById('secondarySortSelect').value || 'Types-Multicolor';
-  let columns = sortIntoGroups(cards, sorts[0]);
+const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+  /* Initialize autocard anytime the DOM is updated. */
+  useEffect(() => /* global */ autocard_init('autocard'));
+
+  let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
   for (let columnLabel of Object.keys(columns)) {
     columnCounts[columnLabel] = columns[columnLabel].length;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], sorts[1]);
+    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
 
   return (
     <Row {...props} style={{ ...props.style, margin: '0 -2px' }}>
       {
-        getLabels(sorts[0]).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
+        getLabels(primary).filter(columnLabel => columns[columnLabel]).map(columnLabel => {
           let column = columns[columnLabel];
           return (
             <Col key={columnLabel} xs="6" md="3" lg="auto" className="mt-3" style={{ padding: '0 2px', width: `${100 / Math.min(Object.keys(columns).length, 8)}%` }}>
               <h6 className="text-center">{columnLabel}<br />({columnCounts[columnLabel]})</h6>
               {
-                getLabels(sorts[1]).filter(label => column[label]).map(label =>
+                getLabels(secondary).filter(label => column[label]).map(label =>
                   <AutocardListGroup
                     key={label}
                     heading={`${label} (${column[label].length})`}
@@ -41,5 +43,7 @@ const TableView = ({ cards, ...props }) => {
     </Row>
   );
 }
+
+const TableView = SortContext.Wrapped(TableViewRaw);
 
 export default TableView;

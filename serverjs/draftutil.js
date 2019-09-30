@@ -1,17 +1,4 @@
-function shuffle(array) {
-  var currentIndex = array.length;
-  var temporaryValue, randomIndex;
-  while (0 !== currentIndex) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-
-}
+var util = require('./util.js');
 
 var methods = {
   getDraftBots: function(params) {
@@ -25,7 +12,7 @@ var methods = {
       colors.push('R');
       colors.push('G');
     }
-    shuffle(colors);
+    colors = util.shuffle(colors);
     for (i = 0; i < params.seats - 1; i++) {
       var colorcombo = [colors.pop(), colors.pop()];
       draftbots.push(colorcombo);
@@ -34,6 +21,9 @@ var methods = {
   },
   indexOfTag: function(cards, tag) {
     tag = tag.toLowerCase();
+    if (tag == '*') {
+      return 0;
+    }
     for (var i = 0; i < cards.length; i++) {
       if (cards[i].tags && cards[i].tags.length > 0) {
         for (var j = 0; j < cards[i].tags.length; j++) {

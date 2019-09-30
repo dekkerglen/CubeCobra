@@ -121,7 +121,7 @@ router.post('/blogpost', ensureAuth, function(req, res) {
         }
       });
     } else {
-      red.redirect('/404');
+      res.status(404).render('misc/404', {});
     }
   });
 });

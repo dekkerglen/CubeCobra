@@ -39,13 +39,16 @@
 	color: #218937;
 }
 
-.pagination>li>a {
+.pagination>li>a,
+.pagination>li>button {
 	background-color: white;
 	color: #5A4181;
 }
 
 .pagination>li>a:focus,
 .pagination>li>a:hover,
+.pagination>li>button:focus,
+.pagination>li>button:hover,
 .pagination>li>span:focus,
 .pagination>li>span:hover {
 	color: #5a5a5a;
@@ -53,13 +56,15 @@
 	border-color: #ddd;
 }
 
-.pagination>.active>a {
+.pagination>.active>a,
+.pagination>.active>button {
 	color: white;
 	background-color: #28A745 !Important;
 	border: solid 1px #28A745 !Important;
 }
 
-.pagination>.active>a:hover {
+.pagination>.active>a:hover,
+.pagination>.active>button:hover {
 	background-color: #28A745 !Important;
 	border: solid 1px #28A745;
 }
@@ -129,9 +134,14 @@
 }
 
 .card-list-item {
-	transition: .25s;
+    transition: .25s;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+.card-list-item a {
 	font-size: 8.5pt;
-	border-radius: 0 !important;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -154,6 +164,7 @@
     top: 0;
     left: 0;
     position: absolute;
+    pointer-events: none;
 }
 .tag-color.card-list-item:after {
 	background: rgba(255,255,255,.2);
@@ -161,6 +172,15 @@
 
 .card-list-item:hover:after {
     opacity: 1;
+}
+
+button.close.float-none {
+    font-size: 1.25rem;
+}
+
+button.close.float-none span {
+    line-height: 0.9;
+    vertical-align: top;
 }
 
 @media(max-width: 991.98px) {
@@ -263,11 +283,6 @@ border-bottom: none;
 	border: none;
 }
 
-#contextModalImg {
-    width:258px;
-    height:359px;
-}
-
 .defaultCardImage:before {
     content: ' ';
     display: block;
@@ -276,12 +291,6 @@ border-bottom: none;
     height: 210px;
     width: 150px;
     background-size: 150px 210px;
-}
-
-#contextModalImg:before {
-    height: 359px;
-    width: 258px;
-    background-size: 258px 359px;
 }
 
 .packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
@@ -294,14 +303,6 @@ border-bottom: none;
     display: inline-block;
     width: 150px;
     vertical-align: top;
-}
-
-#customImageDisplayToggle {
-    margin-right: 6px;
-}
-
-#customImageDisplayMenuItem {
-    float: right;
 }
 
 #packTitle, .card-header h4 {
@@ -327,4 +328,77 @@ code {
 }
 #syntax-accordion .card-header button {
 	color:#000
+}
+
+div.ReactTags__tags {
+	margin-bottom: -0.3rem;
+}
+
+div.ReactTags__tagInput {
+	flex: 1 1 5rem;
+	margin-bottom: 0.3rem;
+}
+
+div.ReactTags__tagInput input.ReactTags__tagInputField,
+div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
+	width: 100%;
+	height: calc(1.5em + 0.5rem + 2px);
+	padding: 0.25rem 0.5rem;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	border-radius: 0.2rem;
+	font-weight: 400;
+	color: #495057;
+	background-color: #fff;
+	background-clip: padding-box;
+	border: 1px solid #ced4da;
+	transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+div.ReactTags__selected {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0;
+}
+
+/* Styles for selected tags */
+div.ReactTags__selected span.ReactTags__tag {
+	border: 1px solid #ced4da;
+	background: #eee;
+	display: block;
+	padding: 0.25rem 0.5rem;
+	margin-right: 0.3rem;
+	margin-bottom: 0.3rem;
+	border-radius: 2px;
+	font-size: 0.875rem;
+}
+div.ReactTags__selected a.ReactTags__remove {
+	color: #aaa;
+	margin-left: 5px;
+	cursor: pointer;
+}
+
+/* Styles for suggestions */
+div.ReactTags__suggestions {
+	position: absolute;
+}
+div.ReactTags__suggestions ul {
+	list-style-type: none;
+	box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+	background: white;
+	width: 200px;
+}
+div.ReactTags__suggestions li {
+	border-bottom: 1px solid #ddd;
+	padding: 5px 10px;
+	margin: 0;
+}
+div.ReactTags__suggestions li mark {
+	text-decoration: underline;
+	background: none;
+	font-weight: 600;
+}
+div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
+	background: #b7cfe0;
+	cursor: pointer;
 }

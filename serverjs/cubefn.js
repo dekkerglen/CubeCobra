@@ -9,9 +9,11 @@ function get_cube_id(cube) {
 }
 
 function build_id_query(id) {
-  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) return {
-    _id: id
-  };
+  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
+    return {
+      _id: id
+    };
+  }
   return {
     $or: [{
         shortID: id.toLowerCase(),
@@ -60,7 +62,6 @@ function intToLegality(val) {
     case 3:
       return 'Standard';
   }
-  return cube;
 }
 
 function legalityToInt(legality) {
@@ -76,17 +77,6 @@ function legalityToInt(legality) {
   }
 }
 
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 function cardsAreEquivalent(card, details) {
   if (card.cardID != details.cardID) {
     return false;
@@ -100,10 +90,10 @@ function cardsAreEquivalent(card, details) {
   if (card.type_line != details.type_line) {
     return false;
   }
-  if (!arraysEqual(card.tags, details.tags)) {
+  if (!util.arraysEqual(card.tags, details.tags)) {
     return false;
   }
-  if (!arraysEqual(card.colors, details.colors)) {
+  if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
 
@@ -119,8 +109,10 @@ var methods = {
       var found = false;
       var options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
-        var card = carddb.cardFromId(option);        
-        card.display_image = util.getCardImageURL({details:card});
+        var card = carddb.cardFromId(option);
+        card.display_image = util.getCardImageURL({
+          details: card
+        });
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
@@ -202,6 +194,8 @@ var methods = {
   generate_short_id,
   build_id_query,
   get_cube_id,
+  intToLegality,
+  legalityToInt
 };
 
 module.exports = methods;

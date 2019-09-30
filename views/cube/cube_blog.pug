@@ -12,6 +12,7 @@ block cube_toolbar
                 a.nav-link.newBlogButton(href='#' data-toggle='modal', data-target='#customDraftModal') Create new blog post
 
 block cube_content
+  include ../flash
   if pages
     hr
     nav(aria-label='pagination')
@@ -31,16 +32,18 @@ block cube_content
         .card-header
             h5.card-title=post.title
             h6.card-subtitle.mb-2.text-muted=post.date_formatted
-        .card-body
-          if post.changelist && post.html
-            .row.no-gutters
-              .col.col-12.col-4-md(style='border-right: 1px solid #DFDFDF;')
+        if post.changelist && post.html
+          .row.no-gutters
+            .col.col-12.col-l-3.col-md-3.col-sm-12(style='border-right: 1px solid #DFDFDF;')
+              .card-body
                 p.card-text
                   a !{post.changelist}
-              .col.col-12.col-4-sm
+            .col.col-9
+              .card-body
                 .card-text
                   a !{post.html}
-          else
+        else
+          .card-body
             if post.changelist
               p.card-text
                 a !{post.changelist}
@@ -52,7 +55,7 @@ block cube_content
         if user && user.id == cube.owner
           .card-footer
             span
-              button.btn.btn-success.editBlogButton(role='button' data-id=post._id) Edit
+              button.btn.btn-success.mr-2.editBlogButton(role='button' data-id=post._id) Edit
               a
               a.btn.btn-danger(data-toggle='collapse', href='#collapsepost'+i, role='button') Delete
             .collapse(id='collapsepost'+i)

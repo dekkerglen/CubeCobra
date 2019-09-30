@@ -14,109 +14,8 @@ block content
           span(style='color: #495057; padding:5px;') Comparison Cube:
           a(href='/cube/list/'+cubeB._id style='color: #218937;padding:5px;') #{cubeB.name}
             |  (#{cubeB.card_count} cards)
-  //edit controls
-  .usercontrols
-    nav.navbar.navbar-expand.navbar-light
-      .collapse.navbar-collapse
-        ul.navbar-nav
-          li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
-          li.nav-item
-              a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
-          li.nav-item
-            a(href="#")#tagColors.nav-link View Tag Colors
-    #accordion.accordion
-      if user
-        if user.id == cube.owner
-          #navedit.collapse(data-parent='#accordion')
-            .container
-              .row.collapse.warnings
-                .col
-                  .alert.alert-danger(role='alert') Invalid input: card not recognized.
-              .row
-                .col
-                  form(autocomplete='off').form-inline
-                    .mb-2.autocomplete
-                      input.form-control#addInput(style='width: 350px', type='text', placeholder='Card to Add')
-                    button.btn.btn-success.mx-sm-1.mb-2#justAddButton(type='button') Just Add
-                .col
-                  form.form-inline
-                    .mb-2.autocomplete
-                      input.form-control#removeInput(style='width: 350px', type='text', placeholder='Card to Remove')
-                    button.btn.btn-success.mx-sm-1.mb-2#removeButton(type='button') Remove / Replace
-              .collapse.editForm
-                form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
-                  .row
-                    .col
-                      br
-                      label Changelist:
-                      .editarea
-                        p.editlist#changelist
-                      br
-                      input#changelistFormBody(type='hidden', name='body')
-                      input#changelistBlog(type='hidden', name='blog')
-                    .col
-                      br
-                      #form-group
-                        label Blog Title:
-                        input.form-control(maxlength='200' name='title', type='text' value='Cube Updated - Automatic Post')
-                      #form-group
-                        label Body:
-                        include ../texteditor
-                  .row
-                    .col
-                      input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
-                      input.btn.mr-sm-2.btn-danger#discardAllButton(type='button', value='Discard All')
-                      br
-                      br
-      #navsort.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              h5 Primary Sort
-              select#primarySortSelect.custom-select
-              br
-              p
-                em  Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count each item once.
-            .col
-              h5 Secondary Sort
-              select#secondarySortSelect.custom-select
-          .row
-            .col
-              button.updateButton.btn.btn-success(type='button') Update Table
-              a
-              br
-              br
-      #navfilter.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              .input-group.mb-3
-                .input-group-prepend
-                  span.input-group-text Filter Type
-                select#filterType.custom-select(aria-label='Example select with button addon')
-                .input-group-append
-                  button#addFilterButton.btn.btn-success(type='button') Add Filter
-              h5 Filters
-              #filterarea
-          .row
-            .col
-              button.updateButton.btn.btn-success(type='button') Update Table
-              br
-              br
-      #navcompare.collapse(data-parent='#accordion')
-        .container
-          .row
-            .col
-              form(autocomplete='off').form-inline
-                .mb-2
-                  input.form-control#compareInput(style='width: 350px', type='text', placeholder='Cube ID to Compare to This Cube')
-                button.btn.btn-success.mx-sm-1.mb-2#compareButton(type='button') Compare Cubes
-                br
-                br
 
   include ../flash
-
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cubeB_ID(type='hidden', name='cubeB_ID', value=cube_b_id)
@@ -125,80 +24,12 @@ block content
   input#only_b(type='hidden', name='only_b', value=only_b)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors.concat(cubeB.tag_colors)))
-  if user && user.id == cube.owner
-    input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
     input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])
     input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])
 
   //Cube list
-  br
-  .container#cubelistarea
   #react-root
-
-  // Modal
-  #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-      .modal-content
-        .modal-header
-          h5#contextModalTitle.modal-title Ambush Viper
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .row.no-gutters
-          .col-4(style='padding: 4px;')
-            img#contextModalImg.card-img(src="https://img.scryfall.com/cards/normal/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1545408427", alt='...')
-            .price-area
-          .col-8
-            .modal-body
-              fieldset(disabled='')
-                h5 Card Attributes
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Version (Set and #)
-                  select#contextModalVersionSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Status
-                  select#contextModalStatusSelect.custom-select
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text CMC
-                  input#contextModalCMC.form-control(type='text', value='2', aria-label='Username', aria-describedby='basic-addon1')
-                .input-group.mb-3
-                  .input-group-prepend
-                    span.input-group-text Type
-                  input#contextModalType.form-control(type='text', value='2')
-                h6 Color Identity Override:
-                .form-check.form-check-inline
-                  input#contextModalCheckboxW.form-check-input(type='checkbox', value='option1')
-                  label.form-check-label(for='contextModalCheckboxW')
-                    img(src='/content/symbols/w.png' alt='White' title='White')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxU.form-check-input(type='checkbox', value='option2')
-                  label.form-check-label(for='contextModalCheckboxU')
-                    img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxB.form-check-input(type='checkbox', value='option3')
-                  label.form-check-label(for='contextModalCheckboxB')
-                    img(src='/content/symbols/b.png' alt='Black' title='Black')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxR.form-check-input(type='checkbox', value='option4')
-                  label.form-check-label(for='contextModalCheckboxR')
-                    img(src='/content/symbols/r.png' alt='Red' title='Red')
-                .form-check.form-check-inline
-                  input#contextModalCheckboxG.form-check-input(type='checkbox', value='option5')
-                  label.form-check-label(for='contextModalCheckboxG')
-                    img(src='/content/symbols/g.png' alt='Green' title='Green')
-                h5 Tags
-                .tags-area#contextTags
-                  .tags-input(data-name='tags-input')
-                    span.tags
-                    input.hidden-input(type='hidden')
-        .modal-footer
-          a#contextScryfallButton(href="#", target="_blank")
-            button.btn.btn-secondary(type='button') View on Scryfall
-          a#contextBuyButton(href="#", target="_blank")
-            button.btn.btn-secondary(type='button') Buy
 
   // Modal
   #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
@@ -221,4 +52,5 @@ block content
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
   script(src='/js/editcube.js')
+  script(src='/js/autocard.js')
   script(src='/js/cube_compare.bundle.js')

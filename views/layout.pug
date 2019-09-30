@@ -17,7 +17,7 @@ html
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
-		title Cube Cobra
+		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
 		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup(style='position:absolute;z-index: 9999;')
@@ -27,12 +27,13 @@ html
 		script(src='/jquery-ui/jquery-ui.min.js')
 	body
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
-			.text-truncate
-				a(href='/')
-					img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
-			button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
-				span.navbar-toggler-icon
-			#navbar.collapse.navbar-collapse
+			.d-flex.flex-row.flex-nowrap.justify-content-between(style='flex: 1 1 auto; min-width: 0')
+				.overflow-hidden
+					a(href='/')
+						img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+				button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
+					span.navbar-toggler-icon
+			#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
 				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
 						.input-group.mt-2.mb-sm-2
@@ -52,9 +53,11 @@ html
 							a.dropdown-item(href='/donate') Donate
 					if user
 						li.nav-item
-							a.nav-link(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+							a.nav-link.d-none.d-lg-block(href="#", data-toggle='modal', data-target='#cubeModal') New Cube
 						li.nav-item
-							a.nav-link(href="/user/view/"+user.id) Your Profile
+							a.nav-link(href="/user/view/"+user.id)
+								span.d-none.d-lg-inline Your
+								|  Profile
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 								|  #{user.username}  

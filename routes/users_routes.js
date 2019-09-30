@@ -130,31 +130,45 @@ router.post('/lostpasswordreset', function(req, res) {
         User.findOne({
           email: req.body.email
         }, function(err, user) {
-          if (user) {
-            if (req.body.password2 != req.body.password) {
-              req.flash('danger', 'New passwords don\'t match');
-              res.render('user/passwordreset');
-            } else {
-              bcrypt.genSalt(10, function(err, salt) {
-                bcrypt.hash(req.body.password2, salt, function(err, hash) {
+          if (err) {
+            console.error('Password reset find user error:', err);
+            res.sendStatus(500);
+            return;
+          }
+          if (!user) {
+            req.flash('danger', 'No user with that email found! Are you sure you created an account?');
+            res.render('user/passwordreset');
+            return;
+          }
+          if (req.body.password2 != req.body.password) {
+            req.flash('danger', 'New passwords don\'t match');
+            res.render('user/passwordreset');
+            return;
+          }
+          bcrypt.genSalt(10, function(err, salt) {
+            if (err) {
+              console.error('Password reset genSalt error:', err);
+              res.sendStatus(500);
+              return;
+            }
+            bcrypt.hash(req.body.password2, salt, function(err, hash) {
+              if (err) {
+                console.error('Password reset hashing error:', err);
+                res.sendStatus(500);
+              } else {
+                user.password = hash;
+                user.save(function(err) {
                   if (err) {
-                    console.log(err);
+                    console.error('Password reset user save error:', err)
+                    res.sendStatus(500);
                   } else {
-                    user.password = hash;
-                    user.save(function(err) {
-                      if (err) {
-                        console.log(err)
-                        return;
-                      } else {
-                        req.flash('success', 'Password updated succesfully');
-                        return res.redirect('/user/login');
-                      }
-                    });
+                    req.flash('success', 'Password updated succesfully');
+                    return res.redirect('/user/login');
                   }
                 });
-              });
-            }
-          }
+              }
+            });
+          });
         });
       }
     });
@@ -396,7 +410,7 @@ router.get('/view/:id', function(req, res) {
       }, function(err, user2) {
         if (!user2) {
           req.flash('danger', 'User not found');
-          res.redirect('/404/' + req.params.id);
+          res.status(404).render('misc/404', {});
         } else {
           res.redirect('/user/view/' + user2._id);
         }
