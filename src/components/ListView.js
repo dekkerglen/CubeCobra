@@ -114,10 +114,10 @@ class ListViewRaw extends Component {
             cube[index].details = json.card;
             cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
             cubeDict[cube[index].index] = cube[index];
-          });
+          }).catch(err => console.error(err));
         }
       }
-    });
+    }).catch(err => console.error(err));
   }
 
   addTag(cardIndex, tag) {
@@ -164,11 +164,12 @@ class ListViewRaw extends Component {
     });
 
     if (target.tagName.toLowerCase() === 'select') {
-      const updated = {
-        cardID: name.startsWith('tdversion') ? value : undefined,
-        status: name.startsWith('tdstatus') ? value : undefined,
-      };
-      console.log(updated);
+      const updated = {};
+      if (name.startsWith('tdversion')) {
+        updated.cardID = value;
+      } else if (name.startsWith('tdstatus')) {
+        updated.status = value;
+      }
       this.syncCard(index, updated);
     }
 
@@ -197,7 +198,10 @@ class ListViewRaw extends Component {
       colors: colorString === 'C' ? [] : [...colorString],
     };
 
-    this.syncCard(index, updated);
+    // <select>s handled in handleChange above.
+    if (target.tagName.toLowerCase() !== 'select') {
+      this.syncCard(index, updated);
+    }
   }
 
   checkAll(event) {
