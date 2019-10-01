@@ -10,8 +10,7 @@ var drafts = require(seedsPath + 'drafts.json');
 var users = require(seedsPath + 'users.json');
 
 // Data array containing seed data - documents organized by Model
-var data = [
-  {
+var data = [{
     'model': 'User',
     'documents': users
   },
