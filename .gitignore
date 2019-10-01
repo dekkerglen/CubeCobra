@@ -1,6 +1,8 @@
 private/
 /dist/
 
+.python-version
+
 # Created by https://www.gitignore.io/api/node,komodoedit,webstorm+all,visualstudio,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=node,komodoedit,webstorm+all,visualstudio,visualstudiocode
 
