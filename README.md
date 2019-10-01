@@ -16,7 +16,7 @@ NodeJS: https://nodejs.org/en/download/
 
 MongoDB: https://docs.mongodb.com/manual/installation/
 
-You will need start a MongoDB background process, and create a database titled 'nodecube'. Refer to the official documentation for directions on how to set this up for your OS. Running 'use nodecube' in the mongo CLI is sufficient.
+You will need start a MongoDB background process, and create a database titled `nodecube`. Refer to the official documentation for directions on how to set this up for your OS. Running `use nodecube` in the mongo CLI is sufficient.
 
 Atom (optional): https://atom.io/
 
@@ -25,23 +25,36 @@ Atom (optional): https://atom.io/
 Clone the project into a folder of your choice. Create a symbolic link from
 `../cubecobrasecrets` to `cubecobrasecrets.example`:
 
-  cd CubeCobra/..
-  ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+```sh
+cd CubeCobra/..
+ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+```
 
 The resulting directory structure should look like this:
 
-    .
-    ├── CubeCobra               # Cloned repository
-    └── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
-        └── email.js            # Email secrets file
-        └── etc...
+```sh
+.
+├── CubeCobra               # Cloned repository
+└── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
+    └── email.js            # Email secrets file
+    └── etc...
+```
 
 Then, run the following commands in the root of the cloned repository:
 
-    npm install
-    npm install nodemon -g
-    node force_update.js
-    npm start
+```sh
+npm install
+npm install nodemon -g
+node force_update.js        # Download Scryfall assets.
+node seed.js                # Seed the mongo database.
+
+# Linux/OSX users
+npm start                   # Start nodemon for backend server and webpack for frontend assets.
+
+# Windows users will need to use 2 terminal instances.
+npm nodemon
+npm webpack-dev-server
+```
 
 You can now open up a browser and connect to the app through: http://localhost:8080
 

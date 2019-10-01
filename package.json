@@ -8,6 +8,8 @@
     "beautify": "js-beautify -r *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "lint": "beautify-lint *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
+    "nodemon": "nodemon --ignore src --ignore public",
+    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "start": "nodemon --ignore src --ignore public & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
     "test": "jest --silent --detectOpenHandles"
   },
