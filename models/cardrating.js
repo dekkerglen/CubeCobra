@@ -7,4 +7,8 @@ let cardRatingSchema = mongoose.Schema({
   name: String
 });
 
+cardRatingSchema.index({
+  name: 1,
+});
+
 let CardRating = module.exports = mongoose.model('CardRating', cardRatingSchema)
