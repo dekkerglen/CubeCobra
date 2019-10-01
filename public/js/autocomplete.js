@@ -70,26 +70,21 @@ function autocompleteByTree(inp, tree, images, submit_button) {
       currentFocus--;
       /*and and make the current item more visible:*/
       addActive(x);
-    } else if (e.keyCode == 9) {
-      /*If the tab key is pressed, prevent the form from being submitted,*/
-      if (currentFocus > -1) {
-        /*and simulate a click on the "active" item:*/
-        e.preventDefault();
-        if (x) x[currentFocus].click();
-      } else {
-        /* The user is moving away from the input now hide the list*/
-        closeAllLists();
+    } else if (e.keyCode == 9 || e.keyCode == 13) {
+      /*If the tab key is pressed, simulate a click on the active or top item.*/
+      if (x && x.length > 0) {
+        if (currentFocus > -1 && currentFocus < x.length) {
+          x[currentFocus].click();
+        } else if (currentFocus === -1) {
+          x[0].click();
+        }
       }
-    } else if (e.keyCode == 13) {
-      /*If the ENTER key is pressed, prevent the form from being submitted,*/
-      e.preventDefault();
-      if (currentFocus > -1) {
-        /*and simulate a click on the "active" item:*/
-        if (x) x[currentFocus].click();
-        temp_button = document.getElementById("justAddButton");
+      if (e.keyCode == 13) {
+        /*If the ENTER key was pressed, prevent the form from being submitted,*/
+        e.preventDefault();
+        var submit_button = document.getElementById(inp.getAttribute('data-button'));
         if (submit_button) {
           submit_button.click();
-          inp.focus();
         }
       }
     }

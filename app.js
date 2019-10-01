@@ -6,19 +6,17 @@ const expressValidator = require('express-validator');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
-const config = require('./config/database');
 var schedule = require('node-schedule');
 const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
-const secrets = require('./secrets').session;
+const secrets = require('../cubecobrasecrets/secrets');
+const mongosecrets = require('../cubecobrasecrets/mongodb');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(process.env.MONGODB_URL || config.database, {
-  useNewUrlParser: true,
-});
+mongoose.connect(process.env.MONGODB_URL || mongosecrets.connectionString);
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');
@@ -33,7 +31,8 @@ db.on('error', function(err) {
 const app = express();
 
 var store = new mongoDBStore({
-  uri: process.env.MONGODB_URL || config.database,
+  uri: process.env.MONGODB_URL || mongosecrets.connectionString,
+  databaseName: mongosecrets.dbname || 'nodecube',
   collection: 'session_data'
 }, function(err) {
   if (err) {
@@ -43,7 +42,6 @@ var store = new mongoDBStore({
 
 // Bring in models
 let Cube = require('./models/cube')
-let User = require('./models/user')
 let Blog = require('./models/blog')
 let Deck = require('./models/deck')
 
@@ -141,16 +139,19 @@ app.get('/', function(req, res) {
 
   if (req.user) user_id = req.user._id;
   Cube.find({
-    'card_count': {
-      $gt: 200
-    },
     $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
-      'owner': user_id
-    }]
+        $and: [{
+          'card_count': {
+            $gt: 200
+          }
+        }, {
+          'isListed': true
+        }]
+      },
+      {
+        'owner': user_id
+      }
+    ]
   }).sort({
     'date_updated': -1
   }).limit(12).exec(function(err, result) {

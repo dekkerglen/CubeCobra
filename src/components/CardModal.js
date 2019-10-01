@@ -3,23 +3,11 @@ import React from 'react';
 import { Button, Col, Form, FormGroup, Input, InputGroup, InputGroupAddon, InputGroupText, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
+import ColorCheck from './ColorCheck';
 import ImageFallback from './ImageFallback';
 import TagInput from './TagInput';
 
-const ColorCheck = ({ color, short, value, onChange }) => (
-  <FormGroup check inline>
-    <Label check>
-      <Input
-        type="checkbox"
-        id={`contextModalCheckbox${short.toUpperCase()}`}
-        name={`color${short.toUpperCase()}`}
-        checked={value}
-        onChange={onChange}
-      />
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
-    </Label>
-  </FormGroup>
-);
+import Affiliate from '../util/Affiliate';
 
 const CardModal = ({
   card,  versions,
@@ -30,13 +18,6 @@ const CardModal = ({
   tagActions,
   ...props
 }) => {
-  let tcgplayerLink = 'https://shop.tcgplayer.com/';
-  if (card.details.tcgplayer_id) {
-    tcgplayerLink += `product/productsearch?id=${card.details.tcgplayer_id}`;
-  } else {
-    tcgplayerLink += `productcatalog/product/show?ProductName=${card.details.name}`;
-  }
-  tcgplayerLink += '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
   return (
     <Modal size="lg" labelledby="cardModalHeader" toggle={toggle} {...props}>
       <ModalHeader id="cardModalHeader" toggle={toggle}>
@@ -139,11 +120,11 @@ const CardModal = ({
             <span className="d-sm-none">Remove</span>
           </Button>
         }
-        <ButtonLink color="secondary" href={card.details.scryfall_url}>
+        <ButtonLink color="secondary" href={card.details.scryfall_uri}>
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
         </ButtonLink>
-        <ButtonLink color="secondary" href={tcgplayerLink}>
+        <ButtonLink color="secondary" href={Affiliate.getTCGLink(card)}>
           Buy
         </ButtonLink>
         {disabled ? '' :

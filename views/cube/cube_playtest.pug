@@ -12,6 +12,7 @@ block cube_toolbar
               a#customDraftButton.nav-link(href='#' data-toggle='modal', data-target='#customDraftModal') Create Custom Draft
 
 block cube_content
+  include ../dynamic_flash
   input#deckInput(type='hidden', value=decks)
   input#cubeID(type='hidden', value=cube_id)
   input#canEdit(type='hidden', value=user && user.id == cube.owner)

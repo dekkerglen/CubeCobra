@@ -1,5 +1,13 @@
-const generateMeta = function(title, description, image, url, width, height) {
-  return [{
+const generateMeta = require("../../serverjs/meta");
+
+test("generateMeta returns the expected object", () => {
+  const title = "the title",
+    description = "the description",
+    image = "a real image url",
+    url = "a real og url",
+    width = 69,
+    height = 420;
+  const expected = [{
     property: 'og:title',
     content: title
   }, {
@@ -33,6 +41,6 @@ const generateMeta = function(title, description, image, url, width, height) {
     property: 'twitter:url',
     content: url
   }];
-};
-
-module.exports = generateMeta;
+  const result = generateMeta(title, description, image, url, width, height);
+  expect(result).toEqual(expected);
+});

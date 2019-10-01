@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { Container, Row, Col } from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 
 import AutocardImage from './AutocardImage';
 import SortContext from './SortContext';
 
-const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, ...props }) => {
+const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+  /* Initialize autocard anytime the DOM is updated. */
+  useEffect(() => /* global */ autocard_init('autocard'));
+
   const groups = {};
   for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
     groups[label1] = {};
@@ -22,7 +25,7 @@ const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, ...props }) => 
               groups[label1][label2][label3].map(({ index, tags, details }) =>
                 <Col key={index} className="w-auto flex-grow-0">
                   <div className="visualSpoilerCardContainer">
-                    <AutocardImage key={index} index={index} tags={tags} {...details} />
+                    <AutocardImage index={index} tags={tags} {...details} />
                   </div>
                 </Col>
               )
