@@ -120,7 +120,7 @@ const CardModal = ({
             <span className="d-sm-none">Remove</span>
           </Button>
         }
-        <ButtonLink color="secondary" href={card.details.scryfall_url}>
+        <ButtonLink color="secondary" href={card.details.scryfall_uri}>
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
         </ButtonLink>
