@@ -114,15 +114,14 @@ function unloadCardDb() {
   }
 }
 
-module.exports = {
-  ...data,
-  cardFromId,
-  getCardDetails,
-  normalizedName: card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(),
-  allIds: card => data.nameToId[data.normalizedName(card)],
-  initializeCardDb,
-  loadJSONFile,
-  getPlaceholderCard,
-  unloadCardDb,
-  allCards: () => Object.values(data._carddict),
-};
+data.cardFromId = cardFromId;
+data.getCardDetails = getCardDetails;
+data.normalizedName = card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+data.allIds = card => data.nameToId[data.normalizedName(card)];
+data.allCards = () => Object.values(data._carddict);
+data.initializeCardDb = initializeCardDb;
+data.loadJSONFile = loadJSONFile;
+data.getPlaceholderCard = getPlaceholderCard;
+data.unloadCardDb = unloadCardDb;
+
+module.exports = data;
