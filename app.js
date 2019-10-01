@@ -407,9 +407,11 @@ app.get('/c/:id', function(req, res) {
 let cubes = require('./routes/cube_routes');
 let users = require('./routes/users_routes');
 let devs = require('./routes/dev_routes');
+let tools = require('./routes/tools_routes');
 app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
+app.use('/tool', tools);
 
 app.use(function(req, res) {
   res.status(404).render('misc/404', {});

@@ -22,6 +22,8 @@ class PagedTable extends Component {
     if (prevProps.rows.length !== this.props.rows.length) {
       this.setState({ page: 0 });
     }
+    /* global */
+    autocard_init('autocard');
   }
 
   render() {
@@ -31,15 +33,17 @@ class PagedTable extends Component {
     const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
 
     return <>
-      <Pagination aria-label="Table page" className="mt-3">
-        {validPages.map(page =>
-          <PaginationItem key={page} active={page === this.state.page}>
-            <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-              {page + 1}
-            </PaginationLink>
-          </PaginationItem>
-        )}
-      </Pagination>
+      {validPages.length === 1 ? '' :
+        <Pagination aria-label="Table page" className="mt-3">
+          {validPages.map(page =>
+            <PaginationItem key={page} active={page === this.state.page}>
+              <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
+                {page + 1}
+              </PaginationLink>
+            </PaginationItem>
+          )}
+        </Pagination>
+      }
       <div className="table-responsive">
         <Table {...props}>
           {children}
