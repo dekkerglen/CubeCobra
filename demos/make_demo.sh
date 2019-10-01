@@ -54,7 +54,7 @@ fi
 echo "Running sls deploy. This may take a while..."
 echo
 
-sls deploy
+sls deploy --stage="$stage"
 
 echo
 echo "Uploading carddb to AWS bucket $bucket..."

@@ -106,12 +106,12 @@ resources:
                 - Access-Control-Request-Method
                 - Origin
                 - Authorization
-                # - Host APIG needs to use SNI
               QueryString: true
             TargetOriginId: APIGOrigin
             ViewerProtocolPolicy: https-only
             Compress: true
             DefaultTTL: 0
+            MaxTTL: 0
           CustomErrorResponses:
             - ErrorCachingMinTTL: 0
               ErrorCode: 400

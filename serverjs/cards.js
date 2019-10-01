@@ -10,6 +10,10 @@ var data = {
   nameToId: {},
   _carddict: {}
 };
+const loaded = {};
+for (key of Object.keys(data)) {
+  loaded[key] = false;
+}
 var fileToAttribute = {
   'carddict.json': '_carddict',
   'cardtree.json': 'cardtree',
@@ -90,17 +94,31 @@ function registerFileWatcher(filename, attribute) {
 }
 
 function initializeCardDb(dataRoot, skipWatchers) {
+  if ([...Object.values(loaded)].every(x => x)) {
+    return Promise.resolve();
+  }
   if (dataRoot === undefined) {
     dataRoot = "private";
   }
-  var promises = [],
-    filepath, attribute;
-  for (var filename in fileToAttribute) {
-    filepath = dataRoot + '/' + filename;
-    attribute = fileToAttribute[filename];
-    promises.push(loadJSONFile(filepath, attribute));
-    if (skipWatchers !== true) {
-      registerFileWatcher(filepath, attribute);
+  const promises = [];
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
+    if (process.env.LAMBDA_TASK_ROOT) {
+      // In an S3 Bucket
+      const promise = s3.getObject({
+        Bucket: process.env.CARDDB_BUCKET,
+        Key: filename,
+      }).promise().then(response => {
+        console.log('carddb: Initialized', attribute);
+        data[attribute] = JSON.parse(response.Body);
+        loaded[attribute] = true;
+      }).catch(err => console.error(err));
+      promises.push(promise);
+    } else {
+      filepath = dataRoot + '/' + filename;
+      promises.push(loadJSONFile(filepath, attribute));
+      if (skipWatchers !== true) {
+        registerFileWatcher(filepath, attribute);
+      }
     }
   }
   return Promise.all(promises);

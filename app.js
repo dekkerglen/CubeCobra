@@ -13,6 +13,7 @@ var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
 const secrets = require('../cubecobrasecrets/secrets');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
+const carddb = require('./serverjs/cards');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
@@ -424,8 +425,10 @@ schedule.scheduleJob('0 0 * * *', function(){
 
 if (!process.env.LAMBDA_TASK_ROOT) {
   // Start server
-  http.createServer(app).listen(5000, 'localhost', function() {
-    console.log('server started on port 5000...');
+  carddb.initializeCardDb().then(() => {
+    http.createServer(app).listen(5000, 'localhost', function() {
+      console.log('server started on port 5000...');
+    });
   });
 }
 
