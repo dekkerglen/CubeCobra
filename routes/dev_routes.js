@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
-const emailconfig = require('../secrets').email;
+const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require("nodemailer");
 const fs = require('fs')
 
