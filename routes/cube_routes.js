@@ -2443,8 +2443,11 @@ router.post('/api/getversions', function(req, res) {
   });
 });
 
-router.post('/api/updatecard/:id', ensureAuth, function (req, res) {
-  const { src, updated } = req.body;
+router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
+  const {
+    src,
+    updated
+  } = req.body;
   if (!src || (src && typeof src.index !== 'number') ||
     (updated.cardID && typeof updated.cardID !== 'string') ||
     (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
@@ -2459,7 +2462,7 @@ router.post('/api/updatecard/:id', ensureAuth, function (req, res) {
     });
     return;
   }
-  Cube.findOne(build_id_query(req.params.id), function (err, cube) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {
       console.error(err);
       res.status(500).send({
@@ -2494,12 +2497,12 @@ router.post('/api/updatecard/:id', ensureAuth, function (req, res) {
           message: 'Cards not equivalent',
         });
       } else {
-        Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function (key) {
+        Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
           if (!updated.hasOwnProperty(key)) {
             updated[key] = card[key];
           }
         });
-        Object.keys(updated).forEach(function (key) {
+        Object.keys(updated).forEach(function(key) {
           if (updated[key] === null) {
             delete updated[key];
           }
@@ -2508,7 +2511,7 @@ router.post('/api/updatecard/:id', ensureAuth, function (req, res) {
 
         cube = setCubeType(cube, carddb);
 
-        cube.save(function (err) {
+        cube.save(function(err) {
           if (err) {
             console.error(err);
             res.status(500).send({
