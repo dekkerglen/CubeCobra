@@ -183,7 +183,7 @@ test("setCubeType correctly sets the type and card_count of its input cube", () 
 });
 
 test("sanitize allows the correct tags", () => {
-  const exampleHtml = "<html><head></head><body><div>lkgdfsge</div><br/><strong>kjggggsgggg</strong><ol><li>gfgwwerer</li></ol></body></html>";
+  const exampleHtml = "<html><head></head><body><div>lkgdfsge</div><strong>kjggggsgggg</strong><ol><li>gfgwwerer</li></ol></body></html>";
   const expected = "<div>lkgdfsge</div><strong>kjggggsgggg</strong><ol><li>gfgwwerer</li></ol>";
   const result = cubefn.sanitize(exampleHtml);
   expect(result).toBe(expected);
