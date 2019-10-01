@@ -2443,39 +2443,72 @@ router.post('/api/getversions', function(req, res) {
   });
 });
 
-router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === String(req.user._id)) {
-      var found = false;
-      cube.cards.forEach(function(card, index) {
-        if (!card.type_line) {
-          card.type_line = carddb.cardFromId(card.cardID).type;
-        }
-        if (!found && req.body.src && cardsAreEquivalent(card, req.body.src, carddb)) {
-          found = true;
-          var updated = req.body.updated;
-          Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
-            if (!updated.hasOwnProperty(key)) {
-              updated[key] = card[key];
-            }
-          });
-          Object.keys(updated).forEach(function(key) {
-            if (updated[key] === null) {
-              delete updated[key];
-            }
-          });
-          cube.cards[index] = updated;
-        }
+router.post('/api/updatecard/:id', ensureAuth, function (req, res) {
+  const { src, updated } = req.body;
+  if (!src || (src && typeof src.index !== 'number') ||
+    (updated.cardID && typeof updated.cardID !== 'string') ||
+    (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
+    (updated.status && typeof updated.status !== 'string') ||
+    (updated.type_line && typeof updated.type_line !== 'string') ||
+    (updated.colors && !Array.isArray(updated.colors)) ||
+    (updated.tags && !Array.isArray(updated.tags))
+  ) {
+    res.status(400).send({
+      success: 'false',
+      message: 'Failed input validation',
+    });
+    return;
+  }
+  Cube.findOne(build_id_query(req.params.id), function (err, cube) {
+    if (err) {
+      console.error(err);
+      res.status(500).send({
+        success: 'false',
+        message: 'Internal server error',
       });
-      if (!found) {
+    } else if (!cube) {
+      res.status(400).send({
+        success: 'false',
+        message: 'No such cube',
+      });
+    } else if (cube.owner !== String(req.user.id)) {
+      res.status(401).send({
+        success: 'false',
+        message: 'Insufficient permissions',
+      });
+    } else if (src.index >= cube.cards.length) {
+      res.status(400).send({
+        success: 'false',
+        message: 'No such card',
+      });
+    } else {
+      const card = cube.cards[src.index];
+      if (!card.type_line) {
+        card.type_line = carddb.cardFromId(card.cardID).type;
+      }
+      if (!cardsAreEquivalent(src, card)) {
+        console.log(src);
+        console.log(card);
         res.status(400).send({
           success: 'false',
-          message: 'Card not found'
+          message: 'Cards not equivalent',
         });
       } else {
+        Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function (key) {
+          if (!updated.hasOwnProperty(key)) {
+            updated[key] = card[key];
+          }
+        });
+        Object.keys(updated).forEach(function (key) {
+          if (updated[key] === null) {
+            delete updated[key];
+          }
+        });
+        cube.cards[src.index] = updated;
+
         cube = setCubeType(cube, carddb);
 
-        cube.save(function(err) {
+        cube.save(function (err) {
           if (err) {
             console.error(err);
             res.status(500).send({
@@ -2489,11 +2522,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
           }
         });
       }
-    } else {
-      res.status(400).send({
-        success: 'false',
-        message: 'Not Authorized'
-      });
     }
   });
 });
