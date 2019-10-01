@@ -1,7 +1,7 @@
 const carddb = require("../../serverjs/cards");
 const fixturesPath = "fixtures";
 const firstLetterCount = 21;
-const fixtureCardCount = 100;
+const fixtureCardCount = 99;
 var placeholderCard = {
   set: '',
   collector_number: '',
@@ -88,7 +88,6 @@ test("cardFromId returns a well-formed card object", () => {
     "rarity": "mythic",
     "scryfall_uri": "https://scryfall.com/card/celd/356/rankle-master-of-pranks?utm_source=api",
     "set": "celd",
-    "toughness": "3",
     "type": "Legendary Creature — Faerie Rogue"
   };
   var promise = carddb.initializeCardDb(fixturesPath, true);
@@ -143,7 +142,6 @@ test("getCardDetails returns a well-formed card object", () => {
     "rarity": "mythic",
     "scryfall_uri": "https://scryfall.com/card/celd/356/rankle-master-of-pranks?utm_source=api",
     "set": "celd",
-    "toughness": "3",
     "type": "Legendary Creature — Faerie Rogue"
   };
   var promise = carddb.initializeCardDb(fixturesPath, true);
