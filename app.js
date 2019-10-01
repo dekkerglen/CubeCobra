@@ -11,8 +11,12 @@ const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
-const secrets = require('../cubecobrasecrets/secrets');
-const mongosecrets = require('../cubecobrasecrets/mongodb');
+let secrets = {};
+let mongosecrets = {};
+if (!process.env.LAMBDA_TASK_ROOT) {
+  secrets = require('../cubecobrasecrets/secrets');
+  mongosecrets = require('../cubecobrasecrets/mongodb');
+}
 const carddb = require('./serverjs/cards');
 const mongoDBStore = require('connect-mongodb-session')(session);
 

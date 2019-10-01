@@ -66,6 +66,7 @@
     "react-tag-input": "^6.4.1",
     "reactstrap": "^8.0.1",
     "rimraf": "^3.0.0",
+    "serverless-apigw-binary": "^0.4.4",
     "sinon": "^7.4.2",
     "terser-webpack-plugin": "^2.1.0",
     "webpack": "^4.40.2",

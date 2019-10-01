@@ -6,7 +6,7 @@ provider:
 
   environment:
     NODE_ENV: production
-    MONGODB_URL: ${file(../cubecobrasecrets/mongodb):connectionString}
+    MONGODB_URL: ${file(../cubecobrasecrets/mongodb.json):connectionString}
     CARDDB_BUCKET: ${self:custom.carddbBucket}
 
   iamRoleStatements:
