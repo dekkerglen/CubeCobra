@@ -8,7 +8,7 @@
     "beautify": "js-beautify -r *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "lint": "beautify-lint *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
-    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --no-watch.clearScreen",
+    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
     "test": "jest --silent --detectOpenHandles"
   },
   "author": "Gwen Dekker",

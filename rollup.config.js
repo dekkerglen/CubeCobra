@@ -4,4 +4,7 @@ export default {
     dir: 'dist/util',
     format: 'cjs',
   },
+  watch: {
+    clearScreen: false,
+  }
 };
