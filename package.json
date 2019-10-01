@@ -7,6 +7,8 @@
   "scripts": {
     "beautify": "js-beautify -r *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "lint": "beautify-lint *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
+    "nodemon": "nodemon --ignore src --ignore public",
+    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js && rollup -c",
     "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
     "test": "jest --silent --detectOpenHandles"
