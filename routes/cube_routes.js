@@ -45,6 +45,10 @@ let User = require('../models/user');
 let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
 
+const {
+  ensureAuth
+} = require('./middleware');
+
 var token = null;
 var cached_prices = {};
 
@@ -2860,18 +2864,5 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
     }
   });
 });
-
-
-
-// Access Control
-function ensureAuth(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  } else {
-    req.flash('danger', 'Please login to view this content');
-    res.redirect('/user/login');
-  }
-}
-
 
 module.exports = router;
