@@ -130,7 +130,7 @@ class FilterCollapse extends Component {
     // Advanced Filter change. Render to filter input.
     const tokens = [];
     for (const name of allFields) {
-      if (this.state[name]) {        
+      if (this.state[name]) {
         const op = numFields.includes(name) ? (this.state[name + 'Op'] || '=') : ':';
         tokens.push(name + op + this.state[name]);
       }
