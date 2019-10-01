@@ -42,6 +42,7 @@
     "pug": "^2.0.3",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
+    "rss": "^1.2.2",
     "sanitize-html": "^1.20.1",
     "selenium-webdriver": "^4.0.0-alpha.4",
     "serve-favicon": "^2.5.0",
