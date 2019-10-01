@@ -77,7 +77,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           </InputGroupAddon>
           <Input type="select" name="status" value={values.status} onChange={onChange}>
             {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map(status =>
-              <option key={ status }>{status}</option>
+              <option key={status}>{status}</option>
             )}
           </Input>
         </InputGroup>
