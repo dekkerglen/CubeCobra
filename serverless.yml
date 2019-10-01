@@ -37,6 +37,7 @@ package:
     - __tests__/**
     - cubecobrasecrets.example/**
     - demos/**
+    - fixtures/**
     - node_modules/**
     - one_shot_scripts/**
     - package-lock.json

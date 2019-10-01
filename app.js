@@ -11,7 +11,7 @@ const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
-let secrets = {};
+let secrets = { session: 'xxx' };
 let mongosecrets = {};
 if (!process.env.LAMBDA_TASK_ROOT) {
   secrets = require('../cubecobrasecrets/secrets');

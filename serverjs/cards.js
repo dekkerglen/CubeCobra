@@ -93,6 +93,13 @@ function registerFileWatcher(filename, attribute) {
   });
 }
 
+let aws = null;
+let s3 = null;
+if (process.env.LAMBDA_TASK_ROOT) {
+  aws = require('aws-sdk');
+  s3 = new aws.S3();
+}
+
 function initializeCardDb(dataRoot, skipWatchers) {
   if ([...Object.values(loaded)].every(x => x)) {
     return Promise.resolve();
