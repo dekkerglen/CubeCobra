@@ -26,6 +26,9 @@ fi
 stage=$1
 bucket="cubecobra-$stage-carddb"
 
+echo "Building..."
+npm run-script build
+
 if ! [ -d demos/deps/nodejs/node_modules ]; then
     echo "Setting up dependency layer..."
     mkdir -p demos/deps/nodejs
