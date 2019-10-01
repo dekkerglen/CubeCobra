@@ -6,17 +6,17 @@ const expressValidator = require('express-validator');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
-const config = require('./config/database');
 var schedule = require('node-schedule');
 const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
 const secrets = require('../cubecobrasecrets/secrets');
+const mongosecrets = require('../cubecobrasecrets/mongodb');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(config.database);
+mongoose.connect(mongosecrets.connectionString);
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');
@@ -31,8 +31,8 @@ db.on('error', function(err) {
 const app = express();
 
 var store = new mongoDBStore({
-  uri: 'mongodb://localhost:27017/nodecube',
-  databaseName: 'nodecube',
+  uri: mongosecrets.connectionString,
+  databaseName: mongosecrets.dbname,
   collection: 'session_data'
 }, function(err) {
   if (err) {
@@ -42,7 +42,6 @@ var store = new mongoDBStore({
 
 // Bring in models
 let Cube = require('./models/cube')
-let User = require('./models/user')
 let Blog = require('./models/blog')
 let Deck = require('./models/deck')
 
