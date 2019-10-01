@@ -581,11 +581,11 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'tag') {
     res = card.tags.some(element => {
-      return element.toLowerCase() == filter.arg;
+      return element.toLowerCase() == filter.arg.toLowerCase();
     });
   }
   if (filter.category == 'status') {
-    if (card.status.toLowerCase() == filter.arg) {
+    if (card.status.toLowerCase() == filter.arg.toLowerCase()) {
       res = true;
     }
   }

@@ -30,6 +30,7 @@ const {
 } = require('canvas');
 Canvas.Image = Image;
 
+const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 
@@ -560,6 +561,46 @@ router.get('/blog/:id', function(req, res) {
               loginCallback: '/cube/blog/' + req.params.id
             });
           }
+        });
+      });
+    }
+  });
+});
+
+router.get('/blog/:id/rss', function(req, res) {
+  var split = req.params.id.split(';');
+  var cube_id = split[0];
+  Cube.findOne(build_id_query(cube_id), function(err, cube) {
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.redirect('/404/');
+    } else {
+      User.findById(cube.owner, function(err, user) {
+        Blog.find({
+          cube: cube._id
+        }).sort('date').exec(function(err, blogs) {
+          if (!user) {
+            user = {
+              username: 'unknown'
+            };
+          }
+
+          const feed = new RSS({
+            title: cube.name,
+            feed_url: `https://cubecobra.com/cube/blog/${cube.id}/rss`,
+            site_url: 'https://cubecobra.com',
+          });
+
+          blogs.forEach((blog) => {
+            feed.item({
+              title: blog.title,
+              description: blog.html ? blog.html : blog.content,
+              guid: blog.id,
+              date: blog.date
+            });
+          });
+          res.set('Content-Type', 'text/xml');
+          res.status(200).send(feed.xml());
         });
       });
     }
