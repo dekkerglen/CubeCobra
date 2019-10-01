@@ -159,7 +159,7 @@ class GroupModal extends Component {
         if (cmc) { card.cmc = cmc; }
         if (type_line) { card.type_line = type_line; }
         if (addTags) {
-          card.tags = [...card.tags, tags.filter(tag => !card.tags.includes(tag))];
+          card.tags = [...card.tags, ...tags.filter(tag => !card.tags.includes(tag))];
         }
         if (deleteTags) {
           card.tags = card.tags.filter(tag => !tags.includes(tag));
