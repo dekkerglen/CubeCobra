@@ -7,8 +7,8 @@
   "scripts": {
     "beautify": "js-beautify -r *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
     "lint": "beautify-lint *.js {config,models,routes,serverjs,views,public/js,__tests__}/**/*.js",
-    "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js",
-    "start": "nodemon --ignore src --ignore public & node_modules/.bin/webpack-dev-server --config webpack.dev.js",
+    "build": "webpack --mode production --config webpack.prod.js && rollup -c",
+    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
     "test": "jest --silent --detectOpenHandles"
   },
   "author": "Gwen Dekker",
@@ -40,6 +40,7 @@
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "pug": "^2.0.3",
+    "quickselect": "^2.0.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "rss": "^1.2.2",
@@ -66,6 +67,7 @@
     "react-tag-input": "^6.4.1",
     "reactstrap": "^8.0.1",
     "rimraf": "^3.0.0",
+    "rollup": "^1.22.0",
     "sinon": "^7.4.2",
     "terser-webpack-plugin": "^2.1.0",
     "webpack": "^4.40.2",
