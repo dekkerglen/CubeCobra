@@ -169,6 +169,8 @@ class ListViewRaw extends Component {
         updated.cardID = value;
       } else if (name.startsWith('tdstatus')) {
         updated.status = value;
+      } else if (name.startsWith('tdcolor')) {
+        updated.colors = value === 'C' ? [] : [...value];
       }
       this.syncCard(index, updated);
     }
