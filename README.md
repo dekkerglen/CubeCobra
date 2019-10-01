@@ -10,7 +10,7 @@ If you are interested in contributing towards Cube Cobra, please read the [Contr
 
 ### Install Prerequisites
 
-You will need to install NodeJS, MongoDB, and an IDE of your preference (I reccomend Atom). You can find the neccesary resources here:
+You will need to install NodeJS, MongoDB, and an IDE of your preference (I recommend Atom). You can find the necessary resources here:
 
 NodeJS: https://nodejs.org/en/download/
 
@@ -25,8 +25,10 @@ Atom (optional): https://atom.io/
 Clone the project into a folder of your choice. Create a symbolic link from
 `../cubecobrasecrets` to `cubecobrasecrets.example`:
 
-  cd CubeCobra/..
-  ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+```bash
+cd CubeCobra/..
+ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
+```
 
 The resulting directory structure should look like this:
 
