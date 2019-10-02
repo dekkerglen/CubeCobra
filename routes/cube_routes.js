@@ -2027,9 +2027,16 @@ router.get('/api/getcardfromcube/:id', function(req, res) {
 
 router.get('/api/cubelist/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    const names = cube.cards.map(card => carddb.cardFromId(card.cardID).name);
-    res.contentType('text/plain');
-    res.status(200).send(names.join("\n"));
+    if (err) {
+      console.error(err);
+      res.sendStatus(500);
+    } else if (!cube) {
+      res.status(404).render('misc/404', {});
+    } else {
+      const names = cube.cards.map(card => carddb.cardFromId(card.cardID).name);
+      res.contentType('text/plain');
+      res.status(200).send(names.join("\n"));
+    }
   });
 });
 
