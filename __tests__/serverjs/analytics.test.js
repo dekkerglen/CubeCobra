@@ -114,10 +114,43 @@ test("GetTypeByColor returns valid counts", () => {
 
 test("GetColorCounts returns valid counts", () => {
   expect.assertions(1);
+  var expected = {
+    "Abzan": 0,
+    "Azorius": 1,
+    "Bant": 0,
+    "Black": 3,
+    "Blue": 4,
+    "Boros": 2,
+    "Dimir": 1,
+    "Esper": 0,
+    "FiveColor": 0,
+    "Golgari": 1,
+    "Green": 4,
+    "Grixis": 0,
+    "Gruul": 1,
+    "Izzet": 1,
+    "Jeskai": 0,
+    "Jund": 0,
+    "Mardu": 0,
+    "Naya": 0,
+    "NonBlack": 0,
+    "NonBlue": 0,
+    "NonGreen": 0,
+    "NonRed": 0,
+    "NonWhite": 0,
+    "Orzhov": 1,
+    "Rakdos": 0,
+    "Red": 4,
+    "Selesnya": 1,
+    "Simic": 1,
+    "Sultai": 0,
+    "Temur": 0,
+    "White": 5
+  };
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     var result = analytics.GetColorCounts(cubefixture.exampleCube.cards, carddb);
-    expect(result).toEqual(false);
+    expect(result).toEqual(expected);
   });
 });
 
