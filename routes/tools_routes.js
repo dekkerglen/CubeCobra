@@ -9,7 +9,7 @@ const CardRating = require('../models/cardrating');
 const router = express.Router();
 
 /* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 2;
+const MIN_PICKS = 20;
 /* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 300;
 
