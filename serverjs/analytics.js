@@ -59,6 +59,8 @@ function GetColorIdentity(colors) {
 }
 
 var methods = {
+  GetColorCat: GetColorCat,
+  GetColorIdentity: GetColorIdentity,
   GetTypeByColor: function(cards, carddb) {
     var TypeByColor = {
       Creatures: {
