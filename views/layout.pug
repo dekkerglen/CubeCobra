@@ -22,21 +22,24 @@ html
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup(style='position:absolute;z-index: 9999;')
 		#autocard_popup2(style='position:absolute;z-index: 9999;')
-		#autocard_popup_info(style='position:absolute;z-index: 9999;')
+		#autocard_popup_info(style='position:absolute;z-index: 9998;')
 		script(src='/bower_components/jquery/dist/jquery.js')
+		script(src='/jquery-ui/jquery-ui.min.js')
 	body
-		nav.navbar.navbar-expand-md.navbar-dark.bg-dark(style="padding-right:10rem")
-			a(href='/')
-				img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
+			.text-truncate
+				a(href='/')
+					img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
 			button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
 				span.navbar-toggler-icon
 			#navbar.collapse.navbar-collapse
 				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
-						.input-group
+						.input-group.mt-2.mb-sm-2
 							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
 							.input-group-append
-								button.btn.btn-success.my-2.my-sm-0(type='submit') Search
+								button.btn.btn-success(type='submit') Search
+
 				ul.navbar-nav
 					li.nav-item.dropdown
 						a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
@@ -55,7 +58,7 @@ html
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 								|  #{user.username}  
-							.dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
+							.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
 								a.dropdown-item(href='/user/account') Account Information
 								a.dropdown-item(href='/user/account/changepassword') Change Password
 								a.dropdown-item(href='/user/account/updateemail') Update Email
@@ -79,6 +82,13 @@ html
 					a All card images, mana symbols, expansions and art related to Magic the Gathering is a property of Wizards of the Coast/Hasbro. 
 					br
 					a This site is not affiliated nor endorsed by Scryfall LLC. This site endeavours to adhere to the Scryfall data guidelines. 
+					br
+					a Custom card images displayed in Cube Cobra are subject to the license terms under which they were uploaded to their hosts.
+					br
+					a Cube Cobra is not responsible for the content of custom card images.
+					br
+					a To report a custom card image violation, message the development team on 
+					a(href='https://discord.gg/Hn39bCU') Discord.
 					br
 					a All other content Copyright &copy; 2019 Cube Cobra
 					br

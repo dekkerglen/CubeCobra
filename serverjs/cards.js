@@ -1,4 +1,7 @@
 const fs = require('fs');
+var util = require('./util.js');
+
+var carddict = {};
 
 //read files
 var data = {
@@ -7,13 +10,85 @@ var data = {
   cardimages: {},
   cardnames: [],
   full_names: [],
-  carddict: {},
+  cardFromId: function(id)
+  {
+    if(carddict[id])
+    {
+      return carddict[id];
+    }
+    else{
+      console.log("Could not find: " + id);
+      //placeholder card if we don't find the one due to a scryfall ID update bug
+      return {
+        // img: 
+        _id:id,
+        set:'',
+        collector_number:'',
+        promo: false,
+        digital: false,
+        full_name: 'Invalid Card',
+        name: 'Invalid Card',
+        name_lower: 'Invalid Card',
+        artist: '',
+        scryfall_uri: '',
+        rarity: '',        
+        legalities: { },
+        oracle_text: '',
+        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        cmc: 0,
+        type: '',        
+        colors: [],
+        color_identity: [],
+        parsed_cost: [],
+        colorcategory: 'c',
+        error:true
+      };
+    }
+  },
+  getCardDetails: function(card)
+  {
+    if(carddict[card.cardID])
+    {
+      var details = carddict[card.cardID];    
+      card.details = details;  
+      details.display_image = util.getCardImageURL(card);
+      return details;
+    }
+    else{
+      console.log("Could not find: " + id);
+      //placeholder card if we don't find the one due to a scryfall ID update bug
+      return {
+        // img: 
+        _id:id,
+        set:'',
+        collector_number:'',
+        promo: false,
+        digital: false,
+        full_name: 'Invalid Card',
+        name: 'Invalid Card',
+        name_lower: 'Invalid Card',
+        artist: '',
+        scryfall_uri: '',
+        rarity: '',        
+        legalities: { },
+        oracle_text: '',
+        image_normal:'https://img.scryfall.com/errors/missing.jpg',
+        cmc: 0,
+        type: '',        
+        colors: [],
+        color_identity: [],
+        parsed_cost: [],
+        colorcategory: 'c',
+        error:true
+      };
+    }
+  },
   nameToId: {},
   normalizedName: card => card.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(),
   allIds: card => data.nameToId[data.normalizedName(card)]
 }
 fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-  data.carddict = JSON.parse(contents);
+  carddict = JSON.parse(contents);
   console.log("carddict loaded");
 });
 fs.readFile('private/cardtree.json', 'utf8', function(err, contents) {
@@ -71,7 +146,7 @@ fs.watchFile('private/names.json', (curr, prev) => {
 fs.watchFile('private/carddict.json', (curr, prev) => {
   console.log('File Changed: carddict');
   fs.readFile('private/carddict.json', 'utf8', function(err, contents) {
-    data.carddict = JSON.parse(contents);
+    carddict = JSON.parse(contents);
     console.log("carddict reloaded");
   });
 });

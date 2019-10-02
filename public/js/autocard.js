@@ -29,7 +29,7 @@ function autocard_init(classname) {
 
 function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
   var w = (card_flip) ? 425 : 250;
-  var h = (show_art_crop) ? 165 : 315;
+  var h = (show_art_crop) ? 175 : 325;
 
   document.onmousemove = function(e) {
     if (window.event) {
@@ -63,11 +63,11 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
       //display on bottom
       document.getElementById("autocard_popup").style.top = (5 + y_offset) + "px";
       document.getElementById("autocard_popup2").style.top = (5 + y_offset) + "px";
-      document.getElementById("autocard_popup_info").style.top = (5 + h + y_offset) + "px";
+      document.getElementById("autocard_popup_info").style.top = (h + y_offset - 7) + "px";
     } else {
       //display on top
-      document.getElementById("autocard_popup").style.top = Math.max(self.pageYOffset, (-(h + 5 + tag_offset) + y_offset)) + "px";
-      document.getElementById("autocard_popup2").style.top = Math.max(self.pageYOffset, (-(h + 5 + tag_offset) + y_offset)) + "px";
+      document.getElementById("autocard_popup").style.top = Math.max(self.pageYOffset, (-(h - 7 + tag_offset) + y_offset)) + "px";
+      document.getElementById("autocard_popup2").style.top = Math.max(self.pageYOffset, (-(h - 7 + tag_offset) + y_offset)) + "px";
       document.getElementById("autocard_popup_info").style.top = Math.max((self.pageYOffset + h), (-(5 + tag_offset) + y_offset)) + "px";
     }
   }
@@ -78,12 +78,13 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
   $(document.getElementById("autocard_popup")).find('img').attr('src', card_image);
   if (card_flip) $(document.getElementById("autocard_popup2")).find('img').attr('src', card_flip);
 
+  w = (card_flip) ? 450 : 225;
+  document.getElementById("autocard_popup_info").style.width = w + "px";
+
   if (tags) {
-    w = (card_flip) ? 450 : 225;
-    document.getElementById("autocard_popup_info").style.width = w + "px";
     let tagsText = '<div class="autocard-tags">';
     tags.forEach(function(tag, index) {
-      tagsText += "<span class='tag'>" + tag.trim() + "</span>";
+      tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + "</span>";
     });
     tagsText += '</div>';
     document.getElementById("autocard_popup_info").innerHTML = tagsText;
@@ -99,7 +100,8 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
             autocardTimeout = setTimeout(function() {
               $(document.getElementById("autocard_popup")).show();
               $(document.getElementById("autocard_popup2")).show();
-              $(document.getElementById("autocard_popup_info")).show();
+              if (tags) $(document.getElementById("autocard_popup_info")).show();
+              else $(document.getElementById("autocard_popup_info")).hide();
             }, 50);
           })
           .attr('src', card_flip) // set the image source so it begins fetching
@@ -111,7 +113,8 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
         if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
         autocardTimeout = setTimeout(function() {
           $(document.getElementById("autocard_popup")).show();
-          $(document.getElementById("autocard_popup_info")).show();
+          if (tags) $(document.getElementById("autocard_popup_info")).show();
+          else $(document.getElementById("autocard_popup_info")).hide();
         }, 50);
       }
     })

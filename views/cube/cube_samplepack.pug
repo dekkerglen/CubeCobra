@@ -16,9 +16,9 @@ block cube_content
             each card, i in pack
               if i % 5 === 0
                 .col-md-2.offset-md-1(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img( src=card.image_normal, width='150', height='210')
+                  a.autocard(card=card.display_image)
+                    img.defaultCardImage( src=card.display_image, width='150', height='210')
               else
                 .col-md-2(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img( src=card.image_normal, width='150', height='210')
+                  a.autocard(card=card.display_image)
+                    img.defaultCardImage( src=card.display_image, width='150', height='210')

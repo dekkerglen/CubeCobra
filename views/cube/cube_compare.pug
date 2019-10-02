@@ -22,7 +22,9 @@ block content
           li.nav-item
             a.nav-link(href='#', data-toggle="collapse" data-target="#navsort" aria-controls="navsort" aria-expanded="false" aria-label="Toggle navigation") Sort
           li.nav-item
-            a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
+              a.nav-link(href='#', data-toggle="collapse" data-target="#navfilter" aria-controls="navfilter" aria-expanded="false" aria-label="Toggle navigation") Filter
+          li.nav-item
+            a(href="#")#tagColors.nav-link View Tag Colors
     #accordion.accordion
       if user
         if user.id == cube.owner
@@ -117,10 +119,12 @@ block content
 
 
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
+  input#cubeB_ID(type='hidden', name='cubeB_ID', value=cube_b_id)
   input#in_both(type='hidden', name='in_both', value=in_both)
   input#only_a(type='hidden', name='only_a', value=only_a)
   input#only_b(type='hidden', name='only_b', value=only_b)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
+  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors.concat(cubeB.tag_colors)))
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
@@ -130,6 +134,7 @@ block content
   //Cube list
   br
   .container#cubelistarea
+  #react-root
 
   // Modal
   #contextModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
@@ -195,7 +200,25 @@ block content
           a#contextBuyButton(href="#", target="_blank")
             button.btn.btn-secondary(type='button') Buy
 
+  // Modal
+  #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
+    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
+      .modal-content
+        .modal-header
+          h5#tagColorsTitle.modal-title View Tag Colors
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        #showTagColors
+          .form-check.form-check-inline
+            input#showTagColorsCheckbox.form-check-input(type='checkbox')
+            label.form-check-label(for='showTagColorsCheckbox') Show Tag Colors in Card List 
+        #tagsColumn.col
+
+        .modal-footer
+          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Close
+
   script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
   script(src='/js/editcube.js')
+  script(src='/js/cube_compare.bundle.js')

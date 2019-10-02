@@ -17,6 +17,29 @@ window.onresize = function() {
   renderDraft();
 }
 
+var hasCustomImages = false;
+$("#customImageDisplayMenuItem").hide();
+deck.forEach(function(inner, index) {
+  inner.forEach(function(card, index) {
+    if (!hasCustomImages && card.imgUrl !== undefined) {
+      hasCustomImages = true;
+      $("#customImageDisplayToggle").prop("checked", true);
+      $("#customImageDisplayMenuItem").show();
+    }
+  });
+});
+
+$('#customImageDisplayToggle').click(function(e) {
+  var enabled = $(this).prop('checked'),
+    display_image;
+  deck.forEach(function(inner, index) {
+    inner.forEach(function(card, index) {
+      adjustDisplayImage(card, enabled);
+    });
+  });
+  renderDraft();
+});
+
 
 function renderDraft() {
   setupColumns();
@@ -37,9 +60,9 @@ function renderDraft() {
         lands++;
       }
       if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '" card_flip="' + card.details.image_flip + '"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.image_normal + '"><img class="deckcard" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.image_normal + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
       }
     });
     $('#deckColumn' + index).html(colhtml);
