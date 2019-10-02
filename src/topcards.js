@@ -37,10 +37,11 @@ class TopCards extends Component {
   }
 
   render() {
-    const rows = this.state.data.map(([name, img, img_flip, rating]) => rating === null ? [] :
+    const rows = this.state.data.map(([name, img, img_flip, rating, picks]) => rating === null ? [] :
       <tr key={name}>
         <td className="autocard" card={img} card_flip={img_flip || undefined}>{name}</td>
         <td>{rating === null ? 'None' : (rating * 100).toFixed(0)}</td>
+        <td>{picks}</td>
       </tr>
     ).flat();
     return <>
@@ -59,6 +60,7 @@ class TopCards extends Component {
           <tr>
             <th>Name</th>
             <th>Rating</th>
+            <th>Total Picks</th>
           </tr>
         </thead>
       </PagedTable>

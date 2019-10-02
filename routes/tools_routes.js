@@ -8,6 +8,9 @@ const CardRating = require('../models/cardrating');
 
 const router = express.Router();
 
+/* Minimum number of picks to show up in Top Cards list. */
+const MIN_PICKS = 2;
+/* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 300;
 
 /* Gets k sorted minimum elements of arr. */
@@ -69,12 +72,26 @@ function topCards(filter, res) {
   });
 
   return CardRating.find({
-    'name': {
+    name: {
       $in: names,
     },
+    picks: {
+      $gte: MIN_PICKS,
+    },
   }).then(ratings => {
-    const ratingDict = new Map(ratings.map(r => [r.name, r.value]));
-    const fullData = versions.map(v => [v.name, v.image_normal, v.image_flip || null, ratingDict.get(v.name) || null]);
+    const ratingDict = new Map(ratings.map(r => [r.name, r]));
+    const fullData = versions.map(v => {
+      const rating = ratingDict.get(v.name);
+      /* This is a Bayesian adjustment to the rating like IMDB does. */
+      const adjust = r => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS)
+      return [
+        v.name,
+        v.image_normal,
+        v.image_flip || null,
+        rating ? adjust(rating) : null,
+        rating ? rating.picks : null,
+      ];
+    });
     const nonNullData = fullData.filter(x => x[3] !== null);
     const data = sortLimit(nonNullData, MAX_RESULTS, x => -(x[3] === null ? -1 : x[3]));
     return {
@@ -92,7 +109,9 @@ router.get('/api/topcards', (req, res) => {
     filter,
   } = makeFilter(req.query.f);
   if (err) {
-    res.sendStatus(400);
+    res.status(400).send({
+      success: 'false',
+    });
     return;
   }
 
@@ -100,11 +119,14 @@ router.get('/api/topcards', (req, res) => {
     data,
   }) => {
     res.status(200).send({
+      success: 'true',
       data,
     });
   }).catch(err => {
     console.error(err);
-    res.sendStatus(500);
+    res.status(500).send({
+      success: 'false',
+    });
   });
 });
 
