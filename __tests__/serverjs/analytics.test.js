@@ -112,5 +112,30 @@ test("GetTypeByColor returns valid counts", () => {
   });
 });
 
-test("GetColorCounts", () => {});
-test("GetCurve", () => {});
+test("GetColorCounts returns valid counts", () => {
+  expect.assertions(1);
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    var result = analytics.GetColorCounts(cubefixture.exampleCube.cards, carddb);
+    expect(result).toEqual(false);
+  });
+});
+
+test("GetCurve returns a valid curve structure", () => {
+  expect.assertions(1);
+  var expected = {
+    "black": [0, 1, 2, 3, 0, 1, 0, 0, 0, 0],
+    "blue": [0, 1, 3, 6, 0, 0, 0, 0, 0, 0],
+    "colorless": [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    "green": [0, 2, 3, 1, 1, 0, 1, 1, 0, 0],
+    "multi": [0, 0, 3, 2, 3, 1, 2, 0, 0, 0],
+    "red": [0, 1, 1, 3, 3, 0, 1, 0, 0, 0],
+    "total": [0, 7, 16, 19, 7, 3, 5, 1, 0, 0],
+    "white": [0, 2, 3, 4, 0, 1, 1, 0, 0, 0]
+  };
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    var result = analytics.GetCurve(cubefixture.exampleCube.cards, carddb);
+    expect(result).toEqual(expected);
+  });
+});
