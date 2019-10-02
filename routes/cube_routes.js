@@ -2025,6 +2025,17 @@ router.get('/api/getcardfromcube/:id', function(req, res) {
   });
 });
 
+router.get('/api/cubelist/:id', function(req, res) {
+  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    var cardnames = "";
+    cube.cards.forEach(function(item, index) {
+      cardnames += carddb.cardFromId(item.cardID).name + "\n";
+    });
+    res.contentType('text/plain');
+    res.status(200).send(cardnames);
+  });
+});
+
 router.post('/editdeck/:id', function(req, res) {
   Deck.findById(req.params.id, function(err, deck) {
     if (err || !deck) {
