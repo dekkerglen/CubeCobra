@@ -31,6 +31,7 @@ block content
         .row
           form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
             input(id='addedcardshidden', type='hidden', value=added)
+            input(id='titlehidden', type='hidden', name='title', value='Cube Bulk Import - Automatic Post')
             input#changelistFormBody(type='hidden', name='body')
             input#changelistBlog(type='hidden', name='blog')
             input.btn.mr-sm-2.btn-success#saveChangesButton(type='button', value='Save Changes')
