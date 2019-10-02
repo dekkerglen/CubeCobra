@@ -2031,7 +2031,7 @@ router.get('/api/cubelist/:id', function(req, res) {
       console.error(err);
       res.sendStatus(500);
     } else if (!cube) {
-      res.status(404).render('misc/404', {});
+      res.sendStatus(404);
     } else {
       const names = cube.cards.map(card => carddb.cardFromId(card.cardID).name);
       res.contentType('text/plain');
