@@ -2872,7 +2872,7 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
       });
     } else {
       const pack = {
-        seed: seed,
+        seed: req.params.seed,
         pack: result.pack.map(card => card.name)
       };
       res.status(200).send(pack);
