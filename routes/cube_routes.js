@@ -202,6 +202,21 @@ function abbreviate(name) {
   return name.length < 20 ? name : name.slice(0, 20) + '…';
 }
 
+async function findCube(req, res, id, requireOwned) {
+  const cube = await Cube.findOne(build_id_query(id)).catch(err => {
+    console.log(err);
+    res.sendStatus(500);
+  });
+  if (!cube) {
+    req.flash('Cube not found');
+    res.render('misc/404', {});
+  } else if (requireOwned && cube.owner !== user._id) {
+    res.sendStatus(403);
+  } else {
+    return cube;
+  }
+}
+
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
   if (req.body.name.length < 5) {
@@ -253,44 +268,25 @@ router.get('/view/:id', function(req, res) {
   res.redirect('/cube/overview/' + req.params.id);
 });
 
-router.post('/format/add/:id', ensureAuth, function(req, res) {
+router.post('/format/add/:id', ensureAuth, async function(req, res) {
   req.body.html = sanitize(req.body.html);
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err || !cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    }
-    if (req.body.id == -1) {
-      if (!cube.draft_formats) {
-        cube.draft_formats = [];
-      }
-      cube.draft_formats.push({
-        title: req.body.title,
-        multiples: req.body.multiples == 'true',
-        html: req.body.html,
-        packs: req.body.format
-      });
-    } else {
-      cube.draft_formats[req.body.id] = {
-        title: req.body.title,
-        multiples: req.body.multiples == 'true',
-        html: req.body.html,
-        packs: req.body.format
-      };
-    }
-    Cube.updateOne({
-      _id: cube._id
-    }, cube, function(err) {
-      if (err) {
-        console.log(err, req);
-        req.flash('danger', 'An error occured saving your custom format.');
-        res.redirect('/cube/playtest/' + req.params.id);
-      } else {
-        req.flash('success', 'Custom format successfully added.');
-        res.redirect('/cube/playtest/' + req.params.id);
-      }
-    });
+  const cube = await findCube(req, res, req.params.id, /* requireOwned */ true);
+  const format = {
+    title: req.body.title,
+    multiples: req.body.multiples == 'true',
+    html: req.body.html,
+    packs: req.body.format,
+  };
+  if (req.body.id == -1) {
+    cube.draft_formats = [...cube.draft_formats, format];
+  } else {
+    cube.draft_formats[req.body.id] = format;
+  }
+  await cube.save().catch(err => {
+    req.flash('danger', 'An error occured saving your custom format.');
+    console.log(err);
   });
+  res.redirect('/cube/playtest/' + req.params.id);
 });
 
 router.post('/blog/post/:id', ensureAuth, function(req, res) {
