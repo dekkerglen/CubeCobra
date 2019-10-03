@@ -38,6 +38,7 @@ html
 			#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
 				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
+						input(type='hidden', name='_csrf', value=csrfToken)
 						.input-group.mt-2.mb-sm-2
 							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
 							.input-group-append
