@@ -52,7 +52,7 @@ class TopCards extends Component {
         />
       </div>
       <SortableTable
-        sorts={{ Rating: row => -row[3], 'Total Picks': row => -row[4] }}
+        sorts={{ Rating: row => row[3], 'Total Picks': row => -row[4] }}
         defaultSort="Rating"
         headers={{ Name: {}, Rating: { style: { width: '10rem' } }, 'Total Picks': { style: { width: '10rem' } } }}
         data={this.state.data}
