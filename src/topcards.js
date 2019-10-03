@@ -2,11 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import FilterCollapse from './components/FilterCollapse';
-import PagedTable from './components/PagedTable';
-
-const compare = ([_a, _b, x], [_c, _d, y]) => {
-  return (y || 0) - (x || 0);
-}
+import SortableTable from './components/SortableTable';
 
 class TopCards extends Component {
   constructor(props) {
@@ -14,7 +10,7 @@ class TopCards extends Component {
 
     this.state = {
       filter: [],
-      data: this.props.defaultData.sort(compare) || [],
+      data: this.props.defaultData || [],
     };
 
     this.setFilter = this.setFilter.bind(this);
@@ -32,17 +28,18 @@ class TopCards extends Component {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
     fetch('/tool/api/topcards?' + params.toString()).then(response => response.json()).then(json => {
-      this.setState({ data: json.data.sort(compare) });
+      this.setState({ data: json.data });
     }).catch(err => console.error(err));
   }
 
   render() {
-    const rows = this.state.data.map(([name, img, img_flip, rating]) => rating === null ? [] :
+    const rowF = ([name, img, img_flip, rating, picks]) => rating === null ? [] :
       <tr key={name}>
         <td className="autocard" card={img} card_flip={img_flip || undefined}>{name}</td>
         <td>{rating === null ? 'None' : (rating * 100).toFixed(0)}</td>
-      </tr>
-    ).flat();
+        <td>{picks}</td>
+      </tr>;
+
     return <>
       <div className="usercontrols pt-3">
         <h4 className="mx-3 mb-3">Top Cards</h4>
@@ -50,18 +47,17 @@ class TopCards extends Component {
           isOpen={true}
           filter={this.state.filter}
           setFilter={this.setFilter}
-          numCards={rows.length}
+          numCards={this.state.data.length}
           useQuery
         />
       </div>
-      <PagedTable rows={rows}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Rating</th>
-          </tr>
-        </thead>
-      </PagedTable>
+      <SortableTable
+        sorts={{ Rating: row => -row[3], 'Total Picks': row => -row[4] }}
+        defaultSort="Rating"
+        headers={{ Name: {}, Rating: { style: { width: '10rem' } }, 'Total Picks': { style: { width: '10rem' } } }}
+        data={this.state.data}
+        rowF={rowF}
+      />
     </>;
   }
 }
