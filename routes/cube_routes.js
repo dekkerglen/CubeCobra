@@ -1102,6 +1102,7 @@ function bulkuploadCSV(req, res, cards, cube) {
       type_line: split[2].replace('-', '—'),
       colors: split[3].split('').filter(c => [...'WUBRG'].includes(c)),
       set: split[4].toUpperCase(),
+      addedTmsp: new Date(),
       collector_number: split[5],
       status: split[6],
       tags: split[7] && split[7].length > 0 ? split[7].split(',') : [],
