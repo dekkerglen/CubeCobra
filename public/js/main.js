@@ -54,7 +54,7 @@ function ISODateToYYYYMMDD(dateString) {
   if (dateString === undefined) {
     return undefined;
   }
-  
+
   return new Date(dateString).toLocaleDateString(locale);
 }
 
