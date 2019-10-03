@@ -404,11 +404,10 @@ app.get('/c/:id', function(req, res) {
 });
 
 //Route files
-let cubes = require('./routes/cube_routes');
 let users = require('./routes/users_routes');
 let devs = require('./routes/dev_routes');
 let tools = require('./routes/tools_routes');
-app.use('/cube', cubes);
+app.use('/cube', require('./routes/cube'));
 app.use('/user', users);
 app.use('/dev', devs);
 app.use('/tool', tools);
