@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import { Input } from 'reactstrap';
 
+import { csrfFetch } from '../util/CSRF';
 import { arraysEqual, fromEntries } from '../util/Util';
 
 import DisplayContext from './DisplayContext';
@@ -94,7 +95,7 @@ class ListViewRaw extends Component {
       return;
     }
 
-    fetch(`/cube/api/updatecard/${cubeID}`, {
+    csrfFetch(`/cube/api/updatecard/${cubeID}`, {
       method: 'POST',
       body: JSON.stringify({
         src: card,

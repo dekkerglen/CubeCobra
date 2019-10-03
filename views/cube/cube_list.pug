@@ -233,6 +233,7 @@ block cube_content
     .modal-dialog.modal-dialog-scrollable(role='document')
       .modal-content
         form(method='POST', action='/cube/bulkupload/'+cube_id)
+          input(type='hidden', name='_csrf', value=csrfToken)
           .modal-header
             h5#pasteBulkModalTitle.modal-title Bulk Upload - Paste Text
             button.close(type='button', data-dismiss='modal', aria-label='Close')
@@ -257,6 +258,7 @@ block cube_content
         .modal-body
           p Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as our .csv export.
           form#uploadFileForm.custom-file(ref='uploadForm', action='/cube/bulkuploadfile/'+cube_id, method='post', enctype='multipart/form-data')
+            input(type='hidden', name='_csrf', value=csrfToken)
             input#customFile.custom-file-input(style='padding:10px' type='file' name='document' onchange="$('#upload-file-info').html(this.files[0].name)")
             label#upload-file-info.custom-file-label(for='customFile') Choose file
         .modal-footer
@@ -279,6 +281,7 @@ block cube_content
             .input-group-prepend
               span#basic-addon3.input-group-text Cube ID  (enter cube id from URL):
             form#importForm.custom-file(ref='uploadForm', action='/cube/importcubetutor/'+cube_id, method='post', enctype='multipart/form-data')
+              input(type='hidden', name='_csrf', value=csrfToken)
               input.form-control(type='text', name='cubeid', placeholder='e.g. 123456')
 
         .modal-footer

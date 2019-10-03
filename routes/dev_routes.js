@@ -7,7 +7,8 @@ const mailer = require("nodemailer");
 const fs = require('fs')
 
 const {
-  ensureAuth
+  ensureAuth,
+  csrfProtection
 } = require('./middleware');
 
 // Bring in models
@@ -15,6 +16,8 @@ let User = require('../models/user')
 let Blog = require('../models/blog')
 
 var adminname = 'Dekkaru';
+
+router.use(csrfProtection);
 
 router.get('/blog', function(req, res) {
   res.redirect('/dev/blog/0');

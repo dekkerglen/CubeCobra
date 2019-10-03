@@ -6,6 +6,7 @@ block content
   h2 Login
   br
   form(method='POST', action='/user/login')
+    input(type='hidden', name='_csrf', value=csrfToken)
     .form-group.row
       label.col-sm-3.col-form-label Username or Email Address:
       input#email.form-control.col-sm-9(name='username', type='text')

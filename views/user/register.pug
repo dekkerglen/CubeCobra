@@ -6,6 +6,7 @@ block content
   h1 Register
   br
   form(method='POST', action='/user/register')
+    input(type='hidden', name='_csrf', value=csrfToken)
     if attempt
       .form-group.row
         label.col-sm-2.col-form-label Email:

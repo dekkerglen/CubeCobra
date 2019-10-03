@@ -83,6 +83,7 @@ block cube_content
         .modal-dialog.modal-lg(role='document')
           .modal-content
             form#postBlogForm(method='POST', action='/cube/blog/post/'+cube_id)
+              input(type='hidden', name='_csrf', value=csrfToken)
               .modal-header
                 h5#blogEditTitle Edit Blog Post
                 button.close(type='button', data-dismiss='modal', aria-label='Close')

@@ -1,3 +1,5 @@
+const csurf = require('csurf');
+
 const ensureAuth = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -7,6 +9,12 @@ const ensureAuth = (req, res, next) => {
   }
 }
 
+const csrfProtection = [csurf(), (req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+}];
+
 module.exports = {
-  ensureAuth
+  ensureAuth,
+  csrfProtection,
 }

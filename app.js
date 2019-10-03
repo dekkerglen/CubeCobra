@@ -3,6 +3,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');
+const csurf = require('csurf');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');

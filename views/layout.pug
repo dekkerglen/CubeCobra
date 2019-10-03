@@ -10,6 +10,8 @@ html
 		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
+		if csrfToken
+			meta(name='csrf-token', content=csrfToken)
 		if metadata
 			for metadatum, i in metadata
 				if metadatum.name
@@ -111,6 +113,7 @@ html
 	.modal-dialog(role='document')
 		.modal-content
 			form(method='POST', action='/user/login')
+				input(type='hidden', name='_csrf', value=csrfToken)
 				.modal-header
 					h5#loginModalLabel.modal-title Login
 					button.close(type='button', data-dismiss='modal', aria-label='Close')
@@ -135,6 +138,7 @@ html
 	.modal-dialog(role='document')
 		.modal-content
 			form(method='POST', action='/cube/add')
+				input(type='hidden', name='_csrf', value=csrfToken)
 				.modal-header
 					h5#loginModalLabel.modal-title Create New Cube
 					button.close(type='button', data-dismiss='modal', aria-label='Close')

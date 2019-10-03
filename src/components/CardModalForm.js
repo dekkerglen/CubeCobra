@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import { csrfFetch } from '../util/CSRF';
+
 import CardModal from './CardModal';
 import CardModalContext from './CardModalContext';
 
@@ -115,7 +117,7 @@ class CardModalForm extends Component {
       return;
     }
 
-    let response = await fetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
+    let response = await csrfFetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
       method: 'POST',
       body: JSON.stringify({ src: card, updated }),
       headers: {
