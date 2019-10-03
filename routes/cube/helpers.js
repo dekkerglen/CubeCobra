@@ -512,10 +512,40 @@ function startStandardDraft(req, res, params, cube) {
   }
 }
 
+function build_tag_colors(cube) {
+  let tag_colors = cube.tag_colors;
+  let tags = tag_colors.map(item => item.tag);
+  let not_found = tag_colors.map(item => item.tag);
+
+  cube.cards.forEach(function(card, index) {
+    card.tags.forEach(function(tag, index) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tag_colors.push({
+          tag,
+          color: null
+        });
+        tags.push(tag);
+      }
+      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
+    });
+  });
+
+  let tmp = [];
+  tag_colors.forEach(function(item, index) {
+    if (!not_found.includes(item.tag)) tmp.push(item);
+  });
+  tag_colors = tmp;
+
+  return tag_colors;
+}
+
+
 module.exports = {
   GetPrices,
   abbreviate,
   addCardHtml,
+  build_tag_colors,
   bulkUpload,
   notPromoOrDigitalId,
   removeCardHtml,
