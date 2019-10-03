@@ -5,8 +5,6 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-const csurf = require('csurf');
-
 var {
   addAutocard,
   generatePack,

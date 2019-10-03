@@ -3,7 +3,6 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');
-const csurf = require('csurf');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
@@ -15,6 +14,10 @@ var updatedb = require('./serverjs/updatecards.js');
 const secrets = require('../cubecobrasecrets/secrets');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 const mongoDBStore = require('connect-mongodb-session')(session);
+
+const {
+  csrfProtection,
+} = require('./routes/middleware');
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
@@ -120,6 +123,19 @@ app.get('*', function(req, res, next) {
   res.locals.user = req.user || null;
   next();
 });
+
+// Route files; they manage their own CSRF protection
+let cubes = require('./routes/cube_routes');
+let users = require('./routes/users_routes');
+let devs = require('./routes/dev_routes');
+let tools = require('./routes/tools_routes');
+app.use('/cube', cubes);
+app.use('/user', users);
+app.use('/dev', devs);
+app.use('/tool', tools);
+
+// CSRF protection for this file
+app.use(csrfProtection);
 
 // Home route
 app.get('/', function(req, res) {
@@ -403,16 +419,6 @@ app.get('/404', function(req, res) {
 app.get('/c/:id', function(req, res) {
   res.redirect('/cube/list/' + req.params.id);
 });
-
-//Route files
-let cubes = require('./routes/cube_routes');
-let users = require('./routes/users_routes');
-let devs = require('./routes/dev_routes');
-let tools = require('./routes/tools_routes');
-app.use('/cube', cubes);
-app.use('/user', users);
-app.use('/dev', devs);
-app.use('/tool', tools);
 
 app.use(function(req, res) {
   res.status(404).render('misc/404', {});
