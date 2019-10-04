@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
@@ -49,7 +49,10 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
   </Card>
 );
 
-const CurveViewRaw = ({ cards, primary, ...props }) => {
+const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+  /* Initialize autocard anytime the DOM is updated. */
+  useEffect(() => /* global */ autocard_init('autocard'));
+
   // We call the groups color and type even though they might be other sorts.
   let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};

@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
-const config = require('../config/database');
-
 (async () => {
   mongoose.connect(config.database).then( async (db) => {
     const totalCubes = await Cube.count();

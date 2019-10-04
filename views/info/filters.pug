@@ -172,3 +172,17 @@ block content
             tr
               td(scope="col") #[code r:common or r:rare]
               td(scope="col") Common or rare cards.
+      .card
+        #collapseArtist-syntax.card-header(data-toggle="collapse" data-target="#collapseArtist" aria-expanded="true" aria-controls="collapseArtist")
+          button(class="btn btn-link" type="button" )
+            h5 Artist
+        #collapseArtist.collapse(aria-labelledby="collapseArtist-syntax" data-parent="#syntax-accordion")
+          p You can use #[code a:], #[code art:], or #[code artist:] to search for cards illustrated by a specific artist.
+          p #[strong Examples:]
+            table.table
+              tr
+                td(scope="col") #[code a:"seb mckinnon"]
+                td(scope="col") All cards illustrated by Seb Mckinnon.
+              tr
+                td(scope="col") #[code a:reb]
+                td(scope="col") All cards illustrated by artists with "reb" in their name.

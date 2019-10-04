@@ -6,17 +6,17 @@ const expressValidator = require('express-validator');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
-const config = require('./config/database');
 var schedule = require('node-schedule');
 const http = require('http');
 var fileUpload = require('express-fileupload');
 var util = require('./serverjs/util.js');
 var updatedb = require('./serverjs/updatecards.js');
 const secrets = require('../cubecobrasecrets/secrets');
+const mongosecrets = require('../cubecobrasecrets/mongodb');
 const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
-mongoose.connect(config.database);
+mongoose.connect(mongosecrets.connectionString);
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');
@@ -31,8 +31,8 @@ db.on('error', function(err) {
 const app = express();
 
 var store = new mongoDBStore({
-  uri: 'mongodb://localhost:27017/nodecube',
-  databaseName: 'nodecube',
+  uri: mongosecrets.connectionString,
+  databaseName: mongosecrets.dbname,
   collection: 'session_data'
 }, function(err) {
   if (err) {
@@ -42,7 +42,6 @@ var store = new mongoDBStore({
 
 // Bring in models
 let Cube = require('./models/cube')
-let User = require('./models/user')
 let Blog = require('./models/blog')
 let Deck = require('./models/deck')
 
@@ -140,16 +139,19 @@ app.get('/', function(req, res) {
 
   if (req.user) user_id = req.user._id;
   Cube.find({
-    'card_count': {
-      $gt: 200
-    },
     $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
-      'owner': user_id
-    }]
+        $and: [{
+          'card_count': {
+            $gt: 200
+          }
+        }, {
+          'isListed': true
+        }]
+      },
+      {
+        'owner': user_id
+      }
+    ]
   }).sort({
     'date_updated': -1
   }).limit(12).exec(function(err, result) {
@@ -405,9 +407,11 @@ app.get('/c/:id', function(req, res) {
 let cubes = require('./routes/cube_routes');
 let users = require('./routes/users_routes');
 let devs = require('./routes/dev_routes');
+let tools = require('./routes/tools_routes');
 app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
+app.use('/tool', tools);
 
 app.use(function(req, res) {
   res.status(404).render('misc/404', {});

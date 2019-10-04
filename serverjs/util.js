@@ -102,6 +102,14 @@ function getCardImageURL(card) {
   return card.imgUrl !== undefined ? card.imgUrl : card.details.image_normal;
 }
 
+function fromEntries(entries) {
+  const obj = {};
+  for (const [k, v] of entries) {
+    obj[k] = v;
+  }
+  return obj;
+}
+
 var methods = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -158,6 +166,7 @@ var methods = {
   to_base_36,
   from_base_36,
   has_profanity,
+  fromEntries,
 }
 
 module.exports = methods;

@@ -59,6 +59,8 @@ function GetColorIdentity(colors) {
 }
 
 var methods = {
+  GetColorCat: GetColorCat,
+  GetColorIdentity: GetColorIdentity,
   GetTypeByColor: function(cards, carddb) {
     var TypeByColor = {
       Creatures: {
@@ -302,134 +304,136 @@ var methods = {
     cards.forEach(function(card, index) {
       card.details = carddb.cardFromId(card.cardID);
     });
+    var cardColors;
     cards.forEach(function(card, index) {
-      if (card.details.colors.length === 2) {
-        if (card.details.colors.includes('W') && card.details.colors.includes('U')) {
+      cardColors = card.details.colors || [];
+      if (cardColors.length === 2) {
+        if (cardColors.includes('W') && cardColors.includes('U')) {
           ColorCounts.Azorius += 1;
           ColorCounts.White += 1;
           ColorCounts.Blue += 1;
-        } else if (card.details.colors.includes('B') && card.details.colors.includes('U')) {
+        } else if (cardColors.includes('B') && cardColors.includes('U')) {
           ColorCounts.Dimir += 1;
           ColorCounts.Black += 1;
           ColorCounts.Blue += 1;
-        } else if (card.details.colors.includes('B') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('B') && cardColors.includes('R')) {
           ColorCounts.Rakdos += 1;
           ColorCounts.Black += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('G') && cardColors.includes('R')) {
           ColorCounts.Gruul += 1;
           ColorCounts.Green += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('W') && card.details.colors.includes('G')) {
+        } else if (cardColors.includes('W') && cardColors.includes('G')) {
           ColorCounts.Selesnya += 1;
           ColorCounts.Green += 1;
           ColorCounts.White += 1;
-        } else if (card.details.colors.includes('W') && card.details.colors.includes('B')) {
+        } else if (cardColors.includes('W') && cardColors.includes('B')) {
           ColorCounts.Orzhov += 1;
           ColorCounts.White += 1;
           ColorCounts.Black += 1;
-        } else if (card.details.colors.includes('R') && card.details.colors.includes('U')) {
+        } else if (cardColors.includes('R') && cardColors.includes('U')) {
           ColorCounts.Izzet += 1;
           ColorCounts.Red += 1;
           ColorCounts.Blue += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('B')) {
+        } else if (cardColors.includes('G') && cardColors.includes('B')) {
           ColorCounts.Golgari += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
-        } else if (card.details.colors.includes('W') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('W') && cardColors.includes('R')) {
           ColorCounts.Boros += 1;
           ColorCounts.White += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('U')) {
+        } else if (cardColors.includes('G') && cardColors.includes('U')) {
           ColorCounts.Simic += 1
           ColorCounts.Green += 1;
           ColorCounts.Blue += 1;
         }
       } else if (card.colors.length == 3) {
-        if (card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('R')) {
+        if (cardColors.includes('G') && cardColors.includes('B') && cardColors.includes('R')) {
           ColorCounts.Jund += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('U') && card.details.colors.includes('W')) {
+        } else if (cardColors.includes('G') && cardColors.includes('U') && cardColors.includes('W')) {
           ColorCounts.Bant += 1;
           ColorCounts.Green += 1;
           ColorCounts.White += 1;
           ColorCounts.Blue += 1;
-        } else if (card.details.colors.includes('U') && card.details.colors.includes('B') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('U') && cardColors.includes('B') && cardColors.includes('R')) {
           ColorCounts.Grixis += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Black += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('W') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('G') && cardColors.includes('W') && cardColors.includes('R')) {
           ColorCounts.Naya += 1;
           ColorCounts.Green += 1;
           ColorCounts.White += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('U') && card.details.colors.includes('B') && card.details.colors.includes('W')) {
+        } else if (cardColors.includes('U') && cardColors.includes('B') && cardColors.includes('W')) {
           ColorCounts.Esper += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
-        } else if (card.details.colors.includes('W') && card.details.colors.includes('U') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('W') && cardColors.includes('U') && cardColors.includes('R')) {
           ColorCounts.Jeskai += 1;
           ColorCounts.Blue += 1;
           ColorCounts.White += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('W') && card.details.colors.includes('B') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('W') && cardColors.includes('B') && cardColors.includes('R')) {
           ColorCounts.Mardu += 1;
           ColorCounts.White += 1;
           ColorCounts.Black += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('U')) {
+        } else if (cardColors.includes('G') && cardColors.includes('B') && cardColors.includes('U')) {
           ColorCounts.Sultai += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.Blue += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('U') && card.details.colors.includes('R')) {
+        } else if (cardColors.includes('G') && cardColors.includes('U') && cardColors.includes('R')) {
           ColorCounts.Temur += 1;
           ColorCounts.Green += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Red += 1;
-        } else if (card.details.colors.includes('G') && card.details.colors.includes('B') && card.details.colors.includes('W')) {
+        } else if (cardColors.includes('G') && cardColors.includes('B') && cardColors.includes('W')) {
           ColorCounts.Abzan += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
         }
       } else if (card.colors.length == 4) {
-        if (!card.details.colors.includes('W')) {
+        if (!cardColors.includes('W')) {
           ColorCounts.NonWhite += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Red += 1;
-        } else if (!card.details.colors.includes('U')) {
+        } else if (!cardColors.includes('U')) {
           ColorCounts.NonBlue += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
           ColorCounts.Red += 1;
-        } else if (!card.details.colors.includes('B')) {
+        } else if (!cardColors.includes('B')) {
           ColorCounts.NonBlack += 1;
           ColorCounts.Green += 1;
           ColorCounts.White += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Red += 1;
-        } else if (!card.details.colors.includes('R')) {
+        } else if (!cardColors.includes('R')) {
           ColorCounts.NonRed += 1;
           ColorCounts.Green += 1;
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
           ColorCounts.Blue += 1;
-        } else if (!card.details.colors.includes('G')) {
+        } else if (!cardColors.includes('G')) {
           ColorCounts.NonGreen += 1;
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
           ColorCounts.Blue += 1;
           ColorCounts.Red += 1;
         }
-      } else if (card.details.colors.length == 5) {
+      } else if (cardColors.length == 5) {
         ColorCounts.FiveColor += 1;
         ColorCounts.Green += 1;
         ColorCounts.Black += 1;

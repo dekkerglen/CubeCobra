@@ -41,6 +41,13 @@ $('#addBasicsButton').click(function(e) {
   addCards(basics.Forest, $('#basicsGreen').val());
 
   renderDraft();
+
+  $('#basicsWhite').val(0);
+  $('#basicsBlue').val(0);
+  $('#basicsRed').val(0);
+  $('#basicsBlack').val(0);
+  $('#basicsGreen').val(0);
+
   $('#basicsModal').modal('hide');
 });
 

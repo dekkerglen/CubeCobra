@@ -6,6 +6,10 @@ const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require("nodemailer");
 const fs = require('fs')
 
+const {
+  ensureAuth
+} = require('./middleware');
+
 // Bring in models
 let User = require('../models/user')
 let Blog = require('../models/blog')
@@ -125,15 +129,5 @@ router.post('/blogpost', ensureAuth, function(req, res) {
     }
   });
 });
-
-
-function ensureAuth(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  } else {
-    req.flash('danger', 'Please login to view this content');
-    res.redirect('/user/login');
-  }
-}
 
 module.exports = router;

@@ -7,6 +7,7 @@ module.exports = {
     cube_compare: ['./cube_compare.js'],
     cube_list: ['./cube_list.js'],
     cube_playtest: ['./cube_playtest.js'],
+    topcards: ['./topcards.js'],
   },
   output: {
     filename: '[name].bundle.js',
