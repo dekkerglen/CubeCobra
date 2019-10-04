@@ -124,14 +124,6 @@ var methods = {
     return res;
   },
   cardsAreEquivalent: cardsAreEquivalent,
-  selectionContainsCard: function(card, selection) {
-    selection.forEach(function(select, index) {
-      if (cardsAreEquivalent(select, card.details)) {
-        return true;
-      }
-    });
-    return false;
-  },
   setCubeType: function(cube, carddb) {
     var pauper = true;
     var type = legalityToInt('Standard');
@@ -153,7 +145,7 @@ var methods = {
   },
   sanitize: function(html) {
     return sanitizeHtml(html, {
-      allowedTags: ['div', 'p', 'strike', 'strong', 'b', 'i', 'em', 'u', 'a', 'h5', 'h6', 'ul', 'ol', 'li', 'span'],
+      allowedTags: ['div', 'p', 'strike', 'strong', 'b', 'i', 'em', 'u', 'a', 'h5', 'h6', 'ul', 'ol', 'li', 'span', 'br'],
       selfClosing: ['br']
     });
   },

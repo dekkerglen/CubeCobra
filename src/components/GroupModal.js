@@ -10,6 +10,8 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
+import { fromEntries } from '../util/Util';
+
 import AutocardListItem from './AutocardListItem';
 import ColorCheck from './ColorCheck';
 import GroupModalContext from './GroupModalContext';
@@ -26,8 +28,8 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
-      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
-      addTags: false,
+      ...fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
+      addTags: true,
       deleteTags: false,
       tags: [],
     };
@@ -56,8 +58,8 @@ class GroupModal extends Component {
       status: '',
       cmc: '',
       type_line: '',
-      ...Object.fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
-      addTags: false,
+      ...fromEntries([...'WUBRGC'].map(c => [`color${c}`, false])),
+      addTags: true,
       deleteTags: false,
       tags: [],
     });
@@ -157,7 +159,7 @@ class GroupModal extends Component {
         if (cmc) { card.cmc = cmc; }
         if (type_line) { card.type_line = type_line; }
         if (addTags) {
-          card.tags = [...card.tags, tags.filter(tag => !card.tags.includes(tag))];
+          card.tags = [...card.tags, ...tags.filter(tag => !card.tags.includes(tag))];
         }
         if (deleteTags) {
           card.tags = card.tags.filter(tag => !tags.includes(tag));

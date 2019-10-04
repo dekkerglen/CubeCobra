@@ -1,6 +1,7 @@
 extends cube_layout
 
 block cube_content
+  include ../dynamic_flash
   #react-root
   input#curveData(type='hidden', value=curve)
   input#typeData(type='hidden', value=TypeByColor)

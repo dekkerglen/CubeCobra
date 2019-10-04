@@ -144,7 +144,7 @@ class EditCollapse extends Component {
                 <Col>
                   <FormGroup>
                     <Label>Blog Title:</Label>
-                    <Input type="text" defaultValue="Cube Updated – Automatic Post" />
+                    <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
                   </FormGroup>
                   <FormGroup>
                     <Label>Body:</Label>

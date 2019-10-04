@@ -33,8 +33,6 @@ Contributing to Cube Cobra does not entitle any contributor to compensation of a
 
 Issues are tagged with 'good first issue' if we think it's a good beginner task to tackle. Complete a few small changes to become familar with the codebase before diving into a huge feature.
 
-The master branch is the branch with changes that are pending for the next update. The release branches are forked from the master branch, and the latest release branch is the branch the server runs off of. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the master branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
-
 
 # How we collaborate - asynchronous communication
 
@@ -140,14 +138,7 @@ tracking that remaining work.
 
 ## How we use git branches
 
-The `master` branch is deployed to the production server. The `development`
-branch contains the version of the code that will be deployed during the next release.
-During these releases, `development` is merged into `master`. `development` is
-considered working at all times. Thus, when we notice bugs or missing features on the
-`development` branch, we open issues tracking them.
-
-As a default, we work on branches based on `development`, and we open our pull
-requests against `development`.
+The `master` branch is the branch with changes that are pending for the next update. The release branches are forked from the `master` branch, and the latest release branch is the branch the server runs off of. First, assign yourself to an issue, and create a fork of the code. When you are finished with the feature, create a pull request back into the master branch. An admin will review your code and merge if it is accepted. Expect some comments and feedback.
 
 ## How we use Discord
 

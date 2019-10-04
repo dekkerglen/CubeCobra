@@ -12,6 +12,8 @@ import {
 
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
+import Query from '../util/Query';
+import { fromEntries } from '../util/Util';
 
 import { ColorChecks } from './ColorCheck';
 
@@ -39,7 +41,7 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>;
 
-const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'set', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const allFields = ['name', 'oracle', 'cmc', 'color', 'colorIdentity', 'mana', 'type', 'set', 'tag', 'status', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity', 'artist'];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) =>
@@ -86,6 +88,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         <NumericField name="toughness" humanName="Toughness" placeholder={'Any value, e.g. "2"'} value={values.toughness} onChange={onChange} />
         <NumericField name="loyalty" humanName="Loyalty" placeholder={'Any value, e.g. "3"'} value={values.loyalty} onChange={onChange} />
         <NumericField name="rarity" humanName="Rarity" placeholder={'Any rarity, e.g. "common"'} value={values.rarity} onChange={onChange} />
+        <TextField name="artist" humanName="Artist" placeholder={'Any text, e.g. "seb"'} value={values.artist} onChange={onChange} />
       </ModalBody>
       <ModalFooter>
         <Button color="danger" aria-label="Close" onClick={toggle}>Cancel</Button>
@@ -100,9 +103,9 @@ class FilterCollapse extends Component {
 
     this.state = {
       advancedOpen: false,
-      filterInput: Hash.get('f', ''),
-      ...Object.fromEntries(allFields.map(n => [n, ''])),
-      ...Object.fromEntries(numFields.map(n => [n + 'Op', '='])),
+      filterInput: this.store().get('f', ''),
+      ...fromEntries(allFields.map(n => [n, ''])),
+      ...fromEntries(numFields.map(n => [n + 'Op', '='])),
     };
 
     this.toggleAdvanced = this.toggleAdvanced.bind(this);
@@ -118,6 +121,10 @@ class FilterCollapse extends Component {
     this.updateFilters();
   }
 
+  store() {
+    return this.props.useQuery ? Query : Hash;
+  }
+
   toggleAdvanced() {
     this.setState({
       advancedOpen: !this.state.advancedOpen,
@@ -130,7 +137,11 @@ class FilterCollapse extends Component {
     for (const name of allFields) {
       if (this.state[name]) {
         const op = numFields.includes(name) ? (this.state[name + 'Op'] || '=') : ':';
-        tokens.push(name + op + this.state[name]);
+        let value = this.state[name].replace('"', '\"');
+        if (value.indexOf(' ') > -1) {
+          value = `"${value}"`;
+        }
+        tokens.push(`${name}${op}${value}`);
       }
     }
     const filterInput = tokens.join(' ');
@@ -144,18 +155,19 @@ class FilterCollapse extends Component {
   updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
-      this.props.setFilter([]);
+      this.props.setFilter([], '');
+      this.store().del('f');
       return;
     }
     const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens);
-    if (!valid || !Filter.verifyTokens(tokens)) return;
+    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    if (!valid) return;
 
     if (tokens.length > 0) {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
-      this.props.setFilter(filters);
-      Hash.set('f', filterInput);
+      this.props.setFilter(filters, filterInput);
+      this.store().set('f', filterInput);
     }
   }
 
@@ -163,24 +175,9 @@ class FilterCollapse extends Component {
     const target = event.target;
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
-    const extra = {};
-
-    if (name !== 'filterInput') {
-      // Advanced Filter change. Render to filter input.
-      const newState = { ...this.state, [name]: value };
-      const tokens = [];
-      for (const name of allFields) {
-        if (newState[name]) {
-          const op = numFields.includes(name) ? (newState[name + 'Op'] || '=') : ':';
-          tokens.push(name + op + newState[name]);
-        }
-      }
-      extra.filterInput = tokens.join(' ');
-    }
 
     this.setState({
       [name]: value,
-      ...extra,
     });
   }
 
@@ -198,14 +195,15 @@ class FilterCollapse extends Component {
 
   handleReset(event) {
     this.setState({ filterInput: '' });
-    this.props.setFilter([]);
+    this.props.setFilter([], '');
+    this.store().del('f');
   }
 
   render() {
-    const { filter, setFilter, numCards, ...props } = this.props;
+    const { filter, setFilter, numCards, useQuery, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens);
+    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     return (
       <Collapse {...props}>
         <Container>
@@ -235,7 +233,7 @@ class FilterCollapse extends Component {
               <h5>Filters</h5>
               <p>
                 {!filter || filter.length === 0 ? <em>No filters applied.</em> :
-                  <em>Filters applied: {numCards} total results.</em>
+                  <em>Filters applied{typeof numCards !== 'undefined' ? `: ${numCards} total results.` : '.'}</em>
                 }
               </p>
             </Col>

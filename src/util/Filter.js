@@ -31,6 +31,9 @@ let categoryMap = new Map([
   ['rarity', 'rarity'],
   ['loy', 'loyalty'],
   ['loyalty', 'loyalty'],
+  ['a', 'artist'],
+  ['art', 'artist'],
+  ['artist', 'artist']
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -197,12 +200,12 @@ function simplifyArg(arg, category) {
   switch (category) {
     case 'color':
     case 'identity':
-      if (colorMap.has(arg)) {
-        res = colorMap.get(arg);
+      if (colorMap.has(arg.toLowerCase())) {
+        res = colorMap.get(arg.toLowerCase());
       } else {
         res = arg;
       }
-      res = res.split('').map((element) => element.toUpperCase());
+      res = res.toUpperCase().split('');
       break;
     case 'mana':
       res = parseManaCost(arg)
@@ -264,6 +267,8 @@ const verifyTokens = (tokens) => {
         case 'rarity':
           if (token(i).arg.search(/^(common|uncommon|rare|mythic)$/) < 0) return false;
           break;
+        case 'artist':
+          return true;
       }
     }
 
@@ -367,18 +372,19 @@ const parseTokens = (tokens) => {
   }
 }
 
-function filterCard(card, filters) {
+/* inCube should be true when we are using a cube's card object and false otherwise (e.g. in Top Cards). */
+function filterCard(card, filters, inCube) {
   if (filters.length == 1) {
     if (filters[0].type == 'token') {
-      return filterApply(card, filters[0]);
+      return filterApply(card, filters[0], inCube);
     } else {
-      return filterCard(card, filters[0]);
+      return filterCard(card, filters[0], inCube);
     }
   } else {
     if (filters.type == 'or') {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) || (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) || (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
     } else {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0]) : filterCard(card, filters[0])) && (filters[1].type == 'token' ? filterApply(card, filters[1]) : filterCard(card, filters[1]))
+      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) && (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
     }
   }
 
@@ -413,10 +419,15 @@ function arrayContainsOtherArray(arr1, arr2) {
   return arr2.every(v => arr1.includes(v));
 }
 
-function filterApply(card, filter) {
+function filterApply(card, filter, inCube) {
   let res = null;
+  if (typeof inCube === 'undefined') {
+    inCube = true;
+  }
+  let cmc = inCube ? card.cmc : card.details.cmc;
+  let colors = inCube ? card.colors : card.details.color_identity;
   if (filter.category == 'name') {
-    res = card.details.name_lower.indexOf(filter.arg) > -1;
+    res = card.details.name_lower.indexOf(filter.arg.toLowerCase()) > -1;
   }
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
@@ -445,55 +456,55 @@ function filterApply(card, filter) {
         break;
     }
   }
-  if (filter.category == 'identity' && card.colors) {
+  if (filter.category == 'identity' && colors) {
     switch (filter.operand) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = !card.colors.length;
+          res = colors.length === 0;
         } else {
-          res = areArraysEqualSets(card.colors, filter.arg);
+          res = areArraysEqualSets(colors, filter.arg);
         }
         break;
       case '<':
-        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length < filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, colors) && colors.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length > filter.arg.length;
+        res = arrayContainsOtherArray(colors, filter.arg) && colors.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(filter.arg, card.colors) && card.details.color_identity.length <= filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, colors) && colors.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(card.colors, filter.arg) && card.details.color_identity.length >= filter.arg.length;
+        res = arrayContainsOtherArray(colors, filter.arg) && colors.length >= filter.arg.length;
         break;
     }
   }
   if (filter.category == 'mana' && card.details.parsed_cost) {
     res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
   }
-  if (filter.category == 'cmc' && card.cmc) {
+  if (filter.category == 'cmc' && cmc) {
     switch (filter.operand) {
       case ':':
       case '=':
-        res = filter.arg == card.cmc;
+        res = filter.arg == cmc;
         break;
       case '<':
-        res = card.cmc < filter.arg;
+        res = cmc < filter.arg;
         break;
       case '>':
-        res = card.cmc > filter.arg;
+        res = cmc > filter.arg;
         break;
       case '<=':
-        res = card.cmc <= filter.arg;
+        res = cmc <= filter.arg;
         break;
       case '>=':
-        res = card.cmc >= filter.arg;
+        res = cmc >= filter.arg;
         break;
     }
   }
   if (filter.category == 'type' && card.details.type) {
-    if (card.details.type.toLowerCase().indexOf(filter.arg) > -1) {
+    if (card.details.type.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
       res = true;
     }
   }
@@ -570,11 +581,11 @@ function filterApply(card, filter) {
   }
   if (filter.category == 'tag') {
     res = card.tags.some(element => {
-      return element.toLowerCase() == filter.arg;
+      return element.toLowerCase() == filter.arg.toLowerCase();
     });
   }
   if (filter.category == 'status') {
-    if (card.status.toLowerCase() == filter.arg) {
+    if (card.status.toLowerCase() == filter.arg.toLowerCase()) {
       res = true;
     }
   }
@@ -650,6 +661,9 @@ function filterApply(card, filter) {
         res = rarity_order.indexOf(rarity) >= rarity_order.indexOf(filter.arg);
         break;
     }
+  }
+  if (filter.category == 'artist') {
+    res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
 
   if (filter.not) {
