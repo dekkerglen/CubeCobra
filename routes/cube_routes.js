@@ -835,6 +835,7 @@ router.get('/analysis/:id', function(req, res) {
   });
 });
 
+
 router.get('/samplepack/:id', function(req, res) {
   res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
 });

@@ -645,7 +645,8 @@ var methods = {
                     mentionedTokens.push({tokenId:candidate._id,sourceCardId:card.details._id});
                     break;
                   }                                                
-                }                  
+                }                   
+                
               }            
             }
           }

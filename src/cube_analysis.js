@@ -59,3 +59,4 @@ const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').
 const wrapper = document.getElementById('react-root');
 const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
+
