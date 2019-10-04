@@ -37,6 +37,7 @@ class CubeAnalysis extends Component {
             {navItem('curve', 'Curve')}
             {navItem('type', 'Type Breakdown')}
             {navItem('multi', 'Multicolored Counts')}
+            {navItem('tokens','Generated Tokens')}
           </Nav>
         </Col>
         <Col xs="12" lg="10">
@@ -44,6 +45,7 @@ class CubeAnalysis extends Component {
             curve: <CurveAnalysis curve={curve} />,
             type: <TypeAnalysis typeByColor={typeByColor} />,
             multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
+            tokens:<GeneratedTokensAnalysis generatedTokens = {generatedTokensData} />,
           }[active]}
         </Col>
       </Row>

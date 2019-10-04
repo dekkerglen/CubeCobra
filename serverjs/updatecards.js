@@ -250,7 +250,7 @@ function convertCard(card, isExtra) {
     newcard.power = faceAttributeSource.power;
   }
   if (faceAttributeSource.toughness) {
-    newcard.power = faceAttributeSource.toughness;
+    newcard.toughness = faceAttributeSource.toughness;
   }
   if (faceAttributeSource.image_uris) {
     newcard.image_small = faceAttributeSource.image_uris.small;
@@ -269,6 +269,17 @@ function convertCard(card, isExtra) {
     newcard.colorcategory = 'm';
   } else if (newcard.color_identity.length == 1) {
     newcard.colorcategory = newcard.color_identity[0].toLowerCase();
+  }
+  if (card.all_parts)  
+  {
+    var tokens = [];
+    card.all_parts.forEach(element => {
+      if (element.component == 'token')  
+      {          
+        tokens.push(element.id);
+      }
+     }); 
+     newcard.tokens = tokens;
   }
   return newcard;
 }
