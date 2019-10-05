@@ -36,7 +36,7 @@ class TopCards extends Component {
     const rowF = ([name, img, img_flip, rating, picks]) => rating === null ? [] :
       <tr key={name}>
         <td className="autocard" card={img} card_flip={img_flip || undefined}>{name}</td>
-        <td>{rating === null ? 'None' : (rating * 100).toFixed(0)}</td>
+        <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
         <td>{picks}</td>
       </tr>;
 
