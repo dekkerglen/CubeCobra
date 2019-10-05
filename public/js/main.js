@@ -49,11 +49,13 @@ $(document).ready(function() {
 });
 
 function ISODateToYYYYMMDD(dateString) {
+  const locale = "en-US";
+
   if (dateString === undefined) {
     return undefined;
   }
-  var date = new Date(dateString);
-  return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
+
+  return new Date(dateString).toLocaleDateString(locale);
 }
 
 function toggleRecent() {
