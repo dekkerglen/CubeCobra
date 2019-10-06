@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
 
+import { csrfFetch } from '../util/CSRF';
+
 import SortContext from './SortContext';
 
 class SortCollapseRaw extends Component {
@@ -24,7 +26,7 @@ class SortCollapseRaw extends Component {
   handleSave() {
     const { primary, secondary } = this.props;
 
-    fetch("/cube/api/savesorts/" + $('#cubeID').val(), {
+    csrfFetch("/cube/api/savesorts/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify({
         sorts: [primary, secondary],

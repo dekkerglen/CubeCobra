@@ -6,6 +6,7 @@ block content
   h4 Advanced Search
   br
   form(method='POST', action='/advanced_search')
+    input(type='hidden', name='_csrf', value=csrfToken)
     .form-group.row
       label.col-sm-2.col-form-labelCube Name
       .col-sm-10

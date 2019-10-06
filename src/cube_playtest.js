@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGroup, Input, Label, Row, UncontrolledAlert, UncontrolledCollapse } from 'reactstrap';
 
+import { csrfFetch } from './util/CSRF';
+
 import DynamicFlash from './components/DynamicFlash';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
@@ -187,7 +189,7 @@ class CubePlaytest extends Component {
 
   deleteFormat(cube, formatID) {
     console.log(formatID);
-    fetch(`/cube/format/remove/${cube};${formatID}`, {
+    csrfFetch(`/cube/format/remove/${cube};${formatID}`, {
       method: 'DELETE',
     }).then(response => {
       this.addAlert({

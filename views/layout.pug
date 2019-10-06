@@ -10,6 +10,8 @@ html
 		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
+		if csrfToken
+			meta(name='csrf-token', content=csrfToken)
 		if metadata
 			for metadatum, i in metadata
 				if metadatum.name
@@ -36,6 +38,7 @@ html
 			#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
 				ul.navbar-nav.mr-auto
 					form(method='POST', action='/search').form-inline
+						input(type='hidden', name='_csrf', value=csrfToken)
 						.input-group.mt-2.mb-sm-2
 							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
 							.input-group-append
@@ -111,6 +114,7 @@ html
 	.modal-dialog(role='document')
 		.modal-content
 			form(method='POST', action='/user/login')
+				input(type='hidden', name='_csrf', value=csrfToken)
 				.modal-header
 					h5#loginModalLabel.modal-title Login
 					button.close(type='button', data-dismiss='modal', aria-label='Close')
@@ -135,6 +139,7 @@ html
 	.modal-dialog(role='document')
 		.modal-content
 			form(method='POST', action='/cube/add')
+				input(type='hidden', name='_csrf', value=csrfToken)
 				.modal-header
 					h5#loginModalLabel.modal-title Create New Cube
 					button.close(type='button', data-dismiss='modal', aria-label='Close')

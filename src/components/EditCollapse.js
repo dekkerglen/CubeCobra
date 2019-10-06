@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import { Button, Card, CardHeader, Col, Collapse, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
 
+import { CSRFForm } from '../util/CSRF';
+
 import ContentEditable from './ContentEditable';
 
 function clickToolbar(event) {
@@ -133,7 +135,7 @@ class EditCollapse extends Component {
             </Col>
           </Row>
           <div className="collapse editForm">
-            <Form id="changelistForm" method="POST" action={`/cube/edit/${cubeID}`}>
+            <CSRFForm id="changelistForm" method="POST" action={`/cube/edit/${cubeID}`}>
               <Row>
                 <Col>
                   <Label>Changelist:</Label>
@@ -181,7 +183,7 @@ class EditCollapse extends Component {
                   <Button color="danger" onClick={discardAll}>Discard All</Button>
                 </Col>
               </Row>
-            </Form>
+            </CSRFForm>
           </div>
         </Container>
       </Collapse>

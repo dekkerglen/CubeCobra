@@ -4,6 +4,7 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
   input#basicsraw(type='hidden', name='basicsraw', value=basics_raw)
   form#submitDeckForm(method='POST', action='/cube/editdeck/'+deckid)
+    input(type='hidden', name='_csrf', value=csrfToken)
     input#deckraw(type='hidden', name='draftraw', value=deck_raw)
 
   #dragelement(style='position:absolute;z-index: 9999;')
