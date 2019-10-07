@@ -7,6 +7,7 @@ import Hash from './util/Hash';
 import CardModalForm from './components/CardModalForm';
 import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
+import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
 import SortContext from './components/SortContext';
 
@@ -49,17 +50,19 @@ class CubeCompare extends Component {
     const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
-        <CubeCompareNavbar
-          cards={filteredCards}
-          openCollapse={openCollapse}
-          setOpenCollapse={this.setOpenCollapse}
-          filter={filter}
-          setFilter={this.setFilter}
-        />
-        <DynamicFlash />
-        <CardModalForm>
-          <CompareView cards={filteredCards} {...props} />
-        </CardModalForm>
+        <DisplayContext.Provider>
+          <CubeCompareNavbar
+            cards={filteredCards}
+            openCollapse={openCollapse}
+            setOpenCollapse={this.setOpenCollapse}
+            filter={filter}
+            setFilter={this.setFilter}
+          />
+          <DynamicFlash />
+          <CardModalForm>
+            <CompareView cards={filteredCards} {...props} />
+          </CardModalForm>
+        </DisplayContext.Provider>
       </SortContext.Provider>
     );
   }
