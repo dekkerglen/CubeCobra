@@ -48,7 +48,7 @@ class ListViewRaw extends Component {
     const currentIds = this.props.cards.map(card => card.cardID);
     const newIds = currentIds.filter(id => !knownIds.has(id));
     if (newIds.length > 0) {
-      fetch('/cube/api/getversions', {
+      csrfFetch('/cube/api/getversions', {
         method: 'POST',
         body: JSON.stringify(newIds),
         headers: {
