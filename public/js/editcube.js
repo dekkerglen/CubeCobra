@@ -167,7 +167,7 @@ function tagColorsModal() {
 $('#tagColors').click(tagColorsModal);
 
 $('#showTagColorsCheckbox').change(function(e) {
-  fetch("/cube/api/saveshowtagcolors", {
+  csrfFetch("/cube/api/saveshowtagcolors", {
     method: "POST",
     body: JSON.stringify({
       show_tag_colors: $(this).prop("checked"),
@@ -302,7 +302,7 @@ if (canEdit && !comparing) {
       });
     }
 
-    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
+    csrfFetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify(data),
       headers: {
