@@ -11,7 +11,7 @@ $(".editBlogButton").click(function(e) {
 
   fetch("/cube/blogsrc/" + id)
     .then(response => response.json())
-    .then(function (json) {
+    .then(function(json) {
       if (json.src) {
         $('#editor').html(json.src);
       } else {
