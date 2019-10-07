@@ -12,7 +12,7 @@ const {
 router.use(csrfProtection);
 
 // Home route
-router.get('/', function (req, res) {
+router.get('/', function(req, res) {
   const routeReady = () => {
     if (recents && drafted && blog && decks) {
       decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
@@ -31,21 +31,21 @@ router.get('/', function (req, res) {
   if (req.user) user_id = req.user._id;
   Cube.find({
     $or: [{
-      $and: [{
-        'card_count': {
-          $gt: 200
-        }
-      }, {
-        'isListed': true
-      }]
-    },
-    {
-      'owner': user_id
-    }
+        $and: [{
+          'card_count': {
+            $gt: 200
+          }
+        }, {
+          'isListed': true
+        }]
+      },
+      {
+        'owner': user_id
+      }
     ]
   }).sort({
     'date_updated': -1
-  }).limit(12).exec(function (err, result) {
+  }).limit(12).exec(function(err, result) {
     if (err) {
       recents = [];
       console.log('recents failed to load');
@@ -68,7 +68,7 @@ router.get('/', function (req, res) {
     }]
   }).sort({
     'numDecks': -1
-  }).limit(12).exec(function (err, result) {
+  }).limit(12).exec(function(err, result) {
     if (err) {
       drafted = [];
       console.log('drafted failed to load');
@@ -85,7 +85,7 @@ router.get('/', function (req, res) {
     dev: 'true'
   }).sort({
     'date': -1
-  }).exec(function (err, result) {
+  }).exec(function(err, result) {
     if (err) {
       blog = [];
       console.log('blog failed to load');
@@ -100,7 +100,7 @@ router.get('/', function (req, res) {
 
   Deck.find().sort({
     'date': -1
-  }).limit(10).exec(function (err, result) {
+  }).limit(10).exec(function(err, result) {
     if (err) {
       decks = [];
       console.log('decks failed to load');
@@ -122,13 +122,13 @@ router.get('/', function (req, res) {
 //name, owner
 //symbols:
 //=,~(contains)
-router.get('/advanced_search', function (req, res) {
+router.get('/advanced_search', function(req, res) {
   res.render('search/advanced_search', {
     loginCallback: '/advanced_search'
   });
 });
 
-router.post('/advanced_search', function (req, res) {
+router.post('/advanced_search', function(req, res) {
   var url = '/search/';
   if (req.body.name && req.body.name.length > 0) {
     url += 'name' + req.body.nameType + req.body.name + ';';
@@ -139,7 +139,7 @@ router.post('/advanced_search', function (req, res) {
   res.redirect(url)
 });
 
-router.post('/search', function (req, res) {
+router.post('/search', function(req, res) {
   if (!req.body.search || req.body.search.length == 0) {
     req.flash('danger', 'No Search Parameters');
     res.redirect('/advanced_search');
@@ -153,13 +153,13 @@ router.post('/search', function (req, res) {
   }
 });
 
-router.get('/search/:id', function (req, res) {
+router.get('/search/:id', function(req, res) {
   var raw_split = req.params.id.split(':');
   var raw_queries = raw_split[0].split(';');
   var page = parseInt(raw_split[1]);
   var query = {};
   var terms = [];
-  raw_queries.forEach(function (val, index) {
+  raw_queries.forEach(function(val, index) {
     if (val.includes('=')) {
       var split = val.split('=');
       query[split[0]] = split[1];
@@ -180,11 +180,11 @@ router.get('/search/:id', function (req, res) {
     $and: [query,
       {
         $or: [{
-          'isListed': true
-        },
-        {
-          'owner': user_id
-        }
+            'isListed': true
+          },
+          {
+            'owner': user_id
+          }
         ]
       }
     ]
@@ -192,7 +192,7 @@ router.get('/search/:id', function (req, res) {
 
   Cube.find(query).sort({
     'date_updated': -1
-  }).exec(function (err, cubes) {
+  }).exec(function(err, cubes) {
     var pages = [];
     if (cubes.length > 12) {
       if (!page) {
@@ -238,55 +238,55 @@ router.get('/search/:id', function (req, res) {
   });
 });
 
-router.get('/contact', function (req, res) {
+router.get('/contact', function(req, res) {
   res.render('info/contact', {
     loginCallback: '/contact'
   });
 });
 
-router.get('/tos', function (req, res) {
+router.get('/tos', function(req, res) {
   res.render('info/tos', {
     loginCallback: '/tos'
   });
 });
 
-router.get('/filters', function (req, res) {
+router.get('/filters', function(req, res) {
   res.render('info/filters', {
     loginCallback: '/filters'
   });
 });
 
-router.get('/privacy', function (req, res) {
+router.get('/privacy', function(req, res) {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy'
   });
 });
 
-router.get('/cookies', function (req, res) {
+router.get('/cookies', function(req, res) {
   res.render('info/cookies', {
     loginCallback: '/cookies'
   });
 });
 
-router.get('/ourstory', function (req, res) {
+router.get('/ourstory', function(req, res) {
   res.render('info/ourstory', {
     loginCallback: '/ourstory'
   });
 });
 
-router.get('/faq', function (req, res) {
+router.get('/faq', function(req, res) {
   res.render('info/faq', {
     loginCallback: '/faq'
   });
 });
 
-router.get('/donate', function (req, res) {
+router.get('/donate', function(req, res) {
   res.render('info/donate', {
     loginCallback: '/donate'
   });
 });
 
-router.get('/c/:id', function (req, res) {
+router.get('/c/:id', function(req, res) {
   res.redirect('/cube/list/' + req.params.id);
 });
 
