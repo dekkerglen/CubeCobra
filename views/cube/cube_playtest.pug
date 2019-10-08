@@ -26,6 +26,7 @@ block cube_content
         .modal-dialog.modal-lg(role='document')
           .modal-content
             form#customDraftForm(method='POST', action='/cube/format/add/'+cube_id)
+              input(type='hidden', name='_csrf', value=csrfToken)
               .modal-header
                 h5 Create Custom Draft Format
                 button.close(type='button', data-dismiss='modal', aria-label='Close')

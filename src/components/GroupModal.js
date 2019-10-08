@@ -10,6 +10,7 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
+import { csrfFetch } from '../util/CSRF';
 import { fromEntries } from '../util/Util';
 
 import AutocardListItem from './AutocardListItem';
@@ -143,7 +144,7 @@ class GroupModal extends Component {
       tags: tags || undefined,
       addTags, deleteTags,
     };
-    const response = await fetch(`/cube/api/updatecards/${cubeID}`, {
+    const response = await csrfFetch(`/cube/api/updatecards/${cubeID}`, {
       method: 'POST',
       body: JSON.stringify({ selected, updated }),
       headers: {

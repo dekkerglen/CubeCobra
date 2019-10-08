@@ -30,6 +30,7 @@ block content
               p.editlist#changelist
         .row
           form#changelistForm(method='POST', action='/cube/edit/'+cube_id)
+            input(type='hidden', name='_csrf', value=csrfToken)
             input(id='addedcardshidden', type='hidden', value=added)
             input(id='titlehidden', type='hidden', name='title', value='Cube Bulk Import - Automatic Post')
             input#changelistFormBody(type='hidden', name='body')

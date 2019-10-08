@@ -14,7 +14,8 @@ let Cube = require('../models/cube')
 let Deck = require('../models/deck')
 
 const {
-  ensureAuth
+  ensureAuth,
+  csrfProtection,
 } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
@@ -30,6 +31,8 @@ function checkUsernameValid(req) {
   });
   return req;
 }
+
+router.use(csrfProtection);
 
 //Lost password form
 router.get('/lostpassword', function(req, res) {

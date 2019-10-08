@@ -46,7 +46,8 @@ let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
 
 const {
-  ensureAuth
+  ensureAuth,
+  csrfProtection,
 } = require('./middleware');
 
 var token = null;
@@ -201,6 +202,8 @@ function notPromoOrDigitalId(id) {
 function abbreviate(name) {
   return name.length < 20 ? name : name.slice(0, 20) + '…';
 }
+
+router.use(csrfProtection);
 
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
