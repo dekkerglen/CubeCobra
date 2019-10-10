@@ -48,5 +48,6 @@ block cube_content
             if card.colorcategory == 'l'
               a.list-group-item.autocard.lands.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
 
+  script(src='/js/csrf.js')
   script(src='/js/utils.js')
   script(src='/js/deck.js')

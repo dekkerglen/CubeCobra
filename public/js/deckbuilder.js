@@ -156,7 +156,7 @@ function saveDraft(callback) {
     }
   });
   //save draft, if we fail, we fail
-  fetch("/cube/api/draftpick/" + draft.cube, {
+  csrfFetch("/cube/api/draftpick/" + draft.cube, {
     method: "POST",
     body: JSON.stringify(temp),
     headers: {
