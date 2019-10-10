@@ -543,6 +543,9 @@ function getLabels(sort) {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
   } else if (sort == 'CMC2') {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
+  } else if (sort == 'CMC-Full') {
+    // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
+    return [...Array(33).keys()].map(x => (x / 2).toString()).concat(['1000000']);
   } else if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort == 'Type') {
