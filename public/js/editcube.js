@@ -7,6 +7,20 @@ var filters = [];
 var show_tag_colors = $('#hideTagColors').val() !== 'true';
 var urlFilterText = '';
 
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute('content') : null;
+}
+
+function csrfFetch(resource, init) {
+  init.credentials = init.credentials || 'same-origin';
+  init.headers = {
+    ...init.headers,
+    'CSRF-Token': getCsrfToken(),
+  }
+  return fetch(resource, init);
+}
+
 var comparing = false;
 if ($('#in_both').length) {
   comparing = true;
@@ -167,7 +181,7 @@ function tagColorsModal() {
 $('#tagColors').click(tagColorsModal);
 
 $('#showTagColorsCheckbox').change(function(e) {
-  fetch("/cube/api/saveshowtagcolors", {
+  csrfFetch("/cube/api/saveshowtagcolors", {
     method: "POST",
     body: JSON.stringify({
       show_tag_colors: $(this).prop("checked"),
@@ -302,19 +316,21 @@ if (canEdit && !comparing) {
       });
     }
 
-    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
+    csrfFetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
       method: "POST",
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json'
       }
     }).then(res => {
-      cubeTagColors = data;
-      tagColorsListeners.forEach(listener => listener());
-      if (show_tag_colors) {
-        updateCubeList();
+      if (res.ok) {
+        cubeTagColors = data;
+        tagColorsListeners.forEach(listener => listener());
+        if (show_tag_colors) {
+          updateCubeList();
+        }
+        $('#tagColorsModal').modal('hide');
       }
-      $('#tagColorsModal').modal('hide');
     });
   });
 }
