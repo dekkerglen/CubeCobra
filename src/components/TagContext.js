@@ -18,7 +18,7 @@ class TagContextProvider extends Component {
 
   addTag(tag) {
     this.setState(({ tags }) =>
-      tags.indexOf(tags) >= 0 ? {} : {
+      tags.some(t => t.id === tag.id) ? {} : {
         tags: [...tags, tag],
       }
     );
