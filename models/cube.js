@@ -68,8 +68,8 @@ cubeSchema.index({
 });
 
 cubeSchema.index({
-  isListed: 1,
   owner: 1,
+  isListed: 1,
 });
 
 let Cube = module.exports = mongoose.model('Cube', cubeSchema)
