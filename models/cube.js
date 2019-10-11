@@ -62,11 +62,14 @@ let cubeSchema = mongoose.Schema({
   draft_formats: {}
 });
 
+// Indexes for home page queries
+cubeSchema.index({
+  isFeatured: 1,
+});
+
 cubeSchema.index({
   isListed: 1,
-  card_count: 1,
   owner: 1,
-  isFeatured: 1
-})
+});
 
 let Cube = module.exports = mongoose.model('Cube', cubeSchema)
