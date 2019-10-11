@@ -14,19 +14,20 @@ router.use(csrfProtection);
 // Home route
 router.get('/', function(req, res) {
   const routeReady = () => {
-    if (recents && drafted && blog && decks) {
+    if (recents && drafted && blog && decks && featured) {
       decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
       res.render('index', {
         devblog: blog.length > 0 ? blog[0] : null,
         recents: recents,
         drafted: drafted,
-        decks: decklinks
+        decks: decklinks,
+        featured: featured
       });
     }
   };
 
   var user_id = '';
-  var recents, drafted, blog, decks;
+  var recents, drafted, blog, decks, featured;
 
   if (req.user) user_id = req.user._id;
   Cube.find({
@@ -53,6 +54,22 @@ router.get('/', function(req, res) {
 
     if (result) {
       recents = result;
+    }
+
+    routeReady();
+  });
+
+
+  Cube.find({
+    isFeatured: true
+  }).exec(function(err, result) {
+    if (err) {
+      recents = [];
+      console.log('featured failed to load');
+    }
+
+    if (result) {
+      featured = result;
     }
 
     routeReady();
