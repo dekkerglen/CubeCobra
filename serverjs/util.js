@@ -1,5 +1,7 @@
 const shuffleSeed = require('shuffle-seed');
 
+const adminname = 'Dekkaru';
+
 function has_profanity(text) {
   if (!text) return false;
 
@@ -167,6 +169,9 @@ var methods = {
   from_base_36,
   has_profanity,
   fromEntries,
+  isAdmin: function(user) {
+    return user && user.username == adminname;
+  }
 }
 
 module.exports = methods;

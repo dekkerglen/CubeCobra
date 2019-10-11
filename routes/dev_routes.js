@@ -1,10 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const passport = require('passport');
-const emailconfig = require('../../cubecobrasecrets/email');
-const mailer = require("nodemailer");
-const fs = require('fs')
+var util = require('../serverjs/util.js');
 
 const {
   ensureAuth,
@@ -15,7 +11,6 @@ const {
 let User = require('../models/user')
 let Blog = require('../models/blog')
 
-var adminname = 'Dekkaru';
 
 router.use(csrfProtection);
 
@@ -30,11 +25,8 @@ router.get('/blog/:id', function(req, res) {
     };
   }
   User.findById(req.user._id, function(err, user) {
-    var admin = false;
-    if (user && user.username == adminname) {
-      //admin
-      admin = true;
-    }
+    var admin = util.isAdmin(user);
+    
     Blog.find({
       dev: 'true'
     }).sort('date').exec(function(err, blogs) {
