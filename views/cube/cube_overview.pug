@@ -33,10 +33,13 @@ block cube_content
             h6 Designed by 
               a(href='/user/view/'+owner) #{owner}
           if admin
-            if cube.isFeatured
-              a(href='/cube/unfeature/'+cube._id) Remove from Featured
-            else
-              a(href='/cube/feature/'+cube._id) Add to Featured
+            form(method='POST', id='featuredForm', action=`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}/${cube._id}`)
+              input(type='hidden', name='_csrf', value=csrfToken)
+              a(href='#', onclick='document.getElementById("featuredForm").submit()')
+                if cube.isFeatured
+                  | Add to Featured
+                else
+                  | Remove from Featured
     .col
       .card.mt-3
         .card-header
