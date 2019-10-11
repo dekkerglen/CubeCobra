@@ -361,21 +361,16 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
 });
 
 router.get('/feature/:id', ensureAuth, function(req, res) {
-  
+
   if (!req.user._id) {
     req.flash('danger', 'Not Authorized');
     res.redirect('/cube/overview/' + req.params.id);
-  }
-  else
-  {
+  } else {
     User.findById(req.user._id, function(err, user) {
-      if(!util.isAdmin(user))
-      {
+      if (!util.isAdmin(user)) {
         req.flash('danger', 'Not Authorized');
         res.redirect('/cube/overview/' + req.params.id)
-      }
-      else
-      {        
+      } else {
         Cube.findOne(build_id_query(req.params.id), function(err, cube) {
           if (err) {
             req.flash('danger', 'Server Error');
@@ -401,52 +396,46 @@ router.get('/feature/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.get('/unfeature/:id', ensureAuth, function(req, res) {  
-if (!req.user._id) {
-  req.flash('danger', 'Not Authorized');
-  res.redirect('/cube/overview/' + req.params.id);
-}
-else
-{
-  User.findById(req.user._id, function(err, user) {
-    if(!util.isAdmin(user))
-    {
-      req.flash('danger', 'Not Authorized');
-      res.redirect('/cube/overview/' + req.params.id)
-    }
-    else
-    {        
-      Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-        if (err) {
-          req.flash('danger', 'Server Error');
-          res.redirect('/cube/overview/' + req.params.id);
-        } else if (!cube) {
-          req.flash('danger', 'Cube not found');
-          res.redirect('/cube/overview/' + req.params.id);
-        } else {
-          cube.isFeatured = false;
-          cube.save(function(err) {
-            if (err) {
-              req.flash('danger', 'Server Error');
-              res.redirect('/cube/overview/' + req.params.id);
-            } else {
-              req.flash('success', 'Cube updated successfully.');
-              res.redirect('/cube/overview/' + req.params.id);
-            }
-          });
-        }
-      });
-    }
-  });
-}
+router.get('/unfeature/:id', ensureAuth, function(req, res) {
+  if (!req.user._id) {
+    req.flash('danger', 'Not Authorized');
+    res.redirect('/cube/overview/' + req.params.id);
+  } else {
+    User.findById(req.user._id, function(err, user) {
+      if (!util.isAdmin(user)) {
+        req.flash('danger', 'Not Authorized');
+        res.redirect('/cube/overview/' + req.params.id)
+      } else {
+        Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+          if (err) {
+            req.flash('danger', 'Server Error');
+            res.redirect('/cube/overview/' + req.params.id);
+          } else if (!cube) {
+            req.flash('danger', 'Cube not found');
+            res.redirect('/cube/overview/' + req.params.id);
+          } else {
+            cube.isFeatured = false;
+            cube.save(function(err) {
+              if (err) {
+                req.flash('danger', 'Server Error');
+                res.redirect('/cube/overview/' + req.params.id);
+              } else {
+                req.flash('success', 'Cube updated successfully.');
+                res.redirect('/cube/overview/' + req.params.id);
+              }
+            });
+          }
+        });
+      }
+    });
+  }
 });
 
 router.get('/overview/:id', async function(req, res) {
   var split = req.params.id.split(';');
   var cube_id = split[0];
   admin = false;
-  if(req.user)
-  {
+  if (req.user) {
     currentUser = await User.findById(req.user._id);
     admin = util.isAdmin(currentUser);
   }
@@ -471,7 +460,7 @@ router.get('/overview/:id', async function(req, res) {
             sum += price_dict[card.details.tcgplayer_id + '_foil'];
           }
         });
-        User.findById(cube.owner, function(err, user) {          
+        User.findById(cube.owner, function(err, user) {
           Blog.find({
             cube: cube._id
           }).sort('date').exec(function(err, blogs) {
@@ -508,7 +497,7 @@ router.get('/overview/:id', async function(req, res) {
                 ),
                 loginCallback: '/cube/overview/' + req.params.id,
                 price: sum.toFixed(2),
-                admin:admin
+                admin: admin
               });
             } else {
               res.render('cube/cube_overview', {
@@ -528,7 +517,7 @@ router.get('/overview/:id', async function(req, res) {
                 loginCallback: '/cube/overview/' + req.params.id,
                 editorvalue: cube.raw_desc,
                 price: sum.toFixed(2),
-                admin:admin
+                admin: admin
               });
             }
           });

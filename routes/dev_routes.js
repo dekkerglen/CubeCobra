@@ -26,7 +26,7 @@ router.get('/blog/:id', function(req, res) {
   }
   User.findById(req.user._id, function(err, user) {
     var admin = util.isAdmin(user);
-    
+
     Blog.find({
       dev: 'true'
     }).sort('date').exec(function(err, blogs) {

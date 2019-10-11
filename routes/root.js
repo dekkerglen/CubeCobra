@@ -59,8 +59,10 @@ router.get('/', function(req, res) {
     routeReady();
   });
 
-  
-  Cube.find({isFeatured:true}).exec(function(err, result) {
+
+  Cube.find({
+    isFeatured: true
+  }).exec(function(err, result) {
     if (err) {
       recents = [];
       console.log('featured failed to load');
