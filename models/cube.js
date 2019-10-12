@@ -17,11 +17,13 @@ let cubeSchema = mongoose.Schema({
   },
   owner: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   isListed: {
     type: Boolean,
-    default: true
+    default: true,
+    index: true
   },
   privatePrices: {
     type: Boolean,
@@ -29,7 +31,8 @@ let cubeSchema = mongoose.Schema({
   },
   isFeatured: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true
   },
   cards: [{
     tags: [String],
@@ -61,12 +64,5 @@ let cubeSchema = mongoose.Schema({
   type: String,
   draft_formats: {}
 });
-
-cubeSchema.index({
-  isListed: 1,
-  card_count: 1,
-  owner: 1,
-  isFeatured: 1
-})
 
 let Cube = module.exports = mongoose.model('Cube', cubeSchema)

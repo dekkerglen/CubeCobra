@@ -360,7 +360,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.get('/feature/:id', ensureAuth, function(req, res) {
+router.post('/feature/:id', ensureAuth, function(req, res) {
 
   if (!req.user._id) {
     req.flash('danger', 'Not Authorized');
@@ -396,7 +396,7 @@ router.get('/feature/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.get('/unfeature/:id', ensureAuth, function(req, res) {
+router.post('/unfeature/:id', ensureAuth, function(req, res) {
   if (!req.user._id) {
     req.flash('danger', 'Not Authorized');
     res.redirect('/cube/overview/' + req.params.id);
