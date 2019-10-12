@@ -24,7 +24,7 @@ block content
   input#only_b(type='hidden', name='only_b', value=only_b)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors.concat(cubeB.tag_colors)))
-  input#hideTagColors(type='hidden', name='hideTagColors', value=(!!user && user.hide_tag_colors).toString())
+  input#showTagColors(type='hidden', name='hideTagColors', value=(!user || !user.hide_tag_colors).toString())
   if cube.default_sorts
     input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])
     input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])
