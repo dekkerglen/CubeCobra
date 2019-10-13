@@ -97,7 +97,7 @@ router.get('/blog/:id', function(req, res) {
 
 router.post('/blogpost', ensureAuth, function(req, res) {
   User.findById(req.user._id, function(err, user) {
-    if (user && user.username == adminname) {
+    if (user && util.isAdmin(user)) {
       var blogpost = new Blog();
       blogpost.title = req.body.title;
       if (req.body.html && req.body.html.length > 0) {
