@@ -121,7 +121,7 @@ class TagColorsModalRaw extends Component {
     const staticRows = orderedTags.map(({ tag, color }) => {
       const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
       return (
-        <span key={tag.text} className={tagClass}>{tag}</span>
+        <span key={tag} className={tagClass}>{tag}</span>
       );
     });
 
