@@ -17,9 +17,6 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
             <AutocardListGroup
               heading={`${cmc} (${(groups[cmc] || []).length})`}
               cards={groups[cmc] || []}
-              primary={primary}
-              secondary={cardType}
-              tertiary={cmc}
             />
           </div>
         )
@@ -41,7 +38,6 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
             cardType={cardType}
             groups={groups[cardType]}
             count={typeCounts[cardType]}
-            primary={primary}
           />
         )
       }
