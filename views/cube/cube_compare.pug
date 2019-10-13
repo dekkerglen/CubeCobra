@@ -32,27 +32,8 @@ block content
   //Cube list
   #react-root
 
-  // Modal
-  #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-      .modal-content
-        .modal-header
-          h5#tagColorsTitle.modal-title View Tag Colors
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        #showTagColors
-          .form-check.form-check-inline
-            input#showTagColorsCheckbox.form-check-input(type='checkbox')
-            label.form-check-label(for='showTagColorsCheckbox') Show Tag Colors in Card List 
-        #tagsColumn.col
-
-        .modal-footer
-          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Close
-
   script(src='/js/csrf.js')
-  script(src='/js/autocomplete.js')
   script(src='/js/sortfilter.js')
-  script(src='/js/tags.js')
   script(src='/js/editcube.js')
   script(src='/js/autocard.js')
   script(src='/js/cube_compare.bundle.js')

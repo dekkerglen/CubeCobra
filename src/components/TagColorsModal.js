@@ -33,7 +33,7 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) =>
         )}
       </Input>
     </Col>
-  </Row>
+  </Row>;
 
 class TagColorsModalRaw extends Component {
   constructor(props) {
@@ -52,10 +52,14 @@ class TagColorsModalRaw extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    return Promise.all([
-      this.props.setTagColors(this.state.tagColors),
-      this.props.setShowTagColors(this.state.showTagColors),
-    ]).then(() => this.props.toggle());
+    if (this.props.canEdit) {
+      return Promise.all([
+        this.props.setTagColors(this.state.tagColors),
+        this.props.setShowTagColors(this.state.showTagColors),
+      ]).then(() => this.props.toggle());
+    } else {
+      return this.props.setShowTagColors(this.state.showTagColors).then(() => this.props.toggle());
+    }
   }
 
   handleChangeColor(event) {
@@ -157,6 +161,10 @@ class TagColorsModalRaw extends Component {
     );
   }
 }
+
+TagColorsModalRaw.defaultProps = {
+  canEdit: false,
+};
 
 const TagColorsModal = props =>
   <TagContext.Consumer>

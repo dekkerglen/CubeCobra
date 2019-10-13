@@ -2015,6 +2015,13 @@ router.post('/api/saveshowtagcolors', function(req, res) {
 
 router.post('/api/savetagcolors/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    if (!cube) {
+      res.status(404).send({
+        success: 'false',
+      });
+      return;
+    }
+
     cube.tag_colors = req.body;
 
     cube.save(function(err) {

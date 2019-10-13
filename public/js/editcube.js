@@ -441,5 +441,4 @@ window.onload = function() {
     prev_handler();
   }
   updateCubeList();
-  activateTags();
 };
