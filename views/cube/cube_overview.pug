@@ -37,9 +37,9 @@ block cube_content
               input(type='hidden', name='_csrf', value=csrfToken)
               a(href='#', onclick='document.getElementById("featuredForm").submit()')
                 if cube.isFeatured
-                  | Add to Featured
-                else
                   | Remove from Featured
+                else
+                  | Add to Featured
     .col
       .card.mt-3
         .card-header
