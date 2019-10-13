@@ -110,12 +110,19 @@ class TagColorsModalRaw extends Component {
     const unknownTagColors = unknownTags.map(tag => ({ tag, color: null }));
     const orderedTags = [...tagColors, ...unknownTagColors];
 
-    const rows = orderedTags.map(({ tag, color }) => {
+    const editableRows = orderedTags.map(({ tag, color }) => {
       const tagClass = `tag-item ${getTagColorClass(tagColors, tag)}`;
       return {
         element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={this.handleChangeColor} />,
         key: tag,
       };
+    });
+
+    const staticRows = orderedTags.map(({ tag, color }) => {
+      const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
+      return (
+        <span key={tag.text} className={tagClass}>{tag}</span>
+      );
     });
 
     return (
@@ -124,24 +131,22 @@ class TagColorsModalRaw extends Component {
           {canEdit ? 'Set Tag Colors' : 'Tag Colors'}
         </ModalHeader>
         <ModalBody>
+          <Form inline className="mb-2">
+            <Label>
+              <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
+              Show Tag Colors in Card List
+            </Label>
+          </Form>
           {!canEdit ? '' :
-            <>
-              <Form inline>
-                <Label>
-                  <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
-                  Show Tag Colors in Card List
-                </Label>
-              </Form>
-              <p><em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em></p>
-            </>
+            <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
           }
-          {canEdit ?
+          {!canEdit ? staticRows :
             <Row className="tag-color-container">
               <Col>
-                <SortableList onSortEnd={this.handleSortEnd} items={rows} />
+                <SortableList onSortEnd={this.handleSortEnd} items={editableRows} />
               </Col>
             </Row>
-          : rows.map(({ element }) => element)}
+          }
         </ModalBody>
         <ModalFooter>
           <Button color="success" className="ml-auto" onClick={this.handleSubmit}>
