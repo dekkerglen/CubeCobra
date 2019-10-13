@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     cube_analysis: ['./cube_analysis.js'],
     cube_compare: ['./cube_compare.js'],
+    cube_draft: ['./cube_draft.js'],
     cube_list: ['./cube_list.js'],
     cube_playtest: ['./cube_playtest.js'],
     topcards: ['./topcards.js'],

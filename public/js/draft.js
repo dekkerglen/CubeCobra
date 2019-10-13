@@ -64,95 +64,68 @@ function arrayRotate(arr, reverse) {
   return arr;
 }
 
-function botPicks() {
+function botPicks(draft) {
   //make bots take a pick out of active activepacks
   for (i = 1; i < draft.packs.length; i++) {
-    var bot = draft.bots[i - 1];
-    var taken = false;
+    const bot = draft.bots[i - 1];
+    const pack = draft.packs[i][0];
+    const picks = draft.picks[i];
+    let taken = false;
     //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
     //try to take card with exactly our two colors
-    var ratedpicks = [];
-    var unratedpicks = [];
-    for (var j = 0; j < draft.packs[i][0].length; j++) {
-      if (draft.ratings[draft.packs[i][0][j].details.name]) {
-        ratedpicks.push(j);
+    const ratedPicks = [];
+    const unratedPicks = [];
+    for (const [index, card] of draft.packs[i][0]) {
+      if (draft.ratings[card.details.name]) {
+        ratedPicks.push([index, card]);
       } else {
-        unratedpicks.push(j)
+        unratedPicks.push([index, card])
       }
     }
 
-    ratedpicks.sort(function(x, y) {
-      if (draft.ratings[draft.packs[i][0][x].details.name] < draft.ratings[draft.packs[i][0][y].details.name]) {
-        return -1;
-      }
-      if (draft.ratings[draft.packs[i][0][x].details.name] > draft.ratings[draft.packs[i][0][y].details.name]) {
-        return 1;
-      }
-      return 0;
-    });
-    shuffle(unratedpicks);
-    var picknums = ratedpicks.concat(unratedpicks);
-    //try to take card that contains exactly <= our colors
-    for (j = 0; j < draft.packs[i][0].length; j++) {
+    ratedPicks.sort(([i, x], [j, y]) => draft.ratings[x.details.name] - draft.ratings[y.details.name]);
+    shuffle(unratedPicks);
+    var allPicks = [...ratedPicks, ...unratedPicks];
+    // try to take card that contains exactly <= our colors
+    for (const [index, card] of allPicks) {
       if (!taken) {
-        var colors = draft.packs[i][0][picknums[j]].colors;
+        const colors = card.colors;
         if (bot[0] == bot[1]) {
           if ((colors.length == 1 && colors.includes(bot[0])) ||
             colors.length == 0) {
-            pick = draft.packs[i][0].splice(picknums[j], 1);
-            draft.picks[i].push(pick[0].cardID);
+            const [pick] = pack.splice(index, 1);
+            picks.push(pick.cardID);
             taken = true;
           }
         } else {
           if ((colors.length == 2 && colors.includes(bot[0]) && colors.includes(bot[1])) ||
             (colors.length == 1 && (colors.includes(bot[0]) || colors.includes(bot[1]))) ||
             colors.length == 0) {
-            pick = draft.packs[i][0].splice(picknums[j], 1);
-            draft.picks[i].push(pick[0].cardID);
+            const [pick] = pack.splice(index, 1);
+            picks.push(pick.cardID);
             taken = true;
           }
         }
       }
     }
     //try to take card that at least has one of our colors
-    for (j = 0; j < draft.packs[i][0].length; j++) {
+    for (const [index, card] of allPicks) {
       if (!taken) {
-        var colors = draft.packs[i][0][picknums[j]].colors;
+        const colors = card.colors;
         if (colors.includes(bot[0]) || colors.includes(bot[1])) {
-          pick = draft.packs[i][0].splice(picknums[j], 1);
-          draft.picks[i].push(pick[0].cardID);
+          const [pick] = pack.splice(index, 1);
+          picks.push(pick.cardID);
           taken = true;
         }
       }
     }
     //take a random card
     if (!taken) {
-      pick = draft.packs[i][0].splice(Math.floor(Math.random() * draft.packs[i][0].length), 1);
-      draft.picks[i].push(pick[0].cardID);
+      const [pick] = pack.splice(Math.floor(Math.random() * pack.length), 1);
+      picks.push(pick.cardID);
     }
   }
 }
-
-var shuffle = function(array) {
-
-  var currentIndex = array.length;
-  var temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-
-};
 
 function submitDraft() {
   saveDraft(function() {
@@ -345,56 +318,6 @@ function getRowHeight() {
   return cardHeight + 20 * max;
 }
 
-function drawHover(e) {
-  var elements = document.getElementsByClassName("card-hover");
-  for (i = 0; i < elements.length; i++) {
-    if (elementHovered(elements[i], e.clientX, e.clientY)) {
-      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);');
-    } else {
-      elements[i].setAttribute('style', '');
-    }
-  }
-  elements = document.getElementsByClassName("pickscol");
-  var found = false;
-  for (i = 0; i < elements.length; i++) {
-    if (elementHovered(elements[i], e.clientX, e.clientY)) {
-      found = true;
-      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
-    } else {
-      elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
-    }
-  }
-  if (!found && elementHovered(document.getElementById('pickshover'), e.clientX, e.clientY)) {
-    var area = document.getElementById('picksarea');
-    var rect = area.getBoundingClientRect();
-    var x = e.clientX;
-    x -= rect.left;
-    x /= (cardWidth + 4);
-    x = Math.floor(x);
-    if (x < 0) {
-      x = 0;
-    }
-    if (x > (numCols / 2) - 1) {
-      x = (numCols / 2) - 1;
-    }
-    if (e.clientY > rect.bottom - getRowHeight()) {
-      x += (numCols / 2);
-    }
-    document.getElementById('picksColumn' + x).setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * draft.picks[0][x].length) + 'px;');
-  }
-}
-
-function removeHover() {
-  var elements = document.getElementsByClassName("card-hover");
-  for (i = 0; i < elements.length; i++) {
-    elements[i].setAttribute('style', '')
-  }
-  elements = document.getElementsByClassName("pickscol");
-  for (i = 0; i < elements.length; i++) {
-    elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * draft.picks[0][i].length) + 'px;');
-  }
-}
-
 function setupPickColumns() {
   var area = document.getElementById('picksarea');
   var rect = area.getBoundingClientRect();
@@ -411,99 +334,4 @@ function setupPickColumns() {
   res += '</div>';
 
   area.innerHTML = res;
-}
-
-// Make the DIV element draggable:
-function setupDrag(elmnt, frompack) {
-  var x = 0;
-  var y = 0;
-  var dist = 0;
-  var finalx = 0;
-  var finaly = 0;
-  elmnt.onmousedown = dragMouseDown;
-
-  function dragMouseDown(e) {
-    stopAutocard = true;
-    e = e || window.event;
-    e.preventDefault();
-    // get the mouse cursor position at startup:
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-
-    x = e.clientX;
-    y = e.clientY;
-    finalx = e.clientX;
-    finaly = e.clientY;
-
-    //get card
-    if (frompack) {
-      dragCard = draft.packs[0][0].splice(e.target.getAttribute('data-id'), 1)[0];
-    } else {
-      dragCard = draft.picks[0][e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'), 1)[0];
-    }
-    //set drag element's inner html
-    dragElement.innerHTML = '<img src="' + dragCard.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
-    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
-    autocard_hide_card();
-    renderDraft();
-    drawHover(e);
-  }
-
-  function elementDrag(e) {
-    e = e || window.event;
-    e.preventDefault();
-    drawHover(e);
-    //update vars
-    finalx = e.clientX;
-    finaly = e.clientY;
-    // set the element's new position:
-    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
-    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
-  }
-
-  function closeDragElement() {
-    stopAutocard = false;
-    // stop moving when mouse button is released:
-    document.onmouseup = null;
-    document.onmousemove = null;
-    dragElement.innerHTML = "";
-    var dist = getDistance(x, y, finalx, finaly);
-    if (dist < 5) {
-      //move to other
-      addToPicks(dragCard, finalx, finaly, true, frompack);
-    } else if (elementHovered(document.getElementById('packhover'), finalx, finaly)) {
-      //move to pack
-      if (frompack) {
-        addToPack(dragCard);
-      } else {
-        addToPicks(dragCard, finalx, finaly, true, frompack);
-      }
-    } else if (elementHovered(document.getElementById('pickshover'), finalx, finaly)) {
-      //move to picks
-      addToPicks(dragCard, finalx, finaly, false, frompack);
-    } else {
-      //return to original
-      if (!frompack) {
-        addToPicks(dragCard, finalx, finaly, true, frompack);
-      } else {
-        addToPack(dragCard);
-      }
-    }
-
-    removeHover();
-    renderDraft();
-  }
-}
-
-function elementHovered(element, x, y) {
-  var rect = element.getBoundingClientRect();
-  return x < rect.right && x > rect.left && y < rect.bottom && y > rect.top;
-}
-
-function getDistance(x1, y1, x2, y2) {
-  var a = x1 - x2;
-  var b = y1 - y2;
-  return Math.sqrt(a * a + b * b);
 }
