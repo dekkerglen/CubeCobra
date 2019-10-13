@@ -1,11 +1,5 @@
 var canEdit = $('#edittoken').val();
-var listGranularity = 50;
-var listPosition = 0;
 var changes = [];
-var sorts = [];
-var filters = [];
-var show_tag_colors = $('#hideTagColors').val() !== 'true';
-var urlFilterText = '';
 
 function getCsrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]');
