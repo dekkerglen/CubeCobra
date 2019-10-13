@@ -30,15 +30,14 @@
 	background:#fbfbfb;
 }
 
-.tag-color-row
-{
-  padding-left:30px;
-  padding-right:30px;
+.tag-color-container {
+  padding-bottom: 1px;
+  background-color: #dee2e6;
 }
 
-.tag-color-row + .tag-color-row
-{
-  border-top: 1px solid #dee2e6;
+.tag-color-row {
+  margin-top: 1px;
+  background: white;
 }
 
 #showTagColors {

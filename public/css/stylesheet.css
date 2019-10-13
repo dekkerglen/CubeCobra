@@ -405,6 +405,5 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 
 /* Fix z-index on sortables. */
 .sortable-item {
-	background: white;
 	z-index: 10000 !important;
 }

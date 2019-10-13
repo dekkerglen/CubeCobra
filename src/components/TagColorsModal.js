@@ -26,8 +26,8 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) =>
     <Col>
       <div className={tagClass}>{tag}</div>
     </Col>
-    <Col>
-      <Input type="select" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
+    <Col className="d-flex flex-column justify-content-center">
+      <Input type="select" size="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
         {TagContext.colors.map(([name, value]) =>
           <option key={value || 'none'} value={value || 'none'}>{name}</option>
         )}
@@ -135,7 +135,13 @@ class TagColorsModalRaw extends Component {
               <p><em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em></p>
             </>
           }
-          <SortableList onSortEnd={this.handleSortEnd} items={rows} />
+          {canEdit ?
+            <Row className="tag-color-container">
+              <Col>
+                <SortableList onSortEnd={this.handleSortEnd} items={rows} />
+              </Col>
+            </Row>
+          : rows.map(({ element }) => element)}
         </ModalBody>
         <ModalFooter>
           <Button color="success" className="ml-auto" onClick={this.handleSubmit}>
