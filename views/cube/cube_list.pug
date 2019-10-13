@@ -8,8 +8,8 @@ block cube_toolbar
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
-  input#showTagColors(type='hidden', name='hideTagColors', value=(!user || !user.hide_tag_colors).toString())
+  input#cubeTagColors(type='hidden', value=JSON.stringify(cube.tag_colors))
+  input#showTagColors(type='hidden', value=(!user || !user.hide_tag_colors).toString())
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts

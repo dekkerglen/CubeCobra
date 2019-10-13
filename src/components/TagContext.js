@@ -20,6 +20,8 @@ class TagContextProvider extends Component {
     this.addTag = this.addTag.bind(this);
     this.setTagColors = this.setTagColors.bind(this);
     this.setShowTagColors = this.setShowTagColors.bind(this);
+    this.cardColorClass = this.cardColorClass.bind(this);
+    this.tagColorClass = this.tagColorClass.bind(this);
   }
 
   addTag(tag) {
@@ -41,6 +43,8 @@ class TagContextProvider extends Component {
     }).then(response => {
       if (response.ok) {
         this.setState({ tagColors });
+      } else {
+        console.error('Request failed.');
       }
     });
   }
@@ -57,8 +61,26 @@ class TagContextProvider extends Component {
     }).then(response => {
       if (response.ok) {
         this.setState({ showTagColors });
+      } else {
+        console.error('Request failed.');
       }
     });
+  }
+
+  cardColorClass(card) {
+    if (this.state.showTagColors) {
+      return getCardTagColorClass(this.state.tagColors, card);
+    } else {
+      return getCardColorClass(card);
+    }
+  }
+
+  tagColorClass(tag) {
+    if (this.state.showTagColors) {
+      return getTagColorClass(this.state.tagColors, tag);
+    } else {
+      return 'tag-no-color';
+    }
   }
 
   render() {
@@ -71,6 +93,8 @@ class TagContextProvider extends Component {
       setTagColors: this.setTagColors,
       showTagColors,
       setShowTagColors: this.setShowTagColors,
+      cardColorClass: this.cardColorClass,
+      tagColorClass: this.tagColorClass,
     };
     return (
       <TagContextRaw.Provider value={value}>
@@ -79,6 +103,45 @@ class TagContextProvider extends Component {
     );
   }
 }
+
+export const getCardColorClass = card => {
+  const type = card.type_line;
+  const colors = card.colors;
+  if (type.toLowerCase().includes('land')) {
+    return 'lands';
+  } else if (colors.length == 0) {
+    return 'colorless';
+  } else if (colors.length > 1) {
+    return 'multi';
+  } else if (colors.length == 1 && [...'WUBRGC'].includes(colors[0])) {
+    return {
+      'W': 'white',
+      'U': 'blue',
+      'B': 'black',
+      'R': 'red',
+      'G': 'green',
+      'C': 'colorless',
+    }[colors[0]];
+  }
+};
+
+export const getCardTagColorClass = (tagColors, card) => {
+  const tagColor = tagColors.find(({ tag }) => card.tags.includes(tag));
+  if (tagColor) {
+    return `tag-color tag-${tagColor.color}`;
+  } else {
+    return getCardColorClass(card);
+  }
+};
+
+export const getTagColorClass = (tagColors, tag) => {
+  const tagColor = tagColors.find(tagColor => tag === tagColor.tag);
+  if (tagColor && tagColor.color) {
+    return `tag-color tag-${tagColor.color}`;
+  } else {
+    return 'tag-no-color';
+  }
+};
 
 const TagContext = {
   Provider: TagContextProvider,
@@ -96,42 +159,9 @@ const TagContext = {
     ['Violet', 'violet'],
     ['Pink', 'pink'],
   ],
-  getCardColorClass: card => {
-    const type = card.type_line;
-    const colors = card.colors;
-    if (type.toLowerCase().includes('land')) {
-      return 'lands';
-    } else if (colors.length == 0) {
-      return 'colorless';
-    } else if (colors.length > 1) {
-      return 'multi';
-    } else if (colors.length == 1 && [...'WUBRGC'].includes(colors[0])) {
-      return {
-        'W': 'white',
-        'U': 'blue',
-        'B': 'black',
-        'R': 'red',
-        'G': 'green',
-        'C': 'colorless',
-      }[colors[0]];
-    }
-  },
-  getCardTagColorClass: (tagColors, card) => {
-    const tagColor = tagColors.find(({ tag }) => card.tags.includes(tag));
-    if (tagColor) {
-      return `tag-color tag-${tagColor.color}`;
-    } else {
-      return getCardColorClass(card);
-    }
-  },
-  getTagColorClass: (tagColors, tag) => {
-    const tagColor = tagColors.find(tagColor => tag === tagColor.tag);
-    if (tagColor && tagColor.color) {
-      return `tag-color tag-${tagColor.color}`;
-    } else {
-      return 'tag-no-color';
-    }
-  },
+  getCardColorClass,
+  getCardTagColorClass,
+  getTagColorClass,
 };
 
 export default TagContext;

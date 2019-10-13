@@ -43,11 +43,6 @@ cube.forEach(function(card, index) {
     $("#customImageDisplayMenuItem").show();
   }
 });
-var cubeTagColors = JSON.parse($('#cubeTagColors').val());
-
-$('.updateButton').click(function(e) {
-  updateCubeList();
-});
 
 $('#customImageDisplayToggle').click(function(e) {
   var enabled = $(this).prop('checked'),
@@ -72,162 +67,6 @@ if (canEdit) {
       e.preventDefault();
       remove();
     }
-  });
-}
-
-var tagColorsListeners = [];
-
-function tagColorsModal() {
-  let b_id = $('#cubeB_ID').val();
-  let query = (b_id) ? `?b_id=${b_id}` : '';
-  fetch(`/cube/api/cubetagcolors/${$('#cubeID').val()}${query}`, {
-    method: "GET",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    query: {
-      b_id: $('#cubeB_ID').val(),
-    },
-  }).then(res => {
-    res.json().then(data => {
-      let html = '';
-      let tag_colors = data.tag_colors;
-      cubeTagColors = tag_colors;
-
-      show_tag_colors = data.show_tag_colors;
-      $('#showTagColorsCheckbox').prop("checked", show_tag_colors);
-
-      tagColorsListeners.forEach(listener => listener());
-
-      const tag_color_options = [
-        'Red',
-        'Brown',
-        'Orange',
-        'Yellow',
-        'Green',
-        'Turquoise',
-        'Blue',
-        'Purple',
-        'Violet',
-        'Pink',
-      ];
-
-      tag_colors.forEach(function(item, index) {
-        let tag = item.tag;
-        let color = item.color;
-
-        html += '<div class="row tag-color-row">'
-
-        let tag_class = ''
-        if (color) {
-          tag_color_options.forEach(function(opt, index) {
-            if (opt.toLowerCase() === color) {
-              tag_class = `tag-color tag-${opt.toLowerCase()}`;
-              return false;
-            }
-          });
-        }
-
-        html += '<div class="col">'
-        html += `<div class="tag-item ${tag_class}">${tag}</div>`
-        html += '</div>'
-
-        if (canEdit && !comparing) {
-          html += '<div class="col">'
-          html += '<select class="tag-color-select">'
-          html += '<option value="">No Color</option>'
-          tag_color_options.forEach(function(opt, index) {
-            const sel = (opt.toLowerCase() === color) ? 'selected' : '';
-            html += `<option value="${opt}" ${sel}>${opt}</option>`
-          })
-          html += '</select>'
-          html += '</div>'
-        }
-
-        html += '</div>'
-      });
-      $('#tagsColumn').html(html);
-
-      if (canEdit && !comparing) {
-        $('#tagsColumn').sortable({
-          helper: function(e, item) {
-            let copy = $(item).clone();
-            $(copy).addClass('tag-sort-helper');
-            return copy;
-          },
-          forcePlaceholderSize: true,
-          placeholder: 'tag-sort-placeholder',
-        });
-      }
-      $('#tagsColumn').disableSelection();
-
-      if (canEdit && !comparing) {
-        $('.tag-color-select').change(function() {
-          let $item = $(this).parent().parent().find('.tag-item');
-          tag_color_options.forEach(function(opt, index) {
-            $item.removeClass(`tag-color tag-${opt.toLowerCase()}`);
-          });
-          if ($(this).val()) {
-            $item.addClass(`tag-color tag-${$(this).val().toLowerCase()}`);
-          }
-        });
-      }
-
-      $('#tagColorsModal').modal('show');
-    });
-  });
-};
-
-$('#tagColors').click(tagColorsModal);
-
-$('#showTagColorsCheckbox').change(function(e) {
-  csrfFetch("/cube/api/saveshowtagcolors", {
-    method: "POST",
-    body: JSON.stringify({
-      show_tag_colors: $(this).prop("checked"),
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }).then(res => {
-    show_tag_colors = $(this).prop("checked");
-    tagColorsListeners.forEach(listener => listener());
-    updateCubeList();
-  });
-});
-
-if (canEdit && !comparing) {
-  $('#tagColorsSubmit').click(function(e) {
-    let data = [];
-    let tags = $('.tag-color-row .tag-item');
-    let colors = $('.tag-color-row .tag-color-select');
-
-    for (let i = 0; i < tags.length; i++) {
-      let tag = $(tags[i]).html();
-      let color = $(colors[i]).children('option:selected');
-      color = (color.val()) ? color.val().toLowerCase() : null;
-      data.push({
-        tag,
-        color
-      });
-    }
-
-    csrfFetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      if (res.ok) {
-        cubeTagColors = data;
-        tagColorsListeners.forEach(listener => listener());
-        if (show_tag_colors) {
-          updateCubeList();
-        }
-        $('#tagColorsModal').modal('hide');
-      }
-    });
   });
 }
 
@@ -349,34 +188,6 @@ function updateCollapse() {
       updateCollapse();
     });
   });
-}
-
-function getCardTagColorClass(card) {
-  let res = getCardColorClass(card);
-  cubeTagColors.every(function(item, index) {
-    if (card.tags.includes(item.tag)) {
-      if (item.color) {
-        res = `tag-color tag-${item.color}`;
-        return false;
-      }
-    }
-    return true;
-  });
-  return res;
-}
-
-function getTagColorClass(tag) {
-  let res = 'tag-no-color'
-  cubeTagColors.every(function(item, index) {
-    if (item.tag === tag) {
-      if (item.color) {
-        res = `tag-color tag-${item.color}`;
-        return false;
-      }
-    }
-    return true;
-  });
-  return res;
 }
 
 function GetColorIdentity(colors) {
@@ -588,39 +399,6 @@ function getLabels(sort) {
     return labels;
   } else if (sort == 'Unsorted') {
     return ['All'];
-  }
-}
-
-function getCardColorClass(card) {
-  var type = card.type_line;
-  var colors = card.colors;
-  if (type.toLowerCase().includes('land')) {
-    return 'lands';
-  } else if (colors.length == 0) {
-    return 'colorless';
-  } else if (colors.length > 1) {
-    return 'multi';
-  } else if (colors.length == 1) {
-    switch (colors[0]) {
-      case "W":
-        return 'white';
-        break;
-      case "U":
-        return 'blue';
-        break;
-      case "B":
-        return 'black';
-        break;
-      case "R":
-        return 'red';
-        break;
-      case "G":
-        return 'green';
-        break;
-      case "C":
-        return 'colorless';
-        break;
-    }
   }
 }
 

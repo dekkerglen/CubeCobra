@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { Button, Col, Input, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Row } from 'reactstrap';
+import { Button, Col, Form, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Row } from 'reactstrap';
 
 import { arrayMove } from '../util/Util';
 
-import TagContext from './TagContext';
+import TagContext, { getTagColorClass } from './TagContext';
 
 const SortableItem = SortableElement(({ value }) =>
   <div className="sortable-item">{value}</div>
@@ -111,7 +111,7 @@ class TagColorsModalRaw extends Component {
     const orderedTags = [...tagColors, ...unknownTagColors];
 
     const rows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `tag-item ${TagContext.getTagColorClass(tagColors, tag)}`;
+      const tagClass = `tag-item ${getTagColorClass(tagColors, tag)}`;
       return {
         element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={this.handleChangeColor} />,
         key: tag,
@@ -124,6 +124,17 @@ class TagColorsModalRaw extends Component {
           {canEdit ? 'Set Tag Colors' : 'Tag Colors'}
         </ModalHeader>
         <ModalBody>
+          {!canEdit ? '' :
+            <>
+              <Form inline>
+                <Label>
+                  <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
+                  Show Tag Colors in Card List
+                </Label>
+              </Form>
+              <p><em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em></p>
+            </>
+          }
           <SortableList onSortEnd={this.handleSortEnd} items={rows} />
         </ModalBody>
         <ModalFooter>
@@ -145,7 +156,6 @@ const TagColorsModal = props =>
         setTagColors={setTagColors}
         savedShowTagColors={showTagColors}
         setShowTagColors={setShowTagColors}
-        getTagColorClass={getTagColorClass}
         {...props}
       />
     }
