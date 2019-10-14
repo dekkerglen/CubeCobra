@@ -30,8 +30,6 @@ const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
                     key={label}
                     heading={`${label} (${column[label].length})`}
                     cards={column[label]}
-                    primary={columnLabel}
-                    secondary={label}
                   />
                 )
             }

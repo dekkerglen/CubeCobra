@@ -11,8 +11,8 @@ const alphaCompare = (a, b) => {
   return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
 };
 
-const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => {
-  const groups = sortIntoGroups(cards, tertiary);
+const AutocardListGroup = ({ cards, heading, sort }) => {
+  const groups = sortIntoGroups(cards, sort);
   return (
     <ListGroup className="list-outline">
       <GroupModalContext.Consumer>
@@ -22,15 +22,12 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
             href="#"
             className="list-group-heading"
             onClick={e => { e.preventDefault(); setGroupModalCards(cards); openGroupModal(); }}
-            primarysort={primary}
-            secondarysort={secondary}
-            tertiarysort={tertiary}
           >
             {heading}
           </ListGroupItem>
         }
       </GroupModalContext.Consumer>
-      {getLabels(tertiary).filter(cmc => groups[cmc]).map(cmc =>
+      {getLabels(sort).filter(cmc => groups[cmc]).map(cmc =>
         <Row key={cmc} noGutters className="cmc-group">
           <Col>
             {groups[cmc].sort(alphaCompare).map(card =>
@@ -44,9 +41,7 @@ const AutocardListGroup = ({ cards, heading, primary, secondary, tertiary }) => 
 }
 
 AutocardListGroup.defaultProps = {
-  primary: 'Color Category',
-  secondary: 'Types-Multicolor',
-  tertiary: 'CMC-Full',
+  sort: 'CMC-Full',
 };
 
 export default AutocardListGroup;
