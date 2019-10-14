@@ -11,6 +11,7 @@ class TopCards extends Component {
     this.state = {
       filter: [],
       data: this.props.defaultData || [],
+      numResults: this.props.defaultNumResults || 0,
     };
 
     this.setFilter = this.setFilter.bind(this);
@@ -28,7 +29,10 @@ class TopCards extends Component {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
     fetch('/tool/api/topcards?' + params.toString()).then(response => response.json()).then(json => {
-      this.setState({ data: json.data });
+      this.setState({
+        data: json.data,
+        numResults: json.numResults,
+      });
     }).catch(err => console.error(err));
   }
 
@@ -47,7 +51,8 @@ class TopCards extends Component {
           isOpen={true}
           filter={this.state.filter}
           setFilter={this.setFilter}
-          numCards={this.state.data.length}
+          numCards={this.state.numResults}
+          numShown={this.state.data.length}
           useQuery
         />
       </div>
@@ -63,6 +68,7 @@ class TopCards extends Component {
 }
 
 const data = JSON.parse(document.getElementById('topcards').value);
+const numResults = parseInt(document.getElementById('topcardsNumResults').value);
 const wrapper = document.getElementById('react-root');
-const element = <TopCards defaultData={data} />;
+const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
