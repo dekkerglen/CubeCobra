@@ -17,6 +17,7 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
             <AutocardListGroup
               heading={`${cmc} (${(groups[cmc] || []).length})`}
               cards={groups[cmc] || []}
+              sort={'Unsorted'}
             />
           </div>
         )
