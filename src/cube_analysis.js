@@ -45,7 +45,7 @@ class CubeAnalysis extends Component {
             curve: <CurveAnalysis curve={curve} />,
             type: <TypeAnalysis typeByColor={typeByColor} />,
             multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
-            tokens:<GeneratedTokensAnalysis generatedTokens = {generatedTokensData} />,
+            tokens:<GeneratedTokensAnalysis generatedTokensCounts = {generatedTokensCounts} />,
           }[active]}
         </Col>
       </Row>
@@ -56,6 +56,7 @@ class CubeAnalysis extends Component {
 const curve = JSON.parse(document.getElementById('curveData').value);
 const typeByColor = JSON.parse(document.getElementById('typeData').value);
 const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').value);
+const generatedTokensCounts = JSON.parse(document.getElementById('generatedTokensData').value);
 const wrapper = document.getElementById('react-root');
 const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

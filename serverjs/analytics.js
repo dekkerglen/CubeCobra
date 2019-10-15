@@ -29,18 +29,16 @@ function text2num(a) {
   return Small[a];  
 }
 */
-function CheckContentsEqualityOfArray(target, candidate)
-{
+function CheckContentsEqualityOfArray(target, candidate) {
   var isValid = candidate.length == target.length;
-  if (!isValid)                    
+  if (!isValid)
     return false;
 
-  for (idx = 0;idx<target.length;idx++){
-    if (!candidate.includes(target[idx]))
-    {
+  for (idx = 0; idx < target.length; idx++) {
+    if (!candidate.includes(target[idx])) {
       isValid = false;
       break;
-    }                      
+    }
   }
   return isValid;
 }
@@ -490,178 +488,26 @@ var methods = {
       }
     });
     return ColorCounts;
-  },GetTokens: function(cards, carddb){
-    
+  },
+  GetTokens: function(cards, carddb) {
+
     var mentionedTokens = [];
 
     cards.forEach(function(card, index) {
       card.details = carddb.cardFromId(card.cardID);
-    });
 
-    cards.forEach(function(card,index2)
-    {
-      if (card.details.oracle_text != null){
-        if ( card.details.oracle_text.includes(' token')){
-          //find the ability that generates the token to reduce the amount of text to get confused by.
-          var abilities = card.details.oracle_text.split("\n");
-          for(abilityIndex = 0; abilityIndex<abilities.length;abilityIndex++){
-            var ability = abilities[abilityIndex];
-            if (ability.includes(' token'))
-            {
-              var re = new RegExp ("[Cc]reates? ([Xa-z]+(?: number of)?) ?(\\d\\/\\d)? ?(?:((?:colorless|red|green|white|black|blue| and )+))?([\\w ',]+)");
-              var result = re.exec(ability);
-              /* a start on figuring out how many of each token is required. May appear in future version.
-              var tokenCount = 0;
-              switch (result[1]){
-                case 'a':
-                  tokenCount = 1;
-                  break;
-                case 'a number of':
-                case 'X':
-                  tokenCount = 5; //just taken out of the air, could be anything really
-                  break;
-                default:
-                  tokenCount = text2num(result[1]);
-                  break;
-              }
-              var tokenMinimumCount = tokenCount;
-              */
-              var tokenPowerAndToughness = result[2];
-              var tokenColor = [];
-              if (result[3])
-              {
-                var colorStrings =result[3].trim().split(' ');
-                colorStrings.forEach(rawColor =>{
-                    switch (rawColor.toLowerCase())
-                    {
-                      case ("red"):
-                        tokenColor.push('R');
-                        break;
-                      case ("white"):
-                        tokenColor.push('W');
-                        break;
-                      case ("green"):
-                        tokenColor.push('G');
-                        break;
-                      case ("black"):
-                        tokenColor.push('B');
-                        break;
-                      case ("blue"):
-                        tokenColor.push('U');
-                        break;
-                    }
-                });
-              }
-              var tokenName = "";
-              var tokenStringIndex = result[4].indexOf('token');
-              var tokenSubAndSuperType = result[4].substr(0,tokenStringIndex).trim();           
-              var tokenTypes = [];
-              var typeStrings =tokenSubAndSuperType.trim().split(' ');
-
-              typeStrings.forEach(element => {
-                switch(element)
-                {
-                  case (""):
-                    break;
-                  case 'enchantment':
-                  case 'artifact':
-                  case 'creature':
-                  case 'legendary':
-                  case 'Aura':
-                    tokenTypes.push(element);
-                    break;
-
-                  default:
-                    if (tokenName.length > 0)
-                      tokenName +=' ';
-                    tokenName += element;
-                    tokenTypes.push(element.toLowerCase());
-                    break;
-                }
-              });
-          
-              if (tokenName == "")
-              {
-                if (result[4].includes("a copy of"))
-                {
-                  if (card.details.tokens)
-                  {
-                    mentionedTokens.push({tokenId:card.details.tokens[0],sourceCardId:card.details._id});
-                    continue;
-                  }
-                  tokenName = "Copy"                  
-                  tokenTypes = [""];
-                }
-              }
-                          
-              if (tokenName != "") //can't find a token with no name, most likely a token that could be a copy of any creature.
-              {  
-                var tokenPower;
-                var tokenToughness;
-                if (tokenPowerAndToughness){                     
-                    if (tokenPowerAndToughness.length>0){
-                      tokenPower = result[2].split('/')[0];
-                      tokenToughness  = result[2].split('/')[1];
-                    }
-                  } 
-
-                var postTokenString = result[4].substr(tokenStringIndex+5).trim();
-                var tokenAbilities = [];
-                if (postTokenString != "" && postTokenString != "s"){ //s for the plural ending of tokens                
-                  var postTokenTypes = postTokenString.trim().split(' ');
-                  
-                  for (i=0;i<postTokenTypes.length;i++){
-                    if ((postTokenTypes[i] == 'with' || postTokenTypes =='and')
-                      && postTokenTypes.length > i ){
-                      tokenAbilities.push(postTokenTypes[i+1]);
-                      i += 2; 
-                    }
-                  }
-                }
-                
-                var dbHits = carddb.nameToId[tokenName.toLowerCase()];
-                for (i =0;i<dbHits.length;i++){
-                  var candidate = carddb.cardFromId(dbHits[i]);
-                  var areColorsValid = CheckContentsEqualityOfArray(tokenColor,candidate.colors);
-
-                  var candidateTypes = candidate.type.toLowerCase().split(' ');
-                  for(j = 0;j <candidateTypes.length;j++){
-                    if (candidateTypes[j] =='token' ||
-                        candidateTypes[j] =="—"){
-                      candidateTypes.splice(j,1);
-                      j--;
-                    }
-                  }                    
-                  var areTypesValid = CheckContentsEqualityOfArray(tokenTypes,candidateTypes);
-
-                  var areAbilitiesValid = false;
-                  if (candidate.oracle_text != undefined && candidate.oracle_text.length>0)
-                    areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities,candidate.oracle_text.toLowerCase().split(','));
-                  else
-                    areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities,[]);
-
-                  if (candidate.power == tokenPower &&
-                      candidate.toughness == tokenToughness &&
-                      areColorsValid &&
-                      areTypesValid &&
-                      areAbilitiesValid
-                      ){                        
-                    mentionedTokens.push({tokenId:candidate._id,sourceCardId:card.details._id});
-                    break;
-                  }                                                
-                }                   
-                
-              }            
-            }
-          }
-        }
+      if (card.details.tokens) {
+        card.details.tokens.forEach(element => {
+          mentionedTokens.push(element);
+        })
       }
     });
+
     var resultingTokens = {};
-    mentionedTokens.forEach(element =>{
-      if (resultingTokens[element.tokenId]){
-        resultingTokens[element.tokenId].push(element.sourceCardId);                        
-      }else{
+    mentionedTokens.forEach(element => {
+      if (resultingTokens[element.tokenId]) {
+        resultingTokens[element.tokenId].push(element.sourceCardId);
+      } else {
         var cardId = [];
         cardId.push(element.sourceCardId);
         resultingTokens[element.tokenId] = cardId;

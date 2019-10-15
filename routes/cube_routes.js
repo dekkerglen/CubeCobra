@@ -853,7 +853,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokens: analytics.GetTokens(cube.cards,carddb),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -862,7 +862,7 @@ router.get('/analysis/:id', function(req, res) {
             ),
             loginCallback: '/cube/analysis/' + req.params.id
           });
-        } else {         
+        } else {
           res.render('cube/cube_analysis', {
             cube: cube,
             cube_id: req.params.id,
@@ -872,7 +872,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokens: analytics.GetTokens(cube.cards,carddb),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
