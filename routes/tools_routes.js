@@ -9,9 +9,9 @@ const CardRating = require('../models/cardrating');
 const router = express.Router();
 
 /* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 20;
+const MIN_PICKS = 40;
 /* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 300;
+const MAX_RESULTS = 1000;
 
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
@@ -93,7 +93,7 @@ function topCards(filter, res) {
       ];
     });
     const nonNullData = fullData.filter(x => x[3] !== null);
-    const data = sortLimit(nonNullData, MAX_RESULTS, x => -(x[3] === null ? -1 : x[3]));
+    const data = sortLimit(nonNullData, MAX_RESULTS, x => x[3] === null ? -1 : x[3]);
     return {
       ratings,
       versions,
@@ -117,9 +117,11 @@ router.get('/api/topcards', (req, res) => {
 
   topCards(filter, res).then(({
     data,
+    names,
   }) => {
     res.status(200).send({
       success: 'true',
+      numResults: names.length,
       data,
     });
   }).catch(err => {
@@ -142,8 +144,10 @@ router.get('/topcards', (req, res) => {
 
   topCards(filter, res).then(({
     data,
+    names,
   }) => {
     res.render('tool/topcards', {
+      numResults: names.length,
       data,
     });
   }).catch(err => {

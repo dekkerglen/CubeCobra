@@ -14,10 +14,9 @@ function getCsrfToken() {
 
 function csrfFetch(resource, init) {
   init.credentials = init.credentials || 'same-origin';
-  init.headers = {
-    ...init.headers,
+  init.headers = Object.assign(init.headers, {
     'CSRF-Token': getCsrfToken(),
-  }
+  });
   return fetch(resource, init);
 }
 
@@ -561,7 +560,7 @@ function getLabels(sort) {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
   } else if (sort == 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
-    return [...Array(33).keys()].map(x => (x / 2).toString()).concat(['1000000']);
+    return Array.from(Array(33).keys()).map(x => (x / 2).toString()).concat(['1000000']);
   } else if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort == 'Type') {
