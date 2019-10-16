@@ -2569,13 +2569,32 @@ router.get('/api/getcardfromid/:id', function(req, res) {
 
 router.get('/api/getversions/:id', function(req, res) {
   cards = [];
+  tcg = [];
   carddb.nameToId[carddb.cardFromId(req.params.id).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
-    cards.push(carddb.cardFromId(id));
+    const card = carddb.cardFromId(id);
+    cards.push(card);
+    if (card.tcgplayer_id) {
+      tcg.push(card.tcgplayer_id);
+    }
   });
-  res.status(200).send({
-    success: 'true',
-    cards: cards
-  });
+  GetPrices(tcg, function(price_dict) {
+    cards.forEach(function(card, index) {
+      if (card.tcgplayer_id) {
+        const card_price_data = price_dict[card.tcgplayer_id];
+        if (card_price_data) {
+          card.price = card_price_data;
+        }
+        const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
+        if (card_foil_price_data) {
+          card.price_foil = card_foil_price_data;
+        }
+      }
+    });
+    res.status(200).send({
+      success: 'true',
+      cards: cards,
+    });
+  })
 });
 
 router.post('/api/getversions', function(req, res) {
@@ -2584,10 +2603,11 @@ router.post('/api/getversions', function(req, res) {
   req.body.forEach(function(cardid, index) {
     cards[cardid] = [];
     carddb.nameToId[carddb.cardFromId(cardid).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
+      const card = carddb.cardFromId(id);
       cards[cardid].push({
         id: id,
-        version: carddb.cardFromId(id).full_name.toUpperCase().substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, carddb.cardFromId(id).full_name.indexOf(']')),
-        img: carddb.cardFromId(id).image_normal
+        version: card.full_name.toUpperCase().substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
+        img: card.image_normal,
       });
     });
   });

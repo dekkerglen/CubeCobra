@@ -85,21 +85,6 @@ class CardModalForm extends Component {
             },
           }
         }));
-        // asyncronously grab the pricing data and update state
-        fetch(`/cube/api/getcardfromid/${value}`).then(
-          response => response.json()
-        ).then(json => {
-            this.setState(({ card }) => ({
-                card: {
-                    ...card,
-                    details: {
-                        ...card.details,
-                        price: json.card.price,
-                        price_foil: json.card.price_foil,
-                    },
-                }
-            }))
-        }).catch(err => console.error(err));
       } else {
         console.error('Can\'t find version');
       }
