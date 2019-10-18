@@ -9,7 +9,9 @@ class CubeBlog extends Component {
     super(props);
 
     this.state = {
-    };
+        posts: this.props.posts,
+        pages: this.props.pages
+      };
   }
 
   select(nav) {
@@ -17,10 +19,19 @@ class CubeBlog extends Component {
   }
 
   render() {
-      
+      return (
+        <>
+            <hr/>
+            <hr/>
+            <hr/>
+            <hr/>
+        </>
+      );
   }
 }
 
+const posts = JSON.parse(document.getElementById('blogData').value);
+const pages = JSON.parse(document.getElementById('blogPages').value);
 const wrapper = document.getElementById('react-root');
-const element = <CubeBlog />;
+const element = <CubeBlog posts={posts} pages={pages} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

@@ -545,21 +545,23 @@ router.get('/blogsrc/:id', function(req, res) {
 });
 
 router.get('/blog/:id', function(req, res) {
-  res.redirect('/cube/blog/'+req.params.id+'/0');
+  res.redirect('/cube/blog/' + req.params.id + '/0');
 });
 
 router.get('/blog/:id/:page', async function(req, res) {
   try {
     var cube_id = req.params.id;
     cube = await Cube.findOne(build_id_query(cube_id));
-  
+
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
     user = await User.findById(cube.owner);
-    blogs = await Blog.find({cube: cube._id});
+    blogs = await Blog.find({
+      cube: cube._id
+    });
 
     if (!user) {
       user = {
@@ -580,7 +582,7 @@ router.get('/blog/:id/:page', async function(req, res) {
     var blog_page = [];
     if (blogs.length > 0) {
       blogs.reverse();
-      
+
       var page = parseInt(req.params.page);
       if (!page) {
         page = 0;
@@ -623,8 +625,7 @@ router.get('/blog/:id/:page', async function(req, res) {
       ),
       loginCallback: '/cube/blog/' + req.params.id
     });
-  }
-  catch(err) {
+  } catch (err) {
     return res.status(500).send(err);
   }
 });
