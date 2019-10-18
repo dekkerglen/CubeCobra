@@ -1,14 +1,15 @@
 import React from 'react';
+import { Col, Row, Table } from 'reactstrap';
 
-//i guess some sort of map that generates an image and a list for each token is in order here.
-const TokenAnalysis = ({ GeneratedTokens, ...props }) => (
 
-        <Row {...props}>
-          <Col>
-            <h4 className="d-lg-block d-none">Generated Tokens</h4>
-            
-          </Col>
-        </Row>
-      );
+const GeneratedTokensAnalysis = ( generatedTokensCounts) => (
+<div>
+  <h4>GeneratedTokensAnalysis</h4>
+  
+  const listItems = generatedTokensCounts.map(([tokenId,SorceCardId]) =>
+  <li>{tokenId}</li>
+);
+</div>
+);
 
 export default GeneratedTokensAnalysis;

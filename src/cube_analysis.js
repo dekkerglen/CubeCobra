@@ -7,6 +7,7 @@ import CurveAnalysis from './components/CurveAnalysis';
 import DynamicFlash from './components/DynamicFlash';
 import MulticoloredAnalysis from './components/MulticoloredAnalysis';
 import TypeAnalysis from './components/TypeAnalysis';
+import GeneratedTokensAnalysis from './components/GeneratedTokensAnalysis';
 
 class CubeAnalysis extends Component {
   constructor(props) {
@@ -22,7 +23,7 @@ class CubeAnalysis extends Component {
   }
 
   render() {
-    const { curve, typeByColor, multicoloredCounts } = this.props;
+    const { curve, typeByColor, multicoloredCounts, generatedTokensCounts } = this.props;
     const active = this.state.nav;
     let navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#">
@@ -37,7 +38,7 @@ class CubeAnalysis extends Component {
             {navItem('curve', 'Curve')}
             {navItem('type', 'Type Breakdown')}
             {navItem('multi', 'Multicolored Counts')}
-            {navItem('tokens','Generated Tokens')}
+            {navItem('tokens','Tokens')}
           </Nav>
         </Col>
         <Col xs="12" lg="10">
@@ -45,7 +46,7 @@ class CubeAnalysis extends Component {
             curve: <CurveAnalysis curve={curve} />,
             type: <TypeAnalysis typeByColor={typeByColor} />,
             multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
-            tokens:<GeneratedTokensAnalysis generatedTokensCounts = {generatedTokensCounts} />,
+            tokens:<GeneratedTokensAnalysis generatedTokensCounts = {GeneratedTokensCounts} />,
           }[active]}
         </Col>
       </Row>
@@ -56,8 +57,8 @@ class CubeAnalysis extends Component {
 const curve = JSON.parse(document.getElementById('curveData').value);
 const typeByColor = JSON.parse(document.getElementById('typeData').value);
 const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').value);
-const generatedTokensCounts = JSON.parse(document.getElementById('generatedTokensData').value);
+const GeneratedTokensCounts = JSON.parse(document.getElementById('generatedTokensData').value);
 const wrapper = document.getElementById('react-root');
-const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} />;
+const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} GeneratedTokensCounts={GeneratedTokensCounts} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
 
