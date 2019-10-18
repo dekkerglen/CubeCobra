@@ -28,7 +28,7 @@ block cube_content
           if cube.privatePrices == false
             a Approx: $#{price}          
             br  
-          a(href=`/cube/blog/${cube._id}/rss`) RSS
+          a(href=`/cube/rss/${cube._id}`) RSS
           em
             h6 Designed by 
               a(href='/user/view/'+owner) #{owner}

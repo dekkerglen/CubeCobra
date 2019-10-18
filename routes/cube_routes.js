@@ -545,114 +545,91 @@ router.get('/blogsrc/:id', function(req, res) {
 });
 
 router.get('/blog/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cube_id = split[0];
-  Cube.findOne(build_id_query(cube_id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      User.findById(cube.owner, function(err, user) {
-        Blog.find({
-          cube: cube._id
-        }).sort('date').exec(function(err, blogs) {
-          if (!user) {
-            user = {
-              username: 'unknown'
-            };
-          }
-          blogs.forEach(function(item, index) {
-            if (!item.date_formatted) {
-              item.date_formatted = item.date.toLocaleString("en-US");
-            }
-            if (item.html) {
-              item.html = addAutocard(item.html, carddb);
-            }
-          });
-          var pages = [];
-          if (blogs.length > 0) {
-            blogs.reverse();
-            if (blogs.length > 10) {
-              var page = parseInt(split[1]);
-              if (!page) {
-                page = 0;
-              }
-              for (i = 0; i < blogs.length / 10; i++) {
-                if (page == i) {
-                  pages.push({
-                    url: '/cube/blog/' + cube_id + ';' + i,
-                    content: (i + 1),
-                    active: true
-                  });
-                } else {
-                  pages.push({
-                    url: '/cube/blog/' + cube_id + ';' + i,
-                    content: (i + 1)
-                  });
-                }
-              }
-              blog_page = [];
-              for (i = 0; i < 10; i++) {
-                if (blogs[i + page * 10]) {
-                  blog_page.push(blogs[i + page * 10]);
-                }
-              }
-              res.render('cube/cube_blog', {
-                cube: cube,
-                cube_id: cube_id,
-                owner: user.username,
-                activeLink: 'blog',
-                title: `${abbreviate(cube.name)} - Blog`,
-                posts: blog_page,
-                pages: pages,
-                metadata: generateMeta(
-                  `Cube Cobra Blog: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/blog/${req.params.id}`
-                ),
-                loginCallback: '/cube/blog/' + req.params.id
-              });
-            } else {
-              res.render('cube/cube_blog', {
-                cube: cube,
-                cube_id: cube_id,
-                owner: user.username,
-                activeLink: 'blog',
-                title: `${abbreviate(cube.name)} - Blog`,
-                posts: blogs,
-                metadata: generateMeta(
-                  `Cube Cobra Blog: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/blog/${req.params.id}`
-                ),
-                loginCallback: '/cube/blog/' + req.params.id
-              });
-            }
-          } else {
-            res.render('cube/cube_blog', {
-              cube: cube,
-              cube_id: cube_id,
-              owner: user.username,
-              activeLink: 'blog',
-              title: `${abbreviate(cube.name)} - Blog`,
-              metadata: generateMeta(
-                `Cube Cobra Blog: ${cube.name}`,
-                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                cube.image_uri,
-                `https://cubecobra.com/cube/blog/${req.params.id}`
-              ),
-              loginCallback: '/cube/blog/' + req.params.id
-            });
-          }
-        });
-      });
-    }
-  });
+  res.redirect('/cube/blog/'+req.params.id+'/0');
 });
 
-router.get('/blog/:id/rss', function(req, res) {
+router.get('/blog/:id/:page', async function(req, res) {
+  try {
+    var cube_id = req.params.id;
+    cube = await Cube.findOne(build_id_query(cube_id));
+  
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    user = await User.findById(cube.owner);
+    blogs = await Blog.find({cube: cube._id});
+
+    if (!user) {
+      user = {
+        username: 'unknown'
+      };
+    }
+
+    blogs.forEach(function(item, index) {
+      if (!item.date_formatted) {
+        item.date_formatted = item.date.toLocaleString("en-US");
+      }
+      if (item.html) {
+        item.html = addAutocard(item.html, carddb);
+      }
+    });
+
+    var pages = [];
+    var blog_page = [];
+    if (blogs.length > 0) {
+      blogs.reverse();
+      
+      var page = parseInt(req.params.page);
+      if (!page) {
+        page = 0;
+      }
+      for (i = 0; i < blogs.length / 10; i++) {
+        if (page == i) {
+          pages.push({
+            url: '/cube/blog/' + cube_id + '/' + i,
+            content: (i + 1),
+            active: true
+          });
+        } else {
+          pages.push({
+            url: '/cube/blog/' + cube_id + '/' + i,
+            content: (i + 1)
+          });
+        }
+      }
+      blog_page = [];
+      for (i = 0; i < 10; i++) {
+        if (blogs[i + page * 10]) {
+          blog_page.push(blogs[i + page * 10]);
+        }
+      }
+    }
+
+    return res.render('cube/cube_blog', {
+      cube: cube,
+      cube_id: cube_id,
+      owner: user.username,
+      activeLink: 'blog',
+      title: `${abbreviate(cube.name)} - Blog`,
+      posts: blogs.length > 0 ? blog_page : blogs,
+      pages: blogs.length > 0 ? pages : null,
+      metadata: generateMeta(
+        `Cube Cobra Blog: ${cube.name}`,
+        (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/blog/${req.params.id}`
+      ),
+      loginCallback: '/cube/blog/' + req.params.id
+    });
+  }
+  catch(err) {
+    return res.status(500).send(err);
+  }
+});
+
+router.get('/rss/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube_id = split[0];
   Cube.findOne(build_id_query(cube_id), function(err, cube) {
@@ -672,7 +649,7 @@ router.get('/blog/:id/rss', function(req, res) {
 
           const feed = new RSS({
             title: cube.name,
-            feed_url: `https://cubecobra.com/cube/blog/${cube.id}/rss`,
+            feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
             site_url: 'https://cubecobra.com',
           });
 

@@ -13,6 +13,17 @@ block cube_toolbar
 
 block cube_content
   include ../flash
+
+  hr
+  hr
+
+  #react-root
+  input#blogData(type='hidden', value=posts)
+  input#blogPages(type='hidden', value=pages)
+
+  hr
+  hr
+
   if pages
     hr
     nav(aria-label='pagination')
@@ -76,6 +87,7 @@ block cube_content
               li.page-item
                 a.page-link(href=page.url)=page.content
       hr
+
   if user
     if user.id == cube.owner
       // edit overview modal
@@ -100,3 +112,4 @@ block cube_content
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
       script(src='/js/csrf.js')
       script(src='/js/blog.js')
+      script(src='/js/cube_analysis.bundle.js')
