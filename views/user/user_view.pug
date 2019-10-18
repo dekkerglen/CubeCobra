@@ -27,8 +27,25 @@ block content
 				if user && user.id == user_limited.id
 					a.btn.btn-success(href='/user/account') Update
 	br
+	h4 Own Cubes
 	.row
 		each cube, i in cubes
+			.col-lg-3.col-md-6.col-sm-12.col-xs-12
+				.card
+					.card-header
+						h5=cube.name
+						if cube.type
+							a #{cube.card_count} Card #{cube.type} Cube
+							br
+					a(href='/cube/overview/'+get_cube_id(cube))
+						img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
+					em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
+					a.btn.btn-success(href='/cube/overview/'+get_cube_id(cube)) View
+				br
+	br
+	h4 Followed Cubes
+	.row
+		each cube, i in followed_cubes
 			.col-lg-3.col-md-6.col-sm-12.col-xs-12
 				.card
 					.card-header

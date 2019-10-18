@@ -424,8 +424,14 @@ router.get('/view/:id', function(req, res) {
       });
     } else {
       Cube.find({
-        owner: user._id
-      }, function(err, cubes) {
+        $or: [{
+          owner: user._id
+        }, {
+          shortID: {
+            $in: user.followed_cubes
+          }
+        }]
+      }).exec(function(err, cubes) {
         res.render('user/user_view', {
           user_limited: {
             username: user.username,
@@ -433,7 +439,8 @@ router.get('/view/:id', function(req, res) {
             about: user.about,
             id: user._id
           },
-          cubes: cubes,
+          cubes: cubes.filter((cube) => cube.owner == user._id),
+          followed_cubes: cubes.filter((cube) => user.followed_cubes.includes(cube.shortID)),
           loginCallback: '/user/view/' + req.params.id
         });
       });

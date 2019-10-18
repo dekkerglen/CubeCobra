@@ -13,6 +13,7 @@ const mongoDBStore = require('connect-mongodb-session')(session);
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
+mongoose.set('useFindAndModify', false);
 let db = mongoose.connection;
 db.once('open', function() {
   console.log('connected to nodecube db');

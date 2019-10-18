@@ -497,7 +497,8 @@ router.get('/overview/:id', async function(req, res) {
                 ),
                 loginCallback: '/cube/overview/' + req.params.id,
                 price: sum.toFixed(2),
-                admin: admin
+                admin: admin,
+                followed: req.user.followed_cubes.includes(cube.shortID) || false,
               });
             } else {
               res.render('cube/cube_overview', {
@@ -517,7 +518,8 @@ router.get('/overview/:id', async function(req, res) {
                 loginCallback: '/cube/overview/' + req.params.id,
                 editorvalue: cube.raw_desc,
                 price: sum.toFixed(2),
-                admin: admin
+                admin: admin,
+                followed: req.user.followed_cubes.includes(cube.shortID) || false,
               });
             }
           });
@@ -2960,6 +2962,36 @@ router.get('/api/p1p1/:id/:seed', function(req, res) {
       res.status(200).send(pack);
     }
   });
+});
+
+router.get('/api/follow/:id', function(req, res) {
+  User.findOneAndUpdate({
+      username: req.user.username
+    }, {
+      $addToSet: {
+        followed_cubes: String(req.params.id)
+      }
+    },
+    function(err, success) {
+      if (err) console.log(err);
+      res.status(200).send();
+    },
+  );
+});
+
+router.get('/api/unfollow/:id', function(req, res) {
+  User.findOneAndUpdate({
+      username: req.user.username
+    }, {
+      $pullAll: {
+        followed_cubes: [String(req.params.id)]
+      }
+    },
+    function(err, success) {
+      if (err) console.log(err);
+      res.status(200).send();
+    },
+  );
 });
 
 module.exports = router;
