@@ -1,4 +1,6 @@
-$(document).ready(function() {
+
+
+$(document).ready(function() {  
   $('.login-link').on('click', function(e) {
     e.preventDefault();
     $('#loginModal').modal('show');
@@ -11,20 +13,6 @@ $(document).ready(function() {
       url: '/cube/remove/' + id,
       success: function() {
         window.location.href = '/';
-      },
-      error: function(err) {
-        console.log(err)
-      }
-    });
-  })
-  $('.delete-blog').on('click', function(e) {
-    $target = $(e.target);
-    var id = $target.attr('data-id');
-    $.ajax({
-      type: 'DELETE',
-      url: '/cube/blog/remove/' + id,
-      success: function() {
-        window.location.href = '';
       },
       error: function(err) {
         console.log(err)
