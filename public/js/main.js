@@ -1,6 +1,4 @@
-
-
-$(document).ready(function() {  
+$(document).ready(function() {
   $('.login-link').on('click', function(e) {
     e.preventDefault();
     $('#loginModal').modal('show');
