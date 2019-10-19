@@ -5,8 +5,6 @@ import { Pagination, PaginationItem, PaginationLink, Collapse } from 'reactstrap
 class Paginate extends React.Component {
   constructor(props) {
     super(props);
-    
-    this.state = {collapse: false};
   }  
   
   render() {

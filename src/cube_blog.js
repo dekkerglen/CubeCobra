@@ -7,12 +7,6 @@ import Paginate from './components/Paginate';
 class CubeBlog extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-        posts: this.props.posts,
-        pages: this.props.pages,
-        canEdit: this.props.canEdit
-      };
   }
 
   componentDidMount() {
@@ -24,18 +18,18 @@ class CubeBlog extends Component {
   }
 
   render() {
-    console.log(this.props.posts);
-      return (
-        <>
-          {!(this.props.pages && this.props.pages.length > 1) ? '' :
-            <Paginate pages={this.props.pages} />
-          }
-          {this.props.posts.map(post =>
-            <BlogPost post={post} canEdit={this.props.canEdit}/>
-          )}
-          {!(this.props.pages && this.props.pages.length > 1) ? '' :
-            <Paginate pages={this.props.pages} />
-          }
+    const {pages, posts, canEdit} = this.props
+    return (
+      <>
+        {(pages && pages.length > 1) &&
+          <Paginate pages={pages} />
+        }
+        {posts.map(post =>
+          <BlogPost post={post} canEdit={canEdit}/>
+        )}
+        {(pages && pages.length > 1) &&
+          <Paginate pages={pages} />
+        }
       </>
     );
   }

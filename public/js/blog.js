@@ -7,7 +7,6 @@ function updateBlog() {
   });
 
   $(".editBlogButton").click(function(e) {
-    console.log("btn press");
     e.preventDefault();
     const id = $(this).attr('data-id');
 
@@ -51,8 +50,6 @@ function updateBlog() {
       }
     });
   });
-
-  //$('.collapse').collapse();
 }
 
 updateBlog();
