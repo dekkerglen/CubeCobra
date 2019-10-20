@@ -676,8 +676,6 @@ router.get('/blog/:id/rss', function(req, res) {
             site_url: 'https://cubecobra.com',
           });
 
-
-
           blogs.forEach((blog) => {
             let content = blog.html ? blog.html : blog.content;
 
