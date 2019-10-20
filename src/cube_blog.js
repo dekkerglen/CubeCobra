@@ -9,10 +9,6 @@ class CubeBlog extends Component {
     super(props);
   }
 
-  componentDidMount() {
-    updateBlog();
-  }
-
   select(nav) {
     this.setState({ });
   }

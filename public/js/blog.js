@@ -6,27 +6,6 @@ function updateBlog() {
     form.submit();
   });
 
-  $(".editBlogButton").click(function(e) {
-    e.preventDefault();
-    const id = $(this).attr('data-id');
-
-    fetch("/cube/blogsrc/" + id)
-      .then(response => response.json())
-      .then(function(json) {
-        if (json.src) {
-          $('#editor').html(json.src);
-        } else {
-          $('#editor').html(json.body);
-        }
-
-        $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(id);
-        $('#blogEditTitle').text('Edit Blog Post');
-        $('#editBlogModal').modal('show');
-        autocard_init('autocard');
-      });
-  });
-
   $(".newBlogButton").click(function(e) {
     e.preventDefault();
     $('#editor').html('');
@@ -36,7 +15,7 @@ function updateBlog() {
     $('#editBlogModal').modal('show');
   });
 
-  $('.delete-blog').on('click', function(e) {
+  $('.delete-blog').off().on('click', function(e) {
     $target = $(e.target);
     var id = $target.attr('data-id');
     $.ajax({

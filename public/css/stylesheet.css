@@ -403,7 +403,15 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 	cursor: pointer;
 }
 
+
 /* Fix z-index on sortables. */
 .sortable-item {
 	z-index: 10000 !important;
 }
+.clickable {
+	cursor: pointer;
+}
+
+div.card.shadowed {
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.10);
+  }
