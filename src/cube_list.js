@@ -9,6 +9,7 @@ import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
+import ErrorBoundary from './components/ErrorBoundary';
 import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
@@ -94,13 +95,15 @@ class CubeList extends Component {
                   hasCustomImages={cards.some(card => card.imgUrl)}
                 />
                 <DynamicFlash />
-                {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
-                {{
-                  'table': <TableView cards={filteredCards} />,
-                  'spoiler': <VisualSpoiler cards={filteredCards} />,
-                  'curve': <CurveView cards={filteredCards} />,
-                  'list': <ListView cubeID={cubeID} cards={filteredCards} />,
-                }[cubeView]}
+                <ErrorBoundary className="mt-3">
+                  {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+                  {{
+                    'table': <TableView cards={filteredCards} />,
+                    'spoiler': <VisualSpoiler cards={filteredCards} />,
+                    'curve': <CurveView cards={filteredCards} />,
+                    'list': <ListView cubeID={cubeID} cards={filteredCards} />,
+                  }[cubeView]}
+                </ErrorBoundary>
               </GroupModal>
             </CardModalForm>
           </TagContext.Provider>

@@ -9,6 +9,7 @@ import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
 import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
+import ErrorBoundary from './components/ErrorBoundary';
 import SortContext from './components/SortContext';
 
 class CubeCompare extends Component {
@@ -59,9 +60,11 @@ class CubeCompare extends Component {
             setFilter={this.setFilter}
           />
           <DynamicFlash />
-          <CardModalForm>
-            <CompareView cards={filteredCards} {...props} />
-          </CardModalForm>
+          <ErrorBoundary>
+            <CardModalForm>
+              <CompareView cards={filteredCards} {...props} />
+            </CardModalForm>
+          </ErrorBoundary>
         </DisplayContext.Provider>
       </SortContext.Provider>
     );
