@@ -58,8 +58,7 @@ function cardIsLabel(card, label, sort) {
   } else if (sort == 'Color Identity') {
     return GetColorIdentity(card.colors) == label;
   } else if (sort == 'Color') {
-    if(!card.details.colors)
-    {
+    if (!card.details.colors) {
       return label == 'Colorless';
     }
     switch (label) {
