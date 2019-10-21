@@ -2729,47 +2729,48 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
   }
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (cube.owner === String(req.user._id)) {
+      const allUpdates = {
+        $set: {}
+      };
       for (const {
           index
         } of selected) {
-        if (typeof index !== 'number') {
+        if (typeof index !== 'number' || !cube.cards[index]) {
           continue;
         }
-        const card = cube.cards[index];
-        if (!card.type_line) {
-          card.type_line = carddb.cardFromId(card.cardID).type;
-        }
-        if (card.details) {
-          delete card.details;
-        }
         if (updated.status) {
-          card.status = updated.status;
+          allUpdates.$set[`cards.${index}.status`] = updated.status;
         }
         if (updated.cmc) {
-          card.cmc = updated.cmc;
+          allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
         }
         if (updated.type_line) {
-          card.type_line = updated.type_line;
+          allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
         }
         if (updated.colors) {
-          card.colors = updated.colors.filter(color => [...'WUBRG'].includes(color));
+          allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter(color => [...'WUBRG'].includes(color));
         }
         if (updated.colorC) {
-          card.colors = [];
+          allUpdates.$set[`cards.${index}.colors`] = [];
         }
         if (updated.tags) {
           if (updated.addTags) {
-            card.tags = [...card.tags, ...updated.tags.filter(tag =>
-              typeof tag === 'string' && !card.tags.includes(tag)
-            )];
+            if (!allUpdates.$addToSet) {
+              allUpdates.$addToSet = {};
+            }
+            allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
           }
           if (updated.deleteTags) {
-            card.tags = card.tags.filter(tag => !updated.tags.includes(tag));
+            if (!allUpdates.$pullAll) {
+              allUpdates.$pullAll = {};
+            }
+            allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
           }
         }
       }
-      cube.save(function(err) {
+      cube.updateOne(allUpdates, function(err) {
         if (err) {
+          console.error(err);
           res.status(500).send({
             success: 'false',
             message: 'Error saving cube'
