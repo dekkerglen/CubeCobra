@@ -33,11 +33,6 @@ class SortContextProvider extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    sorts[0] = this.state.primary;
-    sorts[1] = this.state.secondary;
-  }
-
   changeSort(change) {
     this.setState(change);
   }

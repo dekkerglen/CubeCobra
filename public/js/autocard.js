@@ -1,6 +1,18 @@
 var stopAutocard = false;
 var autocardTimeout = null;
 
+window.globalTagColors = window.globalTagColors || [];
+window.globalShowTagColors = window.globalShowTagColors !== false;
+
+function getTagColorClass(tag) {
+  const tagColor = window.globalTagColors.find(tagColor => tag === tagColor.tag);
+  if (window.globalShowTagColors && tagColor && tagColor.color) {
+    return `tag-color tag-${tagColor.color}`;
+  } else {
+    return 'tag-no-color';
+  }
+};
+
 function getElementPosition(el) {
   var l = 0,
     t = 0;

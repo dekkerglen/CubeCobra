@@ -18,6 +18,7 @@ import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
 import SortCollapse from './SortCollapse';
+import TagColorsModal from './TagColorsModal';
 
 // FIXME: Bring into React
 function compare(event) {
@@ -53,12 +54,15 @@ class CubeListNavbarRaw extends Component {
 
     this.state = {
       isOpen: false,
+      tagColorsModalOpen: false,
     };
 
     this.toggle = this.toggle.bind(this);
     this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
     this.handleMassEdit = this.handleMassEdit.bind(this);
     this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
+    this.handleOpenTagColorsModal = this.handleOpenTagColorsModal.bind(this);
+    this.handleToggleTagColorsModal = this.handleToggleTagColorsModal.bind(this);
   }
 
   toggle() {
@@ -96,9 +100,18 @@ class CubeListNavbarRaw extends Component {
     setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
+  handleOpenTagColorsModal(event) {
+    event.preventDefault();
+    this.setState({ tagColorsModalOpen: true });
+  }
+
+  handleToggleTagColorsModal() {
+    this.setState({ tagColorsModalOpen: false });
+  }
+
   render() {
     const { canEdit, cubeView, cubeID, hasCustomImages, filter, setFilter, cards } = this.props;
-    /* global */
+    const { tagColorsModalOpen } = this.state;
     return (
       <div className="usercontrols">
         <Navbar expand="md" className="navbar-light">
@@ -142,7 +155,7 @@ class CubeListNavbarRaw extends Component {
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>Display</DropdownToggle>
                 <DropdownMenu right>
-                  <DropdownItem onClick={/* global */ tagColorsModal}>
+                  <DropdownItem onClick={() => this.setState({ tagColorsModalOpen: true })}>
                     {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                   </DropdownItem>
                   <DisplayContext.Consumer>
@@ -180,6 +193,11 @@ class CubeListNavbarRaw extends Component {
         <SortCollapse isOpen={this.props.openCollapse === 'sort'} />
         <FilterCollapse filter={filter} setFilter={setFilter} numCards={cards.length} isOpen={this.props.openCollapse === 'filter'} />
         <CompareCollapse isOpen={this.props.openCollapse === 'compare'} />
+        <TagColorsModal
+          canEdit={canEdit}
+          isOpen={this.state.tagColorsModalOpen}
+          toggle={this.handleToggleTagColorsModal}
+        />
       </div>
     );
   }
