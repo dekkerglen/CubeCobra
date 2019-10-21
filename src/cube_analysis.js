@@ -46,7 +46,7 @@ class CubeAnalysis extends Component {
             curve: <CurveAnalysis curve={curve} />,
             type: <TypeAnalysis typeByColor={typeByColor} />,
             multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
-            tokens:<GeneratedTokensAnalysis generatedTokensCounts = {GeneratedTokensCounts} />,
+            tokens:<GeneratedTokensAnalysis GeneratedTokensCounts = {GeneratedTokensCounts} />,
           }[active]}
         </Col>
       </Row>

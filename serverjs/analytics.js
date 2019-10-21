@@ -501,19 +501,20 @@ var methods = {
           mentionedTokens.push(element);
         })
       }
-    });
+    }); 
 
-    var resultingTokens = {};
+    let resultingTokens = [];
+    var tokenIndexArray = [];
     mentionedTokens.forEach(element => {
-      if (resultingTokens[element.tokenId]) {
-        resultingTokens[element.tokenId].push(element.sourceCardId);
+      var relevantIndex = tokenIndexArray.indexOf(element.tokenId);
+      if (relevantIndex>=0) {        
+        resultingTokens[relevantIndex][1].push(element.sourceCardId);
       } else {
-        var cardId = [];
-        cardId.push(element.sourceCardId);
-        resultingTokens[element.tokenId] = cardId;
+        var cardId = [element.tokenId,[element.sourceCardId]];        
+        resultingTokens.push(cardId);
+        tokenIndexArray.push(element.tokenId);
       }
     });
-
     return resultingTokens;
   },
   GetCurve: function(cards, carddb) {
