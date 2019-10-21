@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Pagination, PaginationItem, PaginationLink, Collapse } from 'reactstrap';
+import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 class Paginate extends React.Component {
   constructor(props) {
@@ -13,7 +13,7 @@ class Paginate extends React.Component {
         <hr/>
         <Pagination aria-label="Table page" className="mt-3">
           {this.props.pages.map(page =>
-            <PaginationItem key={page} active={page.active}>
+            <PaginationItem active={page.active}>
               <PaginationLink tag="a" href={page.url}>
                 {page.content}
               </PaginationLink>

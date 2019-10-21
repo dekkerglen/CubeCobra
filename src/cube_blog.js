@@ -9,10 +9,6 @@ class CubeBlog extends Component {
     super(props);
   }
 
-  select(nav) {
-    this.setState({ });
-  }
-
   render() {
     const {pages, posts, canEdit} = this.props
     return (

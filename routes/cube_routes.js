@@ -587,7 +587,7 @@ router.get('/blog/:id/:page', async function(req, res) {
       if (!page) {
         page = 0;
       }
-      for (i = 0; i < blogs.length / 10; i++) {
+      for (var i = 0; i < blogs.length / 10; i++) {
         if (page == i) {
           pages.push({
             url: '/cube/blog/' + cube_id + '/' + i,
@@ -602,7 +602,7 @@ router.get('/blog/:id/:page', async function(req, res) {
         }
       }
       blog_page = [];
-      for (i = 0; i < 10; i++) {
+      for (var i = 0; i < 10; i++) {
         if (blogs[i + page * 10]) {
           blog_page.push(blogs[i + page * 10]);
         }
@@ -1956,6 +1956,73 @@ router.get('/api/cardimages', function(req, res) {
     success: 'true',
     cardimages: carddb.cardimages
   });
+});
+
+function insertComment(comments, position, comment) {
+  if(position.length <= 0)
+  {    
+    comment.index = comments.length;
+    comments.push(comment);
+    return comment;
+  }
+  else {
+    return insertComment(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
+
+router.post('/api/postcomment', ensureAuth, async function(req,res) {
+  /*
+  req.param = {
+    id:String, //blog post id
+    position:[], //array of indexes to represent nested position of comment
+    content:String
+  }
+  req.user -> use to get user fields for comment
+  */
+  user = await User.findById(req.user._id);
+  post = await Blog.findById(req.body.id);
+
+  if (!user) {
+    return res.status(403).send({
+      success: 'false',
+      message:'Unauthorized'
+    });
+  }
+  
+  if (!post) {
+    return res.status(404).send({
+      success: 'false',
+      message:'Post not found'
+    });
+  }
+
+  console.log(post);
+  console.log(req.body);
+
+  try {
+    //slice limits the recursive depth
+    var comment = insertComment(post.comments, req.body.position.slice(0,8), {
+      owner:user._id,
+      ownerName:user.username,
+      ownerImage:'',
+      content:req.body.content,
+      timePosted:Date.now(),
+      comments:[]
+    });
+    await post.save();
+    console.log(post);
+    
+    res.status(200).send({
+      success: 'true',
+      comment: comment
+    });
+  } catch(err) {
+    console.log(err);
+    return res.status(500).send({
+      success: 'false',
+      message:err
+    });
+  }
 });
 
 router.get('/api/imagedict', function(req, res) {
