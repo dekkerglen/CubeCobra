@@ -663,7 +663,7 @@ router.get('/blog/:id/rss', function(req, res) {
       User.findById(cube.owner, function(err, user) {
         Blog.find({
           cube: cube._id
-        }).sort('date').exec(function(err, blogs) {
+        }).sort('-date').exec(function(err, blogs) {
           if (!user) {
             user = {
               username: 'unknown'
@@ -677,9 +677,21 @@ router.get('/blog/:id/rss', function(req, res) {
           });
 
           blogs.forEach((blog) => {
+            let content = blog.html ? blog.html : blog.content;
+
+            if (blog.changelist) {
+              const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+              if (content) {
+                content = content + changeSetElement;
+              } else {
+                content = changeSetElement;
+              }
+
+            }
+
             feed.item({
               title: blog.title,
-              description: blog.html ? blog.html : blog.content,
+              description: content,
               guid: blog.id,
               date: blog.date
             });
