@@ -2690,7 +2690,9 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
   }
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (cube.owner === String(req.user._id)) {
-      const allUpdates = { $set: {} };
+      const allUpdates = {
+        $set: {}
+      };
       for (const {
           index
         } of selected) {
