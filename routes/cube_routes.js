@@ -2570,7 +2570,7 @@ router.get('/api/getcardfromid/:id', function(req, res) {
 router.get('/api/getversions/:id', function(req, res) {
   cards = [];
   tcg = [];
-  carddb.nameToId[carddb.cardFromId(req.params.id).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
+  carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
     const card = carddb.cardFromId(id);
     cards.push(card);
     if (card.tcgplayer_id) {
