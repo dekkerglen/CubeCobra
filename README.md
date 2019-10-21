@@ -54,7 +54,7 @@ npm start                   # Start nodemon for backend server and webpack for f
 
 # Windows users will need to use 2 terminal instances.
 npm nodemon
-npm webpack-dev-server
+npm run-script webpack-dev-server
 ```
 
 Alternatively, if you are on Windows, you can use bash to mimic the Linux/OSX steps:
