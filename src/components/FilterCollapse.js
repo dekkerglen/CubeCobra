@@ -200,10 +200,16 @@ class FilterCollapse extends Component {
   }
 
   render() {
-    const { filter, setFilter, numCards, useQuery, ...props } = this.props;
+    const { filter, setFilter, numCards, numShown, useQuery, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    const appliedText = (
+      'Filters applied'
+      + (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '')
+      + (typeof numShown !== 'undefined' ? `, ${numShown} shown` : '')
+      + '.'
+    );
     return (
       <Collapse {...props}>
         <Container>
@@ -233,7 +239,7 @@ class FilterCollapse extends Component {
               <h5>Filters</h5>
               <p>
                 {!filter || filter.length === 0 ? <em>No filters applied.</em> :
-                  <em>Filters applied{typeof numCards !== 'undefined' ? `: ${numCards} total results.` : '.'}</em>
+                  <em>{appliedText}</em>
                 }
               </p>
             </Col>

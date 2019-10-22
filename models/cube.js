@@ -17,15 +17,22 @@ let cubeSchema = mongoose.Schema({
   },
   owner: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   isListed: {
     type: Boolean,
-    default: true
+    default: true,
+    index: true
   },
   privatePrices: {
     type: Boolean,
     default: false
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false,
+    index: true
   },
   cards: [{
     tags: [String],

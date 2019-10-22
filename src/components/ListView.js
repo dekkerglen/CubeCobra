@@ -5,10 +5,10 @@ import { Input } from 'reactstrap';
 import { csrfFetch } from '../util/CSRF';
 import { arraysEqual, fromEntries } from '../util/Util';
 
-import DisplayContext from './DisplayContext';
 import GroupModalContext from './GroupModalContext';
 import PagedTable from './PagedTable';
 import SortContext from './SortContext';
+import TagContext from './TagContext';
 import TagInput from './TagInput';
 
 const colorCombos = [
@@ -48,7 +48,7 @@ class ListViewRaw extends Component {
     const currentIds = this.props.cards.map(card => card.cardID);
     const newIds = currentIds.filter(id => !knownIds.has(id));
     if (newIds.length > 0) {
-      fetch('/cube/api/getversions', {
+      csrfFetch('/cube/api/getversions', {
         method: 'POST',
         body: JSON.stringify(newIds),
         headers: {
@@ -218,7 +218,7 @@ class ListViewRaw extends Component {
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, changeSort, showTagColors } = this.props;
+    const { cards, primary, secondary, tertiary, changeSort, cardColorClass } = this.props;
     const groups = {};
     for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
       groups[label1] = sortIntoGroups(primaryGroup, secondary);
@@ -242,7 +242,7 @@ class ListViewRaw extends Component {
             const textB =  b.details.name.toUpperCase();
             return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
           }).map(({ index, details, ...card }) =>
-            <tr key={index} className={showTagColors ? getCardTagColorClass(card) : getCardColorClass(card)}>
+            <tr key={index} className={cardColorClass(card)}>
               <td className="align-middle">
                 <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
               </td>
@@ -317,19 +317,19 @@ class ListViewRaw extends Component {
 const ListView = props =>
   <SortContext.Consumer>
     {sortValue =>
-      <DisplayContext.Consumer>
-        {({ showTagColors }) =>
+      <TagContext.Consumer>
+        {({ cardColorClass }) =>
           <GroupModalContext.Consumer>
             {({ setGroupModalCards, openGroupModal }) =>
               <ListViewRaw
                 {...sortValue}
-                {...{ showTagColors, setGroupModalCards, openGroupModal }}
+                {...{ cardColorClass, setGroupModalCards, openGroupModal }}
                 {...props}
               />
             }
           </GroupModalContext.Consumer>
         }
-      </DisplayContext.Consumer>
+      </TagContext.Consumer>
     }
   </SortContext.Consumer>;
 

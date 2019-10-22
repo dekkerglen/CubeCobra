@@ -241,7 +241,7 @@ function addToPicks(card, x, y, cmccol, frompack) {
   draft.pickOrder.push(card._id);
   if (frompack) {
     passPack();
-    fetch("/cube/api/draftpickcard/" + draft.cube, {
+    csrfFetch("/cube/api/draftpickcard/" + draft.cube, {
       method: "POST",
       body: JSON.stringify({
         'draft_id': draft._id,
@@ -275,7 +275,7 @@ function saveDraft(callback) {
     }
   });
   //save draft, if we fail, we fail
-  fetch("/cube/api/draftpick/" + draft.cube, {
+  csrfFetch("/cube/api/draftpick/" + draft.cube, {
     method: "POST",
     body: JSON.stringify(temp),
     headers: {

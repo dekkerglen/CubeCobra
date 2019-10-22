@@ -2,9 +2,8 @@ import React, { Component } from 'react';
 
 import { Button, Card, CardHeader, Col, Collapse, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
 
-import { CSRFForm } from '../util/CSRF';
-
 import ContentEditable from './ContentEditable';
+import CSRFForm from './CSRFForm';
 
 function clickToolbar(event) {
   event.preventDefault();

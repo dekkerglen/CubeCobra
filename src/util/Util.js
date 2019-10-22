@@ -9,6 +9,13 @@ export function arraysEqual(a, b) {
   return true;
 }
 
+export function arrayMove(arr, oldIndex, newIndex) {
+  const result = [...arr];
+  const [element] = result.splice(oldIndex, 1);
+  result.splice(newIndex, 0, element);
+  return result;
+}
+
 export function fromEntries(entries) {
   const obj = {};
   for (const [k, v] of entries) {
@@ -17,4 +24,4 @@ export function fromEntries(entries) {
   return obj;
 }
 
-export default { arraysEqual, fromEntries };
+export default { arraysEqual, arrayMove, fromEntries };

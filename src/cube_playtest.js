@@ -5,6 +5,7 @@ import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGro
 
 import { csrfFetch } from './util/CSRF';
 
+import CSRFForm from './components/CSRFForm';
 import DynamicFlash from './components/DynamicFlash';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
@@ -23,7 +24,7 @@ const LabelRow = ({ htmlFor, label, children, ...props }) => (
 
 const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...props }) => (
   <Card key={format} {...props}>
-    <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
       <CardHeader>
         <CardTitleH5>
           Draft Custom Format: {format.title}
@@ -55,13 +56,13 @@ const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...prop
           </UncontrolledCollapse>
         </>}
       </CardFooter>
-    </form>
+    </CSRFForm>
   </Card>
 );
 
 const StandardDraftCard = ({ cubeID }) => (
   <Card className="mt-3">
-    <form method="POST" action={`/cube/startdraft/${cubeID}`}>
+    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
       <CardHeader>
         <CardTitleH5>Start a new draft</CardTitleH5>
       </CardHeader>
@@ -86,7 +87,7 @@ const StandardDraftCard = ({ cubeID }) => (
         <Input type="hidden" name="id" value="-1" />
         <Button color="success">Start Draft</Button>
       </CardFooter>
-    </form>
+    </CSRFForm>
   </Card>
 );
 

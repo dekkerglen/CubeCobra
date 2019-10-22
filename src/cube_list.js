@@ -67,18 +67,23 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cubeID, canEdit } = this.props;
+    const { cubeID, canEdit, defaultTagColors, defaultShowTagColors } = this.props;
     const { cards, cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
     const defaultTags = [...defaultTagSet].map(tag => ({
       id: tag,
       text: tag,
-    }))
+    }));
     const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
-          <TagContext.Provider defaultTags={defaultTags}>
+          <TagContext.Provider
+            cubeID={cubeID}
+            defaultTagColors={defaultTagColors}
+            defaultShowTagColors={defaultShowTagColors}
+            defaultTags={defaultTags}
+          >
             <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
               <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                 <CubeListNavbar
@@ -117,6 +122,16 @@ cube.forEach((card, index) => {
 });
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
+const defaultTagColors = JSON.parse(document.getElementById('cubeTagColors').value);
+const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = (
+  <CubeList
+    defaultCards={cube}
+    canEdit={canEdit}
+    cubeID={cubeID}
+    defaultTagColors={defaultTagColors}
+    defaultShowTagColors={defaultShowTagColors}
+  />
+);
 wrapper ? ReactDOM.render(element, wrapper) : false;

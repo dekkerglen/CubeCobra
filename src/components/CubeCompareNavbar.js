@@ -7,6 +7,7 @@ import {
 
 import FilterCollapse from './FilterCollapse';
 import SortCollapse from './SortCollapse';
+import TagColorsModal from './TagColorsModal';
 
 class CubeCompareNavbar extends Component {
   constructor(props) {
@@ -14,10 +15,13 @@ class CubeCompareNavbar extends Component {
 
     this.state = {
       isOpen: false,
+      tagColorsModalOpen: false,
     };
 
     this.toggle = this.toggle.bind(this);
     this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
+    this.handleOpenTagColorsModal = this.handleOpenTagColorsModal.bind(this);
+    this.handleToggleTagColorsModal = this.handleToggleTagColorsModal.bind(this);
   }
 
   toggle() {
@@ -35,6 +39,15 @@ class CubeCompareNavbar extends Component {
     setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
   }
 
+  handleOpenTagColorsModal(event) {
+    event.preventDefault();
+    this.setState({ tagColorsModalOpen: true });
+  }
+
+  handleToggleTagColorsModal() {
+    this.setState({ tagColorsModalOpen: false });
+  }
+
   render() {
     const { cards, openCollapse, filter, setFilter } = this.props;
     return (
@@ -50,7 +63,7 @@ class CubeCompareNavbar extends Component {
                 <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>Filter</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" onClick={/* global */ tagColorsModal}>
+                <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
                   View Tag Colors
                 </NavLink>
               </NavItem>
@@ -59,6 +72,11 @@ class CubeCompareNavbar extends Component {
         </Navbar>
         <SortCollapse isOpen={openCollapse === 'sort'} />
         <FilterCollapse filter={filter} setFilter={setFilter} numCards={cards.length} isOpen={this.props.openCollapse === 'filter'} />
+        <TagColorsModal
+          canEdit={false}
+          isOpen={this.state.tagColorsModalOpen}
+          toggle={this.handleToggleTagColorsModal}
+        />
       </div>
     );
   }

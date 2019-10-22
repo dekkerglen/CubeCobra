@@ -44,12 +44,23 @@ function price_bucket_label(index) {
   }
 }
 
+function cmcToNumber(cmc) {
+  if (isNaN(cmc)) {
+    return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
+  } else {
+    return cmc;
+  }
+}
+
 function cardIsLabel(card, label, sort) {
   if (sort == 'Color Category') {
     return GetColorCategory(card.type_line, card.colors) == label;
   } else if (sort == 'Color Identity') {
     return GetColorIdentity(card.colors) == label;
   } else if (sort == 'Color') {
+    if (!card.details.colors) {
+      return label == 'Colorless';
+    }
     switch (label) {
       case 'White':
         return card.details.colors.includes('W');
@@ -83,20 +94,23 @@ function cardIsLabel(card, label, sort) {
         return card.colors.length == 5;
     }
   } else if (sort == 'CMC') {
-    if (isNaN(card.cmc)) {
-      card.cmc = parseInt(card.cmc);
-    }
-    if (card.cmc >= 8) {
+    // Sort by CMC, but collapse all >= 8 into '8+' category.
+    const cmc = Math.round(cmcToNumber(card.cmc || card.details.cmc));
+    if (cmc >= 8) {
       return label == '8+';
     }
-    return card.cmc == label;
+    return cmc == label;
   } else if (sort == 'CMC2') {
-    if (card.cmc >= 7) {
+    const cmc = Math.round(cmcToNumber(card.cmc || card.details.cmc));
+    if (cmc >= 7) {
       return label == '7+';
-    } else if (card.cmc <= 1) {
+    } else if (cmc <= 1) {
       return label == '0-1';
     }
-    return card.cmc == label;
+    return cmc == label;
+  } else if (sort == 'CMC-Full') {
+    // Round to half-integer.
+    return Math.round(cmcToNumber(card.cmc || card.details.cmc) * 2) / 2 == label;
   } else if (sort == 'Supertype' || sort == 'Type') {
     if (card.type_line.includes('Contraption')) {
       return label == 'Contraption';

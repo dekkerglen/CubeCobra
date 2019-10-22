@@ -18,11 +18,7 @@ block cube_content
     .col-md-4
       .card.mt-3
         .card-header
-          .row
-            .col-md-6
-              h3=cube.name
-            .col.md-6.pr-1
-              a.nav-link(href=`/cube/blog/${cube._id}/rss`, class="float-right") RSS
+          h3=cube.name
         img.card-img-top.w-100(src=cube.image_uri)
         em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
         .card-body
@@ -30,10 +26,20 @@ block cube_content
             a #{cube.card_count} Card #{cube.type} Cube
             br
           if cube.privatePrices == false
-            a Approx: $#{price}
+            a Approx: $#{price}          
+            br  
+          a(href=`/cube/blog/${cube._id}/rss`) RSS
           em
             h6 Designed by 
               a(href='/user/view/'+owner) #{owner}
+          if admin
+            form(method='POST', id='featuredForm', action=`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}/${cube._id}`)
+              input(type='hidden', name='_csrf', value=csrfToken)
+              a(href='#', onclick='document.getElementById("featuredForm").submit()')
+                if cube.isFeatured
+                  | Remove from Featured
+                else
+                  | Add to Featured
     .col
       .card.mt-3
         .card-header
@@ -125,6 +131,7 @@ block cube_content
             .modal-footer
               input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube_id, disabled="", id="delete")
               button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
+      script(src='/js/csrf.js')
       script(src='/js/image_autocomplete.js')
       script(src='/js/blog.js')
       script(src='/js/deleteconfirm.js')

@@ -1,11 +1,18 @@
 var canEdit = $('#edittoken').val();
-var listGranularity = 50;
-var listPosition = 0;
 var changes = [];
-var sorts = [];
-var filters = [];
-var show_tag_colors = $('#hideTagColors').val() !== 'true';
-var urlFilterText = '';
+
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute('content') : null;
+}
+
+function csrfFetch(resource, init) {
+  init.credentials = init.credentials || 'same-origin';
+  init.headers = Object.assign(init.headers, {
+    'CSRF-Token': getCsrfToken(),
+  });
+  return fetch(resource, init);
+}
 
 var comparing = false;
 if ($('#in_both').length) {
@@ -28,11 +35,6 @@ cube.forEach(function(card, index) {
     $("#customImageDisplayToggle").prop("checked", true);
     $("#customImageDisplayMenuItem").show();
   }
-});
-var cubeTagColors = JSON.parse($('#cubeTagColors').val());
-
-$('.updateButton').click(function(e) {
-  updateCubeList();
 });
 
 $('#customImageDisplayToggle').click(function(e) {
@@ -59,298 +61,6 @@ if (canEdit) {
       remove();
     }
   });
-}
-
-var tagColorsListeners = [];
-
-function tagColorsModal() {
-  let b_id = $('#cubeB_ID').val();
-  let query = (b_id) ? `?b_id=${b_id}` : '';
-  fetch(`/cube/api/cubetagcolors/${$('#cubeID').val()}${query}`, {
-    method: "GET",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    query: {
-      b_id: $('#cubeB_ID').val(),
-    },
-  }).then(res => {
-    res.json().then(data => {
-      let html = '';
-      let tag_colors = data.tag_colors;
-      cubeTagColors = tag_colors;
-
-      show_tag_colors = data.show_tag_colors;
-      $('#showTagColorsCheckbox').prop("checked", show_tag_colors);
-
-      tagColorsListeners.forEach(listener => listener());
-
-      const tag_color_options = [
-        'Red',
-        'Brown',
-        'Orange',
-        'Yellow',
-        'Green',
-        'Turquoise',
-        'Blue',
-        'Purple',
-        'Violet',
-        'Pink',
-      ];
-
-      tag_colors.forEach(function(item, index) {
-        let tag = item.tag;
-        let color = item.color;
-
-        html += '<div class="row tag-color-row">'
-
-        let tag_class = ''
-        if (color) {
-          tag_color_options.forEach(function(opt, index) {
-            if (opt.toLowerCase() === color) {
-              tag_class = `tag-color tag-${opt.toLowerCase()}`;
-              return false;
-            }
-          });
-        }
-
-        html += '<div class="col">'
-        html += `<div class="tag-item ${tag_class}">${tag}</div>`
-        html += '</div>'
-
-        if (canEdit && !comparing) {
-          html += '<div class="col">'
-          html += '<select class="tag-color-select">'
-          html += '<option value="">No Color</option>'
-          tag_color_options.forEach(function(opt, index) {
-            const sel = (opt.toLowerCase() === color) ? 'selected' : '';
-            html += `<option value="${opt}" ${sel}>${opt}</option>`
-          })
-          html += '</select>'
-          html += '</div>'
-        }
-
-        html += '</div>'
-      });
-      $('#tagsColumn').html(html);
-
-      if (canEdit && !comparing) {
-        $('#tagsColumn').sortable({
-          helper: function(e, item) {
-            let copy = $(item).clone();
-            $(copy).addClass('tag-sort-helper');
-            return copy;
-          },
-          forcePlaceholderSize: true,
-          placeholder: 'tag-sort-placeholder',
-        });
-      }
-      $('#tagsColumn').disableSelection();
-
-      if (canEdit && !comparing) {
-        $('.tag-color-select').change(function() {
-          let $item = $(this).parent().parent().find('.tag-item');
-          tag_color_options.forEach(function(opt, index) {
-            $item.removeClass(`tag-color tag-${opt.toLowerCase()}`);
-          });
-          if ($(this).val()) {
-            $item.addClass(`tag-color tag-${$(this).val().toLowerCase()}`);
-          }
-        });
-      }
-
-      $('#tagColorsModal').modal('show');
-    });
-  });
-};
-
-$('#tagColors').click(tagColorsModal);
-
-$('#showTagColorsCheckbox').change(function(e) {
-  fetch("/cube/api/saveshowtagcolors", {
-    method: "POST",
-    body: JSON.stringify({
-      show_tag_colors: $(this).prop("checked"),
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }).then(res => {
-    show_tag_colors = $(this).prop("checked");
-    tagColorsListeners.forEach(listener => listener());
-    updateCubeList();
-  });
-});
-
-$('#applyAdvancedFilterButton').click(function(e) {
-  e.preventDefault();
-
-  var str = '';
-
-  if ($('#filterName').val().length > 0) {
-    str += 'n:' + $('#filterName').val();
-  }
-
-  if ($('#filterOracle').val().length > 0) {
-    var split = $('#filterOracle').val().split(' ');
-    split.forEach(function(val, index) {
-      str += ' o:' + val;
-    });
-  }
-
-  if ($('#filterCMC').val().length > 0) {
-    if ($('#filterCMCOp').val() == '!') {
-      str += ' -cmc=' + $('#filterCMC').val();
-    } else {
-      str += ' cmc' + $('#filterCMCOp').val() + $('#filterCMC').val();
-    }
-  }
-  if ($('#filterPower').val().length > 0) {
-    if ($('#filterPowerOp').val() == '!') {
-      str += ' -pow=' + $('#filterPower').val();
-    } else {
-      str += ' pow' + $('#filterPowerOp').val() + $('#filterPower').val();
-    }
-  }
-  if ($('#filterToughness').val().length > 0) {
-    if ($('#filterToughnessOp').val() == '!') {
-      str += ' -tou=' + $('#filterToughness').val();
-    } else {
-      str += ' tou' + $('#filterToughnessOp').val() + $('#filterToughness').val();
-    }
-  }
-
-  //Color
-  var colorStr = '';
-  ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(val, index) {
-    if ($('#filterColor' + val).prop('checked')) {
-      colorStr += val;
-    }
-  });
-  if (colorStr.length > 0) {
-    str += ' c' + $('#filterColorOp').val() + colorStr;
-  }
-  //Color Identity
-  colorStr = '';
-  ['W', 'U', 'B', 'R', 'G', 'C'].forEach(function(val, index) {
-    if ($('#filterColorIdentity' + val).prop('checked')) {
-      colorStr += val;
-    }
-  });
-  if (colorStr.length > 0) {
-    str += ' ci' + $('#filterColorIdentityOp').val() + colorStr;
-  }
-  //Mana
-  if ($('#filterMana').val().length > 0) {
-    str += ' m:' + $('#filterMana').val();
-  }
-
-  //Type
-  if ($('#filterType').val().length > 0) {
-    str += ' t:' + $('#filterType').val();
-  }
-
-  //tags
-  if ($('#filterTag').val().length > 0) {
-    str += ' tag:"' + $('#filterTag').val() + '"';
-  }
-
-  //price
-  if ($('#filterPrice').val().length > 0) {
-    str += ' p' + $('#filterPriceOp').val() + $('#filterPrice').val();
-  }
-
-  //price foil 
-  if ($('#filterPriceFoil').val().length > 0) {
-    str += ' pf' + $('#filterPriceFoilOp').val() + $('#filterPriceFoil').val();
-  }
-
-  //status
-  if ($('#filterStatus').val().length > 0) {
-    str += ' stat:"' + $('#filterStatus').val() + '"';
-  }
-
-  //loyalty
-
-  //manacost type
-
-  //artist
-
-  // rarity
-  if ($('#filterRarity').val().length > 0) {
-    str += ' r' + $('#filterRarityOp').val() + $('#filterRarity').val();
-  }
-
-  $('#filterInput').val(str);
-  $('#filterModal').modal('hide');
-  updateFilters(str);
-});
-
-if (canEdit && !comparing) {
-  $('#tagColorsSubmit').click(function(e) {
-    let data = [];
-    let tags = $('.tag-color-row .tag-item');
-    let colors = $('.tag-color-row .tag-color-select');
-
-    for (let i = 0; i < tags.length; i++) {
-      let tag = $(tags[i]).html();
-      let color = $(colors[i]).children('option:selected');
-      color = (color.val()) ? color.val().toLowerCase() : null;
-      data.push({
-        tag,
-        color
-      });
-    }
-
-    fetch("/cube/api/savetagcolors/" + $('#cubeID').val(), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      cubeTagColors = data;
-      tagColorsListeners.forEach(listener => listener());
-      if (show_tag_colors) {
-        updateCubeList();
-      }
-      $('#tagColorsModal').modal('hide');
-    });
-  });
-}
-
-function cardsAreEquivalent(card, details) {
-  if (card.cardID != details.cardID) {
-    return false;
-  }
-  if (card.status != details.status) {
-    return false;
-  }
-  if (card.cmc != details.cmc) {
-    return false;
-  }
-  if (card.type_line != details.type_line) {
-    return false;
-  }
-  if (!arraysEqual(card.tags, details.tags)) {
-    return false;
-  }
-  if (!arraysEqual(card.colors, details.colors)) {
-    return false;
-  }
-
-  return true;
-}
-
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
 }
 
 function justAdd() {
@@ -473,34 +183,6 @@ function updateCollapse() {
   });
 }
 
-function getCardTagColorClass(card) {
-  let res = getCardColorClass(card);
-  cubeTagColors.every(function(item, index) {
-    if (card.tags.includes(item.tag)) {
-      if (item.color) {
-        res = `tag-color tag-${item.color}`;
-        return false;
-      }
-    }
-    return true;
-  });
-  return res;
-}
-
-function getTagColorClass(tag) {
-  let res = 'tag-no-color'
-  cubeTagColors.every(function(item, index) {
-    if (item.tag === tag) {
-      if (item.color) {
-        res = `tag-color tag-${item.color}`;
-        return false;
-      }
-    }
-    return true;
-  });
-  return res;
-}
-
 function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';
@@ -543,6 +225,9 @@ function getLabels(sort) {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
   } else if (sort == 'CMC2') {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
+  } else if (sort == 'CMC-Full') {
+    // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
+    return Array.from(Array(33).keys()).map(x => (x / 2).toString()).concat(['1000000']);
   } else if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort == 'Type') {
@@ -710,39 +395,6 @@ function getLabels(sort) {
   }
 }
 
-function getCardColorClass(card) {
-  var type = card.type_line;
-  var colors = card.colors;
-  if (type.toLowerCase().includes('land')) {
-    return 'lands';
-  } else if (colors.length == 0) {
-    return 'colorless';
-  } else if (colors.length > 1) {
-    return 'multi';
-  } else if (colors.length == 1) {
-    switch (colors[0]) {
-      case "W":
-        return 'white';
-        break;
-      case "U":
-        return 'blue';
-        break;
-      case "B":
-        return 'black';
-        break;
-      case "R":
-        return 'red';
-        break;
-      case "G":
-        return 'green';
-        break;
-      case "C":
-        return 'colorless';
-        break;
-    }
-  }
-}
-
 function sortIntoGroups(cards, sort) {
   var groups = {};
   var labels = getLabels(sort);
@@ -788,5 +440,4 @@ window.onload = function() {
     prev_handler();
   }
   updateCubeList();
-  activateTags();
 };
