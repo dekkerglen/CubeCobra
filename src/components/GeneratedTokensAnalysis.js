@@ -1,12 +1,12 @@
 import React from 'react';
-import { Grid } from '@material-ui/core';
+
 
 
 const GeneratedTokensAnalysis = ( GeneratedTokensCounts) => (
   <div>
     <h4>GeneratedTokensAnalysis</h4>
     {console.log(GeneratedTokensCounts)}
-    <Grid >
+    <div>
     {GeneratedTokensCounts.GeneratedTokensCounts.map(token =>
       <div style={{width: 150, margin:10}}>
         <img src={token[0].image_small}></img>
@@ -18,7 +18,7 @@ const GeneratedTokensAnalysis = ( GeneratedTokensCounts) => (
       </div>
 
     )}
-    </Grid>  
+    </div>  
   </div>
 );
 
