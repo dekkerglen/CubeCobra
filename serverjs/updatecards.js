@@ -464,7 +464,6 @@ function convertCard(card, isExtra) {
       //find the ability that generates the token to reduce the amount of text to get confused by.
       var abilities = newcard.oracle_text.split("\n");
       for (const ability of abilities) {
-        var ability = abilities[abilityIndex];
         if (ability.includes(' token') && !ability.startsWith("If")) {
           var reString = "[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?: with ((?:\".*\")| and |[a-z]+)+)?(?:.*(a copy of))?";
           var re = new RegExp(reString);
