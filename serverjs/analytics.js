@@ -493,7 +493,7 @@ var methods = {
 
     var mentionedTokens = [];
 
-    cards.forEach(function(card, index) {
+    for (const card of cards) {
       card.details = carddb.cardFromId(card.cardID);
 
       if (card.details.tokens) {
