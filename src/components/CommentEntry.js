@@ -40,7 +40,6 @@ class CommentEntry extends React.Component {
         }).catch(err => this.error(err));
         const json = await response.json().catch(err => this.error(err));
         this.props.onPost(json.comment);
-
         document.body.classList.remove('busy-cursor');
     }
 
