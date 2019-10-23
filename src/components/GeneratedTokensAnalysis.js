@@ -24,7 +24,7 @@ const GeneratedTokensAnalysis = ({ tokens }) => (
     </div>
   </Col>
 )}
-</div>
+</Row>
   </div>
 );
 
