@@ -28,7 +28,7 @@ render() {
         {comments.length > 0 && 
             <>
                 <h6 className="comment-button mb-2 text-muted clickable" onClick={this.toggle}>{this.state.collapse ? 'Hide' : 'View'} Replies ({comments.length})</h6>    
-                <Collapse isOpen={this.state.collapse}>
+                <Collapse isOpen={this.state.collapse}>                    
                     {comments.map(comment =>
                         <Comment id={this.props.id} position={this.props.position.concat([comment.index])} comment={comment} />
                     )}
