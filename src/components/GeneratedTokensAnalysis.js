@@ -5,7 +5,7 @@ import { Row, Col } from 'reactstrap';
 const GeneratedTokensAnalysis = ({ tokens }) => (
   <div>
     <h4>GeneratedTokensAnalysis</h4>    
-    <div className='row'>
+    <Row>
 {tokens.map(token =>
   <Col xs={12} sm={6} md={4} lg={2}>
     <div class="card">
