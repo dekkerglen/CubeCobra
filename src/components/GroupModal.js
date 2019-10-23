@@ -170,8 +170,8 @@ class GroupModal extends Component {
         if (colorC) { card.colors = []; }
         cube[card.index] = card;
         cubeDict[card.index] = card;
-        /* global */ updateCubeList();
       }
+      /* global */ updateCubeList();
 
       this.close();
     }
