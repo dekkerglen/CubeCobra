@@ -564,7 +564,7 @@ function convertCard(card, isExtra) {
             });
             continue;
           }
-          for (dbHitsIndex = 0; dbHitsIndex < dbHits.length; dbHitsIndex++) {
+          for (const dbHit of dbHits) {
             var candidate = carddb.cardFromId(dbHits[dbHitsIndex]);
             var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
 
