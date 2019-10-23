@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col } from 'reactstrap';
 
 
-const GeneratedTokensAnalysis = ( GeneratedTokensCounts) => (
+const GeneratedTokensAnalysis = ({ tokens }) => (
   <div>
     <h4>GeneratedTokensAnalysis</h4>    
     <div className='row'>
