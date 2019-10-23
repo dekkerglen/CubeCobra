@@ -60,6 +60,6 @@ const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').
 const GeneratedTokensCounts = JSON.parse(document.getElementById('generatedTokensData').value);
 
 const wrapper = document.getElementById('react-root');
-const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} GeneratedTokensCounts={GeneratedTokensCounts} />;
+const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} tokens={tokens} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
 
