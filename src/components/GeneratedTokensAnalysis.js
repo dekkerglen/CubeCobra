@@ -6,7 +6,7 @@ const GeneratedTokensAnalysis = ( GeneratedTokensCounts) => (
   <div>
     <h4>GeneratedTokensAnalysis</h4>    
     <div className='row'>
-{GeneratedTokensCounts.GeneratedTokensCounts.map(token =>
+{tokens.map(token =>
   <Col xs={12} sm={6} md={4} lg={2}>
     <div class="card">
         <img src={token[0].image_small} className='card-img-top'></img>
