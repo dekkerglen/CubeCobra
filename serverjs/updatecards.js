@@ -207,6 +207,189 @@ function convertName(card, isExtra) {
   }
 }
 
+function CheckContentsEqualityOfArray(target, candidate) {
+  var isValid = candidate.length == target.length;
+  if (!isValid)
+    return false;
+
+  for (idx = 0; idx < target.length; idx++) {
+    if (!candidate.includes(target[idx])) {
+      isValid = false;
+      break;
+    }
+  }
+  return isValid;
+}
+
+function getTokensFromCard(card) {
+  var cardTokens = [];
+  if (!card.all_parts)
+    return [];
+  card.all_parts.forEach(element => {
+    if (element.component == 'token') {
+      cardTokens.push(element.id);
+    }
+  });
+  return cardTokens;
+}
+
+var specialCaseCardsList = ["Outlaws' Merriment",
+  "Sword of Dungeons & Dragons",
+  "Wolf's Quarry",
+  //the cards below are transform cards that are on here due to the way 
+  //we currently do not populate the oracle text of transform cards.
+  "Arlinn Kord",
+  "Bloodline Keeper",
+  "Docent of Perfection",
+  "Dowsing Dagger",
+  "Extricator of Sin",
+  "Garruk Relentless",
+  "Golden Guardian",
+  "Hanweir Militia Captain",
+  "Huntmaster of the Fells",
+  "Legion's Landing",
+  "Liliana, Heretical Healer",
+  "Mayor of Avabruck",
+  "Nissa, Vastwood Seer",
+  "Shrill Howler",
+  "Storm the Vault",
+  "Treasure Map",
+  "Westvale Abbey"
+];
+var specialCaseTokensList = ["Food"];
+
+function getTokensForSpecialCaseCard(newCardid, card) {
+  var result = [];
+  switch (card.name) {
+    case "Outlaws' Merriment":
+      result.push({
+        tokenId: "db951f76-b785-453e-91b9-b3b8a5c1cfd4",
+        sourceCardId: newCardid
+      }); // 3/1 human cleric with lifelink and haste
+      result.push({
+        tokenId: "cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447",
+        sourceCardId: newCardid
+      }); // 1/2 human rogue with Haste and When this creature enters the battlefield, it deals 1 damage to any target.
+      result.push({
+        tokenId: "c994ea90-71f4-403f-9418-2b72cc2de14d",
+        sourceCardId: newCardid
+      }); // 3/1 human warrior with Trample and haste
+      break;
+    case "Sword of Dungeons & Dragons":
+      result.push({
+        tokenId: "44c65dfd-69be-4345-92e9-51a35a486f21",
+        sourceCardId: newCardid
+      }); // 4/4 gold dragon with flying 
+      break;
+    case "Wolf's Quarry":
+      result.push({
+        tokenId: "365b2234-c29d-42db-a8e0-80685a4b6434",
+        sourceCardId: newCardid
+      }); // 1/1 green boar token with "when this creature dies, create a Food token."
+      result.push({
+        tokenId: "bf36408d-ed85-497f-8e68-d3a922c388a0",
+        sourceCardId: newCardid
+      }); // Food token.
+      break;
+    case "Jace, Cunning Castaway":
+      result.push({
+        tokenId: "a10729a5-061a-4daf-91d6-0f6ce813a992",
+        sourceCardId: newCardid
+      }); // 2/2 blue illusion with flying and "When this creature becomes the target of a spell, sacrifice it."
+      break;
+    case "Bloodline Keeper":
+      result.push({
+        tokenId: "71496671-f7ba-4014-a895-d70a27979db7",
+        sourceCardId: newCardid
+      }); // 2/2 black vampire with flying
+      break;
+    case "Docent of Perfection":
+      result.push({
+        tokenId: "e4439a8b-ef98-428d-a274-53c660b23afe",
+        sourceCardId: newCardid
+      }); // 1/1 blue human wizard
+      break;
+    case "Dowsing Dagger":
+      result.push({
+        tokenId: "642d1d93-22d0-43f9-8691-6790876185a0",
+        sourceCardId: newCardid
+      }); // 0/2 green plant with defender
+      break;
+    case "Shrill Howler":
+    case "Extricator of Sin":
+      result.push({
+        tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58",
+        sourceCardId: newCardid
+      }); // 3/2 eldrazi horror
+      break;
+    case "Garruk Relentless":
+      result.push({
+        tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30",
+        sourceCardId: newCardid
+      }); // 2/2 green wolf
+      result.push({
+        tokenId: "7a49607c-427a-474c-ad77-60cd05844b3c",
+        sourceCardId: newCardid
+      }); // 1/1 black wolf with deathtouch
+      break;
+    case "Golden Guardian":
+      result.push({
+        tokenId: "a7820eb9-6d7f-4bc4-b421-4e4420642fb7",
+        sourceCardId: newCardid
+      }); // 4/4 artifact golem
+      break;
+    case "Westvale Abbey":
+    case "Hanweir Militia Captain":
+      result.push({
+        tokenId: " 94ed2eca-1579-411d-af6f-c7359c65de30",
+        sourceCardId: newCardid
+      }); // 1/1 black and white human clerid
+      break;
+    case "Legion's Landing":
+      result.push({
+        tokenId: "09293ae7-0629-417b-9eda-9bd3f6d8e118",
+        sourceCardId: newCardid
+      }); // 1/1 white vampire with lifelink
+      break;
+    case "Liliana, Heretical Healer":
+      result.push({
+        tokenId: "8e214f84-01ee-49c1-8801-4e550b5ade5d",
+        sourceCardId: newCardid
+      }); // 2/2 black zombie
+      break;
+    case "Arlinn Kord":
+    case "Huntmaster of the Fells":
+    case "Mayor of Avabruck":
+      result.push({
+        tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30",
+        sourceCardId: newCardid
+      }); // 2/2 green wolf
+      break;
+    case "Nissa, Vastwood Seer":
+      result.push({
+        tokenId: "0affd414-f774-48d1-af9e-bff74e58e1ca",
+        sourceCardId: newCardid
+      }); // 4/4 green ashaya elemental
+      break;
+    case "Treasure Map":
+    case "Storm the Vault":
+      result.push({
+        tokenId: "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0",
+        sourceCardId: newCardid
+      }); // 3/2 eldrazi horror        
+      break;
+  }
+  return result;
+}
+
+function getTokenIDForSpecialCaseToken(tokenName) {
+  switch (tokenName) {
+    case "Food":
+      return "bf36408d-ed85-497f-8e68-d3a922c388a0";
+      break;
+  }
+}
+
 function convertCard(card, isExtra) {
   var faceAttributeSource;
   let newcard = {};
@@ -250,7 +433,7 @@ function convertCard(card, isExtra) {
     newcard.power = faceAttributeSource.power;
   }
   if (faceAttributeSource.toughness) {
-    newcard.power = faceAttributeSource.toughness;
+    newcard.toughness = faceAttributeSource.toughness;
   }
   if (faceAttributeSource.image_uris) {
     newcard.image_small = faceAttributeSource.image_uris.small;
@@ -269,6 +452,159 @@ function convertCard(card, isExtra) {
     newcard.colorcategory = 'm';
   } else if (newcard.color_identity.length == 1) {
     newcard.colorcategory = newcard.color_identity[0].toLowerCase();
+  }
+  var mentionedTokens = [];
+
+  if (specialCaseCardsList.includes(newcard.name)) {
+    newcard.tokens = getTokensForSpecialCaseCard(newcard._id, card);
+  } else
+  if (newcard.oracle_text != null) {
+    if (newcard.oracle_text.includes(' token')) {
+
+      //find the ability that generates the token to reduce the amount of text to get confused by.
+      var abilities = newcard.oracle_text.split("\n");
+      for (const ability of abilities) {
+        var ability = abilities[abilityIndex];
+        if (ability.includes(' token') && !ability.startsWith("If")) {
+          var reString = "[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?: with ((?:\".*\")| and |[a-z]+)+)?(?:.*(a copy of))?";
+          var re = new RegExp(reString);
+          var result = re.exec(ability);
+          if (result == undefined)
+            continue;
+          var tokenCountString = result[1];
+          var tokenPowerAndToughness = result[2];
+          var tokenColorString = result[3];
+          var tokenSubTypesString = result[4] ? result[4].trim() : "";
+          var tokenSuperTypesString = result[5] ? result[5].trim() : "";
+          var tokenName = result[7] ? result[7].trim() : tokenSubTypesString; //if not specificaly named, use the type
+
+          var tokenAbilities = [];
+          if (result[8]) {
+            var tmpTokenAbilities = result[8].toLowerCase().split('\"');
+            tmpTokenAbilities.forEach(line => {
+              tmpTokenAbilityParts = line.split(',');
+              tmpTokenAbilityParts.forEach(part => {
+                if (part.length > 0)
+                  tokenAbilities.push(part);
+              });
+            });
+          }
+          var isACopy = result[9] || result[6] ? true : false;
+
+          if (specialCaseTokensList.includes(tokenName)) {
+            mentionedTokens.push({
+              tokenId: getTokenIDForSpecialCaseToken(tokenName),
+              sourceCardId: newcard._id
+            });
+            continue;
+          }
+
+          if (isACopy) // most likely a token that could be a copy of any creature but it could have a specific token
+          {
+            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate 
+              continue;
+
+            var cardTokens = getTokensFromCard(card);
+
+            if (cardTokens.length > 0) {
+              cardTokens.forEach(element => {
+                mentionedTokens.push({
+                  tokenId: element,
+                  sourceCardId: newcard._id
+                });
+              });
+            } else //if there is no specified tokens for the card use the generic copy token
+              mentionedTokens.push({
+                tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c",
+                sourceCardId: newcard._id
+              });
+
+            continue;
+          }
+
+          var tokenColor = [];
+          if (tokenColorString) {
+            var colorStrings = tokenColorString.trim().split(' ');
+            colorStrings.forEach(rawColor => {
+              switch (rawColor.toLowerCase()) {
+                case ("red"):
+                  tokenColor.push('R');
+                  break;
+                case ("white"):
+                  tokenColor.push('W');
+                  break;
+                case ("green"):
+                  tokenColor.push('G');
+                  break;
+                case ("black"):
+                  tokenColor.push('B');
+                  break;
+                case ("blue"):
+                  tokenColor.push('U');
+                  break;
+              }
+            });
+          }
+          var tokenPower;
+          var tokenToughness;
+          if (tokenPowerAndToughness) {
+            if (tokenPowerAndToughness.length > 0) {
+              tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
+              tokenPower = tokenPowerAndToughness.split('/')[0];
+              tokenToughness = tokenPowerAndToughness.split('/')[1];
+            }
+          }
+
+          var dbHits = carddb.nameToId[tokenName.toLowerCase()];
+          if (dbHits == undefined) {
+            // for all the cards that produce tokens but do not have any in the database
+            result.push({
+              tokenId: "",
+              sourceCardId: newcard._id
+            });
+            continue;
+          }
+          for (const dbHit of dbHits) {
+            var candidate = carddb.cardFromId(dbHits[dbHitsIndex]);
+            var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
+
+            var candidateTypes = candidate.type.toLowerCase().replace(" —", "").replace("token ", "").split(' ');
+
+            var creatureTypes = []
+            tokenSuperTypesString.toLowerCase().split(' ').forEach(type => {
+              creatureTypes.push(type);
+            });
+            tokenSubTypesString.toLowerCase().split(' ').forEach(type => {
+              creatureTypes.push(type);
+            });
+            var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
+
+            var areAbilitiesValid = false;
+            if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0)
+              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, candidate.oracle_text.toLowerCase().split(','));
+            else
+              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
+
+            if (candidate.power == tokenPower &&
+              candidate.toughness == tokenToughness &&
+              areColorsValid &&
+              areTypesValid &&
+              areAbilitiesValid
+            ) {
+              mentionedTokens.push({
+                tokenId: candidate._id,
+                sourceCardId: newcard._id
+              });
+              break;
+            }
+          }
+
+        }
+      }
+    }
+    if (mentionedTokens.length > 0) {
+      newcard.tokens = mentionedTokens;
+    }
   }
   return newcard;
 }
