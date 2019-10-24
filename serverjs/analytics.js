@@ -493,7 +493,7 @@ var methods = {
 
     var mentionedTokens = [];
 
-    for (const card of cards) {
+    for (var card of cards) {
       card.details = carddb.cardFromId(card.cardID);
 
       if (card.details.tokens) {

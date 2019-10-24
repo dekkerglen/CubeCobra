@@ -84,12 +84,171 @@ function writeFile(filepath, data) {
   });
 }
 
+function addTokens(card)
+{
+  var mentionedTokens = [];
+
+  if (specialCaseCardsList.includes(_catalog.dict[card.id].name)) {
+    _catalog.dict[card.id].tokens = getTokensForSpecialCaseCard(_catalog.dict[card.id]._id, card);
+  } else
+  if (_catalog.dict[card.id].oracle_text != null) {
+    if (_catalog.dict[card.id].oracle_text.includes(' token')) {
+
+      //find the ability that generates the token to reduce the amount of text to get confused by.
+      var abilities = _catalog.dict[card.id].oracle_text.split("\n");
+      for (const ability of abilities) {
+        if (ability.includes(' token') && !ability.startsWith("If")) {
+          var reString = "[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?: with ((?:\".*\")| and |[a-z]+)+)?(?:.*(a copy of))?";
+          var re = new RegExp(reString);
+          var result = re.exec(ability);
+          if (result == undefined)
+            continue;
+          var tokenCountString = result[1];
+          var tokenPowerAndToughness = result[2];
+          var tokenColorString = result[3];
+          var tokenSubTypesString = result[4] ? result[4].trim() : "";
+          var tokenSuperTypesString = result[5] ? result[5].trim() : "";
+          var tokenName = result[7] ? result[7].trim() : tokenSubTypesString; //if not specificaly named, use the type
+
+          var tokenAbilities = [];
+          if (result[8]) {
+            var tmpTokenAbilities = result[8].toLowerCase().split('\"');
+            tmpTokenAbilities.forEach(line => {
+              tmpTokenAbilityParts = line.split(',');
+              tmpTokenAbilityParts.forEach(part => {
+                if (part.length > 0)
+                  tokenAbilities.push(part);
+              });
+            });
+          }
+          var isACopy = result[9] || result[6] ? true : false;
+
+          if (specialCaseTokensList.includes(tokenName)) {
+            mentionedTokens.push({
+              tokenId: getTokenIDForSpecialCaseToken(tokenName),
+              sourceCardId: _catalog.dict[card.id]._id
+            });
+            continue;
+          }
+
+          if (isACopy) // most likely a token that could be a copy of any creature but it could have a specific token
+          {
+            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate 
+              continue;
+
+            var cardTokens = getTokensFromCard(card);
+
+            if (cardTokens.length > 0) {
+              cardTokens.forEach(element => {
+                mentionedTokens.push({
+                  tokenId: element,
+                  sourceCardId: _catalog.dict[card.id]._id
+                });
+              });
+            } else //if there is no specified tokens for the card use the generic copy token
+              mentionedTokens.push({
+                tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c",
+                sourceCardId: _catalog.dict[card.id]._id
+              });
+
+            continue;
+          }
+
+          var tokenColor = [];
+          if (tokenColorString) {
+            var colorStrings = tokenColorString.trim().split(' ');
+            colorStrings.forEach(rawColor => {
+              switch (rawColor.toLowerCase()) {
+                case ("red"):
+                  tokenColor.push('R');
+                  break;
+                case ("white"):
+                  tokenColor.push('W');
+                  break;
+                case ("green"):
+                  tokenColor.push('G');
+                  break;
+                case ("black"):
+                  tokenColor.push('B');
+                  break;
+                case ("blue"):
+                  tokenColor.push('U');
+                  break;
+              }
+            });
+          }
+          var tokenPower;
+          var tokenToughness;
+          if (tokenPowerAndToughness) {
+            if (tokenPowerAndToughness.length > 0) {
+              tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
+              tokenPower = tokenPowerAndToughness.split('/')[0];
+              tokenToughness = tokenPowerAndToughness.split('/')[1];
+            }
+          }
+
+          var dbHits = _catalog.nameToId[tokenName.toLowerCase()];
+          if (dbHits == undefined) {
+            // for all the cards that produce tokens but do not have any in the database
+            result.push({
+              tokenId: "",
+              sourceCardId: _catalog.dict[card.id]._id
+            });
+            continue;
+          }
+          for (const dbHit of dbHits) {
+            var candidate = _catalog.dict[dbHit];
+            var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
+
+            var candidateTypes = candidate.type.toLowerCase().replace(" —", "").replace("token ", "").split(' ');
+
+            var creatureTypes = []
+            tokenSuperTypesString.toLowerCase().split(' ').forEach(type => {
+              creatureTypes.push(type);
+            });
+            tokenSubTypesString.toLowerCase().split(' ').forEach(type => {
+              creatureTypes.push(type);
+            });
+            var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
+
+            var areAbilitiesValid = false;
+            if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0)
+              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, candidate.oracle_text.toLowerCase().split(','));
+            else
+              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
+
+            if (candidate.power == tokenPower &&
+              candidate.toughness == tokenToughness &&
+              areColorsValid &&
+              areTypesValid &&
+              areAbilitiesValid
+            ) {
+              mentionedTokens.push({
+                tokenId: candidate._id,
+                sourceCardId: _catalog.dict[card.id]._id
+              });
+              break;
+            }
+          }
+
+        }
+      }
+    }
+    if (mentionedTokens.length > 0) {
+      _catalog.dict[card.id].tokens = mentionedTokens;
+    }
+  }
+}
+
 function saveAllCards(arr) {
   arr.forEach(function(card, index) {
     if (card.layout == 'transform') {
       addCardToCatalog(convertCard(card, true), true);
     }
     addCardToCatalog(convertCard(card));
+  });
+  arr.forEach(function(card, index) {
+    addTokens(card);
   });
   if (!fs.existsSync('private')) {
     fs.mkdirSync('private');
@@ -453,158 +612,7 @@ function convertCard(card, isExtra) {
   } else if (newcard.color_identity.length == 1) {
     newcard.colorcategory = newcard.color_identity[0].toLowerCase();
   }
-  var mentionedTokens = [];
-
-  if (specialCaseCardsList.includes(newcard.name)) {
-    newcard.tokens = getTokensForSpecialCaseCard(newcard._id, card);
-  } else
-  if (newcard.oracle_text != null) {
-    if (newcard.oracle_text.includes(' token')) {
-
-      //find the ability that generates the token to reduce the amount of text to get confused by.
-      var abilities = newcard.oracle_text.split("\n");
-      for (const ability of abilities) {
-        if (ability.includes(' token') && !ability.startsWith("If")) {
-          var reString = "[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?: with ((?:\".*\")| and |[a-z]+)+)?(?:.*(a copy of))?";
-          var re = new RegExp(reString);
-          var result = re.exec(ability);
-          if (result == undefined)
-            continue;
-          var tokenCountString = result[1];
-          var tokenPowerAndToughness = result[2];
-          var tokenColorString = result[3];
-          var tokenSubTypesString = result[4] ? result[4].trim() : "";
-          var tokenSuperTypesString = result[5] ? result[5].trim() : "";
-          var tokenName = result[7] ? result[7].trim() : tokenSubTypesString; //if not specificaly named, use the type
-
-          var tokenAbilities = [];
-          if (result[8]) {
-            var tmpTokenAbilities = result[8].toLowerCase().split('\"');
-            tmpTokenAbilities.forEach(line => {
-              tmpTokenAbilityParts = line.split(',');
-              tmpTokenAbilityParts.forEach(part => {
-                if (part.length > 0)
-                  tokenAbilities.push(part);
-              });
-            });
-          }
-          var isACopy = result[9] || result[6] ? true : false;
-
-          if (specialCaseTokensList.includes(tokenName)) {
-            mentionedTokens.push({
-              tokenId: getTokenIDForSpecialCaseToken(tokenName),
-              sourceCardId: newcard._id
-            });
-            continue;
-          }
-
-          if (isACopy) // most likely a token that could be a copy of any creature but it could have a specific token
-          {
-            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate 
-              continue;
-
-            var cardTokens = getTokensFromCard(card);
-
-            if (cardTokens.length > 0) {
-              cardTokens.forEach(element => {
-                mentionedTokens.push({
-                  tokenId: element,
-                  sourceCardId: newcard._id
-                });
-              });
-            } else //if there is no specified tokens for the card use the generic copy token
-              mentionedTokens.push({
-                tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c",
-                sourceCardId: newcard._id
-              });
-
-            continue;
-          }
-
-          var tokenColor = [];
-          if (tokenColorString) {
-            var colorStrings = tokenColorString.trim().split(' ');
-            colorStrings.forEach(rawColor => {
-              switch (rawColor.toLowerCase()) {
-                case ("red"):
-                  tokenColor.push('R');
-                  break;
-                case ("white"):
-                  tokenColor.push('W');
-                  break;
-                case ("green"):
-                  tokenColor.push('G');
-                  break;
-                case ("black"):
-                  tokenColor.push('B');
-                  break;
-                case ("blue"):
-                  tokenColor.push('U');
-                  break;
-              }
-            });
-          }
-          var tokenPower;
-          var tokenToughness;
-          if (tokenPowerAndToughness) {
-            if (tokenPowerAndToughness.length > 0) {
-              tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
-              tokenPower = tokenPowerAndToughness.split('/')[0];
-              tokenToughness = tokenPowerAndToughness.split('/')[1];
-            }
-          }
-
-          var dbHits = carddb.nameToId[tokenName.toLowerCase()];
-          if (dbHits == undefined) {
-            // for all the cards that produce tokens but do not have any in the database
-            result.push({
-              tokenId: "",
-              sourceCardId: newcard._id
-            });
-            continue;
-          }
-          for (const dbHit of dbHits) {
-            var candidate = carddb.cardFromId(dbHits[dbHitsIndex]);
-            var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
-
-            var candidateTypes = candidate.type.toLowerCase().replace(" —", "").replace("token ", "").split(' ');
-
-            var creatureTypes = []
-            tokenSuperTypesString.toLowerCase().split(' ').forEach(type => {
-              creatureTypes.push(type);
-            });
-            tokenSubTypesString.toLowerCase().split(' ').forEach(type => {
-              creatureTypes.push(type);
-            });
-            var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
-
-            var areAbilitiesValid = false;
-            if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0)
-              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, candidate.oracle_text.toLowerCase().split(','));
-            else
-              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
-
-            if (candidate.power == tokenPower &&
-              candidate.toughness == tokenToughness &&
-              areColorsValid &&
-              areTypesValid &&
-              areAbilitiesValid
-            ) {
-              mentionedTokens.push({
-                tokenId: candidate._id,
-                sourceCardId: newcard._id
-              });
-              break;
-            }
-          }
-
-        }
-      }
-    }
-    if (mentionedTokens.length > 0) {
-      newcard.tokens = mentionedTokens;
-    }
-  }
+  
   return newcard;
 }
 

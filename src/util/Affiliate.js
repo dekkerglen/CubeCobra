@@ -9,5 +9,4 @@ export function getTCGLink(card) {
   
   return tcgplayerLink;
 }
-
 export default { getTCGLink }
