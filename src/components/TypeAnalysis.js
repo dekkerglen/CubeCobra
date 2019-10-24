@@ -47,4 +47,5 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
   </Row>
 );
 
+
 export default TypeAnalysis;
