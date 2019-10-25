@@ -3016,8 +3016,7 @@ router.get('/api/follow/:id', function(req, res) {
       }
     },
     function(err, success) {
-      if (err) console.log(err);
-      res.status(200).send();
+      err ? res.status(500).send() : res.status(200).send();
     },
   );
 });
@@ -3031,8 +3030,7 @@ router.get('/api/unfollow/:id', function(req, res) {
       }
     },
     function(err, success) {
-      if (err) console.log(err);
-      res.status(200).send();
+      err ? res.status(500).send() : res.status(200).send();
     },
   );
 });

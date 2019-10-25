@@ -31,7 +31,7 @@ const UserSchema = mongoose.Schema({
     default: false
   },
   edit_token: String,
-  followed_cubes: [Number]
+  followed_cubes_ids: [Number]
 });
 
 const User = module.exports = mongoose.model('User', UserSchema);
