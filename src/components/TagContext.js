@@ -132,7 +132,7 @@ export const getCardColorClass = card => {
 
 export const getCardTagColorClass = (tagColors, card) => {
   const tagColor = tagColors.find(({ tag }) => card.tags.includes(tag));
-  if (tagColor) {
+  if (tagColor && tagColor.color) {
     return `tag-color tag-${tagColor.color}`;
   } else {
     return getCardColorClass(card);
