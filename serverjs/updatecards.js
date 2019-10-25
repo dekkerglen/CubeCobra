@@ -412,7 +412,7 @@ var specialCaseCardsList = {"Outlaws' Merriment":[{
   //the cards below are transform cards that are on here due to the way 
   //we currently do not populate the oracle text of transform cards.
   "Arlinn Kord":[{
-    tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30"
+    tokenId: "88452ed7-1065-41c3-94a6-dc41108c45c1"
   }],
   "Bloodline Keeper":[{
     tokenId: "71496671-f7ba-4014-a895-d70a27979db7"
@@ -427,7 +427,7 @@ var specialCaseCardsList = {"Outlaws' Merriment":[{
     tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58"
   }],
   "Garruk Relentless":[{
-    tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30"
+    tokenId: "88452ed7-1065-41c3-94a6-dc41108c45c1"
   },{
     tokenId: "7a49607c-427a-474c-ad77-60cd05844b3c"
   }],
@@ -438,7 +438,7 @@ var specialCaseCardsList = {"Outlaws' Merriment":[{
     tokenId: " 94ed2eca-1579-411d-af6f-c7359c65de30"
   }],
   "Huntmaster of the Fells":[{
-    tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30"
+    tokenId: "88452ed7-1065-41c3-94a6-dc41108c45c1"
   }],
   "Legion's Landing":[{
     tokenId: "09293ae7-0629-417b-9eda-9bd3f6d8e118"
