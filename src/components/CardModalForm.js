@@ -159,7 +159,7 @@ class CardModalForm extends Component {
     this.props.setOpenCollapse(() => 'edit');
     this.setState({ isOpen: false });
   }
- 
+
   getCardVersions(card) {
     fetch('/cube/api/getversions/' + card.cardID)
       .then(response => response.json())

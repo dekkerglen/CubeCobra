@@ -665,7 +665,7 @@ router.get('/blog/:id/rss', function(req, res) {
       User.findById(cube.owner, function(err, user) {
         Blog.find({
           cube: cube._id
-        }).sort('date').exec(function(err, blogs) {
+        }).sort('-date').exec(function(err, blogs) {
           if (!user) {
             user = {
               username: 'unknown'
@@ -679,9 +679,21 @@ router.get('/blog/:id/rss', function(req, res) {
           });
 
           blogs.forEach((blog) => {
+            let content = blog.html ? blog.html : blog.content;
+
+            if (blog.changelist) {
+              const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+              if (content) {
+                content = content + changeSetElement;
+              } else {
+                content = changeSetElement;
+              }
+
+            }
+
             feed.item({
               title: blog.title,
-              description: blog.html ? blog.html : blog.content,
+              description: content,
               guid: blog.id,
               date: blog.date
             });
@@ -933,6 +945,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -951,6 +964,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -964,6 +978,7 @@ router.get('/analysis/:id', function(req, res) {
     }
   });
 });
+
 
 router.get('/samplepack/:id', function(req, res) {
   res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
@@ -2017,6 +2032,13 @@ router.post('/api/saveshowtagcolors', function(req, res) {
 
 router.post('/api/savetagcolors/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    if (!cube) {
+      res.status(404).send({
+        success: 'false',
+      });
+      return;
+    }
+
     cube.tag_colors = req.body;
 
     cube.save(function(err) {
@@ -2559,13 +2581,32 @@ router.get('/api/getcardfromid/:id', function(req, res) {
 
 router.get('/api/getversions/:id', function(req, res) {
   cards = [];
-  carddb.nameToId[carddb.cardFromId(req.params.id).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
-    cards.push(carddb.cardFromId(id));
+  tcg = [];
+  carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
+    const card = carddb.cardFromId(id);
+    cards.push(card);
+    if (card.tcgplayer_id) {
+      tcg.push(card.tcgplayer_id);
+    }
   });
-  res.status(200).send({
-    success: 'true',
-    cards: cards
-  });
+  GetPrices(tcg, function(price_dict) {
+    cards.forEach(function(card, index) {
+      if (card.tcgplayer_id) {
+        const card_price_data = price_dict[card.tcgplayer_id];
+        if (card_price_data) {
+          card.price = card_price_data;
+        }
+        const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
+        if (card_foil_price_data) {
+          card.price_foil = card_foil_price_data;
+        }
+      }
+    });
+    res.status(200).send({
+      success: 'true',
+      cards: cards,
+    });
+  })
 });
 
 router.post('/api/getversions', function(req, res) {
@@ -2574,10 +2615,11 @@ router.post('/api/getversions', function(req, res) {
   req.body.forEach(function(cardid, index) {
     cards[cardid] = [];
     carddb.nameToId[carddb.cardFromId(cardid).name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")].forEach(function(id, index) {
+      const card = carddb.cardFromId(id);
       cards[cardid].push({
         id: id,
-        version: carddb.cardFromId(id).full_name.toUpperCase().substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, carddb.cardFromId(id).full_name.indexOf(']')),
-        img: carddb.cardFromId(id).image_normal
+        version: card.full_name.toUpperCase().substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
+        img: card.image_normal,
       });
     });
   });
@@ -2692,47 +2734,48 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
   }
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (cube.owner === String(req.user._id)) {
+      const allUpdates = {
+        $set: {}
+      };
       for (const {
           index
         } of selected) {
-        if (typeof index !== 'number') {
+        if (typeof index !== 'number' || !cube.cards[index]) {
           continue;
         }
-        const card = cube.cards[index];
-        if (!card.type_line) {
-          card.type_line = carddb.cardFromId(card.cardID).type;
-        }
-        if (card.details) {
-          delete card.details;
-        }
         if (updated.status) {
-          card.status = updated.status;
+          allUpdates.$set[`cards.${index}.status`] = updated.status;
         }
         if (updated.cmc) {
-          card.cmc = updated.cmc;
+          allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
         }
         if (updated.type_line) {
-          card.type_line = updated.type_line;
+          allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
         }
         if (updated.colors) {
-          card.colors = updated.colors.filter(color => [...'WUBRG'].includes(color));
+          allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter(color => [...'WUBRG'].includes(color));
         }
         if (updated.colorC) {
-          card.colors = [];
+          allUpdates.$set[`cards.${index}.colors`] = [];
         }
         if (updated.tags) {
           if (updated.addTags) {
-            card.tags = [...card.tags, ...updated.tags.filter(tag =>
-              typeof tag === 'string' && !card.tags.includes(tag)
-            )];
+            if (!allUpdates.$addToSet) {
+              allUpdates.$addToSet = {};
+            }
+            allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
           }
           if (updated.deleteTags) {
-            card.tags = card.tags.filter(tag => !updated.tags.includes(tag));
+            if (!allUpdates.$pullAll) {
+              allUpdates.$pullAll = {};
+            }
+            allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
           }
         }
       }
-      cube.save(function(err) {
+      cube.updateOne(allUpdates, function(err) {
         if (err) {
+          console.error(err);
           res.status(500).send({
             success: 'false',
             message: 'Error saving cube'

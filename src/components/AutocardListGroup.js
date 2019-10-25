@@ -31,7 +31,10 @@ const AutocardListGroup = ({ cards, heading, sort }) => {
         <Row key={cmc} noGutters className="cmc-group">
           <Col>
             {groups[cmc].sort(alphaCompare).map(card =>
-              <AutocardListItem key={card.details.name} card={card} />
+              <AutocardListItem
+                key={typeof card.index === 'undefined' ? card.details.name : card.index}
+                card={card}
+              />
             )}
           </Col>
         </Row>
