@@ -921,6 +921,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -939,6 +940,7 @@ router.get('/analysis/:id', function(req, res) {
             TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
             MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
               `Cube Cobra Analysis: ${cube.name}`,
               (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -952,6 +954,7 @@ router.get('/analysis/:id', function(req, res) {
     }
   });
 });
+
 
 router.get('/samplepack/:id', function(req, res) {
   res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
