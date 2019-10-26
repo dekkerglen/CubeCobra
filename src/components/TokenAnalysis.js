@@ -20,7 +20,7 @@ class TokenAnalysis extends Component {
         {tokens.map(token =>
         <Col key={token} xs={6} sm={6} md={4} lg={3}>
           <Card className="mb-2">
-            <a href={Affiliate.getTCGLink({details:token[0]})}><img src={token[0].image_normal} className='card-img-top'></img></a>
+            <a href={Affiliate.getTCGLink({details:token[0]}, true)}><img src={token[0].image_normal} className='card-img-top'></img></a>
             <CardBody>
               <p className="card-text">
                   {token[1].map( card =>
