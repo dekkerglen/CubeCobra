@@ -6,14 +6,16 @@ $(document).ready(function() {
   $('.delete-cube').on('click', function(e) {
     $target = $(e.target);
     var id = $target.attr('data-id');
-    $.ajax({
-      type: 'DELETE',
-      url: '/cube/remove/' + id,
-      success: function() {
-        window.location.href = '/';
-      },
-      error: function(err) {
-        console.log(err)
+    csrfFetch('/cube/remove/' + id, {
+      method: 'DELETE',
+      headers: {}
+    }).then(response => {
+      if (!response.ok) {
+        console.log(response);
+      }
+      else
+      {
+        window.location.href = '';
       }
     });
   })
@@ -21,17 +23,19 @@ $(document).ready(function() {
     $target = $(e.target);
     var id = $target.attr('data-id');
     var cube = $target.attr('data-cube');
-    $.ajax({
-      type: 'DELETE',
-      url: '/cube/format/remove/' + cube + ';' + id,
-      success: function() {
+    csrfFetch('/cube/format/remove/' + cube + ';' + id, {
+      method: 'DELETE',
+      headers: {}
+    }).then(response => {
+      if (!response.ok) {
+        console.log(response);
+      }
+      else
+      {
         window.location.href = '';
-      },
-      error: function(err) {
-        console.log(err)
       }
     });
-  })
+  });
 });
 
 function ISODateToYYYYMMDD(dateString) {
