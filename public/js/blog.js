@@ -15,20 +15,6 @@ function updateBlog() {
     $('#editBlogModal').modal('show');
   });
 
-  $('.delete-blog').off().on('click', function(e) {
-    $target = $(e.target);
-    var id = $target.attr('data-id');
-    $.ajax({
-      type: 'DELETE',
-      url: '/cube/blog/remove/' + id,
-      success: function() {
-        window.location.href = '';
-      },
-      error: function(err) {
-        console.log(err)
-      }
-    });
-  });
 }
 
 updateBlog();

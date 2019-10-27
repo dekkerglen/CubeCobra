@@ -24,6 +24,7 @@ class Comment extends React.Component {
       this.stopEdit = this.stopEdit.bind(this);
       this.submitEdit = this.submitEdit.bind(this);
       this.submitDelete = this.submitDelete.bind(this);
+      this.updateServerSide = this.updateServerSide.bind(this);
 
       this.childElement = React.createRef();
 
@@ -53,7 +54,7 @@ class Comment extends React.Component {
     });
   }
 
-  async submitEdit()
+  submitEdit()
   {
     this.props.comment.content = this.state.editValue;
     this.props.comment.updated = true;
@@ -65,18 +66,7 @@ class Comment extends React.Component {
       isEdit: false
     });   
         
-    //send edit command to server    
-    await csrfFetch(`/cube/api/editcomment`, {
-      method: 'POST',
-      body: JSON.stringify({ 
-          id:this.props.id,
-          comment:this.props.comment,
-          position:this.props.position
-      }),
-      headers: {
-      'Content-Type': 'application/json',
-      },
-  }).catch(err => this.error(err));
+    this.updateServerSide();
   }
 
   submitDelete()
@@ -90,6 +80,24 @@ class Comment extends React.Component {
 
     this.props.submitEdit(this.props.comment, this.props.position);
     this.forceUpdate();
+    
+    this.updateServerSide();
+  }
+
+  async updateServerSide()
+  {    
+    //send edit command to server    
+    await csrfFetch(`/cube/api/editcomment`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+          id:this.props.id,
+          comment:this.props.comment,
+          position:this.props.position
+      }),
+      headers: {
+      'Content-Type': 'application/json',
+      },
+    }).catch(err => this.error(err));
   }
 
   startEdit()

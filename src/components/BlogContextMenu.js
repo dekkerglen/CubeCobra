@@ -20,7 +20,7 @@ class BlogContextMenu extends React.Component {
   }
   
   clickEdit(post) {    
-    fetch("/cube/blogsrc/" + post._id)
+    csrfFetch("/cube/blogsrc/" + post._id)
       .then(response => response.json())
       .then(function(json) {
         if (json.src) {
@@ -38,8 +38,22 @@ class BlogContextMenu extends React.Component {
   }
   
   clickDelete(post) {
-    $("delete-blog" ).prop( "data-id", post._id );
-    $('#deleteModal').modal('show');
+    $('#deleteModal').modal('show');    
+    
+    $('.delete-blog').off().on('click', function(e) {
+      csrfFetch('/cube/blog/remove/' + post._id, {
+        method: 'DELETE',
+        headers: {}
+      }).then(response => {
+        if (!response.ok) {
+          console.log(response);
+        }
+        else
+        {
+          window.location.href = '';
+        }
+      });
+    });
   }
 
   render() {
