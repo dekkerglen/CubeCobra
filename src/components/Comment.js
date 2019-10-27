@@ -146,7 +146,7 @@ class Comment extends React.Component {
                   {' '}
                   <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.stopEdit}>Cancel</a>   
               </Collapse>
-              {(this.props.position.length < 6 && this.props.loggedIn) &&
+              {(this.props.position.length < 20 && this.props.loggedIn) &&
               <div>
                 <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}>
                     <span className="comment-button mb-2 text-muted clickable">Reply</span>

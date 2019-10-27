@@ -1998,7 +1998,8 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
   }
 
   try {
-    saveEdit(post.comments, req.body.position.slice(0, 8), req.body.comment);
+    req.body.comment.content = sanitize(req.body.comment.content);
+    saveEdit(post.comments, req.body.position.slice(0, 22), req.body.comment);
     await post.save();
     res.status(200).send({
       success: 'true'
@@ -2032,11 +2033,11 @@ router.post('/api/postcomment', ensureAuth, async function(req, res) {
 
   try {
     //slice limits the recursive depth
-    var comment = insertComment(post.comments, req.body.position.slice(0, 8), {
+    var comment = insertComment(post.comments, req.body.position.slice(0, 22), {
       owner: user._id,
       ownerName: user.username,
       ownerImage: '',
-      content: req.body.content,
+      content: sanitize(req.body.content),
       //the -1000 is to prevent weird time display error
       timePosted: Date.now() - 1000,
       comments: []
