@@ -66,6 +66,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   type: 'Creature — Werewolf',
   tcgplayer_id: 57617,
   power: '2',
+  toughness: '2',
   image_small: undefined,
   image_normal: undefined,
   art_crop: undefined,
