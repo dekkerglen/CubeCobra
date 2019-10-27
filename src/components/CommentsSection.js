@@ -31,7 +31,14 @@ render() {
                 <h6 className="comment-button mb-2 text-muted clickable" onClick={this.toggle}>{this.state.collapse ? 'Hide' : 'View'} Replies ({comments.length})</h6>    
                 <Collapse isOpen={this.state.collapse}>   
                     <PagedList pageSize={10} rows={comments.slice(0).reverse().map(comment =>
-                        <Comment key={comment.index} id={this.props.id} position={this.props.position.concat([comment.index])} comment={comment} userid={this.props.userid}  loggedIn={this.props.loggedIn}/>
+                        <Comment 
+                        key={comment.index} 
+                        id={this.props.id} 
+                        position={this.props.position.concat([comment.index])} 
+                        comment={comment} 
+                        userid={this.props.userid} 
+                        loggedIn={this.props.loggedIn} 
+                        submitEdit={this.props.submitEdit}/>
                     )}>
                     </PagedList>                        
                 </Collapse>

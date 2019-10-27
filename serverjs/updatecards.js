@@ -391,77 +391,78 @@ function getTokensFromCard(card) {
   return cardTokens;
 }
 
-var specialCaseCardsList = {"Outlaws' Merriment":[{
+var specialCaseCardsList = {
+  "Outlaws' Merriment": [{
     tokenId: "db951f76-b785-453e-91b9-b3b8a5c1cfd4"
-  },{
+  }, {
     tokenId: "cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447"
-  },{
+  }, {
     tokenId: "c994ea90-71f4-403f-9418-2b72cc2de14d"
   }],
-  "Sword of Dungeons & Dragons":[{
+  "Sword of Dungeons & Dragons": [{
     tokenId: "44c65dfd-69be-4345-92e9-51a35a486f21"
   }],
-  "Wolf's Quarry":[{
+  "Wolf's Quarry": [{
     tokenId: "365b2234-c29d-42db-a8e0-80685a4b6434"
-  },{
+  }, {
     tokenId: "bf36408d-ed85-497f-8e68-d3a922c388a0"
   }],
-  "Jace, Cunning Castaway":[{
+  "Jace, Cunning Castaway": [{
     tokenId: "a10729a5-061a-4daf-91d6-0f6ce813a992"
   }],
   //the cards below are transform cards that are on here due to the way 
   //we currently do not populate the oracle text of transform cards.
-  "Arlinn Kord":[{
+  "Arlinn Kord": [{
     tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
   }],
-  "Bloodline Keeper":[{
+  "Bloodline Keeper": [{
     tokenId: "71496671-f7ba-4014-a895-d70a27979db7"
   }],
-  "Docent of Perfection":[{
+  "Docent of Perfection": [{
     tokenId: "e4439a8b-ef98-428d-a274-53c660b23afe"
   }],
-  "Dowsing Dagger":[{
+  "Dowsing Dagger": [{
     tokenId: "642d1d93-22d0-43f9-8691-6790876185a0"
   }],
-  "Extricator of Sin":[{
+  "Extricator of Sin": [{
     tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58"
   }],
-  "Garruk Relentless":[{
+  "Garruk Relentless": [{
     tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
-  },{
+  }, {
     tokenId: "7a49607c-427a-474c-ad77-60cd05844b3c"
   }],
-  "Golden Guardian":[{
+  "Golden Guardian": [{
     tokenId: "a7820eb9-6d7f-4bc4-b421-4e4420642fb7",
   }],
-  "Hanweir Militia Captain":[{
+  "Hanweir Militia Captain": [{
     tokenId: " 94ed2eca-1579-411d-af6f-c7359c65de30"
   }],
-  "Huntmaster of the Fells":[{
+  "Huntmaster of the Fells": [{
     tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
   }],
-  "Legion's Landing":[{
+  "Legion's Landing": [{
     tokenId: "09293ae7-0629-417b-9eda-9bd3f6d8e118"
   }],
-  "Liliana, Heretical Healer":[{
+  "Liliana, Heretical Healer": [{
     tokenId: "8e214f84-01ee-49c1-8801-4e550b5ade5d"
   }],
-  "Mayor of Avabruck":[{
+  "Mayor of Avabruck": [{
     tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
   }],
-  "Nissa, Vastwood Seer":[{
+  "Nissa, Vastwood Seer": [{
     tokenId: "0affd414-f774-48d1-af9e-bff74e58e1ca"
   }],
-  "Shrill Howler":[{
+  "Shrill Howler": [{
     tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58"
   }],
-  "Storm the Vault":[{
+  "Storm the Vault": [{
     tokenId: "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0"
   }],
-  "Treasure Map":[{
+  "Treasure Map": [{
     tokenId: "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0"
   }],
-  "Westvale Abbey":[{
+  "Westvale Abbey": [{
     tokenId: " 94ed2eca-1579-411d-af6f-c7359c65de30",
   }]
 };
@@ -469,16 +470,13 @@ var specialCaseTokensList = ["Food"];
 
 function getTokensForSpecialCaseCard(newCardid, card) {
   var result = [];
-  if(card.card_faces)
-  {
+  if (card.card_faces) {
     var result = specialCaseCardsList[card.card_faces[0].name];
-  }
-  else{
+  } else {
     var result = specialCaseCardsList[card.name];
   }
-  result.forEach(function(card, index)
-  {
-    card.sourceCardId=newCardid;
+  result.forEach(function(card, index) {
+    card.sourceCardId = newCardid;
   });
   return result;
 }

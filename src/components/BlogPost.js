@@ -9,16 +9,38 @@ class BlogPost extends React.Component {
     super(props);    
     
     this.onPost = this.onPost.bind(this);
+    this.submitEdit = this.submitEdit.bind(this);
 
     this.childElement = React.createRef();
   }
   
+  error(message) {
+    console.log(message);
+  }
+
   onPost(comment)
   {
     comment.index = this.props.post.comments.length;
     this.props.post.comments.push(comment);
-    this.forceUpdate();
     this.childElement.current.expand();
+  }
+
+  saveEdit(comments, position, comment)
+  {      
+    if(position.length == 1)
+    {
+        comments[position[0]] = comment;
+    }
+    else if(position.length > 1)
+    {
+        this.saveEdit(comments[position[0]].comments, position.slice(1), comment);
+    }
+  }
+
+  async submitEdit(comment, position)
+  {
+    //update current state
+    this.saveEdit(this.props.post.comments, position, comment);
   }
 
   render() {
@@ -67,17 +89,24 @@ class BlogPost extends React.Component {
                 }
             </div>
             }
-            {post.comments.length > 0 &&
-            <div className="card-body px-4 pt-2 pb-0 border-top">
-                <CommentsSection ref={this.childElement} id={post._id} comments={post.comments} position={[]} userid={this.props.userid} loggedIn={this.props.loggedIn}/>
-            </div>
-            }
             {this.props.loggedIn &&
                 <div className="card-body px-4 pt-2 pb-0 border-top">
                     <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
                         <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
                     </CommentEntry>
                 </div>
+            }
+            {post.comments.length > 0 &&
+            <div className="card-body px-4 pt-2 pb-0 border-top">
+                <CommentsSection 
+                    ref={this.childElement} 
+                    id={post._id} 
+                    comments={post.comments} 
+                    position={[]} 
+                    userid={this.props.userid} 
+                    loggedIn={this.props.loggedIn} 
+                    submitEdit={this.submitEdit}/>
+            </div>
             }
         </div>
     );

@@ -18,29 +18,6 @@ class BlogContextMenu extends React.Component {
     });
     updateBlog();
   }
-  
-  clickEdit(post) {    
-    fetch("/cube/blogsrc/" + post._id)
-      .then(response => response.json())
-      .then(function(json) {
-        if (json.src) {
-          $('#editor').html(json.src);
-        } else {
-          $('#editor').html(json.body);
-        }
-
-        $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(post._id);
-        $('#blogEditTitle').text('Edit Blog Post');
-        $('#editBlogModal').modal('show');
-        autocard_init('autocard');
-      });
-  }
-  
-  clickDelete(post) {
-    $("delete-blog" ).prop( "data-id", post._id );
-    $('#deleteModal').modal('show');
-  }
 
   render() {
     return (
@@ -50,7 +27,7 @@ class BlogContextMenu extends React.Component {
         </DropdownToggle>
         <DropdownMenu right>
           <DropdownItem onClick={this.props.edit}>Edit</DropdownItem>
-          <DropdownItem>Delete</DropdownItem>
+          <DropdownItem onClick={this.props.delete}>Delete</DropdownItem>
         </DropdownMenu>
       </Dropdown>
     );

@@ -3,13 +3,13 @@ let mongoose = require('mongoose');
 //this pattern lets us define comment recursively
 var Comment = new mongoose.Schema();
 Comment.add({
-  owner:String,
-  ownerName:String,
-  ownerImage:String,
-  content:String,
-  index:Number,
-  timePosted:Date,
-  comments:[Comment]
+  owner: String,
+  ownerName: String,
+  content: String,
+  index: Number,
+  timePosted: Date,
+  comments: [Comment],
+  updated: Boolean
 });
 
 // Blog schema

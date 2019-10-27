@@ -57,7 +57,9 @@ class AgeText extends React.Component {
     render() {
         var date = new Date(this.props.date);
         var now = new Date();
-        var str = '';
+
+
+        var str = date + ' ' + now  + ' ';
         if(this.inYears(date, now) > 0) {
             str = this.inYears(date, now) + ' year';
         } else if(this.inMonths(date, now) > 0) {

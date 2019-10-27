@@ -1962,68 +1962,95 @@ router.get('/api/cardimages', function(req, res) {
 });
 
 function insertComment(comments, position, comment) {
-  if(position.length <= 0)
-  {    
+  if (position.length <= 0) {
     comment.index = comments.length;
     comments.push(comment);
     return comment;
-  }
-  else {
+  } else {
     return insertComment(comments[position[0]].comments, position.slice(1), comment);
   }
 }
 
-router.post('/api/postcomment', ensureAuth, async function(req,res) {
-  /*
-  req.param = {
-    id:String, //blog post id
-    position:[], //array of indexes to represent nested position of comment
-    content:String
+function saveEdit(comments, position, comment) {
+  if (position.length == 1) {
+    comments[position[0]] = comment;
+  } else if (position.length > 1) {
+    saveEdit(comments[position[0]].comments, position.slice(1), comment);
   }
-  req.user -> use to get user fields for comment
-  */
+}
+
+router.post('/api/editcomment', ensureAuth, async function(req, res) {
   user = await User.findById(req.user._id);
   post = await Blog.findById(req.body.id);
 
   if (!user) {
     return res.status(403).send({
       success: 'false',
-      message:'Unauthorized'
+      message: 'Unauthorized'
     });
   }
-  
+
   if (!post) {
     return res.status(404).send({
       success: 'false',
-      message:'Post not found'
+      message: 'Post not found'
     });
   }
 
-  console.log(post);
-  console.log(req.body);
+  try {
+    saveEdit(post.comments, req.body.position.slice(0, 8), req.body.comment);
+    await post.save();
+    res.status(200).send({
+      success: 'true'
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      success: 'false',
+      message: err
+    });
+  }
+});
+
+router.post('/api/postcomment', ensureAuth, async function(req, res) {
+  user = await User.findById(req.user._id);
+  post = await Blog.findById(req.body.id);
+
+  if (!user) {
+    return res.status(403).send({
+      success: 'false',
+      message: 'Unauthorized'
+    });
+  }
+
+  if (!post) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Post not found'
+    });
+  }
 
   try {
     //slice limits the recursive depth
-    var comment = insertComment(post.comments, req.body.position.slice(0,8), {
-      owner:user._id,
-      ownerName:user.username,
-      ownerImage:'',
-      content:req.body.content,
-      timePosted:Date.now(),
-      comments:[]
+    var comment = insertComment(post.comments, req.body.position.slice(0, 8), {
+      owner: user._id,
+      ownerName: user.username,
+      ownerImage: '',
+      content: req.body.content,
+      //the -1000 is to prevent weird time display error
+      timePosted: Date.now() - 1000,
+      comments: []
     });
     await post.save();
-    console.log(post);
-    
     res.status(200).send({
       success: 'true',
       comment: comment
     });
-  } catch(err) {
+  } catch (err) {
     console.log(err);
     return res.status(500).send({
       success: 'false',
-      message:err
+      message: err
     });
   }
 });
