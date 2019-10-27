@@ -49,7 +49,7 @@ class BlogContextMenu extends React.Component {
           {this.props.value}
         </DropdownToggle>
         <DropdownMenu right>
-          <DropdownItem>Edit</DropdownItem>
+          <DropdownItem onClick={this.props.edit}>Edit</DropdownItem>
           <DropdownItem>Delete</DropdownItem>
         </DropdownMenu>
       </Dropdown>

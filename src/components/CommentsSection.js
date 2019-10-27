@@ -3,7 +3,7 @@ import React from 'react';
 import { Collapse } from 'reactstrap';
 
 import Comment from './Comment';
-import PagedTable from './PagedTable';
+import PagedList from './PagedList';
 
 class CommentsSection extends React.Component {
 constructor(props) 
@@ -30,10 +30,10 @@ render() {
             <>
                 <h6 className="comment-button mb-2 text-muted clickable" onClick={this.toggle}>{this.state.collapse ? 'Hide' : 'View'} Replies ({comments.length})</h6>    
                 <Collapse isOpen={this.state.collapse}>   
-                    <PagedTable pageSize={10} rows={comments.slice(0).reverse().map(comment =>
-                        <Comment id={this.props.id} position={this.props.position.concat([comment.index])} comment={comment} />
+                    <PagedList pageSize={10} rows={comments.slice(0).reverse().map(comment =>
+                        <Comment key={comment.index} id={this.props.id} position={this.props.position.concat([comment.index])} comment={comment} userid={this.props.userid}  loggedIn={this.props.loggedIn}/>
                     )}>
-                    </PagedTable>                        
+                    </PagedList>                        
                 </Collapse>
             </>
         }

@@ -17,6 +17,8 @@ block cube_content
   #react-root
   input#blogData(type='hidden', value=posts)
   input#blogPages(type='hidden', value=pages)
+  if user
+    input#userid(type='hidden', value=user._id)
   input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
 
   if user
