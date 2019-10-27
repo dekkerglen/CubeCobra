@@ -56,17 +56,20 @@ class Comment extends React.Component {
 
   submitEdit()
   {
-    this.props.comment.content = this.state.editValue;
-    this.props.comment.updated = true;
-    //this -1000 (ms) is to prevent a strange date display bug
-    this.props.comment.timePosted = new Date() - 1000;
+    if(this.state.editValue.length > 0)
+    {
+      this.props.comment.content = this.state.editValue;
+      this.props.comment.updated = true;
+      //this -1000 (ms) is to prevent a strange date display bug
+      this.props.comment.timePosted = new Date() - 1000;
 
-    this.props.submitEdit(this.props.comment, this.props.position);
-    this.setState({
-      isEdit: false
-    });   
-        
-    this.updateServerSide();
+      this.props.submitEdit(this.props.comment, this.props.position);
+      this.setState({
+        isEdit: false
+      });   
+          
+      this.updateServerSide();
+    }
   }
 
   submitDelete()

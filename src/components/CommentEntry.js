@@ -21,26 +21,29 @@ class CommentEntry extends React.Component {
 
     async clickSubmit()
     {
-        document.body.classList.add('busy-cursor');
-        this.setState({ 
-            collapse: false,
-            inputValue:'' 
-        });
+        if(this.state.inputValue.length > 0)
+        {
+            document.body.classList.add('busy-cursor');
+            this.setState({ 
+                collapse: false,
+                inputValue:'' 
+            });
 
-        const response = await csrfFetch(`/cube/api/postcomment`, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                id:this.props.id,
-                content:this.state.inputValue,
-                position:this.props.position
-            }),
-            headers: {
-            'Content-Type': 'application/json',
-            },
-        }).catch(err => this.error(err));
-        const json = await response.json().catch(err => this.error(err));
-        this.props.onPost(json.comment);
-        document.body.classList.remove('busy-cursor');
+            const response = await csrfFetch(`/cube/api/postcomment`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    id:this.props.id,
+                    content:this.state.inputValue,
+                    position:this.props.position
+                }),
+                headers: {
+                'Content-Type': 'application/json',
+                },
+            }).catch(err => this.error(err));
+            const json = await response.json().catch(err => this.error(err));
+            this.props.onPost(json.comment);
+            document.body.classList.remove('busy-cursor');
+        }
     }
 
     updateInputValue(evt) {
