@@ -12,9 +12,7 @@ $(document).ready(function() {
     }).then(response => {
       if (!response.ok) {
         console.log(response);
-      }
-      else
-      {
+      } else {
         window.location.href = '';
       }
     });
@@ -29,9 +27,7 @@ $(document).ready(function() {
     }).then(response => {
       if (!response.ok) {
         console.log(response);
-      }
-      else
-      {
+      } else {
         window.location.href = '';
       }
     });
