@@ -30,11 +30,7 @@ class CubeBlog extends Component {
 const posts = JSON.parse(document.getElementById('blogData').value);  
 const pages = JSON.parse(document.getElementById('blogPages').value); 
 const loggedIn = document.getElementById('userid') != null;
-var userid = '';
-if(loggedIn)
-{
-  userid = document.getElementById('userid').value; 
-}
+const userid = loggedIn ? document.getElementById('userid').value : '';
 const canEdit = document.getElementById('canEdit').value === 'true';
 const wrapper = document.getElementById('react-root');
 const element = <CubeBlog posts={posts} pages={pages} canEdit={canEdit} loggedIn={loggedIn} userid={userid} />;
