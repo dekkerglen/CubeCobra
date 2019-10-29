@@ -53,7 +53,8 @@ const convertedExampleDoubleFacedCardFlipFace = {
   name_lower: 'moonscarred werewolf',
   full_name: 'Moonscarred Werewolf [dka-125]',
   artist: 'Cynthia Sheppard',
-  scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
+  scryfall_uri:
+    'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   rarity: 'common',
   oracle_text: undefined,
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
@@ -74,6 +75,38 @@ const convertedExampleDoubleFacedCardFlipFace = {
   image_normal: undefined,
   art_crop: undefined,
   colorcategory: 'g',
+};
+
+const tokenGeneratingExampleCard = {
+  color_identity: ['W'],
+  set: 'celd',
+  collector_number: '386',
+  promo: true,
+  digital: false,
+  border_color: 'black',
+  name: 'Castle Ardenvale',
+  name_lower: 'castle ardenvale',
+  full_name: 'Castle Ardenvale [celd-386]',
+  artist: 'Volkan Baǵa',
+  scryfall_uri: 'https://scryfall.com/card/celd/386/castle-ardenvale?utm_source=api',
+  rarity: 'rare',
+  oracle_text:
+    'Castle Ardenvale enters the battlefield tapped unless you control a Plains.\n' +
+    '{T}: Add {W}.\n' +
+    '{2}{W}{W}, {T}: Create a 1/1 white Human creature token.',
+  _id: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
+  cmc: 0,
+  legalities: {Legacy: false, Modern: false, Standard: false, Pauper: false},
+  parsed_cost: [''],
+  colors: [],
+  type: 'Land',
+  image_small:
+    'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+  image_normal:
+    'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+  art_crop:
+    'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+  colorcategory: 'l',
 };
 
 const convertFnToAttribute = {
@@ -227,3 +260,17 @@ for (var convertFn in convertFnToAttribute) {
     expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
   });
 }
+
+test('parseTokenMakingAbility correctly parses tokens created by an ability', () => {
+  const card = tokenGeneratingExampleCard;
+  const tokenMakingAbility = card.oracle_text;
+  // the card needs to be in the catalog for sourceCard for tokens.
+  // this functionality is tested later.
+  updatecards.addCardToCatalog(card);
+  expect(
+    updatecards.parseTokenMakingAbility(
+      tokenMakingAbility,
+      tokenGeneratingExampleCard._id
+    )
+  ).toEqual('bleep');
+});

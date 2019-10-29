@@ -1,7 +1,9 @@
-const analytics = require('../../serverjs/analytics');
-const carddb = require('../../serverjs/cards');
-const cubefixture = require('../../fixtures/examplecube');
+const analytics = require("../../serverjs/analytics");
+const carddb = require("../../serverjs/cards");
+const updatecards = require("../../serverjs/updatecards");
+const cubefixture = require("../../fixtures/examplecube");
 
+const cardsFixturePath = 'fixtures/cards_small.json';
 const fixturesPath = 'fixtures';
 
 beforeEach(() => {});
@@ -154,7 +156,19 @@ test('GetColorCounts returns valid counts', () => {
   });
 });
 
-test('GetCurve returns a valid curve structure', () => {
+test("GetTokens returns valid tokens", () => {
+  expect.assertions(1);
+  // updateCardbase is needed to parse tokens and save in db
+  return updatecards.updateCardbase(cardsFixturePath).then(function() {
+    var dbLoaded = carddb.initializeCardDb(fixturesPath, true);
+    dbLoaded.then(function() {
+      var result = analytics.GetTokens(cubefixture.exampleCube.cards, carddb);
+      expect(result).toEqual('blah');
+    });
+  });
+});
+
+test("GetCurve returns a valid curve structure", () => {
   expect.assertions(1);
   var expected = {
     black: [0, 1, 2, 3, 0, 1, 0, 0, 0, 0],
