@@ -2399,16 +2399,32 @@ router.get('/deck/:id', function(req, res) {
           req.flash('danger', 'Cube not found');
           res.status(404).render('misc/404', {});
         } else {
-          var owner_name = "Unknown";
-          var drafter_name = "Anonymous";
-          User.findById(deck.owner, function(err, drafter) {
-            if (drafter) {
-              drafter_name = drafter.username;
+          let owner = {
+            name: 'Unknown',
+            id: null,
+            profileUrl: null
+          };
+
+          let drafter = {
+            name: 'Anonymous',
+            id: null,
+            profileUrl: null
+          };
+
+          User.findById(deck.owner, function(err, deckUser) {
+            if (deckUser) {
+              drafter.name = deckUser.username;
+              drafter.id = deckUser._id;
+              drafter.profileUrl = `/user/view/${deckUser._id}`;
             }
-            User.findById(cube.owner, function(err, owner) {
-              if (owner) {
-                owner_name = owner.username;
+
+            User.findById(cube.owner, function(err, cubeUser) {
+              if (cubeUser) {
+                owner.name = cubeUser.username;
+                owner.id = cubeUser._id;
+                owner.profileUrl = `/user/view/${cubeUser._id}`;
               }
+
               var player_deck = [];
               var bot_decks = [];
               if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
@@ -2441,10 +2457,10 @@ router.get('/deck/:id', function(req, res) {
                   oldformat: true,
                   cube: cube,
                   cube_id: get_cube_id(cube),
-                  owner: owner_name,
+                  owner: owner,
                   activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - ${drafter_name}'s deck`,
-                  drafter: drafter_name,
+                  title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+                  drafter: drafter,
                   cards: player_deck,
                   bot_decks: bot_decks,
                   bots: bot_names,
@@ -2486,10 +2502,10 @@ router.get('/deck/:id', function(req, res) {
                   oldformat: false,
                   cube: cube,
                   cube_id: get_cube_id(cube),
-                  owner: owner_name,
+                  owner: owner,
                   activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - ${drafter_name}'s deck`,
-                  drafter: drafter_name,
+                  title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+                  drafter: drafter,
                   deck: JSON.stringify(deck.playerdeck),
                   bot_decks: bot_decks,
                   bots: bot_names,
