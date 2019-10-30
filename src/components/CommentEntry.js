@@ -63,7 +63,7 @@ class CommentEntry extends React.Component {
                     <a onClick={this.toggle}>{this.props.children}</a>  
                 </Collapse>  
                 <Collapse isOpen={this.state.collapse}>
-                    <textarea value={this.state.inputValue} onChange={evt => this.updateInputValue(evt)} className="form-control" id="exampleFormControlTextarea1" rows="2" maxLength="500"></textarea>        
+                    <textarea value={this.state.inputValue} onChange={this.updateInputValue} className="form-control" id="exampleFormControlTextarea1" rows="2" maxLength="500"></textarea>        
                     <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.clickSubmit}>Submit</a>   
                     {' '}
                     <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.toggle}>Cancel</a>   
