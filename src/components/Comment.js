@@ -13,8 +13,9 @@ class Comment extends React.Component {
       super(props);
 
       this.state = {
-          isEdit: false,
-          editValue: ''
+        isEdit: false,
+        editValue: '',          
+        childExpanded: false
       };
 
       this.onPost = this.onPost.bind(this);
@@ -23,12 +24,7 @@ class Comment extends React.Component {
       this.submitEdit = this.submitEdit.bind(this);
       this.submitDelete = this.submitDelete.bind(this);
       this.updateServerSide = this.updateServerSide.bind(this);
-
-      this.childElement = React.createRef();
-
-      this.state = {
-        hover: false
-      };
+      this.toggleChildCollapse = this.toggleChildCollapse.bind(this);
   }
 
   onPost(comment)
@@ -36,7 +32,9 @@ class Comment extends React.Component {
     comment.index = this.props.comment.comments.length;
     this.props.comment.comments.push(comment);
     this.forceUpdate();
-    this.childElement.current.expand();
+    this.setState({
+        childExpanded: true
+    });
   }
 
   submitEdit()
@@ -108,6 +106,15 @@ class Comment extends React.Component {
     });
   }
 
+  toggleChildCollapse()
+  {
+    console.log('toggle');
+    console.log(this.state);
+    this.setState({
+        childExpanded: !this.state.childExpanded
+    });
+  }
+
   render() {
     var comment = this.props.comment;
     return (
@@ -142,11 +149,12 @@ class Comment extends React.Component {
         </div>
         {comment.comments.length > 0 &&       
           <div className="pl-2 pt-1 pr-1 border-left border-right border-bottom">      
-              <CommentsSection ref={this.childElement} className='pl-4' 
+              <CommentsSection className='pl-4' 
+                expanded={this.state.childExpanded}
+                toggle={this.toggleChildCollapse}
                 id={this.props.id} 
                 comments={comment.comments} 
                 position={this.props.position} 
-                expanded={comment.expanded ? true : false} 
                 userid={this.props.userid}  
                 loggedIn={this.props.loggedIn} 
                 submitEdit={this.props.submitEdit}/>

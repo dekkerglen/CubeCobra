@@ -7,11 +7,14 @@ import CommentEntry from './CommentEntry';
 class BlogPost extends React.Component {
   constructor(props) {
     super(props);    
-    
+
+    this.state = {
+        childExpanded: false
+    };   
+      
     this.onPost = this.onPost.bind(this);
     this.submitEdit = this.submitEdit.bind(this);
-
-    this.childElement = React.createRef();
+    this.toggleChildCollapse = this.toggleChildCollapse.bind(this);
   }
   
   error(message) {
@@ -22,7 +25,9 @@ class BlogPost extends React.Component {
   {
     comment.index = this.props.post.comments.length;
     this.props.post.comments.push(comment);
-    this.childElement.current.expand();
+    this.setState({
+        childExpanded: true
+    });
   }
 
   saveEdit(comments, position, comment)
@@ -35,6 +40,13 @@ class BlogPost extends React.Component {
     {
         this.saveEdit(comments[position[0]].comments, position.slice(1), comment);
     }
+  }
+
+  toggleChildCollapse()
+  {
+    this.setState({
+        childExpanded: !this.state.childExpanded
+    });
   }
 
   async submitEdit(comment, position)
@@ -91,7 +103,8 @@ class BlogPost extends React.Component {
             {post.comments.length > 0 &&
             <CardBody className=" px-4 pt-2 pb-0 border-top">
                 <CommentsSection 
-                    ref={this.childElement} 
+                    expanded={this.state.childExpanded}
+                    toggle={this.toggleChildCollapse}
                     id={post._id} 
                     comments={post.comments} 
                     position={[]} 

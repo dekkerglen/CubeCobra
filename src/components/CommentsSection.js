@@ -9,17 +9,6 @@ class CommentsSection extends React.Component {
 constructor(props) 
 {
     super(props);
-    
-    this.state = {collapse: false};
-    this.toggle = this.toggle.bind(this);
-}
-  
-toggle() {    
-    this.setState({ collapse: !this.state.collapse });
-}
-
-expand() {
-    this.setState({ collapse: true });
 }
 
 render() {
@@ -28,8 +17,8 @@ render() {
         <>
         {comments.length > 0 && 
             <>
-                <h6 className="comment-button mb-2 text-muted clickable" onClick={this.toggle}>{this.state.collapse ? 'Hide' : 'View'} Replies ({comments.length})</h6>    
-                <Collapse isOpen={this.state.collapse}>   
+                <h6 className="comment-button mb-2 text-muted clickable" onClick={this.props.toggle}>{this.props.expanded ? 'Hide' : 'View'} Replies ({comments.length})</h6>    
+                <Collapse isOpen={this.props.expanded}>   
                     <PagedList pageSize={10} rows={comments.slice(0).reverse().map(comment =>
                         <Comment 
                         key={comment.index} 
