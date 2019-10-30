@@ -18,8 +18,6 @@ class Comment extends React.Component {
       };
 
       this.onPost = this.onPost.bind(this);
-      this.mouseOut = this.mouseOut.bind(this);
-      this.mouseOver = this.mouseOver.bind(this);
       this.startEdit = this.startEdit.bind(this);
       this.stopEdit = this.stopEdit.bind(this);
       this.submitEdit = this.submitEdit.bind(this);
@@ -39,19 +37,6 @@ class Comment extends React.Component {
     this.props.comment.comments.push(comment);
     this.forceUpdate();
     this.childElement.current.expand();
-  }
-
-  mouseOut(event) {
-    this.setState({
-      hover: false
-    });
-  }
-  
-  mouseOver(event) {
-    event.stopPropagation();
-      this.setState({
-        hover: true
-    });
   }
 
   submitEdit()
@@ -127,8 +112,8 @@ class Comment extends React.Component {
     var comment = this.props.comment;
     return (
       <div className='mb-1'>
-        <div className={'comment border mt-1 px-2' + (this.state.hover ? ' highlight-hover' : ' highlight-nohover')}>
-          <div className="form-group mb-1" onMouseLeave={(event) => this.mouseOut(event)} onMouseEnter={(event) => this.mouseOver(event)}>
+        <div className={'comment border mt-1 px-2'}>
+          <div className="form-group mb-1 comment-hover">
               {comment.ownerName ? <a href={'/user/view/'+comment.owner}><small>{comment.ownerName}</small></a> : <a><small>Anonymous</small></a>}
               {comment.timePosted && (comment.updated ? <em><small> - Updated <AgeText date={comment.timePosted}/></small></em> : <a><small> - <AgeText date={comment.timePosted}/></small></a>)}
               {comment.owner == this.props.userid &&

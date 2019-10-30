@@ -420,10 +420,3 @@ div.card {
   body.busy-cursor {
 	cursor: progress;
   }
-
-  .highlight-hover{
-	background-color: #F8F8F8;
-  }
-  .highlight-nohover{
-	background-color: #FFFFFF;
-  }
