@@ -36,9 +36,16 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
           {types.map(type =>
             <tr>
               <th scope="row">{type}</th>
-              {colors.map(([name, path, _]) =>
-                <td>{typeByColor[type][path]}</td>
-              )}
+              {colors.map(([name, path, _]) => {
+                count = typeByColor[type][path];
+                color_total = typeByColor['Total'];
+                if (name !== 'Total' && path !== 'Total' && count > 1 && color_total > count) {
+                  percent = Number.parseFloat(count / color_total * 100.0).toFixed(1);
+                  return <td>{count}<span class="percent">{percent}%</span></td>;
+                } else {
+                  return <td>{count}</td>;
+                }
+              })}
             </tr>
           )}
         </tbody>
