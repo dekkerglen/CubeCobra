@@ -12,125 +12,63 @@ const {
 router.use(csrfProtection);
 
 // Home route
-router.get('/', function(req, res) {
-  const routeReady = () => {
-    if (recents && drafted && blog && decks && featured) {
-      decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
-      res.render('index', {
-        devblog: blog.length > 0 ? blog[0] : null,
-        recents: recents,
-        drafted: drafted,
-        decks: decklinks,
-        featured: featured
-      });
-    }
-  };
-
-  var user_id = '';
-  var recents, drafted, blog, decks, featured;
-
-  if (req.user) user_id = req.user._id;
-  Cube.find({
-    $or: [{
-        $and: [{
-          'card_count': {
-            $gt: 200
-          }
-        }, {
-          'isListed': true
-        }]
-      },
-      {
-        'owner': user_id
-      }
-    ]
-  }).sort({
-    'date_updated': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      recents = [];
-      console.log('recents failed to load');
-    }
-
-    if (result) {
-      recents = result;
-    }
-
-    routeReady();
-  });
-
-
-  Cube.find({
-    isFeatured: true
-  }).exec(function(err, result) {
-    if (err) {
-      recents = [];
-      console.log('featured failed to load');
-    }
-
-    if (result) {
-      featured = result;
-    }
-
-    routeReady();
-  });
-
-  Cube.find({
-    $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
-      'owner': user_id
-    }]
-  }).sort({
-    'numDecks': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      drafted = [];
-      console.log('drafted failed to load');
-    }
-
-    if (result) {
-      drafted = result;
-    }
-
-    routeReady();
-  });
-
-  Blog.find({
-    dev: 'true'
-  }).sort({
-    'date': -1
-  }).exec(function(err, result) {
-    if (err) {
-      blog = [];
-      console.log('blog failed to load');
-    }
-
-    if (result) {
-      blog = result;
-    }
-
-    routeReady();
-  });
-
-  Deck.find().sort({
-    'date': -1
-  }).limit(10).exec(function(err, result) {
-    if (err) {
-      decks = [];
-      console.log('decks failed to load');
-    }
-
-    if (result) {
-      decks = result;
-    }
-
-    routeReady();
-  });
+router.get('/', async function(req, res) {
+  req.user ? res.redirect('/dashboard') : res.redirect('/landing');
 });
 
+router.get('/explore', async function(req, res) {
+  const user_id = req.user ? req.user._id : '';
+
+  [recents, featured, drafted, blog, decks] = await Promise.all([
+    Cube.find({
+      $or: [{
+          $and: [{
+            'card_count': {
+              $gt: 200
+            }
+          }, {
+            'isListed': true
+          }]
+        },
+        {
+          'owner': user_id
+        }
+      ]
+    }).sort({
+      'date_updated': -1
+    }).limit(12).exec(),
+    Cube.find({isFeatured: true}).exec(),
+    Cube.find({
+      $or: [{
+        'isListed': true
+      }, {
+        'isListed': null
+      }, {
+        'owner': user_id
+      }]
+    }).sort({
+      'numDecks': -1
+    }).limit(12).exec(),
+    Blog.find({
+      dev: 'true'
+    }).sort({
+      'date': -1
+    }).exec(),
+    Deck.find().sort({
+      'date': -1
+    }).limit(10).exec()
+  ]);
+  
+  decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
+  res.render('index', {
+    devblog: blog.length > 0 ? blog[0] : null,
+    recents: recents,
+    drafted: drafted,
+    decks: decklinks,
+    featured: featured,
+    loginCallback: '/explore'
+  });
+});
 
 //format: {search};{search};{search}:{page}
 //list like:
@@ -142,6 +80,18 @@ router.get('/', function(req, res) {
 router.get('/advanced_search', function(req, res) {
   res.render('search/advanced_search', {
     loginCallback: '/advanced_search'
+  });
+});
+
+router.get('/dashboard', function(req, res) {
+  res.render('dashboard', {
+    loginCallback: '/'
+  });
+});
+
+router.get('/landing', function(req, res) {
+  res.render('landing', {
+    loginCallback: '/'
   });
 });
 

@@ -417,6 +417,9 @@ div.card {
 	border-radius: 0px;
   }
 
-  body.busy-cursor {
+body.busy-cursor {
 	cursor: progress;
-  }
+}
+.centered-max400 { 
+	margin: auto; max-width: 400px;
+}
