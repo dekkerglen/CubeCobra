@@ -12,29 +12,11 @@ $(document).ready(function() {
     }).then(response => {
       if (!response.ok) {
         console.log(response);
-      }
-      else
-      {
+      } else {
         window.location.href = '';
       }
     });
   })
-  $('.delete-blog').on('click', function(e) {
-    $target = $(e.target);
-    var id = $target.attr('data-id');
-    csrfFetch('/cube/blog/remove/' + id, {
-      method: 'DELETE',
-      headers: {}
-    }).then(response => {
-      if (!response.ok) {
-        console.log(response);
-      }
-      else
-      {
-        window.location.href = '';
-      }
-    });
-  });
   $('.delete-format').on('click', function(e) {
     $target = $(e.target);
     var id = $target.attr('data-id');
@@ -45,9 +27,7 @@ $(document).ready(function() {
     }).then(response => {
       if (!response.ok) {
         console.log(response);
-      }
-      else
-      {
+      } else {
         window.location.href = '';
       }
     });
