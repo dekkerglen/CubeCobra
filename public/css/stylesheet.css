@@ -420,3 +420,19 @@ div.card {
   body.busy-cursor {
 	cursor: progress;
   }
+
+
+/* Styles for Analysis */
+
+.breakdown .percent {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: #535A5F;
+  margin-left: 0.5em;
+}
+.breakdown .percent::before {
+  content: "(";
+}
+.breakdown .percent::after {
+  content: ")";
+}
