@@ -27,8 +27,7 @@ db.on('error', (err) => {
 // Init app
 const app = express();
 
-const store = new MongoDBStore(
-  {
+const store = new MongoDBStore({
     uri: mongosecrets.connectionString,
     databaseName: mongosecrets.dbname,
     collection: 'session_data',
