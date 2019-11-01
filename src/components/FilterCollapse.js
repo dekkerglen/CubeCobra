@@ -36,7 +36,7 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
       <option value=">">greater than</option>
       <option value="<=">less than or equal to</option>
       <option value=">=">greater than or equal to</option>
-      <option value="!">not equal to</option>
+      <option value="!=">not equal to</option>
     </Input>
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>;
