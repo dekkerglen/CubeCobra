@@ -22,8 +22,6 @@ class PagedList extends Component {
     if (prevProps.rows.length !== this.props.rows.length) {
       this.setState({ page: 0 });
     }
-    /* global */
-    autocard_init('autocard');
   }
 
   render() {

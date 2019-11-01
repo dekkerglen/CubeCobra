@@ -6,9 +6,6 @@ import AutocardImage from './AutocardImage';
 import SortContext from './SortContext';
 
 const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
-  /* Initialize autocard anytime the DOM is updated. */
-  useEffect(() => /* global */ autocard_init('autocard'));
-
   const groups = {};
   for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
     groups[label1] = {};

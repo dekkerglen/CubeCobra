@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
+
+import DisplayContext from './DisplayContext';
 
 /* HOC to add autocard to another element */
 
@@ -13,10 +15,12 @@ const handleMouseOver = event => {
 
 const handleMouseOut = event => /* global */ autocard_hide_card();
 
-const withAutocard = Tag => ({ card, ...props }) => {
+const withAutocard = Tag => ({ card, front, back, ...props }) => {
+  const { showCustomImages } = useContext(DisplayContext.Context);
+  card = card || { details: {} };
   const tags = card.tags || [];
-  const front = card.imgUrl || card.details.image_normal;
-  const back = card.details.image_flip;
+  front = front || (showCustomImages ? card.imgUrl || card.details.display_image : false) || card.details.image_normal;
+  back = back || card.details.image_flip;
   return (
     <Tag
       onMouseOver={handleMouseOver}

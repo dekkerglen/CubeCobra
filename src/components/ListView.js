@@ -10,6 +10,7 @@ import PagedTable from './PagedTable';
 import SortContext from './SortContext';
 import TagContext from './TagContext';
 import TagInput from './TagInput';
+import withAutocard from './WithAutocard';
 
 const colorCombos = [
   'C', 'W', 'U', 'B', 'R', 'G',
@@ -18,6 +19,8 @@ const colorCombos = [
   'WUBR', 'WUBG', 'WURG', 'WBRG', 'UBRG',
   'WUBRG'
 ];
+
+const AutocardTd = withAutocard('td');
 
 class ListViewRaw extends Component {
   constructor(props) {
@@ -66,14 +69,10 @@ class ListViewRaw extends Component {
     /* global */
     activateTags();
 
-    /* global */
-    autocard_init('autocard');
     this.updateVersions();
   }
 
   componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
     this.updateVersions();
   }
 
@@ -246,9 +245,9 @@ class ListViewRaw extends Component {
               <td className="align-middle">
                 <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
               </td>
-              <td className="align-middle text-truncate autocard" card={details.display_image}>
+              <AutocardTd className="align-middle text-truncate" card={{ details, ...card }}>
                 {details.name}
-              </td>
+              </AutocardTd>
               <td>
                 <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
                   {(this.state.versionDict[card.cardID] || []).map(version =>

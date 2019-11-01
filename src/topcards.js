@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 
 import FilterCollapse from './components/FilterCollapse';
 import SortableTable from './components/SortableTable';
+import withAutocard from './components/WithAutocard';
+
+const AutocardTd = withAutocard('td');
 
 class TopCards extends Component {
   constructor(props) {
@@ -15,14 +18,6 @@ class TopCards extends Component {
     };
 
     this.setFilter = this.setFilter.bind(this);
-  }
-
-  componentDidMount() {
-    /* global */ autocard_init('autocard');
-  }
-
-  componentDidUpdate() {
-    /* global */ autocard_init('autocard');
   }
 
   setFilter(filter, filterInput) {
@@ -39,7 +34,7 @@ class TopCards extends Component {
   render() {
     const rowF = ([name, img, img_flip, rating, picks]) => rating === null ? [] :
       <tr key={name}>
-        <td className="autocard" card={img} card_flip={img_flip || undefined}>{name}</td>
+        <AutocardTd front={img} back={img_flip || undefined}>{name}</AutocardTd>
         <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
         <td>{picks}</td>
       </tr>;
