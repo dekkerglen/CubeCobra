@@ -9,6 +9,7 @@ module.exports = {
     cube_playtest: ['./cube_playtest.js'],
     topcards: ['./topcards.js'],
     cube_blog: ['./cube_blog.js'],
+    cube_overview: ['./cube_overview.js']
   },
   output: {
     filename: '[name].bundle.js',

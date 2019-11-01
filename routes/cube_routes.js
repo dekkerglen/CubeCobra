@@ -360,39 +360,34 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.post('/feature/:id', ensureAuth, function(req, res) {
+router.post('/feature/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id);
+    } 
 
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/overview/' + req.params.id);
-  } else {
-    User.findById(req.user._id, function(err, user) {
-      if (!util.isAdmin(user)) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/overview/' + req.params.id)
-      } else {
-        Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-          if (err) {
-            req.flash('danger', 'Server Error');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else if (!cube) {
-            req.flash('danger', 'Cube not found');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else {
-            cube.isFeatured = true;
-            cube.save(function(err) {
-              if (err) {
-                req.flash('danger', 'Server Error');
-                res.redirect('/cube/overview/' + req.params.id);
-              } else {
-                req.flash('success', 'Cube updated successfully.');
-                res.redirect('/cube/overview/' + req.params.id);
-              }
-            });
-          }
-        });
-      }
-    });
+    const user = await User.findById(req.user._id);    
+    if (!util.isAdmin(user)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id)
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/overview/' + req.params.id);
+    }
+
+    cube.isFeatured = true;
+    await cube.save();
+    
+    req.flash('success', 'Cube updated successfully.');
+    return res.redirect('/cube/overview/' + req.params.id);
+  }
+  catch(err) {
+    req.flash('danger', 'Server Error');
+    return res.redirect('/cube/overview/' + req.params.id);
   }
 });
 
@@ -432,99 +427,84 @@ router.post('/unfeature/:id', ensureAuth, function(req, res) {
 });
 
 router.get('/overview/:id', async function(req, res) {
-  var split = req.params.id.split(';');
-  var cube_id = split[0];
-  admin = false;
-  if (req.user) {
-    currentUser = await User.findById(req.user._id);
-    admin = util.isAdmin(currentUser);
-  }
-  Cube.findOne(build_id_query(cube_id), function(err, cube) {
+  try{
+    var split = req.params.id.split(';');
+    var cube_id = split[0];
+    admin = false;
+    if (req.user) {
+      currentUser = await User.findById(req.user._id);
+      admin = util.isAdmin(currentUser);
+    }
+    const cube = await Cube.findOne(build_id_query(cube_id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      var pids = [];
+      return res.status(404).render('misc/404', {});
+    }
+
+    var pids = [];
+    cube.cards.forEach(function(card, index) {
+      card.details = carddb.cardFromId(card.cardID);
+      if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
+        pids.push(card.details.tcgplayer_id);
+      }
+    });
+
+    GetPrices(pids, async function(price_dict) {
+      var sum = 0;
       cube.cards.forEach(function(card, index) {
-        card.details = carddb.cardFromId(card.cardID);
-        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-          pids.push(card.details.tcgplayer_id);
+        if (price_dict[card.details.tcgplayer_id]) {
+          sum += price_dict[card.details.tcgplayer_id];
+        } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
+          sum += price_dict[card.details.tcgplayer_id + '_foil'];
         }
       });
-      GetPrices(pids, function(price_dict) {
-        var sum = 0;
-        cube.cards.forEach(function(card, index) {
-          if (price_dict[card.details.tcgplayer_id]) {
-            sum += price_dict[card.details.tcgplayer_id];
-          } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
-            sum += price_dict[card.details.tcgplayer_id + '_foil'];
+      const user = await User.findById(cube.owner)
+      const blogs = await Blog.find({ cube: cube._id }).sort('date');
+
+      if(blogs)
+      {
+        blogs.forEach(function(item, index) {
+          if (!item.date_formatted) {
+            item.date_formatted = item.date.toLocaleString("en-US");
+          }
+          if (item.html) {
+            item.html = addAutocard(item.html, carddb);
           }
         });
-        User.findById(cube.owner, function(err, user) {
-          Blog.find({
-            cube: cube._id
-          }).sort('date').exec(function(err, blogs) {
-            blogs.forEach(function(item, index) {
-              if (!item.date_formatted) {
-                item.date_formatted = item.date.toLocaleString("en-US");
-              }
-              if (item.html) {
-                item.html = addAutocard(item.html, carddb);
-              }
-            });
-            if (blogs.length > 0) {
-              blogs.reverse();
-            }
-            cube.raw_desc = cube.body;
-            if (cube.descriptionhtml) {
-              cube.raw_desc = cube.descriptionhtml;
-              cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb);
-            }
-            if (!user) {
-              res.render('cube/cube_overview', {
-                cube: cube,
-                cube_id: cube_id,
-                title: `${abbreviate(cube.name)} - Overview`,
-                activeLink: 'overview',
-                num_cards: cube.cards.length,
-                author: 'unknown',
-                post: blogs[0],
-                metadata: generateMeta(
-                  `Cube Cobra Overview: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/overview/${req.params.id}`
-                ),
-                loginCallback: '/cube/overview/' + req.params.id,
-                price: sum.toFixed(2),
-                admin: admin
-              });
-            } else {
-              res.render('cube/cube_overview', {
-                cube: cube,
-                cube_id: cube_id,
-                title: `${abbreviate(cube.name)} - Overview`,
-                activeLink: 'overview',
-                num_cards: cube.cards.length,
-                owner: user.username,
-                post: blogs[0],
-                metadata: generateMeta(
-                  `Cube Cobra Overview: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/overview/${req.params.id}`
-                ),
-                loginCallback: '/cube/overview/' + req.params.id,
-                editorvalue: cube.raw_desc,
-                price: sum.toFixed(2),
-                admin: admin
-              });
-            }
-          });
-        });
+        if (blogs.length > 0) {
+          blogs.reverse();
+        }
+      }
+      cube.raw_desc = cube.body;
+      if (cube.descriptionhtml) {
+        cube.raw_desc = cube.descriptionhtml;
+        cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb);
+      }      
+      return res.render('cube/cube_overview', {
+        cube: cube,
+        cube_id: cube_id,
+        title: `${abbreviate(cube.name)} - Overview`,
+        activeLink: 'overview',
+        num_cards: cube.cards.length,
+        owner: user ? user.username : 'unknown',
+        post: blogs ? blogs[0] : null,
+        metadata: generateMeta(
+          `Cube Cobra Overview: ${cube.name}`,
+          (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/overview/${req.params.id}`
+        ),
+        loginCallback: '/cube/overview/' + req.params.id,
+        editorvalue: cube.raw_desc,
+        price: sum.toFixed(2),
+        admin: admin
       });
-    }
-  });
+    });
+  }
+  catch(err) {
+    req.flash('danger', 'Server Error');
+    return res.redirect('/cube/overview/' + req.params.id);
+  }
 });
 
 router.get('/blogsrc/:id', function(req, res) {
