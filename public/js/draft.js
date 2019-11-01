@@ -88,6 +88,9 @@ function botRating(botColors, card) {
   const overlap = botColors.some(c => colors.includes(c));
   const isLand = card.type_line.indexOf('Land') > -1;
   const isFetch = fetchLands.includes(card.details.name);
+
+  // Prioritize on-color or overlapping fetches.
+  // Then overlapping lands, then overlapping spells.
   if (subset || (isFetch && overlap)) {
     rating -= 0.4;
   } else if (isLand && overlap) {
@@ -99,12 +102,10 @@ function botRating(botColors, card) {
 }
 
 function botPicks() {
-  //make bots take a pick out of active activepacks
+  // make bots take one pick out of active packs
   for (botIndex = 1; botIndex < draft.packs.length; botIndex++) {
     const pack = draft.packs[botIndex][0];
     const botColors = draft.bots[botIndex - 1];
-    //botColors has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
-    //try to take card with exactly our two colors
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
