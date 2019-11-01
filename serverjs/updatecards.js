@@ -508,6 +508,7 @@ function convertCard(card, isExtra) {
   newcard.collector_number = card.collector_number;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
+  newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
   newcard.name = name;
   newcard.name_lower = name.toLowerCase();

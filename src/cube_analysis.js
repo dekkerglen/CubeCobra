@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
+import Hash from './util/Hash';
+
 import CurveAnalysis from './components/CurveAnalysis';
 import DynamicFlash from './components/DynamicFlash';
 import MulticoloredAnalysis from './components/MulticoloredAnalysis';
@@ -14,11 +16,16 @@ class CubeAnalysis extends Component {
     super(props);
 
     this.state = {
-      nav: 'curve',
+      nav: Hash.get('nav', 'curve'),
     };
   }
 
   select(nav) {
+    if (nav === 'curve') {
+      Hash.del('nav')
+    } else {
+      Hash.set('nav', nav);
+    }
     this.setState({ nav });
   }
 
