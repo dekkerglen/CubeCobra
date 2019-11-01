@@ -3,6 +3,7 @@ import { Row, Col, Card, CardBody } from 'reactstrap';
 
 import Affiliate from '../util/Affiliate';
 
+import MassBuyButton from './MassBuyButton';
 import withAutocard from './WithAutocard';
 
 const AutocardLink = withAutocard('a');
@@ -29,32 +30,41 @@ const dedupeCards = cards => {
 }
 
 const TokenAnalysis = ({ tokens }) =>
-  <Row>
-    {sortTokens(tokens).map(([token, tokenCards]) =>
-      <Col key={token._id} xs={6} md={4} lg={3}>
-        <Card className="mb-3">
-          <a href={Affiliate.getTCGLink({ details: token })}>
-            <img src={token.image_normal} className='card-img-top' />
-          </a>
-          <CardBody>
-            <p className="card-text">
-              {dedupeCards(sortCards(tokenCards)).map(card =>
-                <>
-                  <AutocardLink
-                    key={card.name}
-                    href={Affiliate.getTCGLink({details:card})}
-                    card={{ details: card }}
-                  >
-                    {card.name}
-                  </AutocardLink>
-                  <br />
-                </>
-              )}
-            </p>
-          </CardBody>
-        </Card>
+  <>
+    <Row className="mb-3">
+      <Col>
+        <MassBuyButton cards={tokens.map(([token, tokenCards]) => ({ details: token }))}>
+          Buy all tokens
+        </MassBuyButton>
       </Col>
-    )}
-  </Row>;
+    </Row>
+    <Row>
+      {sortTokens(tokens).map(([token, tokenCards]) =>
+        <Col key={token._id} xs={6} md={4} lg={3}>
+          <Card className="mb-3">
+            <a href={Affiliate.getTCGLink({ details: token })}>
+              <img src={token.image_normal} className='card-img-top' />
+            </a>
+            <CardBody>
+              <p className="card-text">
+                {dedupeCards(sortCards(tokenCards)).map(card =>
+                  <>
+                    <AutocardLink
+                      key={card.name}
+                      href={Affiliate.getTCGLink({details:card})}
+                      card={{ details: card }}
+                    >
+                      {card.name}
+                    </AutocardLink>
+                    <br />
+                  </>
+                )}
+              </p>
+            </CardBody>
+          </Card>
+        </Col>
+      )}
+    </Row>
+  </>;
 
 export default TokenAnalysis;

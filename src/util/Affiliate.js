@@ -11,4 +11,9 @@ export function getTCGLink(card) {
 
   return tcgplayerLink;
 }
-export default { getTCGLink }
+
+export const tcgMassEntryUrl =
+  'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
+  '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
+
+export default { getTCGLink, tcgMassEntryUrl };
