@@ -83,6 +83,13 @@ router.get('/advanced_search', function(req, res) {
   });
 });
 
+router.get('/random', async function(req, res) {
+  const count = await Cube.count();
+  var random = Math.floor(Math.random() * count);
+  const cube = await Cube.findOne().skip(random);
+  res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
+})
+
 router.get('/dashboard', function(req, res) {
   res.render('dashboard', {
     loginCallback: '/'
