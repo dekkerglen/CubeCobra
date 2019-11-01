@@ -33,7 +33,10 @@ const TokenAnalysis = ({ tokens }) =>
   <>
     <Row className="mb-3">
       <Col>
-        <MassBuyButton cards={tokens.map(([token, tokenCards]) => ({ details: token }))}>
+        <MassBuyButton
+          color="success"
+          cards={tokens.map(([token, tokenCards]) => ({ details: token }))}
+        >
           Buy all tokens
         </MassBuyButton>
       </Col>
