@@ -360,6 +360,74 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
   }
 });
 
+router.post('/follow/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id);
+    } 
+
+    const user = await User.findById(req.user._id);    
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/overview/' + req.params.id);
+    }
+
+    if(!cube.users_following.includes(user._id))
+    {
+      cube.users_following.push(user._id);
+    }
+    if(!user.followed_cubes.includes(cube._id))
+    {
+      users.followed_cubes.push(cube._id);
+    }
+
+    await user.save();
+    await cube.save();
+    
+    res.status(200).send({
+      success: 'true'
+    });
+  }
+  catch(err) {
+    res.status(500).send({
+      success: 'false'
+    });
+  }
+});
+
+router.post('/feature/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id);
+    } 
+
+    const user = await User.findById(req.user._id);    
+    if (!util.isAdmin(user)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id)
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/overview/' + req.params.id);
+    }
+
+    cube.isFeatured = true;
+    await cube.save();
+    
+    req.flash('success', 'Cube updated successfully.');
+    return res.redirect('/cube/overview/' + req.params.id);
+  }
+  catch(err) {
+    req.flash('danger', 'Server Error');
+    return res.redirect('/cube/overview/' + req.params.id);
+  }
+});
+
 router.post('/feature/:id', ensureAuth, async function(req, res) {
   try {
     if (!req.user._id) {
@@ -430,6 +498,7 @@ router.get('/overview/:id', async function(req, res) {
   try{
     var split = req.params.id.split(';');
     var cube_id = split[0];
+    var currentUser;
     admin = false;
     if (req.user) {
       currentUser = await User.findById(req.user._id);
@@ -497,7 +566,8 @@ router.get('/overview/:id', async function(req, res) {
         loginCallback: '/cube/overview/' + req.params.id,
         editorvalue: cube.raw_desc,
         price: sum.toFixed(2),
-        admin: admin
+        admin: admin,
+        followed: currentUser ? currentUser.followed_cubes.includes(cube._id) : null
       });
     });
   }

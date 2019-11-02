@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardText } from 'reactstrap';
+import { Row, Col, Card, CardHeader, CardBody, CardText, Button } from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
@@ -9,10 +9,21 @@ import CSRFForm from './components/CSRFForm';
 class CubeOverview extends Component {
   constructor(props) {
     super(props);
+    
+    this.follow = this.follow.bind(this);    
+    this.unfollow = this.unfollow.bind(this);     
+  }
+
+  follow() {
+
+  }
+
+  unfollow() {
+
   }
 
   render() {
-    const {post, cube, price, owner, admin} = this.props;
+    const {post, cube, price, owner, admin, followed} = this.props;
     return (
       <>
       <DynamicFlash/>
@@ -21,6 +32,7 @@ class CubeOverview extends Component {
           <Card className="mt-3">
             <CardHeader>
               <h3>{cube.name}</h3>
+              <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>   
             </CardHeader>
             <img className="card-img-top w-100" src={cube.image_uri}/>
             <em className="text-right p-1">Art by: {cube.image_artist}</em>
@@ -49,6 +61,11 @@ class CubeOverview extends Component {
                 </CSRFForm>
               }
             </CardBody>
+            {followed ?
+              <Button outline color="success" className="rounded-0" onClick={this.unfollow}>Unfollow</Button>
+            :
+              <Button color="success" className="rounded-0" onClick={this.follow}>Follow</Button>
+            }
           </Card>
         </Col>
         <Col>
@@ -82,6 +99,7 @@ const cube = JSON.parse(document.getElementById('cubeData').value);
 const price = document.getElementById('priceData').value;  
 const owner = document.getElementById('ownerData').value;  
 const admin = document.getElementById('adminData').value === 'true';
+const followed = document.getElementById('followedData').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeOverview post={blog} cube={cube} price={price} owner={owner} admin={admin}/>;
+const element = <CubeOverview post={blog} cube={cube} price={price} owner={owner} admin={admin} followed={followed}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;

@@ -62,7 +62,11 @@ let cubeSchema = mongoose.Schema({
   default_sorts: [String],
   card_count: Number,
   type: String,
-  draft_formats: {}
+  draft_formats: {},
+  users_following: {
+    type: [String],
+    default: []
+  }
 });
 
 let Cube = module.exports = mongoose.model('Cube', cubeSchema)

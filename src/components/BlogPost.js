@@ -3,6 +3,7 @@ import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from './CommentsSection';
 import CommentEntry from './CommentEntry';
+import AgeText from './AgeText';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -65,7 +66,7 @@ class BlogPost extends React.Component {
                     <BlogContextMenu className="float-sm-right" post={post} value='...'/>
                     }
                 </div></h5>
-                <h6 className="card-subtitle mb-2 text-muted">{post.date_formatted}</h6>                  
+                <h6 className="card-subtitle mb-2 text-muted"><AgeText date={post.date}/></h6>                  
             </CardHeader>
             {(post.changelist && post.html) ? 
             <Row className="no-gutters">

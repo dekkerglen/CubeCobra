@@ -22,6 +22,7 @@ block cube_content
   input#priceData(type='hidden', value=price)
   input#ownerData(type='hidden', value=owner)
   input#adminData(type='hidden', value=admin)
+  input#followedData(type='hidden', value=followed)
   if user
     input#userid(type='hidden', value=user._id)
   input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
