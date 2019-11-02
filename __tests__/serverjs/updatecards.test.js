@@ -119,158 +119,146 @@ const convertFnToAttribute = {
   convertCmc: 'cmc',
 };
 
-beforeEach(() => {
-  rimraf.sync('private');
-  updatecards.initializeCatalog();
-});
+describe('updatecards', () => {
+  beforeEach(() => {
+    rimraf.sync('private');
+    updatecards.initializeCatalog();
+  });
 
-afterEach(() => {
-  rimraf.sync('private');
-});
+  afterEach(() => {
+    rimraf.sync('private');
+  });
 
-test('updateCardbase creates the expected files', () => {
-  expect.assertions(7);
-  var noopPromise = new Promise((resolve, reject) => {
-    process.nextTick(() => {
-      resolve();
+  test('updateCardbase creates the expected files', () => {
+    expect.assertions(7);
+    var noopPromise = new Promise((resolve, reject) => {
+      process.nextTick(() => {
+        resolve();
+      });
+    });
+    var downloadMock = jest.fn();
+    downloadMock.mockReturnValue(noopPromise);
+    var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
+    updatecards.downloadDefaultCards = downloadMock;
+    return updatecards.updateCardbase(cardsFixturePath).then(function() {
+      expect(fs.existsSync('private/cardtree.json')).toBe(true);
+      expect(fs.existsSync('private/imagedict.json')).toBe(true);
+      expect(fs.existsSync('private/cardimages.json')).toBe(true);
+      expect(fs.existsSync('private/names.json')).toBe(true);
+      expect(fs.existsSync('private/carddict.json')).toBe(true);
+      expect(fs.existsSync('private/nameToId.json')).toBe(true);
+      expect(fs.existsSync('private/full_names.json')).toBe(true);
+    });
+    updatecards.downloadDefaultCards = initialDownloadDefaultCards;
+  });
+
+  test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
+    const card = convertedExampleCard;
+    updatecards.addCardToCatalog(card);
+    var catalog = updatecards.catalog;
+    const normalizedFullName = card.full_name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    const normalizedName = carddb.normalizedName(card);
+    const expectedImagedictStructure = {
+      uri: card.art_crop,
+      artist: card.artist,
+    };
+    const expectedCardimagesStructure = {
+      image_normal: card.image_normal,
+    };
+    expect(Object.keys(catalog.dict).length).toBe(1);
+    expect(catalog.dict[card._id]).toEqual(card);
+    expect(Object.keys(catalog.imagedict).length).toBe(1);
+    expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
+    expect(Object.keys(catalog.cardimages).length).toBe(1);
+    expect(catalog.cardimages[normalizedName]).toEqual(expectedCardimagesStructure);
+    expect(Object.keys(catalog.nameToId).length).toBe(1);
+    expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+    expect(Object.keys(catalog.names).length).toBe(1);
+    expect(Object.keys(catalog.full_names).length).toBe(1);
+  });
+
+  test("addCardToCatalog successfully adds a double-faced card's information to the internal structures", () => {
+    const card = convertedExampleDoubleFacedCardFlipFace;
+    updatecards.addCardToCatalog(card, true);
+    var catalog = updatecards.catalog;
+    const normalizedFullName = card.full_name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    const normalizedName = carddb.normalizedName(card);
+    const expectedImagedictStructure = {
+      uri: card.art_crop,
+      artist: card.artist,
+    };
+    expect(Object.keys(catalog.dict).length).toBe(1);
+    expect(catalog.dict[card._id]).toEqual(card);
+    expect(Object.keys(catalog.imagedict).length).toBe(1);
+    expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
+    expect(Object.keys(catalog.cardimages).length).toBe(0);
+    expect(Object.keys(catalog.nameToId).length).toBe(1);
+    expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+    expect(Object.keys(catalog.names).length).toBe(1);
+    expect(Object.keys(catalog.full_names).length).toBe(1);
+  });
+
+  test('initializeCatalog clears the updatecards structures', () => {
+    expect.assertions(6);
+    var contents = fs.readFileSync(cardsFixturePath);
+    var cards = JSON.parse(contents);
+    return updatecards.saveAllCards(cards).then(function() {
+      updatecards.initializeCatalog();
+      expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
+      expect(updatecards.catalog.names.length).toBe(0);
+      expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
+      expect(updatecards.catalog.full_names.length).toBe(0);
+      expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
+      expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
     });
   });
-  var downloadMock = jest.fn();
-  downloadMock.mockReturnValue(noopPromise);
-  var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
-  updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase(cardsFixturePath).then(function() {
-    expect(fs.existsSync('private/cardtree.json')).toBe(true);
-    expect(fs.existsSync('private/imagedict.json')).toBe(true);
-    expect(fs.existsSync('private/cardimages.json')).toBe(true);
-    expect(fs.existsSync('private/names.json')).toBe(true);
-    expect(fs.existsSync('private/carddict.json')).toBe(true);
-    expect(fs.existsSync('private/nameToId.json')).toBe(true);
-    expect(fs.existsSync('private/full_names.json')).toBe(true);
+
+  test('saveAllCards creates the expected files', () => {
+    expect.assertions(7);
+    var contents = fs.readFileSync(cardsFixturePath);
+    var cards = JSON.parse(contents);
+    return updatecards.saveAllCards(cards).then(function() {
+      expect(fs.existsSync('private/cardtree.json')).toBe(true);
+      expect(fs.existsSync('private/imagedict.json')).toBe(true);
+      expect(fs.existsSync('private/cardimages.json')).toBe(true);
+      expect(fs.existsSync('private/names.json')).toBe(true);
+      expect(fs.existsSync('private/carddict.json')).toBe(true);
+      expect(fs.existsSync('private/nameToId.json')).toBe(true);
+      expect(fs.existsSync('private/full_names.json')).toBe(true);
+    });
   });
-  updatecards.downloadDefaultCards = initialDownloadDefaultCards;
-});
 
-test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
-  const card = convertedExampleCard;
-  updatecards.addCardToCatalog(card);
-  var catalog = updatecards.catalog;
-  const normalizedFullName = card.full_name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  const normalizedName = carddb.normalizedName(card);
-  const expectedImagedictStructure = {
-    uri: card.art_crop,
-    artist: card.artist,
-  };
-  const expectedCardimagesStructure = {
-    image_normal: card.image_normal,
-  };
-  expect(Object.keys(catalog.dict).length).toBe(1);
-  expect(catalog.dict[card._id]).toEqual(card);
-  expect(Object.keys(catalog.imagedict).length).toBe(1);
-  expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
-  expect(Object.keys(catalog.cardimages).length).toBe(1);
-  expect(catalog.cardimages[normalizedName]).toEqual(expectedCardimagesStructure);
-  expect(Object.keys(catalog.nameToId).length).toBe(1);
-  expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
-  expect(Object.keys(catalog.names).length).toBe(1);
-  expect(Object.keys(catalog.full_names).length).toBe(1);
-});
-
-test("addCardToCatalog successfully adds a double-faced card's information to the internal structures", () => {
-  const card = convertedExampleDoubleFacedCardFlipFace;
-  updatecards.addCardToCatalog(card, true);
-  var catalog = updatecards.catalog;
-  const normalizedFullName = card.full_name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  const normalizedName = carddb.normalizedName(card);
-  const expectedImagedictStructure = {
-    uri: card.art_crop,
-    artist: card.artist,
-  };
-  expect(Object.keys(catalog.dict).length).toBe(1);
-  expect(catalog.dict[card._id]).toEqual(card);
-  expect(Object.keys(catalog.imagedict).length).toBe(1);
-  expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
-  expect(Object.keys(catalog.cardimages).length).toBe(0);
-  expect(Object.keys(catalog.nameToId).length).toBe(1);
-  expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
-  expect(Object.keys(catalog.names).length).toBe(1);
-  expect(Object.keys(catalog.full_names).length).toBe(1);
-});
-
-test('initializeCatalog clears the updatecards structures', () => {
-  expect.assertions(6);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards).then(function() {
-    updatecards.initializeCatalog();
-    expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
-    expect(updatecards.catalog.names.length).toBe(0);
-    expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
-    expect(updatecards.catalog.full_names.length).toBe(0);
-    expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
-    expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
+  test('convertCard returns a correctly converted card object', () => {
+    const result = updatecards.convertCard(examplecards.exampleCard);
+    expect(result).toEqual(convertedExampleCard);
   });
-});
 
-test('saveAllCards creates the expected files', () => {
-  expect.assertions(7);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards).then(function() {
-    expect(fs.existsSync('private/cardtree.json')).toBe(true);
-    expect(fs.existsSync('private/imagedict.json')).toBe(true);
-    expect(fs.existsSync('private/cardimages.json')).toBe(true);
-    expect(fs.existsSync('private/names.json')).toBe(true);
-    expect(fs.existsSync('private/carddict.json')).toBe(true);
-    expect(fs.existsSync('private/nameToId.json')).toBe(true);
-    expect(fs.existsSync('private/full_names.json')).toBe(true);
+  var attribute;
+  for (var convertFn in convertFnToAttribute) {
+    attribute = convertFnToAttribute[convertFn];
+    test(convertFn + " properly converts a card's " + attribute, () => {
+      const result = updatecards[convertFn](examplecards.exampleCard);
+      expect(result).toBe(convertedExampleCard[attribute]);
+    });
+  }
+
+  test('convertCard returns a correctly converted double-faced card object', () => {
+    const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
+    expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
   });
-});
 
-test('convertCard returns a correctly converted card object', () => {
-  const result = updatecards.convertCard(examplecards.exampleCard);
-  expect(result).toEqual(convertedExampleCard);
-});
-
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleCard);
-    expect(result).toBe(convertedExampleCard[attribute]);
-  });
-}
-
-test('convertCard returns a correctly converted double-faced card object', () => {
-  const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
-  expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
-});
-
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a double-faced card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
-    expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
-  });
-}
-
-test('parseTokenMakingAbility correctly parses tokens created by an ability', () => {
-  const card = tokenGeneratingExampleCard;
-  const tokenMakingAbility = card.oracle_text;
-  // the card needs to be in the catalog for sourceCard for tokens.
-  // this functionality is tested later.
-  updatecards.addCardToCatalog(card);
-  expect(
-    updatecards.parseTokenMakingAbility(
-      tokenMakingAbility,
-      tokenGeneratingExampleCard._id
-    )
-  ).toEqual('bleep');
+  var attribute;
+  for (var convertFn in convertFnToAttribute) {
+    attribute = convertFnToAttribute[convertFn];
+    test(convertFn + " properly converts a double-faced card's " + attribute, () => {
+      const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
+      expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
+    });
+  }
 });

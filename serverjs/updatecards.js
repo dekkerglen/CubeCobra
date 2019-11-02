@@ -87,198 +87,185 @@ function writeFile(filepath, data) {
   });
 }
 
-function parseTokenMakingAbility(ability, cardID) {
-  var generatedTokens = [];
-  if (ability.includes(' token') && !ability.startsWith('If')) {
-    var reString =
-      '[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:\'s \\w+)?)?)?(?: with ((?:".*")| and |[a-z]+)+)?(?:.*(a copy of))?';
-    var re = new RegExp(reString);
-    var result = re.exec(ability);
-    if (result === undefined) {
-      return [];
-    }
-    var tokenCountString = result[1];
-    var tokenPowerAndToughness = result[2];
-    var tokenColorString = result[3];
-    var tokenSubTypesString = result[4] ? result[4].trim() : '';
-    var tokenSuperTypesString = result[5] ? result[5].trim() : '';
-    // if not specificaly named, use the type
-    var tokenName = result[7] ? result[7].trim() : tokenSubTypesString;
-    var tokenAbilities = [];
-    if (result[8]) {
-      var tmpTokenAbilities = result[8].toLowerCase().split('"');
-      tmpTokenAbilities.forEach(line => {
-        tmpTokenAbilityParts = line.split(',');
-        tmpTokenAbilityParts.forEach(part => {
-          if (part.length > 0) tokenAbilities.push(part);
-        });
-      });
-    }
-    var isACopy = result[9] || result[6] ? true : false;
-
-    if (specialCaseTokensList.includes(tokenName)) {
-      generatedTokens.push({
-        tokenId: getTokenIDForSpecialCaseToken(tokenName),
-        sourceCardId: _catalog.dict[cardID]._id,
-      });
-      return generatedTokens;
-    }
-
-    if (isACopy) {
-      // most likely a token that could be a copy of any creature but it could have a specific token
-      if (
-        ability
-          .toLowerCase()
-          .includes("create a token that's a copy of a creature token you control.")
-      ) {
-        // the Populate ability
-        return;
-      }
-
-      var cardTokens = getTokensFromCard(card);
-
-      if (cardTokens.length > 0) {
-        cardTokens.forEach(element => {
-          generatedTokens.push({
-            tokenId: element,
-            sourceCardId: _catalog.dict[cardID]._id,
-          });
-        });
-      } else {
-        // if there is no specified tokens for the card use the generic copy token
-        generatedTokens.push({
-          tokenId: 'a020dc47-3747-4123-9954-f0e87a858b8c',
-          sourceCardId: _catalog.dict[card.id]._id,
-        });
-      }
-      return generatedTokens;
-    }
-
-    var tokenColor = [];
-    if (tokenColorString) {
-      var colorStrings = tokenColorString.trim().split(' ');
-      colorStrings.forEach(rawColor => {
-        switch (rawColor.toLowerCase()) {
-          case 'red':
-            tokenColor.push('R');
-            break;
-          case 'white':
-            tokenColor.push('W');
-            break;
-          case 'green':
-            tokenColor.push('G');
-            break;
-          case 'black':
-            tokenColor.push('B');
-            break;
-          case 'blue':
-            tokenColor.push('U');
-            break;
-        }
-      });
-    }
-    var tokenPower;
-    var tokenToughness;
-    if (tokenPowerAndToughness) {
-      if (tokenPowerAndToughness.length > 0) {
-        tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
-        tokenPower = tokenPowerAndToughness.split('/')[0];
-        tokenToughness = tokenPowerAndToughness.split('/')[1];
-      }
-    }
-
-    var dbHits = _catalog.nameToId[tokenName.toLowerCase()];
-    if (dbHits == undefined) {
-      // for all the cards that produce tokens but do not have any in the database
-      generatedTokens.push({
-        tokenId: '',
-        sourceCardId: _catalog.dict[cardID]._id,
-      });
-      return generatedTokens;
-    }
-    for (const dbHit of dbHits) {
-      var candidate = _catalog.dict[dbHit];
-      var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
-
-      var candidateTypes = candidate.type
-        .toLowerCase()
-        .replace(' —', '')
-        .replace('token ', '')
-        .split(' ');
-
-      var creatureTypes = [];
-      tokenSuperTypesString
-        .toLowerCase()
-        .split(' ')
-        .forEach(type => {
-          creatureTypes.push(type);
-        });
-      tokenSubTypesString
-        .toLowerCase()
-        .split(' ')
-        .forEach(type => {
-          creatureTypes.push(type);
-        });
-      var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
-
-      var areAbilitiesValid = false;
-      if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0) {
-        areAbilitiesValid = CheckContentsEqualityOfArray(
-          tokenAbilities,
-          candidate.oracle_text.toLowerCase().split(',')
-        );
-      } else {
-        areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
-      }
-
-      if (
-        candidate.power == tokenPower &&
-        candidate.toughness == tokenToughness &&
-        areColorsValid &&
-        areTypesValid &&
-        areAbilitiesValid
-      ) {
-        generatedTokens.push({
-          tokenId: candidate._id,
-          sourceCardId: _catalog.dict[cardID]._id,
-        });
-        return generatedTokens;
-      }
-    }
-  }
-  return generatedTokens;
-}
-
-function parseTokens(cardID) {
+function parseTokens(card) {
+  // a card can have multiple tokens
   var mentionedTokens = [];
 
-  if (Object.keys(specialCaseCardsList).includes(_catalog.dict[cardID].name)) {
-    const newCard = _catalog.dict[cardID]._id;
-    mentionedTokens = getTokensForSpecialCaseCard(newCard._id, newCard);
-    return mentionedTokens;
+  if (Object.keys(specialCaseCardsList).includes(card.name)) {
+    return getTokensForSpecialCaseCard(card);
   }
-
-  if (_catalog.dict[cardID].oracle_text == null) {
+  if (card.oracle_text === undefined) {
     return [];
   }
 
-  if (!_catalog.dict[cardID].oracle_text.includes(' token')) {
-    return [];
-  }
-  // find the ability that generates the token to reduce the amount of text to get confused by.
-  var abilities = _catalog.dict[cardID].oracle_text.split('\n');
-  for (const ability of abilities) {
-    mentionedTokens.push(parseTokenMakingAbility(ability, cardID));
+  if (card.oracle_text.includes(' token')) {
+    // find the ability that generates the token to reduce the amount of text to get confused by.
+    var abilities = card.oracle_text.split('\n');
+    for (const ability of abilities) {
+      if (ability.includes(' token') && !ability.startsWith('If')) {
+        var reString =
+          '[Cc]reates? ([Xa-z]+(?: number of)?)(?: tapped)?(?: ([0-9X]+/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:\'s \\w+)?)?)?(?: with ((?:".*")| and |[a-z]+)+)?(?:.*(a copy of))?';
+        var re = new RegExp(reString);
+        var result = re.exec(ability);
+        if (result === undefined) {
+          continue;
+        }
+        var tokenCountString = result[1];
+        var tokenPowerAndToughness = result[2];
+        var tokenColorString = result[3];
+        var tokenSubTypesString = result[4] ? result[4].trim() : '';
+        var tokenSuperTypesString = result[5] ? result[5].trim() : '';
+        var tokenName = result[7] ? result[7].trim() : tokenSubTypesString; //if not specificaly named, use the type
+
+        var tokenAbilities = [];
+        if (result[8]) {
+          var tmpTokenAbilities = result[8].toLowerCase().split('"');
+          tmpTokenAbilities.forEach(line => {
+            tmpTokenAbilityParts = line.split(',');
+            tmpTokenAbilityParts.forEach(part => {
+              if (part.length > 0) tokenAbilities.push(part);
+            });
+          });
+        }
+        var isACopy = result[9] || result[6] ? true : false;
+
+        if (specialCaseTokensList.includes(tokenName)) {
+          mentionedTokens.push({
+            tokenId: getTokenIDForSpecialCaseToken(tokenName),
+            sourceCardId: card._id,
+          });
+          continue;
+        }
+
+        if (isACopy) {
+          // most likely a token that could be a copy of any creature but it could have a specific token
+          if (
+            ability
+              .toLowerCase()
+              .includes("create a token that's a copy of a creature token you control.")
+          ) {
+            //populate
+            continue;
+          }
+
+          var cardTokens = getTokensFromCard(card);
+
+          if (cardTokens.length > 0) {
+            cardTokens.forEach(element => {
+              mentionedTokens.push({
+                tokenId: element,
+                sourceCardId: card._id,
+              });
+            });
+          } else {
+            // if there is no specified tokens for the card use the generic copy token
+            mentionedTokens.push({
+              tokenId: 'a020dc47-3747-4123-9954-f0e87a858b8c',
+              sourceCardId: card._id,
+            });
+          }
+
+          continue;
+        }
+
+        var tokenColor = [];
+        if (tokenColorString) {
+          var colorStrings = tokenColorString.trim().split(' ');
+          colorStrings.forEach(rawColor => {
+            switch (rawColor.toLowerCase()) {
+              case 'red':
+                tokenColor.push('R');
+                break;
+              case 'white':
+                tokenColor.push('W');
+                break;
+              case 'green':
+                tokenColor.push('G');
+                break;
+              case 'black':
+                tokenColor.push('B');
+                break;
+              case 'blue':
+                tokenColor.push('U');
+                break;
+            }
+          });
+        }
+        var tokenPower;
+        var tokenToughness;
+        if (tokenPowerAndToughness) {
+          if (tokenPowerAndToughness.length > 0) {
+            tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
+            tokenPower = tokenPowerAndToughness.split('/')[0];
+            tokenToughness = tokenPowerAndToughness.split('/')[1];
+          }
+        }
+
+        var dbHits = _catalog.nameToId[tokenName.toLowerCase()];
+        if (dbHits === undefined) {
+          // for all the cards that produce tokens but do not have any in the database
+          mentionedTokens.push({
+            tokenId: '',
+            sourceCardId: card._id,
+          });
+          continue;
+        }
+        for (const dbHit of dbHits) {
+          var candidate = _catalog.dict[dbHit];
+          var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
+
+          var candidateTypes = candidate.type
+            .toLowerCase()
+            .replace(' —', '')
+            .replace('token ', '')
+            .split(' ');
+
+          var creatureTypes = [];
+          tokenSuperTypesString
+            .toLowerCase()
+            .split(' ')
+            .forEach(type => {
+              creatureTypes.push(type);
+            });
+          tokenSubTypesString
+            .toLowerCase()
+            .split(' ')
+            .forEach(type => {
+              creatureTypes.push(type);
+            });
+          var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
+
+          var areAbilitiesValid = false;
+          if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0)
+            areAbilitiesValid = CheckContentsEqualityOfArray(
+              tokenAbilities,
+              candidate.oracle_text.toLowerCase().split(',')
+            );
+          else areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
+
+          if (
+            candidate.power == tokenPower &&
+            candidate.toughness == tokenToughness &&
+            areColorsValid &&
+            areTypesValid &&
+            areAbilitiesValid
+          ) {
+            mentionedTokens.push({
+              tokenId: candidate._id,
+              sourceCardId: _catalog.dict[card.id]._id,
+            });
+            break;
+          }
+        }
+      }
+    }
   }
   return mentionedTokens;
 }
 
-function addTokens(card) {
-  const mentionedTokens = parseTokens(card.id);
-  console.log(`${card} mentions ${mentionedTokens}`);
-  if (mentionedTokens.length > 0) {
-    _catalog.dict[card.id].tokens = mentionedTokens;
-  }
+function annotateTokensInCatalog(card) {
+  _catalog.dict[card.id].tokens = parseTokens(card);
+  return;
 }
 
 function saveAllCards(arr) {
@@ -289,7 +276,7 @@ function saveAllCards(arr) {
     addCardToCatalog(convertCard(card));
   });
   arr.forEach(function(card, index) {
-    addTokens(card);
+    annotateTokensInCatalog(card);
   });
   if (!fs.existsSync('private')) {
     fs.mkdirSync('private');
@@ -447,15 +434,10 @@ function CheckContentsEqualityOfArray(target, candidate) {
 
 function getTokensFromCard(card) {
   var cardTokens = [];
-<<<<<<< HEAD
-  if (!card.all_parts) return [];
-  card.all_parts.forEach((element) => {
-=======
   if (!card.all_parts) {
     return [];
   }
   card.all_parts.forEach(element => {
->>>>>>> wip refactoring for testing tokens
     if (element.component == 'token') {
       cardTokens.push(element.id);
     }
@@ -464,37 +446,6 @@ function getTokensFromCard(card) {
 }
 
 var specialCaseCardsList = {
-<<<<<<< HEAD
-  "Outlaws' Merriment": [
-    {
-      tokenId: 'db951f76-b785-453e-91b9-b3b8a5c1cfd4',
-    },
-    {
-      tokenId: 'cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447',
-    },
-    {
-      tokenId: 'c994ea90-71f4-403f-9418-2b72cc2de14d',
-    },
-  ],
-  'Sword of Dungeons & Dragons': [
-    {
-      tokenId: '44c65dfd-69be-4345-92e9-51a35a486f21',
-    },
-  ],
-  "Wolf's Quarry": [
-    {
-      tokenId: '365b2234-c29d-42db-a8e0-80685a4b6434',
-    },
-    {
-      tokenId: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-    },
-  ],
-  'Jace, Cunning Castaway': [
-    {
-      tokenId: 'a10729a5-061a-4daf-91d6-0f6ce813a992',
-    },
-  ],
-=======
   "Outlaws' Merriment": [{
     tokenId: "db951f76-b785-453e-91b9-b3b8a5c1cfd4"
   }, {
@@ -513,7 +464,6 @@ var specialCaseCardsList = {
   "Jace, Cunning Castaway": [{
     tokenId: "a10729a5-061a-4daf-91d6-0f6ce813a992"
   }],
->>>>>>> wip refactoring for testing tokens
   //the cards below are transform cards that are on here due to the way
   //we currently do not populate the oracle text of transform cards.
   'Arlinn Kord': [
@@ -607,7 +557,7 @@ var specialCaseCardsList = {
 };
 var specialCaseTokensList = ['Food'];
 
-function getTokensForSpecialCaseCard(newCardid, card) {
+function getTokensForSpecialCaseCard(card) {
   var result = [];
   if (card.card_faces) {
     var result = specialCaseCardsList[card.card_faces[0].name];
@@ -615,7 +565,7 @@ function getTokensForSpecialCaseCard(newCardid, card) {
     var result = specialCaseCardsList[card.name];
   }
   result.forEach(function(card, index) {
-    card.sourceCardId = newCardid;
+    result.sourceCardId = card._id;
   });
   return result;
 }
@@ -701,6 +651,7 @@ module.exports = {
   catalog: _catalog,
   addCardToCatalog: addCardToCatalog,
   updateCardbase: updateCardbase,
+  annotateTokensInCatalog: annotateTokensInCatalog,
   downloadDefaultCards: downloadDefaultCards,
   saveAllCards: saveAllCards,
   convertCard: convertCard,
@@ -711,9 +662,6 @@ module.exports = {
   convertColors: convertColors,
   convertParsedCost: convertParsedCost,
   convertCmc: convertCmc,
-<<<<<<< HEAD
-=======
   parseTokenMakingAbility: parseTokenMakingAbility,
   parseTokens: parseTokens,
->>>>>>> wip refactoring for testing tokens
 };
