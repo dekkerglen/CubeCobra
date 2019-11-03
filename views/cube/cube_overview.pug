@@ -11,7 +11,7 @@ block cube_toolbar
               li.nav-item
                 a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
               li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube
+                a.nav-link(href='#' data-toggle='modal', data-target='#deleteCubeModal') Delete Cube
                 
   include ../dynamic_flash
 block cube_content
@@ -98,7 +98,7 @@ block cube_content
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+      #deleteCubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteCubeModalLabel', aria-hidden='true')
         .modal-dialog(role='document')
           .modal-content
             .modal-header
