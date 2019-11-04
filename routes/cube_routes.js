@@ -343,6 +343,8 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
               blogpost.cube = cube._id;
               blogpost.dev = 'false';
               blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+              blogpost.username = user.username;
+              blogpost.cubename = cube.name;
 
               blogpost.save(function(err) {
                 if (err) {
@@ -1151,6 +1153,8 @@ router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
               blogpost.cube = cube._id;
               blogpost.dev = 'false';
               blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+              blogpost.username = cube.owner_name;
+              blogpost.cubename = cube.name;
 
               if (missing.length > 0) {
                 res.render('cube/bulk_upload', {
@@ -1266,6 +1270,8 @@ function bulkuploadCSV(req, res, cards, cube) {
   blogpost.cube = cube._id;
   blogpost.dev = 'false';
   blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+  blogpost.username = cube.owner_name;
+  blogpost.cubename = cube.name;
 
   //
   if (missing.length > 0) {
@@ -1359,6 +1365,8 @@ function bulkUpload(req, res, list, cube) {
         blogpost.cube = cube._id;
         blogpost.dev = 'false';
         blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+        blogpost.username = cube.owner_name;
+        blogpost.cubename = cube.name;
 
         //
         if (missing.length > 0) {
@@ -1960,6 +1968,8 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       blogpost.cube = cube._id;
       blogpost.dev = 'false';
       blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+      blogpost.username = cube.owner_name;
+      blogpost.cubename = cube.name;
 
       blogpost.save(function(err) {
         if (err) {
