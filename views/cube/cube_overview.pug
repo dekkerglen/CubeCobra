@@ -17,12 +17,12 @@ block cube_toolbar
 block cube_content
   #react-root
   
-  input#blogData(type='hidden', value=post)
+  input#blogData(type='hidden', value=(post?post:'false'))
   input#cubeData(type='hidden', value=cube)
   input#priceData(type='hidden', value=price)
   input#ownerData(type='hidden', value=owner)
   input#adminData(type='hidden', value=admin)
-  input#followedData(type='hidden', value=followed)
+  input#followedData(type='hidden', value=is_following)
   if user
     input#userid(type='hidden', value=user._id)
   input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
@@ -112,8 +112,8 @@ block cube_content
             .modal-footer
               input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube_id, disabled="", id="delete")
               button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
-      script(src='/js/csrf.js')
-      script(src='/js/image_autocomplete.js')
-      script(src='/js/blog.js')
-      script(src='/js/deleteconfirm.js')
+  script(src='/js/csrf.js')
+  script(src='/js/image_autocomplete.js')
+  script(src='/js/blog.js')
+  script(src='/js/deleteconfirm.js')
   script(src='/js/cube_overview.bundle.js')

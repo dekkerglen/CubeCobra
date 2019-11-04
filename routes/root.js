@@ -4,6 +4,7 @@ const router = express.Router();
 const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
+const User = require('../models/user');
 
 const {
   csrfProtection,
@@ -90,10 +91,26 @@ router.get('/random', async function(req, res) {
   res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
 })
 
-router.get('/dashboard', function(req, res) {
-  res.render('dashboard', {
-    loginCallback: '/'
-  });
+router.get('/dashboard', async function(req, res) {
+  try {
+    user = await User.findById(req.user._id);
+    if (!user) {
+      return res.redirect('/landing');
+    }
+
+    blogs = await Blog.find({cube: {$in: user.followed_cubes}})
+    .sort({
+      'date': 1
+    }).limit(50);
+
+    return res.render('dashboard', {
+      posts: blogs,
+      loginCallback: '/'
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
 });
 
 router.get('/landing', function(req, res) {

@@ -11,19 +11,47 @@ class CubeOverview extends Component {
     super(props);
     
     this.follow = this.follow.bind(this);    
-    this.unfollow = this.unfollow.bind(this);     
+    this.unfollow = this.unfollow.bind(this);    
+    
+    this.state = {
+      followed: this.props.followed
+    };
   }
 
   follow() {
-
+    this.setState({
+      followed: true
+    });
+    csrfFetch("/cube/follow/" + this.props.cube._id, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (!response.ok) {
+        console.log(response);
+      }
+    });      
   }
 
   unfollow() {
-
+    this.setState({
+      followed: false
+    });
+    csrfFetch("/cube/unfollow/" + this.props.cube._id, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (!response.ok) {
+        console.log(response);
+      }
+    }); 
   }
 
   render() {
-    const {post, cube, price, owner, admin, followed} = this.props;
+    const {post, cube, price, owner, admin} = this.props;
     return (
       <>
       <DynamicFlash/>
@@ -61,8 +89,8 @@ class CubeOverview extends Component {
                 </CSRFForm>
               }
             </CardBody>
-            {followed ?
-              <Button outline color="success" className="rounded-0" onClick={this.unfollow}>Unfollow</Button>
+            {this.state.followed ?
+              <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>Unfollow</Button>
             :
               <Button color="success" className="rounded-0" onClick={this.follow}>Follow</Button>
             }
@@ -98,8 +126,9 @@ const blog = JSON.parse(document.getElementById('blogData').value);
 const cube = JSON.parse(document.getElementById('cubeData').value);  
 const price = document.getElementById('priceData').value;  
 const owner = document.getElementById('ownerData').value;  
-const admin = document.getElementById('adminData').value === 'true';
-const followed = document.getElementById('followedData').value === 'true';
+const admin = JSON.parse(document.getElementById('adminData').value) == true;
+const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
-const element = <CubeOverview post={blog} cube={cube} price={price} owner={owner} admin={admin} followed={followed}/>;
+console.log(followed);
+const element = <CubeOverview post={blog?blog:null} cube={cube} price={price} owner={owner} admin={admin} followed={followed}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;
