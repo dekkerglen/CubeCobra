@@ -7,7 +7,7 @@ import CurveAnalysis from './components/CurveAnalysis';
 import DynamicFlash from './components/DynamicFlash';
 import MulticoloredAnalysis from './components/MulticoloredAnalysis';
 import TypeAnalysis from './components/TypeAnalysis';
-import GeneratedTokensAnalysis from './components/GeneratedTokensAnalysis';
+import TokenAnalysis from './components/TokenAnalysis';
 
 class CubeAnalysis extends Component {
   constructor(props) {
@@ -23,7 +23,8 @@ class CubeAnalysis extends Component {
   }
 
   render() {
-    const { curve, typeByColor, multicoloredCounts, generatedTokensCounts } = this.props;
+    const { curve, typeByColor, multicoloredCounts, tokens } = this.props;
+    console.log(tokens);
     const active = this.state.nav;
     let navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#">
@@ -46,7 +47,7 @@ class CubeAnalysis extends Component {
             curve: <CurveAnalysis curve={curve} />,
             type: <TypeAnalysis typeByColor={typeByColor} />,
             multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
-            tokens:<GeneratedTokensAnalysis GeneratedTokensCounts = {GeneratedTokensCounts} />,
+            tokens:<TokenAnalysis tokens={tokens} />,
           }[active]}
         </Col>
       </Row>
