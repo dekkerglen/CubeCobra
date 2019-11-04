@@ -93,18 +93,20 @@ router.get('/random', async function(req, res) {
 
 router.get('/dashboard', async function(req, res) {
   try {
-    user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.redirect('/landing');
     }
 
-    blogs = await Blog.find({cube: {$in: user.followed_cubes}})
-    .sort({
-      'date': 1
-    }).limit(50);
+    const cubesq = Cube.find({owner: user._id});
+    const blogsq = Blog.find({cube: {$in: user.followed_cubes}}).sort({'date': 1}).limit(50);
+    
+    //We can do these queries in parallel
+    const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
 
     return res.render('dashboard', {
       posts: blogs,
+      cubes: cubes,
       loginCallback: '/'
     });
   } catch (err) {

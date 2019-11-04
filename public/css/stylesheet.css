@@ -423,3 +423,7 @@ body.busy-cursor {
 .centered-max400 { 
 	margin: auto; max-width: 400px;
 }
+.cube-preview-image {
+	width: 100%;
+	height: auto;
+}

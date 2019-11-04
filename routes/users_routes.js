@@ -409,36 +409,34 @@ router.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-router.get('/view/:id', function(req, res) {
-  User.findById(req.params.id, function(err, user) {
+router.get('/view/:id', async function(req, res) {
+  try { 
+    const user = await User.findById(req.params.id);
     if (!user) {
-      User.findOne({
-        username_lower: req.params.id.toLowerCase()
-      }, function(err, user2) {
+      //if this is not a valid ID we will find the user with the username entered
+      const user2 = await User.findOne({username_lower: req.params.id.toLowerCase()});
         if (!user2) {
           req.flash('danger', 'User not found');
-          res.status(404).render('misc/404', {});
-        } else {
-          res.redirect('/user/view/' + user2._id);
+          return res.status(404).render('misc/404', {});
         }
-      });
-    } else {
-      Cube.find({
-        owner: user._id
-      }, function(err, cubes) {
-        res.render('user/user_view', {
-          user_limited: {
-            username: user.username,
-            email: user.email,
-            about: user.about,
-            id: user._id
-          },
-          cubes: cubes,
-          loginCallback: '/user/view/' + req.params.id
-        });
-      });
+        user = user2;
     }
-  });
+    const cubes = await Cube.find({owner: user._id});
+
+    return res.render('user/user_view', {
+      user_limited: {
+        username: user.username,
+        email: user.email,
+        about: user.about,
+        id: user._id
+      },
+      cubes: cubes,
+      loginCallback: '/user/view/' + req.params.id
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
 });
 
 router.get('/decks/:id', function(req, res) {
