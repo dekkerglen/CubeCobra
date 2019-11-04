@@ -30,7 +30,7 @@ class Dashboard extends Component {
     //List of your cubes
     //List of drafts of your cube
     //List of replies to your blogs  
-    const {posts, cubes} = this.props;
+    const {posts, cubes, decks} = this.props;
     return (       
       <Row>
         <Col sm="12" xs="12" md="6" lg="6" >
@@ -59,6 +59,20 @@ class Dashboard extends Component {
         <Col sm="12" xs="12" md="6" lg="6" >
           <Card>
             <CardHeader><h5>Recent Drafts</h5></CardHeader>
+            <CardBody className="py-2 px-2">  
+                {decks.length > 0 ?
+                  decks.map(deck =>
+                    <a key={deck._id} href={'/cube/deck/'+deck._id}>{deck.name}<br/></a>
+                  )
+                :
+                  <p className="m-2">Nobody has drafted your cubes! Perhaps try reaching out on the <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a></p>
+                }  
+            </CardBody>
+            <CardFooter>
+              {cubes.length > 2 &&
+                <a href='#'>View All</a>
+              }
+            </CardFooter>
           </Card>
         </Col>
         <Col sm="12" xs="12" md="12" lg="12" className="my-2">
@@ -80,9 +94,10 @@ class Dashboard extends Component {
   }
 }
 
-const posts = JSON.parse(document.getElementById('blogData').value);  
-const cubes = JSON.parse(document.getElementById('cubeData').value);  
+const posts = JSON.parse(document.getElementById('blogData').value);
+const cubes = JSON.parse(document.getElementById('cubeData').value);
+const decks = JSON.parse(document.getElementById('decksData').value);
 const userid = document.getElementById('userid').value;
 const wrapper = document.getElementById('react-root');
-const element = <Dashboard posts={posts} userid={userid} cubes={cubes}/>;
+const element = <Dashboard posts={posts} userid={userid} cubes={cubes} decks={decks}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;

@@ -104,9 +104,18 @@ router.get('/dashboard', async function(req, res) {
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
 
+    const cubeIds = [];
+    cubes.forEach(function(cube, index)
+    {
+      cubeIds.push(cube._id);
+    });
+
+    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':1}).limit(20);
+
     return res.render('dashboard', {
       posts: blogs,
       cubes: cubes,
+      decks: decks,
       loginCallback: '/'
     });
   } catch (err) {

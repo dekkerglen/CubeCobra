@@ -6,7 +6,10 @@ let deckSchema = mongoose.Schema({
     []
   ],
   owner: String,
-  cube: String,
+  cube: {
+    type: String,
+    index:true
+  },
   date: Date,
   name: String,
   bots: [

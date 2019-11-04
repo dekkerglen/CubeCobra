@@ -439,84 +439,63 @@ router.get('/view/:id', async function(req, res) {
   }
 });
 
-router.get('/decks/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var userid = split[0];
-  User.findById(userid, function(err, user) {
-    Deck.find({
-      owner: userid
-    }).sort('date').exec(function(err, decks) {
-      if (!user) {
-        user = {
-          username: 'unknown'
-        };
-      }
-      var pages = [];
-      var pagesize = 30;
-      if (decks.length > 0) {
-        decks.reverse();
-        if (decks.length > pagesize) {
-          var page = parseInt(split[1]);
-          if (!page) {
-            page = 0;
-          }
-          for (i = 0; i < decks.length / pagesize; i++) {
-            if (page == i) {
-              pages.push({
-                url: '/user/decks/' + userid + ';' + i,
-                content: (i + 1),
-                active: true
-              });
-            } else {
-              pages.push({
-                url: '/user/decks/' + userid + ';' + i,
-                content: (i + 1),
-              });
-            }
-          }
-          deck_page = [];
-          for (i = 0; i < pagesize; i++) {
-            if (decks[i + page * pagesize]) {
-              deck_page.push(decks[i + page * pagesize]);
-            }
-          }
-          res.render('user/user_decks', {
-            user_limited: {
-              username: user.username,
-              email: user.email,
-              about: user.about,
-              id: user._id
-            },
-            decks: deck_page,
-            pages: pages,
-            loginCallback: '/user/decks/' + userid
-          });
-        } else {
-          res.render('user/user_decks', {
-            user_limited: {
-              username: user.username,
-              email: user.email,
-              about: user.about,
-              id: user._id
-            },
-            decks: decks,
-            loginCallback: '/user/decks/' + userid
-          });
+router.get('/decks/:id', async function(req, res) {
+  try{
+    var split = req.params.id.split(';');
+    var userid = split[0];
+    const user = await User.findById(userid);
+    const decks = await Deck.find({owner: userid}).sort('-date').exec();
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+    var pages = null;
+    var pagesize = 30;
+    if (decks.length > 0) {
+      if (decks.length > pagesize) {
+        pages = [];
+        var page = parseInt(split[1]);
+        if (!page) {
+          page = 0;
         }
-      } else {
-        res.render('user/user_decks', {
-          user_limited: {
-            username: user.username,
-            email: user.email,
-            about: user.about,
-            id: user._id
-          },
-          loginCallback: '/user/decks/' + userid,
-          decks: []
-        });
+        for (i = 0; i < decks.length / pagesize; i++) {
+          if (page == i) {
+            pages.push({
+              url: '/user/decks/' + userid + ';' + i,
+              content: (i + 1),
+              active: true
+            });
+          } else {
+            pages.push({
+              url: '/user/decks/' + userid + ';' + i,
+              content: (i + 1),
+            });
+          }
+        }
+        deck_page = [];
+        for (i = 0; i < pagesize; i++) {
+          if (decks[i + page * pagesize]) {
+            deck_page.push(decks[i + page * pagesize]);
+          }
+        }
+        decks = deck_page;
       }
+    }
+    return res.render('user/user_decks', {
+      user_limited: {
+        username: user.username,
+        email: user.email,
+        about: user.about,
+        id: user._id
+      },
+      loginCallback: '/user/decks/' + userid,
+      decks: decks ? decks:[],
+      pages: pages ? pages : null
     });
-  });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
 });
 
 //account page
