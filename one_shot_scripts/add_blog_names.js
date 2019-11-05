@@ -10,8 +10,11 @@ const {
 (async () => {
     var i = 0;
 	mongoose.connect(mongosecrets.connectionString).then( async (db) => {
+        const user = await User.findById('5cf9cdf2aefc6508c5ebcb40');
     
-		const cursor = Blog.find().cursor();
+        console.log(user);
+    
+        const cursor =  Blog.find({owner: {$in: user.followed_users}}).cursor();
         for (let blog = await cursor.next(); blog != null; blog = await cursor.next()) {
             console.log(i++);
             const cube = await Cube.findById(blog.cube);

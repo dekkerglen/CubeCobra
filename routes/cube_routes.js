@@ -369,14 +369,18 @@ router.post('/follow/:id', ensureAuth, async function(req, res) {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/overview/' + req.params.id);
+      res.status(404).send({
+        success: 'false'
+      });
     } 
 
     const user = await User.findById(req.user._id);    
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/overview/' + req.params.id);
+      res.status(404).send({
+        success: 'false'
+      });
     }
 
     if(!cube.users_following.includes(user._id))
@@ -390,10 +394,6 @@ router.post('/follow/:id', ensureAuth, async function(req, res) {
 
     await user.save();
     await cube.save();
-    
-    console.log(cube);
-
-    console.log(user);
 
     res.status(200).send({
       success: 'true'
@@ -411,14 +411,18 @@ router.post('/unfollow/:id', ensureAuth, async function(req, res) {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/overview/' + req.params.id);
+      res.status(404).send({
+        success: 'false'
+      });
     } 
 
     const user = await User.findById(req.user._id);    
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/overview/' + req.params.id);
+      res.status(404).send({
+        success: 'false'
+      });
     }
 
     while(cube.users_following.includes(user._id))

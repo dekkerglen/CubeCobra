@@ -34,6 +34,14 @@ const UserSchema = mongoose.Schema({
   followed_cubes: {
     type: [String],
     default: []
+  },  
+  followed_users: {
+    type: [String],
+    default: []
+  },  
+  users_following: {
+    type: [String],
+    default: []
   }
 });
 

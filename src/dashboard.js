@@ -76,19 +76,15 @@ class Dashboard extends Component {
             </CardFooter>
           </Card>
         </Col>
-        <Col sm="12" xs="12" md="12" lg="12" className="my-2">
-          <Card>
-            <CardHeader><h5>Feed</h5></CardHeader>
-            <CardBody className="pt-0 pb-1 px-2">
-              {posts.length > 0 ?
-                <PagedList pageSize={10} rows={posts.slice(0).reverse().map(post =>
-                  <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={true} />)}>
-                </PagedList>
-              :
-                <p>No posts to show. <a href="/explore">Find some cubes</a> to follow!</p>
-              }
-            </CardBody>
-          </Card>
+        <Col sm="12" xs="12" md="12" lg="12" className="mb-2 mt-4">
+          <Card><CardHeader><h4>Feed</h4></CardHeader></Card>
+          {posts.length > 0 ?
+            <PagedList pageSize={10} rows={posts.slice(0).reverse().map(post =>
+              <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={true} />)}>
+            </PagedList>
+          :
+            <p>No posts to show. <a href="/explore">Find some cubes</a> to follow!</p>
+          }
         </Col>
       </Row>   
     );

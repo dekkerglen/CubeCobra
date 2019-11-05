@@ -39,6 +39,78 @@ router.get('/lostpassword', function(req, res) {
   res.render('user/lostpassword');
 });
 
+router.get('/follow/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});
+    } 
+
+    const user = await User.findById(req.user._id);    
+    const other = await User.findById(req.params.id);
+    if (!other) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    if(!other.users_following.includes(user._id))
+    {
+      other.users_following.push(user._id);
+    }
+    if(!user.followed_users.includes(other._id))
+    {
+      user.followed_users.push(other._id);
+    }
+
+    await user.save();
+    await other.save();
+    
+    return res.redirect('/user/view/'+req.params.id);
+  }
+  catch(err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
+  }
+});
+
+router.get('/unfollow/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});
+    } 
+
+    const user = await User.findById(req.user._id);    
+    const other = await User.findById(req.params.id);
+    if (!other) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    while(other.users_following.includes(user._id))
+    {
+      other.users_following.splice(other.users_following.indexOf(user._id),1);
+    }
+    while(user.followed_users.includes(other._id))
+    {
+      user.followed_users.splice(user.followed_users.indexOf(other._id),1);
+    }
+
+    await user.save();
+    await other.save();
+    
+    return res.redirect('/user/view/'+req.params.id);
+  }
+  catch(err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
+  }
+});
+
 //Lost password submit
 router.post('/lostpassword', function(req, res) {
   req.checkBody('email', 'Email is required').notEmpty();
@@ -410,17 +482,17 @@ router.get('/logout', function(req, res) {
 });
 
 router.get('/view/:id', async function(req, res) {
+  var user;
   try { 
-    const user = await User.findById(req.params.id);
+    user = await User.findById(req.params.id);
+  } catch (err) {
+    user = await User.findOne({username_lower: req.params.id.toLowerCase()});
     if (!user) {
-      //if this is not a valid ID we will find the user with the username entered
-      const user2 = await User.findOne({username_lower: req.params.id.toLowerCase()});
-        if (!user2) {
-          req.flash('danger', 'User not found');
-          return res.status(404).render('misc/404', {});
-        }
-        user = user2;
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
     }
+  }
+  try {
     const cubes = await Cube.find({owner: user._id});
 
     return res.render('user/user_view', {
@@ -431,7 +503,9 @@ router.get('/view/:id', async function(req, res) {
         id: user._id
       },
       cubes: cubes,
-      loginCallback: '/user/view/' + req.params.id
+      loginCallback: '/user/view/' + req.params.id,
+      followers:user.users_following.length,
+      following:user.users_following.includes(req.user._id)
     });
   } catch (err) {
     console.log(err);
