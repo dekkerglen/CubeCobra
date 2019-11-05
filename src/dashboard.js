@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import BlogPost from './components/BlogPost';
 import PagedList from './components/PagedList';
 import CubePreview from './components/CubePreview';
+import DeckPreview from './components/DeckPreview';
 
 import { Card, Col, Row, CardHeader , CardBody, CardFooter} from 'reactstrap';
 
@@ -58,11 +59,11 @@ class Dashboard extends Component {
         </Col>
         <Col sm="12" xs="12" md="6" lg="6" >
           <Card>
-            <CardHeader><h5>Recent Drafts</h5></CardHeader>
-            <CardBody className="py-2 px-2">  
+            <CardHeader><h5>Recent Drafts of Your Cubes</h5></CardHeader>
+            <CardBody className="p-0">  
                 {decks.length > 0 ?
                   decks.map(deck =>
-                    <a key={deck._id} href={'/cube/deck/'+deck._id}>{deck.name}<br/></a>
+                    <DeckPreview deck={deck}/>
                   )
                 :
                   <p className="m-2">Nobody has drafted your cubes! Perhaps try reaching out on the <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a></p>
@@ -70,7 +71,7 @@ class Dashboard extends Component {
             </CardBody>
             <CardFooter>
               {cubes.length > 2 &&
-                <a href='#'>View All</a>
+                <a href='/dashboard/decks/0'>View All</a>
               }
             </CardFooter>
           </Card>

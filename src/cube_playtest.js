@@ -7,6 +7,7 @@ import { csrfFetch } from './util/CSRF';
 
 import CSRFForm from './components/CSRFForm';
 import DynamicFlash from './components/DynamicFlash';
+import DeckPreview from './components/DeckPreview';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map(n => <option key={n}>{n}</option>);
@@ -96,12 +97,9 @@ const DecksCard = ({ decks, cubeID, ...props }) => (
     <CardHeader>
       <CardTitleH5>Recent Decks</CardTitleH5>
     </CardHeader>
-    <CardBody>
+    <CardBody className="p-0">
       {decks.map(deck =>
-        <Fragment key={deck._id}>
-          <a href={`/cube/deck/${deck._id}`}>{deck.name}</a>
-          <br />
-        </Fragment>
+        <DeckPreview deck={deck}/>
       )}
     </CardBody>
     <CardFooter>
@@ -226,13 +224,13 @@ class CubePlaytest extends Component {
         <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
       )}
       <Row className="justify-content-center">
-        <Col xs="12" md="6" xl="5">
+        <Col xs="12" md="6" xl="6">
           {decks.length == 0 ? '' :
             <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />
           }
           <SamplePackCard cubeID={cubeID} className="mt-3" />
         </Col>
-        <Col xs="12" md="6" xl="5">
+        <Col xs="12" md="6" xl="6">
           {!draftFormats ? '' :
             draftFormats.map((format, index) =>
               <CustomDraftCard

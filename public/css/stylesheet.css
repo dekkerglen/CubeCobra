@@ -427,3 +427,10 @@ body.busy-cursor {
 	width: 100%;
 	height: auto;
 }
+.deck-preview:hover {
+	background: #EFEFEF;
+	cursor: pointer;
+}
+.no-underline-hover:hover{
+    text-decoration: none;
+}

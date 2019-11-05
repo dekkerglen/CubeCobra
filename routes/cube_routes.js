@@ -286,7 +286,7 @@ router.post('/format/add/:id', ensureAuth, async function(req, res) {
         packs: req.body.format
       };
     }
-    await cube.save();
+    await Cube.updateOne({_id: cube._id}, cube);
 
     req.flash('success', 'Custom format successfully added.');
     res.redirect('/cube/playtest/' + req.params.id);
@@ -908,62 +908,43 @@ router.get('/list/:id', function(req, res) {
   });
 });
 
-router.get('/playtest/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+router.get('/playtest/:id', async function(req, res) {
+  try{
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      cube.cards.forEach(function(card, index) {
-        card.details = carddb.cardFromId(card.cardID);
-        card.details.display_image = util.getCardImageURL(card);
-      });
-      User.findById(cube.owner, function(err, user) {
-        Deck.find({
-          _id: {
-            $in: cube.decks
-          }
-        }, function(err, decks) {
-          decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length).reverse();
-          if (!user || err) {
-            res.render('cube/cube_playtest', {
-              cube: cube,
-              cube_id: req.params.id,
-              activeLink: 'playtest',
-              title: `${abbreviate(cube.name)} - Playtest`,
-              author: 'unknown',
-              decks: decklinks,
-              cube_raw: JSON.stringify(cube),
-              metadata: generateMeta(
-                `Cube Cobra Playtest: ${cube.name}`,
-                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                cube.image_uri,
-                `https://cubecobra.com/cube/playtest/${req.params.id}`
-              ),
-              loginCallback: '/cube/playtest/' + req.params.id
-            });
-          } else {
-            res.render('cube/cube_playtest', {
-              cube: cube,
-              cube_id: req.params.id,
-              activeLink: 'playtest',
-              title: `${abbreviate(cube.name)} - Playtest`,
-              owner: user.username,
-              decks: decklinks,
-              cube_raw: JSON.stringify(cube),
-              metadata: generateMeta(
-                `Cube Cobra Playtest: ${cube.name}`,
-                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                cube.image_uri,
-                `https://cubecobra.com/cube/playtest/${req.params.id}`
-              ),
-              loginCallback: '/cube/playtest/' + req.params.id
-            });
-          }
-        });
-      });
+      return res.status(404).render('misc/404', {});
     }
-  });
+
+    const userq = User.findById(cube.owner).exec();
+    const decksq = Deck.find({cube: cube._id}).sort({'date': -1}).limit(10).exec();
+
+    const [user, decks] = await Promise.all([userq, decksq]);
+
+    res.render('cube/cube_playtest', {
+      cube: cube,
+      cube_id: req.params.id,
+      activeLink: 'playtest',
+      title: `${abbreviate(cube.name)} - Playtest`,
+      owner: user ? user.username : "Unknown",
+      decks: decks,
+      cube_raw: JSON.stringify(cube),
+      metadata: generateMeta(
+        `Cube Cobra Playtest: ${cube.name}`,
+        (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/playtest/${req.params.id}`
+      ),
+      loginCallback: '/cube/playtest/' + req.params.id
+    });
+  } catch(err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err
+    });
+  }
 });
 
 router.get('/analysis/:id', function(req, res) {
@@ -1021,7 +1002,6 @@ router.get('/analysis/:id', function(req, res) {
     }
   });
 });
-
 
 router.get('/samplepack/:id', function(req, res) {
   res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
@@ -2317,11 +2297,12 @@ router.post('/editdeck/:id', function(req, res) {
   });
 });
 
-router.post('/submitdeck/:id', function(req, res) {
-  //req.body contains draft
-  var draftid = req.body.body;
+router.post('/submitdeck/:id', async function(req, res) {
+  try {
+    //req.body contains draft0
+    var draftid = req.body.body;
+    const draft = await Draft.findById(draftid);
 
-  Draft.findById(draftid, function(err, draft) {
     var deck = new Deck();
     deck.playerdeck = draft.picks[0];
     deck.cards = draft.picks.slice(1);
@@ -2332,136 +2313,104 @@ router.post('/submitdeck/:id', function(req, res) {
     deck.date = Date.now();
     deck.bots = draft.bots;
     deck.playersideboard = [];
-    Cube.findOne(build_id_query(draft.cube), function(err, cube) {
-      if (!cube.decks) {
-        cube.decks = [];
-      }
-      cube.decks.push(deck._id);
-      if (!cube.numDecks) {
-        cube.numDecks = 0;
-      }
-      cube.numDecks += 1;
-      cube.save(function(err) {
-        User.findById(deck.owner, function(err, user) {
-          var owner = "Anonymous";
-          if (user) {
-            owner = user.username;
-          }
-          deck.name = owner + "'s draft of " + cube.name + " on " + deck.date.toLocaleString("en-US");
-          cube.decks.push(deck._id);
-          cube.save(function(err) {
-            deck.save(function(err) {
-              if (err) {
-                console.log(err, req);
-              } else {
-                return res.redirect('/cube/deckbuilder/' + deck._id);
-              }
-            });
-          });
-        });
-      });
+
+    cube = await Cube.findOne(build_id_query(draft.cube));
+
+    if (!cube.decks) {
+      cube.decks = [];
+    }
+
+    cube.decks.push(deck._id);
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+
+    cube.numDecks += 1;
+    await cube.save();
+    const user = await User.findById(deck.owner);
+
+    var owner = user ? user.username : "Anonymous";
+    deck.name = owner + "'s draft of " + cube.name + " on " + deck.date.toLocaleString("en-US");
+    deck.username = owner;
+    deck.cubename = cube.name;
+    cube.decks.push(deck._id);
+    await cube.save();
+    await deck.save();
+
+    return res.redirect('/cube/deckbuilder/' + deck._id);
+  } catch(err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err
     });
-  });
+  }
 });
 
-router.get('/decks/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cubeid = split[0];
-  Cube.findOne(build_id_query(cubeid), function(err, cube) {
-    if (err || !cube) {
+router.get('/decks/:cubeid/:page', async function(req, res) {
+  try {
+    var cubeid = req.params.cubeid;
+    var page = req.params.page;
+    var pagesize = 30;
+
+    const cube = await Cube.findOne(build_id_query(cubeid));
+
+    if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Deck.find({
-        cube: cube._id
-      }).sort('date').exec(function(err, decks) {
-        User.findById(cube.owner, function(err, owner) {
-          var owner_name = 'unknown';
-          if (owner) {
-            owner_name = owner.username;
-          }
-          var pages = [];
-          var pagesize = 30;
-          if (decks.length > 0) {
-            decks.reverse();
-            if (decks.length > pagesize) {
-              var page = parseInt(split[1]);
-              if (!page) {
-                page = 0;
-              }
-              for (i = 0; i < decks.length / pagesize; i++) {
-                if (page == i) {
-                  pages.push({
-                    url: '/cube/decks/' + cubeid + ';' + i,
-                    content: (i + 1),
-                    active: true
-                  });
-                } else {
-                  pages.push({
-                    url: '/cube/decks/' + cubeid + ';' + i,
-                    content: (i + 1),
-                  });
-                }
-              }
-              deck_page = [];
-              for (i = 0; i < pagesize; i++) {
-                if (decks[i + page * pagesize]) {
-                  deck_page.push(decks[i + page * pagesize]);
-                }
-              }
-              res.render('cube/cube_decks', {
-                cube: cube,
-                cube_id: cubeid,
-                owner: owner_name,
-                activeLink: 'playtest',
-                title: `${abbreviate(cube.name)} - Draft Decks`,
-                decks: deck_page,
-                pages: pages,
-                metadata: generateMeta(
-                  `Cube Cobra Decks: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/user/decks/${req.params.id}`
-                ),
-                loginCallback: '/user/decks/' + cubeid
-              });
-            } else {
-              res.render('cube/cube_decks', {
-                cube: cube,
-                cube_id: cubeid,
-                owner: owner_name,
-                activeLink: 'playtest',
-                title: `${abbreviate(cube.name)} - Draft Decks`,
-                decks: decks,
-                metadata: generateMeta(
-                  `Cube Cobra Decks: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/user/decks/${req.params.id}`
-                ),
-                loginCallback: '/user/decks/' + cubeid
-              });
-            }
-          } else {
-            res.render('cube/cube_decks', {
-              cube: cube,
-              cube_id: cubeid,
-              owner: owner_name,
-              activeLink: 'playtest',
-              metadata: generateMeta(
-                `Cube Cobra Decks: ${cube.name}`,
-                (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                cube.image_uri,
-                `https://cubecobra.com/user/decks/${req.params.id}`
-              ),
-              loginCallback: '/user/decks/' + cubeid,
-              decks: []
-            });
-          }
+      return res.status(404).render('misc/404', {});
+    } 
+
+    const decksq = Deck.find({cube: cube._id}).sort({'date': -1}).skip(pagesize*page).limit(pagesize).exec();
+    const numDecksq = Deck.countDocuments({cube: cube._id}).exec();
+    const ownerq = User.findById(cube.owner).exec();
+
+    const [decks, numDecks, owner] = await Promise.all([decksq, numDecksq, ownerq]);
+
+    var owner_name = owner ? owner.username: 'unknown';
+
+    var pages = [];        
+    for (i = 0; i < numDecks / pagesize; i++) {
+      if (page == i) {
+        pages.push({
+          url: '/cube/decks/' + cubeid + '/' + i,
+          content: (i + 1),
+          active: true
         });
-      });
+      } else {
+        pages.push({
+          url: '/cube/decks/' + cubeid + '/' + i,
+          content: (i + 1),
+        });
+      }
     }
-  });
+
+    res.render('cube/cube_decks', {
+      cube: cube,
+      cube_id: cubeid,
+      owner: owner_name,
+      activeLink: 'playtest',
+      title: `${abbreviate(cube.name)} - Draft Decks`,
+      decks: decks,
+      pages: pages,
+      metadata: generateMeta(
+        `Cube Cobra Decks: ${cube.name}`,
+        (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/user/decks/${req.params.id}`
+      ),
+      loginCallback: '/user/decks/' + cubeid
+    });
+  } catch(err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err
+    });
+  }
+});
+
+router.get('/decks/:id', async function(req, res) {
+  res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 
 router.get('/deckbuilder/:id', function(req, res) {

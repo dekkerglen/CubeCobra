@@ -10,7 +10,10 @@ let deckSchema = mongoose.Schema({
     type: String,
     index:true
   },
-  date: Date,
+  date: {
+    type:Date,
+    index:true
+  },
   name: String,
   bots: [
     []
@@ -21,7 +24,15 @@ let deckSchema = mongoose.Schema({
   playersideboard: [
     []
   ],
-  cols: Number
+  cols: Number,
+  username: {
+    type: String,
+    default: 'User'
+  },
+  cubename: {
+    type: String,
+    default: 'Cube'
+  }
 });
 
 let Deck = module.exports = mongoose.model('Deck', deckSchema)

@@ -98,7 +98,7 @@ router.get('/dashboard', async function(req, res) {
       return res.redirect('/landing');
     }
 
-    const cubesq = Cube.find({owner: user._id});
+    const cubesq = Cube.find({owner: user._id}).sort({'date_updated': -1});
     const blogsq = Blog.find({cube: {$in: user.followed_cubes}}).sort({'date': 1}).limit(50);
     
     //We can do these queries in parallel
@@ -110,7 +110,7 @@ router.get('/dashboard', async function(req, res) {
       cubeIds.push(cube._id);
     });
 
-    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':1}).limit(20);
+    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':-1}).limit(12);
 
     return res.render('dashboard', {
       posts: blogs,
@@ -124,8 +124,67 @@ router.get('/dashboard', async function(req, res) {
   }
 });
 
-router.get('/landing', function(req, res) {
+
+router.get('/dashboard/decks/:page', async function(req, res) {
+  try {
+    const pagesize = 30;
+    const page = req.params.page;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.redirect('/landing');
+    }
+
+    const cubes = await Cube.find({owner: user._id}).sort({'date_updated': -1}).exec();
+
+    const cubeIds = [];
+    cubes.forEach(function(cube, index)
+    {
+      cubeIds.push(cube._id);
+    });
+
+    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':-1}).skip(pagesize*page).limit(30).exec();
+    const numDecks = await Deck.countDocuments({cube: {$in: cubeIds}}).exec();
+
+    var pages = [];        
+    for (i = 0; i < numDecks / pagesize; i++) {
+      if (page == i) {
+        pages.push({
+          url: '/dashboard/decks/' + i,
+          content: (i + 1),
+          active: true
+        });
+      } else {
+        pages.push({
+          url: '/dashboard/decks/' + i,
+          content: (i + 1),
+        });
+      }
+    }
+
+    return res.render('dashboard_decks', {
+      decks: decks,
+      pages: pages,
+      loginCallback: '/'
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
+router.get('/landing', async function(req, res) {
+
+  const cubeq = Cube.countDocuments().exec();
+  const deckq = Deck.countDocuments().exec();
+  const userq = User.countDocuments().exec();
+
+  const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
+
+  //this regex add commas to the number
   res.render('landing', {
+    numusers:user.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numcubes:cube.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numdrafts:deck.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     loginCallback: '/'
   });
 });
