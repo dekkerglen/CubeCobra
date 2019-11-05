@@ -138,14 +138,14 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
 }
 
 function autocard_hide_card() {
-  document.getElementById("autocard_popup").innerHTML = '';
-  document.getElementById("autocard_popup2").innerHTML = '';
-  document.getElementById("autocard_popup_info").innerHTML = '';
-
   // clear any load events that haven't fired yet so that they don't fire after the card should be hidden
   if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
   $(document.getElementById("autocard_popup")).find('img').off('load');
   $(document.getElementById("autocard_popup2")).find('img').off('load');
+
+  document.getElementById("autocard_popup").innerHTML = '';
+  document.getElementById("autocard_popup2").innerHTML = '';
+  document.getElementById("autocard_popup_info").innerHTML = '';
 
   $(document.getElementById("autocard_popup")).hide();
   $(document.getElementById("autocard_popup2")).hide();
