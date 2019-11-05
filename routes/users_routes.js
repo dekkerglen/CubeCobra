@@ -439,48 +439,43 @@ router.get('/view/:id', async function(req, res) {
   }
 });
 
-router.get('/decks/:id', async function(req, res) {
+router.get('/decks/:userid', function(req, res) {
+  res.redirect('/user/decks/'+req.params.userid+'/0')
+})
+
+router.get('/decks/:userid/:page', async function(req, res) {
   try{
-    var split = req.params.id.split(';');
-    var userid = split[0];
-    const user = await User.findById(userid);
-    const decks = await Deck.find({owner: userid}).sort('-date').exec();
+    const userid = req.params.userid;
+    const page = req.params.page;
+    const pagesize = 30;
+
+    const userq = User.findById(userid).exec();
+    const decksq = Deck.find({owner: userid}).sort({'date':-1}).skip(pagesize*page).limit(30).exec();
+    const numDecksq = await Deck.countDocuments({owner: userid}).exec();
+
+    const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
+
     if (!user) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
-    var pages = null;
-    var pagesize = 30;
-    if (decks.length > 0) {
-      if (decks.length > pagesize) {
-        pages = [];
-        var page = parseInt(split[1]);
-        if (!page) {
-          page = 0;
-        }
-        for (i = 0; i < decks.length / pagesize; i++) {
-          if (page == i) {
-            pages.push({
-              url: '/user/decks/' + userid + ';' + i,
-              content: (i + 1),
-              active: true
-            });
-          } else {
-            pages.push({
-              url: '/user/decks/' + userid + ';' + i,
-              content: (i + 1),
-            });
-          }
-        }
-        deck_page = [];
-        for (i = 0; i < pagesize; i++) {
-          if (decks[i + page * pagesize]) {
-            deck_page.push(decks[i + page * pagesize]);
-          }
-        }
-        decks = deck_page;
+
+    const pages = [];    
+    for (i = 0; i < numDecks / pagesize; i++) {
+      if (page == i) {
+        pages.push({
+          url: '/user/decks/' + userid + '/' + i,
+          content: (i + 1),
+          active: true
+        });
+      } else {
+        pages.push({
+          url: '/user/decks/' + userid + '/' + i,
+          content: (i + 1),
+        });
       }
     }
+
     return res.render('user/user_decks', {
       user_limited: {
         username: user.username,
