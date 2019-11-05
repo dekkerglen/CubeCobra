@@ -419,8 +419,9 @@ div.card {
 
 body.busy-cursor {
 	cursor: progress;
+
 }
-.centered-max400 { 
+.centered-max400 {
 	margin: auto; max-width: 400px;
 }
 .cube-preview-image {
@@ -433,4 +434,20 @@ body.busy-cursor {
 }
 .no-underline-hover:hover{
     text-decoration: none;
+  }
+
+
+/* Styles for Analysis */
+
+.breakdown .percent {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: #535A5F;
+  margin-left: 0.5em;
+}
+.breakdown .percent::before {
+  content: "(";
+}
+.breakdown .percent::after {
+  content: ")";
 }
