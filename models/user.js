@@ -30,15 +30,15 @@ const UserSchema = mongoose.Schema({
     type: Boolean,
     default: false
   },
-  edit_token: String,  
+  edit_token: String,
   followed_cubes: {
     type: [String],
     default: []
-  },  
+  },
   followed_users: {
     type: [String],
     default: []
-  },  
+  },
   users_following: {
     type: [String],
     default: []

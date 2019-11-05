@@ -44,30 +44,27 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
       return res.status(401).render('misc/404', {});
-    } 
+    }
 
-    const user = await User.findById(req.user._id);    
+    const user = await User.findById(req.user._id);
     const other = await User.findById(req.params.id);
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    if(!other.users_following.includes(user._id))
-    {
+    if (!other.users_following.includes(user._id)) {
       other.users_following.push(user._id);
     }
-    if(!user.followed_users.includes(other._id))
-    {
+    if (!user.followed_users.includes(other._id)) {
       user.followed_users.push(other._id);
     }
 
     await user.save();
     await other.save();
-    
-    return res.redirect('/user/view/'+req.params.id);
-  }
-  catch(err) {
+
+    return res.redirect('/user/view/' + req.params.id);
+  } catch (err) {
     res.status(500).send({
       success: 'false'
     });
@@ -80,30 +77,27 @@ router.get('/unfollow/:id', ensureAuth, async function(req, res) {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
       return res.status(401).render('misc/404', {});
-    } 
+    }
 
-    const user = await User.findById(req.user._id);    
+    const user = await User.findById(req.user._id);
     const other = await User.findById(req.params.id);
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    while(other.users_following.includes(user._id))
-    {
-      other.users_following.splice(other.users_following.indexOf(user._id),1);
+    while (other.users_following.includes(user._id)) {
+      other.users_following.splice(other.users_following.indexOf(user._id), 1);
     }
-    while(user.followed_users.includes(other._id))
-    {
-      user.followed_users.splice(user.followed_users.indexOf(other._id),1);
+    while (user.followed_users.includes(other._id)) {
+      user.followed_users.splice(user.followed_users.indexOf(other._id), 1);
     }
 
     await user.save();
     await other.save();
-    
-    return res.redirect('/user/view/'+req.params.id);
-  }
-  catch(err) {
+
+    return res.redirect('/user/view/' + req.params.id);
+  } catch (err) {
     res.status(500).send({
       success: 'false'
     });
@@ -483,17 +477,21 @@ router.get('/logout', function(req, res) {
 
 router.get('/view/:id', async function(req, res) {
   var user;
-  try { 
+  try {
     user = await User.findById(req.params.id);
   } catch (err) {
-    user = await User.findOne({username_lower: req.params.id.toLowerCase()});
+    user = await User.findOne({
+      username_lower: req.params.id.toLowerCase()
+    });
     if (!user) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
   }
   try {
-    const cubes = await Cube.find({owner: user._id});
+    const cubes = await Cube.find({
+      owner: user._id
+    });
 
     return res.render('user/user_view', {
       user_limited: {
@@ -504,8 +502,8 @@ router.get('/view/:id', async function(req, res) {
       },
       cubes: cubes,
       loginCallback: '/user/view/' + req.params.id,
-      followers:user.users_following.length,
-      following:user.users_following.includes(req.user._id)
+      followers: user.users_following.length,
+      following: user.users_following.includes(req.user._id)
     });
   } catch (err) {
     console.log(err);
@@ -514,18 +512,24 @@ router.get('/view/:id', async function(req, res) {
 });
 
 router.get('/decks/:userid', function(req, res) {
-  res.redirect('/user/decks/'+req.params.userid+'/0')
+  res.redirect('/user/decks/' + req.params.userid + '/0')
 })
 
 router.get('/decks/:userid/:page', async function(req, res) {
-  try{
+  try {
     const userid = req.params.userid;
     const page = req.params.page;
     const pagesize = 30;
 
     const userq = User.findById(userid).exec();
-    const decksq = Deck.find({owner: userid}).sort({'date':-1}).skip(pagesize*page).limit(30).exec();
-    const numDecksq = await Deck.countDocuments({owner: userid}).exec();
+    const decksq = Deck.find({
+      owner: userid
+    }).sort({
+      'date': -1
+    }).skip(pagesize * page).limit(30).exec();
+    const numDecksq = await Deck.countDocuments({
+      owner: userid
+    }).exec();
 
     const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
 
@@ -534,7 +538,7 @@ router.get('/decks/:userid/:page', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    const pages = [];    
+    const pages = [];
     for (i = 0; i < numDecks / pagesize; i++) {
       if (page == i) {
         pages.push({
@@ -558,7 +562,7 @@ router.get('/decks/:userid/:page', async function(req, res) {
         id: user._id
       },
       loginCallback: '/user/decks/' + userid,
-      decks: decks ? decks:[],
+      decks: decks ? decks : [],
       pages: pages ? pages : null
     });
   } catch (err) {

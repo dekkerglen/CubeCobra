@@ -38,7 +38,9 @@ router.get('/explore', async function(req, res) {
     }).sort({
       'date_updated': -1
     }).limit(12).exec(),
-    Cube.find({isFeatured: true}).exec(),
+    Cube.find({
+      isFeatured: true
+    }).exec(),
     Cube.find({
       $or: [{
         'isListed': true
@@ -59,7 +61,7 @@ router.get('/explore', async function(req, res) {
       'date': -1
     }).limit(10).exec()
   ]);
-  
+
   decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
   res.render('index', {
     devblog: blog.length > 0 ? blog[0] : null,
@@ -98,25 +100,40 @@ router.get('/dashboard', async function(req, res) {
       return res.redirect('/landing');
     }
 
-    const cubesq = Cube.find({owner: user._id}).sort({'date_updated': -1});
+    const cubesq = Cube.find({
+      owner: user._id
+    }).sort({
+      'date_updated': -1
+    });
     //const blogsq = Blog.find({$or:[
     //  {cube: {$in: user.followed_cubes}},
     //  {owner: {$in: user.followed_users}}
     //]}).sort({'date': 1}).limit(50);
-    const blogsq = Blog.find( {owner: {$in: user.followed_users}}).sort({'date': 1}).limit(50);
-    
+    const blogsq = Blog.find({
+      owner: {
+        $in: user.followed_users
+      }
+    }).sort({
+      'date': 1
+    }).limit(50);
+
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
 
     console.log(blogs[0]);
 
     const cubeIds = [];
-    cubes.forEach(function(cube, index)
-    {
+    cubes.forEach(function(cube, index) {
       cubeIds.push(cube._id);
     });
 
-    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':-1}).limit(10);
+    const decks = await Deck.find({
+      cube: {
+        $in: cubeIds
+      }
+    }).sort({
+      'date': -1
+    }).limit(10);
 
     return res.render('dashboard', {
       posts: blogs,
@@ -139,18 +156,31 @@ router.get('/dashboard/decks/:page', async function(req, res) {
       return res.redirect('/landing');
     }
 
-    const cubes = await Cube.find({owner: user._id}).sort({'date_updated': -1}).exec();
+    const cubes = await Cube.find({
+      owner: user._id
+    }).sort({
+      'date_updated': -1
+    }).exec();
 
     const cubeIds = [];
-    cubes.forEach(function(cube, index)
-    {
+    cubes.forEach(function(cube, index) {
       cubeIds.push(cube._id);
     });
 
-    const decks = await Deck.find({cube: {$in: cubeIds}}).sort({'date':-1}).skip(pagesize*page).limit(30).exec();
-    const numDecks = await Deck.countDocuments({cube: {$in: cubeIds}}).exec();
+    const decks = await Deck.find({
+      cube: {
+        $in: cubeIds
+      }
+    }).sort({
+      'date': -1
+    }).skip(pagesize * page).limit(30).exec();
+    const numDecks = await Deck.countDocuments({
+      cube: {
+        $in: cubeIds
+      }
+    }).exec();
 
-    var pages = [];        
+    var pages = [];
     for (i = 0; i < numDecks / pagesize; i++) {
       if (page == i) {
         pages.push({
@@ -187,9 +217,9 @@ router.get('/landing', async function(req, res) {
 
   //this regex add commas to the number
   res.render('landing', {
-    numusers:user.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-    numcubes:cube.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-    numdrafts:deck.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numusers: user.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numcubes: cube.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numdrafts: deck.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     loginCallback: '/'
   });
 });

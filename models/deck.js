@@ -8,11 +8,11 @@ let deckSchema = mongoose.Schema({
   owner: String,
   cube: {
     type: String,
-    index:true
+    index: true
   },
   date: {
-    type:Date,
-    index:true
+    type: Date,
+    index: true
   },
   name: String,
   bots: [
