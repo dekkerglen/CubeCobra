@@ -105,22 +105,24 @@ router.get('/dashboard', async function(req, res) {
     }).sort({
       'date_updated': -1
     });
-    //const blogsq = Blog.find({$or:[
-    //  {cube: {$in: user.followed_cubes}},
-    //  {owner: {$in: user.followed_users}}
-    //]}).sort({'date': 1}).limit(50);
     const blogsq = Blog.find({
-      owner: {
-        $in: user.followed_users
-      }
+      $or: [{
+          cube: {
+            $in: user.followed_cubes
+          }
+        },
+        {
+          owner: {
+            $in: user.followed_users
+          }
+        }
+      ]
     }).sort({
       'date': 1
     }).limit(50);
 
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
-
-    console.log(blogs[0]);
 
     const cubeIds = [];
     cubes.forEach(function(cube, index) {
