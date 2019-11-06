@@ -76,7 +76,7 @@ class Dashboard extends Component {
             </CardFooter>
           </Card>
         </Col>
-        <Col sm="12" xs="12" md="12" lg="12" className="mb-2 mt-4">
+        <Col xs="12" className="mb-2 mt-4">
           <Card><CardHeader><h4>Feed</h4></CardHeader></Card>
           {posts.length > 0 ?
             <PagedList pageSize={10} rows={posts.slice(0).reverse().map(post =>
