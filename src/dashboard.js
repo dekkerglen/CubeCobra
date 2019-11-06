@@ -37,7 +37,7 @@ class Dashboard extends Component {
         <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Your Cubes</h5></CardHeader>
-            <CardBody className="py-2 px-2">      
+            <CardBody className="p-2">      
               <Row>   
                 {cubes.length > 0 ?
                   cubes.slice(0,2).map(cube =>
