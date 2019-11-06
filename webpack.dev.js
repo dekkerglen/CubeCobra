@@ -12,7 +12,7 @@ module.exports = merge(common, {
     publicPath: '/js/',
     proxy: [{
       context: ['!/js/*.bundle.js', '**'],
-      target: 'http://localhost:4999',
+      target: 'http://localhost:5000',
     }],
   },
   optimization: {
