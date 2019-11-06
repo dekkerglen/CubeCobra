@@ -24,7 +24,7 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
           <tr>
             <th scope="col" />
             {colors.map(([name, _, short]) =>
-              <th scope="col">
+              <th key={name + "col"} scope="col">
                 {name === 'Total' ? 'Total' :
                   <img key={short} src={`/content/symbols/${short}.png`} alt={name} title={name} />
                 }
@@ -32,13 +32,21 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
             )}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="breakdown">
           {types.map(type =>
-            <tr>
+            <tr key={type + "row"}>
               <th scope="row">{type}</th>
-              {colors.map(([name, path, _]) =>
-                <td>{typeByColor[type][path]}</td>
-              )}
+              {colors.map(([name, path, _]) => {
+                const reactKey = type + path;
+                const count = typeByColor[type][path];
+                const colorTotal = typeByColor['Total'][path];
+                if (name !== 'Total' && path !== 'Total' && count > 1 && colorTotal > count) {
+                  const percent = Math.round(count / colorTotal * 100.0);
+                  return <td key={reactKey}>{count}<span className="percent">{percent}%</span></td>;
+                } else {
+                  return <td key={reactKey}>{count}</td>;
+                }
+              })}
             </tr>
           )}
         </tbody>

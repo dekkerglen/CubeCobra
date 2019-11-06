@@ -1,3 +1,8 @@
+function changeHash(hash) {
+  const url =  window.location.pathname + window.location.search + (hash ? `#${hash}` : '');
+  window.history.replaceState({}, document.title, url);
+}
+
 export function get(key, def) {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const result = params.get(key);
@@ -7,19 +12,13 @@ export function get(key, def) {
 export function set(key, value) {
   const params = new URLSearchParams(window.location.hash.slice(1));
   params.set(key, value);
-  window.location.hash = params.toString();
+  changeHash(params.toString());
 }
 
 export function del(key) {
   const params = new URLSearchParams(window.location.hash.slice(1));
   params.delete(key);
-  const str = params.toString();
-  if (!str) {
-    // Remove hash symbol from URL.
-    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-  } else {
-    window.location.hash = str;
-  }
+  changeHash(params.toString());
 }
 
 export default { get, set, del };

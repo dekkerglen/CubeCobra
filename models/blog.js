@@ -1,6 +1,18 @@
 let mongoose = require('mongoose');
 
-// Cube schema
+//this pattern lets us define comment recursively
+var Comment = new mongoose.Schema();
+Comment.add({
+  owner: String,
+  ownerName: String,
+  content: String,
+  index: Number,
+  timePosted: Date,
+  comments: [Comment],
+  updated: Boolean
+});
+
+// Blog schema
 let blogSchema = mongoose.Schema({
   title: String,
   body: String,
@@ -10,7 +22,9 @@ let blogSchema = mongoose.Schema({
   html: String,
   dev: String,
   date_formatted: String,
-  changelist: String
+  changelist: String,
+  comments: [Comment]
 });
+
 
 let Blog = module.exports = mongoose.model('Blog', blogSchema)
