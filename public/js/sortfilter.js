@@ -44,7 +44,8 @@ function price_bucket_label(index) {
   }
 }
 
-function cmcToNumber(cmc) {
+function cmcToNumber(card) {
+  const cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
   if (isNaN(cmc)) {
     return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
   } else {
@@ -95,13 +96,13 @@ function cardIsLabel(card, label, sort) {
     }
   } else if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
-    const cmc = Math.round(cmcToNumber(card.cmc || card.details.cmc));
+    const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
       return label == '8+';
     }
     return cmc == label;
   } else if (sort == 'CMC2') {
-    const cmc = Math.round(cmcToNumber(card.cmc || card.details.cmc));
+    const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
       return label == '7+';
     } else if (cmc <= 1) {
@@ -110,7 +111,7 @@ function cardIsLabel(card, label, sort) {
     return cmc == label;
   } else if (sort == 'CMC-Full') {
     // Round to half-integer.
-    return Math.round(cmcToNumber(card.cmc || card.details.cmc) * 2) / 2 == label;
+    return Math.round(cmcToNumber(card) * 2) / 2 == label;
   } else if (sort == 'Supertype' || sort == 'Type') {
     if (card.type_line.includes('Contraption')) {
       return label == 'Contraption';
