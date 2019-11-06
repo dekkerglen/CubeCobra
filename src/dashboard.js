@@ -34,7 +34,7 @@ class Dashboard extends Component {
     const {posts, cubes, decks} = this.props;
     return (       
       <Row>
-        <Col sm="12" xs="12" md="6" lg="6" >
+        <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Your Cubes</h5></CardHeader>
             <CardBody className="py-2 px-2">      
