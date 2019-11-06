@@ -16,6 +16,7 @@ import { fromEntries } from '../util/Util';
 import AutocardListItem from './AutocardListItem';
 import ColorCheck from './ColorCheck';
 import GroupModalContext from './GroupModalContext';
+import MassBuyButton from './MassBuyButton';
 import TagInput from './TagInput';
 
 class GroupModal extends Component {
@@ -209,7 +210,7 @@ class GroupModal extends Component {
     const accumulatorFoil = (total, card) => total + (card.details.price_foil || 0)
     const totalPrice = cards.length ? cards.reduce(accumulator, 0): 0
     const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0): 0
-    
+
     const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
     return <>
       {contextChildren}
@@ -300,10 +301,7 @@ class GroupModal extends Component {
         </ModalBody>
         <ModalFooter>
           <Button color="danger" onClick={this.handleRemoveAll}>Remove all from cube</Button>
-          <Form method="POST" action={tcgplayerMassEntryUrl} inline>
-            <Input type="hidden" name="c" value={cards.map(({ details }) => `1 ${details.name}`).join('||')} />
-            <Button type="submit" color="secondary">Buy all</Button>
-          </Form>
+          <MassBuyButton cards={cards}>Buy all</MassBuyButton>
           <Button color="success" onClick={this.handleApply}>Apply to all</Button>
         </ModalFooter>
       </Modal>

@@ -285,9 +285,9 @@ function convertLegalities(card, isExtra) {
   } else {
     return {
       Legacy: card.legalities.legacy == 'legal',
-      Modern: card.legalities.modern == 'legal',
-      Standard: card.legalities.standard == 'legal',
-      Pauper: card.legalities.pauper == 'legal'
+      Modern: card.legalities.modern == 'legal' || card.legalities.modern == 'banned',
+      Standard: card.legalities.standard == 'legal' || card.legalities.standard == 'banned',
+      Pauper: card.legalities.pauper == 'legal' || card.legalities.pauper == 'banned',
     };
   }
 }
@@ -508,6 +508,7 @@ function convertCard(card, isExtra) {
   newcard.collector_number = card.collector_number;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
+  newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
   newcard.name = name;
   newcard.name_lower = name.toLowerCase();
