@@ -63,7 +63,7 @@ class Dashboard extends Component {
             <CardBody className="p-0">  
                 {decks.length > 0 ?
                   decks.map(deck =>
-                    <DeckPreview deck={deck}/>
+                    <DeckPreview key={deck._id} deck={deck} />
                   )
                 :
                   <p className="m-2">Nobody has drafted your cubes! Perhaps try reaching out on the <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a></p>
