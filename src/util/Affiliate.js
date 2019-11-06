@@ -3,13 +3,9 @@ export function getTCGLink(card, isToken) {
   if (card.details.tcgplayer_id) {
     tcgplayerLink += `product/productsearch?id=${card.details.tcgplayer_id}`;
   } else {
-    if(isToken)
-    {
-      tcgplayerLink += `productcatalog/product/show?ProductName=${card.details.name}%20token`;
-    }
-    else
-    {
-      tcgplayerLink += `productcatalog/product/show?ProductName=${card.details.name}`;
+    tcgplayerLink += `productcatalog/product/show?ProductName=${card.details.name}`;
+    if (isToken) {
+      tcgplayerLink += ' Token';
     }
   }
   tcgplayerLink += '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
