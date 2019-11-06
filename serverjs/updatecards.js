@@ -95,25 +95,25 @@ function addTokens(card) {
 
       //find the ability that generates the token to reduce the amount of text to get confused by.
       var abilities = _catalog.dict[card.id].oracle_text.split("\n");
-      for (const ability of abilities) {      
-        if (ability.includes(' token') ) {
+      for (const ability of abilities) {
+        if (ability.includes(' token')) {
           var reString = "((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(\".*\")|[a-z]+| and )+)+)?(?:.*(a copy of))?";
           var re = new RegExp(reString);
           var result = re.exec(ability);
           if (result == undefined)
-            continue;          
-          
+            continue;
+
           var tokenPowerAndToughness = result[4];
           var tokenColorString = result[5] ? result[5] : result[1];
           var tokenSubTypesString = result[6] ? result[6].trim() : "";
           var tokenSuperTypesString = result[7] ? result[7].trim() : "";
           if (result[3])
             tokenSuperTypesString = "legendary " + tokenSuperTypesString;
-          var tokenName = result[9] ? result[9].trim() : result[2] ? result[2] :tokenSubTypesString; //if not specificaly named, use the type
+          var tokenName = result[9] ? result[9].trim() : result[2] ? result[2] : tokenSubTypesString; //if not specificaly named, use the type
 
           var tokenAbilities = [];
           if (result[10]) {
-            var tmpTokenKeywords = result[10].toLowerCase().replace(/ *\"[^"]*\" */g, "").replace(' and ',',').split(',');
+            var tmpTokenKeywords = result[10].toLowerCase().replace(/ *\"[^"]*\" */g, "").replace(' and ', ',').split(',');
             tmpTokenKeywords.forEach(part => {
               if (part.length > 0)
                 tokenAbilities.push(part);
@@ -145,8 +145,8 @@ function addTokens(card) {
 
             var cardTokens = getTokensFromCard(card);
 
-            if (cardTokens.length > 0) {      
-              cardTokens.forEach(element => {                
+            if (cardTokens.length > 0) {
+              cardTokens.forEach(element => {
                 mentionedTokens.push({
                   tokenId: element,
                   sourceCardId: _catalog.dict[card.id]._id
@@ -191,12 +191,10 @@ function addTokens(card) {
               tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
               tokenPower = tokenPowerAndToughness.split('/')[0];
               tokenToughness = tokenPowerAndToughness.split('/')[1];
-            }            
-          }
-          else if (ability.includes("power and toughness are each equal"))
-          {
+            }
+          } else if (ability.includes("power and toughness are each equal")) {
             tokenPower = '*';
-            tokenToughness ='*';
+            tokenToughness = '*';
           }
 
           var dbHits = _catalog.nameToId[tokenName.toLowerCase()];
@@ -246,33 +244,33 @@ function addTokens(card) {
         }
       }
     }
-    if (_catalog.dict[card.id].oracle_text.includes('Ascend (')){
+    if (_catalog.dict[card.id].oracle_text.includes('Ascend (')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken("City's Blessing"),
         sourceCardId: _catalog.dict[card.id]._id
-      });      
+      });
     }
-    if (_catalog.dict[card.id].oracle_text.includes('Infect (')){
+    if (_catalog.dict[card.id].oracle_text.includes('Infect (')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Poison'),
         sourceCardId: _catalog.dict[card.id]._id
       });
     }
-    if (_catalog.dict[card.id].oracle_text.includes('you become the monarch')){
+    if (_catalog.dict[card.id].oracle_text.includes('you become the monarch')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Monarch'),
         sourceCardId: _catalog.dict[card.id]._id
       });
     }
-    if (_catalog.dict[card.id].oracle_text.includes('{E}')){
+    if (_catalog.dict[card.id].oracle_text.includes('{E}')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Energy'),
         sourceCardId: _catalog.dict[card.id]._id
       });
     }
-    
-    if (_catalog.dict[card.id].oracle_text.includes('emblem')){
-     
+
+    if (_catalog.dict[card.id].oracle_text.includes('emblem')) {
+
       var hits = _catalog.nameToId[card.name.toLowerCase() + " emblem"];
       if (hits != undefined) {
         mentionedTokens.push({
@@ -280,8 +278,8 @@ function addTokens(card) {
           sourceCardId: _catalog.dict[card.id]._id
         });
       }
-    }  
-      
+    }
+
     if (mentionedTokens.length == 0) {
       var cardTokens = getTokensFromCard(card);
 
@@ -295,8 +293,7 @@ function addTokens(card) {
       }
     }
 
-    if (mentionedTokens.length > 0)
-    {
+    if (mentionedTokens.length > 0) {
       _catalog.dict[card.id].tokens = mentionedTokens;
     }
   }
