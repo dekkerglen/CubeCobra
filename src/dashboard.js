@@ -57,7 +57,7 @@ class Dashboard extends Component {
             </CardFooter>
           </Card>
         </Col>
-        <Col sm="12" xs="12" md="6" lg="6" >
+        <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Recent Drafts of Your Cubes</h5></CardHeader>
             <CardBody className="p-0">  
