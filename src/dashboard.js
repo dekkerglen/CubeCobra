@@ -29,10 +29,10 @@ class Dashboard extends Component {
     const {posts, cubes, decks} = this.props;
     return (       
       <Row>
-        <Col sm="12" xs="12" md="6" lg="6" >
+        <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Your Cubes</h5></CardHeader>
-            <CardBody className="py-2 px-2">      
+            <CardBody className="p-2">      
               <Row>   
                 {cubes.length > 0 ?
                   cubes.slice(0,2).map(cube =>
@@ -52,13 +52,13 @@ class Dashboard extends Component {
             </CardFooter>
           </Card>
         </Col>
-        <Col sm="12" xs="12" md="6" lg="6" >
+        <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Recent Drafts of Your Cubes</h5></CardHeader>
             <CardBody className="p-0">  
                 {decks.length > 0 ?
                   decks.map(deck =>
-                    <DeckPreview deck={deck}/>
+                    <DeckPreview key={deck._id} deck={deck} />
                   )
                 :
                   <p className="m-2">Nobody has drafted your cubes! Perhaps try reaching out on the <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a></p>
@@ -71,7 +71,7 @@ class Dashboard extends Component {
             </CardFooter>
           </Card>
         </Col>
-        <Col sm="12" xs="12" md="12" lg="12" className="mb-2 mt-4">
+        <Col xs="12" className="mb-2 mt-4">
           <Card><CardHeader><h4>Feed</h4></CardHeader></Card>
           {posts.length > 0 ?
             <PagedList pageSize={10} rows={posts.slice(0).reverse().map(post =>
