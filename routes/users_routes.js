@@ -46,8 +46,11 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
       return res.status(401).render('misc/404', {});
     }
 
-    const user = await User.findById(req.user._id);
-    const other = await User.findById(req.params.id);
+    const userq = User.findById(req.user._id).exec();
+    const otherq = User.findById(req.params.id).exec();
+
+    const [user, other] = await Promise.all([userq, otherq]);
+
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
@@ -60,8 +63,8 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
       user.followed_users.push(other._id);
     }
 
-    await user.save();
-    await other.save();
+
+    await Promise.all([user.save(), other.save()]);
 
     return res.redirect('/user/view/' + req.params.id);
   } catch (err) {
@@ -79,8 +82,11 @@ router.get('/unfollow/:id', ensureAuth, async function(req, res) {
       return res.status(401).render('misc/404', {});
     }
 
-    const user = await User.findById(req.user._id);
-    const other = await User.findById(req.params.id);
+    const userq = User.findById(req.user._id).exec();
+    const otherq = User.findById(req.params.id).exec();
+
+    const [user, other] = await Promise.all([userq, otherq]);
+
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
@@ -93,8 +99,7 @@ router.get('/unfollow/:id', ensureAuth, async function(req, res) {
       user.followed_users.splice(user.followed_users.indexOf(other._id), 1);
     }
 
-    await user.save();
-    await other.save();
+    await Promise.all([user.save(), other.save()]);
 
     return res.redirect('/user/view/' + req.params.id);
   } catch (err) {
@@ -476,19 +481,20 @@ router.get('/logout', function(req, res) {
 });
 
 router.get('/view/:id', async function(req, res) {
-  var user;
   try {
-    user = await User.findById(req.params.id);
-  } catch (err) {
-    user = await User.findOne({
-      username_lower: req.params.id.toLowerCase()
-    });
-    if (!user) {
-      req.flash('danger', 'User not found');
-      return res.status(404).render('misc/404', {});
+    var user;
+    try {
+      user = await User.findById(req.params.id);
+    } catch (err) {
+      user = await User.findOne({
+        username_lower: req.params.id.toLowerCase()
+      });
+      if (!user) {
+        req.flash('danger', 'User not found');
+        return res.status(404).render('misc/404', {});
+      }
     }
-  }
-  try {
+
     const cubes = await Cube.find({
       owner: user._id
     });

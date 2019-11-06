@@ -14,17 +14,12 @@ class Dashboard extends Component {
     super(props);
     
     this.newCube = this.newCube.bind(this);
-
-    this.state = {  
-      cubes_expanded: false
-    };
   }
 
   newCube(evt)
   {
     evt.preventDefault();
-    //TODO: remove jquery dependency
-    $('#cubeModal').modal('show');
+    document.getElementById('cubeModal').modal('show');
   }
 
   render() {

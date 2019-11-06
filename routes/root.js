@@ -20,54 +20,57 @@ router.get('/', async function(req, res) {
 router.get('/explore', async function(req, res) {
   const user_id = req.user ? req.user._id : '';
 
-  [recents, featured, drafted, blog, decks] = await Promise.all([
-    Cube.find({
-      $or: [{
-          $and: [{
-            'card_count': {
-              $gt: 200
-            }
-          }, {
-            'isListed': true
-          }]
-        },
-        {
-          'owner': user_id
-        }
-      ]
-    }).sort({
-      'date_updated': -1
-    }).limit(12).exec(),
-    Cube.find({
-      isFeatured: true
-    }).exec(),
-    Cube.find({
-      $or: [{
-        'isListed': true
-      }, {
-        'isListed': null
-      }, {
+  const recentsq = Cube.find({
+    $or: [{
+        $and: [{
+          'card_count': {
+            $gt: 200
+          }
+        }, {
+          'isListed': true
+        }]
+      },
+      {
         'owner': user_id
-      }]
-    }).sort({
-      'numDecks': -1
-    }).limit(12).exec(),
-    Blog.find({
-      dev: 'true'
-    }).sort({
-      'date': -1
-    }).exec(),
-    Deck.find().sort({
-      'date': -1
-    }).limit(10).exec()
-  ]);
+      }
+    ]
+  }).sort({
+    'date_updated': -1
+  }).limit(12).exec();
 
-  decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
+  const featuredq = Cube.find({
+    isFeatured: true
+  }).exec();
+
+  const draftedq = Cube.find({
+    $or: [{
+      'isListed': true
+    }, {
+      'isListed': null
+    }, {
+      'owner': user_id
+    }]
+  }).sort({
+    'numDecks': -1
+  }).limit(12).exec();
+
+  const blogq = Blog.find({
+    dev: 'true'
+  }).sort({
+    'date': -1
+  }).exec();
+
+  const decksq = Deck.find().sort({
+    'date': -1
+  }).limit(10).exec();
+
+  const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+
   res.render('index', {
     devblog: blog.length > 0 ? blog[0] : null,
     recents: recents,
     drafted: drafted,
-    decks: decklinks,
+    decks: decks,
     featured: featured,
     loginCallback: '/explore'
   });
@@ -162,12 +165,11 @@ router.get('/dashboard/decks/:page', async function(req, res) {
       owner: user._id
     }).sort({
       'date_updated': -1
+    }).select({
+      '_id': 1
     }).exec();
 
-    const cubeIds = [];
-    cubes.forEach(function(cube, index) {
-      cubeIds.push(cube._id);
-    });
+    const cubeIds = cubes.map(cube => cube._id);
 
     const decks = await Deck.find({
       cube: {
@@ -175,7 +177,7 @@ router.get('/dashboard/decks/:page', async function(req, res) {
       }
     }).sort({
       'date': -1
-    }).skip(pagesize * page).limit(30).exec();
+    }).skip(pagesize * page).limit(pagesize).exec();
     const numDecks = await Deck.countDocuments({
       cube: {
         $in: cubeIds
@@ -219,9 +221,9 @@ router.get('/landing', async function(req, res) {
 
   //this regex add commas to the number
   res.render('landing', {
-    numusers: user.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-    numcubes: cube.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-    numdrafts: deck.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+    numusers: user.toLocaleString('en-US'),
+    numcubes: cube.toLocaleString('en-US'),
+    numdrafts: deck.toLocaleString('en-US'),
     loginCallback: '/'
   });
 });

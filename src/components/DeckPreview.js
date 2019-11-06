@@ -9,7 +9,7 @@ class DeckPreview extends React.Component {
   }
 
   render() {
-    var deck = this.props.deck;
+    const deck = this.props.deck;
     return (
         <a className="no-underline-hover" href={'/cube/deck/'+deck._id}><div className="border-top pb-2 pt-3 px-2 deck-preview">
           <h6 className="card-subtitle mb-2 text-muted">

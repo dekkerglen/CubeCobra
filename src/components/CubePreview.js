@@ -9,7 +9,7 @@ class CubePreview extends React.Component {
       super(props);
   }
 
-  get_cube_id(cube) {
+  getCubeId(cube) {
     if (cube.urlAlias) return cube.urlAlias;
     if (cube.shortID) return cube.shortID;
     return cube._id;
@@ -26,9 +26,9 @@ class CubePreview extends React.Component {
           }
           <em>Designed by <a href={'/user/view/'+cube.owner}>{cube.owner_name}</a></em>
         </CardHeader>
-        <a href={'/cube/overview/'+this.get_cube_id(cube)}><img className="card-img-top cube-preview-image" src={cube.image_uri}/></a>
+        <a href={'/cube/overview/'+this.getCubeId(cube)}><img className="card-img-top cube-preview-image" src={cube.image_uri}/></a>
         <em className="text-right p-1">Art by {cube.image_artist}</em>
-        <a className="btn btn-success rounded-0" href={'/cube/overview/'+this.get_cube_id(cube)}>View</a>
+        <a className="btn btn-success rounded-0" href={'/cube/overview/'+this.getCubeId(cube)}>View</a>
       </Card>
     );
   }

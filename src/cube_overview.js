@@ -24,9 +24,7 @@ class CubeOverview extends Component {
     });
     csrfFetch("/cube/follow/" + this.props.cube._id, {
       method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: {}
     }).then(response => {
       if (!response.ok) {
         console.log(response);
@@ -40,9 +38,7 @@ class CubeOverview extends Component {
     });
     csrfFetch("/cube/unfollow/" + this.props.cube._id, {
       method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: {}
     }).then(response => {
       if (!response.ok) {
         console.log(response);
@@ -129,6 +125,5 @@ const owner = document.getElementById('ownerData').value;
 const admin = JSON.parse(document.getElementById('adminData').value) == true;
 const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
-console.log(followed);
 const element = <CubeOverview post={blog?blog:null} cube={cube} price={price} owner={owner} admin={admin} followed={followed}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;
