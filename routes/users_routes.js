@@ -39,6 +39,77 @@ router.get('/lostpassword', function(req, res) {
   res.render('user/lostpassword');
 });
 
+router.get('/follow/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});
+    }
+
+    const userq = User.findById(req.user._id).exec();
+    const otherq = User.findById(req.params.id).exec();
+
+    const [user, other] = await Promise.all([userq, otherq]);
+
+    if (!other) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    if (!other.users_following.includes(user._id)) {
+      other.users_following.push(user._id);
+    }
+    if (!user.followed_users.includes(other._id)) {
+      user.followed_users.push(other._id);
+    }
+
+
+    await Promise.all([user.save(), other.save()]);
+
+    return res.redirect('/user/view/' + req.params.id);
+  } catch (err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
+  }
+});
+
+router.get('/unfollow/:id', ensureAuth, async function(req, res) {
+  try {
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});
+    }
+
+    const userq = User.findById(req.user._id).exec();
+    const otherq = User.findById(req.params.id).exec();
+
+    const [user, other] = await Promise.all([userq, otherq]);
+
+    if (!other) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    while (other.users_following.includes(user._id)) {
+      other.users_following.splice(other.users_following.indexOf(user._id), 1);
+    }
+    while (user.followed_users.includes(other._id)) {
+      user.followed_users.splice(user.followed_users.indexOf(other._id), 1);
+    }
+
+    await Promise.all([user.save(), other.save()]);
+
+    return res.redirect('/user/view/' + req.params.id);
+  } catch (err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
+  }
+});
+
 //Lost password submit
 router.post('/lostpassword', function(req, res) {
   req.checkBody('email', 'Email is required').notEmpty();
@@ -409,116 +480,101 @@ router.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-router.get('/view/:id', function(req, res) {
-  User.findById(req.params.id, function(err, user) {
-    if (!user) {
-      User.findOne({
+router.get('/view/:id', async function(req, res) {
+  try {
+    var user;
+    try {
+      user = await User.findById(req.params.id);
+    } catch (err) {
+      user = await User.findOne({
         username_lower: req.params.id.toLowerCase()
-      }, function(err, user2) {
-        if (!user2) {
-          req.flash('danger', 'User not found');
-          res.status(404).render('misc/404', {});
-        } else {
-          res.redirect('/user/view/' + user2._id);
-        }
       });
-    } else {
-      Cube.find({
-        owner: user._id
-      }, function(err, cubes) {
-        res.render('user/user_view', {
-          user_limited: {
-            username: user.username,
-            email: user.email,
-            about: user.about,
-            id: user._id
-          },
-          cubes: cubes,
-          loginCallback: '/user/view/' + req.params.id
-        });
-      });
+      if (!user) {
+        req.flash('danger', 'User not found');
+        return res.status(404).render('misc/404', {});
+      }
     }
-  });
+
+    const cubes = await Cube.find({
+      owner: user._id
+    });
+
+    return res.render('user/user_view', {
+      user_limited: {
+        username: user.username,
+        email: user.email,
+        about: user.about,
+        id: user._id
+      },
+      cubes: cubes,
+      loginCallback: '/user/view/' + req.params.id,
+      followers: user.users_following.length,
+      following: user.users_following.includes(req.user._id)
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
 });
 
-router.get('/decks/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var userid = split[0];
-  User.findById(userid, function(err, user) {
-    Deck.find({
+router.get('/decks/:userid', function(req, res) {
+  res.redirect('/user/decks/' + req.params.userid + '/0')
+})
+
+router.get('/decks/:userid/:page', async function(req, res) {
+  try {
+    const userid = req.params.userid;
+    const page = req.params.page;
+    const pagesize = 30;
+
+    const userq = User.findById(userid).exec();
+    const decksq = Deck.find({
       owner: userid
-    }).sort('date').exec(function(err, decks) {
-      if (!user) {
-        user = {
-          username: 'unknown'
-        };
-      }
-      var pages = [];
-      var pagesize = 30;
-      if (decks.length > 0) {
-        decks.reverse();
-        if (decks.length > pagesize) {
-          var page = parseInt(split[1]);
-          if (!page) {
-            page = 0;
-          }
-          for (i = 0; i < decks.length / pagesize; i++) {
-            if (page == i) {
-              pages.push({
-                url: '/user/decks/' + userid + ';' + i,
-                content: (i + 1),
-                active: true
-              });
-            } else {
-              pages.push({
-                url: '/user/decks/' + userid + ';' + i,
-                content: (i + 1),
-              });
-            }
-          }
-          deck_page = [];
-          for (i = 0; i < pagesize; i++) {
-            if (decks[i + page * pagesize]) {
-              deck_page.push(decks[i + page * pagesize]);
-            }
-          }
-          res.render('user/user_decks', {
-            user_limited: {
-              username: user.username,
-              email: user.email,
-              about: user.about,
-              id: user._id
-            },
-            decks: deck_page,
-            pages: pages,
-            loginCallback: '/user/decks/' + userid
-          });
-        } else {
-          res.render('user/user_decks', {
-            user_limited: {
-              username: user.username,
-              email: user.email,
-              about: user.about,
-              id: user._id
-            },
-            decks: decks,
-            loginCallback: '/user/decks/' + userid
-          });
-        }
+    }).sort({
+      'date': -1
+    }).skip(pagesize * page).limit(pagesize).exec();
+    const numDecksq = await Deck.countDocuments({
+      owner: userid
+    }).exec();
+
+    const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const pages = [];
+    for (i = 0; i < numDecks / pagesize; i++) {
+      if (page == i) {
+        pages.push({
+          url: '/user/decks/' + userid + '/' + i,
+          content: (i + 1),
+          active: true
+        });
       } else {
-        res.render('user/user_decks', {
-          user_limited: {
-            username: user.username,
-            email: user.email,
-            about: user.about,
-            id: user._id
-          },
-          loginCallback: '/user/decks/' + userid,
-          decks: []
+        pages.push({
+          url: '/user/decks/' + userid + '/' + i,
+          content: (i + 1),
         });
       }
+    }
+
+    return res.render('user/user_decks', {
+      user_limited: {
+        username: user.username,
+        email: user.email,
+        about: user.about,
+        id: user._id
+      },
+      loginCallback: '/user/decks/' + userid,
+      decks: decks ? decks : [],
+      pages: pages ? pages : null
     });
-  });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
 });
 
 //account page

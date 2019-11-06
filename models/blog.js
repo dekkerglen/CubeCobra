@@ -23,7 +23,15 @@ let blogSchema = mongoose.Schema({
   dev: String,
   date_formatted: String,
   changelist: String,
-  comments: [Comment]
+  comments: [Comment],
+  username: {
+    type: String,
+    default: 'User'
+  },
+  cubename: {
+    type: String,
+    default: 'Cube'
+  }
 });
 
 
