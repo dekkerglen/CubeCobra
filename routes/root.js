@@ -126,11 +126,7 @@ router.get('/dashboard', async function(req, res) {
 
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
-
-    const cubeIds = [];
-    cubes.forEach(function(cube, index) {
-      cubeIds.push(cube._id);
-    });
+    const cubeIds = cubes.map(cube => cube._id);
 
     const decks = await Deck.find({
       cube: {

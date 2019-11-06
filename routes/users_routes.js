@@ -532,7 +532,7 @@ router.get('/decks/:userid/:page', async function(req, res) {
       owner: userid
     }).sort({
       'date': -1
-    }).skip(pagesize * page).limit(30).exec();
+    }).skip(pagesize * page).limit(pagesize).exec();
     const numDecksq = await Deck.countDocuments({
       owner: userid
     }).exec();
