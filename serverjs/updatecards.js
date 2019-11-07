@@ -250,7 +250,7 @@ function addTokens(card) {
         sourceCardId: _catalog.dict[card.id]._id
       });
     }
-    if (_catalog.dict[card.id].oracle_text.includes('Infect (')) {
+    if (_catalog.dict[card.id].oracle_text.includes('poison counter')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Poison'),
         sourceCardId: _catalog.dict[card.id]._id
