@@ -1790,6 +1790,7 @@ router.get('/draft/:id', function(req, res) {
 
 // Edit Submit POST Route
 router.post('/editoverview/:id', ensureAuth, function(req, res) {
+  console.log(req.body);
   req.body.html = sanitize(req.body.html);
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     if (err) {

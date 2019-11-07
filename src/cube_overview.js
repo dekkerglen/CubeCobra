@@ -108,7 +108,7 @@ class CubeOverview extends Component {
         </Col>
       </Row>
       {post &&
-          <BlogPost key={post._id} post={post} canEdit={canEdit} userid={userid} loggedIn={loggedIn} />
+          <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={loggedIn} />
       }
       </>
     );
