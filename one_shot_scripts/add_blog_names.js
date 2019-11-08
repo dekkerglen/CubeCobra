@@ -7,6 +7,8 @@ const {
 	generate_short_id,
 } = require('../serverjs/cubefn.js');
 
+const batch_size = 100;
+
 const cubeNameCache = {};
 const userNameCache = {};
 
@@ -17,7 +19,7 @@ async function addVars(blog) {
     }
     blog.cubename = cubeNameCache[blog.cube];
 
-    if(userNameCache[blog.owner]) {
+    if(!userNameCache[blog.owner]) {
         const user = await User.findById(blog.owner);
         userNameCache[blog.owner] = user ? user.username : 'User';
     }
@@ -34,16 +36,23 @@ async function addVars(blog) {
         const cursor = Blog.find().cursor();
         
         //batch them in 100
-        for(var i = 0; i < count; i += 100)
+        for(var i = 0; i < count; i += batch_size)
         {
+            console.log("Finished: " + i + " of " + count + " blogs");
             const blogs = [];
-            let blog = await cursor.next()
-            if(blog) {
-                blogs.push(blog)
+            for(var j = 0; j < batch_size; j++)
+            {
+                if(i + j < count)
+                {
+                    let blog = await cursor.next()
+                    if(blog) {
+                        blogs.push(blog)
+                    }
+                }
             }
             await Promise.all(blogs.map(blog => addVars(blog)));
-            console.log("Finished: " + i + " of " + count + " blogs");
         }
+        console.log("Finished: " + count + " of " + count + " blogs");
         mongoose.disconnect();
         console.log("done");
 	});
