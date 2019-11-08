@@ -7,25 +7,42 @@ const {
 	generate_short_id,
 } = require('../serverjs/cubefn.js');
 
+const cubeNameCache = {};
+const userNameCache = {};
+
+async function addVars(deck) {
+    if(!cubeNameCache[deck.cube]) {
+        const cube = await Cube.findById(deck.cube);
+        cubeNameCache[deck.cube] = cube ? cube.name : 'Cube';
+    }
+    deck.cubename = cubeNameCache[deck.cube];
+
+    if(userNameCache[deck.owner]) {
+        const user = await User.findById(deck.owner);
+        userNameCache[deck.owner] = user ? user.username : 'User';
+    }
+    deck.username = userNameCache[deck.owner];
+
+    return await deck.save();
+}
+
 (async () => {
     var i = 0;
 	mongoose.connect(mongosecrets.connectionString).then( async (db) => {
-        const cubes = await Cube.find({owner: "5cf9cdf2aefc6508c5ebcb40"});
-    
-        const cubeIds = [];
-        cubes.forEach(function(cube, index)
+
+        const count = await Deck.countDocuments();
+        const cursor = Deck.find().cursor();
+        
+        //batch them in 100
+        for(var i = 0; i < count; i += 100)
         {
-          cubeIds.push(cube._id);
-        });
-    
-		const cursor = Deck.find({cube: {$in: cubeIds}}).cursor();
-        for (let deck = await cursor.next(); deck != null; deck = await cursor.next()) {
-            console.log(i++);
-            const cube = await Cube.findById(deck.cube);
-            const user = await User.findById(deck.owner);
-            deck.cubename = cube ? cube.name : 'Cube';
-            deck.username = user ? user.username : 'User';
-            await deck.save();
+            const decks = [];
+            let deck = await cursor.next()
+            if(deck) {
+                decks.push(deck)
+            }
+            await Promise.all(decks.map(deck => addVars(deck)));
+            console.log("Finished: " + i + " of " + count + " decks");
         }
         mongoose.disconnect();
         console.log("done");
