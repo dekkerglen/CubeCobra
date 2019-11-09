@@ -74,32 +74,34 @@ class BlogPost extends React.Component {
                     <AgeText date={post.date}/>
                 </h6>                  
             </CardHeader>
-            {(post.changelist && post.html) ? 
-            <Row className="no-gutters">
-                <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{'borderRight': '1px solid #DFDFDF'}}>
-                    <CardBody className="py-2">
+            <div style={{"overflow": "auto", "max-height":"50vh"}}>
+                {(post.changelist && post.html) ? 
+                <Row className="no-gutters">
+                    <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{'borderRight': '1px solid #DFDFDF'}}>
+                        <CardBody className="py-2">
+                            <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
+                        </CardBody>
+                    </Col>                     
+                    <Col className="col-9">
+                        <CardBody className="py-2">
+                            <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
+                        </CardBody>
+                    </Col>
+                </Row>
+                : 
+                <CardBody className="py-2">
+                    {post.changelist &&
                         <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
-                    </CardBody>
-                </Col>                     
-                <Col className="col-9">
-                    <CardBody className="py-2">
+                    }
+                    {post.body &&
+                        <CardText>{post.body}</CardText>
+                    }
+                    {post.html &&
                         <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
-                    </CardBody>
-                </Col>
-            </Row>
-            : 
-            <CardBody className="py-2">
-                {post.changelist &&
-                    <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
+                    }
+                </CardBody>
                 }
-                {post.body &&
-                    <CardText>{post.body}</CardText>
-                }
-                {post.html &&
-                    <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
-                }
-            </CardBody>
-            }
+            </div>
             {this.props.loggedIn &&
                 <CardBody className="px-4 pt-2 pb-0 border-top">
                     <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
