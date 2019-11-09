@@ -451,3 +451,40 @@ body.busy-cursor {
 .breakdown .percent::after {
   content: ")";
 }
+.cube-preview-card {
+	width: 100%;
+	padding-top: 127%; /* 1:1 Aspect Ratio */
+	position: relative; /* If you want text inside of it */
+}
+.cube-preview-card:hover {
+	background: #EFEFEF;
+	cursor: pointer;
+    border: 1px solid #000000;
+}
+.cube-image-preview {
+	height: 100%;
+	object-fit: cover;
+}
+.cube-preview-element {
+	height: 70%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
+.cube-preview-body {
+	position: absolute;
+	top: 70%;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
+.cube-preview-artist {
+	font-size: small;
+	position: absolute;
+	bottom: 0;
+	right: 2px;
+    color: white;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}

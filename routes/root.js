@@ -134,7 +134,7 @@ router.get('/dashboard', async function(req, res) {
       }
     }).sort({
       'date': -1
-    }).limit(10);
+    }).limit(15);
 
     return res.render('dashboard', {
       posts: blogs,
