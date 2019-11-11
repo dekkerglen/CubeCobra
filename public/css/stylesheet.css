@@ -229,18 +229,17 @@ button.close.float-none span {
 	background-color: #28A745;
 	color: white
 }
+.dropdown-no-green a:focus {
+	background-color: transparent;
+	color: #0056B5
+}
+
 
 .cmc-group {
 	border-radius:0;
 	position: relative;
 }
 .cmc-group:not(:last-of-type) {
-	/* content : "";
-  position: absolute;
-  left    : 12.5%;
-  bottom  : 0;
-  height  : 1px;
-  width   : 75%;  or 100px */
   border-bottom:1px solid #999;
 }
 .cmc-group:last-of-type {
@@ -500,8 +499,8 @@ body.busy-cursor {
 .nav-item:hover .notification-icon{
     background:#CCCECF;
 }
-.nav-item.active.notification-icon{
-    background:#CCCECF;
+.nav-item:focus .notification-icon{
+    background:white;
 }
 
 .notification-scrollarea
@@ -512,9 +511,9 @@ body.busy-cursor {
 }
 
 .user-notification{	
-	border-top: 1px;
+	border-top: 1px solid #DEE2E6;
 }
+
 .user-notification:hover{	
 	background: #EFEFEF;
-	cursor: pointer;
 }

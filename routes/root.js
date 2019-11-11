@@ -129,8 +129,6 @@ router.get('/dashboard', async function(req, res) {
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
     const cubeIds = cubes.map(cube => cube._id);
 
-    console.log(blogs[0]);
-
     const decks = await Deck.find({
       cube: {
         $in: cubeIds

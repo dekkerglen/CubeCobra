@@ -112,6 +112,17 @@ function fromEntries(entries) {
   return obj;
 }
 
+function addNotification(user,from,url,text) {
+  return user.notifications.push({
+    user_from:from._id,
+    user_from_name:from.username,
+    url:url,
+    date:new Date(),
+    text:text
+  });
+}
+
+
 var methods = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -171,7 +182,8 @@ var methods = {
   fromEntries,
   isAdmin: function(user) {
     return user && user.username == adminname;
-  }
+  },
+  addNotification
 }
 
 module.exports = methods;

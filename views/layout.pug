@@ -62,19 +62,29 @@ html
 								a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 									if user.notifications && user.notifications.length > 0
 										.badge.badge-danger
-											| #{user.notifications.length}
+											if user.notifications.length > 100
+												| 100+
+											else
+												| #{user.notifications.length}
 									img.notification-icon(style='height: 18px; margin: 0 0' src="/content/notification.png")
-								.dropdown-menu.dropdown-menu-right.pb-0(aria-labelledby='navbarDropdownMenuLink')
-									h6.my-1.mx-4 Notifications
-									.dropdown-divider.mb-0
+								.dropdown-menu.dropdown-no-green.dropdown-menu-right.p-0(aria-labelledby='navbarDropdownMenuLink')
+									.card-header
+										h6 Notifications
+											a.float-right.mt-0(href="/user/clearnotifications").card-subtitle Clear All
 	
 									.sm-main-nav.notification-scrollarea
 										if user.notifications && user.notifications.length > 0
-											for notification, i in user.notifications
-												.user-notification.py-2.px-4
-													a(href=notification.link) #{notification.text}
+											- var n = user.notifications.length
+											if n > 100
+												- n = 100
+											while n > 0
+												- n--
+												.user-notification.py-3.px-2
+													a.no-underline-hover(href="/user/notification/"+n)
+														h6.card-subtitle #{user.notifications[n].text}
 										else
-											em.my-2.mx-4 No Notifications
+											.my-2
+												em.mx-4 You don't have any notifications to show.
 
 							li.nav-item.dropdown
 								a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
