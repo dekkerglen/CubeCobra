@@ -2158,14 +2158,11 @@ router.post('/api/postcomment', ensureAuth, async function(req, res) {
       //need to find owner from comment tree
       const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
       var positionText = '';
-      comment.position.forEach(function(pos, index)
+      req.body.position.forEach(function(pos, index)
       {
-        if(positionText.length > 0)
-        {
-          positionText += '-';
-        }
-        positionText += pos;
+        positionText += pos + '-';
       });
+      positionText += comment.index;
       await util.addNotification(owner,user,'/cube/viewcomment/'+post._id+'/'+positionText,user.username + " replied to your comment on " + post.title);
     }
 

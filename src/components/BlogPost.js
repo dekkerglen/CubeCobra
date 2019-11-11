@@ -56,6 +56,16 @@ class BlogPost extends React.Component {
     this.saveEdit(this.props.post.comments, position, comment);
   }
 
+  componentDidMount() {
+    if(this.props.focused)
+    {
+        var $container = $("html,body");
+        var $scrollTo = $('.comment-highlighted');
+        
+        $container.animate({scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0},300);
+    }
+  }
+
   render() {
     var post = this.props.post;
     return (
