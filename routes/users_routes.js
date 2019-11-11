@@ -35,38 +35,52 @@ function checkUsernameValid(req) {
 router.use(csrfProtection);
 
 router.get('/notification/:index', ensureAuth, async function(req,res) {
-  if(!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    return res.status(401).render('misc/404', {});    
+  try {
+    if(!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});    
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if(req.params.index > user.notifications.length) {
+      req.flash('danger', 'Not Found');
+      return res.status(401).render('misc/404', {});    
+    }
+
+    const notification = user.notifications.splice(req.params.index,1)[0];
+    await user.save();
+
+    console.log(notification.url);
+
+    return res.redirect(notification.url);
+  } catch (err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
   }
-
-  const user = await User.findById(req.user._id);
-
-  if(req.params.index > user.notifications.length) {
-    req.flash('danger', 'Not Found');
-    return res.status(401).render('misc/404', {});    
-  }
-
-  const notification = user.notifications.splice(req.params.index,1)[0];
-  await user.save();
-
-  console.log(notification.url);
-
-  return res.redirect(notification.url);
 });
 
 router.get('/clearnotifications', ensureAuth, async function(req, res) {
-  if(!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    return res.status(401).render('misc/404', {});    
+  try {
+    if(!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.status(401).render('misc/404', {});    
+    }
+
+    const user = await User.findById(req.user._id);
+
+    user.notifications = [];
+    await user.save();
+
+    return res.redirect('/');
+  } catch (err) {
+    res.status(500).send({
+      success: 'false'
+    });
+    console.error(err);
   }
-
-  const user = await User.findById(req.user._id);
-
-  user.notifications = [];
-  await user.save();
-
-  return res.redirect('/');
 });
 
 //Lost password form

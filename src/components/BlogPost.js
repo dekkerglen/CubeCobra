@@ -67,9 +67,13 @@ class BlogPost extends React.Component {
                     }
                 </div></h5>
                 <h6 className="card-subtitle mb-2 text-muted">
-                    <a href={"/user/view/" + post.owner}>{post.username}</a>
+                    <a href={"/user/view/" + post.owner}>{post.dev=='true' ? 'Dekkaru' : post.username}</a>
                     {" posted to "} 
-                    <a href={"/cube/overview/" + post.cube}>{post.cubename}</a>
+                    {post.dev == 'true' ?
+                        <a href={"/dev/blog/0"}>Developer Blog</a>
+                    :
+                        <a href={"/cube/overview/" + post.cube}>{post.cubename}</a>
+                    }
                     {" - "} 
                     <AgeText date={post.date}/>
                 </h6>                  
