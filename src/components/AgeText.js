@@ -88,6 +88,7 @@ class AgeText extends React.Component {
                 str += ' ago';
             }
         }
+        
         return (
             <>{str}</>
         )

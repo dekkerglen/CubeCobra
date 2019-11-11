@@ -24,8 +24,8 @@ class CubePreview extends React.Component {
               <img className="card-img-top cube-image-preview" src={cube.image_uri}/>
               <em className="cube-preview-artist">Art by {cube.image_artist}</em>
             </div>
-            <div className="cube-preview-body p-2">
-              <h6 className="text-muted">{cube.name}</h6>            
+            <div className="cube-preview-body py-1 px-2">
+              <h5 className="text-muted cube-preview-text my-0">{cube.name}</h5>            
               {cube.type &&
                 <div className="text-muted">{cube.card_count} Card {cube.type} Cube</div>
               }

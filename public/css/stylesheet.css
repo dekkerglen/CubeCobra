@@ -453,7 +453,7 @@ body.busy-cursor {
 }
 .cube-preview-card {
 	width: 100%;
-	padding-top: 127%; /* 1:1 Aspect Ratio */
+	padding-top: 110%; /* 1:1 Aspect Ratio */
 	position: relative; /* If you want text inside of it */
 }
 .cube-preview-card:hover {
@@ -465,8 +465,13 @@ body.busy-cursor {
 	height: 100%;
 	object-fit: cover;
 }
+.cube-preview-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 .cube-preview-element {
-	height: 70%;
+	height: 73%;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -475,7 +480,7 @@ body.busy-cursor {
 }
 .cube-preview-body {
 	position: absolute;
-	top: 70%;
+	top: 73%;
 	left: 0;
 	bottom: 0;
 	right: 0;

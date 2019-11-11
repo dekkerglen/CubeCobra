@@ -121,12 +121,15 @@ router.get('/dashboard', async function(req, res) {
         }
       ]
     }).sort({
-      'date': 1
+      'date': -1
     }).limit(50);
 
+    
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
     const cubeIds = cubes.map(cube => cube._id);
+
+    console.log(blogs[0]);
 
     const decks = await Deck.find({
       cube: {
@@ -134,7 +137,7 @@ router.get('/dashboard', async function(req, res) {
       }
     }).sort({
       'date': -1
-    }).limit(15);
+    }).limit(13);
 
     return res.render('dashboard', {
       posts: blogs,
