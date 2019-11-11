@@ -118,7 +118,7 @@ router.get('/dashboard', async function(req, res) {
           owner: {
             $in: user.followed_users
           }
-        }, 
+        },
         {
           dev: 'true'
         }
@@ -127,7 +127,7 @@ router.get('/dashboard', async function(req, res) {
       'date': -1
     }).limit(50);
 
-    
+
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
     const cubeIds = cubes.map(cube => cube._id);

@@ -113,7 +113,7 @@ router.post('/blogpost', ensureAuth, async function(req, res) {
       blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
       await blogpost.save();
-      
+
       req.flash('success', 'Blog post successful');
       res.redirect('/dev/blog');
     }

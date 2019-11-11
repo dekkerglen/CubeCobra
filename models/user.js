@@ -44,12 +44,12 @@ const UserSchema = mongoose.Schema({
     default: []
   },
   notifications: {
-    type:[{
-      user_from:String,
-      user_from_name:String,
-      url:String,
-      date:Date,
-      text:String
+    type: [{
+      user_from: String,
+      user_from_name: String,
+      url: String,
+      date: Date,
+      text: String
     }],
     default: []
   }

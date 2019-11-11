@@ -2030,9 +2030,9 @@ function insertComment(comments, position, comment) {
     return insertComment(comments[position[0]].comments, position.slice(1), comment);
   }
 }
+
 function getOwnerFromComment(comments, position, comment) {
-  if(position.length <= 0)
-  {
+  if (position.length <= 0) {
     return '';
   } else if (position.length == 1) {
     return comments[position[0]].owner;
@@ -2119,7 +2119,7 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
 router.post('/api/postcomment', ensureAuth, async function(req, res) {
   const userq = await User.findById(req.user._id);
   const postq = await Blog.findById(req.body.id);
-  
+
   const [user, post] = await Promise.all([userq, postq]);
 
   if (!user) {
@@ -2149,21 +2149,19 @@ router.post('/api/postcomment', ensureAuth, async function(req, res) {
     });
 
     //give notification to owner
-    if(req.body.position.length == 0) {
+    if (req.body.position.length == 0) {
       //owner is blog post owner
       const owner = await User.findById(post.owner);
-      await util.addNotification(owner,user,'/cube/blogpost/'+post._id,user.username + " added a comment to " + post.title);
-    }
-    else {
+      await util.addNotification(owner, user, '/cube/blogpost/' + post._id, user.username + " added a comment to " + post.title);
+    } else {
       //need to find owner from comment tree
       const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
       var positionText = '';
-      req.body.position.forEach(function(pos, index)
-      {
+      req.body.position.forEach(function(pos, index) {
         positionText += pos + '-';
       });
       positionText += comment.index;
-      await util.addNotification(owner,user,'/cube/viewcomment/'+post._id+'/'+positionText,user.username + " replied to your comment on " + post.title);
+      await util.addNotification(owner, user, '/cube/viewcomment/' + post._id + '/' + positionText, user.username + " replied to your comment on " + post.title);
     }
 
     await post.save();
@@ -2352,7 +2350,7 @@ router.post('/editdeck/:id', async function(req, res) {
       req.flash('danger', 'Unauthorized');
       return res.status(404).render('misc/404', {});
     }
-    
+
     deck = JSON.parse(req.body.draftraw);
 
     await Deck.updateOne({
@@ -2409,8 +2407,8 @@ router.post('/submitdeck/:id', async function(req, res) {
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
-    
-    await util.addNotification(cubeOwner,user,'/cube/deck/'+deck._id,user.username + " drafted your cube: " + cube.name);
+
+    await util.addNotification(cubeOwner, user, '/cube/deck/' + deck._id, user.username + " drafted your cube: " + cube.name);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 

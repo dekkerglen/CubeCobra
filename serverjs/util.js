@@ -112,19 +112,17 @@ function fromEntries(entries) {
   return obj;
 }
 
-async function addNotification(user,from,url,text) {
-  if(user._id == from._id) {
+async function addNotification(user, from, url, text) {
+  if (user._id == from._id) {
     return; //we don't need to give notifications to ourselves
   }
   user.notifications.push({
-    user_from:from._id,
-    user_from_name:from.username,
-    url:url,
-    date:new Date(),
-    text:text
+    user_from: from._id,
+    user_from_name: from.username,
+    url: url,
+    date: new Date(),
+    text: text
   });
-  
-  console.log(user.notifications);
   await user.save();
 }
 

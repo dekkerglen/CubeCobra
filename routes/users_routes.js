@@ -34,21 +34,21 @@ function checkUsernameValid(req) {
 
 router.use(csrfProtection);
 
-router.get('/notification/:index', ensureAuth, async function(req,res) {
+router.get('/notification/:index', ensureAuth, async function(req, res) {
   try {
-    if(!req.user._id) {
+    if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});    
+      return res.status(401).render('misc/404', {});
     }
 
     const user = await User.findById(req.user._id);
 
-    if(req.params.index > user.notifications.length) {
+    if (req.params.index > user.notifications.length) {
       req.flash('danger', 'Not Found');
-      return res.status(401).render('misc/404', {});    
+      return res.status(401).render('misc/404', {});
     }
 
-    const notification = user.notifications.splice(req.params.index,1)[0];
+    const notification = user.notifications.splice(req.params.index, 1)[0];
     await user.save();
 
     return res.redirect(notification.url);
@@ -62,9 +62,9 @@ router.get('/notification/:index', ensureAuth, async function(req,res) {
 
 router.get('/clearnotifications', ensureAuth, async function(req, res) {
   try {
-    if(!req.user._id) {
+    if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});    
+      return res.status(401).render('misc/404', {});
     }
 
     const user = await User.findById(req.user._id);
@@ -110,7 +110,7 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
       user.followed_users.push(other._id);
     }
 
-    await util.addNotification(other, user, '/user/view/'+user._id, user.username + ' has followed you!');
+    await util.addNotification(other, user, '/user/view/' + user._id, user.username + ' has followed you!');
 
     await Promise.all([user.save(), other.save()]);
 
