@@ -42,6 +42,15 @@ const UserSchema = mongoose.Schema({
   users_following: {
     type: [String],
     default: []
+  },
+  notifications: {
+    type:[{
+      link:String,
+      date:Date,
+      text:String,
+      seen:Boolean
+    }],
+    default: []
   }
 });
 
