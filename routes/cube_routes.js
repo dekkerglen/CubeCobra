@@ -2341,29 +2341,33 @@ router.get('/api/cubelist/:id', function(req, res) {
   });
 });
 
-router.post('/editdeck/:id', function(req, res) {
-  Deck.findById(req.params.id, function(err, deck) {
+router.post('/editdeck/:id', async function(req, res) {
+  try {
+    const deck = Deck.findById(req.params.id);
     if (err || !deck) {
       req.flash('danger', 'Deck not found');
-      res.status(404).render('misc/404', {});
-    } else if ((deck.owner && !(req.user)) || (deck.owner && (deck.owner != req.user._id))) {
-      req.flash('danger', 'Unauthorized');
-      res.status(404).render('misc/404', {});
-    } else {
-      deck = JSON.parse(req.body.draftraw);
-
-      Deck.updateOne({
-        _id: deck._id
-      }, deck, function(err) {
-        if (err) {
-          req.flash('danger', 'Error saving deck');
-        } else {
-          req.flash('success', 'Deck saved succesfully');
-        }
-        res.redirect('/cube/deck/' + deck._id);
-      });
+      return res.status(404).render('misc/404', {});
     }
-  });
+    if ((deck.owner && !(req.user)) || (deck.owner && (deck.owner != req.user._id))) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
+    }
+    
+    deck = JSON.parse(req.body.draftraw);
+
+    await Deck.updateOne({
+      _id: deck._id
+    });
+
+    req.flash('success', 'Deck saved succesfully');
+    res.redirect('/cube/deck/' + deck._id);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err
+    });
+  }
 });
 
 router.post('/submitdeck/:id', async function(req, res) {
@@ -2395,16 +2399,20 @@ router.post('/submitdeck/:id', async function(req, res) {
     }
 
     cube.numDecks += 1;
-    await cube.save();
-    const user = await User.findById(deck.owner);
+    const userq = User.findById(deck.owner);
+    const cubeOwnerq = User.findById(cube.owner);
+
+    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : "Anonymous";
     deck.name = owner + "'s draft of " + cube.name + " on " + deck.date.toLocaleString("en-US");
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
-    await cube.save();
-    await deck.save();
+    
+    await util.addNotification(cubeOwner,user,'/cube/deck/'+deck._id,user.username + " drafted your cube: " + cube.name);
+
+    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
