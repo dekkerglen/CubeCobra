@@ -517,3 +517,6 @@ body.busy-cursor {
 .user-notification:hover{	
 	background: #EFEFEF;
 }
+.comment-highlighted {
+	background: #ECF4E3;
+}

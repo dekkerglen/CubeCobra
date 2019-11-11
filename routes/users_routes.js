@@ -51,8 +51,6 @@ router.get('/notification/:index', ensureAuth, async function(req,res) {
     const notification = user.notifications.splice(req.params.index,1)[0];
     await user.save();
 
-    console.log(notification.url);
-
     return res.redirect(notification.url);
   } catch (err) {
     res.status(500).send({
@@ -112,7 +110,7 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
       user.followed_users.push(other._id);
     }
 
-    util.addNotification(other, user, '/user/view/'+user._id, user.username + ' has followed you!');
+    await util.addNotification(other, user, '/user/view/'+user._id, user.username + ' has followed you!');
 
     await Promise.all([user.save(), other.save()]);
 

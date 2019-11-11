@@ -15,7 +15,8 @@ class Comment extends React.Component {
       this.state = {
         isEdit: false,
         editValue: '',          
-        childExpanded: false
+        childExpanded: this.props.focused ? true :false,
+        highlighted: this.props.focused ? this.props.focused.length==0:false
       };
 
       this.onPost = this.onPost.bind(this);
@@ -119,32 +120,32 @@ class Comment extends React.Component {
     var comment = this.props.comment;
     return (
       <div className='mb-1'>
-        <div className={'comment border mt-1 px-2'}>
+        <div className={'comment border mt-1 px-2' + (this.state.highlighted ? ' comment-highlighted': '')}>
           <div className="form-group mb-1 comment-hover">
-              {comment.ownerName ? <a href={'/user/view/'+comment.owner}><small>{comment.ownerName}</small></a> : <a><small>Anonymous</small></a>}
-              {comment.timePosted && (comment.updated ? <em><small> - Updated <AgeText date={comment.timePosted}/></small></em> : <a><small> - <AgeText date={comment.timePosted}/></small></a>)}
-              {comment.owner == this.props.userid &&
-                <div className="float-sm-right">
-                  <CommentContextMenu className="float-sm-right" comment={comment} value='...' edit={this.startEdit} delete={this.submitDelete}/>
-                </div>              
-              }
-              <br></br>              
-              <Collapse isOpen={!this.state.isEdit}>
-                <a>{comment.content}</a>
-              </Collapse>
-              <Collapse isOpen={this.state.isEdit}>
-                  <textarea value={this.state.inputValue} onChange={evt => this.updateEditValue(evt)} className="form-control" id="exampleFormControlTextarea1" rows="2" maxLength="500" defaultValue={comment.content}></textarea>        
-                  <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.submitEdit}>Submit</a>   
-                  {' '}
-                  <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.stopEdit}>Cancel</a>   
-              </Collapse>
-              {(this.props.position.length < 20 && this.props.loggedIn) &&
-              <div>
-                <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}>
-                    <span className="comment-button mb-2 text-muted clickable">Reply</span>
-                </CommentEntry>
-              </div>
-              }
+            {comment.ownerName ? <a href={'/user/view/'+comment.owner}><small>{comment.ownerName}</small></a> : <a><small>Anonymous</small></a>}
+            {comment.timePosted && (comment.updated ? <em><small> - Updated <AgeText date={comment.timePosted}/></small></em> : <a><small> - <AgeText date={comment.timePosted}/></small></a>)}
+            {comment.owner == this.props.userid &&
+              <div className="float-sm-right">
+                <CommentContextMenu className="float-sm-right" comment={comment} value='...' edit={this.startEdit} delete={this.submitDelete}/>
+              </div>              
+            }
+            <br></br>              
+            <Collapse isOpen={!this.state.isEdit}>
+              <a>{comment.content}</a>
+            </Collapse>
+            <Collapse isOpen={this.state.isEdit}>
+                <textarea value={this.state.inputValue} onChange={evt => this.updateEditValue(evt)} className="form-control" id="exampleFormControlTextarea1" rows="2" maxLength="500" defaultValue={comment.content}></textarea>        
+                <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.submitEdit}>Submit</a>   
+                {' '}
+                <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.stopEdit}>Cancel</a>   
+            </Collapse>
+            {(this.props.position.length < 20 && this.props.loggedIn) &&
+            <div>
+              <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}>
+                  <span className="comment-button mb-2 text-muted clickable">Reply</span>
+              </CommentEntry>
+            </div>
+            }
           </div>
         </div>
         {comment.comments.length > 0 &&       
@@ -157,7 +158,8 @@ class Comment extends React.Component {
                 position={this.props.position} 
                 userid={this.props.userid}  
                 loggedIn={this.props.loggedIn} 
-                submitEdit={this.props.submitEdit}/>
+                submitEdit={this.props.submitEdit}                
+                focused={(this.props.focused && this.props.focused.length > 0) ? this.props.focused : this.props.focused}/>
           </div>
         }
       </div>

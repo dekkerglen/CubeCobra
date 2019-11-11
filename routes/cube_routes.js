@@ -2030,6 +2030,16 @@ function insertComment(comments, position, comment) {
     return insertComment(comments[position[0]].comments, position.slice(1), comment);
   }
 }
+function getOwnerFromComment(comments, position, comment) {
+  if(position.length <= 0)
+  {
+    return '';
+  } else if (position.length == 1) {
+    return comments[position[0]].owner;
+  } else {
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
 
 function saveEdit(comments, position, comment) {
   if (position.length == 1) {
@@ -2038,6 +2048,39 @@ function saveEdit(comments, position, comment) {
     saveEdit(comments[position[0]].comments, position.slice(1), comment);
   }
 }
+
+router.get('/blogpost/:id', async function(req, res) {
+  try {
+    const post = await Blog.findById(req.params.id);
+    const owner = await User.findById(post.owner);
+
+    return res.render('cube/blogpost', {
+      post: post,
+      owner: owner._id,
+      loginCallback: '/blogpost/' + req.params.id
+    });
+  } catch (err) {
+    res.redirect('/404');
+  }
+});
+
+router.get('/viewcomment/:id/:position', async function(req, res) {
+  try {
+    const position = req.params.position.split('-');
+
+    const post = await Blog.findById(req.params.id);
+    const owner = await User.findById(post.owner);
+
+    return res.render('cube/blogpost', {
+      post: post,
+      owner: owner._id,
+      loginCallback: '/blogpost/' + req.params.id,
+      position: position
+    });
+  } catch (err) {
+    res.redirect('/404');
+  }
+});
 
 router.post('/api/editcomment', ensureAuth, async function(req, res) {
   user = await User.findById(req.user._id);
@@ -2074,8 +2117,10 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
 });
 
 router.post('/api/postcomment', ensureAuth, async function(req, res) {
-  user = await User.findById(req.user._id);
-  post = await Blog.findById(req.body.id);
+  const userq = await User.findById(req.user._id);
+  const postq = await Blog.findById(req.body.id);
+  
+  const [user, post] = await Promise.all([userq, postq]);
 
   if (!user) {
     return res.status(403).send({
@@ -2102,6 +2147,28 @@ router.post('/api/postcomment', ensureAuth, async function(req, res) {
       timePosted: Date.now() - 1000,
       comments: []
     });
+
+    //give notification to owner
+    if(req.body.position.length == 0) {
+      //owner is blog post owner
+      const owner = await User.findById(post.owner);
+      await util.addNotification(owner,user,'/cube/blogpost/'+post._id,user.username + " added a comment to " + post.title);
+    }
+    else {
+      //need to find owner from comment tree
+      const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
+      var positionText = '';
+      comment.position.forEach(function(pos, index)
+      {
+        if(positionText.length > 0)
+        {
+          positionText += '-';
+        }
+        positionText += pos;
+      });
+      await util.addNotification(owner,user,'/cube/viewcomment/'+post._id+'/'+positionText,user.username + " replied to your comment on " + post.title);
+    }
+
     await post.save();
     res.status(200).send({
       success: 'true',

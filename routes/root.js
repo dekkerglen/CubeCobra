@@ -118,7 +118,7 @@ router.get('/dashboard', async function(req, res) {
           owner: {
             $in: user.followed_users
           }
-        },
+        }, 
         {
           dev: 'true'
         }

@@ -10,7 +10,7 @@ class BlogPost extends React.Component {
     super(props);    
 
     this.state = {
-        childExpanded: false
+        childExpanded: props.focused ? true : false
     };   
       
     this.onPost = this.onPost.bind(this);
@@ -78,7 +78,7 @@ class BlogPost extends React.Component {
                     <AgeText date={post.date}/>
                 </h6>                  
             </CardHeader>
-            <div style={{"overflow": "auto", "max-height":"50vh"}}>
+            <div style={{"overflow": "auto", "maxHeight":"50vh"}}>
                 {(post.changelist && post.html) ? 
                 <Row className="no-gutters">
                     <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{'borderRight': '1px solid #DFDFDF'}}>
@@ -123,7 +123,8 @@ class BlogPost extends React.Component {
                     position={[]} 
                     userid={this.props.userid} 
                     loggedIn={this.props.loggedIn} 
-                    submitEdit={this.submitEdit}/>
+                    submitEdit={this.submitEdit}
+                    focused={this.props.focused}/>
             </CardBody>
             }
         </Card>
