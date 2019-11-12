@@ -2049,7 +2049,7 @@ function saveEdit(comments, position, comment) {
   }
 }
 
-router.get('/blogpost/:id', async function(req, res) {
+router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.findById(req.params.id);
     const owner = await User.findById(post.owner);
@@ -2066,7 +2066,7 @@ router.get('/blogpost/:id', async function(req, res) {
 
 router.get('/viewcomment/:id/:position', async function(req, res) {
   try {
-    const position = req.params.position.split('-');
+    const {position, id} = req.params;
 
     const post = await Blog.findById(req.params.id);
     const owner = await User.findById(post.owner);
@@ -2074,8 +2074,8 @@ router.get('/viewcomment/:id/:position', async function(req, res) {
     return res.render('cube/blogpost', {
       post: post,
       owner: owner._id,
-      loginCallback: '/blogpost/' + req.params.id,
-      position: position
+      loginCallback: `/blogpost/${id}`,
+      position: position.split('-')
     });
   } catch (err) {
     res.redirect('/404');
@@ -2117,8 +2117,8 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
 });
 
 router.post('/api/postcomment', ensureAuth, async function(req, res) {
-  const userq = await User.findById(req.user._id);
-  const postq = await Blog.findById(req.body.id);
+  const userq = User.findById(req.user._id);
+  const postq = Blog.findById(req.body.id);
 
   const [user, post] = await Promise.all([userq, postq]);
 
@@ -2341,7 +2341,8 @@ router.get('/api/cubelist/:id', function(req, res) {
 
 router.post('/editdeck/:id', async function(req, res) {
   try {
-    const deck = Deck.findById(req.params.id);
+    const deck = await Deck.findById(req.params.id);
+
     if (err || !deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
