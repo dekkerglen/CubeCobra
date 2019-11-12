@@ -16,6 +16,12 @@ export function arrayMove(arr, oldIndex, newIndex) {
   return result;
 }
 
+export function arrayDelete(arr, index) {
+  const result = [...arr];
+  result.splice(arr, 1);
+  return result;
+}
+
 export function fromEntries(entries) {
   const obj = {};
   for (const [k, v] of entries) {

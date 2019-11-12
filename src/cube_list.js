@@ -5,6 +5,7 @@ import Filter from './util/Filter';
 import Hash from './util/Hash';
 
 import CardModalForm from './components/CardModalForm';
+import { ChangelistContextProvider } from './components/ChangelistContext';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
@@ -85,32 +86,34 @@ class CubeList extends Component {
             defaultShowTagColors={defaultShowTagColors}
             defaultTags={defaultTags}
           >
-            <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
-              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
-                <CubeListNavbar
-                  canEdit={canEdit}
-                  cubeID={cubeID}
-                  cubeView={cubeView}
-                  changeCubeView={this.changeCubeView}
-                  openCollapse={openCollapse}
-                  setOpenCollapse={this.setOpenCollapse}
-                  filter={filter}
-                  setFilter={this.setFilter}
-                  cards={filteredCards}
-                  hasCustomImages={cards.some(card => card.imgUrl)}
-                />
-                <DynamicFlash />
-                <ErrorBoundary className="mt-3">
-                  {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
-                  {{
-                    'table': <TableView cards={filteredCards} />,
-                    'spoiler': <VisualSpoiler cards={filteredCards} />,
-                    'curve': <CurveView cards={filteredCards} />,
-                    'list': <ListView cubeID={cubeID} cards={filteredCards} />,
-                  }[cubeView]}
-                </ErrorBoundary>
-              </GroupModal>
-            </CardModalForm>
+            <ChangelistContextProvider>
+              <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
+                <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
+                  <CubeListNavbar
+                    canEdit={canEdit}
+                    cubeID={cubeID}
+                    cubeView={cubeView}
+                    changeCubeView={this.changeCubeView}
+                    openCollapse={openCollapse}
+                    setOpenCollapse={this.setOpenCollapse}
+                    filter={filter}
+                    setFilter={this.setFilter}
+                    cards={filteredCards}
+                    hasCustomImages={cards.some(card => card.imgUrl)}
+                  />
+                  <DynamicFlash />
+                  <ErrorBoundary className="mt-3">
+                    {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+                    {{
+                      'table': <TableView cards={filteredCards} />,
+                      'spoiler': <VisualSpoiler cards={filteredCards} />,
+                      'curve': <CurveView cards={filteredCards} />,
+                      'list': <ListView cubeID={cubeID} cards={filteredCards} />,
+                    }[cubeView]}
+                  </ErrorBoundary>
+                </GroupModal>
+              </CardModalForm>
+            </ChangelistContextProvider>
           </TagContext.Provider>
         </DisplayContext.Provider>
       </SortContext.Provider>
