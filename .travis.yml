@@ -2,7 +2,7 @@ language: node_js
 node_js:
     - "stable"
 
-before_install: "npm install jest beautify-lint"
+before_install: "npm install jest prettier"
 install: "npm install"
 script:
     - "npm run lint"
