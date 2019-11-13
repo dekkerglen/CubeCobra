@@ -130,8 +130,7 @@ async function addNotification(user, from, url, text) {
     date: new Date(),
     text: text
   });
-  if(user.old_notifications.length > 200)
-  {
+  if (user.old_notifications.length > 200) {
     user.old_notifications = user.old_notifications.slice(1);
   }
   await user.save();
