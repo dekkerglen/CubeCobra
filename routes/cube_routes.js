@@ -2066,7 +2066,10 @@ router.get('/blogpost/:id', async (req, res) => {
 
 router.get('/viewcomment/:id/:position', async (req, res) => {
   try {
-    const {position, id} = req.params;
+    const {
+      position,
+      id
+    } = req.params;
 
     const post = await Blog.findById(req.params.id);
     const owner = await User.findById(post.owner);

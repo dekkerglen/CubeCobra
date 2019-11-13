@@ -573,7 +573,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    if(!user) {
+    if (!user) {
       res.redirect('/404');
     }
 
