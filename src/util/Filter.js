@@ -250,9 +250,13 @@ const verifyTokens = (tokens) => {
             return false;
           }
           break;
-        case 'cmc':
         case 'power':
         case 'toughness':
+          if (token(i).arg.search(/^[-\+]?((\d+(\.5)?)|(\.5))$/) < 0) return false;
+          break;
+        case 'cmc':
+          if (token(i).arg.search(/^\+?((\d+(\.5)?)|(\.5))$/) < 0) return false;
+          break;
         case 'loyalty':
           if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
