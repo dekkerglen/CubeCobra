@@ -18,8 +18,11 @@ class DeckPreview extends React.Component {
               :
                 <a>Anonymous</a>
               }
-              {" drafted "} 
-              <a href={"/cube/overview/" + deck.cube}>{deck.cubename}</a>
+              {' '}
+              <a href={'/cube/deck/'+deck._id}>
+                {"drafted "} 
+                {deck.cubename}
+              </a>
               {" - "} 
               <AgeText date={deck.date}/>
           </h6>      

@@ -11,7 +11,8 @@ module.exports = {
     cube_blog: ['./cube_blog.js'],
     cube_overview: ['./cube_overview.js'],
     dashboard: ['./dashboard.js'],
-    blogpost: ['./blogpost.js']
+    blogpost: ['./blogpost.js'],
+    notifications: ['./notifications.js']
   },
   output: {
     filename: '[name].bundle.js',

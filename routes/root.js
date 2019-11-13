@@ -13,11 +13,11 @@ const {
 router.use(csrfProtection);
 
 // Home route
-router.get('/', async function(req, res) {
+router.get('/', async (req, res) => {
   req.user ? res.redirect('/dashboard') : res.redirect('/landing');
 });
 
-router.get('/explore', async function(req, res) {
+router.get('/explore', async (req, res) => {
   const user_id = req.user ? req.user._id : '';
 
   const recentsq = Cube.find({
@@ -89,14 +89,14 @@ router.get('/advanced_search', function(req, res) {
   });
 });
 
-router.get('/random', async function(req, res) {
+router.get('/random', async (req, res) => {
   const count = await Cube.count();
   var random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random);
   res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
 })
 
-router.get('/dashboard', async function(req, res) {
+router.get('/dashboard', async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -152,7 +152,7 @@ router.get('/dashboard', async function(req, res) {
   }
 });
 
-router.get('/dashboard/decks/:page', async function(req, res) {
+router.get('/dashboard/decks/:page', async (req, res) => {
   try {
     const pagesize = 30;
     const page = req.params.page;
@@ -211,7 +211,7 @@ router.get('/dashboard/decks/:page', async function(req, res) {
   }
 });
 
-router.get('/landing', async function(req, res) {
+router.get('/landing', async (req, res) => {
 
   const cubeq = Cube.countDocuments().exec();
   const deckq = Deck.countDocuments().exec();

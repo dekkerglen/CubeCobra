@@ -95,7 +95,7 @@ router.get('/blog/:id', function(req, res) {
   });
 });
 
-router.post('/blogpost', ensureAuth, async function(req, res) {
+router.post('/blogpost', ensureAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 

@@ -49,10 +49,20 @@ const UserSchema = mongoose.Schema({
       user_from_name: String,
       url: String,
       date: Date,
-      text: String
+      text: String,
     }],
     default: []
-  }
+  },
+  old_notifications: {
+    type: [{
+      user_from: String,
+      user_from_name: String,
+      url: String,
+      date: Date,
+      text: String,
+    }],
+    default: []
+  },
 });
 
 const User = module.exports = mongoose.model('User', UserSchema);

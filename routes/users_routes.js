@@ -34,7 +34,7 @@ function checkUsernameValid(req) {
 
 router.use(csrfProtection);
 
-router.get('/notification/:index', ensureAuth, async function(req, res) {
+router.get('/notification/:index', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -60,7 +60,7 @@ router.get('/notification/:index', ensureAuth, async function(req, res) {
   }
 });
 
-router.get('/clearnotifications', ensureAuth, async function(req, res) {
+router.get('/clearnotifications', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -86,7 +86,7 @@ router.get('/lostpassword', function(req, res) {
   res.render('user/lostpassword');
 });
 
-router.get('/follow/:id', ensureAuth, async function(req, res) {
+router.get('/follow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -123,7 +123,7 @@ router.get('/follow/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.get('/unfollow/:id', ensureAuth, async function(req, res) {
+router.get('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -528,7 +528,7 @@ router.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-router.get('/view/:id', async function(req, res) {
+router.get('/view/:id', async (req, res) => {
   try {
     var user;
     try {
@@ -569,7 +569,24 @@ router.get('/decks/:userid', function(req, res) {
   res.redirect('/user/decks/' + req.params.userid + '/0')
 })
 
-router.get('/decks/:userid/:page', async function(req, res) {
+router.get('/notifications', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if(!user) {
+      res.redirect('/404');
+    }
+
+    return res.render('user/notifications', {
+      notifications: user.old_notifications
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
+router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const userid = req.params.userid;
     const page = req.params.page;

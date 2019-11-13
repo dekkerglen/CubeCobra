@@ -263,7 +263,7 @@ router.get('/view/:id', function(req, res) {
   res.redirect('/cube/overview/' + req.params.id);
 });
 
-router.post('/format/add/:id', ensureAuth, async function(req, res) {
+router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
     req.body.html = sanitize(req.body.html);
 
@@ -368,7 +368,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.post('/follow/:id', ensureAuth, async function(req, res) {
+router.post('/follow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -407,7 +407,7 @@ router.post('/follow/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/unfollow/:id', ensureAuth, async function(req, res) {
+router.post('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -446,7 +446,7 @@ router.post('/unfollow/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/feature/:id', ensureAuth, async function(req, res) {
+router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -511,7 +511,7 @@ router.post('/unfeature/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.get('/overview/:id', async function(req, res) {
+router.get('/overview/:id', async (req, res) => {
   try {
     var split = req.params.id.split(';');
     var cube_id = split[0];
@@ -615,7 +615,7 @@ router.get('/blog/:id', function(req, res) {
   res.redirect('/cube/blog/' + req.params.id + '/0');
 });
 
-router.get('/blog/:id/:page', async function(req, res) {
+router.get('/blog/:id/:page', async (req, res) => {
   try {
     var cube_id = req.params.id;
     cube = await Cube.findOne(build_id_query(cube_id));
@@ -908,7 +908,7 @@ router.get('/list/:id', function(req, res) {
   });
 });
 
-router.get('/playtest/:id', async function(req, res) {
+router.get('/playtest/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
 
@@ -2064,7 +2064,7 @@ router.get('/blogpost/:id', async (req, res) => {
   }
 });
 
-router.get('/viewcomment/:id/:position', async function(req, res) {
+router.get('/viewcomment/:id/:position', async (req, res) => {
   try {
     const {position, id} = req.params;
 
@@ -2082,7 +2082,7 @@ router.get('/viewcomment/:id/:position', async function(req, res) {
   }
 });
 
-router.post('/api/editcomment', ensureAuth, async function(req, res) {
+router.post('/api/editcomment', ensureAuth, async (req, res) => {
   user = await User.findById(req.user._id);
   post = await Blog.findById(req.body.id);
 
@@ -2116,7 +2116,7 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/api/postcomment', ensureAuth, async function(req, res) {
+router.post('/api/postcomment', ensureAuth, async (req, res) => {
   const userq = User.findById(req.user._id);
   const postq = Blog.findById(req.body.id);
 
@@ -2339,7 +2339,7 @@ router.get('/api/cubelist/:id', function(req, res) {
   });
 });
 
-router.post('/editdeck/:id', async function(req, res) {
+router.post('/editdeck/:id', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
 
@@ -2369,7 +2369,7 @@ router.post('/editdeck/:id', async function(req, res) {
   }
 });
 
-router.post('/submitdeck/:id', async function(req, res) {
+router.post('/submitdeck/:id', async (req, res) => {
   try {
     //req.body contains draft0
     var draftid = req.body.body;
@@ -2423,7 +2423,7 @@ router.post('/submitdeck/:id', async function(req, res) {
   }
 });
 
-router.get('/decks/:cubeid/:page', async function(req, res) {
+router.get('/decks/:cubeid/:page', async (req, res) => {
   try {
     var cubeid = req.params.cubeid;
     var page = req.params.page;
@@ -2491,7 +2491,7 @@ router.get('/decks/:cubeid/:page', async function(req, res) {
   }
 });
 
-router.get('/decks/:id', async function(req, res) {
+router.get('/decks/:id', async (req, res) => {
   res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 

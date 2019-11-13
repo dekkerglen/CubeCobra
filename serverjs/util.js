@@ -123,6 +123,17 @@ async function addNotification(user, from, url, text) {
     date: new Date(),
     text: text
   });
+  user.old_notifications.push({
+    user_from: from._id,
+    user_from_name: from.username,
+    url: url,
+    date: new Date(),
+    text: text
+  });
+  if(user.old_notifications.length > 200)
+  {
+    user.old_notifications = user.old_notifications.slice(1);
+  }
   await user.save();
 }
 

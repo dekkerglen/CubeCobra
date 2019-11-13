@@ -23,9 +23,6 @@ class Dashboard extends Component {
   }
 
   render() {
-    //List of your cubes
-    //List of drafts of your cube
-    //List of replies to your blogs  
     const {posts, cubes, decks} = this.props;
     return (       
       <Row>

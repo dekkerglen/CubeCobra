@@ -67,7 +67,7 @@ html
 											else
 												| #{user.notifications.length}
 									img.notification-icon(style='height: 18px; margin: 0 0' src="/content/notification.png")
-								.dropdown-menu.dropdown-no-green.dropdown-menu-right.p-0(aria-labelledby='navbarDropdownMenuLink')
+								.dropdown-menu.dropdown-no-green.dropdown-menu-right.p-0.mb-0(aria-labelledby='navbarDropdownMenuLink')
 									.card-header
 										h6 Notifications
 											a.float-right.mt-0(href="/user/clearnotifications").card-subtitle Clear All
@@ -85,6 +85,9 @@ html
 										else
 											.my-2
 												em.mx-4 You don't have any notifications to show.
+									.card-footer.pb-1.pt-1
+										h6
+											a.my-0(href="/user/notifications").card-subtitle View Older Notifications
 
 							li.nav-item.dropdown
 								a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
