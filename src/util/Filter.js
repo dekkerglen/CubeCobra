@@ -194,6 +194,13 @@ const colorMap = new Map([
   ['temur', 'rug']
 ]);
 
+const rarityMap = new Map([
+    ['c', 'common'],
+    ['u', 'uncommon'],
+    ['r', 'rare'],
+    ['m', 'mythic']
+]);
+
 //change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
   let res = '';
@@ -209,6 +216,14 @@ function simplifyArg(arg, category) {
       break;
     case 'mana':
       res = parseManaCost(arg)
+      break;
+    case 'rarity':
+      let argLower = arg.toLowerCase()
+      if (rarityMap.has(argLower)) {
+        res = rarityMap.get(argLower);
+      } else {
+        res = arg;
+      }
       break;
     default:
       res = arg;
