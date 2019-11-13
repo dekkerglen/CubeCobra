@@ -201,32 +201,28 @@ const rarityMap = new Map([
     ['m', 'mythic']
 ]);
 
+const simplifyCategoryMaps = new Map([
+    ['color', colorMap],
+    ['identity', colorMap],
+    ['rarity', rarityMap]
+]);
+
+
 //change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
-  let res = '';
+  let res = arg;
+  if (simplifyCategoryMaps.has(category)) {
+      let map = simplifyCategoryMaps.get(category);
+      let argLower = arg.toLowerCase()
+      res = map.has(argLower) ? map.get(argLower) : arg;
+  }
   switch (category) {
     case 'color':
     case 'identity':
-      if (colorMap.has(arg.toLowerCase())) {
-        res = colorMap.get(arg.toLowerCase());
-      } else {
-        res = arg;
-      }
       res = res.toUpperCase().split('');
       break;
     case 'mana':
-      res = parseManaCost(arg)
-      break;
-    case 'rarity':
-      let argLower = arg.toLowerCase()
-      if (rarityMap.has(argLower)) {
-        res = rarityMap.get(argLower);
-      } else {
-        res = arg;
-      }
-      break;
-    default:
-      res = arg;
+      res = parseManaCost(res)
       break;
   }
   return res;
