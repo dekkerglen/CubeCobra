@@ -215,9 +215,6 @@ function simplifyArg(arg, category) {
       res = parseManaCost(res)
       break;
     case 'rarity':
-      console.log(rarityMap);
-      console.log(res);
-      console.log(rarityMap.get(res));
       res = rarityMap.get(res) || res;
       break;
   }
