@@ -2346,7 +2346,7 @@ router.post('/editdeck/:id', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
 
-    if (err || !deck) {
+    if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
@@ -2355,11 +2355,14 @@ router.post('/editdeck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    deck = JSON.parse(req.body.draftraw);
+    var newdeck = JSON.parse(req.body.draftraw);
 
-    await Deck.updateOne({
-      _id: deck._id
-    });
+    deck.cards = newdeck.cards;
+    deck.playerdeck = newdeck.playerdeck;
+    deck.playersideboard = newdeck.playersideboard;
+    deck.cols = newdeck.cols;
+
+    await deck.save();
 
     req.flash('success', 'Deck saved succesfully');
     res.redirect('/cube/deck/' + deck._id);
@@ -2498,214 +2501,213 @@ router.get('/decks/:id', async (req, res) => {
   res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 
-router.get('/deckbuilder/:id', function(req, res) {
-  Deck.findById(req.params.id, function(err, deck) {
-    if (err || !deck) {
-      req.flash('danger', 'Deck not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      deck.cards.forEach(function(card, index) {
-        if (Array.isArray(card)) {
-          card.forEach(function(item, index2) {
-            if (item) {
-              item = {
-                cardID: item
-              };
-              item.details = carddb.cardFromId(item.cardID);
-              item.details.display_image = util.getCardImageURL(item);
-            }
-          });
-        } else {
-          card.details = carddb.cardFromId(card);
-          card.details.display_image = util.getCardImageURL(card);
-        }
-      });
-      Cube.findOne(build_id_query(deck.cube), function(err, cube) {
-        if (!deck) {
-          req.flash('danger', 'Cube not found');
-          res.status(404).render('misc/404', {});
-        } else {
-          User.findById(cube.owner, function(err, user) {
-            if (!user || err) {
-              res.render('cube/cube_deckbuilder', {
-                cube: cube,
-                cube_id: get_cube_id(cube),
-                owner: 'Unknown',
-                activeLink: 'playtest',
-                title: `${abbreviate(cube.name)} - Deckbuilder`,
-                metadata: generateMeta(
-                  `Cube Cobra Draft: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/draft/${req.params.id}`
-                ),
-                loginCallback: '/cube/draft/' + req.params.id,
-                deck_raw: JSON.stringify(deck),
-                basics_raw: JSON.stringify(getBasics(carddb)),
-                deckid: deck._id
-              });
-            } else {
-              res.render('cube/cube_deckbuilder', {
-                cube: cube,
-                cube_id: get_cube_id(cube),
-                owner: user.username,
-                activeLink: 'playtest',
-                title: `${abbreviate(cube.name)} - Deckbuilder`,
-                metadata: generateMeta(
-                  `Cube Cobra Draft: ${cube.name}`,
-                  (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                  cube.image_uri,
-                  `https://cubecobra.com/cube/draft/${req.params.id}`
-                ),
-                loginCallback: '/cube/draft/' + req.params.id,
-                deck_raw: JSON.stringify(deck),
-                basics_raw: JSON.stringify(getBasics(carddb)),
-                deckid: deck._id
-              });
-            }
-          });
-        }
-      });
-    }
-  });
-});
-
-router.get('/deck/:id', function(req, res) {
-  Deck.findById(req.params.id, function(err, deck) {
+router.get('/deckbuilder/:id', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id);
     if (!deck) {
       req.flash('danger', 'Deck not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Cube.findOne(build_id_query(deck.cube), function(err, cube) {
-        if (!cube) {
-          req.flash('danger', 'Cube not found');
-          res.status(404).render('misc/404', {});
-        } else {
-          let owner = {
-            name: 'Unknown',
-            id: null,
-            profileUrl: null
-          };
+      return res.status(404).render('misc/404', {});
+    } 
 
-          let drafter = {
-            name: 'Anonymous',
-            id: null,
-            profileUrl: null
-          };
+    const deckOwner = await User.findById(deck.owner);
 
-          User.findById(deck.owner, function(err, deckUser) {
-            if (deckUser) {
-              drafter.name = deckUser.username;
-              drafter.id = deckUser._id;
-              drafter.profileUrl = `/user/view/${deckUser._id}`;
-            }
+    if(!req.user || deckOwner._id != req.user.id) {
+      req.flash('danger', 'Only logged in deck owners can build decks.');
+      return res.redirect('/cube/deck/'+req.params.id);
+    }
 
-            User.findById(cube.owner, function(err, cubeUser) {
-              if (cubeUser) {
-                owner.name = cubeUser.username;
-                owner.id = cubeUser._id;
-                owner.profileUrl = `/user/view/${cubeUser._id}`;
-              }
+    //add images to cards
+    deck.cards.forEach(function(card, index) {
+      if (Array.isArray(card)) {
+        card.forEach(function(item, index2) {
+          if (item) {
+            item = {
+              cardID: item
+            };
+            item.details = carddb.cardFromId(item.cardID);
+            item.details.display_image = util.getCardImageURL(item);
+          }
+        });
+      } else {
+        card.details = carddb.cardFromId(card);
+        card.details.display_image = util.getCardImageURL(card);
+      }
+    });
 
-              var player_deck = [];
-              var bot_decks = [];
-              if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
-                //old format
-                deck.cards[0].forEach(function(card, index) {
-                  card.details = carddb.cardFromId(card);
-                  card.details.display_image = util.getCardImageURL(card);
-                  player_deck.push(card.details);
-                });
-                for (i = 1; i < deck.cards.length; i++) {
-                  var bot_deck = [];
-                  deck.cards[i].forEach(function(card, index) {
-                    if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
-                      console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
-                    } else {
-                      var details = carddb.cardFromId(card[0].cardID);
-                      details.display_image = util.getCardImageURL({
-                        details
-                      });
-                      bot_deck.push(details);
-                    }
-                  });
-                  bot_decks.push(bot_deck);
-                }
-                var bot_names = [];
-                for (i = 0; i < deck.bots.length; i++) {
-                  bot_names.push("Seat " + (i + 2) + ": " + deck.bots[i][0] + ", " + deck.bots[i][1]);
-                }
-                return res.render('cube/cube_deck', {
-                  oldformat: true,
-                  cube: cube,
-                  cube_id: get_cube_id(cube),
-                  owner: owner,
-                  activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-                  drafter: drafter,
-                  cards: player_deck,
-                  bot_decks: bot_decks,
-                  bots: bot_names,
-                  metadata: generateMeta(
-                    `Cube Cobra Deck: ${cube.name}`,
-                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                    cube.image_uri,
-                    `https://cubecobra.com/cube/deck/${req.params.id}`
-                  ),
-                  loginCallback: '/cube/deck/' + req.params.id
-                });
-              } else {
-                deck.playerdeck.forEach(function(col, ind) {
-                  col.forEach(function(card, index) {
-                    card.details.display_image = util.getCardImageURL(card);
-                  });
-                });
-                //new format
-                for (i = 0; i < deck.cards.length; i++) {
-                  var bot_deck = [];
-                  deck.cards[i].forEach(function(cardid, index) {
-                    if (carddb.cardFromId(cardid).error) {
-                      console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
-                    } else {
-                      var details = carddb.cardFromId(cardid);
-                      details.display_image = util.getCardImageURL({
-                        details
-                      });
-                      bot_deck.push(details);
-                    }
-                  });
-                  bot_decks.push(bot_deck);
-                }
-                var bot_names = [];
-                for (i = 0; i < deck.bots.length; i++) {
-                  bot_names.push("Seat " + (i + 2) + ": " + deck.bots[i][0] + ", " + deck.bots[i][1]);
-                }
-                return res.render('cube/cube_deck', {
-                  oldformat: false,
-                  cube: cube,
-                  cube_id: get_cube_id(cube),
-                  owner: owner,
-                  activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-                  drafter: drafter,
-                  deck: JSON.stringify(deck.playerdeck),
-                  bot_decks: bot_decks,
-                  bots: bot_names,
-                  metadata: generateMeta(
-                    `Cube Cobra Deck: ${cube.name}`,
-                    (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                    cube.image_uri,
-                    `https://cubecobra.com/cube/deck/${req.params.id}`
-                  ),
-                  loginCallback: '/cube/deck/' + req.params.id
-                });
-              }
+    const cube = await Cube.findOne(build_id_query(deck.cube));
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }    
+    return res.render('cube/cube_deckbuilder', {
+      cube: cube,
+      cube_id: get_cube_id(cube),
+      owner: deckOwner ? deckOwner.username : 'Unknown',
+      ownerid: deckOwner ? deckOwner._id : '',
+      activeLink: 'playtest',
+      title: `${abbreviate(cube.name)} - Deckbuilder`,
+      metadata: generateMeta(
+        `Cube Cobra Draft: ${cube.name}`,
+        (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/draft/${req.params.id}`
+      ),
+      loginCallback: '/cube/draft/' + req.params.id,
+      deck_raw: JSON.stringify(deck),
+      basics_raw: JSON.stringify(getBasics(carddb)),
+      deckid: deck._id
+    });
+  } catch (err) {
+    console.log(err);
+    req.flash('danger', err.message);
+    res.redirect('/404');
+  }
+});
+
+router.get('/deck/:id', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id);
+
+    if (!deck) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const cube = await Cube.findOne(build_id_query(deck.cube));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    } 
+
+    let owner = {
+      name: 'Unknown',
+      id: null,
+      profileUrl: null
+    };
+
+    let drafter = {
+      name: 'Anonymous',
+      id: null,
+      profileUrl: null
+    };
+
+    const deckUserq = User.findById(deck.owner);
+    const cubeUserq = User.findById(cube.owner);
+
+    const [deckUser, cubeUser] = await Promise.all([deckUserq, cubeUserq]);
+
+    if (deckUser) {
+      drafter.name = deckUser.username;
+      drafter.id = deckUser._id;
+      drafter.profileUrl = `/user/view/${deckUser._id}`;
+    }
+
+    if (cubeUser) {
+      owner.name = cubeUser.username;
+      owner.id = cubeUser._id;
+      owner.profileUrl = `/user/view/${cubeUser._id}`;
+    }
+
+    var player_deck = [];
+    var bot_decks = [];
+    if (typeof deck.cards[deck.cards.length - 1][0] === 'object') {
+      //old format
+      deck.cards[0].forEach(function(card, index) {
+        card.details = carddb.cardFromId(card);
+        card.details.display_image = util.getCardImageURL(card);
+        player_deck.push(card.details);
+      });
+      for (i = 1; i < deck.cards.length; i++) {
+        var bot_deck = [];
+        deck.cards[i].forEach(function(card, index) {
+          if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
+            console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
+          } else {
+            var details = carddb.cardFromId(card[0].cardID);
+            details.display_image = util.getCardImageURL({
+              details
             });
-          });
-        }
+            bot_deck.push(details);
+          }
+        });
+        bot_decks.push(bot_deck);
+      }
+      var bot_names = [];
+      for (i = 0; i < deck.bots.length; i++) {
+        bot_names.push("Seat " + (i + 2) + ": " + deck.bots[i][0] + ", " + deck.bots[i][1]);
+      }
+      return res.render('cube/cube_deck', {
+        oldformat: true,
+        deckid: deck._id, 
+        cube: cube,
+        cube_id: get_cube_id(cube),
+        owner: owner,
+        activeLink: 'playtest',
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+        drafter: drafter,
+        cards: player_deck,
+        bot_decks: bot_decks,
+        bots: bot_names,
+        metadata: generateMeta(
+          `Cube Cobra Deck: ${cube.name}`,
+          (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/deck/${req.params.id}`
+        ),
+        loginCallback: '/cube/deck/' + req.params.id
+      });
+    } else {
+      deck.playerdeck.forEach(function(col, ind) {
+        col.forEach(function(card, index) {
+          card.details.display_image = util.getCardImageURL(card);
+        });
+      });
+      //new format
+      for (i = 0; i < deck.cards.length; i++) {
+        var bot_deck = [];
+        deck.cards[i].forEach(function(cardid, index) {
+          if (carddb.cardFromId(cardid).error) {
+            console.log(req.params.id + ": Could not find seat " + (bot_decks.length + 1) + ", pick " + (bot_deck.length + 1));
+          } else {
+            var details = carddb.cardFromId(cardid);
+            details.display_image = util.getCardImageURL({
+              details
+            });
+            bot_deck.push(details);
+          }
+        });
+        bot_decks.push(bot_deck);
+      }
+      var bot_names = [];
+      for (i = 0; i < deck.bots.length; i++) {
+        bot_names.push("Seat " + (i + 2) + ": " + deck.bots[i][0] + ", " + deck.bots[i][1]);
+      }
+      return res.render('cube/cube_deck', {
+        oldformat: false,
+        deckid: deck._id, 
+        cube: cube,
+        cube_id: get_cube_id(cube),
+        owner: owner,
+        activeLink: 'playtest',
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+        drafter: drafter,
+        deck: JSON.stringify(deck.playerdeck),
+        bot_decks: bot_decks,
+        bots: bot_names,
+        metadata: generateMeta(
+          `Cube Cobra Deck: ${cube.name}`,
+          (cube.type) ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/deck/${req.params.id}`
+        ),
+        loginCallback: '/cube/deck/' + req.params.id
       });
     }
-  });
+  } catch (err) {
+    req.flash('danger', err);
+    res.redirect('/404');
+  }
 });
 
 router.get('/api/getcard/:name', function(req, res) {
