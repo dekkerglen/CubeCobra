@@ -2501,6 +2501,66 @@ router.get('/decks/:id', async (req, res) => {
   res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 
+router.get('/rebuild/:id', ensureAuth, async(req, res) => {
+  try {    
+    const base = await Deck.findById(req.params.id);
+    if (!base) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
+    } 
+
+    var deck = new Deck();
+    deck.playerdeck = base.playerdeck;
+    deck.cards = base.cards;
+    deck.owner = req.user._id;
+    deck.cube = base.cube;
+    deck.date = Date.now();
+    deck.bots = base.bots;
+    deck.playersideboard = base.playersideboard;
+
+    cube = await Cube.findOne(build_id_query(deck.cube));
+
+    if (!cube.decks) {
+      cube.decks = [];
+    }
+
+    cube.decks.push(deck._id);
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+
+    cube.numDecks += 1;
+    const userq = User.findById(deck.owner);
+    const baseuserq = User.findById(base.owner);
+    const cubeOwnerq = User.findById(cube.owner);
+
+    const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
+
+    var owner = user ? user.username : "Anonymous";
+    deck.name = owner + "'s rebuild from " + cube.name + " on " + deck.date.toLocaleString("en-US");
+    deck.username = owner;
+    deck.cubename = cube.name;
+    cube.decks.push(deck._id);
+
+    if(cubeOwner._id != user.id) {
+      await util.addNotification(cubeOwner, user, '/cube/deck/' + deck._id, user.username + " rebuilt a deck from your cube: " + cube.name);
+    }
+    if(baseUser._id != user.id) {
+      await util.addNotification(baseUser, user, '/cube/deck/' + deck._id, user.username + " rebuilt your deck from cube: " + cube.name);
+    }
+
+    await Promise.all([cube.save(), deck.save()]);
+
+    return res.redirect('/cube/deckbuilder/' + deck._id);
+  }
+  catch(err) {
+    console.log(err);
+
+    req.flash('danger', "This deck is not able to be cloned and rebuilt.");
+    res.redirect('/cube/deck/'+req.params.id);
+  }
+});
+
 router.get('/deckbuilder/:id', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);

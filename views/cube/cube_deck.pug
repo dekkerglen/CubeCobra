@@ -12,8 +12,9 @@ block cube_content
                 a.nav-link.newBlogButton(href='/cube/deckbuilder/'+deckid) Edit
           li.nav-item
             a.nav-link.newBlogButton(href='/cube/redraft/'+deckid) Redraft
-          li.nav-item
-            a.nav-link.newBlogButton(href='/cube/rebuild/'+deckid) Clone and Rebuild
+          if user
+            li.nav-item
+              a.nav-link.newBlogButton(href='/cube/rebuild/'+deckid) Clone and Rebuild
 
   include ../flash
   link(rel='stylesheet' href='/css/draft.css')
