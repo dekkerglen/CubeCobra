@@ -20,7 +20,10 @@ class BlogContextMenu extends React.Component {
   }
   
   clickEdit(post) {    
-    csrfFetch("/cube/blogsrc/" + post._id)
+    csrfFetch("/cube/blogsrc/" + post._id, {
+        method: "GET",
+        headers: {}
+      })
       .then(response => response.json())
       .then(function(json) {
         if (json.src) {

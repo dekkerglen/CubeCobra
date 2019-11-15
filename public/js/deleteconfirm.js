@@ -1,7 +1,7 @@
 $("#confirmation").keyup(function() {
   if ($(this).val().toLowerCase() == 'delete') {
-    $("#delete").removeAttr('disabled');
+    $(".delete-cube").removeAttr('disabled');
   } else {
-    $("#delete").attr('disabled', 'disabled')
+    $(".delete-cube").attr('disabled', 'disabled')
   }
 })

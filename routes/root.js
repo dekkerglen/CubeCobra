@@ -4,6 +4,7 @@ const router = express.Router();
 const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
+const User = require('../models/user');
 
 const {
   csrfProtection,
@@ -12,25 +13,14 @@ const {
 router.use(csrfProtection);
 
 // Home route
-router.get('/', function(req, res) {
-  const routeReady = () => {
-    if (recents && drafted && blog && decks && featured) {
-      decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
-      res.render('index', {
-        devblog: blog.length > 0 ? blog[0] : null,
-        recents: recents,
-        drafted: drafted,
-        decks: decklinks,
-        featured: featured
-      });
-    }
-  };
+router.get('/', async function(req, res) {
+  req.user ? res.redirect('/dashboard') : res.redirect('/landing');
+});
 
-  var user_id = '';
-  var recents, drafted, blog, decks, featured;
+router.get('/explore', async function(req, res) {
+  const user_id = req.user ? req.user._id : '';
 
-  if (req.user) user_id = req.user._id;
-  Cube.find({
+  const recentsq = Cube.find({
     $or: [{
         $and: [{
           'card_count': {
@@ -46,36 +36,13 @@ router.get('/', function(req, res) {
     ]
   }).sort({
     'date_updated': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      recents = [];
-      console.log('recents failed to load');
-    }
+  }).limit(12).exec();
 
-    if (result) {
-      recents = result;
-    }
-
-    routeReady();
-  });
-
-
-  Cube.find({
+  const featuredq = Cube.find({
     isFeatured: true
-  }).exec(function(err, result) {
-    if (err) {
-      recents = [];
-      console.log('featured failed to load');
-    }
+  }).exec();
 
-    if (result) {
-      featured = result;
-    }
-
-    routeReady();
-  });
-
-  Cube.find({
+  const draftedq = Cube.find({
     $or: [{
       'isListed': true
     }, {
@@ -85,52 +52,29 @@ router.get('/', function(req, res) {
     }]
   }).sort({
     'numDecks': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      drafted = [];
-      console.log('drafted failed to load');
-    }
+  }).limit(12).exec();
 
-    if (result) {
-      drafted = result;
-    }
-
-    routeReady();
-  });
-
-  Blog.find({
+  const blogq = Blog.find({
     dev: 'true'
   }).sort({
     'date': -1
-  }).exec(function(err, result) {
-    if (err) {
-      blog = [];
-      console.log('blog failed to load');
-    }
+  }).exec();
 
-    if (result) {
-      blog = result;
-    }
-
-    routeReady();
-  });
-
-  Deck.find().sort({
+  const decksq = Deck.find().sort({
     'date': -1
-  }).limit(10).exec(function(err, result) {
-    if (err) {
-      decks = [];
-      console.log('decks failed to load');
-    }
+  }).limit(10).exec();
 
-    if (result) {
-      decks = result;
-    }
+  const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
 
-    routeReady();
+  res.render('index', {
+    devblog: blog.length > 0 ? blog[0] : null,
+    recents: recents,
+    drafted: drafted,
+    decks: decks,
+    featured: featured,
+    loginCallback: '/explore'
   });
 });
-
 
 //format: {search};{search};{search}:{page}
 //list like:
@@ -142,6 +86,141 @@ router.get('/', function(req, res) {
 router.get('/advanced_search', function(req, res) {
   res.render('search/advanced_search', {
     loginCallback: '/advanced_search'
+  });
+});
+
+router.get('/random', async function(req, res) {
+  const count = await Cube.count();
+  var random = Math.floor(Math.random() * count);
+  const cube = await Cube.findOne().skip(random);
+  res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
+})
+
+router.get('/dashboard', async function(req, res) {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.redirect('/landing');
+    }
+
+    const cubesq = Cube.find({
+      owner: user._id
+    }).sort({
+      'date_updated': -1
+    });
+    const blogsq = Blog.find({
+      $or: [{
+          cube: {
+            $in: user.followed_cubes
+          }
+        },
+        {
+          owner: {
+            $in: user.followed_users
+          }
+        }
+      ]
+    }).sort({
+      'date': 1
+    }).limit(50);
+
+    //We can do these queries in parallel
+    const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
+    const cubeIds = cubes.map(cube => cube._id);
+
+    const decks = await Deck.find({
+      cube: {
+        $in: cubeIds
+      }
+    }).sort({
+      'date': -1
+    }).limit(10);
+
+    return res.render('dashboard', {
+      posts: blogs,
+      cubes: cubes,
+      decks: decks,
+      loginCallback: '/'
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
+router.get('/dashboard/decks/:page', async function(req, res) {
+  try {
+    const pagesize = 30;
+    const page = req.params.page;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.redirect('/landing');
+    }
+
+    const cubes = await Cube.find({
+      owner: user._id
+    }).sort({
+      'date_updated': -1
+    }).select({
+      '_id': 1
+    }).exec();
+
+    const cubeIds = cubes.map(cube => cube._id);
+
+    const decks = await Deck.find({
+      cube: {
+        $in: cubeIds
+      }
+    }).sort({
+      'date': -1
+    }).skip(pagesize * page).limit(pagesize).exec();
+    const numDecks = await Deck.countDocuments({
+      cube: {
+        $in: cubeIds
+      }
+    }).exec();
+
+    var pages = [];
+    for (i = 0; i < numDecks / pagesize; i++) {
+      if (page == i) {
+        pages.push({
+          url: '/dashboard/decks/' + i,
+          content: (i + 1),
+          active: true
+        });
+      } else {
+        pages.push({
+          url: '/dashboard/decks/' + i,
+          content: (i + 1),
+        });
+      }
+    }
+
+    return res.render('dashboard_decks', {
+      decks: decks,
+      pages: pages,
+      loginCallback: '/'
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
+router.get('/landing', async function(req, res) {
+
+  const cubeq = Cube.countDocuments().exec();
+  const deckq = Deck.countDocuments().exec();
+  const userq = User.countDocuments().exec();
+
+  const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
+
+  //this regex add commas to the number
+  res.render('landing', {
+    numusers: user.toLocaleString('en-US'),
+    numcubes: cube.toLocaleString('en-US'),
+    numdrafts: deck.toLocaleString('en-US'),
+    loginCallback: '/'
   });
 });
 

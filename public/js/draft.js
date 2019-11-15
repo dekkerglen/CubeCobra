@@ -64,72 +64,66 @@ function arrayRotate(arr, reverse) {
   return arr;
 }
 
+function arrayIsSubset(needles, haystack) {
+  return needles.every(x => haystack.includes(x));
+}
+
+const fetchLands = [
+  'Arid Mesa',
+  'Bloodstained Mire',
+  'Flooded Strand',
+  'Marsh Flats',
+  'Misty Rainforest',
+  'Polluted Delta',
+  'Scalding Tarn',
+  'Verdant Catacombs',
+  'Windswept Heath',
+  'Wooded Foothills',
+];
+
+function botRating(botColors, card) {
+  let rating = draft.ratings[card.details.name];
+  const colors = card.colors;
+  const subset = arrayIsSubset(colors, botColors);
+  const overlap = botColors.some(c => colors.includes(c));
+  const isLand = card.type_line.indexOf('Land') > -1;
+  const isFetch = fetchLands.includes(card.details.name);
+
+  // Prioritize on-color or overlapping fetches.
+  // Then overlapping lands, then overlapping spells.
+  if (subset || (isFetch && overlap)) {
+    rating -= 0.4;
+  } else if (isLand && overlap) {
+    rating -= 0.3;
+  } else if (overlap) {
+    rating -= 0.2;
+  }
+  return rating;
+}
+
 function botPicks() {
-  //make bots take a pick out of active activepacks
-  for (i = 1; i < draft.packs.length; i++) {
-    var bot = draft.bots[i - 1];
-    var taken = false;
-    //bot has 2 colors, let's try to take a card with one of those colors or colorless, otherwise take a random card
-    //try to take card with exactly our two colors
-    var ratedpicks = [];
-    var unratedpicks = [];
-    for (var j = 0; j < draft.packs[i][0].length; j++) {
-      if (draft.ratings[draft.packs[i][0][j].details.name]) {
-        ratedpicks.push(j);
+  // make bots take one pick out of active packs
+  for (botIndex = 1; botIndex < draft.packs.length; botIndex++) {
+    const pack = draft.packs[botIndex][0];
+    const botColors = draft.bots[botIndex - 1];
+    const ratedPicks = [];
+    const unratedPicks = [];
+    for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
+      if (draft.ratings[pack[cardIndex].details.name]) {
+        ratedPicks.push(cardIndex);
       } else {
-        unratedpicks.push(j)
+        unratedPicks.push(cardIndex)
       }
     }
 
-    ratedpicks.sort(function(x, y) {
-      if (draft.ratings[draft.packs[i][0][x].details.name] < draft.ratings[draft.packs[i][0][y].details.name]) {
-        return -1;
-      }
-      if (draft.ratings[draft.packs[i][0][x].details.name] > draft.ratings[draft.packs[i][0][y].details.name]) {
-        return 1;
-      }
-      return 0;
+    ratedPicks.sort((x, y) => {
+      return botRating(botColors, pack[x]) - botRating(botColors, pack[y]);
     });
-    shuffle(unratedpicks);
-    var picknums = ratedpicks.concat(unratedpicks);
-    //try to take card that contains exactly <= our colors
-    for (j = 0; j < draft.packs[i][0].length; j++) {
-      if (!taken) {
-        var colors = draft.packs[i][0][picknums[j]].colors;
-        if (bot[0] == bot[1]) {
-          if ((colors.length == 1 && colors.includes(bot[0])) ||
-            colors.length == 0) {
-            pick = draft.packs[i][0].splice(picknums[j], 1);
-            draft.picks[i].push(pick[0].cardID);
-            taken = true;
-          }
-        } else {
-          if ((colors.length == 2 && colors.includes(bot[0]) && colors.includes(bot[1])) ||
-            (colors.length == 1 && (colors.includes(bot[0]) || colors.includes(bot[1]))) ||
-            colors.length == 0) {
-            pick = draft.packs[i][0].splice(picknums[j], 1);
-            draft.picks[i].push(pick[0].cardID);
-            taken = true;
-          }
-        }
-      }
-    }
-    //try to take card that at least has one of our colors
-    for (j = 0; j < draft.packs[i][0].length; j++) {
-      if (!taken) {
-        var colors = draft.packs[i][0][picknums[j]].colors;
-        if (colors.includes(bot[0]) || colors.includes(bot[1])) {
-          pick = draft.packs[i][0].splice(picknums[j], 1);
-          draft.picks[i].push(pick[0].cardID);
-          taken = true;
-        }
-      }
-    }
-    //take a random card
-    if (!taken) {
-      pick = draft.packs[i][0].splice(Math.floor(Math.random() * draft.packs[i][0].length), 1);
-      draft.picks[i].push(pick[0].cardID);
-    }
+    shuffle(unratedPicks);
+
+    const pickOrder = ratedPicks.concat(unratedPicks);
+    pick = pack.splice(pickOrder[0], 1);
+    draft.picks[botIndex].push(pick[0].cardID);
   }
 }
 

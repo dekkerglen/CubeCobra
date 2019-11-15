@@ -2,7 +2,7 @@ function updateBlog() {
   $("#postBlogForm").submit(function(e) {
     e.preventDefault();
     var form = this;
-    $('#postBlogHiddenHTML').val($('#editor').html());
+    $('.postBlogHiddenHTML').val($('#editor').html());
     form.submit();
   });
 

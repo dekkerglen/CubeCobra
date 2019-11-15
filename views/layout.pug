@@ -7,7 +7,7 @@ doctype html
 html
 	head  
 		meta(charset='UTF-8')
-		meta(name='description', content='Build, Manage, and Playtest your Magic the Gathering cube!')
+		meta(name='description', content='Build, playtest, and share your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
 		if csrfToken
@@ -29,53 +29,51 @@ html
 		script(src='/jquery-ui/jquery-ui.min.js')
 	body
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
-			.d-flex.flex-row.flex-nowrap.justify-content-between(style='flex: 1 1 auto; min-width: 0')
-				.overflow-hidden
-					a(href='/')
-						img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
-				button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
-					span.navbar-toggler-icon
-			#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
-				ul.navbar-nav.mr-auto
-					form(method='POST', action='/search').form-inline
-						input(type='hidden', name='_csrf', value=csrfToken)
-						.input-group.mt-2.mb-sm-2
-							input.form-control(width='300px' type='search', placeholder='Search', aria-label='Search', name='search')
-							.input-group-append
-								button.btn.btn-success(type='submit') Search
+			.container
+				.d-flex.flex-row.flex-nowrap.justify-content-between(style='flex: 1 1 auto; min-width: 0')
+					.overflow-hidden
+						a(href='/')
+							img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
+					button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
+						span.navbar-toggler-icon
+				#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
+					ul.navbar-nav.mr-auto
 
-				ul.navbar-nav
-					li.nav-item.dropdown
-						a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
-							|  About
-						.dropdown-menu(aria-labelledby='navbarDropdownMenuLink')
-							a.dropdown-item(href='/tool/topcards') Top Cards
-							a.dropdown-item(href='/contact') Contact
-							a.dropdown-item(href='/dev/blog') Dev Blog
-							a.dropdown-item(href='/ourstory') Our Story
-							a.dropdown-item(href='/faq') FAQ
-							a.dropdown-item(href='/donate') Donate
-					if user
-						li.nav-item
-							a.nav-link.d-none.d-lg-block(href="#", data-toggle='modal', data-target='#cubeModal') New Cube
-						li.nav-item
-							a.nav-link(href="/user/view/"+user.id)
-								span.d-none.d-lg-inline Your
-								|  Profile
+					ul.navbar-nav
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
-								|  #{user.username}  
+								|  Browse
 							.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
-								a.dropdown-item(href='/user/account') Account Information
-								a.dropdown-item(href='/user/account/changepassword') Change Password
-								a.dropdown-item(href='/user/account/updateemail') Update Email
-								a.dropdown-item(href='/user/logout') Logout
+								a.dropdown-item(href='/tool/topcards') Top Cards
+								a.dropdown-item(href='/explore') Explore Cubes
+								a.dropdown-item(href='/random') Random Cube
+								a.dropdown-item(href='/advanced_search') Search
+						li.nav-item.dropdown
+							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+								|  About
+							.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
+								a.dropdown-item(href='/contact') Contact
+								a.dropdown-item(href='/dev/blog') Dev Blog
+								a.dropdown-item(href='/ourstory') Our Story
+								a.dropdown-item(href='/faq') FAQ
+								a.dropdown-item(href='/donate') Donate
+						if user
+							li.nav-item.dropdown
+								a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
+									|  #{user.username}  
+								.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
+									a.dropdown-item(href="/user/view/"+user.id) Your Profile
+									a.dropdown-item(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+									a.dropdown-item(href='/user/account') Account Information
+									a.dropdown-item(href='/user/account/changepassword') Change Password
+									a.dropdown-item(href='/user/account/updateemail') Update Email
+									a.dropdown-item(href='/user/logout') Logout
 
-					else
-						li.nav-item
-							a.nav-link(href='/user/register') Register
-						li.nav-item
-							a(href='/user/login').login-link.nav-link Login
+						else
+							li.nav-item
+								a.nav-link(href='/user/register') Register
+							li.nav-item
+								a(href='/user/login').login-link.nav-link Login
 		.container
 			block content
 			br
@@ -91,8 +89,7 @@ html
 					a This site is not affiliated nor endorsed by Scryfall LLC. This site endeavours to adhere to the Scryfall data guidelines. 
 					br
 					a Custom card images displayed in Cube Cobra are subject to the license terms under which they were uploaded to their hosts.
-					br
-					a Cube Cobra is not responsible for the content of custom card images.
+						|  Cube Cobra is not responsible for the content of custom card images.
 					br
 					a To report a custom card image violation, message the development team on 
 					a(href='https://discord.gg/Hn39bCU') Discord.
@@ -148,7 +145,6 @@ html
 					.form-group
 						label.col-form-label Cube Name:
 						input.form-control(name='name', type='text')
-
 					br
 				.modal-footer
 					input.btn.btn-success(type='submit',value='Create')

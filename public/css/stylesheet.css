@@ -417,6 +417,37 @@ div.card {
 	border-radius: 0px;
   }
 
-  body.busy-cursor {
+body.busy-cursor {
 	cursor: progress;
+
+}
+.centered-max400 {
+	margin: auto; max-width: 400px;
+}
+.cube-preview-image {
+	width: 100%;
+	height: auto;
+}
+.deck-preview:hover {
+	background: #EFEFEF;
+	cursor: pointer;
+}
+.no-underline-hover:hover{
+    text-decoration: none;
   }
+
+
+/* Styles for Analysis */
+
+.breakdown .percent {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: #535A5F;
+  margin-left: 0.5em;
+}
+.breakdown .percent::before {
+  content: "(";
+}
+.breakdown .percent::after {
+  content: ")";
+}

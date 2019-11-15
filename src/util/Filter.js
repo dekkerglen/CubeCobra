@@ -51,7 +51,7 @@ function findEndingQuotePosition(filterText, num) {
 }
 
 function tokenizeInput(filterText, tokens) {
-  filterText = filterText.trim();
+  filterText = filterText.trim().toLowerCase();
   if (!filterText) {
     return true;
   }
