@@ -2506,13 +2506,13 @@ router.get('/decks/:id', async (req, res) => {
   res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 
-router.get('/rebuild/:id', ensureAuth, async(req, res) => {
-  try {    
+router.get('/rebuild/:id', ensureAuth, async (req, res) => {
+  try {
     const base = await Deck.findById(req.params.id);
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
-    } 
+    }
 
     var deck = new Deck();
     deck.playerdeck = base.playerdeck;
@@ -2547,47 +2547,46 @@ router.get('/rebuild/:id', ensureAuth, async(req, res) => {
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
-    if(cubeOwner._id != user.id) {
+    if (cubeOwner._id != user.id) {
       await util.addNotification(cubeOwner, user, '/cube/deck/' + deck._id, user.username + " rebuilt a deck from your cube: " + cube.name);
     }
-    if(baseUser._id != user.id) {
+    if (baseUser._id != user.id) {
       await util.addNotification(baseUser, user, '/cube/deck/' + deck._id, user.username + " rebuilt your deck from cube: " + cube.name);
     }
 
     await Promise.all([cube.save(), deck.save()]);
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
-  }
-  catch(err) {
+  } catch (err) {
     console.log(err);
 
     req.flash('danger', "This deck is not able to be cloned and rebuilt.");
-    res.redirect('/cube/deck/'+req.params.id);
+    res.redirect('/cube/deck/' + req.params.id);
   }
 });
 
-router.get('/redraft/:id' , async (req, res) => {
+router.get('/redraft/:id', async (req, res) => {
   try {
     const base = await Deck.findById(req.params.id);
 
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
-    } 
+    }
 
     const srcDraft = await Draft.findById(base.draft);
 
-    if(!srcDraft) {      
+    if (!srcDraft) {
       req.flash('danger', "This deck is not able to be redrafted.");
-      res.redirect('/cube/deck/'+req.params.id);
+      res.redirect('/cube/deck/' + req.params.id);
     }
 
     var draft = new Draft();
     draft.bots = base.bots.slice();
-    draft.cube = base.cube.slice();    
+    draft.cube = base.cube.slice();
     draft.packNumber = 1;
     draft.pickNumber = 1;
-    
+
     draft.initial_state = srcDraft.initial_state.slice();
     draft.packs = srcDraft.initial_state.slice();
     draft.picks = [];
@@ -2597,13 +2596,12 @@ router.get('/redraft/:id' , async (req, res) => {
     }
 
     await draft.save();
-    res.redirect('/cube/draft/' + draft._id);  
-  }
-  catch(err) {
+    res.redirect('/cube/draft/' + draft._id);
+  } catch (err) {
     console.log(err);
 
     req.flash('danger', "This deck is not able to be redrafted.");
-    res.redirect('/cube/deck/'+req.params.id);
+    res.redirect('/cube/deck/' + req.params.id);
   }
 });
 
@@ -2613,13 +2611,13 @@ router.get('/deckbuilder/:id', async (req, res) => {
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
-    } 
+    }
 
     const deckOwner = await User.findById(deck.owner);
 
-    if(!req.user || deckOwner._id != req.user.id) {
+    if (!req.user || deckOwner._id != req.user.id) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
-      return res.redirect('/cube/deck/'+req.params.id);
+      return res.redirect('/cube/deck/' + req.params.id);
     }
 
     //add images to cards
@@ -2645,7 +2643,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
-    }    
+    }
     return res.render('cube/cube_deckbuilder', {
       cube: cube,
       cube_id: get_cube_id(cube),
@@ -2684,7 +2682,7 @@ router.get('/deck/:id', async (req, res) => {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
-    } 
+    }
 
     let owner = {
       name: 'Unknown',
@@ -2745,7 +2743,7 @@ router.get('/deck/:id', async (req, res) => {
       }
       return res.render('cube/cube_deck', {
         oldformat: true,
-        deckid: deck._id, 
+        deckid: deck._id,
         cube: cube,
         cube_id: get_cube_id(cube),
         owner: owner,
@@ -2791,7 +2789,7 @@ router.get('/deck/:id', async (req, res) => {
       }
       return res.render('cube/cube_deck', {
         oldformat: false,
-        deckid: deck._id, 
+        deckid: deck._id,
         cube: cube,
         cube_id: get_cube_id(cube),
         owner: owner,
