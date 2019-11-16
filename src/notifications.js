@@ -9,14 +9,6 @@ import { Card, Col, Row, CardHeader , CardBody, CardFooter} from 'reactstrap';
 class Notifications extends Component {
   constructor(props) {
     super(props);
-    
-    this.newCube = this.newCube.bind(this);
-  }
-
-  newCube(evt)
-  {
-    evt.preventDefault();
-    document.getElementById('cubeModal').modal('show');
   }
 
   render() {

@@ -54,7 +54,8 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
     return res.redirect(notification.url);
   } catch (err) {
     res.status(500).send({
-      success: 'false'
+      success: 'false',
+      message:err
     });
     console.error(err);
   }

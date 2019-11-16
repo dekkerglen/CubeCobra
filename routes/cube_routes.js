@@ -2031,13 +2031,13 @@ function insertComment(comments, position, comment) {
   }
 }
 
-function getOwnerFromComment(comments, position, comment) {
+function getOwnerFromComment(comments, position) {
   if (position.length <= 0) {
     return '';
   } else if (position.length == 1) {
     return comments[position[0]].owner;
   } else {
-    return getOwnerFromComment(comments[position[0]].comments, position.slice(1), comment);
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
   }
 }
 
@@ -2346,7 +2346,7 @@ router.post('/editdeck/:id', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
 
-    if (err || !deck) {
+    if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
