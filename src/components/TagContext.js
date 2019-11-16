@@ -158,7 +158,7 @@ const TagContext = {
     ['Orange', 'orange'],
     ['Yellow', 'yellow'],
     ['Green', 'green'],
-    ['Turquoise', 'Turquoise'],
+    ['Turquoise', 'turquoise'],
     ['Blue', 'blue'],
     ['Purple', 'purple'],
     ['Violet', 'violet'],
