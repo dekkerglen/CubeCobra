@@ -56,7 +56,7 @@ function tokenizeInput(filterText, tokens) {
     return true;
   }
 
-  const operators = '>=|<=|<|>|:|='
+  const operators = '>=|<=|<|>|:|!=|='
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
@@ -108,7 +108,11 @@ function tokenizeInput(filterText, tokens) {
   let operand = firstTerm[0].match(operators_re);
   if (operand) {
     operand = operand[0];
-    token.operand = operand;
+    if (operand === '!=') {
+      token.not = true;
+    } else {
+      token.operand = operand;
+    }
   } else {
     token.operand = 'none';
   }
@@ -421,6 +425,11 @@ function arrayContainsOtherArray(arr1, arr2) {
 
 function filterApply(card, filter, inCube) {
   let res = null;
+  if (filter.operand === '!=') {
+    filter.not = true;
+    filter.operand = '=';
+  }
+
   if (typeof inCube === 'undefined') {
     inCube = true;
   }
