@@ -3,7 +3,7 @@ extends layout
 block content
 	include flash
 	br
-	.row 
+	.row
 		.col-lg-6.col-md-6.col-sm-12.col-xs-12
 			if featured && featured.length > 0
 				.card
@@ -21,11 +21,11 @@ block content
 												a #{cube.card_count} Card #{cube.type} Cube
 												br
 											em
-												a Designed by 
-												a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+												a Designed by
+												a(href='/user/view/'+cube.owner) #{cube.owner_name}
 										a(href='/cube/overview/'+get_cube_id(cube))
 											img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}                    
+										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
 										a.btn.btn-success.rounded-0(href='/cube/overview/'+get_cube_id(cube)) View
 									br
 				br
@@ -45,11 +45,11 @@ block content
 												a #{cube.card_count} Card #{cube.type} Cube
 												br
 											em
-												a Designed by 
-												a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+												a Designed by
+												a(href='/user/view/'+cube.owner) #{cube.owner_name}
 										a(href='/cube/overview/'+get_cube_id(cube))
 											img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}                    
+										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
 										a.btn.btn-success.rounded-0(href='/cube/overview/'+get_cube_id(cube)) View
 									br
 					#recentCollapse.collapse
@@ -64,15 +64,15 @@ block content
 													a #{cube.card_count} Card #{cube.type} Cube
 													br
 												em
-													a Designed by 
-													a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+													a Designed by
+													a(href='/user/view/'+cube.owner) #{cube.owner_name}
 											a(href='/cube/overview/'+get_cube_id(cube))
 												img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-											em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}                      
+											em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
 											a.btn.btn-success.rounded-0(href='/cube/overview/'+get_cube_id(cube)) View
 										br
 				.card-footer
-					a#recentMore(data-toggle="collapse" href="#recentCollapse" onclick="toggleRecent()") View More..
+					a#recentMore(data-toggle="collapse" href="#recentCollapse" onclick="toggleRecent()") View More...
 			br
 			.card
 				.card-header
@@ -100,11 +100,11 @@ block content
 												a #{cube.card_count} Card #{cube.type} Cube
 												br
 											em
-												a Designed by 
-												a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+												a Designed by
+												a(href='/user/view/'+cube.owner) #{cube.owner_name}
 										a(href='/cube/overview/'+get_cube_id(cube))
 											img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}                    
+										em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
 										a.btn.btn-success.rounded-0(href='/cube/overview/'+get_cube_id(cube)) View
 									br
 					#draftCollapse.collapse
@@ -119,15 +119,15 @@ block content
 													a #{cube.card_count} Card #{cube.type} Cube
 													br
 												em
-													a Designed by 
-													a(href='/user/view/'+cube.owner) #{cube.owner_name}  
+													a Designed by
+													a(href='/user/view/'+cube.owner) #{cube.owner_name}
 											a(href='/cube/overview/'+get_cube_id(cube))
 												img.card-img-top(src=cube.image_uri style='width: 100%;height: auto;')
-											em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}                      
+											em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
 											a.btn.btn-success.rounded-0(href='/cube/overview/'+get_cube_id(cube)) View
 										br
 				.card-footer
-					a#draftMore(data-toggle="collapse" href="#draftCollapse" onclick="toggleDraft()") View More..
+					a#draftMore(data-toggle="collapse" href="#draftCollapse" onclick="toggleDraft()") View More...
 			br
 			if devblog
 				.card
