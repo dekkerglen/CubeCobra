@@ -107,12 +107,7 @@ function tokenizeInput(filterText, tokens) {
   //find operand
   let operand = firstTerm[0].match(operators_re);
   if (operand) {
-    operand = operand[0];
-    if (operand === '!=') {
-      token.not = true;
-    } else {
-      token.operand = operand;
-    }
+    token.operand = operand[0];
   } else {
     token.operand = 'none';
   }
@@ -166,7 +161,6 @@ function tokenizeInput(filterText, tokens) {
   } else {
     return false;
   }
-
 }
 
 const colorMap = new Map([

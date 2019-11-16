@@ -1,11 +1,54 @@
-const Filter = require('../../src/util/Filter');
+import Filter from '../../src/util/Filter';
 
-describe('Filter', () => {
+describe('filter', () => {
   describe('tokenizeInput', () => {
-    it('Tokenizes all operators properly', () => {
-      test('tokenize equality', () => {
-        expect(Filter.tokenizeInput('rarity=common')).toBe('1234');
-      })
-    })
+    let tokens;
+    beforeEach(() => {
+      tokens = [];
+    });
+    it('tokenizes =', () => {
+      Filter.tokenizeInput('rarity=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": "=", "type": "token"}]);
+    });
+    it('tokenizes >', () => {
+      Filter.tokenizeInput('rarity>common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": ">", "type": "token"}]);
+    });
+    it('tokenizes <', () => {
+      Filter.tokenizeInput('rarity<common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": "<", "type": "token"}]);
+    });
+    it('tokenizes >=', () => {
+      Filter.tokenizeInput('rarity>=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": ">=", "type": "token"}]);
+    });
+    it('tokenizes <=', () => {
+      Filter.tokenizeInput('rarity<=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": "<=", "type": "token"}]);
+    });
+    it('tokenizes !=', () => {
+      Filter.tokenizeInput('rarity!=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": false, "operand": "!=", "type": "token"}]);
+    });
+    it('tokenizes negated =', () => {
+      Filter.tokenizeInput('-rarity=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": true, "operand": "=", "type": "token"}]);
+    });
+    it('tokenizes negated >', () => {
+      Filter.tokenizeInput('-rarity>common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": true, "operand": ">", "type": "token"}]);
+    });
+    it('tokenizes negated <', () => {
+      Filter.tokenizeInput('-rarity<common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": true, "operand": "<", "type": "token"}]);
+    });
+    it('tokenizes negated <=', () => {
+      Filter.tokenizeInput('-rarity<=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": true, "operand": "<=", "type": "token"}]);
+    });
+    it('tokenizes negated >=', () => {
+      Filter.tokenizeInput('-rarity>=common', tokens)
+      expect(tokens).toEqual([{"arg": "common", "category": "rarity", "not": true, "operand": ">=", "type": "token"}]);
+    });
   });
 })

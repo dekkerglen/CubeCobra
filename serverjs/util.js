@@ -42,7 +42,7 @@ function addWordToTree(obj, word) {
       obj[word.charAt(0)]['$'] = {};
     }
   } else {
-    character = word.charAt(0);
+    let character = word.charAt(0);
     word = word.substr(1, word.length)
     if (!obj[character]) {
       obj[character] = {};

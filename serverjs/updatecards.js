@@ -113,7 +113,7 @@ function addTokens(card) {
           if (result[8]) {
             var tmpTokenAbilities = result[8].toLowerCase().split('\"');
             tmpTokenAbilities.forEach(line => {
-              tmpTokenAbilityParts = line.split(',');
+              let tmpTokenAbilityParts = line.split(',');
               tmpTokenAbilityParts.forEach(part => {
                 if (part.length > 0)
                   tokenAbilities.push(part);
@@ -132,7 +132,7 @@ function addTokens(card) {
 
           if (isACopy) // most likely a token that could be a copy of any creature but it could have a specific token
           {
-            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate 
+            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate
               continue;
 
             var cardTokens = getTokensFromCard(card);
@@ -410,7 +410,7 @@ var specialCaseCardsList = {
   "Jace, Cunning Castaway": [{
     tokenId: "a10729a5-061a-4daf-91d6-0f6ce813a992"
   }],
-  //the cards below are transform cards that are on here due to the way 
+  //the cards below are transform cards that are on here due to the way
   //we currently do not populate the oracle text of transform cards.
   "Arlinn Kord": [{
     tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
