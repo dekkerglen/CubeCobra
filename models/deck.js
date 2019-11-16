@@ -32,6 +32,10 @@ let deckSchema = mongoose.Schema({
   cubename: {
     type: String,
     default: 'Cube'
+  },
+  draft: {
+    type: String,
+    default: ''
   }
 });
 

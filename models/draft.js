@@ -17,7 +17,12 @@ let draftSchema = mongoose.Schema({
   pickOrder: [],
   pickNumber: Number,
   packNumber: Number,
-  ratings: {}
+  ratings: {},
+  initial_state: [
+    [
+      []
+    ]
+  ]
 });
 
 let Draft = module.exports = mongoose.model('Draft', draftSchema)

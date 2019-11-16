@@ -1574,6 +1574,7 @@ function startCustomDraft(req, res, params, cube) {
         }
       }
     }
+    draft.initial_state = draft.packs.slice();
     if (!fail) {
       draft.save(function(err) {
         if (err) {
@@ -1630,6 +1631,7 @@ function startCustomDraft(req, res, params, cube) {
         }
       }
     }
+    draft.initial_state = draft.packs.slice();
     if (!fail) {
       draft.save(function(err) {
         if (err) {
@@ -1673,6 +1675,7 @@ function startStandardDraft(req, res, params, cube) {
         }
       }
     }
+    draft.initial_state = draft.packs.slice();
     draft.save(function(err) {
       if (err) {
         console.log(err, req);
@@ -2391,6 +2394,8 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.date = Date.now();
     deck.bots = draft.bots;
     deck.playersideboard = [];
+    deck.pickOrder = draft.pickOrder;
+    deck.draft = draft._id;
 
     cube = await Cube.findOne(build_id_query(draft.cube));
 
@@ -2557,6 +2562,47 @@ router.get('/rebuild/:id', ensureAuth, async(req, res) => {
     console.log(err);
 
     req.flash('danger', "This deck is not able to be cloned and rebuilt.");
+    res.redirect('/cube/deck/'+req.params.id);
+  }
+});
+
+router.get('/redraft/:id' , async (req, res) => {
+  try {
+    const base = await Deck.findById(req.params.id);
+
+    if (!base) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
+    } 
+
+    const srcDraft = await Draft.findById(base.draft);
+
+    if(!srcDraft) {      
+      req.flash('danger', "This deck is not able to be redrafted.");
+      res.redirect('/cube/deck/'+req.params.id);
+    }
+
+    var draft = new Draft();
+    draft.bots = base.bots.slice();
+    draft.cube = base.cube.slice();    
+    draft.packNumber = 1;
+    draft.pickNumber = 1;
+    
+    draft.initial_state = srcDraft.initial_state.slice();
+    draft.packs = srcDraft.initial_state.slice();
+    draft.picks = [];
+
+    for (i = 0; i < draft.packs.length; i++) {
+      draft.picks.push([]);
+    }
+
+    await draft.save();
+    res.redirect('/cube/draft/' + draft._id);  
+  }
+  catch(err) {
+    console.log(err);
+
+    req.flash('danger', "This deck is not able to be redrafted.");
     res.redirect('/cube/deck/'+req.params.id);
   }
 });
