@@ -12,47 +12,113 @@ describe('filter', () => {
     });
     it('tokenizes =', () => {
       Filter.tokenizeInput('rarity=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '=',
+        type: 'token'
+      }]);
     });
     it('tokenizes >', () => {
       Filter.tokenizeInput('rarity>common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '>', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '>',
+        type: 'token'
+      }]);
     });
     it('tokenizes <', () => {
       Filter.tokenizeInput('rarity<common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '<', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '<',
+        type: 'token'
+      }]);
     });
     it('tokenizes >=', () => {
       Filter.tokenizeInput('rarity>=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '>=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '>=',
+        type: 'token'
+      }]);
     });
     it('tokenizes <=', () => {
       Filter.tokenizeInput('rarity<=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '<=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '<=',
+        type: 'token'
+      }]);
     });
     it('tokenizes !=', () => {
       Filter.tokenizeInput('rarity!=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: false, operand: '!=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: false,
+        operand: '!=',
+        type: 'token'
+      }]);
     });
     it('tokenizes negated =', () => {
       Filter.tokenizeInput('-rarity=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: true, operand: '=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: true,
+        operand: '=',
+        type: 'token'
+      }]);
     });
     it('tokenizes negated >', () => {
       Filter.tokenizeInput('-rarity>common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: true, operand: '>', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: true,
+        operand: '>',
+        type: 'token'
+      }]);
     });
     it('tokenizes negated <', () => {
       Filter.tokenizeInput('-rarity<common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: true, operand: '<', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: true,
+        operand: '<',
+        type: 'token'
+      }]);
     });
     it('tokenizes negated <=', () => {
       Filter.tokenizeInput('-rarity<=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: true, operand: '<=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: true,
+        operand: '<=',
+        type: 'token'
+      }]);
     });
     it('tokenizes negated >=', () => {
       Filter.tokenizeInput('-rarity>=common', tokens);
-      expect(tokens).toEqual([{ arg: 'common', category: 'rarity', not: true, operand: '>=', type: 'token' }]);
+      expect(tokens).toEqual([{
+        arg: 'common',
+        category: 'rarity',
+        not: true,
+        operand: '>=',
+        type: 'token'
+      }]);
     });
   });
 
@@ -71,16 +137,14 @@ describe('filter', () => {
       Filter.tokenizeInput('castle', tokens);
       const castleFilters = [Filter.parseTokens(tokens)];
       const castles = exampleCube.cards.filter((card) => Filter.filterCard(card, castleFilters));
-      const expectedCastles = [
-        {
+      const expectedCastles = [{
           addedTmsp: '2019-09-28T20:58:35.095Z',
           cardID: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
           cmc: 0,
           colors: ['W'],
           details: {
             _id: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
             artist: 'Volkan Baǵa',
             border_color: 'black',
             cmc: 0,
@@ -90,10 +154,8 @@ describe('filter', () => {
             colors: [],
             digital: false,
             full_name: 'Castle Ardenvale [celd-386]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+            image_small: 'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
             legalities: {
               Legacy: false,
               Modern: false,
@@ -102,8 +164,7 @@ describe('filter', () => {
             },
             name: 'Castle Ardenvale',
             name_lower: 'castle ardenvale',
-            oracle_text:
-              'Castle Ardenvale enters the battlefield tapped unless you control a Plains.\n' +
+            oracle_text: 'Castle Ardenvale enters the battlefield tapped unless you control a Plains.\n' +
               '{T}: Add {W}.\n' +
               '{2}{W}{W}, {T}: Create a 1/1 white Human creature token.',
             parsed_cost: [''],
@@ -124,8 +185,7 @@ describe('filter', () => {
           colors: ['R'],
           details: {
             _id: '9954b9bb-21e7-40af-aaa7-b2001b8d1d45',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
             artist: 'Jaime Jones',
             border_color: 'black',
             cmc: 0,
@@ -135,10 +195,8 @@ describe('filter', () => {
             colors: [],
             digital: false,
             full_name: 'Castle Embereth [celd-387]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
+            image_small: 'https://img.scryfall.com/cards/small/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
             legalities: {
               Legacy: false,
               Modern: false,
@@ -147,8 +205,7 @@ describe('filter', () => {
             },
             name: 'Castle Embereth',
             name_lower: 'castle embereth',
-            oracle_text:
-              'Castle Embereth enters the battlefield tapped unless you control a Mountain.\n{T}: Add {R}.\n{1}{R}{R}, {T}: Creatures you control get +1/+0 until end of turn.',
+            oracle_text: 'Castle Embereth enters the battlefield tapped unless you control a Mountain.\n{T}: Add {R}.\n{1}{R}{R}, {T}: Creatures you control get +1/+0 until end of turn.',
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
@@ -167,8 +224,7 @@ describe('filter', () => {
           colors: ['G'],
           details: {
             _id: 'aca10c34-010a-4a9f-a747-2592c4d58c5d',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
             artist: 'Adam Paquette',
             border_color: 'black',
             cmc: 0,
@@ -178,10 +234,8 @@ describe('filter', () => {
             colors: [],
             digital: false,
             full_name: 'Castle Garenbrig [celd-388]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
+            image_small: 'https://img.scryfall.com/cards/small/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
             legalities: {
               Legacy: false,
               Modern: false,
@@ -190,8 +244,7 @@ describe('filter', () => {
             },
             name: 'Castle Garenbrig',
             name_lower: 'castle garenbrig',
-            oracle_text:
-              'Castle Garenbrig enters the battlefield tapped unless you control a Forest.\n{T}: Add {G}.\n{2}{G}{G}, {T}: Add six {G}. Spend this mana only to cast creature spells or activate abilities of creatures.',
+            oracle_text: 'Castle Garenbrig enters the battlefield tapped unless you control a Forest.\n{T}: Add {G}.\n{2}{G}{G}, {T}: Add six {G}. Spend this mana only to cast creature spells or activate abilities of creatures.',
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
@@ -210,8 +263,7 @@ describe('filter', () => {
           colors: ['B'],
           details: {
             _id: '12b8c2e6-5256-4e7e-8d7d-4b386419780a',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
             artist: 'Titus Lunter',
             border_color: 'black',
             cmc: 0,
@@ -221,10 +273,8 @@ describe('filter', () => {
             colors: [],
             digital: false,
             full_name: 'Castle Locthwain [celd-389]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
+            image_small: 'https://img.scryfall.com/cards/small/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
             legalities: {
               Legacy: false,
               Modern: false,
@@ -233,8 +283,7 @@ describe('filter', () => {
             },
             name: 'Castle Locthwain',
             name_lower: 'castle locthwain',
-            oracle_text:
-              'Castle Locthwain enters the battlefield tapped unless you control a Swamp.\n{T}: Add {B}.\n{1}{B}{B}, {T}: Draw a card, then you lose life equal to the number of cards in your hand.',
+            oracle_text: 'Castle Locthwain enters the battlefield tapped unless you control a Swamp.\n{T}: Add {B}.\n{1}{B}{B}, {T}: Draw a card, then you lose life equal to the number of cards in your hand.',
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
@@ -253,8 +302,7 @@ describe('filter', () => {
           colors: ['U'],
           details: {
             _id: '4113eeed-9399-4b59-a6d9-7d40190853c5',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
             artist: 'John Avon',
             border_color: 'black',
             cmc: 0,
@@ -264,10 +312,8 @@ describe('filter', () => {
             colors: [],
             digital: false,
             full_name: 'Castle Vantress [celd-390]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
+            image_small: 'https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
             legalities: {
               Legacy: false,
               Modern: false,
@@ -276,8 +322,7 @@ describe('filter', () => {
             },
             name: 'Castle Vantress',
             name_lower: 'castle vantress',
-            oracle_text:
-              'Castle Vantress enters the battlefield tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.',
+            oracle_text: 'Castle Vantress enters the battlefield tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.',
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
@@ -481,11 +526,9 @@ describe('filter', () => {
 
     describe('P/T filtering', () => {
       let tokens;
-      let expectations = [
-        {
+      let expectations = [{
           title: 'the = operator exact-matches power/toughness',
-          tests: [
-            {
+          tests: [{
               filter: 'power=4',
               lookup: ['details', 'power'],
               expectedValue: 4,
@@ -501,8 +544,7 @@ describe('filter', () => {
         },
         {
           title: 'the < operator performs less-than matches for power/toughness',
-          tests: [
-            {
+          tests: [{
               filter: 'power<4',
               lookup: ['details', 'power'],
               expectedValue: 4,
@@ -518,8 +560,7 @@ describe('filter', () => {
         },
         {
           title: 'the > operator performs greater-than matches for power/toughness',
-          tests: [
-            {
+          tests: [{
               filter: 'power>4',
               lookup: ['details', 'power'],
               expectedValue: 4,
@@ -535,8 +576,7 @@ describe('filter', () => {
         },
         {
           title: 'the >= operator performs greater-than-or-eqal-to matches for power/toughness',
-          tests: [
-            {
+          tests: [{
               filter: 'power>=3',
               lookup: ['details', 'power'],
               expectedValue: 3,
@@ -552,8 +592,7 @@ describe('filter', () => {
         },
         {
           title: 'the <= operator performs greater-than-or-eqal-to matches for power/toughness',
-          tests: [
-            {
+          tests: [{
               filter: 'power<=3',
               lookup: ['details', 'power'],
               expectedValue: 3,
