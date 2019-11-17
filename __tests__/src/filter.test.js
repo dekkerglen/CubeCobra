@@ -144,7 +144,7 @@ describe('filter', () => {
           colors: ['W'],
           details: {
             _id: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
-            art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
             artist: 'Volkan Baǵa',
             border_color: 'black',
             cmc: 0,
@@ -153,14 +153,15 @@ describe('filter', () => {
             colorcategory: 'l',
             colors: [],
             digital: false,
-            full_name: 'Castle Ardenvale [celd-386]',
-            image_normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
-            image_small: 'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1568809426',
+            full_name: 'Castle Ardenvale [eld-386]',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
+            image_small: 'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
+            isToken: false,
             legalities: {
-              Legacy: false,
-              Modern: false,
+              Legacy: true,
+              Modern: true,
               Pauper: false,
-              Standard: false,
+              Standard: true,
             },
             name: 'Castle Ardenvale',
             name_lower: 'castle ardenvale',
@@ -170,8 +171,13 @@ describe('filter', () => {
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/celd/386/castle-ardenvale?utm_source=api',
-            set: 'celd',
+            scryfall_uri: 'https://scryfall.com/card/eld/386/castle-ardenvale?utm_source=api',
+            set: 'eld',
+            tcgplayer_id: 199391,
+            tokens: [{
+              sourceCardId: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
+              tokenId: '94057dc6-e589-4a29-9bda-90f5bece96c4',
+            }, ],
             type: 'Land',
           },
           status: 'Not Owned',
@@ -185,7 +191,7 @@ describe('filter', () => {
           colors: ['R'],
           details: {
             _id: '9954b9bb-21e7-40af-aaa7-b2001b8d1d45',
-            art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
             artist: 'Jaime Jones',
             border_color: 'black',
             cmc: 0,
@@ -194,14 +200,15 @@ describe('filter', () => {
             colorcategory: 'l',
             colors: [],
             digital: false,
-            full_name: 'Castle Embereth [celd-387]',
-            image_normal: 'https://img.scryfall.com/cards/normal/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
-            image_small: 'https://img.scryfall.com/cards/small/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1568809445',
+            full_name: 'Castle Embereth [eld-387]',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
+            image_small: 'https://img.scryfall.com/cards/small/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
+            isToken: false,
             legalities: {
-              Legacy: false,
-              Modern: false,
+              Legacy: true,
+              Modern: true,
               Pauper: false,
-              Standard: false,
+              Standard: true,
             },
             name: 'Castle Embereth',
             name_lower: 'castle embereth',
@@ -209,8 +216,9 @@ describe('filter', () => {
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/celd/387/castle-embereth?utm_source=api',
-            set: 'celd',
+            scryfall_uri: 'https://scryfall.com/card/eld/387/castle-embereth?utm_source=api',
+            set: 'eld',
+            tcgplayer_id: 199287,
             type: 'Land',
           },
           status: 'Not Owned',
@@ -224,7 +232,7 @@ describe('filter', () => {
           colors: ['G'],
           details: {
             _id: 'aca10c34-010a-4a9f-a747-2592c4d58c5d',
-            art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
             artist: 'Adam Paquette',
             border_color: 'black',
             cmc: 0,
@@ -233,14 +241,15 @@ describe('filter', () => {
             colorcategory: 'l',
             colors: [],
             digital: false,
-            full_name: 'Castle Garenbrig [celd-388]',
-            image_normal: 'https://img.scryfall.com/cards/normal/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
-            image_small: 'https://img.scryfall.com/cards/small/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1568796969',
+            full_name: 'Castle Garenbrig [eld-388]',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
+            image_small: 'https://img.scryfall.com/cards/small/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
+            isToken: false,
             legalities: {
-              Legacy: false,
-              Modern: false,
+              Legacy: true,
+              Modern: true,
               Pauper: false,
-              Standard: false,
+              Standard: true,
             },
             name: 'Castle Garenbrig',
             name_lower: 'castle garenbrig',
@@ -248,8 +257,9 @@ describe('filter', () => {
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/celd/388/castle-garenbrig?utm_source=api',
-            set: 'celd',
+            scryfall_uri: 'https://scryfall.com/card/eld/388/castle-garenbrig?utm_source=api',
+            set: 'eld',
+            tcgplayer_id: 199289,
             type: 'Land',
           },
           status: 'Not Owned',
@@ -263,7 +273,7 @@ describe('filter', () => {
           colors: ['B'],
           details: {
             _id: '12b8c2e6-5256-4e7e-8d7d-4b386419780a',
-            art_crop: 'https://img.scryfall.com/cards/art_crop/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
             artist: 'Titus Lunter',
             border_color: 'black',
             cmc: 0,
@@ -272,14 +282,15 @@ describe('filter', () => {
             colorcategory: 'l',
             colors: [],
             digital: false,
-            full_name: 'Castle Locthwain [celd-389]',
-            image_normal: 'https://img.scryfall.com/cards/normal/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
-            image_small: 'https://img.scryfall.com/cards/small/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1568814474',
+            full_name: 'Castle Locthwain [eld-389]',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
+            image_small: 'https://img.scryfall.com/cards/small/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
+            isToken: false,
             legalities: {
-              Legacy: false,
-              Modern: false,
+              Legacy: true,
+              Modern: true,
               Pauper: false,
-              Standard: false,
+              Standard: true,
             },
             name: 'Castle Locthwain',
             name_lower: 'castle locthwain',
@@ -287,8 +298,9 @@ describe('filter', () => {
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/celd/389/castle-locthwain?utm_source=api',
-            set: 'celd',
+            scryfall_uri: 'https://scryfall.com/card/eld/389/castle-locthwain?utm_source=api',
+            set: 'eld',
+            tcgplayer_id: 199389,
             type: 'Land',
           },
           status: 'Not Owned',
@@ -302,7 +314,7 @@ describe('filter', () => {
           colors: ['U'],
           details: {
             _id: '4113eeed-9399-4b59-a6d9-7d40190853c5',
-            art_crop: 'https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
+            art_crop: 'https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
             artist: 'John Avon',
             border_color: 'black',
             cmc: 0,
@@ -311,14 +323,15 @@ describe('filter', () => {
             colorcategory: 'l',
             colors: [],
             digital: false,
-            full_name: 'Castle Vantress [celd-390]',
-            image_normal: 'https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
-            image_small: 'https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454',
+            full_name: 'Castle Vantress [eld-390]',
+            image_normal: 'https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
+            image_small: 'https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
+            isToken: false,
             legalities: {
-              Legacy: false,
-              Modern: false,
+              Legacy: true,
+              Modern: true,
               Pauper: false,
-              Standard: false,
+              Standard: true,
             },
             name: 'Castle Vantress',
             name_lower: 'castle vantress',
@@ -326,8 +339,9 @@ describe('filter', () => {
             parsed_cost: [''],
             promo: true,
             rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/celd/390/castle-vantress?utm_source=api',
-            set: 'celd',
+            scryfall_uri: 'https://scryfall.com/card/eld/390/castle-vantress?utm_source=api',
+            set: 'eld',
+            tcgplayer_id: 199285,
             type: 'Land',
           },
           status: 'Not Owned',
@@ -526,6 +540,7 @@ describe('filter', () => {
 
     describe('P/T filtering', () => {
       let tokens;
+      let cards;
       let expectations = [{
           title: 'the = operator exact-matches power/toughness',
           tests: [{
@@ -575,7 +590,7 @@ describe('filter', () => {
           ],
         },
         {
-          title: 'the >= operator performs greater-than-or-eqal-to matches for power/toughness',
+          title: 'the >= operator performs greater-than-or-equal-to matches for power/toughness',
           tests: [{
               filter: 'power>=3',
               lookup: ['details', 'power'],
@@ -591,16 +606,16 @@ describe('filter', () => {
           ],
         },
         {
-          title: 'the <= operator performs greater-than-or-eqal-to matches for power/toughness',
+          title: 'the <= operator performs less-than-or-equal-to matches for power/toughness',
           tests: [{
-              filter: 'power<=3',
-              lookup: ['details', 'power'],
+              filter: 'toughness<=3',
+              lookup: ['details', 'toughness'],
               expectedValue: 3,
               matcherName: 'toBeLessThanOrEqual',
             },
             {
-              filter: 'toughness<=3',
-              lookup: ['details', 'toughness'],
+              filter: 'power<=3',
+              lookup: ['details', 'power'],
               expectedValue: 3,
               matcherName: 'toBeLessThanOrEqual',
             },
@@ -613,13 +628,136 @@ describe('filter', () => {
           expectation.tests.forEach((test) => {
             tokens = [];
             Filter.tokenizeInput(test.filter, tokens);
-            const cards = exampleCube.cards.filter((card) => Filter.filterCard(card, [Filter.parseTokens(tokens)]));
+            cards = exampleCube.cards.filter((card) => Filter.filterCard(card, [Filter.parseTokens(tokens)]));
             cards.forEach((card) => {
               let value = card;
               test.lookup.forEach((key) => {
                 value = value[key];
               });
               expect(parseInt(value, 10))[test.matcherName](test.expectedValue);
+            });
+          });
+        });
+      });
+    });
+
+    describe('rarity filtering', () => {
+      let tokens;
+      let cards;
+      let expectations = [{
+          title: 'the = operator exact-matches rarity',
+          tests: [{
+              filter: 'rarity=c',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'common',
+              matcherName: 'toEqual',
+            },
+            {
+              filter: 'rarity=u',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'uncommon',
+              matcherName: 'toEqual',
+            },
+            {
+              filter: 'rarity=r',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'rare',
+              matcherName: 'toEqual',
+            },
+            {
+              filter: 'rarity=m',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'mythic',
+              matcherName: 'toEqual',
+            },
+          ],
+        },
+        {
+          title: 'the > operator matches higher rarity',
+          tests: [{
+              filter: 'rarity>c',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'common',
+              matcherName: 'toEqual',
+              not: true,
+            },
+            {
+              filter: 'rarity>u',
+              lookup: ['details', 'rarity'],
+              expectedValue: ['uncommon', 'common'],
+              matcherName: 'arrayContaining',
+              not: true,
+            },
+            {
+              filter: 'rarity>r',
+              lookup: ['details', 'rarity'],
+              expectedValue: ['uncommon', 'common', 'rare'],
+              matcherName: 'arrayContaining',
+              not: true,
+            },
+          ],
+        },
+        {
+          title: 'the < operator matches lower rarity',
+          tests: [{
+              filter: 'rarity<m',
+              lookup: ['details', 'rarity'],
+              expectedValue: 'mythic',
+              matcherName: 'toEqual',
+              not: true,
+            },
+            {
+              filter: 'rarity<r',
+              lookup: ['details', 'rarity'],
+              expectedValue: ['rare', 'mythic'],
+              matcherName: 'arrayContaining',
+              not: true,
+            },
+            {
+              filter: 'rarity<u',
+              lookup: ['details', 'rarity'],
+              expectedValue: ['uncommon', 'rare', 'mythic'],
+              matcherName: 'arrayContaining',
+              not: true,
+            },
+            {
+              filter: 'rarity<c',
+              lookup: ['details', 'rarity'],
+              expectedValue: ['uncommon', 'rare', 'mythic'],
+              matcherName: 'arrayContaining',
+              not: true,
+            },
+          ],
+        },
+      ];
+
+      expectations.forEach((expectation) => {
+        it(expectation.title, () => {
+          expectation.tests.forEach((test) => {
+            tokens = [];
+            Filter.tokenizeInput(test.filter, tokens);
+            cards = exampleCube.cards.filter((card) => Filter.filterCard(card, [Filter.parseTokens(tokens)]));
+            cards.forEach((card) => {
+              let {
+                expectedValue,
+                matcherName,
+                not
+              } = test;
+              let value = card;
+              test.lookup.forEach((key) => {
+                value = value[key];
+              });
+              let expectation = expect(parseInt(value, 10));
+              if (not) {
+                // not.arrayContaining is a special case
+                if (matcherName === 'arrayContaining') {
+                  matcherName = 'toEqual'
+                  expectedValue = expect.not.arrayContaining(expectedValue);
+                } else {
+                  expectation = expectation.not;
+                }
+              }
+              expectation[matcherName](expectedValue);
             });
           });
         });
