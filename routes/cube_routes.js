@@ -263,7 +263,7 @@ router.get('/view/:id', function(req, res) {
   res.redirect('/cube/overview/' + req.params.id);
 });
 
-router.post('/format/add/:id', ensureAuth, async function(req, res) {
+router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
     req.body.html = sanitize(req.body.html);
 
@@ -368,7 +368,7 @@ router.post('/blog/post/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.post('/follow/:id', ensureAuth, async function(req, res) {
+router.post('/follow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -407,7 +407,7 @@ router.post('/follow/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/unfollow/:id', ensureAuth, async function(req, res) {
+router.post('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -446,7 +446,7 @@ router.post('/unfollow/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/feature/:id', ensureAuth, async function(req, res) {
+router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -511,7 +511,7 @@ router.post('/unfeature/:id', ensureAuth, function(req, res) {
   }
 });
 
-router.get('/overview/:id', async function(req, res) {
+router.get('/overview/:id', async (req, res) => {
   try {
     var split = req.params.id.split(';');
     var cube_id = split[0];
@@ -615,7 +615,7 @@ router.get('/blog/:id', function(req, res) {
   res.redirect('/cube/blog/' + req.params.id + '/0');
 });
 
-router.get('/blog/:id/:page', async function(req, res) {
+router.get('/blog/:id/:page', async (req, res) => {
   try {
     var cube_id = req.params.id;
     cube = await Cube.findOne(build_id_query(cube_id));
@@ -908,7 +908,7 @@ router.get('/list/:id', function(req, res) {
   });
 });
 
-router.get('/playtest/:id', async function(req, res) {
+router.get('/playtest/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
 
@@ -2031,6 +2031,16 @@ function insertComment(comments, position, comment) {
   }
 }
 
+function getOwnerFromComment(comments, position) {
+  if (position.length <= 0) {
+    return '';
+  } else if (position.length == 1) {
+    return comments[position[0]].owner;
+  } else {
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
+  }
+}
+
 function saveEdit(comments, position, comment) {
   if (position.length == 1) {
     comments[position[0]] = comment;
@@ -2039,7 +2049,43 @@ function saveEdit(comments, position, comment) {
   }
 }
 
-router.post('/api/editcomment', ensureAuth, async function(req, res) {
+router.get('/blogpost/:id', async (req, res) => {
+  try {
+    const post = await Blog.findById(req.params.id);
+    const owner = await User.findById(post.owner);
+
+    return res.render('cube/blogpost', {
+      post: post,
+      owner: owner._id,
+      loginCallback: '/blogpost/' + req.params.id
+    });
+  } catch (err) {
+    res.redirect('/404');
+  }
+});
+
+router.get('/viewcomment/:id/:position', async (req, res) => {
+  try {
+    const {
+      position,
+      id
+    } = req.params;
+
+    const post = await Blog.findById(req.params.id);
+    const owner = await User.findById(post.owner);
+
+    return res.render('cube/blogpost', {
+      post: post,
+      owner: owner._id,
+      loginCallback: `/blogpost/${id}`,
+      position: position.split('-')
+    });
+  } catch (err) {
+    res.redirect('/404');
+  }
+});
+
+router.post('/api/editcomment', ensureAuth, async (req, res) => {
   user = await User.findById(req.user._id);
   post = await Blog.findById(req.body.id);
 
@@ -2073,9 +2119,11 @@ router.post('/api/editcomment', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/api/postcomment', ensureAuth, async function(req, res) {
-  user = await User.findById(req.user._id);
-  post = await Blog.findById(req.body.id);
+router.post('/api/postcomment', ensureAuth, async (req, res) => {
+  const userq = User.findById(req.user._id);
+  const postq = Blog.findById(req.body.id);
+
+  const [user, post] = await Promise.all([userq, postq]);
 
   if (!user) {
     return res.status(403).send({
@@ -2102,6 +2150,23 @@ router.post('/api/postcomment', ensureAuth, async function(req, res) {
       timePosted: Date.now() - 1000,
       comments: []
     });
+
+    //give notification to owner
+    if (req.body.position.length == 0) {
+      //owner is blog post owner
+      const owner = await User.findById(post.owner);
+      await util.addNotification(owner, user, '/cube/blogpost/' + post._id, user.username + " added a comment to " + post.title);
+    } else {
+      //need to find owner from comment tree
+      const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
+      var positionText = '';
+      req.body.position.forEach(function(pos, index) {
+        positionText += pos + '-';
+      });
+      positionText += comment.index;
+      await util.addNotification(owner, user, '/cube/viewcomment/' + post._id + '/' + positionText, user.username + " replied to your comment on " + post.title);
+    }
+
     await post.save();
     res.status(200).send({
       success: 'true',
@@ -2277,32 +2342,37 @@ router.get('/api/cubelist/:id', function(req, res) {
   });
 });
 
-router.post('/editdeck/:id', function(req, res) {
-  Deck.findById(req.params.id, function(err, deck) {
-    if (err || !deck) {
-      req.flash('danger', 'Deck not found');
-      res.status(404).render('misc/404', {});
-    } else if ((deck.owner && !(req.user)) || (deck.owner && (deck.owner != req.user._id))) {
-      req.flash('danger', 'Unauthorized');
-      res.status(404).render('misc/404', {});
-    } else {
-      deck = JSON.parse(req.body.draftraw);
+router.post('/editdeck/:id', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id);
 
-      Deck.updateOne({
-        _id: deck._id
-      }, deck, function(err) {
-        if (err) {
-          req.flash('danger', 'Error saving deck');
-        } else {
-          req.flash('success', 'Deck saved succesfully');
-        }
-        res.redirect('/cube/deck/' + deck._id);
-      });
+    if (!deck) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
     }
-  });
+    if ((deck.owner && !(req.user)) || (deck.owner && (deck.owner != req.user._id))) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
+    }
+
+    deck = JSON.parse(req.body.draftraw);
+
+    await Deck.updateOne({
+      _id: deck._id
+    });
+
+    req.flash('success', 'Deck saved succesfully');
+    res.redirect('/cube/deck/' + deck._id);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err
+    });
+  }
 });
 
-router.post('/submitdeck/:id', async function(req, res) {
+router.post('/submitdeck/:id', async (req, res) => {
   try {
     //req.body contains draft0
     var draftid = req.body.body;
@@ -2331,16 +2401,20 @@ router.post('/submitdeck/:id', async function(req, res) {
     }
 
     cube.numDecks += 1;
-    await cube.save();
-    const user = await User.findById(deck.owner);
+    const userq = User.findById(deck.owner);
+    const cubeOwnerq = User.findById(cube.owner);
+
+    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : "Anonymous";
     deck.name = owner + "'s draft of " + cube.name + " on " + deck.date.toLocaleString("en-US");
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
-    await cube.save();
-    await deck.save();
+
+    await util.addNotification(cubeOwner, user, '/cube/deck/' + deck._id, user.username + " drafted your cube: " + cube.name);
+
+    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
@@ -2352,7 +2426,7 @@ router.post('/submitdeck/:id', async function(req, res) {
   }
 });
 
-router.get('/decks/:cubeid/:page', async function(req, res) {
+router.get('/decks/:cubeid/:page', async (req, res) => {
   try {
     var cubeid = req.params.cubeid;
     var page = req.params.page;
@@ -2420,7 +2494,7 @@ router.get('/decks/:cubeid/:page', async function(req, res) {
   }
 });
 
-router.get('/decks/:id', async function(req, res) {
+router.get('/decks/:id', async (req, res) => {
   res.redirect('/cube/decks/' + req.params.id + '/0');
 });
 

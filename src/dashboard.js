@@ -23,20 +23,17 @@ class Dashboard extends Component {
   }
 
   render() {
-    //List of your cubes
-    //List of drafts of your cube
-    //List of replies to your blogs  
     const {posts, cubes, decks} = this.props;
     return (       
       <Row>
         <Col xs="12" md="6">
           <Card>
             <CardHeader><h5>Your Cubes</h5></CardHeader>
-            <CardBody className="p-2">      
-              <Row>   
+            <CardBody className="p-0">      
+              <Row className="no-gutters">   
                 {cubes.length > 0 ?
-                  cubes.slice(0,2).map(cube =>
-                    <Col key={cube._id} sm="12" xs="12" md="6" lg="6" >
+                  cubes.slice(0,4).map(cube =>
+                    <Col key={cube._id} xs="12" sm="12"  md="12" lg="6" >
                       <CubePreview cube={cube}/>
                     </Col>
                   )
@@ -74,7 +71,7 @@ class Dashboard extends Component {
         <Col xs="12" className="mb-2 mt-4">
           <Card><CardHeader><h4>Feed</h4></CardHeader></Card>
           {posts.length > 0 ?
-            <PagedList pageSize={10} rows={posts.slice(0).reverse().map(post =>
+            <PagedList pageSize={10} rows={posts.slice(0).map(post =>
               <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={true} />)}>
             </PagedList>
           :

@@ -10,7 +10,7 @@ class BlogPost extends React.Component {
     super(props);    
 
     this.state = {
-        childExpanded: false
+        childExpanded: props.focused ? true : false
     };   
       
     this.onPost = this.onPost.bind(this);
@@ -56,6 +56,16 @@ class BlogPost extends React.Component {
     this.saveEdit(this.props.post.comments, position, comment);
   }
 
+  componentDidMount() {
+    if(this.props.focused)
+    {
+        var $container = $("html,body");
+        var $scrollTo = $('.comment-highlighted');
+        
+        $container.animate({scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0},300);
+    }
+  }
+
   render() {
     var post = this.props.post;
     return (
@@ -67,39 +77,45 @@ class BlogPost extends React.Component {
                     }
                 </div></h5>
                 <h6 className="card-subtitle mb-2 text-muted">
-                    <a href={"/user/view/" + post.owner}>{post.username}</a>
+                    <a href={"/user/view/" + post.owner}>{post.dev=='true' ? 'Dekkaru' : post.username}</a>
                     {" posted to "} 
-                    <a href={"/cube/overview/" + post.cube}>{post.cubename}</a>
+                    {post.dev == 'true' ?
+                        <a href={"/dev/blog/0"}>Developer Blog</a>
+                    :
+                        <a href={"/cube/overview/" + post.cube}>{post.cubename}</a>
+                    }
                     {" - "} 
                     <AgeText date={post.date}/>
                 </h6>                  
             </CardHeader>
-            {(post.changelist && post.html) ? 
-            <Row className="no-gutters">
-                <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{'borderRight': '1px solid #DFDFDF'}}>
-                    <CardBody className="py-2">
+            <div style={{"overflow": "auto", "maxHeight":"50vh"}}>
+                {(post.changelist && post.html) ? 
+                <Row className="no-gutters">
+                    <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{'borderRight': '1px solid #DFDFDF'}}>
+                        <CardBody className="py-2">
+                            <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
+                        </CardBody>
+                    </Col>                     
+                    <Col className="col-9">
+                        <CardBody className="py-2">
+                            <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
+                        </CardBody>
+                    </Col>
+                </Row>
+                : 
+                <CardBody className="py-2">
+                    {post.changelist &&
                         <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
-                    </CardBody>
-                </Col>                     
-                <Col className="col-9">
-                    <CardBody className="py-2">
+                    }
+                    {post.body &&
+                        <CardText>{post.body}</CardText>
+                    }
+                    {post.html &&
                         <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
-                    </CardBody>
-                </Col>
-            </Row>
-            : 
-            <CardBody className="py-2">
-                {post.changelist &&
-                    <CardText dangerouslySetInnerHTML={{__html: post.changelist}} />
+                    }
+                </CardBody>
                 }
-                {post.body &&
-                    <CardText>{post.body}</CardText>
-                }
-                {post.html &&
-                    <CardText dangerouslySetInnerHTML={{__html: post.html}}/>
-                }
-            </CardBody>
-            }
+            </div>
             {this.props.loggedIn &&
                 <CardBody className="px-4 pt-2 pb-0 border-top">
                     <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
@@ -117,7 +133,8 @@ class BlogPost extends React.Component {
                     position={[]} 
                     userid={this.props.userid} 
                     loggedIn={this.props.loggedIn} 
-                    submitEdit={this.submitEdit}/>
+                    submitEdit={this.submitEdit}
+                    focused={this.props.focused}/>
             </CardBody>
             }
         </Card>

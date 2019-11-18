@@ -95,8 +95,10 @@ router.get('/blog/:id', function(req, res) {
   });
 });
 
-router.post('/blogpost', ensureAuth, function(req, res) {
-  User.findById(req.user._id, function(err, user) {
+router.post('/blogpost', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
     if (user && util.isAdmin(user)) {
       var blogpost = new Blog();
       blogpost.title = req.body.title;
@@ -110,19 +112,18 @@ router.post('/blogpost', ensureAuth, function(req, res) {
       blogpost.dev = 'true';
       blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
 
-      //console.log(draft);
-      blogpost.save(function(err) {
-        if (err) {
-          console.log(err);
-        } else {
-          req.flash('success', 'Blog post successful');
-          res.redirect('/dev/blog');
-        }
-      });
-    } else {
-      res.status(404).render('misc/404', {});
+      await blogpost.save();
+
+      req.flash('success', 'Blog post successful');
+      res.redirect('/dev/blog');
     }
-  });
+  } catch (err) {
+    res.status(500).send({
+      success: 'false',
+      message: err
+    });
+    console.error(err);
+  }
 });
 
 module.exports = router;

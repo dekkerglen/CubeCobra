@@ -21,6 +21,7 @@ render() {
                     <Comment 
                     key={comment.index} 
                     id={this.props.id} 
+                    focused={(this.props.focused && this.props.focused[0] == comment.index) ? this.props.focused.slice(1): null}
                     position={this.props.position.concat([comment.index])} 
                     comment={comment} 
                     userid={this.props.userid} 

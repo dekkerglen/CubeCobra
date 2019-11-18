@@ -18,20 +18,27 @@ class CubePreview extends React.Component {
   render() {
     var cube = this.props.cube;
     return (
-      <Card >
-        <CardHeader>
-          <h5>{cube.name}</h5>
-          {cube.type &&
-            <a>{cube.card_count} Card {cube.type} Cube<br/></a>
-          }
-          <em>Designed by <a href={'/user/view/'+cube.owner}>{cube.owner_name}</a></em>
-        </CardHeader>
-        <a href={'/cube/overview/'+this.getCubeId(cube)}><img className="card-img-top cube-preview-image" src={cube.image_uri}/></a>
-        <em className="text-right p-1">Art by {cube.image_artist}</em>
-        <a className="btn btn-success rounded-0" href={'/cube/overview/'+this.getCubeId(cube)}>View</a>
-      </Card>
+      <a href={'/cube/overview/'+this.getCubeId(cube)} className="no-underline-hover">
+        <Card className="cube-preview-card">
+            <div className="cube-preview-element">
+              <img className="card-img-top cube-image-preview" src={cube.image_uri}/>
+              <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+            </div>
+            <div className="cube-preview-body py-1 px-2">
+              <h5 className="text-muted cube-preview-text my-0">{cube.name}</h5>            
+              {cube.type &&
+                <div className="text-muted">{cube.card_count} Card {cube.type} Cube</div>
+              }
+              <em className="text-muted">Designed by <a href={'/user/view/'+cube.owner}>{cube.owner_name}</a></em>
+            </div>
+        </Card>
+      </a>
     );
   }
 }
+
+/*
+        
+*/
 
 export default CubePreview

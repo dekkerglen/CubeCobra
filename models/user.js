@@ -42,7 +42,27 @@ const UserSchema = mongoose.Schema({
   users_following: {
     type: [String],
     default: []
-  }
+  },
+  notifications: {
+    type: [{
+      user_from: String,
+      user_from_name: String,
+      url: String,
+      date: Date,
+      text: String,
+    }],
+    default: []
+  },
+  old_notifications: {
+    type: [{
+      user_from: String,
+      user_from_name: String,
+      url: String,
+      date: Date,
+      text: String,
+    }],
+    default: []
+  },
 });
 
 const User = module.exports = mongoose.model('User', UserSchema);

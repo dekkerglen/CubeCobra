@@ -112,6 +112,31 @@ function fromEntries(entries) {
   return obj;
 }
 
+async function addNotification(user, from, url, text) {
+  if (user._id == from._id) {
+    return; //we don't need to give notifications to ourselves
+  }
+  user.notifications.push({
+    user_from: from._id,
+    user_from_name: from.username,
+    url: url,
+    date: new Date(),
+    text: text
+  });
+  user.old_notifications.push({
+    user_from: from._id,
+    user_from_name: from.username,
+    url: url,
+    date: new Date(),
+    text: text
+  });
+  while (user.old_notifications.length > 200) {
+    user.old_notifications = user.old_notifications.slice(1);
+  }
+  await user.save();
+}
+
+
 var methods = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -171,7 +196,8 @@ var methods = {
   fromEntries,
   isAdmin: function(user) {
     return user && user.username == adminname;
-  }
+  },
+  addNotification
 }
 
 module.exports = methods;
