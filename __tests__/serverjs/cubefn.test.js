@@ -176,9 +176,9 @@ test("setCubeType correctly sets the type and card_count of its input cube", () 
   return promise.then(function() {
     var result = cubefn.setCubeType(exampleCube, carddb);
     expect(result.card_count).toBe(exampleCube.cards.length);
-    expect(result.type).toBe("Vintage");
+    expect(result.type).toBe("Standard");
     expect(exampleCube.card_count).toBe(exampleCube.cards.length);
-    expect(exampleCube.type).toBe("Vintage");
+    expect(exampleCube.type).toBe("Standard");
   });
 });
 
@@ -194,7 +194,7 @@ test("addAutocard correctly replaces autocard format strings", () => {
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const exampleHtml = "<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>";
-    const expected = "<div>lkgdfsge</div><strong><a class=\"autocard\" card=\"https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023\">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>";
+    const expected = "<div>lkgdfsge</div><strong><a class=\"autocard\" card=\"https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1571537886\">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>";
     const result = cubefn.addAutocard(exampleHtml, carddb);
     expect(result).toBe(expected);
   });

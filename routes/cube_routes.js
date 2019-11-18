@@ -2034,13 +2034,13 @@ function insertComment(comments, position, comment) {
   }
 }
 
-function getOwnerFromComment(comments, position, comment) {
+function getOwnerFromComment(comments, position) {
   if (position.length <= 0) {
     return '';
   } else if (position.length == 1) {
     return comments[position[0]].owner;
   } else {
-    return getOwnerFromComment(comments[position[0]].comments, position.slice(1), comment);
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
   }
 }
 

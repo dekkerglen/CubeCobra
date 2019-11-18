@@ -38,16 +38,6 @@ class CubeCompare extends Component {
     this.setFilter = this.setFilter.bind(this);
   }
 
-  componentDidMount() {
-    /* global */
-    autocard_init('autocard');
-  }
-
-  componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
-  }
-
   setOpenCollapse(collapseFunction) {
     this.setState(({ openCollapse }) => ({
       openCollapse: collapseFunction(openCollapse),

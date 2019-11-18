@@ -47,9 +47,6 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
 );
 
 const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
-  /* Initialize autocard anytime the DOM is updated. */
-  useEffect(() => /* global */ autocard_init('autocard'));
-
   // We call the groups color and type even though they might be other sorts.
   let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};

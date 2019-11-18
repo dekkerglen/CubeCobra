@@ -38,16 +38,6 @@ class CubeList extends Component {
     updateCubeListeners.push(cards => this.setState({ cards }));
   }
 
-  componentDidMount() {
-    /* global */
-    autocard_init('autocard');
-  }
-
-  componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
-  }
-
   changeCubeView(cubeView) {
     if (cubeView === 'table') {
       Hash.del('view')

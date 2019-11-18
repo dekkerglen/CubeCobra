@@ -47,7 +47,7 @@ function ISODateToYYYYMMDD(dateString) {
 function toggleRecent() {
   var x = document.getElementById("recentMore");
   if (x.innerHTML === "View More...") {
-    x.innerHTML = "Hide";
+    x.innerHTML = "View Fewer...";
   } else {
     x.innerHTML = "View More...";
   }

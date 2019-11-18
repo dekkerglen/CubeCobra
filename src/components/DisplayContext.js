@@ -36,6 +36,7 @@ class DisplayContextProvider extends React.Component {
 }
 
 const DisplayContext = {
+  Context: DisplayContextRaw,
   Provider: DisplayContextProvider,
   Consumer: DisplayContextRaw.Consumer,
   Wrapped: Component => props => (
