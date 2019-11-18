@@ -12,14 +12,6 @@ import { Card, Col, Row, CardHeader , CardBody, CardFooter} from 'reactstrap';
 class Dashboard extends Component {
   constructor(props) {
     super(props);
-    
-    this.newCube = this.newCube.bind(this);
-  }
-
-  newCube(evt)
-  {
-    evt.preventDefault();
-    document.getElementById('cubeModal').modal('show');
   }
 
   render() {
@@ -38,7 +30,7 @@ class Dashboard extends Component {
                     </Col>
                   )
                 :
-                  <p className="m-2">You don't have any cubes. <a href="#" onClick={this.newCube}>Add a new cube?</a></p>
+                  <p className="m-2">You don't have any cubes. <a href="#" data-toggle="modal" data-target="#cubeModal">Add a new cube?</a></p>
                 }  
               </Row>
             </CardBody>
