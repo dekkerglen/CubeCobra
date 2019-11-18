@@ -56,7 +56,7 @@ function tokenizeInput(filterText, tokens) {
     return true;
   }
 
-  const operators = '>=|<=|<|>|:|='
+  const operators = '>=|<=|<|>|:|!=|='
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
@@ -107,8 +107,7 @@ function tokenizeInput(filterText, tokens) {
   //find operand
   let operand = firstTerm[0].match(operators_re);
   if (operand) {
-    operand = operand[0];
-    token.operand = operand;
+    token.operand = operand[0];
   } else {
     token.operand = 'none';
   }
@@ -162,7 +161,6 @@ function tokenizeInput(filterText, tokens) {
   } else {
     return false;
   }
-
 }
 
 const colorMap = new Map([
@@ -429,6 +427,11 @@ function arrayContainsOtherArray(arr1, arr2) {
 
 function filterApply(card, filter, inCube) {
   let res = null;
+  if (filter.operand === '!=') {
+    filter.not = true;
+    filter.operand = '=';
+  }
+
   if (typeof inCube === 'undefined') {
     inCube = true;
   }
@@ -491,23 +494,25 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'mana' && card.details.parsed_cost) {
     res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
   }
-  if (filter.category == 'cmc' && cmc) {
+  if (filter.category == 'cmc' && cmc !== undefined) {
+    let arg = parseInt(filter.arg, 10);
+    cmc = parseInt(cmc, 10);
     switch (filter.operand) {
       case ':':
       case '=':
-        res = filter.arg == cmc;
+        res = arg == cmc;
         break;
       case '<':
-        res = cmc < filter.arg;
+        res = cmc < arg;
         break;
       case '>':
-        res = cmc > filter.arg;
+        res = cmc > arg;
         break;
       case '<=':
-        res = cmc <= filter.arg;
+        res = cmc <= arg;
         break;
       case '>=':
-        res = cmc >= filter.arg;
+        res = cmc >= arg;
         break;
     }
   }
@@ -523,66 +528,72 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'power') {
     if (card.details.power) {
+      let cardPower = parseInt(card.details.power, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == card.details.power;
+          res = arg == cardPower;
           break;
         case '<':
-          res = card.details.power < filter.arg;
+          res = cardPower < arg;
           break;
         case '>':
-          res = card.details.power > filter.arg;
+          res = cardPower > arg;
           break;
         case '<=':
-          res = card.details.power <= filter.arg;
+          res = cardPower <= arg;
           break;
         case '>=':
-          res = card.details.power >= filter.arg;
+          res = cardPower >= arg;
           break;
       }
     }
   }
   if (filter.category == 'toughness') {
     if (card.details.toughness) {
+      let cardToughness = parseInt(card.details.toughness, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == card.details.toughness;
+          res = arg == cardToughness;
           break;
         case '<':
-          res = card.details.toughness < filter.arg;
+          res = cardToughness < arg;
           break;
         case '>':
-          res = card.details.toughness > filter.arg;
+          res = cardToughness > arg;
           break;
         case '<=':
-          res = card.details.toughness <= filter.arg;
+          res = cardToughness <= arg;
           break;
         case '>=':
-          res = card.details.toughness >= filter.arg;
+          res = cardToughness >= arg;
           break;
       }
     }
   }
   if (filter.category == 'loyalty') {
     if (card.details.loyalty) {
+      let cardLoyalty = parseInt(card.details.loyalty, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = card.details.loyalty == filter.arg;
+          res = cardLoyalty == arg;
           break;
         case '<':
-          res = card.details.loyalty < filter.arg;
+          res = cardLoyalty < arg;
           break;
         case '>':
-          res = card.details.loyalty > filter.arg;
+          res = cardLoyalty > arg;
           break;
         case '<=':
-          res = card.details.loyalty <= filter.arg;
+          res = cardLoyalty <= arg;
           break;
         case '>=':
-          res = card.details.loyalty >= filter.arg;
+          res = cardLoyalty >= arg;
           break;
       }
     }
@@ -606,22 +617,24 @@ function filterApply(card, filter, inCube) {
       price = card.details.price_foil;
     }
     if (price) {
+      price = parseInt(price, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == price;
+          res = arg == price;
           break;
         case '<':
-          res = price < filter.arg;
+          res = price < arg;
           break;
         case '>':
-          res = price > filter.arg;
+          res = price > arg;
           break;
         case '<=':
-          res = price <= filter.arg;
+          res = price <= arg;
           break;
         case '>=':
-          res = price >= filter.arg;
+          res = price >= arg;
           break;
       }
     }
@@ -629,22 +642,24 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'pricefoil') {
     var price = card.details.price_foil || null
     if (price) {
+      price = parseInt(price, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == price;
+          res = arg == price;
           break;
         case '<':
-          res = price < filter.arg;
+          res = price < arg;
           break;
         case '>':
-          res = price > filter.arg;
+          res = price > arg;
           break;
         case '<=':
-          res = price <= filter.arg;
+          res = price <= arg;
           break;
         case '>=':
-          res = price >= filter.arg;
+          res = price >= arg;
           break;
       }
     }

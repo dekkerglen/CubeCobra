@@ -5,7 +5,7 @@ var methods = {
     var botcolors = Math.ceil((params.seats - 1) * 2 / 5);
     var draftbots = [];
     var colors = [];
-    for (i = 0; i < botcolors; i++) {
+    for (let i = 0; i < botcolors; i++) {
       colors.push('W');
       colors.push('U');
       colors.push('B');
@@ -13,7 +13,7 @@ var methods = {
       colors.push('G');
     }
     colors = util.shuffle(colors);
-    for (i = 0; i < params.seats - 1; i++) {
+    for (let i = 0; i < params.seats - 1; i++) {
       var colorcombo = [colors.pop(), colors.pop()];
       draftbots.push(colorcombo);
     }
@@ -24,9 +24,9 @@ var methods = {
     if (tag == '*') {
       return 0;
     }
-    for (var i = 0; i < cards.length; i++) {
+    for (let i = 0; i < cards.length; i++) {
       if (cards[i].tags && cards[i].tags.length > 0) {
-        for (var j = 0; j < cards[i].tags.length; j++) {
+        for (let j = 0; j < cards[i].tags.length; j++) {
           if (tag == cards[i].tags[j].toLowerCase()) {
             return i;
           }
