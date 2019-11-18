@@ -113,9 +113,10 @@ function fromEntries(entries) {
 }
 
 async function addNotification(user, from, url, text) {
-  if (user._id == from._id) {
+  if (user.username == from.username) {
     return; //we don't need to give notifications to ourselves
   }
+
   user.notifications.push({
     user_from: from._id,
     user_from_name: from.username,
