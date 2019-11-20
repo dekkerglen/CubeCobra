@@ -121,7 +121,8 @@ class Comment extends React.Component {
     return (
       <div className='mb-1'>
         <div className={'comment border mt-1 px-2' + (this.state.highlighted ? ' comment-highlighted': '')}>
-          <div className="form-group mb-1 comment-hover">
+          {true ? '' : <a href={'/user/view/'+comment.owner}><img className="profile-thumbnail mt-2 mr-2" src={comment.image} title={"Art by " + comment.artist}/></a>}
+          <div className="form-group mb-1">
             {comment.ownerName ? <a href={'/user/view/'+comment.owner}><small>{comment.ownerName}</small></a> : <a><small>Anonymous</small></a>}
             {comment.timePosted && (comment.updated ? <em><small> - Updated <AgeText date={comment.timePosted}/></small></em> : <a><small> - <AgeText date={comment.timePosted}/></small></a>)}
             {comment.owner == this.props.userid &&
