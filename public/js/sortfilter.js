@@ -1,4 +1,4 @@
-var price_buckets = [.25, .5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
+var price_buckets = [0.25, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
 
 function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
@@ -9,22 +9,22 @@ function GetColorCategory(type, colors) {
     return 'Multicolored';
   } else if (colors.length == 1) {
     switch (colors[0]) {
-      case "W":
+      case 'W':
         return 'White';
         break;
-      case "U":
+      case 'U':
         return 'Blue';
         break;
-      case "B":
+      case 'B':
         return 'Black';
         break;
-      case "R":
+      case 'R':
         return 'Red';
         break;
-      case "G":
+      case 'G':
         return 'Green';
         break;
-      case "C":
+      case 'C':
         return 'Colorless';
         break;
     }
@@ -40,7 +40,7 @@ function price_bucket_label(index) {
   } else if (index == price_buckets.length) {
     return '>= $' + price_buckets[price_buckets.length - 1];
   } else {
-    return '$' + price_buckets[i - 1] + ' - $' + (price_buckets[i] - .01);
+    return '$' + price_buckets[i - 1] + ' - $' + (price_buckets[i] - 0.01);
   }
 }
 
@@ -120,7 +120,7 @@ function cardIsLabel(card, label, sort) {
     }
     return card.type_line.includes(label);
   } else if (sort == 'Tags') {
-    if (label == "") {
+    if (label == '') {
       return false;
     }
     return card.tags.includes(label);
@@ -129,7 +129,7 @@ function cardIsLabel(card, label, sort) {
   } else if (sort == 'Date Added') {
     var day = ISODateToYYYYMMDD(card.addedTmsp);
     if (day === undefined) {
-      day = "unknown";
+      day = 'unknown';
     }
     return label === day;
   } else if (sort == 'Guilds') {
@@ -203,12 +203,32 @@ function cardIsLabel(card, label, sort) {
       var types = split[0].trim().split(' ');
       var type = types[types.length - 1];
       //check last type
-      if (!['Creature', 'Planeswalker', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Conspiracy', 'Contraption', 'Phenomenon', 'Plane', 'Scheme', 'Vanguard', 'Land'].includes(type)) {
+      if (
+        ![
+          'Creature',
+          'Planeswalker',
+          'Instant',
+          'Sorcery',
+          'Artifact',
+          'Enchantment',
+          'Conspiracy',
+          'Contraption',
+          'Phenomenon',
+          'Plane',
+          'Scheme',
+          'Vanguard',
+          'Land',
+        ].includes(type)
+      ) {
         return label == 'Other';
       }
       return label == type;
     } else {
-      return cardIsLabel(card, label, 'Guilds') || cardIsLabel(card, label, 'Shards / Wedges') || cardIsLabel(card, label, '4+ Color');
+      return (
+        cardIsLabel(card, label, 'Guilds') ||
+        cardIsLabel(card, label, 'Shards / Wedges') ||
+        cardIsLabel(card, label, '4+ Color')
+      );
     }
   } else if (sort == 'Artist') {
     return card.details.artist == label;
@@ -291,7 +311,7 @@ function cardIsLabel(card, label, sort) {
         }
       }
     } else {
-      return label == "No Price Available";
+      return label == 'No Price Available';
     }
   } else if (sort == 'Price Foil') {
     if (card.details.price_foil) {
@@ -308,7 +328,7 @@ function cardIsLabel(card, label, sort) {
         }
       }
     } else {
-      return label == "No Price Available";
+      return label == 'No Price Available';
     }
   } else if (sort == 'Unsorted') {
     return label == 'All';
@@ -319,7 +339,7 @@ try {
   module.exports = {
     cardIsLabel: cardIsLabel,
     filterCard: filterCard,
-    price_buckets: price_buckets
+    price_buckets: price_buckets,
   };
 } catch (err) {
   //probably running client side, ignore

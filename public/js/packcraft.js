@@ -9,32 +9,33 @@ var cardTemplate =
 
 var format = [];
 
-var cube = JSON.parse(document.getElementById("cuberaw").value);
+var cube = JSON.parse(document.getElementById('cuberaw').value);
 
-$("#customDraftButton").click(function(e) {
+$('#customDraftButton').click(function(e) {
   e.preventDefault();
-  format = [
-    ["Mythic", "Mythic", "Mythic"]
-  ];
-  $("#customDraftTitle").val('New Custom Format');
+  format = [['Mythic', 'Mythic', 'Mythic']];
+  $('#customDraftTitle').val('New Custom Format');
   $('#editor').html('');
   $('#customDraftHiddenId').val(-1);
   drawFormat();
   $('#customDraftModal').modal('show');
 });
 
-$("#AddPackButton").click(function(e) {
+$('#AddPackButton').click(function(e) {
   e.preventDefault();
-  format.push([""]);
+  format.push(['']);
   drawFormat();
 });
 
 function drawFormat() {
-  var html = "";
+  var html = '';
   format.forEach(function(pack, index) {
     //card header
     html += '<div class="card"><div class="card-header">';
-    html += '<button class="close remove-pack"  type="button"><span data-id=' + index + ' aria-hidden="true">×</span></button>';
+    html +=
+      '<button class="close remove-pack"  type="button"><span data-id=' +
+      index +
+      ' aria-hidden="true">×</span></button>';
     if (pack.length == 1) {
       html += 'Pack ' + (index + 1) + ' - ' + pack.length + ' card</div>';
     } else {
@@ -43,7 +44,7 @@ function drawFormat() {
 
     //card body
     html += '<div class="card-body">';
-    var packhtml = "";
+    var packhtml = '';
     pack.forEach(function(card, card_index) {
       var pickhtml = cardTemplate;
       pickhtml = replaceAll(pickhtml, '#{label}', card_index + 1);
@@ -57,18 +58,21 @@ function drawFormat() {
     //footer
     html += '</div><div class="card-footer">';
     html += '<button type="button" class="btn btn-success add-card" data-pack="' + index + '">Add Card Slot</button>';
-    html += '<a>  </a><button type="button" class="btn btn-success duplicate-pack" data-pack="' + index + '">Duplicate Pack</button>';
+    html +=
+      '<a>  </a><button type="button" class="btn btn-success duplicate-pack" data-pack="' +
+      index +
+      '">Duplicate Pack</button>';
 
     html += '</div></div></br>';
-  })
+  });
 
-  $("#customDraftBody").html(html);
-  $(".remove-pack").click(function(e) {
+  $('#customDraftBody').html(html);
+  $('.remove-pack').click(function(e) {
     e.preventDefault();
     format.splice(e.target.getAttribute('data-id'), 1);
     drawFormat();
   });
-  $(".duplicate-pack").click(function(e) {
+  $('.duplicate-pack').click(function(e) {
     e.preventDefault();
     var pack = [];
     format[e.target.getAttribute('data-pack')].forEach(function(card, card_index) {
@@ -77,17 +81,17 @@ function drawFormat() {
     format.splice(e.target.getAttribute('data-pack'), 0, pack);
     drawFormat();
   });
-  $(".remove-card").click(function(e) {
+  $('.remove-card').click(function(e) {
     e.preventDefault();
     format[e.target.getAttribute('data-pack')].splice(e.target.getAttribute('data-card'), 1);
     drawFormat();
   });
-  $(".add-card").click(function(e) {
+  $('.add-card').click(function(e) {
     e.preventDefault();
-    format[e.target.getAttribute('data-pack')].push("");
+    format[e.target.getAttribute('data-pack')].push('');
     drawFormat();
   });
-  $(".card-input").change(function(e) {
+  $('.card-input').change(function(e) {
     e.preventDefault();
     console.log($(this).val());
     format[e.target.getAttribute('data-pack')][e.target.getAttribute('data-card')] = $(this).val();
@@ -102,7 +106,7 @@ function replaceAll(str, original, replacement) {
   return res;
 }
 
-$("#customDraftForm").submit(function(e) {
+$('#customDraftForm').submit(function(e) {
   e.preventDefault();
   var form = this;
   $('#customDraftHiddenHTML').val($('#editor').html());
@@ -113,10 +117,10 @@ $("#customDraftForm").submit(function(e) {
 $('.editFormatButton').click(function(e) {
   e.preventDefault();
   format = JSON.parse(cube.draft_formats[e.target.getAttribute('data-id')].packs);
-  $("#customDraftTitle").val(cube.draft_formats[e.target.getAttribute('data-id')].title);
+  $('#customDraftTitle').val(cube.draft_formats[e.target.getAttribute('data-id')].title);
   $('#editor').html(cube.draft_formats[e.target.getAttribute('data-id')].html);
-  $('#customDraftFormRadioFalse').prop("checked", !cube.draft_formats[e.target.getAttribute('data-id')].multiples);
-  $('#customDraftFormRadioTrue').prop("checked", cube.draft_formats[e.target.getAttribute('data-id')].multiples);
+  $('#customDraftFormRadioFalse').prop('checked', !cube.draft_formats[e.target.getAttribute('data-id')].multiples);
+  $('#customDraftFormRadioTrue').prop('checked', cube.draft_formats[e.target.getAttribute('data-id')].multiples);
   $('#customDraftHiddenId').val(e.target.getAttribute('data-id'));
   drawFormat();
   $('#customDraftModal').modal('show');

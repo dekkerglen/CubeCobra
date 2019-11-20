@@ -14,60 +14,58 @@ const compareCards = (x, y) => {
   } else {
     return x.name < y.name ? -1 : 1;
   }
-}
+};
 
 const compareTokens = (x, y) => compareCards(x[0], y[0]);
 
-const sortTokens = tokens => [...tokens].sort(compareTokens);
-const sortCards = cards => [...cards].sort(compareCards);
+const sortTokens = (tokens) => [...tokens].sort(compareTokens);
+const sortCards = (cards) => [...cards].sort(compareCards);
 
-const dedupeCards = cards => {
+const dedupeCards = (cards) => {
   const map = new Map();
   for (const card of [...cards].reverse()) {
     map.set(card.name, card);
   }
   return [...map.values()];
-}
+};
 
-const TokenAnalysis = ({ tokens }) =>
+const TokenAnalysis = ({ tokens }) => (
   <>
     <Row className="mb-3">
       <Col>
-        <MassBuyButton
-          color="success"
-          cards={tokens.map(([token, tokenCards]) => ({ details: token }))}
-        >
+        <MassBuyButton color="success" cards={tokens.map(([token, tokenCards]) => ({ details: token }))}>
           Buy all tokens
         </MassBuyButton>
       </Col>
     </Row>
     <Row>
-      {sortTokens(tokens).map(([token, tokenCards]) =>
+      {sortTokens(tokens).map(([token, tokenCards]) => (
         <Col key={token._id} xs={6} md={4} lg={3}>
           <Card className="mb-3">
             <a href={Affiliate.getTCGLink({ details: token })}>
-              <img src={token.image_normal} className='card-img-top' />
+              <img src={token.image_normal} className="card-img-top" />
             </a>
             <CardBody>
               <p className="card-text">
-                {dedupeCards(sortCards(tokenCards)).map(card =>
+                {dedupeCards(sortCards(tokenCards)).map((card) => (
                   <>
                     <AutocardLink
                       key={card.name}
-                      href={Affiliate.getTCGLink({details:card})}
+                      href={Affiliate.getTCGLink({ details: card })}
                       card={{ details: card }}
                     >
                       {card.name}
                     </AutocardLink>
                     <br />
                   </>
-                )}
+                ))}
               </p>
             </CardBody>
           </Card>
         </Col>
-      )}
+      ))}
     </Row>
-  </>;
+  </>
+);
 
 export default TokenAnalysis;

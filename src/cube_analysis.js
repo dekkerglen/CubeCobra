@@ -23,7 +23,7 @@ class CubeAnalysis extends Component {
 
   select(nav) {
     if (nav === 'curve') {
-      Hash.del('nav')
+      Hash.del('nav');
     } else {
       Hash.set('nav', nav);
     }
@@ -38,29 +38,33 @@ class CubeAnalysis extends Component {
         {text}
       </NavLink>
     );
-    return <>
-      <DynamicFlash />
-      <Row className="mt-3">
-        <Col xs="12" lg="2">
-          <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
-            {navItem('curve', 'Curve')}
-            {navItem('type', 'Type Breakdown')}
-            {navItem('multi', 'Multicolored Counts')}
-            {navItem('tokens','Tokens')}
-          </Nav>
-        </Col>
-        <Col xs="12" lg="10">
-          <ErrorBoundary>
-            {{
-              curve: <CurveAnalysis curve={curve} />,
-              type: <TypeAnalysis typeByColor={typeByColor} />,
-              multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
-              tokens: <TokenAnalysis tokens={tokens} />,
-            }[active]}
-          </ErrorBoundary>
-        </Col>
-      </Row>
-    </>;
+    return (
+      <>
+        <DynamicFlash />
+        <Row className="mt-3">
+          <Col xs="12" lg="2">
+            <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
+              {navItem('curve', 'Curve')}
+              {navItem('type', 'Type Breakdown')}
+              {navItem('multi', 'Multicolored Counts')}
+              {navItem('tokens', 'Tokens')}
+            </Nav>
+          </Col>
+          <Col xs="12" lg="10">
+            <ErrorBoundary>
+              {
+                {
+                  curve: <CurveAnalysis curve={curve} />,
+                  type: <TypeAnalysis typeByColor={typeByColor} />,
+                  multi: <MulticoloredAnalysis multicoloredCounts={multicoloredCounts} />,
+                  tokens: <TokenAnalysis tokens={tokens} />,
+                }[active]
+              }
+            </ErrorBoundary>
+          </Col>
+        </Row>
+      </>
+    );
   }
 }
 
@@ -70,5 +74,7 @@ const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').
 const tokens = JSON.parse(document.getElementById('generatedTokensData').value);
 
 const wrapper = document.getElementById('react-root');
-const element = <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} tokens={tokens} />;
+const element = (
+  <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} tokens={tokens} />
+);
 wrapper ? ReactDOM.render(element, wrapper) : false;

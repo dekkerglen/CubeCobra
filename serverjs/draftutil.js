@@ -2,7 +2,7 @@ var util = require('./util.js');
 
 var methods = {
   getDraftBots: function(params) {
-    var botcolors = Math.ceil((params.seats - 1) * 2 / 5);
+    var botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
     var draftbots = [];
     var colors = [];
     for (let i = 0; i < botcolors; i++) {
@@ -36,20 +36,23 @@ var methods = {
     return -1;
   },
   getCardRatings: function(names, CardRating, callback) {
-    CardRating.find({
-      'name': {
-        $in: names
-      }
-    }, function(err, ratings) {
-      var dict = {};
-      if (ratings) {
-        ratings.forEach(function(rating, index) {
-          dict[rating.name] = rating.value;
-        });
-      }
-      callback(dict);
-    });
-  }
+    CardRating.find(
+      {
+        name: {
+          $in: names,
+        },
+      },
+      function(err, ratings) {
+        var dict = {};
+        if (ratings) {
+          ratings.forEach(function(rating, index) {
+            dict[rating.name] = rating.value;
+          });
+        }
+        callback(dict);
+      },
+    );
+  },
 };
 
 module.exports = methods;

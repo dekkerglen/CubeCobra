@@ -7,14 +7,17 @@ const ensureAuth = (req, res, next) => {
     req.flash('danger', 'Please login to view this content');
     res.redirect('/user/login');
   }
-}
+};
 
-const csrfProtection = [csurf(), (req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
-  next();
-}];
+const csrfProtection = [
+  csurf(),
+  (req, res, next) => {
+    res.locals.csrfToken = req.csrfToken();
+    next();
+  },
+];
 
 module.exports = {
   ensureAuth,
   csrfProtection,
-}
+};

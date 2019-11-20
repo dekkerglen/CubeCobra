@@ -6,9 +6,7 @@ const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
 
-const {
-  csrfProtection,
-} = require('./middleware');
+const { csrfProtection } = require('./middleware');
 
 router.use(csrfProtection);
 
@@ -21,48 +19,67 @@ router.get('/explore', async (req, res) => {
   const user_id = req.user ? req.user._id : '';
 
   const recentsq = Cube.find({
-    $or: [{
-        $and: [{
-          'card_count': {
-            $gt: 200
-          }
-        }, {
-          'isListed': true
-        }]
+    $or: [
+      {
+        $and: [
+          {
+            card_count: {
+              $gt: 200,
+            },
+          },
+          {
+            isListed: true,
+          },
+        ],
       },
       {
-        'owner': user_id
-      }
-    ]
-  }).sort({
-    'date_updated': -1
-  }).limit(12).exec();
+        owner: user_id,
+      },
+    ],
+  })
+    .sort({
+      date_updated: -1,
+    })
+    .limit(12)
+    .exec();
 
   const featuredq = Cube.find({
-    isFeatured: true
+    isFeatured: true,
   }).exec();
 
   const draftedq = Cube.find({
-    $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
-      'owner': user_id
-    }]
-  }).sort({
-    'numDecks': -1
-  }).limit(12).exec();
+    $or: [
+      {
+        isListed: true,
+      },
+      {
+        isListed: null,
+      },
+      {
+        owner: user_id,
+      },
+    ],
+  })
+    .sort({
+      numDecks: -1,
+    })
+    .limit(12)
+    .exec();
 
   const blogq = Blog.find({
-    dev: 'true'
-  }).sort({
-    'date': -1
-  }).exec();
+    dev: 'true',
+  })
+    .sort({
+      date: -1,
+    })
+    .exec();
 
-  const decksq = Deck.find().sort({
-    'date': -1
-  }).limit(10).exec();
+  const decksq = Deck.find()
+    .sort({
+      date: -1,
+    })
+    .limit(10)
+    .exec();
 
   const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
 
@@ -72,7 +89,7 @@ router.get('/explore', async (req, res) => {
     drafted: drafted,
     decks: decks,
     featured: featured,
-    loginCallback: '/explore'
+    loginCallback: '/explore',
   });
 });
 
@@ -85,7 +102,7 @@ router.get('/explore', async (req, res) => {
 //=,~(contains)
 router.get('/advanced_search', function(req, res) {
   res.render('search/advanced_search', {
-    loginCallback: '/advanced_search'
+    loginCallback: '/advanced_search',
   });
 });
 
@@ -94,7 +111,7 @@ router.get('/random', async (req, res) => {
   var random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random);
   res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
-})
+});
 
 router.get('/dashboard', async (req, res) => {
   try {
@@ -104,47 +121,51 @@ router.get('/dashboard', async (req, res) => {
     }
 
     const cubesq = Cube.find({
-      owner: user._id
+      owner: user._id,
     }).sort({
-      'date_updated': -1
+      date_updated: -1,
     });
     const blogsq = Blog.find({
-      $or: [{
+      $or: [
+        {
           cube: {
-            $in: user.followed_cubes
-          }
+            $in: user.followed_cubes,
+          },
         },
         {
           owner: {
-            $in: user.followed_users
-          }
+            $in: user.followed_users,
+          },
         },
         {
-          dev: 'true'
-        }
-      ]
-    }).sort({
-      'date': -1
-    }).limit(50);
-
+          dev: 'true',
+        },
+      ],
+    })
+      .sort({
+        date: -1,
+      })
+      .limit(50);
 
     //We can do these queries in parallel
     const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
-    const cubeIds = cubes.map(cube => cube._id);
+    const cubeIds = cubes.map((cube) => cube._id);
 
     const decks = await Deck.find({
       cube: {
-        $in: cubeIds
-      }
-    }).sort({
-      'date': -1
-    }).limit(13);
+        $in: cubeIds,
+      },
+    })
+      .sort({
+        date: -1,
+      })
+      .limit(13);
 
     return res.render('dashboard', {
       posts: blogs,
       cubes: cubes,
       decks: decks,
-      loginCallback: '/'
+      loginCallback: '/',
     });
   } catch (err) {
     console.log(err);
@@ -162,26 +183,33 @@ router.get('/dashboard/decks/:page', async (req, res) => {
     }
 
     const cubes = await Cube.find({
-      owner: user._id
-    }).sort({
-      'date_updated': -1
-    }).select({
-      '_id': 1
-    }).exec();
+      owner: user._id,
+    })
+      .sort({
+        date_updated: -1,
+      })
+      .select({
+        _id: 1,
+      })
+      .exec();
 
-    const cubeIds = cubes.map(cube => cube._id);
+    const cubeIds = cubes.map((cube) => cube._id);
 
     const decks = await Deck.find({
       cube: {
-        $in: cubeIds
-      }
-    }).sort({
-      'date': -1
-    }).skip(pagesize * page).limit(pagesize).exec();
+        $in: cubeIds,
+      },
+    })
+      .sort({
+        date: -1,
+      })
+      .skip(pagesize * page)
+      .limit(pagesize)
+      .exec();
     const numDecks = await Deck.countDocuments({
       cube: {
-        $in: cubeIds
-      }
+        $in: cubeIds,
+      },
     }).exec();
 
     var pages = [];
@@ -189,13 +217,13 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       if (page == i) {
         pages.push({
           url: '/dashboard/decks/' + i,
-          content: (i + 1),
-          active: true
+          content: i + 1,
+          active: true,
         });
       } else {
         pages.push({
           url: '/dashboard/decks/' + i,
-          content: (i + 1),
+          content: i + 1,
         });
       }
     }
@@ -203,7 +231,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
     return res.render('dashboard_decks', {
       decks: decks,
       pages: pages,
-      loginCallback: '/'
+      loginCallback: '/',
     });
   } catch (err) {
     console.log(err);
@@ -212,7 +240,6 @@ router.get('/dashboard/decks/:page', async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-
   const cubeq = Cube.countDocuments().exec();
   const deckq = Deck.countDocuments().exec();
   const userq = User.countDocuments().exec();
@@ -224,7 +251,7 @@ router.get('/landing', async (req, res) => {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
     numdrafts: deck.toLocaleString('en-US'),
-    loginCallback: '/'
+    loginCallback: '/',
   });
 });
 
@@ -236,7 +263,7 @@ router.post('/advanced_search', function(req, res) {
   if (req.body.owner && req.body.owner.length > 0) {
     url += 'owner_name' + req.body.ownerType + req.body.owner + ';';
   }
-  res.redirect(url)
+  res.redirect(url);
 });
 
 router.post('/search', function(req, res) {
@@ -246,7 +273,7 @@ router.post('/search', function(req, res) {
   } else {
     var query = req.body.search;
     if (query.includes(';')) {
-      res.redirect('/search/' + query)
+      res.redirect('/search/' + query);
     } else {
       res.redirect('/search/name~' + query);
     }
@@ -267,8 +294,8 @@ router.get('/search/:id', function(req, res) {
     } else if (val.includes('~')) {
       var split = val.split('~');
       query[split[0]] = {
-        "$regex": split[1],
-        "$options": "i"
+        $regex: split[1],
+        $options: 'i',
       };
       terms.push(split[0].replace('owner_name', 'owner') + ' contains ' + split[1]);
     }
@@ -277,112 +304,116 @@ router.get('/search/:id', function(req, res) {
   var user_id = '';
   if (req.user) user_id = req.user._id;
   query = {
-    $and: [query,
+    $and: [
+      query,
       {
-        $or: [{
-            'isListed': true
+        $or: [
+          {
+            isListed: true,
           },
           {
-            'owner': user_id
-          }
-        ]
-      }
-    ]
+            owner: user_id,
+          },
+        ],
+      },
+    ],
   };
 
-  Cube.find(query).sort({
-    'date_updated': -1
-  }).exec(function(err, cubes) {
-    var pages = [];
-    if (cubes.length > 12) {
-      if (!page) {
-        page = 0;
-      }
-      for (i = 0; i < cubes.length / 12; i++) {
-        if (page == i) {
-          pages.push({
-            url: raw_split[0] + ':' + i,
-            content: (i + 1),
-            active: true
-          });
-        } else {
-          pages.push({
-            url: raw_split[0] + ':' + i,
-            content: (i + 1)
-          });
+  Cube.find(query)
+    .sort({
+      date_updated: -1,
+    })
+    .exec(function(err, cubes) {
+      var pages = [];
+      if (cubes.length > 12) {
+        if (!page) {
+          page = 0;
         }
-      }
-      cube_page = [];
-      for (i = 0; i < 12; i++) {
-        if (cubes[i + page * 12]) {
-          cube_page.push(cubes[i + page * 12]);
+        for (i = 0; i < cubes.length / 12; i++) {
+          if (page == i) {
+            pages.push({
+              url: raw_split[0] + ':' + i,
+              content: i + 1,
+              active: true,
+            });
+          } else {
+            pages.push({
+              url: raw_split[0] + ':' + i,
+              content: i + 1,
+            });
+          }
         }
+        cube_page = [];
+        for (i = 0; i < 12; i++) {
+          if (cubes[i + page * 12]) {
+            cube_page.push(cubes[i + page * 12]);
+          }
+        }
+        res.render('search', {
+          results: cube_page,
+          search: req.params.id,
+          terms: terms,
+          pages: pages,
+          numresults: cubes.length,
+          loginCallback: '/search/' + req.params.id,
+        });
+      } else {
+        res.render('search', {
+          results: cubes,
+          search: req.params.id,
+          terms: terms,
+          numresults: cubes.length,
+          loginCallback: '/search/' + req.params.id,
+        });
       }
-      res.render('search', {
-        results: cube_page,
-        search: req.params.id,
-        terms: terms,
-        pages: pages,
-        numresults: cubes.length,
-        loginCallback: '/search/' + req.params.id
-      });
-    } else {
-      res.render('search', {
-        results: cubes,
-        search: req.params.id,
-        terms: terms,
-        numresults: cubes.length,
-        loginCallback: '/search/' + req.params.id
-      });
-    }
-  });
+    });
 });
 
 router.get('/contact', function(req, res) {
   res.render('info/contact', {
-    loginCallback: '/contact'
+    loginCallback: '/contact',
   });
 });
 
 router.get('/tos', function(req, res) {
   res.render('info/tos', {
-    loginCallback: '/tos'
+    loginCallback: '/tos',
   });
 });
 
 router.get('/filters', function(req, res) {
   res.render('info/filters', {
-    loginCallback: '/filters'
+    loginCallback: '/filters',
   });
 });
 
 router.get('/privacy', function(req, res) {
   res.render('info/privacy_policy', {
-    loginCallback: '/privacy'
+    loginCallback: '/privacy',
   });
 });
 
 router.get('/cookies', function(req, res) {
   res.render('info/cookies', {
-    loginCallback: '/cookies'
+    loginCallback: '/cookies',
   });
 });
 
 router.get('/ourstory', function(req, res) {
   res.render('info/ourstory', {
-    loginCallback: '/ourstory'
+    loginCallback: '/ourstory',
   });
 });
 
 router.get('/faq', function(req, res) {
   res.render('info/faq', {
-    loginCallback: '/faq'
+    loginCallback: '/faq',
   });
 });
 
 router.get('/donate', function(req, res) {
   res.render('info/donate', {
-    loginCallback: '/donate'
+    loginCallback: '/donate',
   });
 });
 

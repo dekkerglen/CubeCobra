@@ -6,7 +6,7 @@ class ImageFallback extends Component {
 
     this.state = {
       fallback: false,
-    }
+    };
 
     this.handleError = this.handleError.bind(this);
   }
@@ -24,9 +24,7 @@ class ImageFallback extends Component {
   render() {
     const { src, fallbackSrc, ...props } = this.props;
 
-    return (
-      <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />
-    );
+    return <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />;
   }
 }
 

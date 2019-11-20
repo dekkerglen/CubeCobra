@@ -29,9 +29,7 @@ class DisplayContextProvider extends React.Component {
       ...this.state,
       toggleShowCustomImages: this.toggleShowCustomImages,
     };
-    return (
-      <DisplayContextRaw.Provider value={value} {...this.props} />
-    );
+    return <DisplayContextRaw.Provider value={value} {...this.props} />;
   }
 }
 
@@ -39,10 +37,8 @@ const DisplayContext = {
   Context: DisplayContextRaw,
   Provider: DisplayContextProvider,
   Consumer: DisplayContextRaw.Consumer,
-  Wrapped: Component => props => (
-    <DisplayContextRaw.Consumer>
-      { value => <Component {...value} {...props} /> }
-    </DisplayContextRaw.Consumer>
+  Wrapped: (Component) => (props) => (
+    <DisplayContextRaw.Consumer>{(value) => <Component {...value} {...props} />}</DisplayContextRaw.Consumer>
   ),
 };
 

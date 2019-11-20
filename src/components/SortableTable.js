@@ -13,7 +13,7 @@ const SortableTable = ({ sorts, defaultSort, headers, data, rowF }) => {
     <PagedTable rows={rows}>
       <thead>
         <tr>
-          {[...Object.keys(headers)].map(header => {
+          {[...Object.keys(headers)].map((header) => {
             const sortable = !!sorts[header];
             if (sortable) {
               return (
@@ -29,7 +29,7 @@ const SortableTable = ({ sorts, defaultSort, headers, data, rowF }) => {
                 </th>
               );
             } else {
-              return <th key={header}>{header}</th>
+              return <th key={header}>{header}</th>;
             }
           })}
         </tr>

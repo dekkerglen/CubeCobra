@@ -56,10 +56,7 @@ class CubeOverview extends Component {
             <Card className="mt-3">
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length}
-{' '}
-followers
-</h6>
+                <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
               </CardHeader>
               <img className="card-img-top w-100" src={cube.image_uri} />
               <em className="text-right p-1">
@@ -77,9 +74,7 @@ followers
                 )}
                 {!cube.privatePrices && (
                   <>
-                    <a>Approx: $
-{price}
-</a>
+                    <a>Approx: ${price}</a>
                     <br />
                   </>
                 )}
