@@ -15,7 +15,7 @@ const CurveAnalysis = ({ curve, ...props }) => {
       ['Colorless', curve.colorless, '#ADADAD'],
       ['Multicolored', curve.multi, '#DBC467'],
       ['Total', curve.total, '#000000'],
-    ].map(color => ({
+    ].map((color) => ({
       label: color[0],
       data: color[1],
       fill: false,
@@ -32,24 +32,28 @@ const CurveAnalysis = ({ curve, ...props }) => {
     },
     hover: {
       mode: 'nearest',
-      intersect: true
+      intersect: true,
     },
     scales: {
-      xAxes: [{
-        display: true,
-        scaleLabel: {
+      xAxes: [
+        {
           display: true,
-          labelString: 'CMC'
-        }
-      }],
-      yAxes: [{
-        display: true,
-        scaleLabel: {
+          scaleLabel: {
+            display: true,
+            labelString: 'CMC',
+          },
+        },
+      ],
+      yAxes: [
+        {
           display: true,
-          labelString: 'Count'
-        }
-      }]
-    }
+          scaleLabel: {
+            display: true,
+            labelString: 'Count',
+          },
+        },
+      ],
+    },
   };
 
   return (
@@ -67,6 +71,6 @@ const CurveAnalysis = ({ curve, ...props }) => {
       </Row>
     </div>
   );
-}
+};
 
 export default CurveAnalysis;

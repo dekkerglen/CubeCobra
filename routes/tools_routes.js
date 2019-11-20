@@ -16,7 +16,7 @@ const MAX_RESULTS = 1000;
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
 function sortLimit(arr, k, keyF) {
-  keyF = keyF || (x => x);
+  keyF = keyF || ((x) => x);
   const compareF = (x, y) => keyF(x) - keyF(y);
   if (k < arr.length) {
     quickselect(arr, k, 0, arr.length - 1, compareF);
@@ -29,9 +29,15 @@ function sortLimit(arr, k, keyF) {
 function matchingCards(filter) {
   const cards = carddb.allCards();
   if (filter.length > 0) {
-    return cards.filter(card => Filter.filterCard({
-      details: card,
-    }, filter, /* inCube */ false));
+    return cards.filter((card) =>
+      Filter.filterCard(
+        {
+          details: card,
+        },
+        filter,
+        /* inCube */ false,
+      ),
+    );
   } else {
     return cards;
   }
@@ -65,9 +71,9 @@ function topCards(filter, res) {
     }
   }
   const names = [...nameMap.keys()];
-  const versions = [...nameMap.values()].map(possible => {
+  const versions = [...nameMap.values()].map((possible) => {
     // TODO: pull out and use notPromoOrDigitalId in cube_routes.js
-    let nonPromo = possible.find(card => !card.promo && !card.digital && card.border_color != 'gold');
+    let nonPromo = possible.find((card) => !card.promo && !card.digital && card.border_color != 'gold');
     return nonPromo || possible[0];
   });
 
@@ -78,12 +84,12 @@ function topCards(filter, res) {
     picks: {
       $gte: MIN_PICKS,
     },
-  }).then(ratings => {
-    const ratingDict = new Map(ratings.map(r => [r.name, r]));
-    const fullData = versions.map(v => {
+  }).then((ratings) => {
+    const ratingDict = new Map(ratings.map((r) => [r.name, r]));
+    const fullData = versions.map((v) => {
       const rating = ratingDict.get(v.name);
       /* This is a Bayesian adjustment to the rating like IMDB does. */
-      const adjust = r => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS)
+      const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
       return [
         v.name,
         v.image_normal,
@@ -92,8 +98,8 @@ function topCards(filter, res) {
         rating ? rating.picks : null,
       ];
     });
-    const nonNullData = fullData.filter(x => x[3] !== null);
-    const data = sortLimit(nonNullData, MAX_RESULTS, x => x[3] === null ? -1 : x[3]);
+    const nonNullData = fullData.filter((x) => x[3] !== null);
+    const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
     return {
       ratings,
       versions,
@@ -104,10 +110,7 @@ function topCards(filter, res) {
 }
 
 router.get('/api/topcards', (req, res) => {
-  const {
-    err,
-    filter,
-  } = makeFilter(req.query.f);
+  const { err, filter } = makeFilter(req.query.f);
   if (err) {
     res.status(400).send({
       success: 'false',
@@ -115,45 +118,40 @@ router.get('/api/topcards', (req, res) => {
     return;
   }
 
-  topCards(filter, res).then(({
-    data,
-    names,
-  }) => {
-    res.status(200).send({
-      success: 'true',
-      numResults: names.length,
-      data,
+  topCards(filter, res)
+    .then(({ data, names }) => {
+      res.status(200).send({
+        success: 'true',
+        numResults: names.length,
+        data,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send({
+        success: 'false',
+      });
     });
-  }).catch(err => {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-    });
-  });
 });
 
 router.get('/topcards', (req, res) => {
-  const {
-    err,
-    filter,
-  } = makeFilter(req.query.f);
+  const { err, filter } = makeFilter(req.query.f);
 
   if (err) {
     req.flash('Invalid filter.');
   }
 
-  topCards(filter, res).then(({
-    data,
-    names,
-  }) => {
-    res.render('tool/topcards', {
-      numResults: names.length,
-      data,
+  topCards(filter, res)
+    .then(({ data, names }) => {
+      res.render('tool/topcards', {
+        numResults: names.length,
+        data,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(500);
     });
-  }).catch(err => {
-    console.error(err);
-    res.sendStatus(500);
-  });
 });
 
 module.exports = router;

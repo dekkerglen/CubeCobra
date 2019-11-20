@@ -5,25 +5,25 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 class Paginate extends React.Component {
   constructor(props) {
     super(props);
-  }  
-  
+  }
+
   render() {
     return (
-        <>
-        <hr/>
+      <>
+        <hr />
         <Pagination aria-label="Table page" className="mt-3">
-          {this.props.pages.map(page =>
+          {this.props.pages.map((page) => (
             <PaginationItem active={page.active}>
               <PaginationLink tag="a" href={page.url}>
                 {page.content}
               </PaginationLink>
             </PaginationItem>
-          )}
+          ))}
         </Pagination>
-      <hr/>
+        <hr />
       </>
     );
   }
 }
 
-export default Paginate
+export default Paginate;

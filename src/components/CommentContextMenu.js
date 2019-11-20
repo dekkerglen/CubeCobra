@@ -5,16 +5,16 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse } from '
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
-    this.toggle = this.toggle.bind(this);      
+    this.toggle = this.toggle.bind(this);
     this.state = {
       dropdownOpen: false,
-      collapseOpen: false
+      collapseOpen: false,
     };
-  }  
-  
+  }
+
   toggle(event) {
     this.setState({
-      dropdownOpen: !this.state.dropdownOpen
+      dropdownOpen: !this.state.dropdownOpen,
     });
     updateBlog();
   }
@@ -34,4 +34,4 @@ class BlogContextMenu extends React.Component {
   }
 }
 
-export default BlogContextMenu
+export default BlogContextMenu;

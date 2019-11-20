@@ -4,51 +4,55 @@ let mongoose = require('mongoose');
 let cubeSchema = mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
   },
   shortID: {
     type: String,
     required: true,
-    index: true
+    index: true,
   },
   urlAlias: {
     type: String,
-    index: true
+    index: true,
   },
   owner: {
     type: String,
     required: true,
-    index: true
+    index: true,
   },
   isListed: {
     type: Boolean,
     default: true,
-    index: true
+    index: true,
   },
   privatePrices: {
     type: Boolean,
-    default: false
+    default: false,
   },
   isFeatured: {
     type: Boolean,
     default: false,
-    index: true
+    index: true,
   },
-  cards: [{
-    tags: [String],
-    status: String,
-    colors: [String],
-    cmc: Number,
-    cardID: String,
-    type_line: String,
-    addedTmsp: Date,
-    imgUrl: String,
-    details: {}
-  }],
-  tag_colors: [{
-    tag: String,
-    color: String,
-  }],
+  cards: [
+    {
+      tags: [String],
+      status: String,
+      colors: [String],
+      cmc: Number,
+      cardID: String,
+      type_line: String,
+      addedTmsp: Date,
+      imgUrl: String,
+      details: {},
+    },
+  ],
+  tag_colors: [
+    {
+      tag: String,
+      color: String,
+    },
+  ],
   decks: [String],
   numDecks: Number,
   description: String,
@@ -65,8 +69,8 @@ let cubeSchema = mongoose.Schema({
   draft_formats: {},
   users_following: {
     type: [String],
-    default: []
-  }
+    default: [],
+  },
 });
 
-let Cube = module.exports = mongoose.model('Cube', cubeSchema)
+let Cube = (module.exports = mongoose.model('Cube', cubeSchema));

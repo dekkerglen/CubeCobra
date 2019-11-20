@@ -14,8 +14,11 @@ window.onload = async () => {
     the text field element and an array of possible autocompleted values:*/
     var currentFocus;
     /*execute a function when someone writes in the text field:*/
-    inp.addEventListener("input", function(e) {
-      var a, b, i, val = this.value;
+    inp.addEventListener('input', function(e) {
+      var a,
+        b,
+        i,
+        val = this.value;
       /*close any already open lists of autocompleted values*/
       closeAllLists();
       if (!val) {
@@ -23,9 +26,9 @@ window.onload = async () => {
       }
       currentFocus = -1;
       /*create a DIV element that will contain the items (values):*/
-      a = document.createElement("DIV");
-      a.setAttribute("id", this.id + "autocomplete-list");
-      a.setAttribute("class", "autocomplete-items");
+      a = document.createElement('DIV');
+      a.setAttribute('id', this.id + 'autocomplete-list');
+      a.setAttribute('class', 'autocomplete-items');
       /*append the DIV element as a child of the autocomplete container:*/
       this.parentNode.appendChild(a);
       /*for each item in the array...*/
@@ -33,23 +36,23 @@ window.onload = async () => {
       for (i = 0; i < matches.length; i++) {
         /*check if the item starts with the same letters as the text field value:*/
         /*create a DIV element for each matching element:*/
-        b = document.createElement("DIV");
+        b = document.createElement('DIV');
 
         // Add an autocard to the div
-        b.setAttribute("class", "autocard autocard-art-crop");
+        b.setAttribute('class', 'autocard autocard-art-crop');
         let image = images[matches[i].toLowerCase()];
-        b.setAttribute("card", image.uri);
+        b.setAttribute('card', image.uri);
 
         /*make the matching letters bold:*/
-        b.innerHTML = "<strong>" + matches[i].substr(0, val.length) + "</strong>";
+        b.innerHTML = '<strong>' + matches[i].substr(0, val.length) + '</strong>';
         b.innerHTML += matches[i].substr(val.length);
         /*insert a input field that will hold the current array item's value:*/
-        b.innerHTML += "<input type='hidden' value='" + matches[i].replace("'", "%27") + "'>";
+        b.innerHTML += "<input type='hidden' value='" + matches[i].replace("'", '%27') + "'>";
 
         /*execute a function when someone clicks on the item value (DIV element):*/
-        b.addEventListener("click", function(e) {
+        b.addEventListener('click', function(e) {
           /*insert the value for the autocomplete text field:*/
-          inp.value = this.getElementsByTagName("input")[0].value.replace("%27", "'");
+          inp.value = this.getElementsByTagName('input')[0].value.replace('%27', "'");
           /*close the list of autocompleted values,
           (or any other open lists of autocompleted values:*/
           var val = inp.value.toLowerCase().replace('?', '-q-');
@@ -58,7 +61,7 @@ window.onload = async () => {
           }
 
           fetch('/cube/api/getimage/' + val)
-            .then(response => response.json())
+            .then((response) => response.json())
             .then(function(json) {
               if (json.img) {
                 document.getElementById('dynamicImage').src = json.img.uri;
@@ -71,16 +74,17 @@ window.onload = async () => {
       autocard_init('autocard');
     });
     /*execute a function presses a key on the keyboard:*/
-    inp.addEventListener("keydown", function(e) {
-      var x = document.getElementById(this.id + "autocomplete-list");
-      if (x) x = x.getElementsByTagName("div");
+    inp.addEventListener('keydown', function(e) {
+      var x = document.getElementById(this.id + 'autocomplete-list');
+      if (x) x = x.getElementsByTagName('div');
       if (e.keyCode == 40) {
         /*If the arrow DOWN key is pressed,
         increase the currentFocus variable:*/
         currentFocus++;
         /*and and make the current item more visible:*/
         addActive(x);
-      } else if (e.keyCode == 38) { //up
+      } else if (e.keyCode == 38) {
+        //up
         /*If the arrow UP key is pressed,
         decrease the currentFocus variable:*/
         currentFocus--;
@@ -99,7 +103,7 @@ window.onload = async () => {
         if (currentFocus > -1) {
           /*and simulate a click on the "active" item:*/
           if (x) x[currentFocus].click();
-          temp_button = document.getElementById("justAddButton");
+          temp_button = document.getElementById('justAddButton');
           if (submit_button) {
             submit_button.click();
             inp.focus();
@@ -124,10 +128,13 @@ window.onload = async () => {
         return names;
       } else {
         character = current.charAt(0);
-        var sub = current.substr(1, current.length)
+        var sub = current.substr(1, current.length);
 
         //please don't try to understand why this works
-        if ((character.toUpperCase() != character.toLowerCase()) && (names[character.toUpperCase()] && names[character.toLowerCase()])) {
+        if (
+          character.toUpperCase() != character.toLowerCase() &&
+          (names[character.toUpperCase()] && names[character.toLowerCase()])
+        ) {
           if (names[character.toUpperCase()][sub.charAt(0)]) {
             var upper = getPosts(names[character.toUpperCase()], sub);
             if (names[character.toLowerCase()]) {
@@ -161,7 +168,7 @@ window.onload = async () => {
       if (isEmpty(tree)) {
         return [];
       } else {
-        var words = []
+        var words = [];
         for (var prop in tree) {
           if (tree.hasOwnProperty(prop)) {
             if (isEmpty(tree[prop])) {
@@ -191,77 +198,80 @@ window.onload = async () => {
 
     //Deepmerge utility
     function isMergeableObject(val) {
-      var nonNullObject = val && typeof val === 'object'
+      var nonNullObject = val && typeof val === 'object';
 
-      return nonNullObject &&
+      return (
+        nonNullObject &&
         Object.prototype.toString.call(val) !== '[object RegExp]' &&
         Object.prototype.toString.call(val) !== '[object Date]'
+      );
     }
 
     function emptyTarget(val) {
-      return Array.isArray(val) ? [] : {}
+      return Array.isArray(val) ? [] : {};
     }
 
     function cloneIfNecessary(value, optionsArgument) {
-      var clone = optionsArgument && optionsArgument.clone === true
-      return (clone && isMergeableObject(value)) ? deepmerge(emptyTarget(value), value, optionsArgument) : value
+      var clone = optionsArgument && optionsArgument.clone === true;
+      return clone && isMergeableObject(value) ? deepmerge(emptyTarget(value), value, optionsArgument) : value;
     }
 
     function defaultArrayMerge(target, source, optionsArgument) {
-      var destination = target.slice()
+      var destination = target.slice();
       source.forEach(function(e, i) {
         if (typeof destination[i] === 'undefined') {
-          destination[i] = cloneIfNecessary(e, optionsArgument)
+          destination[i] = cloneIfNecessary(e, optionsArgument);
         } else if (isMergeableObject(e)) {
-          destination[i] = deepmerge(target[i], e, optionsArgument)
+          destination[i] = deepmerge(target[i], e, optionsArgument);
         } else if (target.indexOf(e) === -1) {
-          destination.push(cloneIfNecessary(e, optionsArgument))
+          destination.push(cloneIfNecessary(e, optionsArgument));
         }
-      })
-      return destination
+      });
+      return destination;
     }
 
     function mergeObject(target, source, optionsArgument) {
-      var destination = {}
+      var destination = {};
       if (isMergeableObject(target)) {
         Object.keys(target).forEach(function(key) {
-          destination[key] = cloneIfNecessary(target[key], optionsArgument)
-        })
+          destination[key] = cloneIfNecessary(target[key], optionsArgument);
+        });
       }
       Object.keys(source).forEach(function(key) {
         if (!isMergeableObject(source[key]) || !target[key]) {
-          destination[key] = cloneIfNecessary(source[key], optionsArgument)
+          destination[key] = cloneIfNecessary(source[key], optionsArgument);
         } else {
-          destination[key] = deepmerge(target[key], source[key], optionsArgument)
+          destination[key] = deepmerge(target[key], source[key], optionsArgument);
         }
-      })
-      return destination
+      });
+      return destination;
     }
 
     function deepmerge(target, source, optionsArgument) {
       var array = Array.isArray(source);
       var options = optionsArgument || {
-        arrayMerge: defaultArrayMerge
-      }
-      var arrayMerge = options.arrayMerge || defaultArrayMerge
+        arrayMerge: defaultArrayMerge,
+      };
+      var arrayMerge = options.arrayMerge || defaultArrayMerge;
 
       if (array) {
-        return Array.isArray(target) ? arrayMerge(target, source, optionsArgument) : cloneIfNecessary(source, optionsArgument)
+        return Array.isArray(target)
+          ? arrayMerge(target, source, optionsArgument)
+          : cloneIfNecessary(source, optionsArgument);
       } else {
-        return mergeObject(target, source, optionsArgument)
+        return mergeObject(target, source, optionsArgument);
       }
     }
     deepmerge.all = function deepmergeAll(array, optionsArgument) {
       if (!Array.isArray(array) || array.length < 2) {
-        throw new Error('first argument should be an array with at least two elements')
+        throw new Error('first argument should be an array with at least two elements');
       }
 
       // we are sure there are at least 2 values, so it is safe to have no initial value
       return array.reduce(function(prev, next) {
-        return deepmerge(prev, next, optionsArgument)
-      })
-    }
-
+        return deepmerge(prev, next, optionsArgument);
+      });
+    };
 
     function addActive(x) {
       /*a function to classify an item as "active":*/
@@ -269,22 +279,22 @@ window.onload = async () => {
       /*start by removing the "active" class on all items:*/
       removeActive(x);
       if (currentFocus >= x.length) currentFocus = 0;
-      if (currentFocus < 0) currentFocus = (x.length - 1);
+      if (currentFocus < 0) currentFocus = x.length - 1;
       /*add class "autocomplete-active":*/
-      x[currentFocus].classList.add("autocomplete-active");
+      x[currentFocus].classList.add('autocomplete-active');
     }
 
     function removeActive(x) {
       /*a function to remove the "active" class from all autocomplete items:*/
       for (var i = 0; i < x.length; i++) {
-        x[i].classList.remove("autocomplete-active");
+        x[i].classList.remove('autocomplete-active');
       }
     }
 
     function closeAllLists(elmnt) {
       /*close all autocomplete lists in the document,
       except the one passed as an argument:*/
-      var x = document.getElementsByClassName("autocomplete-items");
+      var x = document.getElementsByClassName('autocomplete-items');
       for (var i = 0; i < x.length; i++) {
         if (elmnt != x[i] && elmnt != inp) {
           x[i].parentNode.removeChild(x[i]);
@@ -293,11 +303,11 @@ window.onload = async () => {
       autocard_hide_card();
     }
     /*execute a function when someone clicks in the document:*/
-    document.addEventListener("click", function(e) {
+    document.addEventListener('click', function(e) {
       closeAllLists(e.target);
     });
   }
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the cardnames array as possible autocomplete values:*/
-  autocomplete(document.getElementById("imageInput"), cardnames, cardimages);
-}
+  autocomplete(document.getElementById('imageInput'), cardnames, cardimages);
+};

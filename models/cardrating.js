@@ -4,11 +4,11 @@ let mongoose = require('mongoose');
 let cardRatingSchema = mongoose.Schema({
   value: Number,
   picks: Number,
-  name: String
+  name: String,
 });
 
 cardRatingSchema.index({
   name: 1,
 });
 
-let CardRating = module.exports = mongoose.model('CardRating', cardRatingSchema)
+let CardRating = (module.exports = mongoose.model('CardRating', cardRatingSchema));
