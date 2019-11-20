@@ -4,7 +4,7 @@ import DisplayContext from './DisplayContext';
 
 /* HOC to add autocard to another element */
 
-const handleMouseOver = event => {
+const handleMouseOver = (event) => {
   const target = event.currentTarget;
   const front = target.getAttribute('data-front');
   const back = target.getAttribute('data-back');
@@ -13,9 +13,9 @@ const handleMouseOver = event => {
   autocard_show_card(front, back, false, tags.length > 0 ? tags : null);
 };
 
-const handleMouseOut = event => /* global */ autocard_hide_card();
+const handleMouseOut = (event) => /* global */ autocard_hide_card();
 
-const withAutocard = Tag => ({ card, front, back, ...props }) => {
+const withAutocard = (Tag) => ({ card, front, back, ...props }) => {
   const { showCustomImages } = useContext(DisplayContext.Context);
   card = card || { details: {} };
   const tags = card.tags || [];
@@ -31,6 +31,6 @@ const withAutocard = Tag => ({ card, front, back, ...props }) => {
       {...props}
     />
   );
-}
+};
 
 export default withAutocard;

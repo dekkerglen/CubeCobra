@@ -10,25 +10,21 @@ class CubeBlog extends Component {
   }
 
   render() {
-    const {pages, posts, canEdit, userid, loggedIn} = this.props
+    const { pages, posts, canEdit, userid, loggedIn } = this.props;
     return (
       <>
-        {(pages && pages.length > 1) &&
-          <Paginate pages={pages} />
-        }
-        {posts.map(post =>
+        {pages && pages.length > 1 && <Paginate pages={pages} />}
+        {posts.map((post) => (
           <BlogPost key={post._id} post={post} canEdit={canEdit} userid={userid} loggedIn={loggedIn} />
-        )}
-        {(pages && pages.length > 1) &&
-          <Paginate pages={pages} />
-        }
+        ))}
+        {pages && pages.length > 1 && <Paginate pages={pages} />}
       </>
     );
   }
 }
 
-const posts = JSON.parse(document.getElementById('blogData').value);  
-const pages = JSON.parse(document.getElementById('blogPages').value); 
+const posts = JSON.parse(document.getElementById('blogData').value);
+const pages = JSON.parse(document.getElementById('blogPages').value);
 const loggedIn = document.getElementById('userid') != null;
 const userid = loggedIn ? document.getElementById('userid').value : '';
 const canEdit = document.getElementById('canEdit').value === 'true';

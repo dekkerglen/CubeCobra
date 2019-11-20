@@ -23,42 +23,53 @@ class TopCards extends Component {
   setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
-    fetch('/tool/api/topcards?' + params.toString()).then(response => response.json()).then(json => {
-      this.setState({
-        data: json.data,
-        numResults: json.numResults,
-      });
-    }).catch(err => console.error(err));
+    fetch('/tool/api/topcards?' + params.toString())
+      .then((response) => response.json())
+      .then((json) => {
+        this.setState({
+          data: json.data,
+          numResults: json.numResults,
+        });
+      })
+      .catch((err) => console.error(err));
   }
 
   render() {
-    const rowF = ([name, img, img_flip, rating, picks]) => rating === null ? [] :
-      <tr key={name}>
-        <AutocardTd front={img} back={img_flip || undefined}>{name}</AutocardTd>
-        <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
-        <td>{picks}</td>
-      </tr>;
+    const rowF = ([name, img, img_flip, rating, picks]) =>
+      rating === null ? (
+        []
+      ) : (
+        <tr key={name}>
+          <AutocardTd front={img} back={img_flip || undefined}>
+            {name}
+          </AutocardTd>
+          <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
+          <td>{picks}</td>
+        </tr>
+      );
 
-    return <>
-      <div className="usercontrols pt-3">
-        <h4 className="mx-3 mb-3">Top Cards</h4>
-        <FilterCollapse
-          isOpen={true}
-          filter={this.state.filter}
-          setFilter={this.setFilter}
-          numCards={this.state.numResults}
-          numShown={this.state.data.length}
-          useQuery
+    return (
+      <>
+        <div className="usercontrols pt-3">
+          <h4 className="mx-3 mb-3">Top Cards</h4>
+          <FilterCollapse
+            isOpen={true}
+            filter={this.state.filter}
+            setFilter={this.setFilter}
+            numCards={this.state.numResults}
+            numShown={this.state.data.length}
+            useQuery
+          />
+        </div>
+        <SortableTable
+          sorts={{ Rating: (row) => row[3], 'Total Picks': (row) => -row[4] }}
+          defaultSort="Rating"
+          headers={{ Name: {}, Rating: { style: { width: '10rem' } }, 'Total Picks': { style: { width: '10rem' } } }}
+          data={this.state.data}
+          rowF={rowF}
         />
-      </div>
-      <SortableTable
-        sorts={{ Rating: row => row[3], 'Total Picks': row => -row[4] }}
-        defaultSort="Rating"
-        headers={{ Name: {}, Rating: { style: { width: '10rem' } }, 'Total Picks': { style: { width: '10rem' } } }}
-        data={this.state.data}
-        rowF={rowF}
-      />
-    </>;
+      </>
+    );
   }
 }
 

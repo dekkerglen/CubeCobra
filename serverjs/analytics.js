@@ -31,8 +31,7 @@ function text2num(a) {
 */
 function CheckContentsEqualityOfArray(target, candidate) {
   var isValid = candidate.length == target.length;
-  if (!isValid)
-    return false;
+  if (!isValid) return false;
 
   for (idx = 0; idx < target.length; idx++) {
     if (!candidate.includes(target[idx])) {
@@ -52,22 +51,22 @@ function GetColorCat(type, colors) {
     return 'm';
   } else if (colors.length == 1) {
     switch (colors[0]) {
-      case "W":
+      case 'W':
         return 'w';
         break;
-      case "U":
+      case 'U':
         return 'u';
         break;
-      case "B":
+      case 'B':
         return 'b';
         break;
-      case "R":
+      case 'R':
         return 'r';
         break;
-      case "G":
+      case 'G':
         return 'g';
         break;
-      case "C":
+      case 'C':
         return 'c';
         break;
     }
@@ -81,22 +80,22 @@ function GetColorIdentity(colors) {
     return 'Multicolored';
   } else if (colors.length == 1) {
     switch (colors[0]) {
-      case "W":
+      case 'W':
         return 'White';
         break;
-      case "U":
+      case 'U':
         return 'Blue';
         break;
-      case "B":
+      case 'B':
         return 'Black';
         break;
-      case "R":
+      case 'R':
         return 'Red';
         break;
-      case "G":
+      case 'G':
         return 'Green';
         break;
-      case "C":
+      case 'C':
         return 'Colorless';
         break;
     }
@@ -116,7 +115,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Enchantments: {
         White: 0,
@@ -126,7 +125,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Lands: {
         White: 0,
@@ -136,7 +135,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Planeswalkers: {
         White: 0,
@@ -146,7 +145,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Instants: {
         White: 0,
@@ -156,7 +155,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Sorceries: {
         White: 0,
@@ -166,7 +165,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Artifacts: {
         White: 0,
@@ -176,7 +175,7 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
+        Total: 0,
       },
       Total: {
         White: 0,
@@ -186,8 +185,8 @@ var methods = {
         Green: 0,
         Colorless: 0,
         Multi: 0,
-        Total: 0
-      }
+        Total: 0,
+      },
     };
     cards.forEach(function(card, index) {
       card.details = carddb.cardFromId(card.cardID);
@@ -344,7 +343,7 @@ var methods = {
       NonBlack: 0,
       NonRed: 0,
       NonGreen: 0,
-      FiveColor: 0
+      FiveColor: 0,
     };
     cards.forEach(function(card, index) {
       card.details = carddb.cardFromId(card.cardID);
@@ -390,7 +389,7 @@ var methods = {
           ColorCounts.White += 1;
           ColorCounts.Red += 1;
         } else if (cardColors.includes('G') && cardColors.includes('U')) {
-          ColorCounts.Simic += 1
+          ColorCounts.Simic += 1;
           ColorCounts.Green += 1;
           ColorCounts.Blue += 1;
         }
@@ -490,22 +489,21 @@ var methods = {
     return ColorCounts;
   },
   GetTokens: function(cards, carddb) {
-
     var mentionedTokens = [];
 
     for (var card of cards) {
       card.details = carddb.cardFromId(card.cardID);
 
       if (card.details.tokens) {
-        card.details.tokens.forEach(element => {
+        card.details.tokens.forEach((element) => {
           mentionedTokens.push(element);
-        })
+        });
       }
     }
 
     let resultingTokens = [];
     var tokenIndexArray = [];
-    mentionedTokens.forEach(element => {
+    mentionedTokens.forEach((element) => {
       var relevantIndex = tokenIndexArray.indexOf(element.tokenId);
       if (relevantIndex >= 0) {
         resultingTokens[relevantIndex][1].push(carddb.cardFromId(element.sourceCardId));
@@ -526,8 +524,8 @@ var methods = {
       green: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       colorless: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       multi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    }
+      total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
 
     cards.forEach(function(card, index) {
       card.details = carddb.cardFromId(card.cardID);
@@ -568,7 +566,7 @@ var methods = {
       }
     });
     return curve;
-  }
+  },
 };
 
 module.exports = methods;

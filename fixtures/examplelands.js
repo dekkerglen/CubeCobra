@@ -1,5 +1,5 @@
 const exampleBasics = {
-  "plains": {
+  plains: {
     color_identity: ['W'],
     set: 'unh',
     collector_number: '136',
@@ -19,7 +19,7 @@ const exampleBasics = {
       Legacy: true,
       Modern: true,
       Standard: true,
-      Pauper: true
+      Pauper: true,
     },
     parsed_cost: [''],
     colors: [],
@@ -30,7 +30,7 @@ const exampleBasics = {
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
     colorcategory: 'l',
   },
-  "mountain": {
+  mountain: {
     color_identity: ['R'],
     set: 'unh',
     collector_number: '139',
@@ -50,7 +50,7 @@ const exampleBasics = {
       Legacy: true,
       Modern: true,
       Standard: true,
-      Pauper: true
+      Pauper: true,
     },
     parsed_cost: [''],
     colors: [],
@@ -61,7 +61,7 @@ const exampleBasics = {
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/4/2/42232ea6-e31d-46a6-9f94-b2ad2416d79b.jpg?1565989372',
     colorcategory: 'l',
   },
-  "forest": {
+  forest: {
     color_identity: ['G'],
     set: 'unh',
     collector_number: '140',
@@ -81,7 +81,7 @@ const exampleBasics = {
       Legacy: true,
       Modern: true,
       Standard: true,
-      Pauper: true
+      Pauper: true,
     },
     parsed_cost: [''],
     colors: [],
@@ -92,7 +92,7 @@ const exampleBasics = {
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
     colorcategory: 'l',
   },
-  "swamp": {
+  swamp: {
     color_identity: ['B'],
     set: 'unh',
     collector_number: '138',
@@ -112,7 +112,7 @@ const exampleBasics = {
       Legacy: true,
       Modern: true,
       Standard: true,
-      Pauper: true
+      Pauper: true,
     },
     parsed_cost: [''],
     colors: [],
@@ -123,7 +123,7 @@ const exampleBasics = {
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
     colorcategory: 'l',
   },
-  "island": {
+  island: {
     color_identity: ['U'],
     set: 'unh',
     collector_number: '137',
@@ -143,7 +143,7 @@ const exampleBasics = {
       Legacy: true,
       Modern: true,
       Standard: true,
-      Pauper: true
+      Pauper: true,
     },
     parsed_cost: [''],
     colors: [],
@@ -153,9 +153,9 @@ const exampleBasics = {
     image_normal: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
     colorcategory: 'l',
-  }
+  },
 };
 
 module.exports = {
-  exampleBasics: exampleBasics
+  exampleBasics: exampleBasics,
 };

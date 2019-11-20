@@ -34,7 +34,7 @@ let categoryMap = new Map([
   ['a', 'artist'],
   ['art', 'artist'],
   ['artist', 'artist'],
-  ['is', 'is']
+  ['is', 'is'],
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -57,7 +57,7 @@ function tokenizeInput(filterText, tokens) {
     return true;
   }
 
-  const operators = '>=|<=|<|>|:|!=|='
+  const operators = '>=|<=|<|>|:|!=|=';
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
@@ -65,7 +65,7 @@ function tokenizeInput(filterText, tokens) {
     if (findEndingQuotePosition(filterText, 0)) {
       let token = {
         type: 'open',
-      }
+      };
       tokens.push(token);
       return tokenizeInput(filterText.slice(1), tokens);
     } else {
@@ -75,15 +75,15 @@ function tokenizeInput(filterText, tokens) {
 
   if (filterText.indexOf(')') == 0) {
     let token = {
-      type: 'close'
-    }
+      type: 'close',
+    };
     tokens.push(token);
     return tokenizeInput(filterText.slice(1), tokens);
   }
 
   if (filterText.indexOf('or ') == 0 || (filterText.length == 2 && filterText.indexOf('or') == 0)) {
     tokens.push({
-      type: 'or'
+      type: 'or',
     });
     return tokenizeInput(filterText.slice(2), tokens);
   }
@@ -144,13 +144,14 @@ function tokenizeInput(filterText, tokens) {
     token.arg = firstTerm[0].split(')')[0];
   }
 
-
-  filterText = filterText.slice((token.operand == 'none' ? (token.arg.length) : (token.arg.length + token.operand.length + category.length)) + (parens ? 2 : 0));
+  filterText = filterText.slice(
+    (token.operand == 'none' ? token.arg.length : token.arg.length + token.operand.length + category.length) +
+      (parens ? 2 : 0),
+  );
 
   if (!categoryMap.has(category)) {
     return false;
   }
-
 
   token.category = categoryMap.get(category);
   token.arg = simplifyArg(token.arg, token.category);
@@ -190,16 +191,10 @@ const colorMap = new Map([
   ['jeskai', 'urw'],
   ['sultai', 'bgu'],
   ['mardu', 'rwb'],
-  ['temur', 'rug']
+  ['temur', 'rug'],
 ]);
 
-const rarityMap = new Map([
-  ['c', 'common'],
-  ['u', 'uncommon'],
-  ['r', 'rare'],
-  ['m', 'mythic']
-]);
-
+const rarityMap = new Map([['c', 'common'], ['u', 'uncommon'], ['r', 'rare'], ['m', 'mythic']]);
 
 //change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
@@ -211,7 +206,7 @@ function simplifyArg(arg, category) {
       res = res.toUpperCase().split('');
       break;
     case 'mana':
-      res = parseManaCost(res)
+      res = parseManaCost(res);
       break;
     case 'rarity':
       res = rarityMap.get(res) || res;
@@ -224,7 +219,7 @@ const verifyTokens = (tokens) => {
   let temp = tokens;
   let inBounds = (num) => {
     return num > -1 && num < temp.length;
-  }
+  };
   let type = (i) => temp[i].type;
   let token = (i) => temp[i];
 
@@ -248,7 +243,7 @@ const verifyTokens = (tokens) => {
         case 'identity':
           let verifyColors = (element) => {
             return element.search(/^[WUBRGC]$/) < 0;
-          }
+          };
           if (token(i).arg.every(verifyColors)) {
             return false;
           }
@@ -266,7 +261,7 @@ const verifyTokens = (tokens) => {
         case 'mana':
           let verifyMana = (element) => {
             element.search(/^(\d+|[wubrgscxyz]|{([wubrg2]\-[wubrg]|[wubrg]\-p)})$/) < 0;
-          }
+          };
           if (token(i).arg.every(verifyMana)) {
             return false;
           }
@@ -281,10 +276,9 @@ const verifyTokens = (tokens) => {
           break;
       }
     }
-
   }
   return true;
-}
+};
 
 const hybridMap = new Map([
   ['u-w', 'w-u'],
@@ -296,7 +290,7 @@ const hybridMap = new Map([
   ['g-r', 'r-g'],
   ['w-r', 'r-w'],
   ['w-g', 'g-w'],
-  ['u-g', 'g-u']
+  ['u-g', 'g-u'],
 ]);
 
 function parseManaCost(cost) {
@@ -354,7 +348,7 @@ const findClose = (tokens, pos) => {
     }
   }
   return false;
-}
+};
 
 const parseTokens = (tokens) => {
   let peek = () => tokens[0];
@@ -380,7 +374,7 @@ const parseTokens = (tokens) => {
       return result;
     }
   }
-}
+};
 
 /* inCube should be true when we are using a cube's card object and false otherwise (e.g. in Top Cards). */
 function filterCard(card, filters, inCube) {
@@ -392,12 +386,17 @@ function filterCard(card, filters, inCube) {
     }
   } else {
     if (filters.type == 'or') {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) || (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      return (
+        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
+        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      );
     } else {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) && (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      return (
+        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) &&
+        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      );
     }
   }
-
 }
 
 function areArraysEqualSets(a1, a2) {
@@ -426,7 +425,7 @@ function areArraysEqualSets(a1, a2) {
 }
 
 function arrayContainsOtherArray(arr1, arr2) {
-  return arr2.every(v => arr1.includes(v));
+  return arr2.every((v) => arr1.includes(v));
 }
 
 function filterApply(card, filter, inCube) {
@@ -458,16 +457,20 @@ function filterApply(card, filter, inCube) {
         }
         break;
       case '<':
-        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
+        res =
+          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
+        res =
+          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
+        res =
+          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
+        res =
+          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
         break;
     }
   }
@@ -603,7 +606,7 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'tag') {
-    res = card.tags.some(element => {
+    res = card.tags.some((element) => {
       return element.toLowerCase() == filter.arg.toLowerCase();
     });
   }
@@ -644,7 +647,7 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'pricefoil') {
-    var price = card.details.price_foil || null
+    var price = card.details.price_foil || null;
     if (price) {
       price = parseInt(price, 10);
       let arg = parseInt(filter.arg, 10);

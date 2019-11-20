@@ -30,29 +30,40 @@ const AutocardListItemRaw = ({ card, noCardModal, cardColorClass, openCardModal,
       <a
         href={noCardModal ? undefined : '#'}
         className="d-block w-100"
-        onAuxClick={noCardModal ? undefined : e => { e.preventDefault(); handleAuxEvent(e, card) }}
-        onClick={noCardModal ? undefined : e => { e.preventDefault(); openCardModal(card); }}
+        onAuxClick={
+          noCardModal
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                handleAuxEvent(e, card);
+              }
+        }
+        onClick={
+          noCardModal
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                openCardModal(card);
+              }
+        }
       >
         {name}
       </a>
       {children}
     </AutocardDiv>
   );
-}
+};
 
-const AutocardListItem = props =>
+const AutocardListItem = (props) => (
   <TagContext.Consumer>
-    {({ cardColorClass }) =>
+    {({ cardColorClass }) => (
       <CardModalContext.Consumer>
-        {openCardModal =>
-          <AutocardListItemRaw
-            cardColorClass={cardColorClass}
-            openCardModal={openCardModal}
-            {...props}
-          />
-        }
+        {(openCardModal) => (
+          <AutocardListItemRaw cardColorClass={cardColorClass} openCardModal={openCardModal} {...props} />
+        )}
       </CardModalContext.Consumer>
-    }
-  </TagContext.Consumer>;
+    )}
+  </TagContext.Consumer>
+);
 
 export default AutocardListItem;

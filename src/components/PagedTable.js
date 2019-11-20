@@ -30,25 +30,29 @@ class PagedTable extends Component {
     const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
     const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
 
-    return <>
-      {validPages.length === 1 ? '' :
-        <Pagination aria-label="Table page" className="mt-3">
-          {validPages.map(page =>
-            <PaginationItem key={page} active={page === this.state.page}>
-              <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-                {page + 1}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-        </Pagination>
-      }
-      <div className="table-responsive">
-        <Table {...props}>
-          {children}
-          <tbody>{displayRows}</tbody>
-        </Table>
-      </div>
-    </>;
+    return (
+      <>
+        {validPages.length === 1 ? (
+          ''
+        ) : (
+          <Pagination aria-label="Table page" className="mt-3">
+            {validPages.map((page) => (
+              <PaginationItem key={page} active={page === this.state.page}>
+                <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
+                  {page + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+          </Pagination>
+        )}
+        <div className="table-responsive">
+          <Table {...props}>
+            {children}
+            <tbody>{displayRows}</tbody>
+          </Table>
+        </div>
+      </>
+    );
   }
 }
 

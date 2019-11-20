@@ -520,3 +520,12 @@ body.busy-cursor {
 .comment-highlighted {
 	background: #ECF4E3;
 }
+
+.profile-thumbnail {
+	border-radius: 50%;
+	object-fit: cover;
+	width:60px;
+	height:60px;
+	float: left;
+	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}

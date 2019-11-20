@@ -4,65 +4,77 @@ const mongoose = require('mongoose');
 const UserSchema = mongoose.Schema({
   username: {
     type: String,
-    required: true
+    required: true,
   },
   username_lower: {
     type: String,
-    required: true
+    required: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   email: {
     type: String,
-    required: true
+    required: true,
   },
   confirmed: {
     type: String,
-    required: true
+    required: true,
   },
   about: {
     type: String,
-    required: false
+    required: false,
   },
   hide_tag_colors: {
     type: Boolean,
-    default: false
+    default: false,
   },
   edit_token: String,
   followed_cubes: {
     type: [String],
-    default: []
+    default: [],
   },
   followed_users: {
     type: [String],
-    default: []
+    default: [],
   },
   users_following: {
     type: [String],
-    default: []
+    default: [],
   },
   notifications: {
-    type: [{
-      user_from: String,
-      user_from_name: String,
-      url: String,
-      date: Date,
-      text: String,
-    }],
-    default: []
+    type: [
+      {
+        user_from: String,
+        user_from_name: String,
+        url: String,
+        date: Date,
+        text: String,
+      },
+    ],
+    default: [],
   },
   old_notifications: {
-    type: [{
-      user_from: String,
-      user_from_name: String,
-      url: String,
-      date: Date,
-      text: String,
-    }],
-    default: []
+    type: [
+      {
+        user_from: String,
+        user_from_name: String,
+        url: String,
+        date: Date,
+        text: String,
+      },
+    ],
+    default: [],
+  },
+  image: {
+    type: String,
+    default: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+  },
+  artist: {
+    type: String,
+    default: 'Allan Pollack',
   },
 });
 
-const User = module.exports = mongoose.model('User', UserSchema);
+const User = (module.exports = mongoose.model('User', UserSchema));

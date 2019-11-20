@@ -14,7 +14,7 @@ class CardModalForm extends Component {
       versions: [],
       isOpen: false,
       formValues: { tags: [] },
-    }
+    };
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
     this.openCardModal = this.openCardModal.bind(this);
@@ -41,7 +41,7 @@ class CardModalForm extends Component {
       formValues: {
         ...formValues,
         tags: formValues.tags.filter((tag, i) => i !== tagIndex),
-      }
+      },
     }));
   }
 
@@ -68,13 +68,13 @@ class CardModalForm extends Component {
       formValues: {
         ...formValues,
         [name]: value,
-      }
+      },
     }));
 
     if (name === 'version') {
       // This should guarantee that version array is non-null.
       const { versions } = this.state;
-      const newDetails = versions.find(version => version._id === value);
+      const newDetails = versions.find((version) => version._id === value);
       if (versions.length > 0 && newDetails) {
         this.setState(({ card }) => ({
           card: {
@@ -83,16 +83,16 @@ class CardModalForm extends Component {
               ...newDetails,
               display_image: card.imgUrl || newDetails.image_normal,
             },
-          }
+          },
         }));
       } else {
-        console.error('Can\'t find version');
+        console.error("Can't find version");
       }
     }
   }
 
   async saveChanges() {
-    let colors = [...'WUBRG'].filter(color => this.state.formValues['color' + color]);
+    let colors = [...'WUBRG'].filter((color) => this.state.formValues['color' + color]);
     let updated = { ...this.state.formValues, colors };
     for (let color of [...'WUBRG']) {
       delete updated['color' + color];
@@ -102,17 +102,19 @@ class CardModalForm extends Component {
     }
     updated.cardID = updated.version;
     delete updated.version;
-    updated.tags = updated.tags.map(tag => tag.text);
+    updated.tags = updated.tags.map((tag) => tag.text);
 
     let card = this.state.card;
 
-    if (updated.cardID === card.cardID
-      && updated.type_line === card.type_line
-      && updated.status === card.status
-      && updated.cmc === card.cmc
-      && updated.imgUrl === card.imgUrl
-      && updated.colors.join('') === card.colors.join('')
-      && updated.tags.join(',') === card.tags.join(',')) {
+    if (
+      updated.cardID === card.cardID &&
+      updated.type_line === card.type_line &&
+      updated.status === card.status &&
+      updated.cmc === card.cmc &&
+      updated.imgUrl === card.imgUrl &&
+      updated.colors.join('') === card.colors.join('') &&
+      updated.tags.join(',') === card.tags.join(',')
+    ) {
       // no need to sync
       return;
     }
@@ -122,12 +124,12 @@ class CardModalForm extends Component {
       body: JSON.stringify({ src: card, updated }),
       headers: {
         'Content-Type': 'application/json',
-      }
-    }).catch(err => console.error(err));
-    let json = await response.json().catch(err => console.error(err));
+      },
+    }).catch((err) => console.error(err));
+    let json = await response.json().catch((err) => console.error(err));
     if (json.success === 'true') {
-      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID).catch(err => console.error(err));
-      let cardJson = await cardResponse.json().catch(err => console.error(err));
+      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID).catch((err) => console.error(err));
+      let cardJson = await cardResponse.json().catch((err) => console.error(err));
 
       let index = card.index;
       let newCard = {
@@ -154,16 +156,16 @@ class CardModalForm extends Component {
       remove: this.state.card.details,
     });
     updateCollapse();
-    $('#navedit').collapse("show");
-    $('.warnings').collapse("hide");
+    $('#navedit').collapse('show');
+    $('.warnings').collapse('hide');
     this.props.setOpenCollapse(() => 'edit');
     this.setState({ isOpen: false });
   }
 
   getCardVersions(card) {
     fetch('/cube/api/getversions/' + card.cardID)
-      .then(response => response.json())
-      .then(json => {
+      .then((response) => response.json())
+      .then((json) => {
         // Otherwise the modal has changed in between.
         if (card.details.name == this.state.card.details.name) {
           this.setState({
@@ -190,7 +192,7 @@ class CardModalForm extends Component {
         cmc: card.cmc,
         type_line: card.type_line,
         imgUrl: card.imgUrl,
-        tags: card.tags.map(tag => ({ id: tag, text: tag })),
+        tags: card.tags.map((tag) => ({ id: tag, text: tag })),
         colorW: card.colors.includes('W'),
         colorU: card.colors.includes('U'),
         colorB: card.colors.includes('B'),

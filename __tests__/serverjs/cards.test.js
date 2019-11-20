@@ -83,7 +83,8 @@ test('cardFromId returns a well-formed card object', () => {
     },
     name: 'Rankle, Master of Pranks',
     name_lower: 'rankle, master of pranks',
-    oracle_text: 'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
+    oracle_text:
+      'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
     parsed_cost: ['b', 'b', '2'],
     power: '3',
     promo: true,
@@ -127,7 +128,8 @@ test('getCardDetails returns a well-formed card object', () => {
     colorcategory: 'b',
     colors: ['B'],
     digital: false,
-    display_image: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+    display_image:
+      'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
     full_name: 'Rankle, Master of Pranks [eld-356]',
     image_normal: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
     image_small: 'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
@@ -140,7 +142,8 @@ test('getCardDetails returns a well-formed card object', () => {
     },
     name: 'Rankle, Master of Pranks',
     name_lower: 'rankle, master of pranks',
-    oracle_text: 'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
+    oracle_text:
+      'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
     parsed_cost: ['b', 'b', '2'],
     power: '3',
     promo: true,

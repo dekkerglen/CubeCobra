@@ -5,7 +5,7 @@ $('.toolbar a').click(function(e) {
     document.execCommand('formatBlock', false, command);
   } else if (command == 'AC') {
     card = prompt('Enter the card name here: ', '');
-    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + "</a>");
+    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + '</a>');
     autocard_init('autocard');
   } else document.execCommand($(this).data('command'), false, null);
 });
