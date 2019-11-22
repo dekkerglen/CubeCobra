@@ -1,6 +1,21 @@
 extends cube_layout
 
 block cube_content
+  //edit controls
+  .usercontrols
+    nav.navbar.navbar-expand.navbar-light
+      .collapse.navbar-collapse
+        ul.navbar-nav        
+          if user
+            if user.id == owner.id
+              li.nav-item
+                a.nav-link.newBlogButton(href='/cube/deckbuilder/'+deckid) Edit
+          li.nav-item
+            a.nav-link.newBlogButton(href='/cube/redraft/'+deckid) Redraft
+          if user
+            li.nav-item
+              a.nav-link.newBlogButton(href='/cube/rebuild/'+deckid) Clone and Rebuild
+
   include ../flash
   link(rel='stylesheet' href='/css/draft.css')
   br

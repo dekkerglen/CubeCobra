@@ -2,37 +2,33 @@ let mongoose = require('mongoose');
 
 // Cube schema
 let deckSchema = mongoose.Schema({
-  cards: [
-    []
-  ],
+  cards: [[]],
   owner: String,
   cube: {
     type: String,
-    index: true
+    index: true,
   },
   date: {
     type: Date,
-    index: true
+    index: true,
   },
   name: String,
-  bots: [
-    []
-  ],
-  playerdeck: [
-    []
-  ],
-  playersideboard: [
-    []
-  ],
+  bots: [[]],
+  playerdeck: [[]],
+  playersideboard: [[]],
   cols: Number,
   username: {
     type: String,
-    default: 'User'
+    default: 'User',
   },
   cubename: {
     type: String,
-    default: 'Cube'
-  }
+    default: 'Cube',
+  },
+  draft: {
+    type: String,
+    default: '',
+  },
 });
 
-let Deck = module.exports = mongoose.model('Deck', deckSchema)
+let Deck = (module.exports = mongoose.model('Deck', deckSchema));

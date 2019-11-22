@@ -1,4 +1,4 @@
-var deck = JSON.parse(document.getElementById("deckraw").value);
+var deck = JSON.parse(document.getElementById('deckraw').value);
 
 var cardWidth = 125;
 var cardHeight = 175;
@@ -15,16 +15,16 @@ window.onload = function() {
 
 window.onresize = function() {
   renderDraft();
-}
+};
 
 var hasCustomImages = false;
-$("#customImageDisplayMenuItem").hide();
+$('#customImageDisplayMenuItem').hide();
 deck.forEach(function(inner, index) {
   inner.forEach(function(card, index) {
     if (!hasCustomImages && card.imgUrl !== undefined) {
       hasCustomImages = true;
-      $("#customImageDisplayToggle").prop("checked", true);
-      $("#customImageDisplayMenuItem").show();
+      $('#customImageDisplayToggle').prop('checked', true);
+      $('#customImageDisplayMenuItem').show();
     }
   });
 });
@@ -40,7 +40,6 @@ $('#customImageDisplayToggle').click(function(e) {
   renderDraft();
 });
 
-
 function renderDraft() {
   setupColumns();
 
@@ -53,22 +52,57 @@ function renderDraft() {
   var cards = 0;
   //fill up deck
   deck.forEach(function(col, index) {
-    var colhtml = "";
+    var colhtml = '';
     col.forEach(function(card, index2) {
       cards++;
       if (card.details.type.toLowerCase().includes('land')) {
         lands++;
       }
       if (card.details.card_flip) {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '" card_flip="' + card.details.image_flip + '"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml +=
+          '<a style="z-index:' +
+          index2 +
+          '; position: relative; top:-' +
+          155 * index2 +
+          'px;" class="autocard" card="' +
+          card.details.display_image +
+          '" card_flip="' +
+          card.details.image_flip +
+          '"><img class="deckcard defaultCardImage" data-id="' +
+          index2 +
+          '" data-col="' +
+          index +
+          '" src="' +
+          card.details.display_image +
+          '" width="' +
+          cardWidth +
+          '" height="' +
+          cardHeight +
+          '"/></a>';
       } else {
-        colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image + '"><img class="deckcard defaultCardImage" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+        colhtml +=
+          '<a style="z-index:' +
+          index2 +
+          '; position: relative; top:-' +
+          155 * index2 +
+          'px;" class="autocard" card="' +
+          card.details.display_image +
+          '"><img class="deckcard defaultCardImage" data-id="' +
+          index2 +
+          '" data-col="' +
+          index +
+          '" src="' +
+          card.details.display_image +
+          '" width="' +
+          cardWidth +
+          '" height="' +
+          cardHeight +
+          '"/></a>';
       }
     });
     $('#deckColumn' + index).html(colhtml);
   });
-  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands)')
-
+  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands)');
 
   autocard_init('autocard');
 }
@@ -94,7 +128,14 @@ function setupColumns() {
     if (!deck[i]) {
       deck[i] = [];
     }
-    deckhtml += '<div style="height:' + (cardHeight + 20 * deck[i].length) + 'px" id="deckColumn' + i + '" data-id="' + i + '" class="col-even deckcol"></div>'
+    deckhtml +=
+      '<div style="height:' +
+      (cardHeight + 20 * deck[i].length) +
+      'px" id="deckColumn' +
+      i +
+      '" data-id="' +
+      i +
+      '" class="col-even deckcol"></div>';
   }
   deckhtml += '</div>';
 

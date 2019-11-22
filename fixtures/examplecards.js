@@ -18,12 +18,14 @@ const exampleCard = {
     large: 'https://img.scryfall.com/cards/large/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
     png: 'https://img.scryfall.com/cards/png/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.png?1547517462',
     art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
-    border_crop: 'https://img.scryfall.com/cards/border_crop/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462'
+    border_crop:
+      'https://img.scryfall.com/cards/border_crop/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
   },
   mana_cost: '{R}',
   cmc: 1,
   type_line: 'Creature — Devil',
-  oracle_text: 'When Vexing Devil enters the battlefield, any opponent may have it deal 4 damage to them. If a player does, sacrifice Vexing Devil.',
+  oracle_text:
+    'When Vexing Devil enters the battlefield, any opponent may have it deal 4 damage to them. If a player does, sacrifice Vexing Devil.',
   power: '4',
   toughness: '3',
   colors: ['R'],
@@ -39,7 +41,7 @@ const exampleCard = {
     commander: 'legal',
     brawl: 'not_legal',
     duel: 'legal',
-    oldschool: 'not_legal'
+    oldschool: 'not_legal',
   },
   games: ['mtgo', 'paper'],
   reserved: false,
@@ -56,11 +58,12 @@ const exampleCard = {
   set_search_uri: 'https://api.scryfall.com/cards/search?order=set&q=e%3Auma&unique=prints',
   scryfall_set_uri: 'https://scryfall.com/sets/uma?utm_source=api',
   rulings_uri: 'https://api.scryfall.com/cards/a5ebb551-6b0d-45fa-88c8-3746214094f6/rulings',
-  prints_search_uri: 'https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab582e485-c024-47f0-ad6f-b918d32288ba&unique=prints',
+  prints_search_uri:
+    'https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab582e485-c024-47f0-ad6f-b918d32288ba&unique=prints',
   collector_number: '154',
   digital: false,
   rarity: 'rare',
-  flavor_text: 'It\'s not any fun until someone loses an eye.',
+  flavor_text: "It's not any fun until someone loses an eye.",
   card_back_id: '0aeebaf5-8c7d-4636-9e82-8c27447861f7',
   artist: 'Lucas Graciano',
   artist_ids: ['ce98f39c-7cdd-47e6-a520-6c50443bb4c2'],
@@ -75,11 +78,12 @@ const exampleCard = {
   edhrec_rank: 7474,
   related_uris: {
     gatherer: 'https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456750',
-    tcgplayer_decks: 'https://decks.tcgplayer.com/magic/deck/search?contains=Vexing+Devil&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&u tm_source=scryfall',
+    tcgplayer_decks:
+      'https://decks.tcgplayer.com/magic/deck/search?contains=Vexing+Devil&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&u tm_source=scryfall',
     edhrec: 'https://edhrec.com/route/?cc=Vexing+Devil',
-    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Vexing+Devil'
-  }
-}
+    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Vexing+Devil',
+  },
+};
 
 const exampleDoubleFacedCard = {
   object: 'card',
@@ -99,13 +103,15 @@ const exampleDoubleFacedCard = {
   cmc: 2,
   type_line: 'Creature — Human Werewolf // Creature — Werewolf',
   color_identity: ['G'],
-  card_faces: [{
+  card_faces: [
+    {
       object: 'card_face',
       name: 'Scorned Villager',
       mana_cost: '{1}{G}',
       cmc: 0,
       type_line: 'Creature — Human Werewolf',
-      oracle_text: '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.',
+      oracle_text:
+        '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.',
       colors: ['G'],
       power: '1',
       toughness: '1',
@@ -113,14 +119,18 @@ const exampleDoubleFacedCard = {
       artist: 'Cynthia Sheppard',
       artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
       illustration_id: '0d4098f2-0d18-47a0-b79e-0875511dde0c',
-      image_uris: [{
-        small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        large: 'https://img.scryfall.com/cards/large/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        png: 'https://img.scryfall.com/cards/png/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
-        art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        border_crop: 'https://img.scryfall.com/cards/border_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188'
-      }]
+      image_uris: [
+        {
+          small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          large: 'https://img.scryfall.com/cards/large/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          png: 'https://img.scryfall.com/cards/png/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+          art_crop:
+            'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          border_crop:
+            'https://img.scryfall.com/cards/border_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        },
+      ],
     },
     {
       object: 'card_face',
@@ -128,7 +138,8 @@ const exampleDoubleFacedCard = {
       mana_cost: '',
       cmc: 0,
       type_line: 'Creature — Werewolf',
-      oracle_text: 'Vigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewol f.  ',
+      oracle_text:
+        'Vigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewol f.  ',
       colors: ['G'],
       color_indicator: ['G'],
       power: '2',
@@ -137,15 +148,19 @@ const exampleDoubleFacedCard = {
       artist: 'Cynthia Sheppard',
       artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
       illustration_id: 'd91819c2-9961-4c71-a27a-9e6c1b469d7e',
-      image_uris: [{
-        small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        large: 'https://img.scryfall.com/cards/large/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        png: 'https://img.scryfall.com/cards/png/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
-        art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        border_crop: 'https://img.scryfall.com/cards/border_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188'
-      }]
-    }
+      image_uris: [
+        {
+          small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          large: 'https://img.scryfall.com/cards/large/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          png: 'https://img.scryfall.com/cards/png/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+          art_crop:
+            'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+          border_crop:
+            'https://img.scryfall.com/cards/border_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        },
+      ],
+    },
   ],
   legalities: {
     standard: 'not_legal',
@@ -158,7 +173,7 @@ const exampleDoubleFacedCard = {
     commander: 'legal',
     brawl: 'not_legal',
     duel: 'legal',
-    oldschool: 'not_legal'
+    oldschool: 'not_legal',
   },
   games: ['mtgo', 'paper'],
   reserved: false,
@@ -175,7 +190,8 @@ const exampleDoubleFacedCard = {
   set_search_uri: 'https://api.scryfall.com/cards/search?order=set&q=e%3Adka&unique=prints',
   scryfall_set_uri: 'https://scryfall.com/sets/dka?utm_source=api',
   rulings_uri: 'https://api.scryfall.com/cards/6f35e364-81d9-4888-993b-acc7a53d963c/rulings',
-  prints_search_uri: 'https://api.scryfall.com/cards/search?order=released&q=oracleid%3A52855f90-19c1-46c9-8eed-88b3c1722bb0&unique=prints',
+  prints_search_uri:
+    'https://api.scryfall.com/cards/search?order=released&q=oracleid%3A52855f90-19c1-46c9-8eed-88b3c1722bb0&unique=prints',
   collector_number: '125',
   digital: false,
   rarity: 'common',
@@ -193,13 +209,14 @@ const exampleDoubleFacedCard = {
   edhrec_rank: 4758,
   related_uris: {
     gatherer: 'https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=262694',
-    tcgplayer_decks: 'https://decks.tcgplayer.com/magic/deck/search?contains=Scorned+Villager&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall & utm_source = scryfall ',
+    tcgplayer_decks:
+      'https://decks.tcgplayer.com/magic/deck/search?contains=Scorned+Villager&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall & utm_source = scryfall ',
     edhrec: 'https://edhrec.com/route/?cc=Scorned+Villager',
-    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Scorned+Villager'
-  }
+    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Scorned+Villager',
+  },
 };
 
 module.exports = {
   exampleCard: exampleCard,
-  exampleDoubleFacedCard: exampleDoubleFacedCard
-}
+  exampleDoubleFacedCard: exampleDoubleFacedCard,
+};

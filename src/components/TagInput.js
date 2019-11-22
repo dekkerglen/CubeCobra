@@ -7,9 +7,12 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
   <TagContext.Consumer>
     {({ allSuggestions, addSuggestion, tagColorClass }) => (
       <ReactTags
-        tags={tags.map(tag => ({ ...tag, className: tagColorClass(tag.text) }))}
+        tags={tags.map((tag) => ({ ...tag, className: tagColorClass(tag.text) }))}
         suggestions={allSuggestions}
-        handleAddition={tag => { addSuggestion(tag); addTag(tag); }}
+        handleAddition={(tag) => {
+          addSuggestion(tag);
+          addTag(tag);
+        }}
         handleDelete={deleteTag}
         handleDrag={reorderTag}
         placeholder="Tag..."

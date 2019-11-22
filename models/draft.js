@@ -2,22 +2,15 @@ let mongoose = require('mongoose');
 
 // Cube schema
 let draftSchema = mongoose.Schema({
-  picks: [
-    []
-  ],
-  packs: [
-    [
-      []
-    ]
-  ],
+  picks: [[]],
+  packs: [[[]]],
   cube: String,
-  bots: [
-    []
-  ],
+  bots: [[]],
   pickOrder: [],
   pickNumber: Number,
   packNumber: Number,
-  ratings: {}
+  ratings: {},
+  initial_state: [[[]]],
 });
 
-let Draft = module.exports = mongoose.model('Draft', draftSchema)
+let Draft = (module.exports = mongoose.model('Draft', draftSchema));

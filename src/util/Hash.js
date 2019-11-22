@@ -1,5 +1,5 @@
 function changeHash(hash) {
-  const url =  window.location.pathname + window.location.search + (hash ? `#${hash}` : '');
+  const url = window.location.pathname + window.location.search + (hash ? `#${hash}` : '');
   window.history.replaceState({}, document.title, url);
 }
 

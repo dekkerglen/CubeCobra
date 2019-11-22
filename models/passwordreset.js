@@ -4,16 +4,16 @@ const mongoose = require('mongoose');
 const PasswordResetSchema = mongoose.Schema({
   email: {
     type: String,
-    required: true
+    required: true,
   },
   expires: {
     type: Date,
-    required: false
+    required: false,
   },
   code: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
-const PasswordReset = module.exports = mongoose.model('PasswordReset', PasswordResetSchema);
+const PasswordReset = (module.exports = mongoose.model('PasswordReset', PasswordResetSchema));

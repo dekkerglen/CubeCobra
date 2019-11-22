@@ -8,23 +8,23 @@ $(document).ready(function() {
     var id = $target.attr('data-id');
     csrfFetch('/cube/remove/' + id, {
       method: 'DELETE',
-      headers: {}
-    }).then(response => {
+      headers: {},
+    }).then((response) => {
       if (!response.ok) {
         console.log(response);
       } else {
         window.location.href = '';
       }
     });
-  })
+  });
   $('.delete-format').on('click', function(e) {
     $target = $(e.target);
     var id = $target.attr('data-id');
     var cube = $target.attr('data-cube');
     csrfFetch('/cube/format/remove/' + cube + ';' + id, {
       method: 'DELETE',
-      headers: {}
-    }).then(response => {
+      headers: {},
+    }).then((response) => {
       if (!response.ok) {
         console.log(response);
       } else {
@@ -35,7 +35,7 @@ $(document).ready(function() {
 });
 
 function ISODateToYYYYMMDD(dateString) {
-  const locale = "en-US";
+  const locale = 'en-US';
 
   if (dateString === undefined) {
     return undefined;
@@ -45,19 +45,19 @@ function ISODateToYYYYMMDD(dateString) {
 }
 
 function toggleRecent() {
-  var x = document.getElementById("recentMore");
-  if (x.innerHTML === "View More...") {
-    x.innerHTML = "View Fewer...";
+  var x = document.getElementById('recentMore');
+  if (x.innerHTML === 'View More...') {
+    x.innerHTML = 'View Fewer...';
   } else {
-    x.innerHTML = "View More...";
+    x.innerHTML = 'View More...';
   }
 }
 
 function toggleDraft() {
-  var x = document.getElementById("draftMore");
-  if (x.innerHTML === "View More...") {
-    x.innerHTML = "Hide";
+  var x = document.getElementById('draftMore');
+  if (x.innerHTML === 'View More...') {
+    x.innerHTML = 'Hide';
   } else {
-    x.innerHTML = "View More...";
+    x.innerHTML = 'View More...';
   }
 }

@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 
-import {
-  Collapse,
-  Nav, NavItem, NavLink, Navbar, NavbarToggler,
-} from 'reactstrap';
+import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler } from 'reactstrap';
 
 import FilterCollapse from './FilterCollapse';
 import SortCollapse from './SortCollapse';
@@ -27,7 +24,7 @@ class CubeCompareNavbar extends Component {
   toggle() {
     event.preventDefault();
     this.setState(({ isOpen }) => ({
-      isOpen: !isOpen
+      isOpen: !isOpen,
     }));
   }
 
@@ -36,7 +33,7 @@ class CubeCompareNavbar extends Component {
     const target = event.target;
     const collapse = target.getAttribute('data-target');
     const { setOpenCollapse } = this.props;
-    setOpenCollapse(openCollapse => openCollapse === collapse ? null : collapse);
+    setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
   }
 
   handleOpenTagColorsModal(event) {
@@ -57,10 +54,14 @@ class CubeCompareNavbar extends Component {
           <Collapse isOpen={this.state.isOpen} navbar>
             <Nav navbar>
               <NavItem>
-                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>Sort</NavLink>
+                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
+                  Sort
+                </NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>Filter</NavLink>
+                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
+                  Filter
+                </NavLink>
               </NavItem>
               <NavItem>
                 <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
@@ -71,7 +72,12 @@ class CubeCompareNavbar extends Component {
           </Collapse>
         </Navbar>
         <SortCollapse isOpen={openCollapse === 'sort'} />
-        <FilterCollapse filter={filter} setFilter={setFilter} numCards={cards.length} isOpen={this.props.openCollapse === 'filter'} />
+        <FilterCollapse
+          filter={filter}
+          setFilter={setFilter}
+          numCards={cards.length}
+          isOpen={this.props.openCollapse === 'filter'}
+        />
         <TagColorsModal
           canEdit={false}
           isOpen={this.state.tagColorsModalOpen}

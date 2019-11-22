@@ -9,7 +9,7 @@ class ContentEditable extends Component {
     this.elementRef = React.createRef();
   }
 
-  shouldComponentUpdate(nextProps){
+  shouldComponentUpdate(nextProps) {
     return nextProps.value !== this.elementRef.current.innerHTML;
   }
 
@@ -37,7 +37,7 @@ class ContentEditable extends Component {
         contentEditable
         onInput={this.handleChange}
         onBlur={this.handleChange}
-        dangerouslySetInnerHTML={{__html: value}}
+        dangerouslySetInnerHTML={{ __html: value }}
         ref={this.elementRef}
         {...props}
       />

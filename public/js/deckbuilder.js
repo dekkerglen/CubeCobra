@@ -1,5 +1,5 @@
-var deck = JSON.parse(document.getElementById("deckraw").value);
-var basics = JSON.parse(document.getElementById("basicsraw").value);
+var deck = JSON.parse(document.getElementById('deckraw').value);
+var basics = JSON.parse(document.getElementById('basicsraw').value);
 var dragElement = document.getElementById('dragelement');
 var dragCard = null;
 
@@ -19,16 +19,16 @@ window.onload = function() {
 
 window.onresize = function() {
   renderDraft();
-}
+};
 
 var hasCustomImages = false;
-$("#customImageDisplayMenuItem").hide();
+$('#customImageDisplayMenuItem').hide();
 deck.playerdeck.forEach(function(inner, index) {
   inner.forEach(function(card, index) {
     if (!hasCustomImages && card.imgUrl !== undefined) {
       hasCustomImages = true;
-      $("#customImageDisplayToggle").prop("checked", true);
-      $("#customImageDisplayMenuItem").show();
+      $('#customImageDisplayToggle').prop('checked', true);
+      $('#customImageDisplayMenuItem').show();
     }
   });
 });
@@ -80,22 +80,22 @@ function addToSideboard(card, x, y, cmccol) {
     x = card.details.cmc;
   } else {
     x -= rect.left;
-    x /= (cardWidth + 4);
+    x /= cardWidth + 4;
     x = Math.floor(x);
   }
   if (x < 0) {
     x = 0;
   }
-  if (x > (numCols / 2) - 1) {
-    x = (numCols / 2) - 1;
+  if (x > numCols / 2 - 1) {
+    x = numCols / 2 - 1;
   }
   if (cmccol) {
     if (!card.details.type.toLowerCase().includes('creature')) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
   } else {
     if (y > rect.bottom - getSideboardRowHeight()) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
   }
   if (!deck.playersideboard[x]) {
@@ -111,22 +111,22 @@ function addToDeck(card, x, y, cmccol) {
     x = card.details.cmc;
   } else {
     x -= rect.left;
-    x /= (cardWidth + 4);
+    x /= cardWidth + 4;
     x = Math.floor(x);
   }
   if (x < 0) {
     x = 0;
   }
-  if (x > (numCols / 2) - 1) {
-    x = (numCols / 2) - 1;
+  if (x > numCols / 2 - 1) {
+    x = numCols / 2 - 1;
   }
   if (cmccol) {
     if (!card.details.type.toLowerCase().includes('creature')) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
   } else {
     if (y > rect.bottom - getDeckRowHeight()) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
   }
   if (!deck.playerdeck[x]) {
@@ -156,12 +156,12 @@ function saveDraft(callback) {
     }
   });
   //save draft, if we fail, we fail
-  csrfFetch("/cube/api/draftpick/" + draft.cube, {
-    method: "POST",
+  csrfFetch('/cube/api/draftpick/' + draft.cube, {
+    method: 'POST',
     body: JSON.stringify(temp),
     headers: {
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+    },
   }).then(function() {
     if (callback) {
       callback();
@@ -174,7 +174,9 @@ function renderDraft() {
 
   //move cards over if they don't fit into columns
   for (var i = numCols; i < deck.playerdeck.length; i++) {
-    deck.playerdeck[numCols - 1] = deck.playerdeck[numCols - 1].concat(deck.playerdeck[i].splice(0, deck.playerdeck[i].length));
+    deck.playerdeck[numCols - 1] = deck.playerdeck[numCols - 1].concat(
+      deck.playerdeck[i].splice(0, deck.playerdeck[i].length),
+    );
   }
 
   var lands = 0;
@@ -194,18 +196,18 @@ function renderDraft() {
 
     $('#deckColumn' + index).html(getCardColumnHtml(col, index));
   });
-  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands, ' + creatures + ' creatures)')
+  $('#deckName').text('Deck (' + cards + ' cards, ' + lands + ' lands, ' + creatures + ' creatures)');
   //fill up sideboard
   deck.playersideboard.forEach(function(col, index) {
     $('#sideboardColumn' + index).html(getCardColumnHtml(col, index, true));
   });
 
   autocard_init('autocard');
-  var elements = document.getElementsByClassName("sideboardcard");
+  var elements = document.getElementsByClassName('sideboardcard');
   for (i = 0; i < elements.length; i++) {
     setupDrag(elements[i], false);
   }
-  elements = document.getElementsByClassName("deckcard");
+  elements = document.getElementsByClassName('deckcard');
   for (i = 0; i < elements.length; i++) {
     setupDrag(elements[i], true);
   }
@@ -232,7 +234,7 @@ function getSideboardRowHeight() {
 }
 
 function drawHover(e) {
-  var elements = document.getElementsByClassName("card-hover");
+  var elements = document.getElementsByClassName('card-hover');
   for (i = 0; i < elements.length; i++) {
     if (elementHovered(elements[i], e.clientX, e.clientY)) {
       elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);');
@@ -242,12 +244,17 @@ function drawHover(e) {
   }
 
   //for sideboard
-  elements = document.getElementsByClassName("sideboardcol");
+  elements = document.getElementsByClassName('sideboardcol');
   var found = false;
   for (i = 0; i < elements.length; i++) {
     if (elementHovered(elements[i], e.clientX, e.clientY)) {
       found = true;
-      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * deck.playersideboard[i].length) + 'px;');
+      elements[i].setAttribute(
+        'style',
+        'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' +
+          (cardHeight + 20 * deck.playersideboard[i].length) +
+          'px;',
+      );
     } else {
       elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * deck.playersideboard[i].length) + 'px;');
     }
@@ -257,27 +264,39 @@ function drawHover(e) {
     var rect = area.getBoundingClientRect();
     var x = e.clientX;
     x -= rect.left;
-    x /= (cardWidth + 4);
+    x /= cardWidth + 4;
     x = Math.floor(x);
     if (x < 0) {
       x = 0;
     }
-    if (x > (numCols / 2) - 1) {
-      x = (numCols / 2) - 1;
+    if (x > numCols / 2 - 1) {
+      x = numCols / 2 - 1;
     }
     if (e.clientY > rect.bottom - getSideboardRowHeight()) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
-    document.getElementById('sideboardColumn' + x).setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * deck.playersideboard[x].length) + 'px;');
+    document
+      .getElementById('sideboardColumn' + x)
+      .setAttribute(
+        'style',
+        'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' +
+          (cardHeight + 20 * deck.playersideboard[x].length) +
+          'px;',
+      );
   }
 
   //for deck
-  elements = document.getElementsByClassName("deckcol");
+  elements = document.getElementsByClassName('deckcol');
   var found = false;
   for (i = 0; i < elements.length; i++) {
     if (elementHovered(elements[i], e.clientX, e.clientY)) {
       found = true;
-      elements[i].setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * deck.playerdeck[i].length) + 'px;');
+      elements[i].setAttribute(
+        'style',
+        'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' +
+          (cardHeight + 20 * deck.playerdeck[i].length) +
+          'px;',
+      );
     } else {
       elements[i].setAttribute('style', 'height:' + (cardHeight + 20 * deck.playerdeck[i].length) + 'px;');
     }
@@ -287,18 +306,25 @@ function drawHover(e) {
     var rect = area.getBoundingClientRect();
     var x = e.clientX;
     x -= rect.left;
-    x /= (cardWidth + 4);
+    x /= cardWidth + 4;
     x = Math.floor(x);
     if (x < 0) {
       x = 0;
     }
-    if (x > (numCols / 2) - 1) {
-      x = (numCols / 2) - 1;
+    if (x > numCols / 2 - 1) {
+      x = numCols / 2 - 1;
     }
     if (e.clientY > rect.bottom - getDeckRowHeight()) {
-      x += (numCols / 2);
+      x += numCols / 2;
     }
-    document.getElementById('deckColumn' + x).setAttribute('style', 'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' + (cardHeight + 20 * deck.playerdeck[x].length) + 'px;');
+    document
+      .getElementById('deckColumn' + x)
+      .setAttribute(
+        'style',
+        'box-shadow: 0px 0px 15px 0px rgb(89, 155, 255); height:' +
+          (cardHeight + 20 * deck.playerdeck[x].length) +
+          'px;',
+      );
   }
 }
 
@@ -307,17 +333,36 @@ function getCardColumnHtml(col, index, isSideboard = false) {
   var imageClass = '';
 
   if (isSideboard) {
-    imageClass = "sideboardcard";
+    imageClass = 'sideboardcard';
   } else {
-    imageClass = "deckcard defaultCardImage";
+    imageClass = 'deckcard defaultCardImage';
   }
 
   col.forEach(function(card, index2) {
-    colhtml += '<a style="z-index:' + index2 + '; position: relative; top:-' + 155 * (index2) + 'px;" class="autocard" card="' + card.details.display_image;
+    colhtml +=
+      '<a style="z-index:' +
+      index2 +
+      '; position: relative; top:-' +
+      155 * index2 +
+      'px;" class="autocard" card="' +
+      card.details.display_image;
     if (card.details.card_flip) {
       colhtml += '" card_flip="' + card.details.image_flip;
     }
-    colhtml += '" href="#"><img class="' + imageClass + '" data-id="' + index2 + '" data-col="' + index + '" src="' + card.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+    colhtml +=
+      '" href="#"><img class="' +
+      imageClass +
+      '" data-id="' +
+      index2 +
+      '" data-col="' +
+      index +
+      '" src="' +
+      card.details.display_image +
+      '" width="' +
+      cardWidth +
+      '" height="' +
+      cardHeight +
+      '"/></a>';
   });
 
   if (col.length > 0) {
@@ -330,7 +375,7 @@ function removeHover() {
   ['card-hover', 'deckcol', 'sideboardcol'].forEach(function(label, index) {
     var elements = document.getElementsByClassName(label);
     for (i = 0; i < elements.length; i++) {
-      elements[i].setAttribute('style', '')
+      elements[i].setAttribute('style', '');
     }
   });
 }
@@ -347,11 +392,25 @@ function setupColumns() {
     if (!deck.playerdeck[i]) {
       deck.playerdeck[i] = [];
     }
-    deckhtml += '<div style="height:' + (cardHeight + 20 * deck.playerdeck[i].length) + 'px" id="deckColumn' + i + '" data-id="' + i + '" class="col-even deckcol"></div>'
+    deckhtml +=
+      '<div style="height:' +
+      (cardHeight + 20 * deck.playerdeck[i].length) +
+      'px" id="deckColumn' +
+      i +
+      '" data-id="' +
+      i +
+      '" class="col-even deckcol"></div>';
     if (!deck.playersideboard[i]) {
       deck.playersideboard[i] = [];
     }
-    sideboardhtml += '<div style="height:' + (cardHeight + 20 * deck.playersideboard[i].length) + 'px" id="sideboardColumn' + i + '" data-id="' + i + '" class="col-even sideboardcol"></div>'
+    sideboardhtml +=
+      '<div style="height:' +
+      (cardHeight + 20 * deck.playersideboard[i].length) +
+      'px" id="sideboardColumn' +
+      i +
+      '" data-id="' +
+      i +
+      '" class="col-even sideboardcol"></div>';
   }
   deckhtml += '</div>';
   sideboardhtml += '</div>';
@@ -390,9 +449,10 @@ function setupDrag(elmnt, fromdeck) {
       dragCard = deck.playersideboard[e.target.getAttribute('data-col')].splice(e.target.getAttribute('data-id'), 1)[0];
     }
     //set drag element's inner html
-    dragElement.innerHTML = '<img src="' + dragCard.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
-    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
-    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
+    dragElement.innerHTML =
+      '<img src="' + dragCard.details.display_image + '" width="' + cardWidth + '" height="' + cardHeight + '"/></a>';
+    dragElement.style.top = e.clientY - cardHeight / 2 + self.pageYOffset + 'px';
+    dragElement.style.left = e.clientX - cardWidth / 2 + self.pageXOffset + 'px';
     autocard_hide_card();
     renderDraft();
     drawHover(e);
@@ -406,8 +466,8 @@ function setupDrag(elmnt, fromdeck) {
     finalx = e.clientX;
     finaly = e.clientY;
     // set the element's new position:
-    dragElement.style.top = (e.clientY - cardHeight / 2 + self.pageYOffset) + "px";
-    dragElement.style.left = (e.clientX - cardWidth / 2 + self.pageXOffset) + "px";
+    dragElement.style.top = e.clientY - cardHeight / 2 + self.pageYOffset + 'px';
+    dragElement.style.left = e.clientX - cardWidth / 2 + self.pageXOffset + 'px';
   }
 
   function closeDragElement() {
@@ -415,7 +475,7 @@ function setupDrag(elmnt, fromdeck) {
     // stop moving when mouse button is released:
     document.onmouseup = null;
     document.onmousemove = null;
-    dragElement.innerHTML = "";
+    dragElement.innerHTML = '';
     var dist = getDistance(x, y, finalx, finaly);
     if (dist < 5) {
       //move to other
