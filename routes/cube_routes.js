@@ -12,7 +12,6 @@ var {
   build_id_query,
   get_cube_id,
 } = require('../serverjs/cubefn.js');
-const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
 const cardutil = require('../dist/util/Card.js');
 const carddb = require('../serverjs/cards.js');
@@ -924,45 +923,63 @@ router.get('/analysis/:id', function(req, res) {
             username: 'unknown',
           };
         }
-        if (err) {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
+        var pids = [];
+        cube.cards.forEach(function(card, index) {
+          card.details = {
+            ...carddb.cardFromId(card.cardID),
+          };
+          card.details.display_image = util.getCardImageURL(card);
+          if (!card.type_line) {
+            card.type_line = card.details.type;
+          }
+          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
+            pids.push(card.details.tcgplayer_id);
+          }
+        });
+        GetPrices(pids, function(price_dict) {
+          cube.cards.forEach(function(card, index) {
+            if (card.details.tcgplayer_id) {
+              if (price_dict[card.details.tcgplayer_id]) {
+                card.details.price = price_dict[card.details.tcgplayer_id];
+              }
+              if (price_dict[card.details.tcgplayer_id + '_foil']) {
+                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+              }
+            }
           });
-        } else {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
-          });
-        }
+          if (err) {
+            res.render('cube/cube_analysis', {
+              cube: cube,
+              cards: cube.cards,
+              cube_id: req.params.id,
+              owner: user.username,
+              activeLink: 'analysis',
+              title: `${abbreviate(cube.name)} - Analysis`,
+              metadata: generateMeta(
+                `Cube Cobra Analysis: ${cube.name}`,
+                cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                cube.image_uri,
+                `https://cubecobra.com/cube/analysis/${req.params.id}`,
+              ),
+              loginCallback: '/cube/analysis/' + req.params.id,
+            });
+          } else {
+            res.render('cube/cube_analysis', {
+              cube: cube,
+              cube_id: req.params.id,
+              owner: user.username,
+              activeLink: 'analysis',
+              title: `${abbreviate(cube.name)} - Analysis`,
+              metadata: generateMeta(
+                `Cube Cobra Analysis: ${cube.name}`,
+                cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+                cube.image_uri,
+                `https://cubecobra.com/cube/analysis/${req.params.id}`,
+              ),
+              loginCallback: '/cube/analysis/' + req.params.id,
+            });
+          }
+        });
       });
     }
   });
