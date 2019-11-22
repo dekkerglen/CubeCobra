@@ -51,6 +51,7 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
   </InputGroup>
 );
 
+
 const allFields = [
   'name',
   'oracle',
@@ -69,6 +70,7 @@ const allFields = [
   'loyalty',
   'rarity',
   'artist',
+  'is'
 ];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
 
@@ -119,34 +121,20 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <option value="<=">At most these colors</option>
         </Input>
         <hr />
-        <TextField
-          name="mana"
-          humanName="Mana Cost"
-          placeholder={'Any mana cost, e.g. "{1}{W}"'}
-          value={values.mana}
-          onChange={onChange}
-        />
-        <TextField
-          name="type"
-          humanName="Type Line"
-          placeholder={'Choose any card type, supertype, or subtypes to match'}
-          value={values.type_line}
-          onChange={onChange}
-        />
-        <TextField
-          name="set"
-          humanName="Set"
-          placeholder={'Any set code, e.g. "WAR"'}
-          value={values.set}
-          onChange={onChange}
-        />
-        <TextField
-          name="tag"
-          humanName="Tag"
-          placeholder={'Any text, e.g. "Zombie Testing"'}
-          value={values.tag}
-          onChange={onChange}
-        />
+        <TextField name="mana" humanName="Mana Cost" placeholder={'Any mana cost, e.g. "{1}{W}"'} value={values.mana} onChange={onChange} />
+        <InputGroup className="mb-3">
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>Manacost Type</InputGroupText>
+          </InputGroupAddon>
+          <Input type="select" name="is" value={values.is} onChange={onChange}>
+            {['', 'Gold', 'Hybrid', 'Phyrexian'].map(type =>
+              <option key={type}>{type}</option>
+            )}
+          </Input>
+        </InputGroup>
+        <TextField name="type" humanName="Type Line" placeholder={'Choose any card type, supertype, or subtypes to match'} value={values.type_line} onChange={onChange} />
+        <TextField name="set" humanName="Set" placeholder={'Any set code, e.g. "WAR"'} value={values.set} onChange={onChange} />
+        <TextField name="tag" humanName="Tag" placeholder={'Any text, e.g. "Zombie Testing"'} value={values.tag} onChange={onChange} />
         <InputGroup className="mb-3">
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Status</InputGroupText>

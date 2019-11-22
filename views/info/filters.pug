@@ -111,6 +111,7 @@ block content
           p For hybrid costs, you can use #[code {}] i.e. #[code {2/G}], #[code {R/G}], etc.
           p For phyrexian mana, use #[code {W/P}].
           p You can also surround mana costs with #[code {}] if you prefer, i.e. #[code {2}{G}{g}] instead of #[code 2GG]. Either way is fine.
+          p You can search for cards that require two or more colors with #[code is:gold], and cards that contain hybrid symbols with #[code is:hybrid] or Phyrexian mana symbols with #[code is:phyrexian].
           p #[strong Examples:]
           table.table
             tr
@@ -119,6 +120,15 @@ block content
             tr
               td(scope="col") #[code m:2ww] 
               td(scope="col") Cards that cost 2 generic mana, and 2 white mana.
+            tr
+              td(scope="col") #[code is:gold]
+              td(scope="col") Cards that require two or more colors.
+            tr
+              td(scope="col") #[code is:hybrid]
+              td(scope="col") Cards with one or more hybrid mana symbols.
+            tr
+              td(scope="col") #[code is:phyrexian]
+              td(scope="col") Cards with one or more Phyrexian mana symbols.
       .card
         #cmc-syntax.card-header(data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix")
           button(class="btn btn-link" type="button" )

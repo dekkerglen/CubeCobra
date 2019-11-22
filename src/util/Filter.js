@@ -34,6 +34,7 @@ let categoryMap = new Map([
   ['a', 'artist'],
   ['art', 'artist'],
   ['artist', 'artist'],
+  ['is', 'is'],
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -269,7 +270,10 @@ const verifyTokens = (tokens) => {
           if (token(i).arg.search(/^(common|uncommon|rare|mythic)$/) < 0) return false;
           break;
         case 'artist':
-          return true;
+          break;
+        case 'is':
+          if (token(i).arg.search(/^(gold|hybrid|phyrexian)$/) < 0) return false;
+          break;
       }
     }
   }
@@ -690,6 +694,16 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'artist') {
     res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
+  }
+  if (filter.category == 'is') {
+    switch (filter.arg) {
+      case 'gold':
+      case 'hybrid':
+      case 'phyrexian':
+          let type = filter.arg.substring(0,1).toUpperCase() + filter.arg.substring(1);
+          res = cardIsLabel(card, type, 'Manacost Type');
+          break;
+    }
   }
 
   if (filter.not) {
