@@ -587,7 +587,7 @@ router.get('/view/:id', async (req, res) => {
       cubes: cubes,
       loginCallback: '/user/view/' + req.params.id,
       followers: user.users_following.length,
-      following: user.users_following.includes(req.user._id),
+      following: req.user ? user.users_following.includes(req.user._id) : false,
     });
   } catch (err) {
     console.log(err);
@@ -615,7 +615,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
     return res.status(500).send(err);
   }
 });
-
+2
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const userid = req.params.userid;
