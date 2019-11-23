@@ -2482,13 +2482,21 @@ router.post('/submitdeck/:id', async (req, res) => {
     const userq = User.findById(deck.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
-    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
+    var [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : 'Anonymous';
     deck.name = owner + "'s draft of " + cube.name + ' on ' + deck.date.toLocaleString('en-US');
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
+
+    if(!user)
+    {
+      user = {
+        _id: '',
+        username: 'Anonymous' 
+      }
+    }
 
     await util.addNotification(
       cubeOwner,
