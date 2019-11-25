@@ -798,7 +798,7 @@ describe('filter', () => {
               test.lookup.forEach((key) => {
                 value = value[key];
               });
-              let expectation = expect(parseInt(value, 10));
+              let expectation = expect(value, 10);
               if (not) {
                 // not.arrayContaining is a special case
                 if (matcherName === 'arrayContaining') {

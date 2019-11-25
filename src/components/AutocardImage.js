@@ -14,7 +14,7 @@ const AutocardImage = (props) => {
   const handleClick = useCallback(
     (event) => {
       const target = event.target;
-      const index = target.getAttribute('data-index');
+      const index = target.getAttribute('cardindex');
       event.preventDefault();
       openCardModal(/* global */ cube[index]);
     },
