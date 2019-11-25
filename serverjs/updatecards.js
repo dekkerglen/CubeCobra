@@ -348,6 +348,7 @@ function convertColors(card, isExtra) {
     if (!card.card_faces || card.layout == 'flip') {
       return colors.concat(card.colors);
     } else if (card.layout == 'split' || card.layout == 'adventure') {
+      if (card.name.startsWith('Flaxen')) console.log(card);
       return colors.concat(card.colors);
     } else if (card.card_faces[0].colors) {
       return colors.concat(card.card_faces[0].colors);
@@ -596,6 +597,9 @@ function convertCard(card, isExtra) {
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
   newcard.oracle_text = card.oracle_text;
+  if (card.layout == 'adventure') {
+    newcard.oracle_text = card.card_faces[0].oracle_text + '\n' + card.card_faces[1].oracle_text;
+  }
   newcard._id = convertId(card, isExtra);
   newcard.cmc = convertCmc(card, isExtra);
   newcard.legalities = convertLegalities(card, isExtra);

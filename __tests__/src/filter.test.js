@@ -411,56 +411,99 @@ describe('filter', () => {
         tokens = [];
       });
 
+      let greenCardCount = 10;
+      let colorlessCardCount = 3;
+      let goldWithGreenCount = 5;
+
       it('the = operator filters for mono-color cards', () => {
         Filter.tokenizeInput('c:green', tokens);
-        const greenFilter = [Filter.parseTokens(tokens)];
-        const monoGreenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenFilter));
-        expect(monoGreenCards).toHaveLength(4);
+        let greenFilter = [Filter.parseTokens(tokens)];
+        let monoGreenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenFilter));
+        expect(monoGreenCards).toHaveLength(greenCardCount);
         monoGreenCards.forEach((card) => {
-          expect(card.details.colors).toEqual(['G']);
+          expect(card.colors).toEqual(['G']);
+        });
+
+        Filter.tokenizeInput('c:g', tokens);
+        greenFilter = [Filter.parseTokens(tokens)];
+        monoGreenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenFilter));
+        expect(monoGreenCards).toHaveLength(greenCardCount);
+        monoGreenCards.forEach((card) => {
+          expect(card.colors).toEqual(['G']);
         });
       });
 
       it('the >= operator filters for color-including cards', () => {
         Filter.tokenizeInput('c>=green', tokens);
-        const greenPlusFilter = [Filter.parseTokens(tokens)];
-        const greenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenPlusFilter));
-        expect(greenCards).toHaveLength(8);
+        let greenPlusFilter = [Filter.parseTokens(tokens)];
+        let greenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenPlusFilter));
+        expect(greenCards).toHaveLength(greenCardCount + goldWithGreenCount);
         greenCards.forEach((card) => {
-          expect(card.details.colors).toEqual(expect.arrayContaining(['G']));
+          expect(card.colors).toEqual(expect.arrayContaining(['G']));
+        });
+
+        Filter.tokenizeInput('c>=g', tokens);
+        greenPlusFilter = [Filter.parseTokens(tokens)];
+        greenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenPlusFilter));
+        expect(greenCards).toHaveLength(greenCardCount + goldWithGreenCount);
+        greenCards.forEach((card) => {
+          expect(card.colors).toEqual(expect.arrayContaining(['G']));
         });
       });
 
       it('the <= operator filters for colorless and mono-color cards', () => {
         Filter.tokenizeInput('c<=green', tokens);
-        const greenOrColorlessFilter = [Filter.parseTokens(tokens)];
-        const greenOrColorlessCards = exampleCube.cards.filter((card) =>
-          Filter.filterCard(card, greenOrColorlessFilter),
-        );
-        expect(greenOrColorlessCards).toHaveLength(12);
+        let greenOrColorlessFilter = [Filter.parseTokens(tokens)];
+        let greenOrColorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenOrColorlessFilter));
+        expect(greenOrColorlessCards).toHaveLength(greenCardCount + colorlessCardCount);
         greenOrColorlessCards.forEach((card) => {
-          expect(card.details.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+          expect(card.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+        });
+
+        Filter.tokenizeInput('c<=g', tokens);
+        greenOrColorlessFilter = [Filter.parseTokens(tokens)];
+        greenOrColorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenOrColorlessFilter));
+        expect(greenOrColorlessCards).toHaveLength(greenCardCount + colorlessCardCount);
+        greenOrColorlessCards.forEach((card) => {
+          expect(card.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
         });
       });
 
       it('the > operator filters for multi-color cards including a color', () => {
         Filter.tokenizeInput('c>green', tokens);
-        const greenMulticolorFilter = [Filter.parseTokens(tokens)];
-        const greenGoldCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenMulticolorFilter));
-        expect(greenGoldCards).toHaveLength(4);
+        let greenMulticolorFilter = [Filter.parseTokens(tokens)];
+        let greenGoldCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenMulticolorFilter));
+        expect(greenGoldCards).toHaveLength(goldWithGreenCount);
         greenGoldCards.forEach((card) => {
-          expect(card.details.colors).not.toBe(['G']);
-          expect(card.details.colors).toContain('G');
+          expect(card.colors).not.toBe(['G']);
+          expect(card.colors).toContain('G');
+        });
+
+        Filter.tokenizeInput('c>g', tokens);
+        greenMulticolorFilter = [Filter.parseTokens(tokens)];
+        greenGoldCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenMulticolorFilter));
+        expect(greenGoldCards).toHaveLength(goldWithGreenCount);
+        greenGoldCards.forEach((card) => {
+          expect(card.colors).not.toBe(['G']);
+          expect(card.colors).toContain('G');
         });
       });
 
       it('the < operator filters for colorless cards', () => {
         Filter.tokenizeInput('c<green', tokens);
-        const colorlessFilter = [Filter.parseTokens(tokens)];
-        const colorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, colorlessFilter));
-        expect(colorlessCards).toHaveLength(8);
+        let colorlessFilter = [Filter.parseTokens(tokens)];
+        let colorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, colorlessFilter));
+        expect(colorlessCards).toHaveLength(colorlessCardCount);
         colorlessCards.forEach((card) => {
-          expect(card.details.colors).toEqual([]);
+          expect(card.colors).toEqual([]);
+        });
+
+        Filter.tokenizeInput('c<g', tokens);
+        colorlessFilter = [Filter.parseTokens(tokens)];
+        colorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, colorlessFilter));
+        expect(colorlessCards).toHaveLength(colorlessCardCount);
+        colorlessCards.forEach((card) => {
+          expect(card.colors).toEqual([]);
         });
       });
     });
@@ -798,7 +841,7 @@ describe('filter', () => {
               test.lookup.forEach((key) => {
                 value = value[key];
               });
-              let expectation = expect(parseInt(value, 10));
+              let expectation = expect(value);
               if (not) {
                 // not.arrayContaining is a special case
                 if (matcherName === 'arrayContaining') {

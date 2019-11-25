@@ -76,6 +76,74 @@ const convertedExampleDoubleFacedCardFlipFace = {
   colorcategory: 'g',
 };
 
+const convertedExampleAdventureCard = {
+  color_identity: ['G'],
+  set: 'eld',
+  collector_number: '155',
+  promo: false,
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Flaxen Intruder',
+  name_lower: 'flaxen intruder',
+  full_name: 'Flaxen Intruder // Welcome Home [eld-155]',
+  scryfall_uri: 'https://scryfall.com/card/celd/155/flaxen-intruder-welcome-home?utm_source=api',
+  colors: ['G'],
+  color_identity: ['G'],
+  type_line: 'Creature — Human Berserker',
+  power: '1',
+  toughness: '2',
+  artist: 'Gabor Szikszai',
+  cmc: 1,
+  oracle_text:
+    'Whenever Flaxen Intruder deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment.',
+  flavor_text: 'The middle blade was just right.',
+  mana_cost: '{G}',
+  _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
+  layout: 'adventure',
+  released_at: '2019-10-04',
+  tcgplayer_id: 198574,
+  legalities: {
+    Legacy: false,
+    Modern: false,
+    Standard: false,
+    Pauper: false,
+  },
+  rarity: 'uncommon',
+  image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+};
+
+const convertedExampleAdventureCardAdventure = {
+  color_identity: ['G'],
+  set: 'eld',
+  collector_number: '155',
+  promo: false,
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Welcome Home',
+  name_lower: 'welcome home',
+  full_name: 'Welcome Home [eld-155]',
+  artist: 'Gabor Szikszai',
+  scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
+  rarity: 'uncommon',
+  oracle_text:
+    'Create three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
+  _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
+  cmc: 7,
+  legalities: { Legacy: false, Modern: false, Standard: false, Pauper: false },
+  parsed_cost: ['5', 'g', 'g'],
+  colors: ['G'],
+  type: 'Sorcery — Adventure',
+  tcgplayer_id: 198574,
+  image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  colorcategory: 'g',
+};
+
 const convertFnToAttribute = {
   convertName: 'name',
   convertId: '_id',
@@ -170,6 +238,30 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
+test("addCardToCatalog successfully adds an Adventure card's information to the internal structures", () => {
+  const card = convertedExampleAdventureCard;
+  updatecards.addCardToCatalog(card, true);
+  var catalog = updatecards.catalog;
+  const normalizedFullName = card.full_name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const normalizedName = carddb.normalizedName(card);
+  const expectedImagedictStructure = {
+    uri: card.art_crop,
+    artist: card.artist,
+  };
+  expect(Object.keys(catalog.dict).length).toBe(1);
+  expect(catalog.dict[card._id]).toEqual(card);
+  expect(Object.keys(catalog.imagedict).length).toBe(1);
+  expect(catalog.imagedict[normalizedFullName]).toEqual(expectedImagedictStructure);
+  expect(Object.keys(catalog.cardimages).length).toBe(0);
+  expect(Object.keys(catalog.nameToId).length).toBe(1);
+  expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.names).length).toBe(1);
+  expect(Object.keys(catalog.full_names).length).toBe(1);
+});
+
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(6);
   var contents = fs.readFileSync(cardsFixturePath);
@@ -219,11 +311,32 @@ test('convertCard returns a correctly converted double-faced card object', () =>
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
 
-var attribute;
 for (var convertFn in convertFnToAttribute) {
   attribute = convertFnToAttribute[convertFn];
   test(convertFn + " properly converts a double-faced card's " + attribute, () => {
     const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
     expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
+  });
+}
+
+test('convertCard returns a correctly converted Adventure card object', () => {
+  const result = updatecards.convertCard(examplecards.exampleAdventureCard, true);
+  console.log(result);
+  expect(result).toEqual(convertedExampleAdventureCard);
+});
+
+for (var convertFn in convertFnToAttribute) {
+  attribute = convertFnToAttribute[convertFn];
+  test(convertFn + " properly converts an Adventure card's creature " + attribute, () => {
+    const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
+    expect(result).toBe(convertedExampleAdventureCard[attribute]);
+  });
+}
+for (var convertFn in convertFnToAttribute) {
+  attribute = convertFnToAttribute[convertFn];
+  test(convertFn + " properly converts an Adventure card's Adventure  " + attribute, () => {
+    const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
+    console.log('Adventure:', result);
+    expect(result).toBe(convertedExampleAdventureCardAdventure[attribute]);
   });
 }

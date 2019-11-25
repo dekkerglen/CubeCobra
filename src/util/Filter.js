@@ -428,7 +428,7 @@ function arrayContainsOtherArray(arr1, arr2) {
   return arr2.every((v) => arr1.includes(v));
 }
 
-function filterApply(card, filter, inCube) {
+function filterApply(card, filter, inCube = true) {
   let res = null;
   if (filter.operand === '!=') {
     filter.not = true;
@@ -446,35 +446,32 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (filter.category == 'color' && card.details.colors) {
+  if (filter.category == 'color' && colors !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = !card.details.colors.length;
+          res = !colors.length;
         } else {
-          res = areArraysEqualSets(card.details.colors, filter.arg);
+          res = areArraysEqualSets(colors, filter.arg);
         }
         break;
       case '<':
-        res =
-          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, colors) && colors.length < filter.arg.length;
         break;
+        colors;
       case '>':
-        res =
-          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
+        res = arrayContainsOtherArray(colors, filter.arg) && colors.length > filter.arg.length;
         break;
       case '<=':
-        res =
-          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, colors) && colors.length <= filter.arg.length;
         break;
       case '>=':
-        res =
-          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
+        res = arrayContainsOtherArray(colors, filter.arg) && colors.length >= filter.arg.length;
         break;
     }
   }
-  if (filter.category == 'identity' && colors) {
+  if (filter.category == 'identity' && colors !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
@@ -695,14 +692,44 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'artist') {
     res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
-  if (filter.category == 'is') {
+  if (filter.category == 'is' && colors) {
+    // FIXME: This is replicaated from sortutils.js so that it isn't dependent on that file
+    // and can be reused on the server
     switch (filter.arg) {
       case 'gold':
-      case 'hybrid':
-      case 'phyrexian':
-          let type = filter.arg.substring(0,1).toUpperCase() + filter.arg.substring(1);
-          res = cardIsLabel(card, type, 'Manacost Type');
+        if (colors.length <= 1) {
+          res = false;
           break;
+        }
+        res = true;
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-')) {
+            res = false;
+          }
+        });
+        break;
+
+      case 'hybrid':
+        if (colors.length <= 1) {
+          res = false;
+          break;
+        }
+        res = false;
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-') && !symbol.includes('-p')) {
+            res = true;
+          }
+        });
+        break;
+
+      case 'phyrexian':
+        res = false;
+        card.details.parsed_cost.forEach(function(symbol, index) {
+          if (symbol.includes('-p')) {
+            res = true;
+          }
+        });
+        break;
     }
   }
 
