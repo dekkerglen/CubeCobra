@@ -62,10 +62,9 @@ describe('cards', () => {
     const _id = 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4';
     const expected = {
       _id: 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4',
-      art_crop:
-        'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
       artist: 'Dmitry Burmak',
-      border_color: 'borderless',
+      border_color: 'black',
       cmc: 4,
       collector_number: '356',
       color_identity: ['B'],
@@ -73,15 +72,15 @@ describe('cards', () => {
       colors: ['B'],
       digital: false,
       full_name: 'Rankle, Master of Pranks [celd-356]',
-      image_normal:
-        'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
-      image_small:
-        'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
+      full_name: 'Rankle, Master of Pranks [eld-356]',
+      image_normal: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+      image_small: 'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+      isToken: false,
       legalities: {
-        Legacy: false,
-        Modern: false,
+        Legacy: true,
+        Modern: true,
         Pauper: false,
-        Standard: false,
+        Standard: true,
       },
       name: 'Rankle, Master of Pranks',
       name_lower: 'rankle, master of pranks',
@@ -91,8 +90,10 @@ describe('cards', () => {
       power: '3',
       promo: true,
       rarity: 'mythic',
-      scryfall_uri: 'https://scryfall.com/card/celd/356/rankle-master-of-pranks?utm_source=api',
-      set: 'celd',
+      scryfall_uri: 'https://scryfall.com/card/eld/356/rankle-master-of-pranks?utm_source=api',
+      set: 'eld',
+      tcgplayer_id: 198372,
+      toughness: '3',
       type: 'Legendary Creature — Faerie Rogue',
     };
     var promise = carddb.initializeCardDb(fixturesPath, true);
@@ -119,10 +120,9 @@ describe('cards', () => {
     const _id = 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4';
     const expected = {
       _id: 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4',
-      art_crop:
-        'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
       artist: 'Dmitry Burmak',
-      border_color: 'borderless',
+      border_color: 'black',
       cmc: 4,
       collector_number: '356',
       color_identity: ['B'],
@@ -130,17 +130,16 @@ describe('cards', () => {
       colors: ['B'],
       digital: false,
       display_image:
-        'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
-      full_name: 'Rankle, Master of Pranks [celd-356]',
-      image_normal:
-        'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
-      image_small:
-        'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1567700630',
+        'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+      full_name: 'Rankle, Master of Pranks [eld-356]',
+      image_normal: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+      image_small: 'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
+      isToken: false,
       legalities: {
-        Legacy: false,
-        Modern: false,
+        Legacy: true,
+        Modern: true,
         Pauper: false,
-        Standard: false,
+        Standard: true,
       },
       name: 'Rankle, Master of Pranks',
       name_lower: 'rankle, master of pranks',
@@ -150,8 +149,10 @@ describe('cards', () => {
       power: '3',
       promo: true,
       rarity: 'mythic',
-      scryfall_uri: 'https://scryfall.com/card/celd/356/rankle-master-of-pranks?utm_source=api',
-      set: 'celd',
+      scryfall_uri: 'https://scryfall.com/card/eld/356/rankle-master-of-pranks?utm_source=api',
+      set: 'eld',
+      tcgplayer_id: 198372,
+      toughness: '3',
       type: 'Legendary Creature — Faerie Rogue',
     };
     var promise = carddb.initializeCardDb(fixturesPath, true);

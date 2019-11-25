@@ -135,23 +135,17 @@ describe('cubefn', () => {
       island: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
     };
     const expectedDisplayImages = {
-      plains:
-        'https://img.scryfall.com/cards/normal/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
-      mountain:
-        'https://img.scryfall.com/cards/normal/front/4/2/42232ea6-e31d-46a6-9f94-b2ad2416d79b.jpg?1565989372',
-      forest:
-        'https://img.scryfall.com/cards/normal/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
-      swamp:
-        'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
-      island:
-        'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
+      plains: 'https://img.scryfall.com/cards/normal/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
+      mountain: 'https://img.scryfall.com/cards/normal/front/4/2/42232ea6-e31d-46a6-9f94-b2ad2416d79b.jpg?1565989372',
+      forest: 'https://img.scryfall.com/cards/normal/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
+      swamp: 'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
+      island: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
     };
     var mockCarddict = {};
     var expected = {};
     var exampleLand, expectedLandObject;
     basicLands.forEach(function(name) {
-      mockCarddict[mockNameToId[name.toLowerCase()]] =
-        landsfixture.exampleBasics[name.toLowerCase()];
+      mockCarddict[mockNameToId[name.toLowerCase()]] = landsfixture.exampleBasics[name.toLowerCase()];
       exampleLand = landsfixture.exampleBasics[name.toLowerCase()];
       expectedLandObject = {
         // copy necessary because getBasics modifies carddb (bad)
@@ -183,9 +177,9 @@ describe('cubefn', () => {
     return promise.then(function() {
       var result = cubefn.setCubeType(exampleCube, carddb);
       expect(result.card_count).toBe(exampleCube.cards.length);
-      expect(result.type).toBe('Vintage');
+      expect(result.type).toBe('Standard');
       expect(exampleCube.card_count).toBe(exampleCube.cards.length);
-      expect(exampleCube.type).toBe('Vintage');
+      expect(exampleCube.type).toBe('Standard');
     });
   });
 
@@ -201,10 +195,9 @@ describe('cubefn', () => {
     expect.assertions(1);
     var promise = carddb.initializeCardDb(fixturesPath, true);
     return promise.then(function() {
-      const exampleHtml =
-        '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
+      const exampleHtml = '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
       const expected =
-        '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
+        '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1571537886">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
       const result = cubefn.addAutocard(exampleHtml, carddb);
       expect(result).toBe(expected);
     });

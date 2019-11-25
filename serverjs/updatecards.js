@@ -121,7 +121,7 @@ function parseTokens(card) {
         if (result[8]) {
           var tmpTokenAbilities = result[8].toLowerCase().split('"');
           tmpTokenAbilities.forEach(line => {
-            tmpTokenAbilityParts = line.split(',');
+            const tmpTokenAbilityParts = line.split(',');
             tmpTokenAbilityParts.forEach(part => {
               if (part.length > 0) tokenAbilities.push(part);
             });
@@ -423,7 +423,7 @@ function CheckContentsEqualityOfArray(target, candidate) {
   var isValid = candidate.length == target.length;
   if (!isValid) return false;
 
-  for (idx = 0; idx < target.length; idx++) {
+  for (let idx = 0; idx < target.length; idx++) {
     if (!candidate.includes(target[idx])) {
       isValid = false;
       break;
@@ -662,6 +662,5 @@ module.exports = {
   convertColors: convertColors,
   convertParsedCost: convertParsedCost,
   convertCmc: convertCmc,
-  parseTokenMakingAbility: parseTokenMakingAbility,
   parseTokens: parseTokens,
 };
