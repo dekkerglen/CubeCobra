@@ -317,7 +317,7 @@ function convertParsedCost(card, isExtra) {
         .toLowerCase()
         .split('}{')
         .reverse();
-    } else if (card.layout == 'split') {
+    } else if (card.layout == 'split' || card.layout == 'adventure') {
       parsed_cost = card.mana_cost
         .substr(1, card.mana_cost.length - 2)
         .replace(' // ', '{split}')
@@ -347,7 +347,7 @@ function convertColors(card, isExtra) {
   } else {
     if (!card.card_faces || card.layout == 'flip') {
       return colors.concat(card.colors);
-    } else if (card.layout == 'split') {
+    } else if (card.layout == 'split' || card.layout == 'adventure') {
       return colors.concat(card.colors);
     } else if (card.card_faces[0].colors) {
       return colors.concat(card.card_faces[0].colors);
