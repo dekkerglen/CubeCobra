@@ -615,7 +615,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
     return res.status(500).send(err);
   }
 });
-2
+2;
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const userid = req.params.userid;
