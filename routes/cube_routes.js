@@ -2490,12 +2490,11 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
-    if(!user)
-    {
+    if (!user) {
       user = {
         _id: '',
-        username: 'Anonymous' 
-      }
+        username: 'Anonymous',
+      };
     }
 
     await util.addNotification(

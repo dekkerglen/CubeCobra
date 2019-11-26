@@ -700,9 +700,9 @@ function filterApply(card, filter, inCube) {
       case 'gold':
       case 'hybrid':
       case 'phyrexian':
-          let type = filter.arg.substring(0,1).toUpperCase() + filter.arg.substring(1);
-          res = cardIsLabel(card, type, 'Manacost Type');
-          break;
+        let type = filter.arg.substring(0, 1).toUpperCase() + filter.arg.substring(1);
+        res = cardIsLabel(card, type, 'Manacost Type');
+        break;
     }
   }
 
