@@ -23,7 +23,7 @@ const deduplicateTags = (tagColors) => {
     }
   }
   return result;
-}
+};
 
 class CubeCompare extends Component {
   constructor(props) {
@@ -36,16 +36,6 @@ class CubeCompare extends Component {
 
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
     this.setFilter = this.setFilter.bind(this);
-  }
-
-  componentDidMount() {
-    /* global */
-    autocard_init('autocard');
-  }
-
-  componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
   }
 
   setOpenCollapse(collapseFunction) {
@@ -61,12 +51,12 @@ class CubeCompare extends Component {
   render() {
     const { cards, cubeID, defaultTagColors, defaultShowTagColors, ...props } = this.props;
     const { openCollapse, filter } = this.state;
-    const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
-    const defaultTags = [...defaultTagSet].map(tag => ({
+    const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
+    const defaultTags = [...defaultTagSet].map((tag) => ({
       id: tag,
       text: tag,
     }));
-    const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
+    const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
@@ -88,7 +78,7 @@ class CubeCompare extends Component {
               <CardModalForm>
                 <CompareView cards={filteredCards} {...props} />
               </CardModalForm>
-          </ErrorBoundary>
+            </ErrorBoundary>
           </TagContext.Provider>
         </DisplayContext.Provider>
       </SortContext.Provider>
@@ -104,7 +94,10 @@ const defaultShowTagColors = document.getElementById('showTagColors').value === 
 const wrapper = document.getElementById('react-root');
 const element = (
   <CubeCompare
-    cards={cards} both={in_both} onlyA={only_a} onlyB={only_b}
+    cards={cards}
+    both={in_both}
+    onlyA={only_a}
+    onlyB={only_b}
     cubeID={cubeID}
     defaultTagColors={defaultTagColors}
     defaultShowTagColors={defaultShowTagColors}

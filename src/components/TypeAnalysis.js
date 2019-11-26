@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Col, Row, Table } from 'reactstrap';
 
-const types = ['Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Total']
+const types = ['Creatures', 'Instants', 'Sorceries', 'Enchantments', 'Artifacts', 'Planeswalkers', 'Lands', 'Total'];
 
 const colors = [
   ['White', 'White', 'w'],
@@ -23,36 +23,43 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
         <thead>
           <tr>
             <th scope="col" />
-            {colors.map(([name, _, short]) =>
-              <th scope="col">
-                {name === 'Total' ? 'Total' :
+            {colors.map(([name, _, short]) => (
+              <th key={name + 'col'} scope="col">
+                {name === 'Total' ? (
+                  'Total'
+                ) : (
                   <img key={short} src={`/content/symbols/${short}.png`} alt={name} title={name} />
-                }
+                )}
               </th>
-            )}
+            ))}
           </tr>
         </thead>
-        <tbody>
-          {types.map(type =>
-            <tr>
+        <tbody className="breakdown">
+          {types.map((type) => (
+            <tr key={type + 'row'}>
               <th scope="row">{type}</th>
               {colors.map(([name, path, _]) => {
-                count = typeByColor[type][path];
-                color_total = typeByColor['Total'];
-                if (name !== 'Total' && path !== 'Total' && count > 1 && color_total > count) {
-                  percent = Number.parseFloat(count / color_total * 100.0).toFixed(1);
-                  return <td>{count}<span class="percent">{percent}%</span></td>;
+                const reactKey = type + path;
+                const count = typeByColor[type][path];
+                const colorTotal = typeByColor['Total'][path];
+                if (name !== 'Total' && path !== 'Total' && count > 1 && colorTotal > count) {
+                  const percent = Math.round((count / colorTotal) * 100.0);
+                  return (
+                    <td key={reactKey}>
+                      {count}
+                      <span className="percent">{percent}%</span>
+                    </td>
+                  );
                 } else {
-                  return <td>{count}</td>;
+                  return <td key={reactKey}>{count}</td>;
                 }
               })}
             </tr>
-          )}
+          ))}
         </tbody>
       </Table>
     </Col>
   </Row>
 );
-
 
 export default TypeAnalysis;

@@ -9,7 +9,15 @@ Comment.add({
   index: Number,
   timePosted: Date,
   comments: [Comment],
-  updated: Boolean
+  updated: Boolean,
+  image: {
+    type: String,
+    default: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+  },
+  artist: {
+    type: String,
+    default: 'Allan Pollack',
+  },
 });
 
 // Blog schema
@@ -23,8 +31,15 @@ let blogSchema = mongoose.Schema({
   dev: String,
   date_formatted: String,
   changelist: String,
-  comments: [Comment]
+  comments: [Comment],
+  username: {
+    type: String,
+    default: 'User',
+  },
+  cubename: {
+    type: String,
+    default: 'Cube',
+  },
 });
 
-
-let Blog = module.exports = mongoose.model('Blog', blogSchema)
+let Blog = (module.exports = mongoose.model('Blog', blogSchema));

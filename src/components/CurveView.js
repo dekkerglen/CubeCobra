@@ -8,20 +8,20 @@ import SortContext from './SortContext';
 const TypeRow = ({ cardType, groups, count, primary }) => (
   <Fragment key={cardType}>
     <Row className="mt-2">
-      <h6 className="ml-1">{cardType} ({count})</h6>
+      <h6 className="ml-1">
+        {cardType} ({count})
+      </h6>
     </Row>
     <Row className="even-cols">
-      {
-        getLabels('CMC2').map(cmc =>
-          <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
-            <AutocardListGroup
-              heading={`${cmc} (${(groups[cmc] || []).length})`}
-              cards={groups[cmc] || []}
-              sort={'Unsorted'}
-            />
-          </div>
-        )
-      }
+      {getLabels('CMC2').map((cmc) => (
+        <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
+          <AutocardListGroup
+            heading={`${cmc} (${(groups[cmc] || []).length})`}
+            cards={groups[cmc] || []}
+            sort={'Unsorted'}
+          />
+        </div>
+      ))}
     </Row>
   </Fragment>
 );
@@ -29,27 +29,21 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
 const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
   <Card>
     <CardHeader>
-      <h5>{color} {count}</h5>
+      <h5>
+        {color} {count}
+      </h5>
     </CardHeader>
     <CardBody>
-      {
-        getLabels('CNC').filter(cardType => groups[cardType]).map(cardType =>
-          <TypeRow
-            key={cardType}
-            cardType={cardType}
-            groups={groups[cardType]}
-            count={typeCounts[cardType]}
-          />
-        )
-      }
+      {getLabels('CNC')
+        .filter((cardType) => groups[cardType])
+        .map((cardType) => (
+          <TypeRow key={cardType} cardType={cardType} groups={groups[cardType]} count={typeCounts[cardType]} />
+        ))}
     </CardBody>
   </Card>
 );
 
 const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
-  /* Initialize autocard anytime the DOM is updated. */
-  useEffect(() => /* global */ autocard_init('autocard'));
-
   // We call the groups color and type even though they might be other sorts.
   let groups = sortIntoGroups(cards, primary);
   let colorCounts = {};
@@ -84,8 +78,9 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
   return (
     <Row className="mt-3" {...props}>
       <Col>
-        {
-          getLabels(primary).filter(color => groups[color]).map(color => (
+        {getLabels(primary)
+          .filter((color) => groups[color])
+          .map((color) => (
             <ColorCard
               key={color}
               color={color}
@@ -94,12 +89,11 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
               typeCounts={typeCounts[color]}
               primary={color}
             />
-          ))
-        }
+          ))}
       </Col>
     </Row>
   );
-}
+};
 
 const CurveView = SortContext.Wrapped(CurveViewRaw);
 

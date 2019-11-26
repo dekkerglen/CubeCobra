@@ -1,7 +1,7 @@
-const rimraf = require("rimraf");
-const updatecards = require("../../serverjs/updatecards");
-const carddb = require("../../serverjs/cards");
-const examplecards = require("../../fixtures/examplecards");
+const rimraf = require('rimraf');
+const updatecards = require('../../serverjs/updatecards');
+const carddb = require('../../serverjs/cards');
+const examplecards = require('../../fixtures/examplecards');
 const fs = require('fs');
 const cardsFixturePath = 'fixtures/cards_small.json';
 
@@ -11,6 +11,7 @@ const convertedExampleCard = {
   collector_number: '154',
   promo: false,
   digital: false,
+  isToken: false,
   border_color: 'black',
   name: 'Vexing Devil',
   name_lower: 'vexing devil',
@@ -18,14 +19,15 @@ const convertedExampleCard = {
   artist: 'Lucas Graciano',
   scryfall_uri: 'https://scryfall.com/card/uma/154/vexing-devil?utm_source=api',
   rarity: 'rare',
-  oracle_text: 'When Vexing Devil enters the battlefield, any opponent may have it deal 4 damage to them. If a player does, sacrifice Vexing Devil.',
+  oracle_text:
+    'When Vexing Devil enters the battlefield, any opponent may have it deal 4 damage to them. If a player does, sacrifice Vexing Devil.',
   _id: 'a5ebb551-6b0d-45fa-88c8-3746214094f6',
   cmc: 1,
   legalities: {
     Legacy: true,
     Modern: true,
     Standard: false,
-    Pauper: false
+    Pauper: false,
   },
   parsed_cost: ['r'],
   colors: ['R'],
@@ -36,7 +38,7 @@ const convertedExampleCard = {
   image_small: 'https://img.scryfall.com/cards/small/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
   image_normal: 'https://img.scryfall.com/cards/normal/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
-  colorcategory: 'r'
+  colorcategory: 'r',
 };
 
 const convertedExampleDoubleFacedCardFlipFace = {
@@ -45,6 +47,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   collector_number: '125',
   promo: false,
   digital: false,
+  isToken: false,
   border_color: 'black',
   name: 'Moonscarred Werewolf',
   name_lower: 'moonscarred werewolf',
@@ -59,7 +62,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
     Legacy: false,
     Modern: false,
     Standard: false,
-    Pauper: false
+    Pauper: false,
   },
   parsed_cost: [],
   colors: ['G'],
@@ -70,29 +73,29 @@ const convertedExampleDoubleFacedCardFlipFace = {
   image_small: undefined,
   image_normal: undefined,
   art_crop: undefined,
-  colorcategory: 'g'
+  colorcategory: 'g',
 };
 
 const convertFnToAttribute = {
-  "convertName": "name",
-  "convertId": "_id",
-  "convertLegalities": "legalities",
-  "convertType": "type",
-  "convertColors": "colors",
-  "convertParsedCost": "parsed_cost",
-  "convertCmc": "cmc"
+  convertName: 'name',
+  convertId: '_id',
+  convertLegalities: 'legalities',
+  convertType: 'type',
+  convertColors: 'colors',
+  convertParsedCost: 'parsed_cost',
+  convertCmc: 'cmc',
 };
 
 beforeEach(() => {
-  rimraf.sync("private");
+  rimraf.sync('private');
   updatecards.initializeCatalog();
 });
 
 afterEach(() => {
-  rimraf.sync("private");
+  rimraf.sync('private');
 });
 
-test("updateCardbase creates the expected files", () => {
+test('updateCardbase creates the expected files', () => {
   expect.assertions(7);
   var noopPromise = new Promise((resolve, reject) => {
     process.nextTick(() => {
@@ -119,14 +122,17 @@ test("addCardToCatalog successfully adds a card's information to the internal st
   const card = convertedExampleCard;
   updatecards.addCardToCatalog(card);
   var catalog = updatecards.catalog;
-  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedFullName = card.full_name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
   const normalizedName = carddb.normalizedName(card);
   const expectedImagedictStructure = {
     uri: card.art_crop,
-    artist: card.artist
+    artist: card.artist,
   };
   const expectedCardimagesStructure = {
-    image_normal: card.image_normal
+    image_normal: card.image_normal,
   };
   expect(Object.keys(catalog.dict).length).toBe(1);
   expect(catalog.dict[card._id]).toEqual(card);
@@ -144,11 +150,14 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   const card = convertedExampleDoubleFacedCardFlipFace;
   updatecards.addCardToCatalog(card, true);
   var catalog = updatecards.catalog;
-  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedFullName = card.full_name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
   const normalizedName = carddb.normalizedName(card);
   const expectedImagedictStructure = {
     uri: card.art_crop,
-    artist: card.artist
+    artist: card.artist,
   };
   expect(Object.keys(catalog.dict).length).toBe(1);
   expect(catalog.dict[card._id]).toEqual(card);
@@ -161,7 +170,7 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
-test("initializeCatalog clears the updatecards structures", () => {
+test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(6);
   var contents = fs.readFileSync(cardsFixturePath);
   var cards = JSON.parse(contents);
@@ -176,7 +185,7 @@ test("initializeCatalog clears the updatecards structures", () => {
   });
 });
 
-test("saveAllCards creates the expected files", () => {
+test('saveAllCards creates the expected files', () => {
   expect.assertions(7);
   var contents = fs.readFileSync(cardsFixturePath);
   var cards = JSON.parse(contents);
@@ -191,7 +200,7 @@ test("saveAllCards creates the expected files", () => {
   });
 });
 
-test("convertCard returns a correctly converted card object", () => {
+test('convertCard returns a correctly converted card object', () => {
   const result = updatecards.convertCard(examplecards.exampleCard);
   expect(result).toEqual(convertedExampleCard);
 });
@@ -205,7 +214,7 @@ for (var convertFn in convertFnToAttribute) {
   });
 }
 
-test("convertCard returns a correctly converted double-faced card object", () => {
+test('convertCard returns a correctly converted double-faced card object', () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });

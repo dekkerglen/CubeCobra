@@ -3,7 +3,9 @@ import React, { Component } from 'react';
 import { csrfFetch } from '../util/CSRF';
 
 const TagContextRaw = React.createContext({
-  addSuggestion: () => { console.error('Error: No TagContext!'); },
+  addSuggestion: () => {
+    console.error('Error: No TagContext!');
+  },
   allSuggestions: [],
 });
 
@@ -29,9 +31,11 @@ class TagContextProvider extends Component {
 
   addTag(tag) {
     this.setState(({ tags }) =>
-      tags.some(t => t.id === tag.id) ? {} : {
-        tags: [...tags, tag],
-      }
+      tags.some((t) => t.id === tag.id)
+        ? {}
+        : {
+            tags: [...tags, tag],
+          },
     );
   }
 
@@ -41,9 +45,9 @@ class TagContextProvider extends Component {
       method: 'POST',
       body: JSON.stringify(tagColors),
       headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(response => {
+        'Content-Type': 'application/json',
+      },
+    }).then((response) => {
       if (response.ok) {
         this.setState({ tagColors });
         window.globalTagColors = tagColors;
@@ -60,9 +64,9 @@ class TagContextProvider extends Component {
         show_tag_colors: showTagColors,
       }),
       headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(response => {
+        'Content-Type': 'application/json',
+      },
+    }).then((response) => {
       if (response.ok) {
         this.setState({ showTagColors });
         window.globalShowTagColors = showTagColors;
@@ -93,7 +97,7 @@ class TagContextProvider extends Component {
     const value = {
       allSuggestions: tags,
       addSuggestion: this.addTag,
-      allTags: tags.map(tag => tag.text),
+      allTags: tags.map((tag) => tag.text),
       tagColors,
       setTagColors: this.setTagColors,
       showTagColors,
@@ -101,15 +105,11 @@ class TagContextProvider extends Component {
       cardColorClass: this.cardColorClass,
       tagColorClass: this.tagColorClass,
     };
-    return (
-      <TagContextRaw.Provider value={value}>
-        {this.props.children}
-      </TagContextRaw.Provider>
-    );
+    return <TagContextRaw.Provider value={value}>{this.props.children}</TagContextRaw.Provider>;
   }
 }
 
-export const getCardColorClass = card => {
+export const getCardColorClass = (card) => {
   const type = card.type_line;
   const colors = card.colors;
   if (type.toLowerCase().includes('land')) {
@@ -120,12 +120,12 @@ export const getCardColorClass = card => {
     return 'multi';
   } else if (colors.length == 1 && [...'WUBRGC'].includes(colors[0])) {
     return {
-      'W': 'white',
-      'U': 'blue',
-      'B': 'black',
-      'R': 'red',
-      'G': 'green',
-      'C': 'colorless',
+      W: 'white',
+      U: 'blue',
+      B: 'black',
+      R: 'red',
+      G: 'green',
+      C: 'colorless',
     }[colors[0]];
   }
 };
@@ -140,7 +140,7 @@ export const getCardTagColorClass = (tagColors, card) => {
 };
 
 export const getTagColorClass = (tagColors, tag) => {
-  const tagColor = tagColors.find(tagColor => tag === tagColor.tag);
+  const tagColor = tagColors.find((tagColor) => tag === tagColor.tag);
   if (tagColor && tagColor.color) {
     return `tag-color tag-${tagColor.color}`;
   } else {
@@ -158,7 +158,7 @@ const TagContext = {
     ['Orange', 'orange'],
     ['Yellow', 'yellow'],
     ['Green', 'green'],
-    ['Turquoise', 'Turquoise'],
+    ['Turquoise', 'turquoise'],
     ['Blue', 'blue'],
     ['Purple', 'purple'],
     ['Violet', 'violet'],

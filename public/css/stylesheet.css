@@ -229,18 +229,17 @@ button.close.float-none span {
 	background-color: #28A745;
 	color: white
 }
+.dropdown-no-green a:focus {
+	background-color: transparent;
+	color: #0056B5
+}
+
 
 .cmc-group {
 	border-radius:0;
 	position: relative;
 }
 .cmc-group:not(:last-of-type) {
-	/* content : "";
-  position: absolute;
-  left    : 12.5%;
-  bottom  : 0;
-  height  : 1px;
-  width   : 75%;  or 100px */
   border-bottom:1px solid #999;
 }
 .cmc-group:last-of-type {
@@ -417,6 +416,116 @@ div.card {
 	border-radius: 0px;
   }
 
-  body.busy-cursor {
+body.busy-cursor {
 	cursor: progress;
+
+}
+.centered-max400 {
+	margin: auto; max-width: 400px;
+}
+.cube-preview-image {
+	width: 100%;
+	height: auto;
+}
+.deck-preview:hover {
+	background: #EFEFEF;
+	cursor: pointer;
+}
+.no-underline-hover:hover{
+    text-decoration: none;
   }
+
+
+/* Styles for Analysis */
+
+.breakdown .percent {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: #535A5F;
+  margin-left: 0.5em;
+}
+.breakdown .percent::before {
+  content: "(";
+}
+.breakdown .percent::after {
+  content: ")";
+}
+.cube-preview-card {
+	width: 100%;
+	padding-top: 110%; /* 1:1 Aspect Ratio */
+	position: relative; /* If you want text inside of it */
+}
+.cube-preview-card:hover {
+	background: #EFEFEF;
+	cursor: pointer;
+    border: 1px solid #000000;
+}
+.cube-image-preview {
+	height: 100%;
+	object-fit: cover;
+}
+.cube-preview-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.cube-preview-element {
+	height: 73%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
+.cube-preview-body {
+	position: absolute;
+	top: 73%;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
+.cube-preview-artist {
+	font-size: small;
+	position: absolute;
+	bottom: 0;
+	right: 2px;
+    color: white;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+.notification-icon{
+    background:#9A9D90;
+}
+
+.nav-item:hover .notification-icon{
+    background:#CCCECF;
+}
+.nav-item:focus .notification-icon{
+    background:white;
+}
+
+.notification-scrollarea
+{
+   max-height: 60vh;
+   min-width: 40vh;
+   overflow-y: auto;
+}
+
+.user-notification{	
+	border-top: 1px solid #DEE2E6;
+}
+
+.user-notification:hover{	
+	background: #EFEFEF;
+}
+.comment-highlighted {
+	background: #ECF4E3;
+}
+
+.profile-thumbnail {
+	border-radius: 50%;
+	object-fit: cover;
+	width:60px;
+	height:60px;
+	float: left;
+	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}

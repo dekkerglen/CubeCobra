@@ -10,28 +10,61 @@ import PagedTable from './PagedTable';
 import SortContext from './SortContext';
 import TagContext from './TagContext';
 import TagInput from './TagInput';
+import withAutocard from './WithAutocard';
 
 const colorCombos = [
-  'C', 'W', 'U', 'B', 'R', 'G',
-  'WU', 'WB', 'WR', 'WG', 'UB', 'UR', 'UG', 'BR', 'BG', 'RG',
-  'WUB', 'WUR', 'WUG', 'WBR', 'WBG', 'WRG', 'UBR', 'UBG', 'URG', 'BRG',
-  'WUBR', 'WUBG', 'WURG', 'WBRG', 'UBRG',
-  'WUBRG'
+  'C',
+  'W',
+  'U',
+  'B',
+  'R',
+  'G',
+  'WU',
+  'WB',
+  'WR',
+  'WG',
+  'UB',
+  'UR',
+  'UG',
+  'BR',
+  'BG',
+  'RG',
+  'WUB',
+  'WUR',
+  'WUG',
+  'WBR',
+  'WBG',
+  'WRG',
+  'UBR',
+  'UBG',
+  'URG',
+  'BRG',
+  'WUBR',
+  'WUBG',
+  'WURG',
+  'WBRG',
+  'UBRG',
+  'WUBRG',
 ];
+
+const AutocardTd = withAutocard('td');
 
 class ListViewRaw extends Component {
   constructor(props) {
     super(props);
 
-    const cardValues = [].concat.apply([], this.props.cards.map(({ index, ...card }) => [
-      [`tdcheck${index}`, false],
-      [`tdversion${index}`, card.cardID],
-      [`tdtype${index}`, card.type_line],
-      [`tdstatus${index}`, card.status],
-      [`tdcmc${index}`, card.cmc],
-      [`tdcolors${index}`, (card.colors || ['C']).join('')],
-      [`tags${index}`, (card.tags || []).map(tag => ({ id: tag, text: tag }))],
-    ]));
+    const cardValues = [].concat.apply(
+      [],
+      this.props.cards.map(({ index, ...card }) => [
+        [`tdcheck${index}`, false],
+        [`tdversion${index}`, card.cardID],
+        [`tdtype${index}`, card.type_line],
+        [`tdstatus${index}`, card.status],
+        [`tdcmc${index}`, card.cmc],
+        [`tdcolors${index}`, (card.colors || ['C']).join('')],
+        [`tags${index}`, (card.tags || []).map((tag) => ({ id: tag, text: tag }))],
+      ]),
+    );
 
     this.state = {
       ...fromEntries(cardValues),
@@ -45,8 +78,8 @@ class ListViewRaw extends Component {
 
   updateVersions() {
     const knownIds = new Set(Object.keys(this.state.versionDict));
-    const currentIds = this.props.cards.map(card => card.cardID);
-    const newIds = currentIds.filter(id => !knownIds.has(id));
+    const currentIds = this.props.cards.map((card) => card.cardID);
+    const newIds = currentIds.filter((id) => !knownIds.has(id));
     if (newIds.length > 0) {
       csrfFetch('/cube/api/getversions', {
         method: 'POST',
@@ -54,11 +87,13 @@ class ListViewRaw extends Component {
         headers: {
           'Content-Type': 'application/json',
         },
-      }).then(response => response.json()).then(json => {
-        this.setState(({ versionDict }) => ({
-          versionDict: { ...versionDict, ...json.dict }
-        }));
-      });
+      })
+        .then((response) => response.json())
+        .then((json) => {
+          this.setState(({ versionDict }) => ({
+            versionDict: { ...versionDict, ...json.dict },
+          }));
+        });
     }
   }
 
@@ -66,14 +101,10 @@ class ListViewRaw extends Component {
     /* global */
     activateTags();
 
-    /* global */
-    autocard_init('autocard');
     this.updateVersions();
   }
 
   componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
     this.updateVersions();
   }
 
@@ -85,12 +116,14 @@ class ListViewRaw extends Component {
     updated = { ...card, ...updated };
     delete updated.details;
 
-    if (updated.cardID === card.cardID
-      && updated.type_line === card.type_line
-      && updated.status === card.status
-      && updated.cmc === card.cmc
-      && arraysEqual(updated.colors, card.colors)
-      && arraysEqual(updated.tags, card.tags)) {
+    if (
+      updated.cardID === card.cardID &&
+      updated.type_line === card.type_line &&
+      updated.status === card.status &&
+      updated.cmc === card.cmc &&
+      arraysEqual(updated.colors, card.colors) &&
+      arraysEqual(updated.tags, card.tags)
+    ) {
       // no need to sync
       return;
     }
@@ -104,21 +137,26 @@ class ListViewRaw extends Component {
       headers: {
         'Content-Type': 'application/json',
       },
-    }).then(response => response.json()).catch(err => console.error(err)).then(json => {
-      if (json.success === 'true') {
-        cube[index] = { ...cube[index], ...updated };
-        if (updated.cardID !== card.cardID) {
-          // changed version
-          fetch(`/cube/api/getcardfromid/${updated.cardID}`).then(
-            response => response.json()
-          ).then(json => {
-            cube[index].details = json.card;
-            cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
-            cubeDict[cube[index].index] = cube[index];
-          }).catch(err => console.error(err));
+    })
+      .then((response) => response.json())
+      .catch((err) => console.error(err))
+      .then((json) => {
+        if (json.success === 'true') {
+          cube[index] = { ...cube[index], ...updated };
+          if (updated.cardID !== card.cardID) {
+            // changed version
+            fetch(`/cube/api/getcardfromid/${updated.cardID}`)
+              .then((response) => response.json())
+              .then((json) => {
+                cube[index].details = json.card;
+                cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
+                cubeDict[cube[index].index] = cube[index];
+              })
+              .catch((err) => console.error(err));
+          }
         }
-      }
-    }).catch(err => console.error(err));
+      })
+      .catch((err) => console.error(err));
   }
 
   addTag(cardIndex, tag) {
@@ -127,7 +165,7 @@ class ListViewRaw extends Component {
     this.setState({
       [name]: newTags,
     });
-    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   deleteTag(cardIndex, tagIndex) {
@@ -136,7 +174,7 @@ class ListViewRaw extends Component {
     this.setState({
       [name]: newTags,
     });
-    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
@@ -147,7 +185,7 @@ class ListViewRaw extends Component {
     this.setState({
       [name]: newTags,
     });
-    this.syncCard(cardIndex, { tags: newTags.map(tag => tag.text) });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   getChecked() {
@@ -161,7 +199,7 @@ class ListViewRaw extends Component {
     const index = parseInt(target.getAttribute('data-index'));
 
     this.setState({
-      [name]: value
+      [name]: value,
     });
 
     if (target.tagName.toLowerCase() === 'select') {
@@ -178,10 +216,10 @@ class ListViewRaw extends Component {
 
     if (name.startsWith('tdcheck')) {
       let checked = this.getChecked();
-      if (value && !checked.some(card => card.index === index)) {
-        checked.push(this.props.cards.find(card => card.index === index));
+      if (value && !checked.some((card) => card.index === index)) {
+        checked.push(this.props.cards.find((card) => card.index === index));
       } else if (!value) {
-        checked = checked.filter(card => card.index !== index);
+        checked = checked.filter((card) => card.index !== index);
       }
       this.props.setGroupModalCards(checked);
     }
@@ -197,7 +235,7 @@ class ListViewRaw extends Component {
       type_line: this.state[`tdtype${index}`],
       status: this.state[`tdstatus${index}`],
       cmc: this.state[`tdcmc${index}`],
-      tags: this.state[`tags${index}`].map(tagDict => tagDict.text),
+      tags: this.state[`tags${index}`].map((tagDict) => tagDict.text),
       colors: colorString === 'C' ? [] : [...colorString],
     };
 
@@ -233,63 +271,78 @@ class ListViewRaw extends Component {
       [field === 'check' ? 'checked' : 'value']: this.state[`td${field}${index}`],
     });
 
-    const rows =
-      [].concat.apply([], getLabels(primary).filter(label1 => groups[label1]).map(label1 =>
-        [].concat.apply([], getLabels(secondary).filter(label2 => groups[label1][label2]).map(label2 =>
-          groups[label1][label2].sort(function(a,b)
-          {
-            const textA = a.details.name.toUpperCase();
-            const textB =  b.details.name.toUpperCase();
-            return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-          }).map(({ index, details, ...card }) =>
-            <tr key={index} className={cardColorClass(card)}>
-              <td className="align-middle">
-                <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
-              </td>
-              <td className="align-middle text-truncate autocard" card={details.display_image}>
-                {details.name}
-              </td>
-              <td>
-                <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
-                  {(this.state.versionDict[card.cardID] || []).map(version =>
-                    <option key={version.id} value={version.id}>
-                      {version.version}
-                    </option>
-                  )}
-                </Input>
-              </td>
-              <td>
-                <Input {...inputProps(index, 'type')} type="text" />
-              </td>
-              <td>
-                <Input {...inputProps(index, 'status')} type="select">
-                  {getLabels('Status').map(status =>
-                    <option key={status}>{status}</option>
-                  )}
-                </Input>
-              </td>
-              <td>
-                <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
-              </td>
-              <td>
-                <Input {...inputProps(index, 'colors')} type="select">
-                  {colorCombos.map(combo =>
-                    <option key={combo}>{combo}</option>
-                  )}
-                </Input>
-              </td>
-              <td style={{ minWidth: '15rem' }}>
-                <TagInput
-                  tags={this.state[`tags${index}`]}
-                  addTag={this.addTag.bind(this, index)}
-                  deleteTag={this.deleteTag.bind(this, index)}
-                  reorderTag={this.reorderTag.bind(this, index)}
-                />
-              </td>
-            </tr>
-          )
-        ))
-      ));
+    const rows = [].concat.apply(
+      [],
+      getLabels(primary)
+        .filter((label1) => groups[label1])
+        .map((label1) =>
+          [].concat.apply(
+            [],
+            getLabels(secondary)
+              .filter((label2) => groups[label1][label2])
+              .map((label2) =>
+                groups[label1][label2]
+                  .sort(function(a, b) {
+                    const textA = a.details.name.toUpperCase();
+                    const textB = b.details.name.toUpperCase();
+                    return textA < textB ? -1 : textA > textB ? 1 : 0;
+                  })
+                  .map(({ index, details, ...card }) => (
+                    <tr key={index} className={cardColorClass(card)}>
+                      <td className="align-middle">
+                        <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
+                      </td>
+                      <AutocardTd className="align-middle text-truncate" card={{ details, ...card }}>
+                        {details.name}
+                      </AutocardTd>
+                      <td>
+                        <Input
+                          {...inputProps(index, 'version')}
+                          type="select"
+                          style={{ maxWidth: '6rem' }}
+                          className="w-100"
+                        >
+                          {(this.state.versionDict[card.cardID] || []).map((version) => (
+                            <option key={version.id} value={version.id}>
+                              {version.version}
+                            </option>
+                          ))}
+                        </Input>
+                      </td>
+                      <td>
+                        <Input {...inputProps(index, 'type')} type="text" />
+                      </td>
+                      <td>
+                        <Input {...inputProps(index, 'status')} type="select">
+                          {getLabels('Status').map((status) => (
+                            <option key={status}>{status}</option>
+                          ))}
+                        </Input>
+                      </td>
+                      <td>
+                        <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
+                      </td>
+                      <td>
+                        <Input {...inputProps(index, 'colors')} type="select">
+                          {colorCombos.map((combo) => (
+                            <option key={combo}>{combo}</option>
+                          ))}
+                        </Input>
+                      </td>
+                      <td style={{ minWidth: '15rem' }}>
+                        <TagInput
+                          tags={this.state[`tags${index}`]}
+                          addTag={this.addTag.bind(this, index)}
+                          deleteTag={this.deleteTag.bind(this, index)}
+                          reorderTag={this.reorderTag.bind(this, index)}
+                        />
+                      </td>
+                    </tr>
+                  )),
+              ),
+          ),
+        ),
+    );
 
     return (
       <form className="form-inline">
@@ -314,23 +367,20 @@ class ListViewRaw extends Component {
   }
 }
 
-const ListView = props =>
+const ListView = (props) => (
   <SortContext.Consumer>
-    {sortValue =>
+    {(sortValue) => (
       <TagContext.Consumer>
-        {({ cardColorClass }) =>
+        {({ cardColorClass }) => (
           <GroupModalContext.Consumer>
-            {({ setGroupModalCards, openGroupModal }) =>
-              <ListViewRaw
-                {...sortValue}
-                {...{ cardColorClass, setGroupModalCards, openGroupModal }}
-                {...props}
-              />
-            }
+            {({ setGroupModalCards, openGroupModal }) => (
+              <ListViewRaw {...sortValue} {...{ cardColorClass, setGroupModalCards, openGroupModal }} {...props} />
+            )}
           </GroupModalContext.Consumer>
-        }
+        )}
       </TagContext.Consumer>
-    }
-  </SortContext.Consumer>;
+    )}
+  </SortContext.Consumer>
+);
 
 export default ListView;

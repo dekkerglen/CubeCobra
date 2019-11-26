@@ -3,43 +3,69 @@ import { Row, Col, Card, CardBody } from 'reactstrap';
 
 import Affiliate from '../util/Affiliate';
 
-class TokenAnalysis extends Component {
-  constructor(props) {
-    super(props);
-  }
+import MassBuyButton from './MassBuyButton';
+import withAutocard from './WithAutocard';
 
-  componentDidMount() {
-    autocard_init('autocard');
-  }
+const AutocardLink = withAutocard('a');
 
-  render() {
-    var tokens = this.props.tokens;
-    console.log(tokens);
-    return (
-      <Row>
-        {tokens.map(token =>
-        <Col key={token} xs={6} sm={6} md={4} lg={3}>
-          <Card className="mb-2">
-            <a href={Affiliate.getTCGLink({details:token[0]})}><img src={token[0].image_normal} className='card-img-top'></img></a>
+const compareCards = (x, y) => {
+  if (x.name === y.name) {
+    return 0;
+  } else {
+    return x.name < y.name ? -1 : 1;
+  }
+};
+
+const compareTokens = (x, y) => compareCards(x[0], y[0]);
+
+const sortTokens = (tokens) => [...tokens].sort(compareTokens);
+const sortCards = (cards) => [...cards].sort(compareCards);
+
+const dedupeCards = (cards) => {
+  const map = new Map();
+  for (const card of [...cards].reverse()) {
+    map.set(card.name, card);
+  }
+  return [...map.values()];
+};
+
+const TokenAnalysis = ({ tokens }) => (
+  <>
+    <Row className="mb-3">
+      <Col>
+        <MassBuyButton color="success" cards={tokens.map(([token, tokenCards]) => ({ details: token }))}>
+          Buy all tokens
+        </MassBuyButton>
+      </Col>
+    </Row>
+    <Row>
+      {sortTokens(tokens).map(([token, tokenCards]) => (
+        <Col key={token._id} xs={6} md={4} lg={3}>
+          <Card className="mb-3">
+            <a href={Affiliate.getTCGLink({ details: token })}>
+              <img src={token.image_normal} className="card-img-top" />
+            </a>
             <CardBody>
               <p className="card-text">
-                  {token[1].map( card =>
-                    <a className="autocard" href={Affiliate.getTCGLink({details:card})}
+                {dedupeCards(sortCards(tokenCards)).map((card) => (
+                  <>
+                    <AutocardLink
                       key={card.name}
-                      card={card.image_normal}
-                      card_flip={card.image_flip}>
+                      href={Affiliate.getTCGLink({ details: card })}
+                      card={{ details: card }}
+                    >
                       {card.name}
-                      <br></br>
-                    </a>    
-                  )}
+                    </AutocardLink>
+                    <br />
+                  </>
+                ))}
               </p>
             </CardBody>
           </Card>
         </Col>
-        )}
-      </Row>
-    );
-  }
-}
+      ))}
+    </Row>
+  </>
+);
 
 export default TokenAnalysis;

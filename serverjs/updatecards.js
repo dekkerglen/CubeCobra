@@ -12,19 +12,19 @@ function initializeCatalog() {
   _catalog.full_names = [];
   _catalog.imagedict = {};
   _catalog.cardimages = {};
-};
+}
 
 initializeCatalog();
 
 function downloadDefaultCards() {
   var file = fs.createWriteStream('private/cards.json');
   var promise = new Promise((resolve, reject) => {
-    https.get("https://archive.scryfall.com/json/scryfall-default-cards.json", function(response) {
+    https.get('https://archive.scryfall.com/json/scryfall-default-cards.json', function(response) {
       let stream = response.pipe(file);
       stream.on('finish', function() {
         resolve();
       });
-    })
+    });
   });
   return promise;
 }
@@ -40,21 +40,24 @@ function updateCardbase(filepath) {
     var contents = fs.readFileSync(filepath);
     var cards = JSON.parse(contents);
     saveAllCards(cards);
-    console.log("Finished cardbase update...");
+    console.log('Finished cardbase update...');
   });
 }
 
 function addCardToCatalog(card, isExtra) {
   _catalog.dict[card._id] = card;
-  const normalizedFullName = card.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normalizedFullName = card.full_name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
   const normalizedName = carddb.normalizedName(card);
   _catalog.imagedict[normalizedFullName] = {
     uri: card.art_crop,
-    artist: card.artist
-  }
+    artist: card.artist,
+  };
   if (isExtra !== true) {
     let card_images = {
-      image_normal: card.image_normal
+      image_normal: card.image_normal,
     };
     if (card.image_flip) {
       card_images.image_flip = card.image_flip;
@@ -74,7 +77,7 @@ function writeFile(filepath, data) {
   return new Promise((resolve, reject) => {
     fs.writeFile(filepath, data, 'utf8', function(err) {
       if (err) {
-        console.log("An error occured while writing " + filepath);
+        console.log('An error occured while writing ' + filepath);
         console.log(err);
         reject(err);
       } else {
@@ -89,12 +92,10 @@ function addTokens(card) {
 
   if (Object.keys(specialCaseCardsList).includes(_catalog.dict[card.id].name)) {
     _catalog.dict[card.id].tokens = getTokensForSpecialCaseCard(_catalog.dict[card.id]._id, card);
-  } else
-  if (_catalog.dict[card.id].oracle_text != null) {
+  } else if (_catalog.dict[card.id].oracle_text != null) {
     if (_catalog.dict[card.id].oracle_text.includes(' token')) {
-
       //find the ability that generates the token to reduce the amount of text to get confused by.
-      var abilities = _catalog.dict[card.id].oracle_text.split("\n");
+      var abilities = _catalog.dict[card.id].oracle_text.split('\n');
       for (const ability of abilities) {
         if (ability.includes(' token')) {
           var reString = "((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(\".*\")|[a-z]+| and )+)+)?(?:.*(a copy of))?";
@@ -133,29 +134,31 @@ function addTokens(card) {
           if (specialCaseTokensList.includes(tokenName)) {
             mentionedTokens.push({
               tokenId: getTokenIDForSpecialCaseToken(tokenName),
-              sourceCardId: _catalog.dict[card.id]._id
+              sourceCardId: _catalog.dict[card.id]._id,
             });
             continue;
           }
 
-          if (isACopy) // most likely a token that could be a copy of any creature but it could have a specific token
-          {
-            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control.")) //populate 
+          if (isACopy) {
+            // most likely a token that could be a copy of any creature but it could have a specific token
+            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control."))
+              //populate
               continue;
 
             var cardTokens = getTokensFromCard(card);
 
             if (cardTokens.length > 0) {
-              cardTokens.forEach(element => {
+              cardTokens.forEach((element) => {
                 mentionedTokens.push({
                   tokenId: element,
-                  sourceCardId: _catalog.dict[card.id]._id
+                  sourceCardId: _catalog.dict[card.id]._id,
                 });
               });
-            } else //if there is no specified tokens for the card use the generic copy token
+            } //if there is no specified tokens for the card use the generic copy token
+            else
               mentionedTokens.push({
-                tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c",
-                sourceCardId: _catalog.dict[card.id]._id
+                tokenId: 'a020dc47-3747-4123-9954-f0e87a858b8c',
+                sourceCardId: _catalog.dict[card.id]._id,
               });
 
             continue;
@@ -164,21 +167,21 @@ function addTokens(card) {
           var tokenColor = [];
           if (tokenColorString) {
             var colorStrings = tokenColorString.trim().split(' ');
-            colorStrings.forEach(rawColor => {
+            colorStrings.forEach((rawColor) => {
               switch (rawColor.toLowerCase()) {
-                case ("red"):
+                case 'red':
                   tokenColor.push('R');
                   break;
-                case ("white"):
+                case 'white':
                   tokenColor.push('W');
                   break;
-                case ("green"):
+                case 'green':
                   tokenColor.push('G');
                   break;
-                case ("black"):
+                case 'black':
                   tokenColor.push('B');
                   break;
-                case ("blue"):
+                case 'blue':
                   tokenColor.push('U');
                   break;
               }
@@ -201,8 +204,8 @@ function addTokens(card) {
           if (dbHits == undefined) {
             // for all the cards that produce tokens but do not have any in the database
             result.push({
-              tokenId: "",
-              sourceCardId: _catalog.dict[card.id]._id
+              tokenId: '',
+              sourceCardId: _catalog.dict[card.id]._id,
             });
             continue;
           }
@@ -210,23 +213,34 @@ function addTokens(card) {
             var candidate = _catalog.dict[dbHit];
             var areColorsValid = CheckContentsEqualityOfArray(tokenColor, candidate.colors);
 
-            var candidateTypes = candidate.type.toLowerCase().replace(" —", "").replace("token ", "").split(' ');
+            var candidateTypes = candidate.type
+              .toLowerCase()
+              .replace(' —', '')
+              .replace('token ', '')
+              .split(' ');
 
-            var creatureTypes = []
-            tokenSuperTypesString.toLowerCase().split(' ').forEach(type => {
-              creatureTypes.push(type);
-            });
-            tokenSubTypesString.toLowerCase().split(' ').forEach(type => {
-              creatureTypes.push(type);
-            });
+            var creatureTypes = [];
+            tokenSuperTypesString
+              .toLowerCase()
+              .split(' ')
+              .forEach((type) => {
+                creatureTypes.push(type);
+              });
+            tokenSubTypesString
+              .toLowerCase()
+              .split(' ')
+              .forEach((type) => {
+                creatureTypes.push(type);
+              });
             var areTypesValid = CheckContentsEqualityOfArray(creatureTypes, candidateTypes);
 
             var areAbilitiesValid = false;
-            if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0)
+            if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0) {
               areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, candidate.oracle_text.toLowerCase().replace(/ *\([^)]*\) */g, "").split(', '));
-            else
+            } else {
               areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
-
+            }
+            
             if (candidate.power == tokenPower &&
               candidate.toughness == tokenToughness &&
               areColorsValid &&
@@ -235,12 +249,11 @@ function addTokens(card) {
             ) {
               mentionedTokens.push({
                 tokenId: candidate._id,
-                sourceCardId: _catalog.dict[card.id]._id
+                sourceCardId: _catalog.dict[card.id]._id,
               });
               break;
             }
           }
-
         }
       }
     }
@@ -322,8 +335,8 @@ function saveAllCards(arr) {
   pendingWrites.push(writeFile('private/cardimages.json', JSON.stringify(_catalog.cardimages)));
   var allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(function() {
-    console.log("All JSON files saved.");
-  })
+    console.log('All JSON files saved.');
+  });
   return allWritesPromise;
 }
 
@@ -345,9 +358,9 @@ function convertLegalities(card, isExtra) {
   } else {
     return {
       Legacy: card.legalities.legacy == 'legal',
-      Modern: card.legalities.modern == 'legal',
-      Standard: card.legalities.standard == 'legal',
-      Pauper: card.legalities.pauper == 'legal'
+      Modern: card.legalities.modern == 'legal' || card.legalities.modern == 'banned',
+      Standard: card.legalities.standard == 'legal' || card.legalities.standard == 'banned',
+      Pauper: card.legalities.pauper == 'legal' || card.legalities.pauper == 'banned',
     };
   }
 }
@@ -358,11 +371,24 @@ function convertParsedCost(card, isExtra) {
   } else {
     var parsed_cost;
     if (!card.card_faces || card.layout == 'flip') {
-      parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).toLowerCase().split('}{').reverse();
+      parsed_cost = card.mana_cost
+        .substr(1, card.mana_cost.length - 2)
+        .toLowerCase()
+        .split('}{')
+        .reverse();
     } else if (card.layout == 'split') {
-      parsed_cost = card.mana_cost.substr(1, card.mana_cost.length - 2).replace(' // ', '{split}').toLowerCase().split('}{').reverse();
+      parsed_cost = card.mana_cost
+        .substr(1, card.mana_cost.length - 2)
+        .replace(' // ', '{split}')
+        .toLowerCase()
+        .split('}{')
+        .reverse();
     } else if (card.card_faces[0].colors) {
-      parsed_cost = card.card_faces[0].mana_cost.substr(1, card.card_faces[0].mana_cost.length - 2).toLowerCase().split('}{').reverse();
+      parsed_cost = card.card_faces[0].mana_cost
+        .substr(1, card.card_faces[0].mana_cost.length - 2)
+        .toLowerCase()
+        .split('}{')
+        .reverse();
     }
     if (parsed_cost) {
       parsed_cost.forEach(function(item, index) {
@@ -415,10 +441,18 @@ function convertId(card, isExtra) {
 
 function convertName(card, isExtra) {
   if (isExtra) {
-    return card.name.substring(card.name.indexOf('/') + 2).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return card.name
+      .substring(card.name.indexOf('/') + 2)
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   } else {
     if (card.name.includes('/') && card.layout != 'split') {
-      return card.name.substring(0, card.name.indexOf('/')).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return card.name
+        .substring(0, card.name.indexOf('/'))
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
     } else {
       return card.name;
     }
@@ -427,8 +461,7 @@ function convertName(card, isExtra) {
 
 function CheckContentsEqualityOfArray(target, candidate) {
   var isValid = candidate.length == target.length;
-  if (!isValid)
-    return false;
+  if (!isValid) return false;
 
   for (idx = 0; idx < target.length; idx++) {
     if (!candidate.includes(target[idx])) {
@@ -441,9 +474,8 @@ function CheckContentsEqualityOfArray(target, candidate) {
 
 function getTokensFromCard(card) {
   var cardTokens = [];
-  if (!card.all_parts)
-    return [];
-  card.all_parts.forEach(element => {
+  if (!card.all_parts) return [];
+  card.all_parts.forEach((element) => {
     if (element.component == 'token') {
       cardTokens.push(element.id);
     }
@@ -559,8 +591,8 @@ function getTokensForSpecialCaseCard(newCardid, card) {
 
 function getTokenIDForSpecialCaseToken(tokenName) {
   switch (tokenName) {
-    case "Food":
-      return "bf36408d-ed85-497f-8e68-d3a922c388a0";
+    case 'Food':
+      return 'bf36408d-ed85-497f-8e68-d3a922c388a0';
       break;
     case "Treasure":
       return "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0";
@@ -599,6 +631,7 @@ function convertCard(card, isExtra) {
   newcard.collector_number = card.collector_number;
   newcard.promo = card.promo;
   newcard.digital = card.digital;
+  newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
   newcard.name = name;
   newcard.name_lower = name.toLowerCase();
@@ -661,5 +694,5 @@ module.exports = {
   convertType: convertType,
   convertColors: convertColors,
   convertParsedCost: convertParsedCost,
-  convertCmc: convertCmc
+  convertCmc: convertCmc,
 };

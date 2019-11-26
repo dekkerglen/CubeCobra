@@ -1,6 +1,19 @@
 import React, { Component } from 'react';
 
-import { Button, Card, CardHeader, Col, Collapse, Container, Form, FormGroup, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
+import {
+  Button,
+  Card,
+  CardHeader,
+  Col,
+  Collapse,
+  Container,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  Row,
+  UncontrolledAlert,
+} from 'reactstrap';
 
 import ContentEditable from './ContentEditable';
 import CSRFForm from './CSRFForm';
@@ -12,15 +25,13 @@ function clickToolbar(event) {
     document.execCommand('formatBlock', false, command);
   } else if (command == 'AC') {
     card = /* global */ prompt('Enter the card name here: ', '');
-    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + "</a>");
+    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + '</a>');
     /* global */ autocard_init('autocard');
   } else document.execCommand(command, false, null);
 }
 
-const Toolbar = props =>
-  <div className="toolbar" {...props} />;
-const ToolbarItem = props =>
-  <a href="#" className="toolbar-item" onClick={clickToolbar} {...props} />;
+const Toolbar = (props) => <div className="toolbar" {...props} />;
+const ToolbarItem = (props) => <a href="#" className="toolbar-item" onClick={clickToolbar} {...props} />;
 
 function saveChanges() {
   var val = '';
@@ -38,7 +49,7 @@ function saveChanges() {
     }
   });
   $('#changelistFormBody').val(val);
-  document.getElementById("changelistForm").submit();
+  document.getElementById('changelistForm').submit();
 }
 
 function discardAll() {
@@ -113,7 +124,9 @@ class EditCollapse extends Component {
                     data-lpignore
                   />
                 </div>
-                <Button color="success" type="submit" id="justAddButton">Just Add</Button>
+                <Button color="success" type="submit" id="justAddButton">
+                  Just Add
+                </Button>
               </Form>
             </Col>
             <Col xs="12" sm="auto">
@@ -129,7 +142,9 @@ class EditCollapse extends Component {
                     data-lpignore
                   />
                 </div>
-                <Button color="success" type="submit" id="removeButton">Remove/Replace</Button>
+                <Button color="success" type="submit" id="removeButton">
+                  Remove/Replace
+                </Button>
               </Form>
             </Col>
           </Row>
@@ -154,22 +169,30 @@ class EditCollapse extends Component {
                       <CardHeader className="p-0">
                         <Toolbar>
                           <Row noGutters>
-                            <ToolbarItem data-command='bold'><strong>B</strong></ToolbarItem>
-                            <ToolbarItem data-command='italic'><em>I</em></ToolbarItem>
-                            <ToolbarItem data-command='underline'><u>U</u></ToolbarItem>
-                            <ToolbarItem data-command='strikethrough'><s>S</s></ToolbarItem>
-                            <ToolbarItem data-command='h5'><h5>H1</h5></ToolbarItem>
-                            <ToolbarItem data-command='h6'><h6>H2</h6></ToolbarItem>
-                            <ToolbarItem data-command='insertUnorderedList'>ul</ToolbarItem>
-                            <ToolbarItem data-command='insertOrderedList'>ol</ToolbarItem>
+                            <ToolbarItem data-command="bold">
+                              <strong>B</strong>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="italic">
+                              <em>I</em>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="underline">
+                              <u>U</u>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="strikethrough">
+                              <s>S</s>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="h5">
+                              <h5>H1</h5>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="h6">
+                              <h6>H2</h6>
+                            </ToolbarItem>
+                            <ToolbarItem data-command="insertUnorderedList">ul</ToolbarItem>
+                            <ToolbarItem data-command="insertOrderedList">ol</ToolbarItem>
                           </Row>
                         </Toolbar>
                       </CardHeader>
-                      <ContentEditable
-                        id="editor"
-                        value={this.state.postContent}
-                        onChange={this.handlePostChange}
-                      />
+                      <ContentEditable id="editor" value={this.state.postContent} onChange={this.handlePostChange} />
                       <Input type="hidden" name="blog" value={this.state.postContent} />
                       <Input type="hidden" id="changelistFormBody" name="body" />
                     </Card>
@@ -178,8 +201,12 @@ class EditCollapse extends Component {
               </Row>
               <Row className="mb-2">
                 <Col>
-                  <Button color="success" className="mr-2" onClick={saveChanges}>Save Changes</Button>
-                  <Button color="danger" onClick={discardAll}>Discard All</Button>
+                  <Button color="success" className="mr-2" onClick={saveChanges}>
+                    Save Changes
+                  </Button>
+                  <Button color="danger" onClick={discardAll}>
+                    Discard All
+                  </Button>
                 </Col>
               </Row>
             </CSRFForm>

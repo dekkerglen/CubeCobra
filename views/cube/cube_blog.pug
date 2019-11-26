@@ -38,7 +38,7 @@ block cube_content
                   input#postBlogTitleInput.form-control(maxlength='200' name='title', type='text')
                   label Body:
                   input#postBlogHiddenId(type='hidden', name='id')
-                  input#postBlogHiddenHTML(type='hidden', name='html')
+                  input.postBlogHiddenHTML(type='hidden', name='html')
                   include ../texteditor
               .modal-footer
                 input.btn.btn-success(type='submit',value='Save')

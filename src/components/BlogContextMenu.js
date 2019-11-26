@@ -5,23 +5,26 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse } from '
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
-    this.toggle = this.toggle.bind(this);      
+    this.toggle = this.toggle.bind(this);
     this.state = {
       dropdownOpen: false,
-      collapseOpen: false
+      collapseOpen: false,
     };
-  }  
-  
+  }
+
   toggle(event) {
     this.setState({
-      dropdownOpen: !this.state.dropdownOpen
+      dropdownOpen: !this.state.dropdownOpen,
     });
     updateBlog();
   }
-  
-  clickEdit(post) {    
-    csrfFetch("/cube/blogsrc/" + post._id)
-      .then(response => response.json())
+
+  clickEdit(post) {
+    csrfFetch('/cube/blogsrc/' + post._id, {
+      method: 'GET',
+      headers: {},
+    })
+      .then((response) => response.json())
       .then(function(json) {
         if (json.src) {
           $('#editor').html(json.src);
@@ -36,24 +39,24 @@ class BlogContextMenu extends React.Component {
         autocard_init('autocard');
       });
   }
-  
+
   clickDelete(post) {
-    $('#deleteModal').modal('show');    
-    
-    $('.delete-blog').off().on('click', function(e) {
-      csrfFetch('/cube/blog/remove/' + post._id, {
-        method: 'DELETE',
-        headers: {}
-      }).then(response => {
-        if (!response.ok) {
-          console.log(response);
-        }
-        else
-        {
-          window.location.href = '';
-        }
+    $('#deleteModal').modal('show');
+
+    $('.delete-blog')
+      .off()
+      .on('click', function(e) {
+        csrfFetch('/cube/blog/remove/' + post._id, {
+          method: 'DELETE',
+          headers: {},
+        }).then((response) => {
+          if (!response.ok) {
+            console.log(response);
+          } else {
+            window.location.href = '';
+          }
+        });
       });
-    });
   }
 
   render() {
@@ -64,11 +67,17 @@ class BlogContextMenu extends React.Component {
         </DropdownToggle>
         <DropdownMenu right>
           <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
-          <DropdownItem onClick={() => {this.clickDelete(this.props.post)} }>Delete</DropdownItem>
+          <DropdownItem
+            onClick={() => {
+              this.clickDelete(this.props.post);
+            }}
+          >
+            Delete
+          </DropdownItem>
         </DropdownMenu>
       </Dropdown>
     );
   }
 }
 
-export default BlogContextMenu
+export default BlogContextMenu;

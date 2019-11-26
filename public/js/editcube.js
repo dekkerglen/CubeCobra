@@ -25,15 +25,15 @@ if ($('#in_both').length) {
 
 var cubeDict = {},
   hasCustomImages = false;
-$("#customImageDisplayMenuItem").hide();
+$('#customImageDisplayMenuItem').hide();
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
   card.index = index;
   cubeDict[index] = card;
   if (!hasCustomImages && card.imgUrl !== undefined) {
     hasCustomImages = true;
-    $("#customImageDisplayToggle").prop("checked", true);
-    $("#customImageDisplayMenuItem").show();
+    $('#customImageDisplayToggle').prop('checked', true);
+    $('#customImageDisplayMenuItem').show();
   }
 });
 
@@ -64,119 +64,163 @@ if (canEdit) {
 }
 
 function justAdd() {
-  var val = $('#addInput').val().replace('?', '-q-');
+  var val = $('#addInput')
+    .val()
+    .replace('?', '-q-');
   while (val.includes('//')) {
     val = val.replace('//', '-slash-');
   }
   if (val.length > 0) {
     fetch('/cube/api/getcard/' + val)
-      .then(response => response.json())
+      .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
           $('#addInput').val('');
           changes.push({
-            add: json.card
-          })
+            add: json.card,
+          });
           updateCollapse();
-          $('.warnings').collapse("hide");
+          $('.warnings').collapse('hide');
         } else {
-          $('.warnings').collapse("show");
+          $('.warnings').collapse('show');
         }
       });
   }
 }
 
 function remove() {
-  var val = $('#removeInput').val().replace('?', '-q-');
+  var val = $('#removeInput')
+    .val()
+    .replace('?', '-q-');
   while (val.includes('//')) {
     val = val.replace('//', '-slash-');
   }
   if (val.length > 0) {
     fetch('/cube/api/getcardfromcube/' + $('#cubeID').val() + ';' + val)
-      .then(response => response.json())
+      .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
           if ($('#addInput').val().length > 0) {
-            var val2 = $('#addInput').val().replace('?', '-q-');
+            var val2 = $('#addInput')
+              .val()
+              .replace('?', '-q-');
             while (val2.includes('//')) {
               val2 = val2.replace('//', '-slash-');
             }
             fetch('/cube/api/getcard/' + val2)
-              .then(response2 => response2.json())
+              .then((response2) => response2.json())
               .then(function(json2) {
                 if (json2.card) {
                   $('#addInput').val('');
                   $('#removeInput').val('');
                   changes.push({
-                    replace: [json.card, json2.card]
-                  })
+                    replace: [json.card, json2.card],
+                  });
                   updateCollapse();
-                  $('.warnings').collapse("hide");
+                  $('.warnings').collapse('hide');
                 } else {
-                  $('.warnings').collapse("show");
+                  $('.warnings').collapse('show');
                 }
               });
           } else {
             $('#removeInput').val('');
             changes.push({
-              remove: json.card
-            })
+              remove: json.card,
+            });
             updateCollapse();
-            $('.warnings').collapse("hide");
+            $('.warnings').collapse('hide');
           }
         } else {
-          $('.warnings').collapse("show");
+          $('.warnings').collapse('show');
         }
       });
   }
 }
 
 function updateCollapse() {
-  var val = "";
+  var val = '';
   changes.forEach(function(change, index) {
     val += "<a class='clickx' id='clickx" + index + "' href=#>x</a> ";
     if (change.add) {
       val += '<span class="badge badge-success">+</span> ';
       if (change.add.image_flip) {
-        val += '<a class="dynamic-autocard" card="' + change.add.image_normal + '" card_flip="' + change.add.image_flip + '">' + change.add.name + '</a>';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.add.image_normal +
+          '" card_flip="' +
+          change.add.image_flip +
+          '">' +
+          change.add.name +
+          '</a>';
       } else {
         val += '<a class="dynamic-autocard" card="' + change.add.image_normal + '">' + change.add.name + '</a>';
       }
     } else if (change.remove) {
       val += '<span class="badge badge-danger">–</span> ';
       if (change.remove.image_flip) {
-        val += '<a class="dynamic-autocard" card="' + change.remove.image_normal + '" card_flip="' + change.remove.image_flip + '">' + change.remove.name + '</a>';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.remove.image_normal +
+          '" card_flip="' +
+          change.remove.image_flip +
+          '">' +
+          change.remove.name +
+          '</a>';
       } else {
         val += '<a class="dynamic-autocard" card="' + change.remove.image_normal + '">' + change.remove.name + '</a>';
       }
     } else if (change.replace) {
       val += '<span class="badge badge-primary">→</span> ';
       if (change.replace[0].image_flip) {
-        val += '<a class="dynamic-autocard" card="' + change.replace[0].image_normal + '" card_flip="' + change.replace[0].image_flip + '">' + change.replace[0].name + '</a> > ';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.replace[0].image_normal +
+          '" card_flip="' +
+          change.replace[0].image_flip +
+          '">' +
+          change.replace[0].name +
+          '</a> > ';
       } else {
-        val += '<a class="dynamic-autocard" card="' + change.replace[0].image_normal + '">' + change.replace[0].name + '</a> > ';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.replace[0].image_normal +
+          '">' +
+          change.replace[0].name +
+          '</a> > ';
       }
       if (change.replace[1].image_flip) {
-        val += '<a class="dynamic-autocard" card="' + change.replace[1].image_normal + '" card_flip="' + change.replace[1].image_flip + '">' + change.replace[1].name + '</a>';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.replace[1].image_normal +
+          '" card_flip="' +
+          change.replace[1].image_flip +
+          '">' +
+          change.replace[1].name +
+          '</a>';
       } else {
-        val += '<a class="dynamic-autocard" card="' + change.replace[1].image_normal + '">' + change.replace[1].name + '</a>';
+        val +=
+          '<a class="dynamic-autocard" card="' +
+          change.replace[1].image_normal +
+          '">' +
+          change.replace[1].name +
+          '</a>';
       }
     }
-    val += "<br>"
+    val += '<br>';
   });
 
   $('#changelist').html(val);
 
   if (val.length > 0) {
-    $('.editForm').collapse("show");
+    $('.editForm').collapse('show');
   } else {
-    $('.editForm').collapse("hide")
+    $('.editForm').collapse('hide');
   }
 
   autocard_init('dynamic-autocard');
   changes.forEach(function(change, index) {
-    var clickx = document.getElementById("clickx" + index);
-    clickx.addEventListener("click", function(e) {
+    var clickx = document.getElementById('clickx' + index);
+    clickx.addEventListener('click', function(e) {
       changes.splice(index, 1);
       updateCollapse();
     });
@@ -190,22 +234,22 @@ function GetColorIdentity(colors) {
     return 'Multicolored';
   } else if (colors.length == 1) {
     switch (colors[0]) {
-      case "W":
+      case 'W':
         return 'White';
         break;
-      case "U":
+      case 'U':
         return 'Blue';
         break;
-      case "B":
+      case 'B':
         return 'Black';
         break;
-      case "R":
+      case 'R':
         return 'Red';
         break;
-      case "G":
+      case 'G':
         return 'Green';
         break;
-      case "C":
+      case 'C':
         return 'Colorless';
         break;
     }
@@ -213,7 +257,33 @@ function GetColorIdentity(colors) {
 }
 
 function getSorts() {
-  return ['Artist', 'CMC', 'Color Category', 'Color Count', 'Color Identity', 'Color', 'Date Added', 'Guilds', 'Legality', 'Loyalty', 'Manacost Type', 'Power', 'Price', 'Price Foil', 'Rarity', 'Set', 'Shards / Wedges', 'Status', 'Subtype', 'Supertype', 'Tags', 'Toughness', 'Type', 'Types-Multicolor', 'Unsorted'];
+  return [
+    'Artist',
+    'CMC',
+    'Color Category',
+    'Color Count',
+    'Color Identity',
+    'Color',
+    'Date Added',
+    'Guilds',
+    'Legality',
+    'Loyalty',
+    'Manacost Type',
+    'Power',
+    'Price',
+    'Price Foil',
+    'Rarity',
+    'Set',
+    'Shards / Wedges',
+    'Status',
+    'Subtype',
+    'Supertype',
+    'Tags',
+    'Toughness',
+    'Type',
+    'Types-Multicolor',
+    'Unsorted',
+  ];
 }
 
 function getLabels(sort) {
@@ -227,11 +297,28 @@ function getLabels(sort) {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
   } else if (sort == 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
-    return Array.from(Array(33).keys()).map(x => (x / 2).toString()).concat(['1000000']);
+    return Array.from(Array(33).keys())
+      .map((x) => (x / 2).toString())
+      .concat(['1000000']);
   } else if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort == 'Type') {
-    return ['Creature', 'Planeswalker', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Conspiracy', 'Contraption', 'Phenomenon', 'Plane', 'Scheme', 'Vanguard', 'Land', 'Other'];
+    return [
+      'Creature',
+      'Planeswalker',
+      'Instant',
+      'Sorcery',
+      'Artifact',
+      'Enchantment',
+      'Conspiracy',
+      'Contraption',
+      'Phenomenon',
+      'Plane',
+      'Scheme',
+      'Vanguard',
+      'Land',
+      'Other',
+    ];
   } else if (sort == 'Supertype') {
     return ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
   } else if (sort == 'Tags') {
@@ -250,7 +337,7 @@ function getLabels(sort) {
     cube.forEach(function(card, index) {
       formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
       if (formattedDay === undefined) {
-        formattedDay = "unknown";
+        formattedDay = 'unknown';
       }
       if (!days.includes(formattedDay)) {
         days.push(formattedDay);
@@ -299,8 +386,47 @@ function getLabels(sort) {
     });
     return types.sort();
   } else if (sort == 'Types-Multicolor') {
-    return ['Creature', 'Planeswalker', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Conspiracy', 'Contraption', 'Phenomenon', 'Plane', 'Scheme', 'Vanguard', 'Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Golgari', 'Simic', 'Izzet', 'Boros',
-      'Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur', 'Non-White', 'Non-Blue', 'Non-Black', 'Non-Red', 'Non-Green', 'Five Color', 'Land', 'Other'
+    return [
+      'Creature',
+      'Planeswalker',
+      'Instant',
+      'Sorcery',
+      'Artifact',
+      'Enchantment',
+      'Conspiracy',
+      'Contraption',
+      'Phenomenon',
+      'Plane',
+      'Scheme',
+      'Vanguard',
+      'Azorius',
+      'Dimir',
+      'Rakdos',
+      'Gruul',
+      'Selesnya',
+      'Orzhov',
+      'Golgari',
+      'Simic',
+      'Izzet',
+      'Boros',
+      'Bant',
+      'Esper',
+      'Grixis',
+      'Jund',
+      'Naya',
+      'Abzan',
+      'Jeskai',
+      'Sultai',
+      'Mardu',
+      'Temur',
+      'Non-White',
+      'Non-Blue',
+      'Non-Black',
+      'Non-Red',
+      'Non-Green',
+      'Five Color',
+      'Land',
+      'Other',
     ];
   } else if (sort == 'Legality') {
     return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pauper'];
@@ -314,7 +440,7 @@ function getLabels(sort) {
       }
     });
     return items.sort(function(x, y) {
-      if (!(/^\d+$/.test(x)) || !(/^\d+$/.test(y))) {
+      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
         } else if (y > x) {
@@ -339,7 +465,7 @@ function getLabels(sort) {
       }
     });
     return items.sort(function(x, y) {
-      if (!(/^\d+$/.test(x)) || !(/^\d+$/.test(y))) {
+      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
         } else if (y > x) {
@@ -364,7 +490,7 @@ function getLabels(sort) {
       }
     });
     return items.sort(function(x, y) {
-      if (!(/^\d+$/.test(x)) || !(/^\d+$/.test(y))) {
+      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
         } else if (y > x) {
@@ -388,7 +514,7 @@ function getLabels(sort) {
     for (i = 0; i <= price_buckets.length; i++) {
       labels.push(price_bucket_label(i));
     }
-    labels.push("No Price Available");
+    labels.push('No Price Available');
     return labels;
   } else if (sort == 'Unsorted') {
     return ['All'];
@@ -429,7 +555,7 @@ function columnLength(sort, label) {
 var updateCubeListeners = [];
 
 function updateCubeList() {
-  updateCubeListeners.forEach(listener => listener(cube));
+  updateCubeListeners.forEach((listener) => listener(cube));
   autocard_init('autocard');
   autocard_hide_card();
 }

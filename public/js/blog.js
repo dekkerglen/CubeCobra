@@ -1,12 +1,12 @@
 function updateBlog() {
-  $("#postBlogForm").submit(function(e) {
+  $('#postBlogForm').submit(function(e) {
     e.preventDefault();
     var form = this;
-    $('#postBlogHiddenHTML').val($('#editor').html());
+    $('.postBlogHiddenHTML').val($('#editor').html());
     form.submit();
   });
 
-  $(".newBlogButton").click(function(e) {
+  $('.newBlogButton').click(function(e) {
     e.preventDefault();
     $('#editor').html('');
     $('#postBlogTitleInput').val('');
@@ -14,7 +14,6 @@ function updateBlog() {
     $('#blogEditTitle').text('New Blog Post');
     $('#editBlogModal').modal('show');
   });
-
 }
 
 updateBlog();

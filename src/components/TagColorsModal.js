@@ -1,15 +1,25 @@
 import React, { Component } from 'react';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { Button, Col, Form, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Row } from 'reactstrap';
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  Row,
+} from 'reactstrap';
 
 import { arrayMove } from '../util/Util';
 
 import TagContext, { getTagColorClass } from './TagContext';
 
-const SortableItem = SortableElement(({ value }) =>
-  <div className="sortable-item">{value}</div>
-);
+const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
 const SortableList = SortableContainer(({ items }) => {
   return (
@@ -21,19 +31,22 @@ const SortableList = SortableContainer(({ items }) => {
   );
 });
 
-const TagColorRow = ({ tag, tagClass, value, onChange }) =>
+const TagColorRow = ({ tag, tagClass, value, onChange }) => (
   <Row className="tag-color-row">
     <Col>
       <div className={tagClass}>{tag}</div>
     </Col>
     <Col className="d-flex flex-column justify-content-center">
       <Input type="select" size="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
-        {TagContext.colors.map(([name, value]) =>
-          <option key={value || 'none'} value={value || 'none'}>{name}</option>
-        )}
+        {TagContext.colors.map(([name, value]) => (
+          <option key={value || 'none'} value={value || 'none'}>
+            {name}
+          </option>
+        ))}
       </Input>
     </Col>
-  </Row>;
+  </Row>
+);
 
 class TagColorsModalRaw extends Component {
   constructor(props) {
@@ -73,7 +86,7 @@ class TagColorsModalRaw extends Component {
 
     this.setState(({ tagColors }) => {
       const result = [...tagColors];
-      const index = tagColors.findIndex(tagColor => tag === tagColor.tag);
+      const index = tagColors.findIndex((tagColor) => tag === tagColor.tag);
       if (index > -1) {
         result[index] = { tag, color };
       } else {
@@ -95,11 +108,8 @@ class TagColorsModalRaw extends Component {
   handleSortEnd({ oldIndex, newIndex }) {
     const { allTags } = this.props;
     const { tagColors } = this.state;
-    const filteredTags = allTags.filter(tag => !tagColors.some(tagColor => tag === tagColor.tag))
-    const allTagColors = [
-      ...this.state.tagColors,
-      ...filteredTags.map(tag => ({ tag, color: null })),
-    ];
+    const filteredTags = allTags.filter((tag) => !tagColors.some((tagColor) => tag === tagColor.tag));
+    const allTagColors = [...this.state.tagColors, ...filteredTags.map((tag) => ({ tag, color: null }))];
     this.setState({
       tagColors: arrayMove(allTagColors, oldIndex, newIndex),
     });
@@ -110,8 +120,8 @@ class TagColorsModalRaw extends Component {
     const { tagColors, showTagColors } = this.state;
 
     const knownTags = tagColors.map(({ tag, color }) => tag);
-    const unknownTags = allTags.filter(tag => !knownTags.includes(tag));
-    const unknownTagColors = unknownTags.map(tag => ({ tag, color: null }));
+    const unknownTags = allTags.filter((tag) => !knownTags.includes(tag));
+    const unknownTagColors = unknownTags.map((tag) => ({ tag, color: null }));
     const orderedTags = [...tagColors, ...unknownTagColors];
 
     const editableRows = orderedTags.map(({ tag, color }) => {
@@ -125,15 +135,15 @@ class TagColorsModalRaw extends Component {
     const staticRows = orderedTags.map(({ tag, color }) => {
       const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
       return (
-        <span key={tag} className={tagClass}>{tag}</span>
+        <span key={tag} className={tagClass}>
+          {tag}
+        </span>
       );
     });
 
     return (
       <Modal isOpen={isOpen} toggle={toggle}>
-        <ModalHeader toggle={toggle}>
-          {canEdit ? 'Set Tag Colors' : 'Tag Colors'}
-        </ModalHeader>
+        <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
         <ModalBody>
           <Form inline className="mb-2">
             <Label>
@@ -141,16 +151,20 @@ class TagColorsModalRaw extends Component {
               Show Tag Colors in Card List
             </Label>
           </Form>
-          {!canEdit ? '' :
+          {!canEdit ? (
+            ''
+          ) : (
             <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
-          }
-          {!canEdit ? staticRows :
+          )}
+          {!canEdit ? (
+            staticRows
+          ) : (
             <Row className="tag-color-container">
               <Col>
                 <SortableList onSortEnd={this.handleSortEnd} items={editableRows} />
               </Col>
             </Row>
-          }
+          )}
         </ModalBody>
         <ModalFooter>
           <Button color="success" className="ml-auto" onClick={this.handleSubmit}>
@@ -166,9 +180,9 @@ TagColorsModalRaw.defaultProps = {
   canEdit: false,
 };
 
-const TagColorsModal = props =>
+const TagColorsModal = (props) => (
   <TagContext.Consumer>
-    {({ tagColors, setTagColors, showTagColors, setShowTagColors, allTags }) =>
+    {({ tagColors, setTagColors, showTagColors, setShowTagColors, allTags }) => (
       <TagColorsModalRaw
         allTags={allTags}
         savedTagColors={tagColors}
@@ -177,7 +191,8 @@ const TagColorsModal = props =>
         setShowTagColors={setShowTagColors}
         {...props}
       />
-    }
+    )}
   </TagContext.Consumer>
+);
 
 export default TagColorsModal;
