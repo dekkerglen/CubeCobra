@@ -83,10 +83,11 @@ const fetchLands = [
 
 function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
-  const colors = card.colors;
+  const colors = card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors);
   const overlap = botColors.some((c) => colors.includes(c));
-  const isLand = card.type_line.indexOf('Land') > -1;
+  const typeLine = card.type_line || card.details.type;
+  const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = fetchLands.includes(card.details.name);
 
   // Prioritize on-color or overlapping fetches.
