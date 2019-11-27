@@ -93,7 +93,7 @@ function binaryInsert(value, array, startVal, endVal) {
 
 function addCardToCube(cube, card_details, tags) {
   cube.cards.push({
-    tags: Array.isArray(tags) ? tags : ['New'],
+    tags: Array.isArray(tags) ? tags : [],
     status: 'Not Owned',
     colors: card_details.color_identity,
     cmc: card_details.cmc,
