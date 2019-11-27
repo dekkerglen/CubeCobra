@@ -1099,7 +1099,7 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
   });
 });
 
-router.post('/importcubetutor/:id', ensureAuth, async function (req, res) {
+router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (cube.owner != req.user._id) {
@@ -1137,8 +1137,8 @@ router.post('/importcubetutor/:id', ensureAuth, async function (req, res) {
     data('.cardPreview').each((i, elem) => {
       const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
       const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
-      const tagColorClasses = elem.attribs['class'].split(' ').filter(c => tagColors.has(c));
-      const tags = tagColorClasses.map(c => tagColors.get(c));
+      const tagColorClasses = elem.attribs['class'].split(' ').filter((c) => tagColors.has(c));
+      const tags = tagColorClasses.map((c) => tagColors.get(c));
       cards.push({
         set: str.includes('/') ? str.split('/')[0] : 'unknown',
         name,
