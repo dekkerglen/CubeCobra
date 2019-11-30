@@ -58,7 +58,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
   }
 });
 
-router.get('/clearnotifications', ensureAuth, async (req, res) => {
+router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
@@ -70,7 +70,9 @@ router.get('/clearnotifications', ensureAuth, async (req, res) => {
     user.notifications = [];
     await user.save();
 
-    return res.redirect('/');
+    res.status(200).send({
+      success: 'true',
+    });
   } catch (err) {
     res.status(500).send({
       success: 'false',
