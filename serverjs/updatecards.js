@@ -98,34 +98,35 @@ function addTokens(card) {
       var abilities = _catalog.dict[card.id].oracle_text.split('\n');
       for (const ability of abilities) {
         if (ability.includes(' token')) {
-          var reString = "((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+\/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(\".*\")|[a-z]+| and )+)+)?(?:.*(a copy of))?";
+          var reString =
+            '((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:\'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(".*")|[a-z]+| and )+)+)?(?:.*(a copy of))?';
           var re = new RegExp(reString);
           var result = re.exec(ability);
-          if (result == undefined)
-            continue;
+          if (result == undefined) continue;
 
           var tokenPowerAndToughness = result[4];
           var tokenColorString = result[5] ? result[5] : result[1];
-          var tokenSubTypesString = result[6] ? result[6].trim() : "";
-          var tokenSuperTypesString = result[7] ? result[7].trim() : "";
-          if (result[3])
-            tokenSuperTypesString = "legendary " + tokenSuperTypesString;
+          var tokenSubTypesString = result[6] ? result[6].trim() : '';
+          var tokenSuperTypesString = result[7] ? result[7].trim() : '';
+          if (result[3]) tokenSuperTypesString = 'legendary ' + tokenSuperTypesString;
           var tokenName = result[9] ? result[9].trim() : result[2] ? result[2] : tokenSubTypesString; //if not specificaly named, use the type
 
           var tokenAbilities = [];
           if (result[10]) {
-            var tmpTokenKeywords = result[10].toLowerCase().replace(/ *\"[^"]*\" */g, "").replace(' and ', ',').split(',');
-            tmpTokenKeywords.forEach(part => {
-              if (part.length > 0)
-                tokenAbilities.push(part);
+            var tmpTokenKeywords = result[10]
+              .toLowerCase()
+              .replace(/ *\"[^"]*\" */g, '')
+              .replace(' and ', ',')
+              .split(',');
+            tmpTokenKeywords.forEach((part) => {
+              if (part.length > 0) tokenAbilities.push(part);
             });
           }
 
           if (result[11]) {
             var tmpTokenAbilities = result[11].toLowerCase().split('"');
-            tmpTokenAbilities.forEach(part => {
-              if (part.length > 0)
-                tokenAbilities.push(part);
+            tmpTokenAbilities.forEach((part) => {
+              if (part.length > 0) tokenAbilities.push(part);
             });
           }
 
@@ -195,7 +196,7 @@ function addTokens(card) {
               tokenPower = tokenPowerAndToughness.split('/')[0];
               tokenToughness = tokenPowerAndToughness.split('/')[1];
             }
-          } else if (ability.includes("power and toughness are each equal")) {
+          } else if (ability.includes('power and toughness are each equal')) {
             tokenPower = '*';
             tokenToughness = '*';
           }
@@ -236,12 +237,19 @@ function addTokens(card) {
 
             var areAbilitiesValid = false;
             if (candidate.oracle_text != undefined && candidate.oracle_text.length > 0) {
-              areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, candidate.oracle_text.toLowerCase().replace(/ *\([^)]*\) */g, "").split(', '));
+              areAbilitiesValid = CheckContentsEqualityOfArray(
+                tokenAbilities,
+                candidate.oracle_text
+                  .toLowerCase()
+                  .replace(/ *\([^)]*\) */g, '')
+                  .split(', '),
+              );
             } else {
               areAbilitiesValid = CheckContentsEqualityOfArray(tokenAbilities, []);
             }
-            
-            if (candidate.power == tokenPower &&
+
+            if (
+              candidate.power == tokenPower &&
               candidate.toughness == tokenToughness &&
               areColorsValid &&
               areTypesValid &&
@@ -260,35 +268,34 @@ function addTokens(card) {
     if (_catalog.dict[card.id].oracle_text.includes('Ascend (')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken("City's Blessing"),
-        sourceCardId: _catalog.dict[card.id]._id
+        sourceCardId: _catalog.dict[card.id]._id,
       });
     }
     if (_catalog.dict[card.id].oracle_text.includes('poison counter')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Poison'),
-        sourceCardId: _catalog.dict[card.id]._id
+        sourceCardId: _catalog.dict[card.id]._id,
       });
     }
     if (_catalog.dict[card.id].oracle_text.includes('you become the monarch')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Monarch'),
-        sourceCardId: _catalog.dict[card.id]._id
+        sourceCardId: _catalog.dict[card.id]._id,
       });
     }
     if (_catalog.dict[card.id].oracle_text.includes('{E}')) {
       mentionedTokens.push({
         tokenId: getTokenIDForSpecialCaseToken('Energy'),
-        sourceCardId: _catalog.dict[card.id]._id
+        sourceCardId: _catalog.dict[card.id]._id,
       });
     }
 
     if (_catalog.dict[card.id].oracle_text.includes('emblem')) {
-
-      var hits = _catalog.nameToId[card.name.toLowerCase() + " emblem"];
+      var hits = _catalog.nameToId[card.name.toLowerCase() + ' emblem'];
       if (hits != undefined) {
         mentionedTokens.push({
           tokenId: hits[0],
-          sourceCardId: _catalog.dict[card.id]._id
+          sourceCardId: _catalog.dict[card.id]._id,
         });
       }
     }
@@ -297,10 +304,10 @@ function addTokens(card) {
       var cardTokens = getTokensFromCard(card);
 
       if (cardTokens.length > 0) {
-        cardTokens.forEach(element => {
+        cardTokens.forEach((element) => {
           mentionedTokens.push({
             tokenId: element,
-            sourceCardId: _catalog.dict[card.id]._id
+            sourceCardId: _catalog.dict[card.id]._id,
           });
         });
       }
@@ -484,97 +491,148 @@ function getTokensFromCard(card) {
 }
 
 var specialCaseCardsList = {
-  "Outlaws' Merriment": [{
-    tokenId: "db951f76-b785-453e-91b9-b3b8a5c1cfd4"
-  }, {
-    tokenId: "cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447"
-  }, {
-    tokenId: "c994ea90-71f4-403f-9418-2b72cc2de14d"
-  }],
+  "Outlaws' Merriment": [
+    {
+      tokenId: 'db951f76-b785-453e-91b9-b3b8a5c1cfd4',
+    },
+    {
+      tokenId: 'cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447',
+    },
+    {
+      tokenId: 'c994ea90-71f4-403f-9418-2b72cc2de14d',
+    },
+  ],
 
-  "Trostani's Summoner": [{
-    tokenId: "703e7ecf-3d73-40c1-8cfe-0758778817cf"
-  }, {
-    tokenId: "5fc993a7-a1ce-4403-a0a0-2afc9f9eca42"
-  }, {
-    tokenId: "214a48bc-4a1c-44e3-9415-a73af3d4fd95"
-  }],
+  "Trostani's Summoner": [
+    {
+      tokenId: '703e7ecf-3d73-40c1-8cfe-0758778817cf',
+    },
+    {
+      tokenId: '5fc993a7-a1ce-4403-a0a0-2afc9f9eca42',
+    },
+    {
+      tokenId: '214a48bc-4a1c-44e3-9415-a73af3d4fd95',
+    },
+  ],
   //These two are a bit of a problem. Normaly when an ability creates copies the scryfall tokens associated with it are fetched.
-  //This works great in most cases, but these two already have a token in scryfall only it's the wrong token. It's a token refering to 
+  //This works great in most cases, but these two already have a token in scryfall only it's the wrong token. It's a token refering to
   //the first ability and not the one that generates the copies.
-  "Saheeli, the Gifted": [{
-    tokenId: "761507d5-d36a-4123-a074-95d7f6ffb4c5"
-  }, {
-    tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c"
-  }],
-  "Daretti, Ingenious Iconoclast": [{
-    tokenId: "7c82af53-2de8-4cd6-84bf-fb39d2693de2"
-  }, {
-    tokenId: "a020dc47-3747-4123-9954-f0e87a858b8c"
-  }],
+  'Saheeli, the Gifted': [
+    {
+      tokenId: '761507d5-d36a-4123-a074-95d7f6ffb4c5',
+    },
+    {
+      tokenId: 'a020dc47-3747-4123-9954-f0e87a858b8c',
+    },
+  ],
+  'Daretti, Ingenious Iconoclast': [
+    {
+      tokenId: '7c82af53-2de8-4cd6-84bf-fb39d2693de2',
+    },
+    {
+      tokenId: 'a020dc47-3747-4123-9954-f0e87a858b8c',
+    },
+  ],
 
   //There simply does not seem to exist a 3/1 red elemental token with haste but without trample so i choose the closest thing.
-  "Chandra, Flamecaller": [{
-    tokenId: "bc6f27f7-0248-4c04-8022-41073966e4d8"
-  }],
+  'Chandra, Flamecaller': [
+    {
+      tokenId: 'bc6f27f7-0248-4c04-8022-41073966e4d8',
+    },
+  ],
 
-  //the cards below are transform cards that are on here due to the way 
+  //the cards below are transform cards that are on here due to the way
   //we currently do not populate the oracle text of transform cards.
-  "Arlinn Kord": [{
-    tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
-  }],
-  "Bloodline Keeper": [{
-    tokenId: "71496671-f7ba-4014-a895-d70a27979db7"
-  }],
-  "Docent of Perfection": [{
-    tokenId: "e4439a8b-ef98-428d-a274-53c660b23afe"
-  }],
-  "Dowsing Dagger": [{
-    tokenId: "642d1d93-22d0-43f9-8691-6790876185a0"
-  }],
-  "Extricator of Sin": [{
-    tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58"
-  }],
-  "Garruk Relentless": [{
-    tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
-  }, {
-    tokenId: "7a49607c-427a-474c-ad77-60cd05844b3c"
-  }],
-  "Golden Guardian": [{
-    tokenId: "a7820eb9-6d7f-4bc4-b421-4e4420642fb7",
-  }],
-  "Hanweir Militia Captain": [{
-    tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30"
-  }],
-  "Huntmaster of the Fells": [{
-    tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
-  }],
-  "Legion's Landing": [{
-    tokenId: "09293ae7-0629-417b-9eda-9bd3f6d8e118"
-  }],
-  "Liliana, Heretical Healer": [{
-    tokenId: "8e214f84-01ee-49c1-8801-4e550b5ade5d"
-  }],
-  "Mayor of Avabruck": [{
-    tokenId: "bd05e304-1a16-436d-a05c-4a38a839759b"
-  }],
-  "Nissa, Vastwood Seer": [{
-    tokenId: "0affd414-f774-48d1-af9e-bff74e58e1ca"
-  }],
-  "Shrill Howler": [{
-    tokenId: "11d25bde-a303-4b06-a3e1-4ad642deae58"
-  }],
-  "Storm the Vault": [{
-    tokenId: "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0"
-  }],
-  "Treasure Map": [{
-    tokenId: "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0"
-  }],
-  "Westvale Abbey": [{
-    tokenId: "94ed2eca-1579-411d-af6f-c7359c65de30",
-  }]
+  'Arlinn Kord': [
+    {
+      tokenId: 'bd05e304-1a16-436d-a05c-4a38a839759b',
+    },
+  ],
+  'Bloodline Keeper': [
+    {
+      tokenId: '71496671-f7ba-4014-a895-d70a27979db7',
+    },
+  ],
+  'Docent of Perfection': [
+    {
+      tokenId: 'e4439a8b-ef98-428d-a274-53c660b23afe',
+    },
+  ],
+  'Dowsing Dagger': [
+    {
+      tokenId: '642d1d93-22d0-43f9-8691-6790876185a0',
+    },
+  ],
+  'Extricator of Sin': [
+    {
+      tokenId: '11d25bde-a303-4b06-a3e1-4ad642deae58',
+    },
+  ],
+  'Garruk Relentless': [
+    {
+      tokenId: 'bd05e304-1a16-436d-a05c-4a38a839759b',
+    },
+    {
+      tokenId: '7a49607c-427a-474c-ad77-60cd05844b3c',
+    },
+  ],
+  'Golden Guardian': [
+    {
+      tokenId: 'a7820eb9-6d7f-4bc4-b421-4e4420642fb7',
+    },
+  ],
+  'Hanweir Militia Captain': [
+    {
+      tokenId: '94ed2eca-1579-411d-af6f-c7359c65de30',
+    },
+  ],
+  'Huntmaster of the Fells': [
+    {
+      tokenId: 'bd05e304-1a16-436d-a05c-4a38a839759b',
+    },
+  ],
+  "Legion's Landing": [
+    {
+      tokenId: '09293ae7-0629-417b-9eda-9bd3f6d8e118',
+    },
+  ],
+  'Liliana, Heretical Healer': [
+    {
+      tokenId: '8e214f84-01ee-49c1-8801-4e550b5ade5d',
+    },
+  ],
+  'Mayor of Avabruck': [
+    {
+      tokenId: 'bd05e304-1a16-436d-a05c-4a38a839759b',
+    },
+  ],
+  'Nissa, Vastwood Seer': [
+    {
+      tokenId: '0affd414-f774-48d1-af9e-bff74e58e1ca',
+    },
+  ],
+  'Shrill Howler': [
+    {
+      tokenId: '11d25bde-a303-4b06-a3e1-4ad642deae58',
+    },
+  ],
+  'Storm the Vault': [
+    {
+      tokenId: 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0',
+    },
+  ],
+  'Treasure Map': [
+    {
+      tokenId: 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0',
+    },
+  ],
+  'Westvale Abbey': [
+    {
+      tokenId: '94ed2eca-1579-411d-af6f-c7359c65de30',
+    },
+  ],
 };
-var specialCaseTokensList = ["Food", "Treasure"];
+var specialCaseTokensList = ['Food', 'Treasure'];
 
 function getTokensForSpecialCaseCard(newCardid, card) {
   var result = [];
@@ -594,20 +652,20 @@ function getTokenIDForSpecialCaseToken(tokenName) {
     case 'Food':
       return 'bf36408d-ed85-497f-8e68-d3a922c388a0';
       break;
-    case "Treasure":
-      return "e6fa7d35-9a7a-40fc-9b97-b479fc157ab0";
+    case 'Treasure':
+      return 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0';
       break;
-    case "Poison":
-      return "470618f6-f67f-44c6-a086-285632508915";
+    case 'Poison':
+      return '470618f6-f67f-44c6-a086-285632508915';
       break;
     case "City's Blessing":
-      return "ba64ed3e-93c5-406f-a38d-65cc68472122";
+      return 'ba64ed3e-93c5-406f-a38d-65cc68472122';
       break;
-    case "Monarch":
-      return "40b79918-22a7-4fff-82a6-8ebfe6e87185";
+    case 'Monarch':
+      return '40b79918-22a7-4fff-82a6-8ebfe6e87185';
       break;
-    case "Energy":
-      return "a446b9f8-cb22-408a-93ff-bee44a0dccc0";
+    case 'Energy':
+      return 'a446b9f8-cb22-408a-93ff-bee44a0dccc0';
       break;
   }
 }

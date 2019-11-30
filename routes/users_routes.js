@@ -351,7 +351,7 @@ router.post('/register', function(req, res) {
     res.render('user/register', {
       errors: errors,
       attempt: attempt,
-      user: null
+      user: null,
     });
   } else {
     User.findOne(
