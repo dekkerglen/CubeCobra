@@ -888,6 +888,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 
 router.get('/list/:id', function(req, res) {
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    console.log(cube);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});

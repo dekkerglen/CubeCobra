@@ -5,6 +5,7 @@ const carddb = require('../serverjs/cards');
 const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
+const Card = require('../models/card');
 
 const router = express.Router();
 
@@ -152,6 +153,29 @@ router.get('/topcards', (req, res) => {
       console.error(err);
       res.sendStatus(500);
     });
+});
+
+router.get('/card/:id', async (req, res) => {
+  try {    
+    //if id is a cardname, redirect to the default version for that card
+    let ids = carddb.nameToId[req.params.id.toLowerCase()];
+    if(ids) {
+      return res.redirect('/tool/card/' + ids[0]);
+    }
+    
+    let card = carddb.cardFromId(req.params.id);
+
+    const data = await Card.findOne({cardName:card.name.toLowerCase()});
+    
+    res.render('tool/cardpage', {
+      card:card,
+      data:data
+    });
+  } catch(err) {
+    console.log(err); 
+    req.flash('danger', err.message); 
+    res.redirect('/404');
+  }
 });
 
 module.exports = router;

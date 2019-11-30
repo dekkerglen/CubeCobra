@@ -41,7 +41,7 @@ class TopCards extends Component {
       ) : (
         <tr key={name}>
           <AutocardTd front={img} back={img_flip || undefined}>
-            {name}
+            <a href={'/tool/card/' + name}>{name}</a>
           </AutocardTd>
           <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
           <td>{picks}</td>
