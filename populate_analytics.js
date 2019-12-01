@@ -1,10 +1,10 @@
-var carddb = require('./serverjs/cards.js');
-
 const mongoose = require('mongoose');
+const quickselect = require('quickselect');
+
+var carddb = require('./serverjs/cards.js');
 const Deck = require('./models/deck');
 const Cube = require('./models/cube');
 const Card = require('./models/card');
-const CardCorrelation = require('./models/cardCorrelation');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 
 const batch_size = 100;
@@ -38,30 +38,26 @@ const cubeCounts = {
     vintage: 0,
 }
 
-async function createCorrelations() {
+const correlationIndex = {};
+const correlations = [];
+
+//use correlationIndex for index
+const cubesWithCard = [];
+
+function createCorrelations() {
     const totalCards = carddb.cardnames.length;
-    for (var i = 0; i < totalCards; i += batch_size) {
-        let cardnames = carddb.cardnames.slice(i,i+batch_size);
-        let cardqs = cardnames.map((cardname) => {
-            return CardCorrelation.findOne({cardName: cardname.toLowerCase()}).exec();
-        });
-
-        let batch = await Promise.all(cardqs);
-
-        for(var j = 0; j < batch.length; j++) {
-            if(!batch[j]) {
-                batch[j] = new CardCorrelation();
-                batch[j].cardName = cardnames[j].toLowerCase();
-            } else {
-                batch[j].correlation = {};
-            }
+    for (var i = 0; i < totalCards; i ++) {
+        correlationIndex[carddb.cardnames[i].toLowerCase()] = i;
+        correlations.push([]);
+        cubesWithCard.push([]);
+        for (var j = 0; j < totalCards; j ++) {
+            correlations[i].push(0);
         }
-
-        await Promise.all(batch.map((item) => {
-            return item.save();
-        }));
-        console.log('Finished: ' + (i+batch_size) + ' of ' + totalCards + ' card correlations.');
+        if((i+1)%100==0){
+            console.log('Finished: ' + (i+1) + ' of ' + totalCards + ' correlations.');
+        }
     }
+    console.log('Finish init of correlation matrix.')
 }
 
 function attemptIncrement(obj, propname) {
@@ -77,16 +73,16 @@ async function processCube(cube) {
     let cubeLegalityDict = cardSizeUses.vintage;
 
     cubeCounts.total++;
-    if(cube.card_count < 180) {
+    if(cube.card_count <= 180) {
         cubeSizeDict = cardSizeUses.size180;
         cubeCounts.size180++;
-    } else if(cube.card_count < 360) {
+    } else if(cube.card_count <= 360) {
         cubeSizeDict = cardSizeUses.size360;
         cubeCounts.size360++;
-    } else if(cube.card_count < 450) {
+    } else if(cube.card_count <= 450) {
         cubeSizeDict = cardSizeUses.size450;
         cubeCounts.size450++;
-    } else if(cube.card_count < 540) {
+    } else if(cube.card_count <= 540) {
         cubeSizeDict = cardSizeUses.size540;
         cubeCounts.size540++;
     } else  {
@@ -119,7 +115,10 @@ async function processCube(cube) {
     const cardnames = [];
     cube.cards.forEach(function(card, index) {        
         let cardobj = carddb.cardFromId(card.cardID);
-        cardnames.push(cardobj.name);
+        cardnames.push(cardobj.name.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim());
         
         //total
         attemptIncrement(cardUses, cardobj.name.toLowerCase());
@@ -134,70 +133,68 @@ async function processCube(cube) {
         }
     });
     
-    //set correlations  
-    const correlations = await Promise.all(cardnames.map((cardname) => {
-        return CardCorrelation.findOne({cardName:cardname.toLowerCase()}).exec();
-    }));
+    //set correlations
 
-    for(let i = 0; i < correlations.length; i++)
-    {
-        if(!correlations[i]) {
-            console.log("Correlation not found: " + cardnames[i])
-        } else {
-            cardnames.forEach(function(cardname, index) {
-                if(index != i && !cardname.includes('.')) {
-                    if(!correlations[i].correlation[cardname]) {
-                        correlations[i].correlation[cardname] = 0;
+    cardnames.forEach(function(cardname1, index) {
+        //could be an invalid card
+        if(correlationIndex[cardname1]) {
+            cubesWithCard[correlationIndex[cardname1]].push(cube._id);
+            cardnames.forEach(function(cardname2, index2) {
+                if(index != index2) {
+                    try{
+                        correlations[correlationIndex[cardname2.toLowerCase()]]
+                                    [correlationIndex[cardname1.toLowerCase()]]++;
+                        correlations[correlationIndex[cardname1.toLowerCase()]]
+                                    [correlationIndex[cardname2.toLowerCase()]]++;
+                    } catch(err)
+                    {
+                        console.log(cardname1.toLowerCase() + ' or ' + cardname2.toLowerCase() + ' cannot be indexed.');
                     }
-                    correlations[i].correlation[cardname]++;
                 }
             });
         }
-    }
-
-    await Promise.all(correlations.map((correlation) => {
-        if(correlation) {
-            return CardCorrelation.updateOne({cardName:correlation.cardName},correlation).exec();
-        }
-    }));
+    });
 
     return;
 }
 
 async function processCard(card) {    
-    card.cubeTypeCount = {
-        total: cardUses[card.cardName] ? [cardUses[card.cardName],cardUses[card.cardName]/cubeCounts.total] : [0,0],
-        size180: cardSizeUses.size180[card.cardName] ? [cardSizeUses.size180[card.cardName],cardSizeUses.size180[card.cardName]/cubeCounts.size180] : [0,0],
-        size360: cardSizeUses.size360[card.cardName] ? [cardSizeUses.size360[card.cardName],cardSizeUses.size360[card.cardName]/cubeCounts.size360] : [0,0],
-        size450: cardSizeUses.size450[card.cardName] ? [cardSizeUses.size450[card.cardName],cardSizeUses.size450[card.cardName]/cubeCounts.size450] : [0,0],
-        size540: cardSizeUses.size540[card.cardName] ? [cardSizeUses.size540[card.cardName],cardSizeUses.size540[card.cardName]/cubeCounts.size540] : [0,0],
-        size720: cardSizeUses.size720[card.cardName] ? [cardSizeUses.size720[card.cardName],cardSizeUses.size720[card.cardName]/cubeCounts.size720] : [0,0],
-        vintage: cardSizeUses.vintage[card.cardName] ? [cardSizeUses.vintage[card.cardName],cardSizeUses.vintage[card.cardName]/cubeCounts.vintage] : [0,0],
-        legacy: cardSizeUses.legacy[card.cardName] ? [cardSizeUses.legacy[card.cardName],cardSizeUses.legacy[card.cardName]/cubeCounts.legacy] : [0,0],
-        modern: cardSizeUses.modern[card.cardName] ? [cardSizeUses.modern[card.cardName],cardSizeUses.modern[card.cardName]/cubeCounts.modern] : [0,0],
-        standard: cardSizeUses.standard[card.cardName] ? [cardSizeUses.standard[card.cardName],cardSizeUses.standard[card.cardName]/cubeCounts.standard] : [0,0],
-        pauper: cardSizeUses.pauper[card.cardName] ? [cardSizeUses.pauper[card.cardName],cardSizeUses.pauper[card.cardName]/cubeCounts.pauper] : [0,0],
-    };
+    card.total = cardUses[card.cardName] ? [cardUses[card.cardName],cardUses[card.cardName]/cubeCounts.total] : [0,0];
+    card.size180 = cardSizeUses.size180[card.cardName] ? [cardSizeUses.size180[card.cardName],cardSizeUses.size180[card.cardName]/cubeCounts.size180] : [0,0];
+    card.size360 = cardSizeUses.size360[card.cardName] ? [cardSizeUses.size360[card.cardName],cardSizeUses.size360[card.cardName]/cubeCounts.size360] : [0,0];
+    card.size450 = cardSizeUses.size450[card.cardName] ? [cardSizeUses.size450[card.cardName],cardSizeUses.size450[card.cardName]/cubeCounts.size450] : [0,0];
+    card.size540 = cardSizeUses.size540[card.cardName] ? [cardSizeUses.size540[card.cardName],cardSizeUses.size540[card.cardName]/cubeCounts.size540] : [0,0];
+    card.size720 = cardSizeUses.size720[card.cardName] ? [cardSizeUses.size720[card.cardName],cardSizeUses.size720[card.cardName]/cubeCounts.size720] : [0,0];
+    card.vintage = cardSizeUses.vintage[card.cardName] ? [cardSizeUses.vintage[card.cardName],cardSizeUses.vintage[card.cardName]/cubeCounts.vintage] : [0,0];
+    card.legacy = cardSizeUses.legacy[card.cardName] ? [cardSizeUses.legacy[card.cardName],cardSizeUses.legacy[card.cardName]/cubeCounts.legacy] : [0,0];
+    card.modern = cardSizeUses.modern[card.cardName] ? [cardSizeUses.modern[card.cardName],cardSizeUses.modern[card.cardName]/cubeCounts.modern] : [0,0];
+    card.standard = cardSizeUses.standard[card.cardName] ? [cardSizeUses.standard[card.cardName],cardSizeUses.standard[card.cardName]/cubeCounts.standard] : [0,0];
+    card.pauper = cardSizeUses.pauper[card.cardName] ? [cardSizeUses.pauper[card.cardName],cardSizeUses.pauper[card.cardName]/cubeCounts.pauper] : [0,0];    
+
+    card.cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
 
     //cubed with
-    // Create items array
-    const correl = await CardCorrelation.findOne({cardName:card.cardName.toLowerCase()});
-    if(correl) {
-        // Create items array
-        var items = Object.keys(correl.correlation).map(function(key) {
-            return [key, correl.correlation[key]];
-        });
-
-        // Sort the array based on the second element
-        items.sort(function(first, second) {
-            return second[1] - first[1];
-        });
-        
-        // Create a new array with only the first 100 items
-        card.cubedWith = items.slice(0, 36);
-    } else {
-        card.cubedWith =  [[]];
+    //create correl dict
+    const totalCards = carddb.cardnames.length;
+    const items = [];
+    for (var i = 0; i < totalCards; i ++) {        
+        items.push([carddb.cardnames[i].toLowerCase(), correlations[correlationIndex[card.cardName]][correlationIndex[carddb.cardnames[i].toLowerCase()]]])
     }
+    
+    // Sort the array based on the second element
+    
+    //quickselect(items, 100, 0, items.length - 1, function(first, second) {
+    //    return second[1] - first[1];
+    //});  
+    
+    //quickselect isn't sorting correctly for some reason
+    items.sort(function(first, second) {
+        return second[1] - first[1];
+    });
+    
+    // Create a new array with only the first 100 items
+    card.cubedWith = items.slice(0, 100);
+
 }
 
 (async () => {
@@ -206,7 +203,7 @@ async function processCard(card) {
   var i = 0;
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
 
-    await createCorrelations();
+    createCorrelations();
 
     //process all cube objects
     console.log('Started: cubes');
