@@ -61,7 +61,7 @@ html
 							li.nav-item.dropdown
 								a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 									if user.notifications && user.notifications.length > 0
-										.badge.badge-danger
+										#notificationsBadge.badge.badge-danger
 											if user.notifications.length > 100
 												| 100+
 											else
@@ -70,7 +70,7 @@ html
 								.dropdown-menu.dropdown-no-green.dropdown-menu-right.p-0.mb-0(aria-labelledby='navbarDropdownMenuLink')
 									.card-header
 										h6 Notifications
-											a.float-right.mt-0(href="/user/clearnotifications").card-subtitle Clear All
+											a#clearNotifications.float-right.mt-0(href="#").card-subtitle Clear All
 	
 									.sm-main-nav.notification-scrollarea
 										if user.notifications && user.notifications.length > 0
@@ -82,8 +82,10 @@ html
 												.user-notification.py-3.px-2
 													a.no-underline-hover(href="/user/notification/"+n)
 														h6.card-subtitle #{user.notifications[n].text}
+											#noNotifcations.my-2.d-none
+												em.mx-4 You don't have any notifications to show.
 										else
-											.my-2
+											#noNotifcations.my-2
 												em.mx-4 You don't have any notifications to show.
 									.card-footer.pb-1.pt-1
 										h6
@@ -134,6 +136,7 @@ html
 					a(href='/cookies') Cookies Policy
 
 		script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
+		script(src='/js/csrf.js')
 		script(src='/js/main.js')
 		script(src='/js/autocard.js')
 
