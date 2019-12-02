@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const quickselect = require('quickselect');
 
 var carddb = require('./serverjs/cards.js');
-const Deck = require('./models/deck');
+const Draft = require('./models/draft');
 const Cube = require('./models/cube');
 const Card = require('./models/card');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
@@ -65,6 +65,33 @@ function attemptIncrement(obj, propname) {
         obj[propname] = 0;
     }
     obj[propname]++; 
+
+}
+
+async function processDraft(draft) {
+    if(draft.pickOrder) {
+        draft.pickOrder.forEach(function(cid, index) {
+            //could be an invalid card
+            const cardname1 = carddb.cardFromId(cid);
+            if(correlationIndex[cardname1]) {
+                cubesWithCard[correlationIndex[cardname1]].push(cube._id);
+                cardnames.forEach(function(cardname2, index2) {
+                    const cardname2 = carddb.cardFromId(cid);
+                    if(index != index2) {
+                        try{
+                            correlations[correlationIndex[cardname2.toLowerCase()]]
+                                        [correlationIndex[cardname1.toLowerCase()]]++;
+                            correlations[correlationIndex[cardname1.toLowerCase()]]
+                                        [correlationIndex[cardname2.toLowerCase()]]++;
+                        } catch(err)
+                        {
+                            console.log(cardname1.toLowerCase() + ' or ' + cardname2.toLowerCase() + ' cannot be indexed.');
+                        }
+                    }
+                });
+            }
+        });
+    }
 }
 
 async function processCube(cube) {
@@ -135,6 +162,8 @@ async function processCube(cube) {
     
     //set correlations
 
+    //we will do only correlations on deck objects for now
+    /*
     cardnames.forEach(function(cardname1, index) {
         //could be an invalid card
         if(correlationIndex[cardname1]) {
@@ -153,7 +182,7 @@ async function processCube(cube) {
                 }
             });
         }
-    });
+    });*/
 
     return;
 }
@@ -207,8 +236,8 @@ async function processCard(card) {
 
     //process all cube objects
     console.log('Started: cubes');
-    const count = await Cube.countDocuments();
-    const cursor = Cube.find().cursor();
+    let count = await Cube.countDocuments();
+    let cursor = Cube.find().cursor();
     for (var i = 0; i < count; i ++) {
         await processCube(await cursor.next());
         if((i+1)%10==0) {
@@ -218,6 +247,16 @@ async function processCard(card) {
     console.log('Finished: all cubes');
     
     //process all deck objects
+    console.log('Started: drafts');
+    count = await Draft.countDocuments();
+    cursor = Draft.find().cursor();
+    for (var i = 0; i < count; i ++) {
+        await processDraft(await cursor.next());
+        if((i+1)%100==0) {
+            console.log('Finished: ' + (i+1) + ' of ' + count + ' cubes.');
+        }
+    }
+    console.log('Finished: all cubes');
 
     //save card models
     const totalCards = carddb.cardnames.length;
