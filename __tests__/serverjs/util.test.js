@@ -79,22 +79,19 @@ test('addCardToCube adds a well-formed object', () => {
     _id: 'abcdef',
     type: 'creature',
   };
-  const addedTmsp = new Date();
-  util.addCardToCube(testCube, testCard, undefined, addedTmsp);
+  util.addCardToCube(testCube, testCard);
   expect(testCube.cards.length).toBe(initialLength + 1);
   const result = testCube.cards[0];
-  expect(result.tags.length).toBe(1);
-  expect(result.tags[0]).toBe('New');
+  expect(result.tags.length).toBe(0);
   expect(result.status).toBe('Not Owned');
   expect(result.colors).toBe(testCard.color_identity);
   expect(result.cmc).toBe(testCard.cmc);
   expect(result.cardID).toBe(testCard._id);
   expect(result.type_line).toBe(testCard.type);
-  expect(result.addedTmsp).toBe(addedTmsp);
   expect(result.imgUrl).toBe(undefined);
 });
 
-test('addCardToCube allows card id to be overridden', () => {
+test('addCardToCube allows custom tags', () => {
   var testCube = {
     cards: [],
   };
@@ -105,12 +102,11 @@ test('addCardToCube allows card id to be overridden', () => {
     _id: 'abcdef',
     type: 'creature',
   };
-  const addedTmsp = new Date();
-  const idOverride = 'new id ___';
-  util.addCardToCube(testCube, testCard, idOverride, addedTmsp);
+  util.addCardToCube(testCube, testCard, ['Tag']);
   expect(testCube.cards.length).toBe(initialLength + 1);
   const result = testCube.cards[0];
-  expect(result.cardID).toBe(idOverride);
+  expect(result.tags.length).toBe(1);
+  expect(result.tags[0]).toBe('Tag');
 });
 
 test('getCardImageURL returns imgUrl when defined', () => {

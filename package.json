@@ -45,7 +45,6 @@
     "pug": "^2.0.3",
     "quickselect": "^2.0.0",
     "request": "^2.88.0",
-    "request-promise": "^4.2.5",
     "rss": "^1.2.2",
     "sanitize-html": "^1.20.1",
     "selenium-webdriver": "^4.0.0-alpha.4",
