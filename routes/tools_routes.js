@@ -2,6 +2,8 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
+const {GetPrices} = require('../serverjs/prices.js');
+
 const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
@@ -164,12 +166,15 @@ router.get('/card/:id', async (req, res) => {
     }
     
     let card = carddb.cardFromId(req.params.id);
-
     const data = await Card.findOne({cardName:card.name.toLowerCase()});
-    
-    res.render('tool/cardpage', {
-      card:card,
-      data:data
+    const pids = carddb.nameToId[card.name];
+
+    GetPrices(pids, async function(prices) {
+      res.render('tool/cardpage', {
+        card:card,
+        data:data,
+        prices:prices
+      });
     });
   } catch(err) {
     console.log(err); 
