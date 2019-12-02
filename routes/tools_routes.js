@@ -172,7 +172,8 @@ router.get('/card/:id', async (req, res) => {
       res.render('tool/cardpage', {
         card:card,
         data:data,
-        prices:prices
+        prices:prices,
+        related:card.cubedWith.map((id) => carddb.cardFromId(id))
       });
     });
   } catch(err) {

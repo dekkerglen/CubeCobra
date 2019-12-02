@@ -4,6 +4,8 @@ import { Card, CardHeader,CardFooter, Row, Col, CardBody, CardText, Table } from
 
 import ImageFallback from './components/ImageFallback';
 import ButtonLink from './components/ButtonLink';
+import CountTableRow from './components/CountTableRow';
+
 
 import Affiliate from './util/Affiliate';
 
@@ -52,13 +54,7 @@ class CardPage extends Component {
                       <h5>By Legality:</h5>
                       <Table bordered>
                         <tbody>
-                          <tr>
-                            <td>Vintage:</td>
-                            <td>
-                             {Math.round(data.vintage[1] * 1000.0)/10}%                              
-                              <span className="percent">{data.vintage[0]}</span>
-                            </td>
-                          </tr>
+                          <CountTableRow label="Vintage" value={data.vintage[0]} percent={data.vintage[1]} />
                           <tr>
                             <td>Legacy:</td>
                             <td>
@@ -153,6 +149,7 @@ class CardPage extends Component {
 const data = JSON.parse(document.getElementById('data').value);
 const card = JSON.parse(document.getElementById('card').value);
 const prices = JSON.parse(document.getElementById('prices').value);
+const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
-const element = <CardPage data={data} card={card} prices={prices}/>;
+const element = <CardPage data={data} card={card} prices={prices} related={related}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;
