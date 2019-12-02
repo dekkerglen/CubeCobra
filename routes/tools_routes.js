@@ -167,8 +167,7 @@ router.get('/card/:id', async (req, res) => {
     
     let card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({cardName:card.name.toLowerCase()});
-    const pids = carddb.nameToId[card.name];
-
+    const pids = carddb.nameToId[card.name.toLowerCase()].map((id) => carddb.cardFromId(id).tcgplayer_id);
     GetPrices(pids, async function(prices) {
       res.render('tool/cardpage', {
         card:card,

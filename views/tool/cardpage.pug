@@ -4,6 +4,7 @@ block content
   include ../flash
   input(type='hidden', id='data', value=JSON.stringify(data))
   input(type='hidden', id='card', value=JSON.stringify(card))
+  input(type='hidden', id='prices', value=JSON.stringify(prices))
   #react-root
   script(src='/js/autocard.js')
   script(src='/js/cardpage.bundle.js')
