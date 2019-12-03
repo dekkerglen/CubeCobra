@@ -62,7 +62,9 @@ function addCardToCatalog(card, isExtra) {
     if (card.image_flip) {
       card_images.image_flip = card.image_flip;
     }
-    _catalog.cardimages[normalizedName] = card_images;
+    if(carddb.notPromoOrDigitalCard(card)) {
+      _catalog.cardimages[normalizedName] = card_images;
+    }
   }
   //only add if it doesn't exist, this makes the default the newest edition
   if (!_catalog.nameToId[normalizedName]) {
@@ -687,7 +689,14 @@ function convertCard(card, isExtra) {
   newcard.color_identity = newcard.color_identity.concat(card.color_identity);
   newcard.set = card.set;
   newcard.collector_number = card.collector_number;
-  newcard.promo = card.promo;
+  newcard.promo = card.promo 
+    || (card.frame_effects && card.frame_effects.includes('extendedart'))
+    || (card.frame_effects && card.frame_effects.includes('showcase'))
+    || card.textless
+    || card.frame=='art_series'
+    || card.set.toLowerCase()=='mps' //kaladesh masterpieces
+    || card.set.toLowerCase()=='mp2' //invocations
+    || card.set.toLowerCase()=='exp'; //expeditions
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -704,6 +713,9 @@ function convertCard(card, isExtra) {
   newcard.parsed_cost = convertParsedCost(card, isExtra);
   newcard.colors = convertColors(card, isExtra);
   newcard.type = convertType(card, isExtra);
+  newcard.full_art = card.full_art;
+  newcard.language = card.lang;
+
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;
   }
