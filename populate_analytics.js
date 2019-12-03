@@ -88,23 +88,23 @@ async function processDeck(deck) {
             }
         });
 
-        deckCards.forEach(function(n1, index) {
+        for(let i = 0; i < deckCards.length; i++) {
             //could be an invalid card
-            if(correlationIndex[n1] && !basics.includes(n1)) {
-                deckCards.forEach(function(n2, index2) {
-                    if(index != index2 && !basics.includes(n2)) {
+            if(correlationIndex[deckCards[i]] && !basics.includes(deckCards[i])) {
+                for(let j = i+1; j < deckCards.length; j++) {
+                    if(!basics.includes(deckCards[j])) {
                         try {
-                            correlations[correlationIndex[n2]]
-                                        [correlationIndex[n1]]++;
-                            correlations[correlationIndex[n1]]
-                                        [correlationIndex[n2]]++;
+                            correlations[correlationIndex[deckCards[j]]]
+                                        [correlationIndex[deckCards[i]]]++;
+                            correlations[correlationIndex[deckCards[j]]]
+                                        [correlationIndex[deckCards[i]]]++;
                         } catch(err) {
-                            console.log(n1 + ' or ' + n2 + ' cannot be indexed.');
+                            console.log(deckCards[i] + ' or ' + deckCards[j] + ' cannot be indexed.');
                         }
                     }
-                });
+                }
             }
-        });
+        }
     }
 }
 
@@ -156,10 +156,13 @@ async function processCube(cube) {
     // cardnames = [];
     cube.cards.forEach(function(card, index) {        
         let cardobj = carddb.cardFromId(card.cardID);
-        //cardnames.push(cardobj.name.toLowerCase()
-        //.normalize('NFD')
-        //.replace(/[\u0300-\u036f]/g, '')
-        //.trim());
+        const cardname = cardobj.name.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+        if(correlationIndex[cardname]) {
+            cubesWithCard[correlationIndex[cardname]].push(cube._id);
+        }
         
         //total
         attemptIncrement(cardUses, cardobj.name.toLowerCase());
@@ -173,30 +176,6 @@ async function processCube(cube) {
             attemptIncrement(cardSizeUses.pauper, cardobj.name.toLowerCase());
         }
     });
-    
-    //set correlations
-
-    //we will do only correlations on deck objects for now
-    /*
-    cardnames.forEach(function(cardname1, index) {
-        //could be an invalid card
-        if(correlationIndex[cardname1]) {
-            cubesWithCard[correlationIndex[cardname1]].push(cube._id);
-            cardnames.forEach(function(cardname2, index2) {
-                if(index != index2) {
-                    try{
-                        correlations[correlationIndex[cardname2.toLowerCase()]]
-                                    [correlationIndex[cardname1.toLowerCase()]]++;
-                        correlations[correlationIndex[cardname1.toLowerCase()]]
-                                    [correlationIndex[cardname2.toLowerCase()]]++;
-                    } catch(err)
-                    {
-                        console.log(cardname1.toLowerCase() + ' or ' + cardname2.toLowerCase() + ' cannot be indexed.');
-                    }
-                }
-            });
-        }
-    });*/
 
     return;
 }

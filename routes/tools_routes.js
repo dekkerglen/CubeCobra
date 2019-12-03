@@ -8,6 +8,7 @@ const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');
+const Cube = require('../models/cube');
 
 const router = express.Router();
 
@@ -112,6 +113,14 @@ function topCards(filter, res) {
   });
 }
 
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function notPromoOrDigitalId(id) {
   let card = carddb.cardFromId(id);
   return !card.promo && !card.digital && card.border_color != 'gold';
@@ -182,12 +191,16 @@ router.get('/card/:id', async (req, res) => {
     }
     let card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({cardName:card.name.toLowerCase()});
+
+    const cubes = await Promise.all(shuffle(data.cubes).slice(0,12).map((id) => Cube.findOne({_id:id})));
+
     const pids = carddb.nameToId[card.name.toLowerCase()].map((id) => carddb.cardFromId(id).tcgplayer_id);
     GetPrices(pids, async function(prices) {
       res.render('tool/cardpage', {
         card:card,
         data:data,
         prices:prices,
+        cubes:cubes,
         related:data.cubedWith.map((id) => getMostReasonable(id[0]))
       });
     });

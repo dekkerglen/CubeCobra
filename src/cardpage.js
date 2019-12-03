@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Card, CardHeader,CardFooter, Row, Col, CardBody, CardText, Table } from 'reactstrap';
+import { Card, CardHeader,CardFooter, Row, Col, CardBody, CardText, Table, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import ImageFallback from './components/ImageFallback';
 import ButtonLink from './components/ButtonLink';
 import CountTableRow from './components/CountTableRow';
+import CubePreview from './components/CubePreview';
 
 
 import Affiliate from './util/Affiliate';
@@ -12,11 +13,21 @@ import Affiliate from './util/Affiliate';
 class CardPage extends Component {
   constructor(props) {
     super(props);
+    
+    this.state = {
+      selectedTab: "1"
+    };
+    this.changeTab = this.changeTab.bind(this);
+  }
+
+  changeTab(tab) {    
+    this.setState({
+      selectedTab: tab,
+    });
   }
 
   render() {
-    const {card, data, prices,related} = this.props;
-    console.log(data);
+    const {card, data, prices,related,cubes} = this.props;
     return (
         <Card>
             <CardHeader><h4>{card.name}</h4></CardHeader>
@@ -78,14 +89,44 @@ class CardPage extends Component {
                 </Col>
               </Row>
             </CardBody>
-            <CardBody className="border-top">
-              <h4 class="text-center">Often played with:</h4>
-              <Row>
-                {related.map((item) => 
-                  <a key={item.name} href={"/tool/card/"+item.name}><img width="150" height="210" src={item.image_normal}/></a>
-                )}
-              </Row>
-            </CardBody>
+            <Nav tabs>
+              <NavItem>
+                <NavLink className={this.state.selectedTab=="1" ? "active mx-2" : "mx-2 clickable"} onClick={() => { this.changeTab("1"); }}>
+                  Often Drafted With
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink className={this.state.selectedTab=="2" ? "active mx-2" : "mx-2 clickable"} onClick={() => { this.changeTab("2"); }}>
+                  Cubes With This Card
+                </NavLink>
+              </NavItem>
+            </Nav>            
+            <TabContent activeTab={this.state.selectedTab}>
+              <TabPane tabId="1">
+                <CardBody>
+                  <Row>
+                    {related.map((item) => 
+                      <a key={item.name} href={"/tool/card/"+item.name}><img width="150" height="210" src={item.image_normal}/></a>
+                    )}
+                  </Row>
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="2">
+                <Row className="no-gutters">
+                  {cubes.length > 0 ? (
+                    cubes.map((cube) => (
+                      <Col key={cube._id} xs="6" sm="4" md="3" lg="3">
+                        <CubePreview cube={cube} />
+                      </Col>
+                    ))
+                  ) : (
+                    <p className="m-2">
+                      No cubes with this card found.
+                    </p>
+                  )}
+                </Row>
+              </TabPane>
+            </TabContent>
             <CardFooter>
               <ButtonLink className='mx-2' color="success" href={card.scryfall_uri}>
                 <span className="d-none d-sm-inline">View on Scryfall</span>
@@ -103,7 +144,8 @@ class CardPage extends Component {
 const data = JSON.parse(document.getElementById('data').value);
 const card = JSON.parse(document.getElementById('card').value);
 const prices = JSON.parse(document.getElementById('prices').value);
+const cubes = JSON.parse(document.getElementById('cubes').value);
 const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
-const element = <CardPage data={data} card={card} prices={prices} related={related}/>;
+const element = <CardPage data={data} card={card} prices={prices} related={related} cubes={cubes}/>;
 wrapper ? ReactDOM.render(element, wrapper) : false;
