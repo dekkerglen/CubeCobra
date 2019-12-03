@@ -1,5 +1,6 @@
 const express = require('express');
-const rp = require('request-promise');
+const request = require('request');
+const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 var {
   addAutocard,
@@ -970,119 +971,113 @@ router.get('/samplepackimage/:id/:seed', function(req, res) {
   });
 });
 
-router.post('/importcubetutor/:id', ensureAuth, function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.log(err, req);
-    } else {
-      if (cube.owner != req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/list/' + req.params.id);
+router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (cube.owner != req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      res.redirect('/cube/list/' + req.params.id);
+      return;
+    }
+    if (isNaN(req.body.cubeid)) {
+      req.flash('danger', 'Error: Provided ID is not in correct format.');
+      res.redirect('/cube/list/' + req.params.id);
+      return;
+    }
+
+    const response = await fetch(`https://www.cubetutor.com/viewcube/${req.body.cubeid}`, {
+      headers: {
+        // This tricks cubetutor into not redirecting us to the unsupported browser page.
+        'User-Agent': 'Mozilla/5.0',
+      },
+    });
+    if (!response.ok) {
+      req.flash('danger', 'Error accessing CubeTutor.');
+      res.redirect('/cube/list' + req.params.id);
+      return;
+    }
+    const text = await response.text();
+    const data = cheerio.load(text);
+
+    const tagColors = new Map();
+    data('.keyColour').each((i, elem) => {
+      const text = elem.firstChild.nodeValue.trim();
+      tagColors.set(elem.attribs['class'].split(' ')[1], text);
+    });
+
+    const cards = [];
+    data('.cardPreview').each((i, elem) => {
+      const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
+      const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
+      const tagColorClasses = elem.attribs['class'].split(' ').filter((c) => tagColors.has(c));
+      const tags = tagColorClasses.map((c) => tagColors.get(c));
+      cards.push({
+        set: str.includes('/') ? str.split('/')[0] : 'unknown',
+        name,
+        tags,
+      });
+    });
+
+    const added = [];
+    let missing = '';
+    let changelog = '';
+    for (const card of cards) {
+      const potentialIds = carddb.allIds(card);
+      if (potentialIds && potentialIds.length > 0) {
+        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
+        const nonPromo = potentialIds.find(notPromoOrDigitalId);
+        const selected = matchingSet || nonPromo || potentialIds[0];
+        const details = carddb.cardFromId(selected);
+        added.push(details);
+        util.addCardToCube(cube, details, card.tags);
+        changelog += addCardHtml(details);
       } else {
-        if (isNaN(req.body.cubeid)) {
-          req.flash('danger', 'Error: Provided ID is not in correct format.');
-          res.redirect('/cube/list/' + req.params.id);
-        } else {
-          const options = {
-            uri: 'http://www.cubetutor.com/viewcube/' + req.body.cubeid,
-            transform: function(body) {
-              return cheerio.load(body);
-            },
-            headers: {
-              //this tricks cubetutor into not redirecting us to the unsupported browser page
-              'User-Agent': 'Mozilla/5.0',
-            },
-          };
-          rp(options)
-            .then(function(data) {
-              var cards = [];
-              var unknown = [];
-              data('.cardPreview').each(function(i, elem) {
-                var str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
-                if (!str.includes('/')) {
-                  cards.push({
-                    set: 'unknown',
-                    name: decodeURIComponent(elem.children[0].data).replace('_flip', ''),
-                  });
-                } else {
-                  var split = str.split('/');
-                  cards.push({
-                    set: split[0],
-                    name: decodeURIComponent(elem.children[0].data).replace('_flip', ''),
-                  });
-                }
-              });
-              var added = [];
-              var missing = '';
-              var changelog = '';
-              for (let card of cards) {
-                let potentialIds = carddb.allIds(card);
-                if (potentialIds && potentialIds.length > 0) {
-                  let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
-                  let nonPromo = potentialIds.find(notPromoOrDigitalId);
-                  let selected = matchingSet || nonPromo || potentialIds[0];
-                  let details = carddb.cardFromId(selected);
-                  added.push(details);
-                  util.addCardToCube(cube, details);
-                  changelog += addCardHtml(details);
-                } else {
-                  missing += card.name + '\n';
-                }
-              }
-
-              var blogpost = new Blog();
-              blogpost.title = 'Cubetutor Import - Automatic Post';
-              blogpost.html = changelog;
-              blogpost.owner = cube.owner;
-              blogpost.date = Date.now();
-              blogpost.cube = cube._id;
-              blogpost.dev = 'false';
-              blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-              blogpost.username = cube.owner_name;
-              blogpost.cubename = cube.name;
-
-              if (missing.length > 0) {
-                res.render('cube/bulk_upload', {
-                  missing: missing,
-                  cube_id: req.params.id,
-                  title: `${abbreviate(cube.name)} - Bulk Upload`,
-                  added: JSON.stringify(added),
-                  cube: cube,
-                  user: {
-                    id: req.user._id,
-                    username: req.user.username,
-                  },
-                });
-              } else {
-                blogpost.save(function(err) {
-                  cube = setCubeType(cube, carddb);
-                  Cube.updateOne(
-                    {
-                      _id: cube._id,
-                    },
-                    cube,
-                    function(err) {
-                      if (err) {
-                        req.flash('danger', 'Error adding cards. Please try again.');
-                        res.redirect('/cube/list/' + req.params.id);
-                      } else {
-                        req.flash('success', 'All cards successfully added.');
-                        res.redirect('/cube/list/' + req.params.id);
-                      }
-                    },
-                  );
-                });
-              }
-            })
-            .catch(function(err) {
-              console.log(err);
-              req.flash('danger', 'Error: Unable to import this cube.');
-              res.redirect('/cube/list/' + req.params.id);
-            });
-        }
+        missing += card.name + '\n';
       }
     }
-  });
+
+    const blogpost = new Blog();
+    blogpost.title = 'Cubetutor Import - Automatic Post';
+    blogpost.html = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    if (missing.length > 0) {
+      res.render('cube/bulk_upload', {
+        missing: missing,
+        cube_id: req.params.id,
+        title: `${abbreviate(cube.name)} - Bulk Upload`,
+        added: JSON.stringify(added),
+        cube: cube,
+        user: {
+          id: req.user._id,
+          username: req.user.username,
+        },
+      });
+    } else {
+      try {
+        const blogQ = blogpost.save();
+        setCubeType(cube, carddb);
+        const cubeQ = cube.save();
+        await Promise.all([blogQ, cubeQ]);
+        req.flash('success', 'All cards successfully added.');
+        res.redirect('/cube/list/' + req.params.id);
+      } catch (e) {
+        console.error(e);
+        req.flash('danger', 'Error adding cards. Please try again.');
+        res.redirect('/cube/list/' + req.params.id);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    req.flash('danger', 'Error: Unable to import this cube.');
+    res.redirect('/cube/list/' + req.params.id);
+  }
 });
 
 router.post('/bulkupload/:id', ensureAuth, function(req, res) {
@@ -1251,7 +1246,7 @@ function bulkUpload(req, res, list, cube) {
             }
             if (selected) {
               let details = carddb.cardFromId(selected);
-              util.addCardToCube(cube, details, details);
+              util.addCardToCube(cube, details);
               added.push(details);
               changelog += addCardHtml(details);
             } else {

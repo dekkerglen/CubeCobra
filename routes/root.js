@@ -286,18 +286,22 @@ router.get('/search/:id', function(req, res) {
   var page = parseInt(raw_split[1]);
   var query = {};
   var terms = [];
-  raw_queries.forEach(function(val, index) {
-    if (val.includes('=')) {
-      var split = val.split('=');
-      query[split[0]] = split[1];
-      terms.push(split[0].replace('owner_name', 'owner') + ' is exactly ' + split[1]);
-    } else if (val.includes('~')) {
-      var split = val.split('~');
-      query[split[0]] = {
-        $regex: split[1],
-        $options: 'i',
-      };
-      terms.push(split[0].replace('owner_name', 'owner') + ' contains ' + split[1]);
+  raw_queries.forEach(function(search_expression) {
+    let field, filter, search_regex;
+
+    if (search_expression.includes('=')) {
+      [field, filter] = search_expression.split('=');
+      search_regex = new RegExp(`^${filter}$`, 'i');
+      expression_term = 'is exactly';
+    } else if (search_expression.includes('~')) {
+      [field, filter] = search_expression.split('~');
+      search_regex = new RegExp(filter, 'i');
+      expression_term = 'contains';
+    }
+
+    if (search_regex) {
+      query[field] = { $regex: search_regex };
+      terms.push(`${field.replace('owner_name', 'owner')} ${expression_term} ${filter.toLowerCase()}`);
     }
   });
 
