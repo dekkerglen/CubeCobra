@@ -15,7 +15,7 @@ class CardPage extends Component {
   }
 
   render() {
-    const {card, data, prices} = this.props;
+    const {card, data, prices,related} = this.props;
     console.log(data);
     return (
         <Card>
@@ -54,35 +54,11 @@ class CardPage extends Component {
                       <h5>By Legality:</h5>
                       <Table bordered>
                         <tbody>
-                          <CountTableRow label="Vintage" value={data.vintage[0]} percent={data.vintage[1]} />
-                          <tr>
-                            <td>Legacy:</td>
-                            <td>
-                              {Math.round(data.legacy[1] * 1000.0)/10}%
-                              <span className="percent">{data.legacy[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Modern:</td>
-                            <td>
-                              {Math.round(data.modern[1] * 1000.0)/10}%                              
-                              <span className="percent">{data.modern[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Standard:</td>
-                            <td>
-                              {Math.round(data.standard[1] * 1000.0)/10}%
-                              <span className="percent">{data.standard[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Pauper:</td>
-                            <td>
-                              {Math.round(data.pauper[1] * 1000.0)/10}%
-                              <span className="percent">{data.pauper[0]}</span>
-                            </td>
-                          </tr>
+                          <CountTableRow label="Vintage" value={data.vintage} />
+                          <CountTableRow label="Legacy" value={data.legacy} />
+                          <CountTableRow label="Modern" value={data.modern} />
+                          <CountTableRow label="Standard" value={data.standard} />
+                          <CountTableRow label="Pauper" value={data.pauper} />
                         </tbody>
                       </Table>
                     </Col>
@@ -90,46 +66,24 @@ class CardPage extends Component {
                       <h5>By Size:</h5>
                       <Table bordered>
                         <tbody>
-                          <tr>
-                            <td>1-180</td>
-                            <td>
-                              {Math.round(data.size180[1] * 1000.0)/10}%
-                              <span className="percent">{data.size180[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>181-360</td>
-                            <td>
-                              {Math.round(data.size360[1] * 1000.0)/10}%
-                              <span className="percent">{data.size360[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>361-450</td>
-                            <td>
-                              {Math.round(data.size450[1] * 1000.0)/10}%
-                              <span className="percent">{data.size450[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>451-540</td>
-                            <td>
-                              {Math.round(data.size540[1] * 1000.0)/10}%
-                              <span className="percent">{data.size540[0]}</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>541+</td>
-                            <td>
-                              {Math.round(data.size720[1] * 1000.0)/10}%
-                              <span className="percent">{data.size720[0]}</span>
-                            </td>
-                          </tr>
+                          <CountTableRow label="1-180" value={data.size180} />
+                          <CountTableRow label="181-360" value={data.size360} />
+                          <CountTableRow label="361-450" value={data.size450} />
+                          <CountTableRow label="451-540" value={data.size540} />
+                          <CountTableRow label="541+" value={data.size720} />
                         </tbody>
                       </Table>
                     </Col>
                   </Row>
                 </Col>
+              </Row>
+            </CardBody>
+            <CardBody className="border-top">
+              <h4 class="text-center">Often played with:</h4>
+              <Row>
+                {related.map((item) => 
+                  <a key={item.name} href={"/tool/card/"+item.name}><img width="150" height="210" src={item.image_normal}/></a>
+                )}
               </Row>
             </CardBody>
             <CardFooter>

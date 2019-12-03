@@ -1,11 +1,11 @@
 import React from 'react';
 
-const CountTableRow = ({label, percent, value , ...props }) => (
+const CountTableRow = ({label, value, ...props }) => (
     <tr>
         <td>{label}:</td>
         <td>
-            {Math.round(percent * 1000.0)/10}%                              
-            <span className="percent">{value}</span>
+            {Math.round(value[1] * 1000.0)/10}%                              
+            <span className="percent">{value[0]}</span>
         </td>
     </tr>
 );

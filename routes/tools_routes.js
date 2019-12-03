@@ -112,6 +112,22 @@ function topCards(filter, res) {
   });
 }
 
+function notPromoOrDigitalId(id) {
+  let card = carddb.cardFromId(id);
+  return !card.promo && !card.digital && card.border_color != 'gold';
+}
+
+function getMostReasonable(cardname) {
+  const cards = carddb.nameToId[cardname];
+  for(let i = 0; i < cards.length; i++) {
+    if(notPromoOrDigitalId(cards[i])) {
+      return carddb.cardFromId(cards[i]);
+    }
+  }
+  return carddb.cardFromId(cards[0]);
+}
+
+
 router.get('/api/topcards', (req, res) => {
   const { err, filter } = makeFilter(req.query.f);
   if (err) {
@@ -162,9 +178,8 @@ router.get('/card/:id', async (req, res) => {
     //if id is a cardname, redirect to the default version for that card
     let ids = carddb.nameToId[req.params.id.toLowerCase()];
     if(ids) {
-      return res.redirect('/tool/card/' + ids[0]);
+      return res.redirect('/tool/card/' + getMostReasonable(req.params.id.toLowerCase())._id);
     }
-    
     let card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({cardName:card.name.toLowerCase()});
     const pids = carddb.nameToId[card.name.toLowerCase()].map((id) => carddb.cardFromId(id).tcgplayer_id);
@@ -173,7 +188,7 @@ router.get('/card/:id', async (req, res) => {
         card:card,
         data:data,
         prices:prices,
-        related:card.cubedWith.map((id) => carddb.cardFromId(id))
+        related:data.cubedWith.map((id) => getMostReasonable(id[0]))
       });
     });
   } catch(err) {

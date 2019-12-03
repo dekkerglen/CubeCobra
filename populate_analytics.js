@@ -2,12 +2,14 @@ const mongoose = require('mongoose');
 const quickselect = require('quickselect');
 
 var carddb = require('./serverjs/cards.js');
-const Draft = require('./models/draft');
+const Deck = require('./models/deck');
 const Cube = require('./models/cube');
 const Card = require('./models/card');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 
 const batch_size = 100;
+
+const basics = ['mountain','forest','plains','island','swamp'];
 
 const cardUses = {};
 const cardSizeUses = {
@@ -68,24 +70,36 @@ function attemptIncrement(obj, propname) {
 
 }
 
-async function processDraft(draft) {
-    if(draft.pickOrder) {
-        draft.pickOrder.forEach(function(cid, index) {
+async function processDeck(deck) {
+    if(deck.playerdeck && deck.playerdeck.length > 0) {
+        //flatten array
+        const deckCards = [];
+        deck.playerdeck.forEach(function(col, index) {
+            if(Array.isArray(col)) {
+                col.forEach(function(row, index2) {
+                    deckCards.push(row.details.name.toLowerCase().normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim());
+                });
+            } else {
+                deckCards.push(col.details.name.toLowerCase().normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim());
+            }
+        });
+
+        deckCards.forEach(function(n1, index) {
             //could be an invalid card
-            const cardname1 = carddb.cardFromId(cid);
-            if(correlationIndex[cardname1]) {
-                cubesWithCard[correlationIndex[cardname1]].push(cube._id);
-                cardnames.forEach(function(cardname2, index2) {
-                    const cardname2 = carddb.cardFromId(cid);
-                    if(index != index2) {
-                        try{
-                            correlations[correlationIndex[cardname2.toLowerCase()]]
-                                        [correlationIndex[cardname1.toLowerCase()]]++;
-                            correlations[correlationIndex[cardname1.toLowerCase()]]
-                                        [correlationIndex[cardname2.toLowerCase()]]++;
-                        } catch(err)
-                        {
-                            console.log(cardname1.toLowerCase() + ' or ' + cardname2.toLowerCase() + ' cannot be indexed.');
+            if(correlationIndex[n1] && !basics.includes(n1)) {
+                deckCards.forEach(function(n2, index2) {
+                    if(index != index2 && !basics.includes(n2)) {
+                        try {
+                            correlations[correlationIndex[n2]]
+                                        [correlationIndex[n1]]++;
+                            correlations[correlationIndex[n1]]
+                                        [correlationIndex[n2]]++;
+                        } catch(err) {
+                            console.log(n1 + ' or ' + n2 + ' cannot be indexed.');
                         }
                     }
                 });
@@ -139,13 +153,13 @@ async function processCube(cube) {
         }
     }
     
-    const cardnames = [];
+    // cardnames = [];
     cube.cards.forEach(function(card, index) {        
         let cardobj = carddb.cardFromId(card.cardID);
-        cardnames.push(cardobj.name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim());
+        //cardnames.push(cardobj.name.toLowerCase()
+        //.normalize('NFD')
+        //.replace(/[\u0300-\u036f]/g, '')
+        //.trim());
         
         //total
         attemptIncrement(cardUses, cardobj.name.toLowerCase());
@@ -247,16 +261,16 @@ async function processCard(card) {
     console.log('Finished: all cubes');
     
     //process all deck objects
-    console.log('Started: drafts');
-    count = await Draft.countDocuments();
-    cursor = Draft.find().cursor();
+    console.log('Started: decks');
+    count = await Deck.countDocuments();
+    cursor = Deck.find().cursor();
     for (var i = 0; i < count; i ++) {
-        await processDraft(await cursor.next());
-        if((i+1)%100==0) {
-            console.log('Finished: ' + (i+1) + ' of ' + count + ' cubes.');
+        await processDeck(await cursor.next());
+        if((i+1)%1000==0) {
+            console.log('Finished: ' + (i+1) + ' of ' + count + ' decks.');
         }
     }
-    console.log('Finished: all cubes');
+    console.log('Finished: all decks');
 
     //save card models
     const totalCards = carddb.cardnames.length;
