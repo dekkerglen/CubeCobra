@@ -45,7 +45,7 @@ class AgeText extends React.Component {
     var t1 = d1.getTime();
 
     //365/12 is the average day length of a month, which is close enough
-    return parseInt((t2 - t1) / (24 * 3600 * 1000 * 365/12));
+    return parseInt((t2 - t1) / ((24 * 3600 * 1000 * 365) / 12));
   }
 
   inYears(d1, d2) {

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-
 import BlogPost from './components/BlogPost';
 
 class SinglePost extends Component {
