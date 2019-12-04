@@ -24,7 +24,7 @@ async function GetToken() {
     }).then(checkStatus);
     token = await response.json();
     token.expires = Tomorrow();
-    console.log(token.expires.toString());
+    console.log(token.expires.toString(), 'token expiration');
     return token.access_token;
   }
 }
@@ -88,7 +88,8 @@ async function GetPricesPromise(card_ids) {
         },
       })
         .then(checkStatus)
-        .then((response) => response.json()),
+        .then((response) => response.json())
+        .catch(err => console.error('TCGPlayer request failed', err)),
     ),
   );
   for (response of responses) {
@@ -114,7 +115,7 @@ async function GetPricesPromise(card_ids) {
 }
 
 async function addPrices(cards) {
-  const tcgplayerIds = cards.map((card) => card.tcgplayer_id);
+  const tcgplayerIds = cards.map((card) => card.tcgplayer_id).filter(id => id);
   const priceDict = await GetPrices(tcgplayerIds);
   return cards.map((card) => {
     const copy = { ...card };
@@ -122,7 +123,7 @@ async function addPrices(cards) {
       copy.price = priceDict[copy.tcgplayer_id];
     }
     if (priceDict[copy.tcgplayer_id + '_foil']) {
-      copy.price_foil = priceDicct[copy.tcgplayer_id + '_foil'];
+      copy.price_foil = priceDict[copy.tcgplayer_id + '_foil'];
     }
     return copy;
   });
