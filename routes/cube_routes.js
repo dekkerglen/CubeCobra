@@ -1,5 +1,4 @@
 const express = require('express');
-const request = require('request');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 var {
@@ -18,7 +17,7 @@ var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 var util = require('../serverjs/util.js');
-const {GetPrices} = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 var mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
@@ -430,58 +429,57 @@ router.get('/overview/:id', async (req, res) => {
       }
     });
 
-    GetPrices(pids, async function(price_dict) {
-      var sum = 0;
-      cube.cards.forEach(function(card, index) {
-        if (price_dict[card.details.tcgplayer_id]) {
-          sum += price_dict[card.details.tcgplayer_id];
-        } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
-          sum += price_dict[card.details.tcgplayer_id + '_foil'];
-        }
-      });
-      const user = await User.findById(cube.owner);
-      const blogs = await Blog.find({
-        cube: cube._id,
-      }).sort('date');
+    const price_dict = await GetPrices(pids);
+    var sum = 0;
+    cube.cards.forEach(function(card, index) {
+      if (price_dict[card.details.tcgplayer_id]) {
+        sum += price_dict[card.details.tcgplayer_id];
+      } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
+        sum += price_dict[card.details.tcgplayer_id + '_foil'];
+      }
+    });
+    const user = await User.findById(cube.owner);
+    const blogs = await Blog.find({
+      cube: cube._id,
+    }).sort('date');
 
-      if (blogs) {
-        blogs.forEach(function(item, index) {
-          if (!item.date_formatted) {
-            item.date_formatted = item.date.toLocaleString('en-US');
-          }
-          if (item.html) {
-            item.html = addAutocard(item.html, carddb);
-          }
-        });
-        if (blogs.length > 0) {
-          blogs.reverse();
+    if (blogs) {
+      blogs.forEach(function(item, index) {
+        if (!item.date_formatted) {
+          item.date_formatted = item.date.toLocaleString('en-US');
         }
-      }
-      cube.raw_desc = cube.body;
-      if (cube.descriptionhtml) {
-        cube.raw_desc = cube.descriptionhtml;
-        cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb);
-      }
-      return res.render('cube/cube_overview', {
-        cube: cube,
-        is_following: JSON.stringify(currentUser ? currentUser.followed_cubes.includes(cube._id) : null),
-        cube_id: cube_id,
-        title: `${abbreviate(cube.name)} - Overview`,
-        activeLink: 'overview',
-        num_cards: cube.cards.length,
-        owner: user ? user.username : 'unknown',
-        post: blogs ? blogs[0] : null,
-        metadata: generateMeta(
-          `Cube Cobra Overview: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-          cube.image_uri,
-          `https://cubecobra.com/cube/overview/${req.params.id}`,
-        ),
-        loginCallback: '/cube/overview/' + req.params.id,
-        editorvalue: cube.raw_desc,
-        price: sum.toFixed(2),
-        admin: JSON.stringify(admin),
+        if (item.html) {
+          item.html = addAutocard(item.html, carddb);
+        }
       });
+      if (blogs.length > 0) {
+        blogs.reverse();
+      }
+    }
+    cube.raw_desc = cube.body;
+    if (cube.descriptionhtml) {
+      cube.raw_desc = cube.descriptionhtml;
+      cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb);
+    }
+    return res.render('cube/cube_overview', {
+      cube: cube,
+      is_following: JSON.stringify(currentUser ? currentUser.followed_cubes.includes(cube._id) : null),
+      cube_id: cube_id,
+      title: `${abbreviate(cube.name)} - Overview`,
+      activeLink: 'overview',
+      num_cards: cube.cards.length,
+      owner: user ? user.username : 'unknown',
+      post: blogs ? blogs[0] : null,
+      metadata: generateMeta(
+        `Cube Cobra Overview: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/overview/${req.params.id}`,
+      ),
+      loginCallback: '/cube/overview/' + req.params.id,
+      editorvalue: cube.raw_desc,
+      price: sum.toFixed(2),
+      admin: JSON.stringify(admin),
     });
   } catch (err) {
     req.flash('danger', 'Server Error');
@@ -681,7 +679,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           }
           card.details.display_image = util.getCardImageURL(card);
         });
-        GetPrices(pids, function(price_dict) {
+        GetPrices(pids).then(function(price_dict) {
           cubeA.cards.forEach(function(card, index) {
             if (card.details.tcgplayer_id) {
               if (price_dict[card.details.tcgplayer_id]) {
@@ -774,7 +772,7 @@ router.get('/list/:id', function(req, res) {
           pids.push(card.details.tcgplayer_id);
         }
       });
-      GetPrices(pids, function(price_dict) {
+      GetPrices(pids).then(function(price_dict) {
         cube.cards.forEach(function(card, index) {
           if (card.details.tcgplayer_id) {
             if (price_dict[card.details.tcgplayer_id]) {
@@ -2830,7 +2828,7 @@ router.get('/api/getcardfromid/:id', function(req, res) {
   if (card.tcgplayer_id) {
     tcg.push(card.tcgplayer_id);
   }
-  GetPrices(tcg, function(price_dict) {
+  GetPrices(tcg).then(function(price_dict) {
     if (card.error) {
       res.status(200).send({
         success: 'true',
@@ -2860,7 +2858,7 @@ router.get('/api/getversions/:id', function(req, res) {
       tcg.push(card.tcgplayer_id);
     }
   });
-  GetPrices(tcg, function(price_dict) {
+  GetPrices(tcg).then(function(price_dict) {
     cards.forEach(function(card, index) {
       if (card.tcgplayer_id) {
         const card_price_data = price_dict[card.tcgplayer_id];
