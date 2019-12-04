@@ -30,7 +30,7 @@ function sortLimit(arr, k, keyF) {
 }
 
 async function matchingCards(filter) {
-  const cards = carddb.allCards().filter(card => !card.digital);
+  const cards = carddb.allCards().filter((card) => !card.digital);
   if (filter.length > 0) {
     // In the first pass, cards don't have prices, and so match all price filters.
     // In the seoncd pass, we add prices.
@@ -90,13 +90,7 @@ async function topCards(filter, res) {
     const rating = ratingDict.get(v.name);
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-    return [
-      v.name,
-      v.image_normal,
-      v.image_flip || null,
-      rating ? adjust(rating) : null,
-      rating ? rating.picks : null,
-    ];
+    return [v.name, v.image_normal, v.image_flip || null, rating ? adjust(rating) : null, rating ? rating.picks : null];
   });
   const nonNullData = fullData.filter((x) => x[3] !== null);
   const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
@@ -151,7 +145,7 @@ router.get('/api/topcards', async (req, res) => {
       numResults: names.length,
       data,
     });
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.status(500).send({
       success: 'false',
@@ -172,10 +166,10 @@ router.get('/topcards', async (req, res) => {
       numResults: names.length,
       data,
     });
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.sendStatus(500);
-  };
+  }
 });
 
 router.get('/card/:id', async (req, res) => {

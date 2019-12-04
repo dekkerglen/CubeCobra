@@ -406,7 +406,7 @@ function filterCards(cards, filter, inCube) {
 function filterCardsDetails(cardsDetails, filter) {
   const cards = cardsDetails.map((details) => ({ details }));
   const filtered = filterCards(cards, filter, /* inCube */ false);
-  return filtered.map(card => card.details);
+  return filtered.map((card) => card.details);
 }
 
 function areArraysEqualSets(a1, a2) {

@@ -89,7 +89,7 @@ async function GetPricesPromise(card_ids) {
       })
         .then(checkStatus)
         .then((response) => response.json())
-        .catch(err => console.error('TCGPlayer request failed', err)),
+        .catch((err) => console.error('TCGPlayer request failed', err)),
     ),
   );
   for (response of responses) {
@@ -115,7 +115,7 @@ async function GetPricesPromise(card_ids) {
 }
 
 async function addPrices(cards) {
-  const tcgplayerIds = cards.map((card) => card.tcgplayer_id).filter(id => id);
+  const tcgplayerIds = cards.map((card) => card.tcgplayer_id).filter((id) => id);
   const priceDict = await GetPrices(tcgplayerIds);
   return cards.map((card) => {
     const copy = { ...card };
