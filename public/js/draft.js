@@ -231,7 +231,7 @@ function addToPicks(card, x, y, cmccol, frompack) {
     draft.picks[0][x] = [];
   }
   draft.picks[0][x].push(card);
-  draft.pickOrder.push(card._id);
+  draft.pickOrder.push(card.cardID);
   if (frompack) {
     passPack();
     csrfFetch('/cube/api/draftpickcard/' + draft.cube, {

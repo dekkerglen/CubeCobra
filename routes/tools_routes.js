@@ -2,9 +2,13 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
+const {GetPrices} = require('../serverjs/prices.js');
+
 const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
+const Card = require('../models/card');
+const Cube = require('../models/cube');
 
 const router = express.Router();
 
