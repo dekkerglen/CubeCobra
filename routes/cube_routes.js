@@ -18,7 +18,7 @@ var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 var util = require('../serverjs/util.js');
-const {GetPrices} = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 var mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');

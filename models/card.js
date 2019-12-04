@@ -4,8 +4,8 @@ let mongoose = require('mongoose');
 let cardSchema = mongoose.Schema({
   cardName: {
     type: String,
-    index: true
-  },  
+    index: true,
+  },
   size180: [Number],
   size360: [Number],
   size450: [Number],
@@ -18,7 +18,7 @@ let cardSchema = mongoose.Schema({
   vintage: [Number],
   total: [Number],
   cubedWith: [[String]], //this is list of card ids
-  cubes:[String], //this is a list of cube ids
+  cubes: [String], //this is a list of cube ids
 });
 
 let Card = (module.exports = mongoose.model('Card', cardSchema));
