@@ -127,7 +127,7 @@ function getMostReasonable(cardname) {
   const cards = data.nameToId[cardname];
   for (const card of cards) {
     if (notPromoOrDigitalId(card)) {
-      return cardFromId(cards[i]);
+      return cardFromId(card);
     }
   }
   return cardFromId(cards[0]);
