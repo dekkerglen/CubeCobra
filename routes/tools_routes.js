@@ -2,7 +2,7 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
-const {GetPrices} = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 
 const Filter = require('../dist/util/Filter');
 
@@ -114,12 +114,11 @@ function topCards(filter, res) {
 
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
-
 
 router.get('/api/topcards', (req, res) => {
   const { err, filter } = makeFilter(req.query.f);
@@ -167,30 +166,34 @@ router.get('/topcards', (req, res) => {
 });
 
 router.get('/card/:id', async (req, res) => {
-  try {    
+  try {
     //if id is a cardname, redirect to the default version for that card
     let ids = carddb.nameToId[req.params.id.toLowerCase()];
-    if(ids) {
+    if (ids) {
       return res.redirect('/tool/card/' + carddb.getMostReasonable(req.params.id.toLowerCase())._id);
     }
     let card = carddb.cardFromId(req.params.id);
-    const data = await Card.findOne({cardName:card.name.toLowerCase()});
+    const data = await Card.findOne({ cardName: card.name.toLowerCase() });
 
-    const cubes = await Promise.all(shuffle(data.cubes).slice(0,12).map((id) => Cube.findOne({_id:id})));
+    const cubes = await Promise.all(
+      shuffle(data.cubes)
+        .slice(0, 12)
+        .map((id) => Cube.findOne({ _id: id })),
+    );
 
     const pids = carddb.nameToId[card.name.toLowerCase()].map((id) => carddb.cardFromId(id).tcgplayer_id);
     GetPrices(pids, async function(prices) {
       res.render('tool/cardpage', {
-        card:card,
-        data:data,
-        prices:prices,
-        cubes:cubes,
-        related:data.cubedWith.map((id) => carddb.getMostReasonable(id[0]))
+        card: card,
+        data: data,
+        prices: prices,
+        cubes: cubes,
+        related: data.cubedWith.map((id) => carddb.getMostReasonable(id[0])),
       });
     });
-  } catch(err) {
-    console.log(err); 
-    req.flash('danger', err.message); 
+  } catch (err) {
+    console.log(err);
+    req.flash('danger', err.message);
     res.redirect('/404');
   }
 });
