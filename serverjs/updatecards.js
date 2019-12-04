@@ -738,6 +738,9 @@ function convertCard(card, isExtra) {
     newcard.image_normal = card.image_uris.normal;
     newcard.art_crop = card.image_uris.art_crop;
   }
+  if (card.card_faces && card.card_faces.length >= 2 && card.card_faces[1].image_uris) {
+    newcard.image_flip = card.card_faces[1].image_uris.normal;
+  }
   if (newcard.type.toLowerCase().includes('land')) {
     newcard.colorcategory = 'l';
   } else if (newcard.color_identity.length == 0) {
