@@ -126,7 +126,7 @@ function notPromoOrDigitalCard(card) {
 function getMostReasonable(cardname) {
   const cards = data.nameToId[cardname];
   for (const card of cards) {
-    if (notPromoOrDigitalId(cards[i])) {
+    if (notPromoOrDigitalId(card)) {
       return cardFromId(cards[i]);
     }
   }
