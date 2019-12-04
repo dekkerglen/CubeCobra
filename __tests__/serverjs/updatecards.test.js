@@ -41,6 +41,42 @@ const convertedExampleCard = {
   colorcategory: 'r',
 };
 
+const convertedExampleDoubleFacedCard = {
+  _id: '6f35e364-81d9-4888-993b-acc7a53d963c',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  artist: 'Cynthia Sheppard',
+  border_color: 'black',
+  cmc: 2,
+  collector_number: '125',
+  color_identity: ['G'],
+  colorcategory: 'g',
+  colors: ['G'],
+  digital: false,
+  full_name: 'Scorned Villager [dka-125]',
+  image_flip: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  image_small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  isToken: false,
+  legalities: {
+    Legacy: true,
+    Modern: true,
+    Pauper: true,
+    Standard: false,
+  },
+  name: 'Scorned Villager',
+  name_lower: 'scorned villager',
+  oracle_text: undefined,
+  parsed_cost: ['g', '1'],
+  power: '1',
+  promo: false,
+  rarity: 'common',
+  scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
+  set: 'dka',
+  tcgplayer_id: 57617,
+  toughness: '1',
+  type: 'Creature — Human Werewolf ',
+};
+
 const convertedExampleDoubleFacedCardFlipFace = {
   color_identity: ['G'],
   set: 'dka',
@@ -70,9 +106,11 @@ const convertedExampleDoubleFacedCardFlipFace = {
   tcgplayer_id: 57617,
   power: '2',
   toughness: '2',
-  image_small: undefined,
-  image_normal: undefined,
-  art_crop: undefined,
+  image_flip: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  image_normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  image_small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+
   colorcategory: 'g',
 };
 
@@ -214,7 +252,12 @@ for (var convertFn in convertFnToAttribute) {
   });
 }
 
-test('convertCard returns a correctly converted double-faced card object', () => {
+test('convertCard returns a correctly converted double-faced card', () => {
+  const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, false);
+  expect(result).toEqual(convertedExampleDoubleFacedCard);
+});
+
+test('convertCard returns a correctly converted double-faced card flip face object', () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
