@@ -1,4 +1,3 @@
-
 const request = require('request');
 const fetch = require('node-fetch');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
@@ -42,23 +41,23 @@ function Tomorrow() {
 }
 
 function checkStatus(response) {
-    if (response.ok) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-    }
+  if (response.ok) {
+    return Promise.resolve(response);
+  } else {
+    return Promise.reject(new Error(response.statusText));
   }
+}
 
 function listToString(list) {
-    var str = '';
-    list.forEach(function(item, index) {
-      if (index != 0) {
-        str += ',';
-      }
-      str += item;
-    });
-    return str;
-  }
+  var str = '';
+  list.forEach(function(item, index) {
+    if (index != 0) {
+      str += ',';
+    }
+    str += item;
+  });
+  return str;
+}
 
 function parseJSON(response) {
   return response.json();
@@ -132,5 +131,5 @@ function GetPrices(card_ids, callback) {
 }
 
 module.exports = {
-    GetPrices: GetPrices
-}
+  GetPrices: GetPrices,
+};

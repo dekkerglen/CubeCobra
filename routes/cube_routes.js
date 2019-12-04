@@ -18,7 +18,7 @@ var draftutil = require('../serverjs/draftutil.js');
 var carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 var util = require('../serverjs/util.js');
-const {GetPrices} = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 var mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
@@ -1084,10 +1084,10 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
-      req.flash('danger', 'Cube not found.'); 
+      req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
-    } 
-  
+    }
+
     if (cube.owner != req.user._id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect('/cube/playtest/' + req.params.id);
@@ -1097,11 +1097,11 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
     if (!cards) {
       req.flash('danger', 'No cards detected');
       return res.redirect('/cube/playtest/' + req.params.id);
-    }    
+    }
 
     //list of cardids
     var added = [];
-    for(let i = 0;i < 16; i++) {
+    for (let i = 0; i < 16; i++) {
       added.push([]);
     }
     let missing = '';
@@ -1119,23 +1119,23 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
         let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
         if (potentialIds && potentialIds.length > 0) {
           //change this to grab a version that exists in the cube
-          for(let i = 0; i < cube.cards.length; i++) {
-            if(carddb.cardFromId(cube.cards[i].cardID).name.toLowerCase() == item) {
+          for (let i = 0; i < cube.cards.length; i++) {
+            if (carddb.cardFromId(cube.cards[i].cardID).name.toLowerCase() == item) {
               selected = cube.cards[i];
               selected.details = carddb.cardFromId(cube.cards[i].cardID);
               selected.details.display_image = util.getCardImageURL(selected);
             }
           }
-          if(!selected) {
-            selected = {cardID: potentialIds[0]};
+          if (!selected) {
+            selected = { cardID: potentialIds[0] };
             selected.details = carddb.cardFromId(potentialIds[0]);
             selected.details.display_image = util.getCardImageURL(selected);
           }
         }
         if (selected) {
           //push into correct column.
-          let column = Math.min(7,selected.details.cmc);
-          if(!selected.details.type.toLowerCase().includes('creature')){
+          let column = Math.min(7, selected.details.cmc);
+          if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
           added[column].push(selected);
@@ -1144,7 +1144,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
         }
       }
     }
-    
+
     var deck = new Deck();
     deck.playerdeck = added;
     deck.owner = req.user._id;
@@ -1154,7 +1154,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
     deck.playersideboard = [];
     deck.pickOrder = [];
     deck.newformat = true;
-    deck.name= req.user.username + "'s decklist upload on " + deck.date.toLocaleString('en-US');
+    deck.name = req.user.username + "'s decklist upload on " + deck.date.toLocaleString('en-US');
 
     if (!cube.decks) {
       cube.decks = [];
@@ -1164,15 +1164,14 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
     if (!cube.numDecks) {
       cube.numDecks = 0;
     }
-    cube.numDecks += 1;    
+    cube.numDecks += 1;
 
     await Promise.all([cube.save(), deck.save()]);
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
-
-  } catch(err) {      
-    console.log(err); 
-    req.flash('danger', err.message); 
+  } catch (err) {
+    console.log(err);
+    req.flash('danger', err.message);
     res.redirect('/404');
   }
 });

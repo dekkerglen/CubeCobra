@@ -32,7 +32,7 @@ let deckSchema = mongoose.Schema({
   newformat: {
     type: Boolean,
     default: false,
-  }
+  },
 });
 
 let Deck = (module.exports = mongoose.model('Deck', deckSchema));
