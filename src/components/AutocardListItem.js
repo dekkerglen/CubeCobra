@@ -13,7 +13,7 @@ const AutocardDiv = withAutocard('div');
 
 function handleAuxEvent(event, card) {
   if (event.button == 1) {
-    window.open(Affiliate.getTCGLink(card));
+    window.open('/tool/card/' + card.details._id);
   }
 }
 
