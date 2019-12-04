@@ -29,6 +29,10 @@ let deckSchema = mongoose.Schema({
     type: String,
     default: '',
   },
+  newformat: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 let Deck = (module.exports = mongoose.model('Deck', deckSchema));

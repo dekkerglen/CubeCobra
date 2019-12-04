@@ -119,18 +119,16 @@ const exampleDoubleFacedCard = {
       artist: 'Cynthia Sheppard',
       artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
       illustration_id: '0d4098f2-0d18-47a0-b79e-0875511dde0c',
-      image_uris: [
-        {
-          small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          large: 'https://img.scryfall.com/cards/large/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          png: 'https://img.scryfall.com/cards/png/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
-          art_crop:
-            'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          border_crop:
-            'https://img.scryfall.com/cards/border_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        },
-      ],
+      image_uris: {
+        small: 'https://img.scryfall.com/cards/small/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        normal: 'https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        large: 'https://img.scryfall.com/cards/large/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        png: 'https://img.scryfall.com/cards/png/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+        art_crop:
+          'https://img.scryfall.com/cards/art_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        border_crop:
+          'https://img.scryfall.com/cards/border_crop/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+      },
     },
     {
       object: 'card_face',
@@ -148,18 +146,16 @@ const exampleDoubleFacedCard = {
       artist: 'Cynthia Sheppard',
       artist_id: '9dfbdd58-65e6-40cf-951a-80e141061939',
       illustration_id: 'd91819c2-9961-4c71-a27a-9e6c1b469d7e',
-      image_uris: [
-        {
-          small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          large: 'https://img.scryfall.com/cards/large/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          png: 'https://img.scryfall.com/cards/png/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
-          art_crop:
-            'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-          border_crop:
-            'https://img.scryfall.com/cards/border_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-        },
-      ],
+      image_uris: {
+        small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        large: 'https://img.scryfall.com/cards/large/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        png: 'https://img.scryfall.com/cards/png/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.png?1562921188',
+        art_crop:
+          'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+        border_crop:
+          'https://img.scryfall.com/cards/border_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
+      },
     },
   ],
   legalities: {

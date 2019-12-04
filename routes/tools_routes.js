@@ -71,8 +71,7 @@ async function topCards(filter, res) {
   }
   const names = [...nameMap.keys()];
   const versions = [...nameMap.values()].map((possible) => {
-    // TODO: pull out and use notPromoOrDigitalId in cube_routes.js
-    let nonPromo = possible.find((card) => notPromoOrDigital(card));
+    const nonPromo = possible.find((card) => carddb.notPromoOrDigitalCard(card));
     return nonPromo || possible[0];
   });
 
@@ -108,25 +107,6 @@ function shuffle(a) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-function notPromoOrDigitalId(id) {
-  const card = carddb.cardFromId(id);
-  return notPromoOrDigital(card);
-}
-
-function notPromoOrDigital(card) {
-  return !card.promo && !card.digital && card.border_color != 'gold';
-}
-
-function getMostReasonable(cardname) {
-  const cards = carddb.nameToId[cardname];
-  for (let i = 0; i < cards.length; i++) {
-    if (notPromoOrDigitalId(cards[i])) {
-      return carddb.cardFromId(cards[i]);
-    }
-  }
-  return carddb.cardFromId(cards[0]);
 }
 
 router.get('/api/topcards', async (req, res) => {
@@ -177,7 +157,7 @@ router.get('/card/:id', async (req, res) => {
     //if id is a cardname, redirect to the default version for that card
     let ids = carddb.nameToId[req.params.id.toLowerCase()];
     if (ids) {
-      return res.redirect('/tool/card/' + getMostReasonable(req.params.id.toLowerCase())._id);
+      return res.redirect('/tool/card/' + carddb.getMostReasonable(req.params.id.toLowerCase())._id);
     }
     let card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({ cardName: card.name.toLowerCase() });
@@ -195,7 +175,7 @@ router.get('/card/:id', async (req, res) => {
         data: data,
         prices: prices,
         cubes: cubes,
-        related: data.cubedWith.map((id) => getMostReasonable(id[0])),
+        related: data.cubedWith.map((id) => carddb.getMostReasonable(id[0])),
       });
     });
   } catch (err) {

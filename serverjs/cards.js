@@ -115,6 +115,24 @@ function unloadCardDb() {
   }
 }
 
+function notPromoOrDigitalId(id) {
+  return notPromoOrDigitalCard(cardFromId(id));
+}
+
+function notPromoOrDigitalCard(card) {
+  return !card.promo && !card.digital && card.border_color != 'gold' && card.language == 'en' && card.tcgplayer_id;
+}
+
+function getMostReasonable(cardname) {
+  const cards = data.nameToId[cardname];
+  for (const card of cards) {
+    if (notPromoOrDigitalId(card)) {
+      return cardFromId(card);
+    }
+  }
+  return cardFromId(cards[0]);
+}
+
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;
 data.normalizedName = (card) =>
@@ -129,5 +147,8 @@ data.initializeCardDb = initializeCardDb;
 data.loadJSONFile = loadJSONFile;
 data.getPlaceholderCard = getPlaceholderCard;
 data.unloadCardDb = unloadCardDb;
+data.getMostReasonable = getMostReasonable;
+data.notPromoOrDigitalId = notPromoOrDigitalId;
+data.notPromoOrDigitalCard = notPromoOrDigitalCard;
 
 module.exports = data;
