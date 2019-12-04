@@ -182,6 +182,7 @@ function renderDraft() {
   var lands = 0;
   var cards = 0;
   var creatures = 0;
+  console.log(deck);
   //fill up deck
   deck.playerdeck.forEach(function(col, index) {
     col.forEach(function(card, index2) {

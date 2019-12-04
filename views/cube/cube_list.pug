@@ -33,7 +33,7 @@ block cube_content
             button.close(type='button', data-dismiss='modal', aria-label='Close')
               span(aria-hidden='true') ×
           .modal-body
-            p Acceptable plain text with one card name per line.
+            p Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x island"
             textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
           .modal-footer
             #bulkspinner.collapse.spinner-border.text-success(role='status')
