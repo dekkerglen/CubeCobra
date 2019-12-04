@@ -119,7 +119,6 @@ function shuffle(a) {
   }
   return a;
 }
-
 router.get('/api/topcards', (req, res) => {
   const { err, filter } = makeFilter(req.query.f);
   if (err) {
