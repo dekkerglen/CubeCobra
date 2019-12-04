@@ -83,11 +83,6 @@ function replaceCardHtml(oldCard, newCard) {
   );
 }
 
-function notPromoOrDigitalId(id) {
-  let card = carddb.cardFromId(id);
-  return !card.promo && !card.digital && card.border_color != 'gold';
-}
-
 function abbreviate(name) {
   return name.length < 20 ? name : name.slice(0, 20) + '…';
 }
@@ -1025,7 +1020,7 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
       const potentialIds = carddb.allIds(card);
       if (potentialIds && potentialIds.length > 0) {
         const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
-        const nonPromo = potentialIds.find(notPromoOrDigitalId);
+        const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
         const selected = matchingSet || nonPromo || potentialIds[0];
         const details = carddb.cardFromId(selected);
         added.push(details);
@@ -1136,7 +1131,7 @@ function bulkuploadCSV(req, res, cards, cube) {
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
       let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
-      let nonPromo = potentialIds.find(notPromoOrDigitalId);
+      let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
       let first = potentialIds[0];
       card.cardID = matchingSet || nonPromo || first;
       cube.cards.push(card);
@@ -1240,7 +1235,7 @@ function bulkUpload(req, res, list, cube) {
               //does not have set info
               let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
               if (potentialIds && potentialIds.length > 0) {
-                let nonPromo = potentialIds.find(notPromoOrDigitalId);
+                let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
                 selected = nonPromo || potentialIds[0];
               }
             }
@@ -2788,7 +2783,7 @@ router.get('/api/getcard/:name', function(req, res) {
 
   let potentialIds = carddb.nameToId[req.params.name];
   if (potentialIds && potentialIds.length > 0) {
-    let nonPromo = potentialIds.find(notPromoOrDigitalId);
+    let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
     let selected = nonPromo || potentialIds[0];
     let card = carddb.cardFromId(selected);
     res.status(200).send({
@@ -2810,7 +2805,8 @@ router.get('/api/getimage/:name', function(req, res) {
   while (req.params.name.includes('-slash-')) {
     req.params.name = req.params.name.replace('-slash-', '//');
   }
-  var img = carddb.imagedict[req.params.name];
+  var reasonable = carddb.getMostReasonable(carddb.nameToId[req.params.name]);
+  var img = carddb.imagedict[reasonable.name];
   if (!img) {
     res.status(200).send({
       success: 'true',
