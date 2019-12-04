@@ -62,7 +62,7 @@ function addCardToCatalog(card, isExtra) {
     if (card.image_flip) {
       card_images.image_flip = card.image_flip;
     }
-    if(carddb.notPromoOrDigitalCard(card)) {
+    if (carddb.notPromoOrDigitalCard(card)) {
       _catalog.cardimages[normalizedName] = card_images;
     }
   }
@@ -689,14 +689,15 @@ function convertCard(card, isExtra) {
   newcard.color_identity = newcard.color_identity.concat(card.color_identity);
   newcard.set = card.set;
   newcard.collector_number = card.collector_number;
-  newcard.promo = card.promo 
-    || (card.frame_effects && card.frame_effects.includes('extendedart'))
-    || (card.frame_effects && card.frame_effects.includes('showcase'))
-    || card.textless
-    || card.frame=='art_series'
-    || card.set.toLowerCase()=='mps' //kaladesh masterpieces
-    || card.set.toLowerCase()=='mp2' //invocations
-    || card.set.toLowerCase()=='exp'; //expeditions
+  newcard.promo =
+    card.promo ||
+    (card.frame_effects && card.frame_effects.includes('extendedart')) ||
+    (card.frame_effects && card.frame_effects.includes('showcase')) ||
+    card.textless ||
+    card.frame == 'art_series' ||
+    card.set.toLowerCase() == 'mps' || //kaladesh masterpieces
+    card.set.toLowerCase() == 'mp2' || //invocations
+    card.set.toLowerCase() == 'exp'; //expeditions
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;

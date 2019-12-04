@@ -125,14 +125,13 @@ function notPromoOrDigitalCard(card) {
 
 function getMostReasonable(cardname) {
   const cards = data.nameToId[cardname];
-  for(let i = 0; i < cards.length; i++) {
-    if(notPromoOrDigitalId(cards[i])) {
+  for (let i = 0; i < cards.length; i++) {
+    if (notPromoOrDigitalId(cards[i])) {
       return cardFromId(cards[i]);
     }
   }
   return cardFromId(cards[0]);
 }
-
 
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;

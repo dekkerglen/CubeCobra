@@ -49,11 +49,7 @@ const TokenAnalysis = ({ tokens }) => (
               <p className="card-text">
                 {dedupeCards(sortCards(tokenCards)).map((card) => (
                   <>
-                    <AutocardLink
-                      key={card.name}
-                      href={'/tool/card/' + card._id}
-                      card={{ details: card }}
-                    >
+                    <AutocardLink key={card.name} href={'/tool/card/' + card._id} card={{ details: card }}>
                       {card.name}
                     </AutocardLink>
                     <br />
