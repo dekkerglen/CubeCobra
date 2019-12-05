@@ -27,7 +27,7 @@ async function GetToken() {
       token.expires = Tomorrow();
       console.log(token.expires.toString(), 'token expiration');
       return token.access_token;
-    } catch(e) {
+    } catch (e) {
       return;
     }
   }

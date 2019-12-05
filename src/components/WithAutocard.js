@@ -29,7 +29,7 @@ const withAutocard = (Tag) => ({ card, front, back, ...props }) => {
       data-front={front}
       data-back={back}
       data-tags={JSON.stringify(tags)}
-      data-foil={card.finish==='Foil'}
+      data-foil={card.finish === 'Foil'}
       {...props}
     />
   );
