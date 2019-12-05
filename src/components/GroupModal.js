@@ -43,6 +43,7 @@ class GroupModal extends Component {
       addTags: true,
       deleteTags: false,
       tags: [],
+      finish: 'Non-foil',
     };
 
     this.open = this.open.bind(this);

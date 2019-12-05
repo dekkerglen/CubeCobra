@@ -60,6 +60,7 @@ class ListViewRaw extends Component {
         [`tdversion${index}`, card.cardID],
         [`tdtype${index}`, card.type_line],
         [`tdstatus${index}`, card.status],
+        [`tdfinish${index}`, card.finish],
         [`tdcmc${index}`, card.cmc],
         [`tdcolors${index}`, (card.colors || ['C']).join('')],
         [`tags${index}`, (card.tags || []).map((tag) => ({ id: tag, text: tag }))],
@@ -122,7 +123,8 @@ class ListViewRaw extends Component {
       updated.status === card.status &&
       updated.cmc === card.cmc &&
       arraysEqual(updated.colors, card.colors) &&
-      arraysEqual(updated.tags, card.tags)
+      arraysEqual(updated.tags, card.tags) &&
+      updated.finish === card.finish
     ) {
       // no need to sync
       return;
@@ -151,6 +153,7 @@ class ListViewRaw extends Component {
                 cube[index].details = json.card;
                 cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
                 cubeDict[cube[index].index] = cube[index];
+                this.setState();
               })
               .catch((err) => console.error(err));
           }
@@ -208,6 +211,8 @@ class ListViewRaw extends Component {
         updated.cardID = value;
       } else if (name.startsWith('tdstatus')) {
         updated.status = value;
+      } else if (name.startsWith('tdfinish')) {
+        updated.finish = value;
       } else if (name.startsWith('tdcolor')) {
         updated.colors = value === 'C' ? [] : [...value];
       }
@@ -320,6 +325,13 @@ class ListViewRaw extends Component {
                         </Input>
                       </td>
                       <td>
+                        <Input {...inputProps(index, 'finish')} type="select">
+                          {getLabels('Finish').map((finish) => (
+                            <option key={finish}>{finish}</option>
+                          ))}
+                        </Input>
+                      </td>
+                      <td>
                         <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
                       </td>
                       <td>
@@ -356,6 +368,7 @@ class ListViewRaw extends Component {
               <th>Version</th>
               <th>Type</th>
               <th>Status</th>
+              <th>Finish</th>
               <th>CMC</th>
               <th>Color</th>
               <th>Tags</th>

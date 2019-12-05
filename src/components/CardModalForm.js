@@ -17,6 +17,7 @@ class CardModalForm extends Component {
     };
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
+    this.changeCardFinish = this.changeCardFinish.bind(this);
     this.openCardModal = this.openCardModal.bind(this);
     this.closeCardModal = this.closeCardModal.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -143,6 +144,7 @@ class CardModalForm extends Component {
         },
       };
 
+      console.log('screm');
       // magical incantation to get the global state right.
       cube[index] = newCard;
       cubeDict[cube[index].index] = newCard;
@@ -180,6 +182,12 @@ class CardModalForm extends Component {
     this.setState({
       card,
       versions: [],
+    });
+  }
+
+  changeCardFinish(card) {
+    this.setState({
+      card,
     });
   }
 

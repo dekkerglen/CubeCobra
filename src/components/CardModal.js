@@ -50,6 +50,7 @@ const CardModal = ({
               src={card.details.display_image}
               fallbackSrc="/content/default_card.png"
               alt={card.name}
+              finish={values.finish}
             />
             <div className="price-area">
               {!card.details.price ? (
@@ -108,6 +109,16 @@ const CardModal = ({
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Finish</InputGroupText>
+                </InputGroupAddon>
+                <Input type="select" name="finish" value={values.finish} onChange={onChange}>
+                  {getLabels('Finish').map((finish) => (
+                    <option key={finish}>{finish}</option>
+                  ))}
+                </Input>
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
                   <InputGroupText>CMC</InputGroupText>
                 </InputGroupAddon>
                 <Input type="text" name="cmc" value={values.cmc} onChange={onChange} />
@@ -140,13 +151,6 @@ const CardModal = ({
 
               <h5>Tags</h5>
               <TagInput tags={values.tags} readOnly={disabled} {...tagActions} />
-
-              <h5>Finish</h5>
-              <Input type="select" name="status" value={values.finish} onChange={onChange}>
-                {getLabels('Finish').map((finish) => (
-                  <option key={finish}>{finish}</option>
-                ))}
-              </Input>
             </fieldset>
           </Col>
         </Row>

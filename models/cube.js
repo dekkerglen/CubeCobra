@@ -37,7 +37,7 @@ const cubeSchema = mongoose.Schema({
   cards: [
     {
       tags: [String],
-      finish: { type: [String], default: 'Non-foil' },
+      finish: { type: String, default: 'Non-foil' },
       status: String,
       colors: [String],
       cmc: Number,
