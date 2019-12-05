@@ -107,7 +107,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil) {
       '<div style="position:relative"><img class="foilOverlay" src="/content/foilOverlay.png" style="border-radius:"' +
       // magic cards have a border radius of 3mm and a width of 63mm
       (3 / 63) * 255 +
-      '"x" }}><img id="autocard-img" src="" width=225 height=' +
+      'px;" }}><img id="autocard-img" src="" width=225 height=' +
       h +
       '></div>';
   } else {
