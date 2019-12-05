@@ -109,7 +109,7 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
-  syncCard(index, updated) {
+  syncCard(index, updated, setStateCallback) {
     /* globals */
     const cubeID = document.getElementById('cubeID').value;
     const card = cube[index];
@@ -153,10 +153,10 @@ class ListViewRaw extends Component {
                 cube[index].details = json.card;
                 cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
                 cubeDict[cube[index].index] = cube[index];
-                this.setState();
               })
               .catch((err) => console.error(err));
           }
+          setStateCallback();
         }
       })
       .catch((err) => console.error(err));
@@ -165,19 +165,21 @@ class ListViewRaw extends Component {
   addTag(cardIndex, tag) {
     const name = `tags${cardIndex}`;
     const newTags = [...this.state[name], tag];
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   deleteTag(cardIndex, tagIndex) {
     const name = `tags${cardIndex}`;
     const newTags = this.state[name].filter((tag, i) => i !== tagIndex);
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
@@ -185,10 +187,11 @@ class ListViewRaw extends Component {
     const newTags = [...this.state[name]];
     newTags.splice(currIndex, 1);
     newTags.splice(newIndex, 0, tag);
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   getChecked() {
@@ -201,10 +204,6 @@ class ListViewRaw extends Component {
     const name = target.name;
     const index = parseInt(target.getAttribute('data-index'));
 
-    this.setState({
-      [name]: value,
-    });
-
     if (target.tagName.toLowerCase() === 'select') {
       const updated = {};
       if (name.startsWith('tdversion')) {
@@ -216,10 +215,15 @@ class ListViewRaw extends Component {
       } else if (name.startsWith('tdcolor')) {
         updated.colors = value === 'C' ? [] : [...value];
       }
-      this.syncCard(index, updated);
-    }
-
-    if (name.startsWith('tdcheck')) {
+      this.syncCard(index, updated, () => {
+        this.setState({
+          [name]: value,
+        });
+      });
+    } else if (name.startsWith('tdcheck')) {
+      this.setState({
+        [name]: value,
+      });
       let checked = this.getChecked();
       if (value && !checked.some((card) => card.index === index)) {
         checked.push(this.props.cards.find((card) => card.index === index));

@@ -62,6 +62,7 @@ const allFields = [
   'set',
   'tag',
   'status',
+  'finish',
   'price',
   'priceFoil',
   'power',
@@ -165,6 +166,16 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <Input type="select" name="status" value={values.status} onChange={onChange}>
             {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
               <option key={status}>{status}</option>
+            ))}
+          </Input>
+        </InputGroup>
+        <InputGroup className="mb-3">
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>Finish</InputGroupText>
+          </InputGroupAddon>
+          <Input type="select" name="finish" value={values.finish} onChange={onChange}>
+            {['', 'Foil', 'Non-foil'].map((finish) => (
+              <option key={finish}>{finish}</option>
             ))}
           </Input>
         </InputGroup>

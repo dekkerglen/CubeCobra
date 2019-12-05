@@ -144,7 +144,6 @@ class CardModalForm extends Component {
         },
       };
 
-      console.log('screm');
       // magical incantation to get the global state right.
       cube[index] = newCard;
       cubeDict[cube[index].index] = newCard;

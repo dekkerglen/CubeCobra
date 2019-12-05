@@ -6,9 +6,15 @@ class ImageFallback extends Component {
 
     this.state = {
       fallback: false,
+      foilOverlayBorderRadius: '10px',
     };
 
+    this.foilOverlay = React.createRef();
     this.handleError = this.handleError.bind(this);
+  }
+
+  componentDidMount() {
+    this.setState({ foilOverlayBorderRadius: (3 / 63) * this.foilOverlay.current.width });
   }
 
   componentDidUpdate(prevProps) {
@@ -24,19 +30,18 @@ class ImageFallback extends Component {
   render() {
     const { src, fallbackSrc, ...props } = this.props;
     const cardImage = <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />;
-    if (this.props.finish === 'Foil') {
-      return (
-        <div style={{position: 'relative'}}>
-          <img
-            src="/content/foilOverlay.png"
-            style={{position: 'absolute', height: '100%', width: '100%', borderRadius: '10px'}}
-          />
-          {cardImage}
-        </div>
-      );
-    } else {
-      return cardImage;
-    }
+    return (
+      <div style={{ position: 'relative' }}>
+        <img
+          hidden={this.props.finish !== 'Foil'}
+          src="/content/foilOverlay.png"
+          className="foilOverlay"
+          ref={this.foilOverlay}
+          style={{ borderRadius: this.state.foilOverlayBorderRadius }}
+        />
+        {cardImage}
+      </div>
+    );
   }
 }
 

@@ -43,7 +43,7 @@ function autocard_init(classname) {
           $(this).attr('card_flip'),
           $(this).hasClass('autocard-art-crop'),
           tags,
-          foil
+          foil,
         );
       }
     });
@@ -102,9 +102,14 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil) {
     }
   };
   let innerHTML;
-  console.log('wew');
   if (foil) {
-    innerHTML = '<div style="position:relative"><img src="/content/foilOverlay.png" style="position: absolute; height: 100%; width: 100%; border-radius: 10px" }}><img id="autocard-img" src="" width=225 height=' + h + '></div>'
+    innerHTML =
+      '<div style="position:relative"><img class="foilOverlay" src="/content/foilOverlay.png" style="border-radius:"' +
+      // magic cards have a border radius of 3mm and a width of 63mm
+      (3 / 63) * 255 +
+      '"x" }}><img id="autocard-img" src="" width=225 height=' +
+      h +
+      '></div>';
   } else {
     innerHTML = '<img id="autocard-img" src="" width=225 height=' + h + '>';
   }

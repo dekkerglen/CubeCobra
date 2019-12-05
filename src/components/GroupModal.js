@@ -43,7 +43,15 @@ class GroupModal extends Component {
       addTags: true,
       deleteTags: false,
       tags: [],
-      finish: 'Non-foil',
+      finish: '',
+      formValues: {
+        status: '',
+        finish: '',
+        cmc: '',
+        type_line: '',
+        tags: [],
+        ...fromEntries([...'WUBRGC'].map((c) => [`color${c}`, false])),
+      },
     };
 
     this.open = this.open.bind(this);
@@ -68,6 +76,7 @@ class GroupModal extends Component {
     this.setState({
       isOpen: true,
       status: '',
+      finish: '',
       cmc: '',
       type_line: '',
       ...fromEntries([...'WUBRGC'].map((c) => [`color${c}`, false])),
@@ -147,7 +156,7 @@ class GroupModal extends Component {
 
   async handleApply(event) {
     event.preventDefault();
-    const { cards, status, cmc, type_line, colorC, addTags, deleteTags } = this.state;
+    const { cards, status, finish, cmc, type_line, colorC, addTags, deleteTags } = this.state;
     const { cubeID } = this.props;
     const tags = this.state.tags.map((tag) => tag.text);
 
@@ -160,6 +169,7 @@ class GroupModal extends Component {
       colors: colors.length > 0 ? colors : undefined,
       colorC: colorC || undefined,
       tags: tags || undefined,
+      finish: finish || undefined,
       addTags,
       deleteTags,
     };
@@ -177,6 +187,9 @@ class GroupModal extends Component {
       for (const card of updatedCards) {
         if (status) {
           card.status = status;
+        }
+        if (finish) {
+          card.finish = finish;
         }
         if (cmc) {
           card.cmc = cmc;
@@ -222,7 +235,7 @@ class GroupModal extends Component {
 
   render() {
     const { cubeID, canEdit, setOpenCollapse, children, ...props } = this.props;
-    const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
+    const { isOpen, cards, alerts, status, finish, cmc, type_line, addTags, deleteTags, tags } = this.state;
     const tcgplayerMassEntryUrl =
       'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
       '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
@@ -264,16 +277,19 @@ class GroupModal extends Component {
             <Row>
               <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
                 <ListGroup className="list-outline">
-                  {cards.map((card) => (
-                    <AutocardListItem key={card.index} card={card} noCardModal>
-                      <Button
-                        close
-                        className="float-none mr-1"
-                        data-index={card.index}
-                        onClick={this.handleRemoveCard}
-                      />
-                    </AutocardListItem>
-                  ))}
+                  {cards.map((card) => {
+                    card = { ...card, finish };
+                    return (
+                      <AutocardListItem key={card.index} card={card} noCardModal>
+                        <Button
+                          close
+                          className="float-none mr-1"
+                          data-index={card.index}
+                          onClick={this.handleRemoveCard}
+                        />
+                      </AutocardListItem>
+                    );
+                  })}
                 </ListGroup>
               </Col>
               <Col xs="8">
@@ -288,6 +304,20 @@ class GroupModal extends Component {
                     <Input type="select" id="groupStatus" name="status" value={status} onChange={this.handleChange}>
                       {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
                         <option key={status}>{status}</option>
+                      ))}
+                    </Input>
+                  </InputGroup>
+
+                  <Label for="groupStatus">
+                    <h5>Set Finish of All</h5>
+                  </Label>
+                  <InputGroup className="mb-3">
+                    <InputGroupAddon addonType="prepend">
+                      <InputGroupText>Finish</InputGroupText>
+                    </InputGroupAddon>
+                    <Input type="select" id="groupFinish" name="finish" value={finish} onChange={this.handleChange}>
+                      {['', 'Non-foil', 'Foil'].map((finish) => (
+                        <option key={finish}>{finish}</option>
                       ))}
                     </Input>
                   </InputGroup>

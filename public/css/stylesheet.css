@@ -304,6 +304,13 @@ border-bottom: none;
     vertical-align: top;
 }
 
+.foilOverlay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	opacity: 70%;
+}
+
 #packTitle, .card-header h4 {
     display: inline-block;
 }
@@ -510,11 +517,11 @@ body.busy-cursor {
    overflow-y: auto;
 }
 
-.user-notification{	
+.user-notification{
 	border-top: 1px solid #DEE2E6;
 }
 
-.user-notification:hover{	
+.user-notification:hover{
 	background: #EFEFEF;
 }
 .comment-highlighted {

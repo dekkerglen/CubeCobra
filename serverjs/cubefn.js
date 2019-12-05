@@ -95,6 +95,9 @@ function cardsAreEquivalent(card, details) {
   if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
+  if (card.finish != details.finish) {
+    return false;
+  }
 
   return true;
 }

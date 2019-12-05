@@ -3126,6 +3126,9 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
         if (updated.colorC) {
           allUpdates.$set[`cards.${index}.colors`] = [];
         }
+        if (updated.finish) {
+          allUpdates.$set[`cards.${index}.finish`] = updated.finish;
+        }
         if (updated.tags) {
           if (updated.addTags) {
             if (!allUpdates.$addToSet) {
