@@ -2,6 +2,7 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
+const cardutil = require('../dist/util/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
 const Filter = require('../dist/util/Filter');
 
@@ -155,12 +156,13 @@ router.get('/topcards', async (req, res) => {
 router.get('/card/:id', async (req, res) => {
   try {
     //if id is a cardname, redirect to the default version for that card
-    let ids = carddb.nameToId[req.params.id.toLowerCase()];
+    let possibleName = cardutil.decodeName(req.params.id);
+    let ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      return res.redirect('/tool/card/' + carddb.getMostReasonable(req.params.id.toLowerCase())._id);
+      return res.redirect('/tool/card/' + carddb.getMostReasonable(possibleName)._id);
     }
     let card = carddb.cardFromId(req.params.id);
-    const data = await Card.findOne({ cardName: card.name.toLowerCase() });
+    const data = await Card.findOne({ cardName: card.name_lower });
 
     const cubes = await Promise.all(
       shuffle(data.cubes)
@@ -168,14 +170,14 @@ router.get('/card/:id', async (req, res) => {
         .map((id) => Cube.findOne({ _id: id })),
     );
 
-    const pids = carddb.nameToId[card.name.toLowerCase()].map((id) => carddb.cardFromId(id).tcgplayer_id);
+    const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
     GetPrices(pids, async function(prices) {
       res.render('tool/cardpage', {
         card: card,
         data: data,
         prices: prices,
         cubes: cubes,
-        related: data.cubedWith.map((id) => carddb.getMostReasonable(id[0])),
+        related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
       });
     });
   } catch (err) {

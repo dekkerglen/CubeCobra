@@ -4,6 +4,28 @@ const cubefixture = require('../../fixtures/examplecube');
 
 import Filter from '../../src/util/Filter';
 
+const setCounts = (cards, propertyName) => {
+  let greenCardCount = 0;
+  let colorlessCardCount = 0;
+  let goldWithGreenCount = 0;
+  cards.forEach((card) => {
+    if (card.details[propertyName].length == 0) {
+      colorlessCardCount += 1;
+    } else if (card.details[propertyName].length == 1) {
+      if (card.details[propertyName][0] == 'G') {
+        greenCardCount += 1;
+      } else if (card.details[propertyName][0] == 'C') {
+        colorlessCardCount += 1;
+      }
+    } else if (card.details[propertyName].includes('G')) {
+      goldWithGreenCount += 1;
+    }
+  });
+  // uncomment to help with debugging counts
+  //console.log(propertyName,'greenCardCount:', greenCardCount, 'colorlessCardCount:', colorlessCardCount, 'goldWithGreenCount', goldWithGreenCount);
+  return [greenCardCount, colorlessCardCount, goldWithGreenCount];
+};
+
 describe('filter', () => {
   describe('tokenizeInput', () => {
     let tokens;
@@ -161,237 +183,245 @@ describe('filter', () => {
       const castles = exampleCube.cards.filter((card) => Filter.filterCard(card, castleFilters));
       const expectedCastles = [
         {
-          addedTmsp: '2019-09-28T20:58:35.095Z',
-          cardID: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
-          cmc: 0,
+          tags: ['New'],
           colors: ['W'],
+          status: 'Not Owned',
+          cmc: 0,
+          cardID: '7f910495-8bd7-4134-a281-c16fd666d5cc',
+          type_line: 'Land',
+          addedTmsp: '2019-09-28T20:58:35.095Z',
           details: {
-            _id: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
-            artist: 'Volkan Baǵa',
-            border_color: 'black',
-            cmc: 0,
-            collector_number: '386',
             color_identity: ['W'],
-            colorcategory: 'l',
-            colors: [],
+            set: 'eld',
+            collector_number: '238',
+            promo: false,
             digital: false,
-            full_name: 'Castle Ardenvale [eld-386]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/6/f/6f1383eb-aa7d-4d3b-bee4-8cffba9ae846.jpg?1571696313',
             isToken: false,
+            border_color: 'black',
+            name: 'Castle Ardenvale',
+            name_lower: 'castle ardenvale',
+            full_name: 'Castle Ardenvale [eld-238]',
+            artist: 'Volkan Baǵa',
+            scryfall_uri: 'https://scryfall.com/card/eld/238/castle-ardenvale?utm_source=api',
+            rarity: 'rare',
+            oracle_text:
+              'Castle Ardenvale enters the battlefield tapped unless you control a Plains.\n{T}: Add {W}.\n{2}{W}{W}, {T}: Create a 1/1 white Human creature token.',
+            _id: '7f910495-8bd7-4134-a281-c16fd666d5cc',
+            cmc: 0,
             legalities: {
               Legacy: true,
               Modern: true,
               Pauper: false,
               Standard: true,
             },
-            name: 'Castle Ardenvale',
-            name_lower: 'castle ardenvale',
-            oracle_text:
-              'Castle Ardenvale enters the battlefield tapped unless you control a Plains.\n' +
-              '{T}: Add {W}.\n' +
-              '{2}{W}{W}, {T}: Create a 1/1 white Human creature token.',
             parsed_cost: [''],
-            promo: true,
-            rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/eld/386/castle-ardenvale?utm_source=api',
-            set: 'eld',
-            tcgplayer_id: 199391,
+            colors: [],
+            type: 'Land',
+            full_art: false,
+            language: 'en',
+            tcgplayer_id: 199390,
             tokens: [
               {
-                sourceCardId: '6f1383eb-aa7d-4d3b-bee4-8cffba9ae846',
+                sourceCardId: '7f910495-8bd7-4134-a281-c16fd666d5cc',
                 tokenId: '94057dc6-e589-4a29-9bda-90f5bece96c4',
               },
             ],
-            type: 'Land',
+            image_small:
+              'https://img.scryfall.com/cards/small/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
+            image_normal:
+              'https://img.scryfall.com/cards/normal/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
+            art_crop:
+              'https://img.scryfall.com/cards/art_crop/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
+            colorcategory: 'l',
           },
-          status: 'Not Owned',
-          tags: ['New'],
-          type_line: 'Land',
         },
         {
-          addedTmsp: '2019-09-28T20:58:35.096Z',
-          cardID: '9954b9bb-21e7-40af-aaa7-b2001b8d1d45',
-          cmc: 0,
+          tags: ['New'],
           colors: ['R'],
+          status: 'Not Owned',
+          cmc: 0,
+          cardID: '8bb8512e-6913-4be6-8828-24cfcbec042e',
+          type_line: 'Land',
+          addedTmsp: '2019-09-28T20:58:35.096Z',
           details: {
-            _id: '9954b9bb-21e7-40af-aaa7-b2001b8d1d45',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
-            artist: 'Jaime Jones',
-            border_color: 'black',
-            cmc: 0,
-            collector_number: '387',
             color_identity: ['R'],
-            colorcategory: 'l',
-            colors: [],
+            set: 'eld',
+            collector_number: '239',
+            promo: false,
             digital: false,
-            full_name: 'Castle Embereth [eld-387]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/9/9/9954b9bb-21e7-40af-aaa7-b2001b8d1d45.jpg?1571698486',
             isToken: false,
-            legalities: {
-              Legacy: true,
-              Modern: true,
-              Pauper: false,
-              Standard: true,
-            },
+            border_color: 'black',
             name: 'Castle Embereth',
             name_lower: 'castle embereth',
+            full_name: 'Castle Embereth [eld-239]',
+            artist: 'Jaime Jones',
+            scryfall_uri: 'https://scryfall.com/card/eld/239/castle-embereth?utm_source=api',
+            rarity: 'rare',
             oracle_text:
               'Castle Embereth enters the battlefield tapped unless you control a Mountain.\n{T}: Add {R}.\n{1}{R}{R}, {T}: Creatures you control get +1/+0 until end of turn.',
-            parsed_cost: [''],
-            promo: true,
-            rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/eld/387/castle-embereth?utm_source=api',
-            set: 'eld',
-            tcgplayer_id: 199287,
-            type: 'Land',
-          },
-          status: 'Not Owned',
-          tags: ['New'],
-          type_line: 'Land',
-        },
-        {
-          addedTmsp: '2019-09-28T20:58:35.100Z',
-          cardID: 'aca10c34-010a-4a9f-a747-2592c4d58c5d',
-          cmc: 0,
-          colors: ['G'],
-          details: {
-            _id: 'aca10c34-010a-4a9f-a747-2592c4d58c5d',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
-            artist: 'Adam Paquette',
-            border_color: 'black',
+            _id: '8bb8512e-6913-4be6-8828-24cfcbec042e',
             cmc: 0,
-            collector_number: '388',
-            color_identity: ['G'],
-            colorcategory: 'l',
-            colors: [],
-            digital: false,
-            full_name: 'Castle Garenbrig [eld-388]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/a/c/aca10c34-010a-4a9f-a747-2592c4d58c5d.jpg?1571748040',
-            isToken: false,
             legalities: {
               Legacy: true,
               Modern: true,
               Pauper: false,
               Standard: true,
             },
+            parsed_cost: [''],
+            colors: [],
+            type: 'Land',
+            full_art: false,
+            language: 'en',
+            tcgplayer_id: 199286,
+            image_small:
+              'https://img.scryfall.com/cards/small/front/8/b/8bb8512e-6913-4be6-8828-24cfcbec042e.jpg?1572491168',
+            image_normal:
+              'https://img.scryfall.com/cards/normal/front/8/b/8bb8512e-6913-4be6-8828-24cfcbec042e.jpg?1572491168',
+            art_crop:
+              'https://img.scryfall.com/cards/art_crop/front/8/b/8bb8512e-6913-4be6-8828-24cfcbec042e.jpg?1572491168',
+            colorcategory: 'l',
+          },
+        },
+        {
+          tags: ['New'],
+          colors: ['G'],
+          status: 'Not Owned',
+          cmc: 0,
+          cardID: 'e3c2c66c-f7f0-41d5-a805-a129aeaf1b75',
+          type_line: 'Land',
+          addedTmsp: '2019-09-28T20:58:35.100Z',
+          details: {
+            color_identity: ['G'],
+            set: 'eld',
+            collector_number: '240',
+            promo: false,
+            digital: false,
+            isToken: false,
+            border_color: 'black',
             name: 'Castle Garenbrig',
             name_lower: 'castle garenbrig',
+            full_name: 'Castle Garenbrig [eld-240]',
+            artist: 'Adam Paquette',
+            scryfall_uri: 'https://scryfall.com/card/eld/240/castle-garenbrig?utm_source=api',
+            rarity: 'rare',
             oracle_text:
               'Castle Garenbrig enters the battlefield tapped unless you control a Forest.\n{T}: Add {G}.\n{2}{G}{G}, {T}: Add six {G}. Spend this mana only to cast creature spells or activate abilities of creatures.',
-            parsed_cost: [''],
-            promo: true,
-            rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/eld/388/castle-garenbrig?utm_source=api',
-            set: 'eld',
-            tcgplayer_id: 199289,
-            type: 'Land',
-          },
-          status: 'Not Owned',
-          tags: ['New'],
-          type_line: 'Land',
-        },
-        {
-          addedTmsp: '2019-09-28T20:58:35.100Z',
-          cardID: '12b8c2e6-5256-4e7e-8d7d-4b386419780a',
-          cmc: 0,
-          colors: ['B'],
-          details: {
-            _id: '12b8c2e6-5256-4e7e-8d7d-4b386419780a',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
-            artist: 'Titus Lunter',
-            border_color: 'black',
+            _id: 'e3c2c66c-f7f0-41d5-a805-a129aeaf1b75',
             cmc: 0,
-            collector_number: '389',
-            color_identity: ['B'],
-            colorcategory: 'l',
-            colors: [],
-            digital: false,
-            full_name: 'Castle Locthwain [eld-389]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/1/2/12b8c2e6-5256-4e7e-8d7d-4b386419780a.jpg?1571763007',
-            isToken: false,
             legalities: {
               Legacy: true,
               Modern: true,
               Pauper: false,
               Standard: true,
             },
+            parsed_cost: [''],
+            colors: [],
+            type: 'Land',
+            full_art: false,
+            language: 'en',
+            tcgplayer_id: 199288,
+            image_small:
+              'https://img.scryfall.com/cards/small/front/e/3/e3c2c66c-f7f0-41d5-a805-a129aeaf1b75.jpg?1572491176',
+            image_normal:
+              'https://img.scryfall.com/cards/normal/front/e/3/e3c2c66c-f7f0-41d5-a805-a129aeaf1b75.jpg?1572491176',
+            art_crop:
+              'https://img.scryfall.com/cards/art_crop/front/e/3/e3c2c66c-f7f0-41d5-a805-a129aeaf1b75.jpg?1572491176',
+            colorcategory: 'l',
+          },
+        },
+        {
+          tags: ['New'],
+          colors: ['B'],
+          status: 'Not Owned',
+          cmc: 0,
+          cardID: '195383c1-4723-40b0-ba53-298dfd8e30d0',
+          type_line: 'Land',
+          addedTmsp: '2019-09-28T20:58:35.100Z',
+          details: {
+            color_identity: ['B'],
+            set: 'eld',
+            collector_number: '241',
+            promo: false,
+            digital: false,
+            isToken: false,
+            border_color: 'black',
             name: 'Castle Locthwain',
             name_lower: 'castle locthwain',
+            full_name: 'Castle Locthwain [eld-241]',
+            artist: 'Titus Lunter',
+            scryfall_uri: 'https://scryfall.com/card/eld/241/castle-locthwain?utm_source=api',
+            rarity: 'rare',
             oracle_text:
               'Castle Locthwain enters the battlefield tapped unless you control a Swamp.\n{T}: Add {B}.\n{1}{B}{B}, {T}: Draw a card, then you lose life equal to the number of cards in your hand.',
-            parsed_cost: [''],
-            promo: true,
-            rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/eld/389/castle-locthwain?utm_source=api',
-            set: 'eld',
-            tcgplayer_id: 199389,
-            type: 'Land',
-          },
-          status: 'Not Owned',
-          tags: ['New'],
-          type_line: 'Land',
-        },
-        {
-          addedTmsp: '2019-09-28T20:58:35.101Z',
-          cardID: '4113eeed-9399-4b59-a6d9-7d40190853c5',
-          cmc: 0,
-          colors: ['U'],
-          details: {
-            _id: '4113eeed-9399-4b59-a6d9-7d40190853c5',
-            art_crop:
-              'https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
-            artist: 'John Avon',
-            border_color: 'black',
+            _id: '195383c1-4723-40b0-ba53-298dfd8e30d0',
             cmc: 0,
-            collector_number: '390',
-            color_identity: ['U'],
-            colorcategory: 'l',
-            colors: [],
-            digital: false,
-            full_name: 'Castle Vantress [eld-390]',
-            image_normal:
-              'https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
-            image_small:
-              'https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1571763182',
-            isToken: false,
             legalities: {
               Legacy: true,
               Modern: true,
               Pauper: false,
               Standard: true,
             },
+            parsed_cost: [''],
+            colors: [],
+            type: 'Land',
+            full_art: false,
+            language: 'en',
+            tcgplayer_id: 199388,
+            image_small:
+              'https://img.scryfall.com/cards/small/front/1/9/195383c1-4723-40b0-ba53-298dfd8e30d0.jpg?1572491183',
+            image_normal:
+              'https://img.scryfall.com/cards/normal/front/1/9/195383c1-4723-40b0-ba53-298dfd8e30d0.jpg?1572491183',
+            art_crop:
+              'https://img.scryfall.com/cards/art_crop/front/1/9/195383c1-4723-40b0-ba53-298dfd8e30d0.jpg?1572491183',
+            colorcategory: 'l',
+          },
+        },
+        {
+          tags: ['New'],
+          colors: ['U'],
+          status: 'Not Owned',
+          cmc: 0,
+          cardID: '0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b',
+          type_line: 'Land',
+          addedTmsp: '2019-09-28T20:58:35.101Z',
+          details: {
+            color_identity: ['U'],
+            set: 'eld',
+            collector_number: '242',
+            promo: false,
+            digital: false,
+            isToken: false,
+            border_color: 'black',
             name: 'Castle Vantress',
             name_lower: 'castle vantress',
+            full_name: 'Castle Vantress [eld-242]',
+            artist: 'John Avon',
+            scryfall_uri: 'https://scryfall.com/card/eld/242/castle-vantress?utm_source=api',
+            rarity: 'rare',
             oracle_text:
               'Castle Vantress enters the battlefield tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.',
+            _id: '0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b',
+            cmc: 0,
+            legalities: {
+              Legacy: true,
+              Modern: true,
+              Pauper: false,
+              Standard: true,
+            },
             parsed_cost: [''],
-            promo: true,
-            rarity: 'rare',
-            scryfall_uri: 'https://scryfall.com/card/eld/390/castle-vantress?utm_source=api',
-            set: 'eld',
-            tcgplayer_id: 199285,
+            colors: [],
             type: 'Land',
+            full_art: false,
+            language: 'en',
+            tcgplayer_id: 199284,
+            image_small:
+              'https://img.scryfall.com/cards/small/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+            image_normal:
+              'https://img.scryfall.com/cards/normal/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+            art_crop:
+              'https://img.scryfall.com/cards/art_crop/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+            colorcategory: 'l',
           },
-          status: 'Not Owned',
-          tags: ['New'],
-          type_line: 'Land',
         },
       ];
       expect(castles).toEqual(expectedCastles);
@@ -401,66 +431,186 @@ describe('filter', () => {
       let tokens = [];
       Filter.tokenizeInput('o:flying', tokens);
       const flyingFilter = [Filter.parseTokens(tokens)];
+      let countFlyers = exampleCube.cards
+        .map((card) => {
+          return card.details.oracle_text.toLowerCase().indexOf('flying') == -1 ? 0 : 1;
+        })
+        .reduce((total, inc) => (total += inc), 0);
+
       const flyers = exampleCube.cards.filter((card) => Filter.filterCard(card, flyingFilter));
-      expect(flyers).toHaveLength(5);
+      expect(flyers).toHaveLength(countFlyers);
     });
 
     describe('color filters', () => {
-      let tokens;
-      beforeEach(() => {
-        tokens = [];
+      let greenCardCount;
+      let colorlessCardCount;
+      let goldWithGreenCount;
+
+      beforeAll(() => {
+        [greenCardCount, colorlessCardCount, goldWithGreenCount] = setCounts(exampleCube.cards, 'colors');
       });
 
+      const testColors = (operator, expectedCount, expectation) => {
+        let fullNameTokens = [];
+        Filter.tokenizeInput('c' + operator + 'green', fullNameTokens);
+        let parsedFilter = [Filter.parseTokens(fullNameTokens)];
+
+        let filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter));
+        expect(filteredCards).toHaveLength(expectedCount);
+        filteredCards.forEach(expectation);
+
+        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, false));
+        expect(filteredCards).toHaveLength(expectedCount);
+        filteredCards.forEach(expectation);
+
+        // handle color abbreviation
+        let abbreviationTokens = [];
+        Filter.tokenizeInput('c' + operator + 'g', abbreviationTokens);
+        parsedFilter = [Filter.parseTokens(abbreviationTokens)];
+
+        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter));
+        expect(filteredCards).toHaveLength(expectedCount);
+        filteredCards.forEach(expectation);
+
+        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, false));
+        expect(filteredCards).toHaveLength(expectedCount);
+        filteredCards.forEach(expectation);
+      };
+
       it('the = operator filters for mono-color cards', () => {
-        Filter.tokenizeInput('c:green', tokens);
-        const greenFilter = [Filter.parseTokens(tokens)];
-        const monoGreenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenFilter));
-        expect(monoGreenCards).toHaveLength(4);
-        monoGreenCards.forEach((card) => {
+        testColors(':', greenCardCount, (card) => {
           expect(card.details.colors).toEqual(['G']);
         });
       });
 
       it('the >= operator filters for color-including cards', () => {
-        Filter.tokenizeInput('c>=green', tokens);
-        const greenPlusFilter = [Filter.parseTokens(tokens)];
-        const greenCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenPlusFilter));
-        expect(greenCards).toHaveLength(8);
-        greenCards.forEach((card) => {
+        testColors('>=', greenCardCount + goldWithGreenCount, (card) => {
           expect(card.details.colors).toEqual(expect.arrayContaining(['G']));
         });
       });
 
       it('the <= operator filters for colorless and mono-color cards', () => {
-        Filter.tokenizeInput('c<=green', tokens);
-        const greenOrColorlessFilter = [Filter.parseTokens(tokens)];
-        const greenOrColorlessCards = exampleCube.cards.filter((card) =>
-          Filter.filterCard(card, greenOrColorlessFilter),
-        );
-        expect(greenOrColorlessCards).toHaveLength(12);
-        greenOrColorlessCards.forEach((card) => {
+        testColors('<=', greenCardCount + colorlessCardCount, (card) => {
           expect(card.details.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
         });
       });
 
       it('the > operator filters for multi-color cards including a color', () => {
-        Filter.tokenizeInput('c>green', tokens);
-        const greenMulticolorFilter = [Filter.parseTokens(tokens)];
-        const greenGoldCards = exampleCube.cards.filter((card) => Filter.filterCard(card, greenMulticolorFilter));
-        expect(greenGoldCards).toHaveLength(4);
-        greenGoldCards.forEach((card) => {
+        testColors('>', goldWithGreenCount, (card) => {
           expect(card.details.colors).not.toBe(['G']);
           expect(card.details.colors).toContain('G');
         });
       });
 
       it('the < operator filters for colorless cards', () => {
-        Filter.tokenizeInput('c<green', tokens);
-        const colorlessFilter = [Filter.parseTokens(tokens)];
-        const colorlessCards = exampleCube.cards.filter((card) => Filter.filterCard(card, colorlessFilter));
-        expect(colorlessCards).toHaveLength(8);
-        colorlessCards.forEach((card) => {
+        testColors('<', colorlessCardCount, (card) => {
           expect(card.details.colors).toEqual([]);
+        });
+      });
+    });
+
+    describe('color identity filters', () => {
+      let inCube = false;
+      let greenCardCount;
+      let colorlessCardCount;
+      let goldWithGreenCount;
+
+      let testColors = function(operator, expectedCount, inCube, expectation) {
+        let fullNameTokens = [];
+        Filter.tokenizeInput('ci' + operator + 'green', fullNameTokens);
+        let parsedFilter = [Filter.parseTokens(fullNameTokens)];
+
+        let filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, inCube));
+        filteredCards.forEach(expectation);
+        expect(filteredCards).toHaveLength(expectedCount);
+
+        // handle color abbreviation
+        let abbreviationTokens = [];
+        Filter.tokenizeInput('ci' + operator + 'g', abbreviationTokens);
+        parsedFilter = [Filter.parseTokens(abbreviationTokens)];
+
+        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, inCube));
+        filteredCards.forEach(expectation);
+        expect(filteredCards).toHaveLength(expectedCount);
+      };
+
+      describe('not in cube', () => {
+        beforeAll(() => {
+          [greenCardCount, colorlessCardCount, goldWithGreenCount] = setCounts(exampleCube.cards, 'color_identity');
+        });
+
+        it('the = operator filters for mono-color cards', () => {
+          testColors(':', greenCardCount, inCube, (card) => {
+            expect(card.details.color_identity).toEqual(['G']);
+          });
+        });
+
+        it('the >= operator filters for color-including cards', () => {
+          testColors('>=', greenCardCount + goldWithGreenCount, inCube, (card) => {
+            expect(card.details.color_identity).toEqual(expect.arrayContaining(['G']));
+          });
+        });
+
+        it('the <= operator filters for colorless and mono-color cards', () => {
+          testColors('<=', greenCardCount + colorlessCardCount, inCube, (card) => {
+            expect(card.details.color_identity).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+          });
+        });
+
+        it('the > operator filters for multi-color cards including a color', () => {
+          testColors('>', goldWithGreenCount, inCube, (card) => {
+            expect(card.details.color_identity).not.toBe(['G']);
+            expect(card.details.color_identity).toContain('G');
+          });
+        });
+
+        it('the < operator filters for colorless cards', () => {
+          testColors('<', colorlessCardCount, inCube, (card) => {
+            if (card.details.color_identity.length > 0) console.log(card);
+            expect(card.details.color_identity).toEqual([]);
+          });
+        });
+      });
+
+      describe('in cube, with overrides', () => {
+        beforeAll(() => {
+          inCube = true;
+          // NOTE: in the examplecube.js colors[] have been set for the cards, overriding the card defaults
+          greenCardCount = 8;
+          colorlessCardCount = 4;
+          goldWithGreenCount = 4;
+        });
+
+        it('the = operator filters for mono-color cards', () => {
+          testColors(':', greenCardCount, inCube, (card) => {
+            //console.log('card colors', card.details.color_identity);
+            expect(card.colors).toEqual(['G']);
+          });
+        });
+
+        it('the >= operator filters for color-including cards', () => {
+          testColors('>=', greenCardCount + goldWithGreenCount, inCube, (card) => {
+            expect(card.colors).toEqual(expect.arrayContaining(['G']));
+          });
+        });
+
+        it('the <= operator filters for colorless and mono-color cards', () => {
+          testColors('<=', greenCardCount + colorlessCardCount, inCube, (card) => {
+            expect(card.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+          });
+        });
+
+        it('the > operator filters for multi-color cards including a color', () => {
+          testColors('>', goldWithGreenCount, inCube, (card) => {
+            expect(card.colors).not.toBe(['G']);
+            expect(card.colors).toContain('G');
+          });
+        });
+
+        it('the < operator filters for colorless cards', () => {
+          testColors('<', colorlessCardCount, inCube, (card) => {
+            expect(card.colors).toEqual([]);
+          });
         });
       });
     });
@@ -475,10 +625,10 @@ describe('filter', () => {
         Filter.tokenizeInput('mana:1W', tokens);
         const oneAndAWhiteFilter = [Filter.parseTokens(tokens)];
         const oneAndAWhiteCards = exampleCube.cards.filter((card) => Filter.filterCard(card, oneAndAWhiteFilter));
-        expect(oneAndAWhiteCards).toHaveLength(3);
         oneAndAWhiteCards.forEach((card) => {
           expect(card.details.parsed_cost).toEqual(expect.arrayContaining(['1', 'w']));
         });
+        expect(oneAndAWhiteCards).toHaveLength(3);
       });
     });
 
@@ -492,60 +642,60 @@ describe('filter', () => {
         Filter.tokenizeInput('cmc=1', tokens);
         const oneCmcFilter = [Filter.parseTokens(tokens)];
         const oneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, oneCmcFilter));
-        expect(oneCmcCards).toHaveLength(7);
         oneCmcCards.forEach((card) => {
           expect(card.details.cmc).toEqual(1);
         });
+        expect(oneCmcCards).toHaveLength(7);
       });
 
       it('the < operator filters for less-than cmc', () => {
         Filter.tokenizeInput('cmc<1', tokens);
         const ltOneCmcFilter = [Filter.parseTokens(tokens)];
         const ltOneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, ltOneCmcFilter));
-        expect(ltOneCmcCards).toHaveLength(7);
         ltOneCmcCards.forEach((card) => {
           expect(card.details.cmc).toEqual(0);
         });
+        expect(ltOneCmcCards).toHaveLength(7);
       });
 
       it('the <= operator filters for less-than-or-equal-to cmc', () => {
         Filter.tokenizeInput('cmc<=1', tokens);
         const ltEqOneCmcFilter = [Filter.parseTokens(tokens)];
         const ltEqOneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, ltEqOneCmcFilter));
-        expect(ltEqOneCmcCards).toHaveLength(14);
         ltEqOneCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeLessThanOrEqual(1);
         });
+        expect(ltEqOneCmcCards).toHaveLength(14);
       });
 
       it('the > operator filters for greater-than cmc', () => {
         Filter.tokenizeInput('cmc>5', tokens);
         const gtFiveCmcFilter = [Filter.parseTokens(tokens)];
         const gtFiveCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, gtFiveCmcFilter));
-        expect(gtFiveCmcCards).toHaveLength(6);
         gtFiveCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeGreaterThan(5);
         });
+        expect(gtFiveCmcCards).toHaveLength(6);
       });
 
       it('the >= operator filters for greater-than-or-equal-to cmc', () => {
         Filter.tokenizeInput('cmc>=5', tokens);
         const gtEqFiveCmcFilter = [Filter.parseTokens(tokens)];
         const gtEqFiveCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, gtEqFiveCmcFilter));
-        expect(gtEqFiveCmcCards).toHaveLength(9);
         gtEqFiveCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeGreaterThanOrEqual(5);
         });
+        expect(gtEqFiveCmcCards).toHaveLength(9);
       });
 
       it('the != operator filters for cmc not-equal to', () => {
         Filter.tokenizeInput('cmc!=5', tokens);
         const notEqual5CmcFilter = [Filter.parseTokens(tokens)];
         const notEqual5CmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, notEqual5CmcFilter));
-        expect(notEqual5CmcCards).toHaveLength(62);
         notEqual5CmcCards.forEach((card) => {
           expect(card.details.cmc).not.toEqual(5);
         });
+        expect(notEqual5CmcCards).toHaveLength(62);
       });
     });
 
@@ -559,10 +709,10 @@ describe('filter', () => {
         Filter.tokenizeInput('type=creature', tokens);
         const creatureFilter = [Filter.parseTokens(tokens)];
         const creatureCards = exampleCube.cards.filter((card) => Filter.filterCard(card, creatureFilter));
-        expect(creatureCards).toHaveLength(40);
         creatureCards.forEach((card) => {
           expect(card.details.type).toContain('Creature');
         });
+        expect(creatureCards).toHaveLength(40);
       });
     });
 
@@ -576,10 +726,14 @@ describe('filter', () => {
         Filter.tokenizeInput('set=ELD', tokens);
         const eldraineFilter = [Filter.parseTokens(tokens)];
         const eldraineCards = exampleCube.cards.filter((card) => Filter.filterCard(card, eldraineFilter));
-        expect(eldraineCards).toHaveLength(exampleCube.cards.length);
+        exampleCube.cards.forEach((card) => {
+          if (card.details.set !== 'eld') console.log(card);
+        });
         eldraineCards.forEach((card) => {
           expect(card.details.set).toContain('eld');
         });
+
+        expect(eldraineCards).toHaveLength(exampleCube.cards.length);
       });
     });
 

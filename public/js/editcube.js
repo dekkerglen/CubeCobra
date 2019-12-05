@@ -64,14 +64,9 @@ if (canEdit) {
 }
 
 function justAdd() {
-  var val = $('#addInput')
-    .val()
-    .replace('?', '-q-');
-  while (val.includes('//')) {
-    val = val.replace('//', '-slash-');
-  }
+  var val = $('#addInput').val();
   if (val.length > 0) {
-    fetch('/cube/api/getcard/' + val)
+    fetch('/cube/api/getcard/' + encodeURIComponent(val))
       .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
@@ -89,25 +84,15 @@ function justAdd() {
 }
 
 function remove() {
-  var val = $('#removeInput')
-    .val()
-    .replace('?', '-q-');
-  while (val.includes('//')) {
-    val = val.replace('//', '-slash-');
-  }
+  var val = $('#removeInput').val();
   if (val.length > 0) {
-    fetch('/cube/api/getcardfromcube/' + $('#cubeID').val() + ';' + val)
+    fetch('/cube/api/getcardfromcube/' + $('#cubeID').val() + ';' + encodeURIComponent(val))
       .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
           if ($('#addInput').val().length > 0) {
-            var val2 = $('#addInput')
-              .val()
-              .replace('?', '-q-');
-            while (val2.includes('//')) {
-              val2 = val2.replace('//', '-slash-');
-            }
-            fetch('/cube/api/getcard/' + val2)
+            var val2 = $('#addInput').val();
+            fetch('/cube/api/getcard/' + encodeURIComponent(val2))
               .then((response2) => response2.json())
               .then(function(json2) {
                 if (json2.card) {

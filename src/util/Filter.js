@@ -1,3 +1,5 @@
+import { normalizeName } from './Card';
+
 let rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
 let categoryMap = new Map([
@@ -445,18 +447,24 @@ function filterApply(card, filter, inCube) {
     filter.operand = '=';
   }
 
+  // handle cube overrides to colors
   if (typeof inCube === 'undefined') {
     inCube = true;
   }
   let cmc = inCube ? card.cmc : card.details.cmc;
-  let colors = inCube ? card.colors : card.details.color_identity;
+  // NOTE: color naming is confusing:
+  // colors = colors in mana cost
+  // color_identity = (Commander style) colors anywhere on card
+  // card.colors is an override for card.details.color_identity
+  let color_identity = inCube ? card.colors : card.details.color_identity;
+
   if (filter.category == 'name') {
-    res = card.details.name_lower.indexOf(filter.arg.toLowerCase()) > -1;
+    res = card.details.name_lower.indexOf(normalizeName(filter.arg)) > -1;
   }
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (filter.category == 'color' && card.details.colors) {
+  if (filter.category == 'color' && card.details.colors !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
@@ -484,27 +492,27 @@ function filterApply(card, filter, inCube) {
         break;
     }
   }
-  if (filter.category == 'identity' && colors) {
+  if (filter.category == 'identity' && color_identity !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = colors.length === 0;
+          res = color_identity.length === 0;
         } else {
-          res = areArraysEqualSets(colors, filter.arg);
+          res = areArraysEqualSets(color_identity, filter.arg);
         }
         break;
       case '<':
-        res = arrayContainsOtherArray(filter.arg, colors) && colors.length < filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(colors, filter.arg) && colors.length > filter.arg.length;
+        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(filter.arg, colors) && colors.length <= filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(colors, filter.arg) && colors.length >= filter.arg.length;
+        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length >= filter.arg.length;
         break;
     }
   }
