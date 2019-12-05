@@ -14,6 +14,7 @@ class ImageFallback extends Component {
   }
 
   componentDidMount() {
+    // magic cards have a border radius of 3mm and a width of 63mm
     this.setState({ foilOverlayBorderRadius: (3 / 63) * this.foilOverlay.current.width });
   }
 
