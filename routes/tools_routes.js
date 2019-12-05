@@ -2,8 +2,7 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
-const { GetPrices } = require('../serverjs/prices.js');
-
+const { addPrices, GetPrices } = require('../serverjs/prices');
 const Filter = require('../dist/util/Filter');
 
 const CardRating = require('../models/cardrating');
@@ -30,18 +29,14 @@ function sortLimit(arr, k, keyF) {
   return result;
 }
 
-function matchingCards(filter) {
-  const cards = carddb.allCards();
+async function matchingCards(filter) {
+  const cards = carddb.allCards().filter((card) => !card.digital);
   if (filter.length > 0) {
-    return cards.filter((card) =>
-      Filter.filterCard(
-        {
-          details: card,
-        },
-        filter,
-        /* inCube */ false,
-      ),
-    );
+    // In the first pass, cards don't have prices, and so match all price filters.
+    // In the seoncd pass, we add prices.
+    const firstPass = Filter.filterCardsDetails(cards, filter);
+    const withPrices = await addPrices(firstPass);
+    return Filter.filterCardsDetails(withPrices, filter);
   } else {
     return cards;
   }
@@ -64,8 +59,8 @@ function makeFilter(filterText) {
   };
 }
 
-function topCards(filter, res) {
-  const cards = matchingCards(filter);
+async function topCards(filter, res) {
+  const cards = await matchingCards(filter);
   const nameMap = new Map();
   for (const card of cards) {
     if (nameMap.has(card.name)) {
@@ -76,40 +71,34 @@ function topCards(filter, res) {
   }
   const names = [...nameMap.keys()];
   const versions = [...nameMap.values()].map((possible) => {
-    let nonPromo = possible.find((card) => !card.promo && !card.digital && card.border_color != 'gold');
+    const nonPromo = possible.find((card) => carddb.notPromoOrDigitalCard(card));
     return nonPromo || possible[0];
   });
 
-  return CardRating.find({
+  const ratings = await CardRating.find({
     name: {
       $in: names,
     },
     picks: {
       $gte: MIN_PICKS,
     },
-  }).then((ratings) => {
-    const ratingDict = new Map(ratings.map((r) => [r.name, r]));
-    const fullData = versions.map((v) => {
-      const rating = ratingDict.get(v.name);
-      /* This is a Bayesian adjustment to the rating like IMDB does. */
-      const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-      return [
-        v.name,
-        v.image_normal,
-        v.image_flip || null,
-        rating ? adjust(rating) : null,
-        rating ? rating.picks : null,
-      ];
-    });
-    const nonNullData = fullData.filter((x) => x[3] !== null);
-    const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
-    return {
-      ratings,
-      versions,
-      names,
-      data,
-    };
   });
+
+  const ratingDict = new Map(ratings.map((r) => [r.name, r]));
+  const fullData = versions.map((v) => {
+    const rating = ratingDict.get(v.name);
+    /* This is a Bayesian adjustment to the rating like IMDB does. */
+    const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
+    return [v.name, v.image_normal, v.image_flip || null, rating ? adjust(rating) : null, rating ? rating.picks : null];
+  });
+  const nonNullData = fullData.filter((x) => x[3] !== null);
+  const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
+  return {
+    ratings,
+    versions,
+    names,
+    data,
+  };
 }
 
 function shuffle(a) {
@@ -119,49 +108,48 @@ function shuffle(a) {
   }
   return a;
 }
-router.get('/api/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
-  if (err) {
-    res.status(400).send({
-      success: 'false',
-    });
-    return;
-  }
 
-  topCards(filter, res)
-    .then(({ data, names }) => {
-      res.status(200).send({
-        success: 'true',
-        numResults: names.length,
-        data,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).send({
+router.get('/api/topcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
+    if (err) {
+      res.status(400).send({
         success: 'false',
       });
+      return;
+    }
+
+    const { data, names } = await topCards(filter, res);
+    res.status(200).send({
+      success: 'true',
+      numResults: names.length,
+      data,
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+    });
+  }
 });
 
-router.get('/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
+router.get('/topcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
 
-  if (err) {
-    req.flash('Invalid filter.');
-  }
+    if (err) {
+      req.flash('Invalid filter.');
+    }
 
-  topCards(filter, res)
-    .then(({ data, names }) => {
-      res.render('tool/topcards', {
-        numResults: names.length,
-        data,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500);
+    const { data, names } = await topCards(filter, res);
+    res.render('tool/topcards', {
+      numResults: names.length,
+      data,
     });
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.get('/card/:id', async (req, res) => {

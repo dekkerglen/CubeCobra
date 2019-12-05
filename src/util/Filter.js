@@ -399,6 +399,16 @@ function filterCard(card, filters, inCube) {
   }
 }
 
+function filterCards(cards, filter, inCube) {
+  return cards.filter((card) => filterCard(card, filter, inCube));
+}
+
+function filterCardsDetails(cardsDetails, filter) {
+  const cards = cardsDetails.map((details) => ({ details }));
+  const filtered = filterCards(cards, filter, /* inCube */ false);
+  return filtered.map((card) => card.details);
+}
+
 function areArraysEqualSets(a1, a2) {
   if (a1.length != a2.length) return false;
   let superSet = {};
@@ -644,6 +654,8 @@ function filterApply(card, filter, inCube) {
           res = price >= arg;
           break;
       }
+    } else {
+      res = true;
     }
   }
   if (filter.category == 'pricefoil') {
@@ -669,6 +681,8 @@ function filterApply(card, filter, inCube) {
           res = price >= arg;
           break;
       }
+    } else {
+      res = true;
     }
   }
   if (filter.category == 'rarity') {
@@ -713,4 +727,4 @@ function filterApply(card, filter, inCube) {
   }
 }
 
-export default { tokenizeInput, verifyTokens, parseTokens, filterCard };
+export default { tokenizeInput, verifyTokens, parseTokens, filterCard, filterCards, filterCardsDetails };
