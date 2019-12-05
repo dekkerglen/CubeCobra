@@ -214,7 +214,10 @@ function updateCollapse() {
   if (val.length > 0) {
     $('.editForm').collapse('show');
   } else {
-    $('.editForm').collapse('hide');
+    const el = $('.editForm');
+    if (el.collapse) {
+      el.collapse('hide');
+    }
   }
 
   autocard_init('dynamic-autocard');
