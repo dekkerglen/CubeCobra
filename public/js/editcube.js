@@ -14,19 +14,19 @@ function csrfFetch(resource, init) {
   return fetch(resource, init);
 }
 
-var comparing = false;
+let comparing = false;
 if ($('#in_both').length) {
   comparing = true;
-  var in_both = JSON.parse($('#in_both').val());
-  var only_a = JSON.parse($('#only_a').val());
-  var only_b = JSON.parse($('#only_b').val());
+  const in_both = JSON.parse($('#in_both').val());
+  const only_a = JSON.parse($('#only_a').val());
+  const only_b = JSON.parse($('#only_b').val());
   view = 'table';
 }
 
-var cubeDict = {},
-  hasCustomImages = false;
+const cubeDict = {};
+let hasCustomImages = false;
 $('#customImageDisplayMenuItem').hide();
-var cube = JSON.parse($('#cuberaw').val());
+const cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
   card.index = index;
   cubeDict[index] = card;
@@ -38,15 +38,15 @@ cube.forEach(function(card, index) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'),
-    display_image;
+  const enabled = $(this).prop('checked');
+  let display_image;
   cube.forEach(function(card, index) {
     adjustDisplayImage(card, enabled);
   });
   updateCubeList();
 });
 
-var editListeners = [];
+const editListeners = [];
 
 if (canEdit) {
   $('#addInput').keyup(function(e) {
@@ -64,14 +64,14 @@ if (canEdit) {
 }
 
 function justAdd() {
-  var val = $('#addInput')
+  let val = $('#addInput')
     .val()
     .replace('?', '-q-');
   while (val.includes('//')) {
     val = val.replace('//', '-slash-');
   }
   if (val.length > 0) {
-    fetch('/cube/api/getcard/' + val)
+    fetch(`/cube/api/getcard/${val}`)
       .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
@@ -89,25 +89,25 @@ function justAdd() {
 }
 
 function remove() {
-  var val = $('#removeInput')
+  let val = $('#removeInput')
     .val()
     .replace('?', '-q-');
   while (val.includes('//')) {
     val = val.replace('//', '-slash-');
   }
   if (val.length > 0) {
-    fetch('/cube/api/getcardfromcube/' + $('#cubeID').val() + ';' + val)
+    fetch(`/cube/api/getcardfromcube/${$('#cubeID').val()};${val}`)
       .then((response) => response.json())
       .then(function(json) {
         if (json.card) {
           if ($('#addInput').val().length > 0) {
-            var val2 = $('#addInput')
+            let val2 = $('#addInput')
               .val()
               .replace('?', '-q-');
             while (val2.includes('//')) {
               val2 = val2.replace('//', '-slash-');
             }
-            fetch('/cube/api/getcard/' + val2)
+            fetch(`/cube/api/getcard/${val2}`)
               .then((response2) => response2.json())
               .then(function(json2) {
                 if (json2.card) {
@@ -138,72 +138,34 @@ function remove() {
 }
 
 function updateCollapse() {
-  var val = '';
+  let val = '';
   changes.forEach(function(change, index) {
-    val += "<a class='clickx' id='clickx" + index + "' href=#>x</a> ";
+    val += `<a class='clickx' id='clickx${index}' href=#>x</a> `;
     if (change.add) {
       val += '<span class="badge badge-success">+</span> ';
       if (change.add.image_flip) {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.add.image_normal +
-          '" card_flip="' +
-          change.add.image_flip +
-          '">' +
-          change.add.name +
-          '</a>';
+        val += `<a class="dynamic-autocard" card="${change.add.image_normal}" card_flip="${change.add.image_flip}">${change.add.name}</a>`;
       } else {
-        val += '<a class="dynamic-autocard" card="' + change.add.image_normal + '">' + change.add.name + '</a>';
+        val += `<a class="dynamic-autocard" card="${change.add.image_normal}">${change.add.name}</a>`;
       }
     } else if (change.remove) {
       val += '<span class="badge badge-danger">–</span> ';
       if (change.remove.image_flip) {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.remove.image_normal +
-          '" card_flip="' +
-          change.remove.image_flip +
-          '">' +
-          change.remove.name +
-          '</a>';
+        val += `<a class="dynamic-autocard" card="${change.remove.image_normal}" card_flip="${change.remove.image_flip}">${change.remove.name}</a>`;
       } else {
-        val += '<a class="dynamic-autocard" card="' + change.remove.image_normal + '">' + change.remove.name + '</a>';
+        val += `<a class="dynamic-autocard" card="${change.remove.image_normal}">${change.remove.name}</a>`;
       }
     } else if (change.replace) {
       val += '<span class="badge badge-primary">→</span> ';
       if (change.replace[0].image_flip) {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.replace[0].image_normal +
-          '" card_flip="' +
-          change.replace[0].image_flip +
-          '">' +
-          change.replace[0].name +
-          '</a> > ';
+        val += `<a class="dynamic-autocard" card="${change.replace[0].image_normal}" card_flip="${change.replace[0].image_flip}">${change.replace[0].name}</a> > `;
       } else {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.replace[0].image_normal +
-          '">' +
-          change.replace[0].name +
-          '</a> > ';
+        val += `<a class="dynamic-autocard" card="${change.replace[0].image_normal}">${change.replace[0].name}</a> > `;
       }
       if (change.replace[1].image_flip) {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.replace[1].image_normal +
-          '" card_flip="' +
-          change.replace[1].image_flip +
-          '">' +
-          change.replace[1].name +
-          '</a>';
+        val += `<a class="dynamic-autocard" card="${change.replace[1].image_normal}" card_flip="${change.replace[1].image_flip}">${change.replace[1].name}</a>`;
       } else {
-        val +=
-          '<a class="dynamic-autocard" card="' +
-          change.replace[1].image_normal +
-          '">' +
-          change.replace[1].name +
-          '</a>';
+        val += `<a class="dynamic-autocard" card="${change.replace[1].image_normal}">${change.replace[1].name}</a>`;
       }
     }
     val += '<br>';
@@ -219,7 +181,7 @@ function updateCollapse() {
 
   autocard_init('dynamic-autocard');
   changes.forEach(function(change, index) {
-    var clickx = document.getElementById('clickx' + index);
+    const clickx = document.getElementById(`clickx${index}`);
     clickx.addEventListener('click', function(e) {
       changes.splice(index, 1);
       updateCollapse();
@@ -230,9 +192,11 @@ function updateCollapse() {
 function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'Multicolored';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length == 1) {
     switch (colors[0]) {
       case 'W':
         return 'White';
@@ -289,20 +253,26 @@ function getSorts() {
 function getLabels(sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
-  } else if (sort == 'Color Identity') {
+  }
+  if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
-  } else if (sort == 'CMC') {
+  }
+  if (sort == 'CMC') {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
-  } else if (sort == 'CMC2') {
+  }
+  if (sort == 'CMC2') {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
-  } else if (sort == 'CMC-Full') {
+  }
+  if (sort == 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
     return Array.from(Array(33).keys())
       .map((x) => (x / 2).toString())
       .concat(['1000000']);
-  } else if (sort == 'Color') {
+  }
+  if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-  } else if (sort == 'Type') {
+  }
+  if (sort == 'Type') {
     return [
       'Creature',
       'Planeswalker',
@@ -319,9 +289,11 @@ function getLabels(sort) {
       'Land',
       'Other',
     ];
-  } else if (sort == 'Supertype') {
+  }
+  if (sort == 'Supertype') {
     return ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
-  } else if (sort == 'Tags') {
+  }
+  if (sort == 'Tags') {
     var tags = [];
     cube.forEach(function(card, index) {
       card.tags.forEach(function(tag, index2) {
@@ -331,7 +303,8 @@ function getLabels(sort) {
       });
     });
     return tags.sort();
-  } else if (sort == 'Date Added') {
+  }
+  if (sort == 'Date Added') {
     var days = [],
       formattedDay;
     cube.forEach(function(card, index) {
@@ -344,15 +317,23 @@ function getLabels(sort) {
       }
     });
     return days.sort();
-  } else if (sort == 'Status') {
+  }
+  if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned'];
-  } else if (sort == 'Guilds') {
+  }
+  if (sort === 'Finish') {
+    return ['Non-foil', 'Foil'];
+  }
+  if (sort == 'Guilds') {
     return ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Golgari', 'Simic', 'Izzet', 'Boros'];
-  } else if (sort == 'Shards / Wedges') {
+  }
+  if (sort == 'Shards / Wedges') {
     return ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
-  } else if (sort == 'Color Count') {
+  }
+  if (sort == 'Color Count') {
     return ['0', '1', '2', '3', '4', '5'];
-  } else if (sort == 'Set') {
+  }
+  if (sort == 'Set') {
     var sets = [];
     cube.forEach(function(card, index) {
       if (!sets.includes(card.details.set.toUpperCase())) {
@@ -360,7 +341,8 @@ function getLabels(sort) {
       }
     });
     return sets.sort();
-  } else if (sort == 'Artist') {
+  }
+  if (sort == 'Artist') {
     var artists = [];
     cube.forEach(function(card, index) {
       if (!artists.includes(card.details.artist)) {
@@ -368,11 +350,14 @@ function getLabels(sort) {
       }
     });
     return artists.sort();
-  } else if (sort == 'Rarity') {
+  }
+  if (sort == 'Rarity') {
     return ['Common', 'Uncommon', 'Rare', 'Mythic'];
-  } else if (sort == 'Unsorted') {
+  }
+  if (sort == 'Unsorted') {
     return ['All'];
-  } else if (sort == 'Subtype') {
+  }
+  if (sort == 'Subtype') {
     var types = [];
     cube.forEach(function(card, index) {
       if (card.type_line.includes('—')) {
@@ -385,7 +370,8 @@ function getLabels(sort) {
       }
     });
     return types.sort();
-  } else if (sort == 'Types-Multicolor') {
+  }
+  if (sort == 'Types-Multicolor') {
     return [
       'Creature',
       'Planeswalker',
@@ -522,8 +508,8 @@ function getLabels(sort) {
 }
 
 function sortIntoGroups(cards, sort) {
-  var groups = {};
-  var labels = getLabels(sort);
+  const groups = {};
+  const labels = getLabels(sort);
   labels.forEach(function(label, index) {
     group = [];
 
@@ -541,8 +527,8 @@ function sortIntoGroups(cards, sort) {
 }
 
 function columnLength(sort, label) {
-  var res = 0;
-  var cards = filteredCube();
+  let res = 0;
+  const cards = filteredCube();
 
   cards.forEach(function(card, cardindex) {
     if (cardIsLabel(card, label, sort)) {
@@ -552,7 +538,7 @@ function columnLength(sort, label) {
   return res;
 }
 
-var updateCubeListeners = [];
+const updateCubeListeners = [];
 
 function updateCubeList() {
   updateCubeListeners.forEach((listener) => listener(cube));
@@ -560,7 +546,7 @@ function updateCubeList() {
   autocard_hide_card();
 }
 
-var prev_handler = window.onload;
+const prev_handler = window.onload;
 window.onload = function() {
   if (prev_handler) {
     prev_handler();

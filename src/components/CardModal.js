@@ -34,6 +34,7 @@ const CardModal = ({
   saveChanges,
   queueRemoveCard,
   tagActions,
+  cardFinishActions,
   ...props
 }) => {
   return (
@@ -54,12 +55,18 @@ const CardModal = ({
               {!card.details.price ? (
                 ''
               ) : (
-                <div className="card-price">TCGPlayer Market: {card.details.price.toFixed(2)}</div>
+                <div className="card-price">
+                  TCGPlayer Market:
+                  {card.details.price.toFixed(2)}
+                </div>
               )}
               {!card.details.price_foil ? (
                 ''
               ) : (
-                <div className="card-price">Foil TCGPlayer Market: {card.details.price_foil.toFixed(2)}</div>
+                <div className="card-price">
+                  Foil TCGPlayer Market:
+                  {card.details.price_foil.toFixed(2)}
+                </div>
               )}
             </div>
           </Col>
@@ -78,7 +85,7 @@ const CardModal = ({
                   onChange={onChange}
                 >
                   {versions.map((version) => {
-                    let name = version.full_name
+                    const name = version.full_name
                       .toUpperCase()
                       .substring(version.full_name.indexOf('[') + 1, version.full_name.indexOf(']'));
                     return (
@@ -125,7 +132,7 @@ const CardModal = ({
                     key={color[1]}
                     color={color[0]}
                     short={color[1]}
-                    value={values['color' + color[1]]}
+                    value={values[`color${color[1]}`]}
                     onChange={onChange}
                   />
                 ))}
@@ -133,6 +140,13 @@ const CardModal = ({
 
               <h5>Tags</h5>
               <TagInput tags={values.tags} readOnly={disabled} {...tagActions} />
+
+              <h5>Finish</h5>
+              <Input type="select" name="status" value={values.finish} onChange={onChange}>
+                {getLabels('Finish').map((finish) => (
+                  <option key={finish}>{finish}</option>
+                ))}
+              </Input>
             </fieldset>
           </Col>
         </Row>
