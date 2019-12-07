@@ -2,9 +2,7 @@ import React from 'react';
 
 const MagicMarkdown = ({ markdown }) => {
   const markdownStr = unescape(markdown.toString());
-  console.log(markdownStr);
   const split = markdownStr.split(/({[wubrgcWUBRGC\d\-]+}|\[\[.+\]\])/g);
-  console.log(split);
   return split.map(section => {
     if (section.startsWith('{')) {
       const symbol = section.substring(1, section.length - 1);

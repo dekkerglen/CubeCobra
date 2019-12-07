@@ -46,7 +46,7 @@ onmessage = (e) => {
   var cardColors;
   cards.forEach((card, index) => {
     // Hack until asfan can be properly added to cards
-    asfan = card.asfan || (1 / cards.length);
+    asfan = card.asfan || (15 / cards.length);
     cardColors = (card.colors || card.details.colors) ||  [];
     
     totalCount += 1;
