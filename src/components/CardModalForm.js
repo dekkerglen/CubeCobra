@@ -17,6 +17,7 @@ class CardModalForm extends Component {
     };
 
     this.changeCardVersion = this.changeCardVersion.bind(this);
+    this.changeCardFinish = this.changeCardFinish.bind(this);
     this.openCardModal = this.openCardModal.bind(this);
     this.closeCardModal = this.closeCardModal.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -60,9 +61,9 @@ class CardModalForm extends Component {
   }
 
   handleChange(event) {
-    const target = event.target;
+    const { target } = event;
     const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
+    const { name } = target;
 
     this.setState(({ formValues }) => ({
       formValues: {
@@ -92,10 +93,10 @@ class CardModalForm extends Component {
   }
 
   async saveChanges() {
-    let colors = [...'WUBRG'].filter((color) => this.state.formValues['color' + color]);
-    let updated = { ...this.state.formValues, colors };
-    for (let color of [...'WUBRG']) {
-      delete updated['color' + color];
+    const colors = [...'WUBRG'].filter((color) => this.state.formValues[`color${color}`]);
+    const updated = { ...this.state.formValues, colors };
+    for (const color of [...'WUBRG']) {
+      delete updated[`color${color}`];
     }
     if (updated.imgUrl === '') {
       updated.imgUrl = null;
@@ -104,7 +105,7 @@ class CardModalForm extends Component {
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    let card = this.state.card;
+    const { card } = this.state;
 
     if (
       updated.cardID === card.cardID &&
@@ -113,26 +114,27 @@ class CardModalForm extends Component {
       updated.cmc === card.cmc &&
       updated.imgUrl === card.imgUrl &&
       updated.colors.join('') === card.colors.join('') &&
-      updated.tags.join(',') === card.tags.join(',')
+      updated.tags.join(',') === card.tags.join(',') &&
+      updated.finish === card.finish
     ) {
       // no need to sync
       return;
     }
 
-    let response = await csrfFetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
+    const response = await csrfFetch(`/cube/api/updatecard/${document.getElementById('cubeID').value}`, {
       method: 'POST',
       body: JSON.stringify({ src: card, updated }),
       headers: {
         'Content-Type': 'application/json',
       },
     }).catch((err) => console.error(err));
-    let json = await response.json().catch((err) => console.error(err));
+    const json = await response.json().catch((err) => console.error(err));
     if (json.success === 'true') {
-      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID).catch((err) => console.error(err));
-      let cardJson = await cardResponse.json().catch((err) => console.error(err));
+      const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`).catch((err) => console.error(err));
+      const cardJson = await cardResponse.json().catch((err) => console.error(err));
 
-      let index = card.index;
-      let newCard = {
+      const { index } = card;
+      const newCard = {
         ...cube[index],
         ...updated,
         index,
@@ -163,7 +165,7 @@ class CardModalForm extends Component {
   }
 
   getCardVersions(card) {
-    fetch('/cube/api/getversions/' + card.cardID)
+    fetch(`/cube/api/getversions/${card.cardID}`)
       .then((response) => response.json())
       .then((json) => {
         // Otherwise the modal has changed in between.
@@ -182,6 +184,12 @@ class CardModalForm extends Component {
     });
   }
 
+  changeCardFinish(card) {
+    this.setState({
+      card,
+    });
+  }
+
   openCardModal(card) {
     this.setState({
       card,
@@ -189,6 +197,7 @@ class CardModalForm extends Component {
       formValues: {
         version: card.cardID,
         status: card.status,
+        finish: card.finish,
         cmc: card.cmc,
         type_line: card.type_line,
         imgUrl: card.imgUrl,
@@ -209,7 +218,7 @@ class CardModalForm extends Component {
   }
 
   render() {
-    let { canEdit, setOpenCollapse, children, ...props } = this.props;
+    const { canEdit, setOpenCollapse, children, ...props } = this.props;
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         {children}

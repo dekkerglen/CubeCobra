@@ -22,10 +22,14 @@ async function GetToken() {
       header: 'application/x-www-form-urlencoded',
       body: body.toString(),
     }).then(checkStatus);
-    token = await response.json();
-    token.expires = Tomorrow();
-    console.log(token.expires.toString(), 'token expiration');
-    return token.access_token;
+    try {
+      token = await response.json();
+      token.expires = Tomorrow();
+      console.log(token.expires.toString(), 'token expiration');
+      return token.access_token;
+    } catch (e) {
+      return;
+    }
   }
 }
 
@@ -79,7 +83,12 @@ async function GetPricesPromise(card_ids) {
     chunks.push(card_ids.slice(i * chunkSize, (i + 1) * chunkSize));
   }
 
-  const access_token = await GetToken();
+  let access_token;
+  try {
+    access_token = await GetToken();
+  } catch (e) {
+    return price_dict;
+  }
   const responses = await Promise.all(
     chunks.map((chunk) =>
       fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {

@@ -24,10 +24,10 @@ const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, changeSort, ...
               getLabels(tertiary)
                 .filter((label3) => groups[label1][label2][label3])
                 .map((label3) =>
-                  groups[label1][label2][label3].map(({ index, tags, details }) => (
+                  groups[label1][label2][label3].map(({ index, tags, finish, details }) => (
                     <Col key={index} className="w-auto flex-grow-0">
                       <div className="visualSpoilerCardContainer">
-                        <AutocardImage index={index} tags={tags} {...details} />
+                        <AutocardImage index={index} tags={tags} finish={finish} {...details} />
                       </div>
                     </Col>
                   )),

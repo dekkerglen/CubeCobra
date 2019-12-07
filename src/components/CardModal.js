@@ -34,6 +34,7 @@ const CardModal = ({
   saveChanges,
   queueRemoveCard,
   tagActions,
+  cardFinishActions,
   ...props
 }) => {
   return (
@@ -49,17 +50,24 @@ const CardModal = ({
               src={card.details.display_image}
               fallbackSrc="/content/default_card.png"
               alt={card.name}
+              finish={values.finish}
             />
             <div className="price-area">
               {!card.details.price ? (
                 ''
               ) : (
-                <div className="card-price">TCGPlayer Market: {card.details.price.toFixed(2)}</div>
+                <div className="card-price">
+                  TCGPlayer Market:
+                  {card.details.price.toFixed(2)}
+                </div>
               )}
               {!card.details.price_foil ? (
                 ''
               ) : (
-                <div className="card-price">Foil TCGPlayer Market: {card.details.price_foil.toFixed(2)}</div>
+                <div className="card-price">
+                  Foil TCGPlayer Market:
+                  {card.details.price_foil.toFixed(2)}
+                </div>
               )}
             </div>
           </Col>
@@ -78,7 +86,7 @@ const CardModal = ({
                   onChange={onChange}
                 >
                   {versions.map((version) => {
-                    let name = version.full_name
+                    const name = version.full_name
                       .toUpperCase()
                       .substring(version.full_name.indexOf('[') + 1, version.full_name.indexOf(']'));
                     return (
@@ -96,6 +104,16 @@ const CardModal = ({
                 <Input type="select" name="status" value={values.status} onChange={onChange}>
                   {getLabels('Status').map((status) => (
                     <option key={status}>{status}</option>
+                  ))}
+                </Input>
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Finish</InputGroupText>
+                </InputGroupAddon>
+                <Input type="select" name="finish" value={values.finish} onChange={onChange}>
+                  {getLabels('Finish').map((finish) => (
+                    <option key={finish}>{finish}</option>
                   ))}
                 </Input>
               </InputGroup>
@@ -125,7 +143,7 @@ const CardModal = ({
                     key={color[1]}
                     color={color[0]}
                     short={color[1]}
-                    value={values['color' + color[1]]}
+                    value={values[`color${color[1]}`]}
                     onChange={onChange}
                   />
                 ))}

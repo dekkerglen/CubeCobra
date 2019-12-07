@@ -268,6 +268,7 @@ function getSorts() {
     'Color Identity',
     'Color',
     'Date Added',
+    'Finish',
     'Guilds',
     'Legality',
     'Loyalty',
@@ -349,6 +350,8 @@ function getLabels(sort) {
     return days.sort();
   } else if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned'];
+  } else if (sort == 'Finish') {
+    return ['Non-foil', 'Foil'];
   } else if (sort == 'Guilds') {
     return ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Golgari', 'Simic', 'Izzet', 'Boros'];
   } else if (sort == 'Shards / Wedges') {

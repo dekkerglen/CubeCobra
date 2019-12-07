@@ -37,11 +37,13 @@ function autocard_init(classname) {
               .attr('card_tags')
               .split(',')
           : null;
+        let foil = $(this).attr('data-foil') === 'true';
         autocard_show_card(
           $(this).attr('card'),
           $(this).attr('card_flip'),
           $(this).hasClass('autocard-art-crop'),
           tags,
+          foil,
         );
       }
     });
@@ -52,7 +54,7 @@ function autocard_init(classname) {
     });
 }
 
-function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
+function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil) {
   var w = card_flip ? 425 : 250;
   var h = show_art_crop ? 175 : 325;
 
@@ -99,16 +101,28 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
         Math.max(self.pageYOffset + h, -(5 + tag_offset) + y_offset) + 'px';
     }
   };
-  document.getElementById('autocard_popup').innerHTML = '<img src="" width=225 height=' + h + '>';
+  let innerHTML;
+  if (foil) {
+    innerHTML =
+      '<div style="position:relative"><img class="foilOverlay" src="/content/foilOverlay.png" style="border-radius:"' +
+      // magic cards have a border radius of 3mm and a width of 63mm
+      (3 / 63) * 255 +
+      'px;" }}><img id="autocard-img" src="" width=225 height=' +
+      h +
+      '></div>';
+  } else {
+    innerHTML = '<img id="autocard-img" src="" width=225 height=' + h + '>';
+  }
+  document.getElementById('autocard_popup').innerHTML = innerHTML;
   if (card_flip) {
-    document.getElementById('autocard_popup2').innerHTML = '<img src="" width=225 height=' + h + '>';
+    document.getElementById('autocard_popup2').innerHTML = innerHTML;
   }
   $(document.getElementById('autocard_popup'))
-    .find('img')
+    .find('#autocard-img')
     .attr('src', card_image);
   if (card_flip)
     $(document.getElementById('autocard_popup2'))
-      .find('img')
+      .find('#autocard-img')
       .attr('src', card_flip);
 
   w = card_flip ? 450 : 225;
@@ -125,12 +139,12 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags) {
 
   // only show the three autocard divs once the images are done loading
   $(document.getElementById('autocard_popup'))
-    .find('img')
+    .find('#autocard-img')
     .one('load', function() {
       // only fill in tags area once the image is done loading
       if (card_flip) {
         $(document.getElementById('autocard_popup2'))
-          .find('img')
+          .find('#autocard-img')
           .one('load', function() {
             // only fill in tags area once the image is done loading
             if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
@@ -166,10 +180,10 @@ function autocard_hide_card() {
   // clear any load events that haven't fired yet so that they don't fire after the card should be hidden
   if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
   $(document.getElementById('autocard_popup'))
-    .find('img')
+    .find('#autocard-img')
     .off('load');
   $(document.getElementById('autocard_popup2'))
-    .find('img')
+    .find('#autocard-img')
     .off('load');
 
   document.getElementById('autocard_popup').innerHTML = '';

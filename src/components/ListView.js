@@ -60,6 +60,7 @@ class ListViewRaw extends Component {
         [`tdversion${index}`, card.cardID],
         [`tdtype${index}`, card.type_line],
         [`tdstatus${index}`, card.status],
+        [`tdfinish${index}`, card.finish],
         [`tdcmc${index}`, card.cmc],
         [`tdcolors${index}`, (card.colors || ['C']).join('')],
         [`tags${index}`, (card.tags || []).map((tag) => ({ id: tag, text: tag }))],
@@ -108,7 +109,7 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
-  syncCard(index, updated) {
+  syncCard(index, updated, setStateCallback) {
     /* globals */
     const cubeID = document.getElementById('cubeID').value;
     const card = cube[index];
@@ -122,7 +123,8 @@ class ListViewRaw extends Component {
       updated.status === card.status &&
       updated.cmc === card.cmc &&
       arraysEqual(updated.colors, card.colors) &&
-      arraysEqual(updated.tags, card.tags)
+      arraysEqual(updated.tags, card.tags) &&
+      updated.finish === card.finish
     ) {
       // no need to sync
       return;
@@ -154,6 +156,7 @@ class ListViewRaw extends Component {
               })
               .catch((err) => console.error(err));
           }
+          setStateCallback();
         }
       })
       .catch((err) => console.error(err));
@@ -162,19 +165,21 @@ class ListViewRaw extends Component {
   addTag(cardIndex, tag) {
     const name = `tags${cardIndex}`;
     const newTags = [...this.state[name], tag];
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   deleteTag(cardIndex, tagIndex) {
     const name = `tags${cardIndex}`;
     const newTags = this.state[name].filter((tag, i) => i !== tagIndex);
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
@@ -182,10 +187,11 @@ class ListViewRaw extends Component {
     const newTags = [...this.state[name]];
     newTags.splice(currIndex, 1);
     newTags.splice(newIndex, 0, tag);
-    this.setState({
-      [name]: newTags,
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
+      this.setState({
+        [name]: newTags,
+      });
     });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   getChecked() {
@@ -198,23 +204,26 @@ class ListViewRaw extends Component {
     const name = target.name;
     const index = parseInt(target.getAttribute('data-index'));
 
-    this.setState({
-      [name]: value,
-    });
-
     if (target.tagName.toLowerCase() === 'select') {
       const updated = {};
       if (name.startsWith('tdversion')) {
         updated.cardID = value;
       } else if (name.startsWith('tdstatus')) {
         updated.status = value;
+      } else if (name.startsWith('tdfinish')) {
+        updated.finish = value;
       } else if (name.startsWith('tdcolor')) {
         updated.colors = value === 'C' ? [] : [...value];
       }
-      this.syncCard(index, updated);
-    }
-
-    if (name.startsWith('tdcheck')) {
+      this.syncCard(index, updated, () => {
+        this.setState({
+          [name]: value,
+        });
+      });
+    } else if (name.startsWith('tdcheck')) {
+      this.setState({
+        [name]: value,
+      });
       let checked = this.getChecked();
       if (value && !checked.some((card) => card.index === index)) {
         checked.push(this.props.cards.find((card) => card.index === index));
@@ -320,6 +329,13 @@ class ListViewRaw extends Component {
                         </Input>
                       </td>
                       <td>
+                        <Input {...inputProps(index, 'finish')} type="select">
+                          {getLabels('Finish').map((finish) => (
+                            <option key={finish}>{finish}</option>
+                          ))}
+                        </Input>
+                      </td>
+                      <td>
                         <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
                       </td>
                       <td>
@@ -356,6 +372,7 @@ class ListViewRaw extends Component {
               <th>Version</th>
               <th>Type</th>
               <th>Status</th>
+              <th>Finish</th>
               <th>CMC</th>
               <th>Color</th>
               <th>Tags</th>
