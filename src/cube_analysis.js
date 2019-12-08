@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Col, Nav, NavLink, Row } from 'reactstrap';
+import { Col, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, Nav, NavLink, Row } from 'reactstrap';
 
 import Filter from './util/Filter';
 import Hash from './util/Hash';
@@ -27,15 +27,27 @@ class CubeAnalysis extends Component {
       },
       analytics_order: ['colorCount', 'cumulativeColorCount'],
       filter: [],
-      openCollapse: null
+      openCollapse: null,
+      cardsWithAsfan: null,
+      filteredWithAsfan: null,
+      formatId: -1,
+      formatDropdownOpen: false
     };
 
+    this.updateAsfan = this.updateAsfan.bind(this);
+    this.updateFilter = this.updateFilter.bind(this);
     this.updateData = this.updateData.bind(this);
     this.setFilter = this.setFilter.bind(this);
     this.addScript = this.addScript.bind(this);
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
+    this.updateAsfanCustomWithMultiples = this.updateAsfanCustomWithMultiples.bind(this);
+    this.updateAsfanCustomSingleton = this.updateAsfanCustomSingleton.bind(this);
+    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
+    this.setFormat = this.setFormat.bind(this);
+  }
 
-    this.updateData();
+  componentDidMount() {
+    this.updateAsfan();
   }
 
   addScript(scriptName, scriptKey, scriptCode) {
@@ -52,30 +64,142 @@ class CubeAnalysis extends Component {
 
   select(nav) {
     Hash.set('nav', nav);
+    this.setState({nav}, this.updateData);
     this.nav = nav;
     this.updateData();
   }
 
-  updateData() {
-    const { workers, analytics, analytics_order, filter } = this.state;
+  updateAsfanCustomWithMultiples(format, cardsWithAsfan, pools) {
+    var failMessage = null;
+    for (var i = 0; i < format.length; i++) {
+      for (var j = 0; j < format[i].length; j++) {
+        const tagCount = format[i][j].length;
+        for (var tag of format[i][j]) {
+          const pool = pools[tag];
+          if (pool && pool.length > 0) {
+            const poolWeight = 1 / tagCount / pool.length;
+            for (var cardIndex of pool) {
+              cardsWithAsfan[cardIndex].asfan += poolWeight;
+            }
+          } else {
+            failMessage = 'Unable to create draft, no card with tag "' + tag + '" found.';
+          }
+        }
+      }
+    }
+    if (!failMessage) {
+      this.setState({cardsWithAsfan}, this.updateFilter);
+    } else {
+      console.error(failMessage);
+    }
+  }
+
+  updateAsfanCustomSingleton(format, cardsWithAsfan, pools) {
+    var failMessage = null;
+    for (var i = 0; i < format.length; i++) {
+      for (var j = 0; j < format[i].length; j++) {
+        const tagCount = format[i][j].length;
+        for (var tag of format[i][j]) {
+          const pool = pools[tag];
+          if (pool && pool.length > 0) {
+            const poolCount = pool.reduce((sum, cardIndex) => sum + (1 - cardsWithAsfan[cardIndex].asfan), 0);
+            const poolWeight = 1 / tagCount / poolCount;
+            for (var cardIndex of pool) {
+              cardsWithAsfan[cardIndex].asfan += (1 - cardsWithAsfan[cardIndex].asfan) * poolWeight;
+            }
+          } else {
+            failMessage = 'Unable to create draft, no card with tag "' + tag + '" found.';
+          }
+        }
+      }
+    }
+    if (!failMessage) {
+      this.setState({cardsWithAsfan}, this.updateFilter);
+    } else {
+      console.error(failMessage);
+    }
+  }
+
+  async updateAsfan() {
+    const { formatId } = this.state;
     const { cube } = this.props;
+    if (formatId == -1) {
+      const defaultAsfan = 15 / cube.cards.length;
+      const cardsWithAsfan = cube.cards.map((card) => Object.assign({}, card, {asfan: defaultAsfan}));
+      this.setState({cardsWithAsfan}, this.updateFilter);
+    } else {
+      var format = JSON.parse(cube.draft_formats[formatId].packs);
+      for (var j = 0; j < format.length; j++) {
+        for (var k = 0; k < format[j].length; k++) {
+          format[j][k] = format[j][k].split(',');
+          for (var m = 0; m < format[j][k].length; m++) {
+            format[j][k][m] = format[j][k][m].trim().toLowerCase();
+          }
+        }
+      }
+      var pools = {};
+      const cards = cube.cards;
+      //sort the cards into groups by tag, then we can pull from them randomly
+      pools['*'] = [];
+      cards.forEach(function(card, index) {
+        pools['*'].push(index);
+        if (card.tags && card.tags.length > 0) {
+          card.tags.forEach(function(tag, tag_index) {
+            tag = tag.toLowerCase();
+            if (tag != '*') {
+              if (!pools[tag]) {
+                pools[tag] = [];
+              }
+              if (!pools[tag].includes(index)) {
+                pools[tag].push(index);
+              }
+            }
+          });
+        }
+      });
+      var cardsWithAsfan = cards.map((card) => Object.assign({}, card, {asfan: 0}));
+      if (cube.draft_formats[formatId].multiples) {
+        this.updateAsfanCustomWithMultiples(format, cardsWithAsfan, pools);
+      } else {
+        this.updateAsfanCustomSingleton(format, cardsWithAsfan, pools);
+      }
+    }    
+  }
+
+  async updateFilter() {
+    const { filter, cardsWithAsfan } = this.state;
+    if (cardsWithAsfan == null) {
+      this.updateAsfan();
+      return;
+    }
+    const filteredWithAsfan = filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
+    this.setState({filteredWithAsfan}, this.updateData);
+  }
+
+  async updateData() {
+    const { workers, analytics, analytics_order, filteredWithAsfan } = this.state;
+    if (filteredWithAsfan == null) {
+      this.updateFilter();
+      return;
+    }
     if (!workers[this.nav]) {
-      if (analytics[this.nav]) workers[this.nav] = new Worker(analytics[this.nav].url);
-      else {
+      if (analytics[this.nav]) {
+        workers[this.nav] = new Worker(analytics[this.nav].url);
+        workers[this.nav].addEventListener("message", e => { this.setState({data: e.data})});
+      } else {
         this.select(analytics_order[0]);
         return;
       }
-      workers[this.nav].addEventListener("message", e => { this.setState({data: e.data})});
     }
-    const worker = workers[this.nav];
-    const cards = cube.cards;
-    const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
-    worker.postMessage(filteredCards);
+    workers[this.nav].postMessage(filteredWithAsfan);
   }
 
   setFilter(filter) {
-    this.setState({ filter });
-    this.updateData();
+    this.setState({ filter }, this.updateFilter);
+  }
+
+  setFormat(formatId) {
+    this.setState({ formatId }, this.updateAsfan);
   }
   
   setOpenCollapse(collapseFunction) {
@@ -84,12 +208,18 @@ class CubeAnalysis extends Component {
     }));
   }
 
+  toggleFormatDropdownOpen() {
+    this.setState((prevState, props) => {
+        return {formatDropdownOpen: !prevState.formatDropdownOpen};
+    });
+  }
+
   render() {
     const { cube } = this.props;
-    const { analytics, analytics_order, filter } = this.state
+    const { analytics, analytics_order, filter, formatDropdownOpen } = this.state
     const active = this.nav;
     const cards = cube.cards;
-    const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+    const filteredCards = (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     let navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#" key={nav}>
         {text}
@@ -104,6 +234,27 @@ class CubeAnalysis extends Component {
       }
       return result;
     }
+    var dropdownElement;
+    if (cube.draft_formats) {
+      dropdownElement = (
+        <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
+          <DropdownToggle caret>
+            Draft Format
+          </DropdownToggle>
+          <DropdownMenu>
+            <DropdownItem key="default" onClick={() => this.setFormat(-1)}>Default Draft Format</DropdownItem>
+            <DropdownItem header key="customformatsheader">Custom Formats</DropdownItem>
+            {cube.draft_formats ? cube.draft_formats.map((format, formatIndex) => (
+              <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>{format.title}</DropdownItem>
+            )) : ""}
+          </DropdownMenu>
+        </Dropdown>
+      );
+    } else {
+      dropdownElement = (
+        <h5>Default Draft Format</h5>
+      );
+    }
             
     return (
       <AddAnalyticModal id="addAnalyticModal" addScript={this.addScript} setOpenCollapse={this.setOpenCollapse}>
@@ -114,6 +265,7 @@ class CubeAnalysis extends Component {
           numCards={filteredCards.length}
           isOpen={true}
         />
+        {dropdownElement}
         <Row className="mt-3">
           <Col xs="12" lg="2">
             <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">

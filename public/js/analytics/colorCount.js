@@ -38,13 +38,15 @@ onmessage = (e) => {
   var ColorCounts = Array.from(colorCombinations, (label) => 0);
   var ColorAsfans = Array.from(colorCombinations, (label) => 0);
   var cardColors;
+  var totalCount = 0;
+  var totalAsfan = 0;
   cards.forEach((card, index) => {
     // Hack until asfan can be properly added to cards
     asfan = card.asfan || (15 / cards.length);
     cardColors = (card.colors || card.details.colors) ||  [];
     
-    ColorCounts.Total += 1;
-    ColorAsfans.Total += asfan;
+    totalCount += 1;
+    totalAsfan += asfan;
     colorCombinations.forEach((combination, idx) => {
       if (areArraysEqualSets(combination, cardColors)) {
         ColorCounts[idx] += 1;
@@ -56,7 +58,8 @@ onmessage = (e) => {
     key: combination.length == 0 ? 'C' : combination.join(''), 
     label: combination.length == 0 ? '{c}' : combination.map(c => '{' + c.toLowerCase() + '}').join(''),
     asfan: ColorAsfans[idx].toFixed(2),
-    count: ColorCounts[idx]})); 
+    count: ColorCounts[idx]}));
+  datapoints.push({key: "total", label: "Total", asfan: totalAsfan.toFixed(2), count: totalCount});
   postMessage({
     type: "table",
     columns: [

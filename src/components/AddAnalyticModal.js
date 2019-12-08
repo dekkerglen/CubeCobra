@@ -56,12 +56,9 @@ class AddAnalyticModal extends Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
+    this.setState({
         [name]: value,
-      },
-    }));
+    });
   }
 
   submitAnalytic() {
