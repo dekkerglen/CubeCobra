@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 import {
   Button,
@@ -17,32 +17,33 @@ import {
   Row,
 } from 'reactstrap';
 
-import AddAnalyticModalContext from './AddAnalyticModalContext'
+import AddAnalyticModalContext from './AddAnalyticModalContext';
 
 class AddAnalyticModal extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      name: "New Analytic",
-      key: "custom",
-      code:   "onmessage = e => {\n"
-            + "  if (!e) return;\n"
-            + "  const cards = e.data;\n"
-            + "\n"
-            + "  // Fill in your code here\n"
-            + "\n"
-            + "  postMessage({\n"
-            + "    type: 'table',\n"
-            + "    columns: [\n"
-            + "      {header: 'Header', key: 'firstcolumn'}\n"
-            + "    ],\n"
-            + "    data: [\n"
-            + "      {key: 'firstdata', firstcolumn: '{w}'}\n"
-            + "    ]\n"
-            + "  });\n"
-            + "}",
-        isOpen: false
+      name: 'New Analytic',
+      key: 'custom',
+      code:
+        'onmessage = e => {\n' +
+        '  if (!e) return;\n' +
+        '  const cards = e.data;\n' +
+        '\n' +
+        '  // Fill in your code here\n' +
+        '\n' +
+        '  postMessage({\n' +
+        "    type: 'table',\n" +
+        '    columns: [\n' +
+        "      {header: 'Header', key: 'firstcolumn'}\n" +
+        '    ],\n' +
+        '    data: [\n' +
+        "      {key: 'firstdata', firstcolumn: '{w}'}\n" +
+        '    ]\n' +
+        '  });\n' +
+        '}',
+      isOpen: false,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -50,19 +51,19 @@ class AddAnalyticModal extends Component {
     this.openAddAnalyticModal = this.openAddAnalyticModal.bind(this);
     this.closeAddAnalyticModal = this.closeAddAnalyticModal.bind(this);
   }
-  
+
   handleChange(event) {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
     this.setState({
-        [name]: value,
+      [name]: value,
     });
   }
 
   submitAnalytic() {
-    const {addScript} = this.props;
+    const { addScript } = this.props;
 
     this.closeAddAnalyticModal();
 
@@ -70,20 +71,25 @@ class AddAnalyticModal extends Component {
   }
 
   openAddAnalyticModal() {
-    this.setState({isOpen: true});
+    this.setState({ isOpen: true });
   }
 
   closeAddAnalyticModal() {
-    this.setState({isOpen: false});
+    this.setState({ isOpen: false });
   }
 
   render() {
-    let { addScript, setOpenCollapse, children, ...props } = this.props; 
+    let { addScript, setOpenCollapse, children, ...props } = this.props;
     return (
       <AddAnalyticModalContext.Provider value={this.openAddAnalyticModal}>
         {children}
-        <Modal size="lg" labelledby="addAnalyticModalHeader" toggle={this.closeAddAnalyticsModal}
-               isOpen={this.state.isOpen} {...props}>
+        <Modal
+          size="lg"
+          labelledby="addAnalyticModalHeader"
+          toggle={this.closeAddAnalyticsModal}
+          isOpen={this.state.isOpen}
+          {...props}
+        >
           <ModalHeader id="addAnalyticModalHeader" toggle={this.closeAddAnalyticsModal}>
             Add Analytics Script
           </ModalHeader>

@@ -17,13 +17,13 @@ class CubeAnalysis extends Component {
   constructor(props) {
     super(props);
 
-    this.nav = Hash.get('nav', 'colorCount'),
     this.state = {
-      data: {type: "none"},
+      nav: Hash.get('nav', 'colorCount'),
+      data: { type: 'none' },
       workers: {},
       analytics: {
-        colorCount: {url: '/js/analytics/colorCount.js', title: 'Count By Color'},
-        cumulativeColorCount: {url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Count By Color'}
+        colorCount: { url: '/js/analytics/colorCount.js', title: 'Count By Color' },
+        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Count By Color' },
       },
       analytics_order: ['colorCount', 'cumulativeColorCount'],
       filter: [],
@@ -31,7 +31,7 @@ class CubeAnalysis extends Component {
       cardsWithAsfan: null,
       filteredWithAsfan: null,
       formatId: -1,
-      formatDropdownOpen: false
+      formatDropdownOpen: false,
     };
 
     this.updateAsfan = this.updateAsfan.bind(this);
@@ -53,20 +53,18 @@ class CubeAnalysis extends Component {
   addScript(scriptName, scriptKey, scriptCode) {
     const { analytics, analytics_order } = this.state;
     if (analytics[scriptKey]) {
-        scriptName = scriptName + "-1";
-        scriptKey = scriptKey + "-1";
+      scriptName = scriptName + '-1';
+      scriptKey = scriptKey + '-1';
     }
-    const scriptBlob = new Blob([scriptCode], {type: 'application/json'});
-    analytics[scriptKey] = {url: URL.createObjectURL(scriptBlob), title: scriptName};
+    const scriptBlob = new Blob([scriptCode], { type: 'application/json' });
+    analytics[scriptKey] = { url: URL.createObjectURL(scriptBlob), title: scriptName };
     analytics_order.push(scriptKey);
     this.select(scriptKey);
   }
 
   select(nav) {
     Hash.set('nav', nav);
-    this.setState({nav}, this.updateData);
-    this.nav = nav;
-    this.updateData();
+    this.setState({ nav }, this.updateData);
   }
 
   updateAsfanCustomWithMultiples(format, cardsWithAsfan, pools) {
@@ -88,7 +86,7 @@ class CubeAnalysis extends Component {
       }
     }
     if (!failMessage) {
-      this.setState({cardsWithAsfan}, this.updateFilter);
+      this.setState({ cardsWithAsfan }, this.updateFilter);
     } else {
       console.error(failMessage);
     }
@@ -114,7 +112,7 @@ class CubeAnalysis extends Component {
       }
     }
     if (!failMessage) {
-      this.setState({cardsWithAsfan}, this.updateFilter);
+      this.setState({ cardsWithAsfan }, this.updateFilter);
     } else {
       console.error(failMessage);
     }
@@ -125,8 +123,8 @@ class CubeAnalysis extends Component {
     const { cube } = this.props;
     if (formatId == -1) {
       const defaultAsfan = 15 / cube.cards.length;
-      const cardsWithAsfan = cube.cards.map((card) => Object.assign({}, card, {asfan: defaultAsfan}));
-      this.setState({cardsWithAsfan}, this.updateFilter);
+      const cardsWithAsfan = cube.cards.map((card) => Object.assign({}, card, { asfan: defaultAsfan }));
+      this.setState({ cardsWithAsfan }, this.updateFilter);
     } else {
       var format = JSON.parse(cube.draft_formats[formatId].packs);
       for (var j = 0; j < format.length; j++) {
@@ -157,13 +155,13 @@ class CubeAnalysis extends Component {
           });
         }
       });
-      var cardsWithAsfan = cards.map((card) => Object.assign({}, card, {asfan: 0}));
+      var cardsWithAsfan = cards.map((card) => Object.assign({}, card, { asfan: 0 }));
       if (cube.draft_formats[formatId].multiples) {
         this.updateAsfanCustomWithMultiples(format, cardsWithAsfan, pools);
       } else {
         this.updateAsfanCustomSingleton(format, cardsWithAsfan, pools);
       }
-    }    
+    }
   }
 
   async updateFilter() {
@@ -172,26 +170,29 @@ class CubeAnalysis extends Component {
       this.updateAsfan();
       return;
     }
-    const filteredWithAsfan = filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
-    this.setState({filteredWithAsfan}, this.updateData);
+    const filteredWithAsfan =
+      filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
+    this.setState({ filteredWithAsfan }, this.updateData);
   }
 
   async updateData() {
-    const { workers, analytics, analytics_order, filteredWithAsfan } = this.state;
+    const { nav, workers, analytics, analytics_order, filteredWithAsfan } = this.state;
     if (filteredWithAsfan == null) {
       this.updateFilter();
       return;
     }
-    if (!workers[this.nav]) {
-      if (analytics[this.nav]) {
-        workers[this.nav] = new Worker(analytics[this.nav].url);
-        workers[this.nav].addEventListener("message", e => { this.setState({data: e.data})});
+    if (!workers[nav]) {
+      if (analytics[nav]) {
+        workers[nav] = new Worker(analytics[nav].url);
+        workers[nav].addEventListener('message', (e) => {
+          this.setState({ data: e.data });
+        });
       } else {
         this.select(analytics_order[0]);
         return;
       }
     }
-    workers[this.nav].postMessage(filteredWithAsfan);
+    workers[nav].postMessage(filteredWithAsfan);
   }
 
   setFilter(filter) {
@@ -201,7 +202,7 @@ class CubeAnalysis extends Component {
   setFormat(formatId) {
     this.setState({ formatId }, this.updateAsfan);
   }
-  
+
   setOpenCollapse(collapseFunction) {
     this.setState(({ openCollapse }) => ({
       openCollapse: collapseFunction(openCollapse),
@@ -210,61 +211,59 @@ class CubeAnalysis extends Component {
 
   toggleFormatDropdownOpen() {
     this.setState((prevState, props) => {
-        return {formatDropdownOpen: !prevState.formatDropdownOpen};
+      return { formatDropdownOpen: !prevState.formatDropdownOpen };
     });
   }
 
   render() {
     const { cube } = this.props;
-    const { analytics, analytics_order, filter, formatDropdownOpen } = this.state
-    const active = this.nav;
+    const { analytics, analytics_order, filter, formatDropdownOpen } = this.state;
+    const active = this.state.nav;
     const cards = cube.cards;
-    const filteredCards = (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+    const filteredCards =
+      (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     let navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#" key={nav}>
         {text}
       </NavLink>
     );
     let visualization = (data) => {
-      let result = (
-        <p>Loading Data</p>
-      );
+      let result = <p>Loading Data</p>;
       if (data) {
-        if (data.type == 'table') result = (<AnalyticsTable data={this.state.data} title={analytics[active].title} />);
+        if (data.type == 'table') result = <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
       }
       return result;
-    }
+    };
     var dropdownElement;
     if (cube.draft_formats) {
       dropdownElement = (
         <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
-          <DropdownToggle caret>
-            Draft Format
-          </DropdownToggle>
+          <DropdownToggle caret>Draft Format</DropdownToggle>
           <DropdownMenu>
-            <DropdownItem key="default" onClick={() => this.setFormat(-1)}>Default Draft Format</DropdownItem>
-            <DropdownItem header key="customformatsheader">Custom Formats</DropdownItem>
-            {cube.draft_formats ? cube.draft_formats.map((format, formatIndex) => (
-              <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>{format.title}</DropdownItem>
-            )) : ""}
+            <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
+              Default Draft Format
+            </DropdownItem>
+            <DropdownItem header key="customformatsheader">
+              Custom Formats
+            </DropdownItem>
+            {cube.draft_formats
+              ? cube.draft_formats.map((format, formatIndex) => (
+                  <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
+                    {format.title}
+                  </DropdownItem>
+                ))
+              : ''}
           </DropdownMenu>
         </Dropdown>
       );
     } else {
-      dropdownElement = (
-        <h5>Default Draft Format</h5>
-      );
+      dropdownElement = <h5>Default Draft Format</h5>;
     }
-            
+
     return (
       <AddAnalyticModal id="addAnalyticModal" addScript={this.addScript} setOpenCollapse={this.setOpenCollapse}>
         <DynamicFlash />
-        <FilterCollapse
-          filter={filter}
-          setFilter={this.setFilter}
-          numCards={filteredCards.length}
-          isOpen={true}
-        />
+        <FilterCollapse filter={filter} setFilter={this.setFilter} numCards={filteredCards.length} isOpen={true} />
         {dropdownElement}
         <Row className="mt-3">
           <Col xs="12" lg="2">
@@ -280,9 +279,7 @@ class CubeAnalysis extends Component {
             </Nav>
           </Col>
           <Col xs="12" lg="10">
-            <ErrorBoundary>
-              {visualization(this.state.data)}
-            </ErrorBoundary>
+            <ErrorBoundary>{visualization(this.state.data)}</ErrorBoundary>
           </Col>
         </Row>
       </AddAnalyticModal>
@@ -295,7 +292,5 @@ cube.cards.forEach((card, index) => {
   card.index = index;
 });
 const wrapper = document.getElementById('react-root');
-const element = (
-  <CubeAnalysis cube={cube} />
-);
+const element = <CubeAnalysis cube={cube} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
