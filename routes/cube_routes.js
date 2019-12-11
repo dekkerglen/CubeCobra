@@ -2997,7 +2997,8 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
     (updated.status && typeof updated.status !== 'string') ||
     (updated.type_line && typeof updated.type_line !== 'string') ||
     (updated.colors && !Array.isArray(updated.colors)) ||
-    (updated.tags && !Array.isArray(updated.tags))
+    (updated.tags && !Array.isArray(updated.tags)) ||
+    (updated.finish && typeof updated.finish !== 'string')
   ) {
     res.status(400).send({
       success: 'false',
@@ -3053,6 +3054,8 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         cube.cards[src.index] = updated;
 
         cube = setCubeType(cube, carddb);
+
+        console.log(updated);
 
         cube.save(function(err) {
           if (err) {
@@ -3110,6 +3113,9 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
         }
         if (updated.colorC) {
           allUpdates.$set[`cards.${index}.colors`] = [];
+        }
+        if (updated.finish) {
+          allUpdates.$set[`cards.${index}.finish`] = updated.finish;
         }
         if (updated.tags) {
           if (updated.addTags) {

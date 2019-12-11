@@ -23,6 +23,7 @@ let categoryMap = new Map([
   ['toughness', 'toughness'],
   ['name', 'name'],
   ['tag', 'tag'],
+  ['finish', 'finish'],
   ['price', 'price'],
   ['pricefoil', 'pricefoil'],
   ['p', 'price'],
@@ -627,6 +628,9 @@ function filterApply(card, filter, inCube) {
     res = card.tags.some((element) => {
       return element.toLowerCase() == filter.arg.toLowerCase();
     });
+  }
+  if (filter.category == 'finish') {
+    return card.finish.toLowerCase() === filter.arg.toLowerCase();
   }
   if (filter.category == 'status') {
     if (card.status.toLowerCase() == filter.arg.toLowerCase()) {

@@ -9,8 +9,9 @@ const handleMouseOver = (event) => {
   const front = target.getAttribute('data-front');
   const back = target.getAttribute('data-back');
   const tags = JSON.parse(target.getAttribute('data-tags') || '[]');
+  const foil = target.getAttribute('data-foil') === 'true';
   /* global */
-  autocard_show_card(front, back, false, tags.length > 0 ? tags : null);
+  autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil);
 };
 
 const handleMouseOut = (event) => /* global */ autocard_hide_card();
@@ -28,6 +29,7 @@ const withAutocard = (Tag) => ({ card, front, back, ...props }) => {
       data-front={front}
       data-back={back}
       data-tags={JSON.stringify(tags)}
+      data-foil={card.finish === 'Foil'}
       {...props}
     />
   );

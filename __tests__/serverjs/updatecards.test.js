@@ -94,6 +94,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   border_color: 'black',
   name: 'Moonscarred Werewolf',
   name_lower: 'moonscarred werewolf',
+  full_art: false,
   full_name: 'Moonscarred Werewolf [dka-125]',
   full_art: false,
   artist: 'Cynthia Sheppard',
@@ -103,6 +104,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
     '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   cmc: 0,
+  language: 'en',
   legalities: {
     Legacy: false,
     Modern: false,

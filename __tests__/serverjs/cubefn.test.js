@@ -67,6 +67,7 @@ test('cardsAreEquivalent returns true for two equivalent cards', () => {
     tags: ['New'],
     colors: ['W'],
     randomField: 'y',
+    finish: 'Foil',
   };
   const testCard2 = JSON.parse(JSON.stringify(testCard1));
   const result = cubefn.cardsAreEquivalent(testCard1, testCard2);

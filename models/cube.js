@@ -1,7 +1,7 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 // Cube schema
-let cubeSchema = mongoose.Schema({
+const cubeSchema = mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -37,6 +37,7 @@ let cubeSchema = mongoose.Schema({
   cards: [
     {
       tags: [String],
+      finish: { type: String, default: 'Non-foil' },
       status: String,
       colors: [String],
       cmc: Number,
@@ -73,4 +74,4 @@ let cubeSchema = mongoose.Schema({
   },
 });
 
-let Cube = (module.exports = mongoose.model('Cube', cubeSchema));
+const Cube = (module.exports = mongoose.model('Cube', cubeSchema));
