@@ -688,6 +688,7 @@ function convertCard(card, isExtra) {
   newcard.color_identity = [];
   newcard.color_identity = newcard.color_identity.concat(card.color_identity);
   newcard.set = card.set;
+  newcard.set_name = card.set_name;
   newcard.collector_number = card.collector_number;
   newcard.promo =
     card.promo ||
