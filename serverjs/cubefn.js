@@ -61,7 +61,7 @@ function intToLegality(val) {
     case 3:
       return 'Pioneer';
     case 4:
-      return 'Standard'
+      return 'Standard';
     default:
       return undefined;
   }
@@ -78,7 +78,7 @@ function legalityToInt(legality) {
     case 'Pioneer':
       return 3;
     case 'Standard':
-      return 4
+      return 4;
     default:
       return undefined;
   }
