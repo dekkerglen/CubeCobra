@@ -1,8 +1,10 @@
+const fs = require('fs');
 const rimraf = require('rimraf');
+
 const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
-const fs = require('fs');
+
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
@@ -28,6 +30,7 @@ const convertedExampleCard = {
     Legacy: true,
     Modern: true,
     Standard: false,
+    Pioneer: false,
     Pauper: false,
   },
   parsed_cost: ['r'],
@@ -65,6 +68,7 @@ const convertedExampleDoubleFacedCard = {
     Legacy: true,
     Modern: true,
     Pauper: true,
+    Pioneer: false,
     Standard: false,
   },
   name: 'Scorned Villager',
@@ -104,6 +108,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
     Legacy: false,
     Modern: false,
     Standard: false,
+    Pioneer: false,
     Pauper: false,
   },
   parsed_cost: [],

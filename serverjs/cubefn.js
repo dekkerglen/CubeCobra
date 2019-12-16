@@ -63,7 +63,7 @@ function intToLegality(val) {
     case 4:
       return 'Standard'
     default:
-      return 'Vintage';
+      return undefined;
   }
 }
 
@@ -80,7 +80,7 @@ function legalityToInt(legality) {
     case 'Standard':
       return 4
     default:
-      return 0;
+      return undefined;
   }
 }
 

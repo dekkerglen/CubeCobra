@@ -94,15 +94,17 @@ test('intToLegality returns the expected values', () => {
   expect(cubefn.intToLegality(0)).toBe('Vintage');
   expect(cubefn.intToLegality(1)).toBe('Legacy');
   expect(cubefn.intToLegality(2)).toBe('Modern');
-  expect(cubefn.intToLegality(3)).toBe('Standard');
-  expect(cubefn.intToLegality(4)).toBe(undefined);
+  expect(cubefn.intToLegality(3)).toBe('Pioneer');
+  expect(cubefn.intToLegality(4)).toBe('Standard');
+  expect(cubefn.intToLegality(5)).toBe(undefined);
 });
 
 test('legalityToInt returns the expected values', () => {
   expect(cubefn.legalityToInt('Vintage')).toBe(0);
   expect(cubefn.legalityToInt('Legacy')).toBe(1);
   expect(cubefn.legalityToInt('Modern')).toBe(2);
-  expect(cubefn.legalityToInt('Standard')).toBe(3);
+  expect(cubefn.legalityToInt('Pioneer')).toBe(3);
+  expect(cubefn.legalityToInt('Standard')).toBe(4);
   expect(cubefn.legalityToInt('not a format')).toBe(undefined);
 });
 
