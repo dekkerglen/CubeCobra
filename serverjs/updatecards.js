@@ -1,11 +1,12 @@
-var util = require('./util.js');
-var carddb = require('./cards.js');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const cardutil = require('../dist/util/Card.js');
 
-var _catalog = {};
+const util = require('./util.js');
+const carddb = require('./cards.js');
+
+const _catalog = {};
 
 function initializeCatalog() {
   _catalog.dict = {};
@@ -368,15 +369,16 @@ function convertLegalities(card, isExtra) {
       Modern: false,
       Standard: false,
       Pauper: false,
-    };
-  } else {
-    return {
-      Legacy: card.legalities.legacy == 'legal',
-      Modern: card.legalities.modern == 'legal' || card.legalities.modern == 'banned',
-      Standard: card.legalities.standard == 'legal' || card.legalities.standard == 'banned',
-      Pauper: card.legalities.pauper == 'legal' || card.legalities.pauper == 'banned',
+      Pioneer: false,
     };
   }
+  return {
+    Legacy: card.legalities.legacy === 'legal',
+    Modern: card.legalities.modern === 'legal' || card.legalities.modern === 'banned',
+    Standard: card.legalities.standard === 'legal' || card.legalities.standard === 'banned',
+    Pioneer: card.legalities.pioneer === 'legal' || card.legalities.pioneer === 'banned',
+    Pauper: card.legalities.pauper === 'legal' || card.legalities.pauper === 'banned',
+  };
 }
 
 function convertParsedCost(card, isExtra = false) {
