@@ -142,12 +142,14 @@ class CardPage extends Component {
           <TabPane tabId="2">
             <Row className="no-gutters">
               {cubes.length > 0 ? (
-                cubes.map((cube) => (
-                  cube &&
-                  <Col key={cube._id} xs="12" sm="6" md="6" lg="4" xl="3">
-                    <CubePreview cube={cube} />
-                  </Col>
-                ))
+                cubes.map(
+                  (cube) =>
+                    cube && (
+                      <Col key={cube._id} xs="12" sm="6" md="6" lg="4" xl="3">
+                        <CubePreview cube={cube} />
+                      </Col>
+                    ),
+                )
               ) : (
                 <p className="m-2">No cubes with this card found.</p>
               )}
