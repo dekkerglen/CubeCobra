@@ -42,7 +42,6 @@ The resulting directory structure should look like this:
 
 Then, run the following commands in the root of the cloned repository:
 
-
 ```sh
 npm install
 npm install nodemon -g
@@ -72,4 +71,6 @@ Nodemon will restart the application anytime there is a change to a source file.
 
 ### Running tests
 
-To run the test suite, run `npm run test`
+To run the test suite, run `npm run test`.
+
+If you make changes to `updatecards.js` or other code that will require remaking the fixture files in `fixtures/` you can use the helper: `node update_fixtures.js` after getting the lastest card info using `node force_update.js`. This will retain the same cards in the fixtures but with updated card details and fixture files.

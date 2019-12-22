@@ -2,45 +2,46 @@ const rimraf = require('rimraf');
 const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
+const cardutil = require('../../dist/util/Card.js');
 const fs = require('fs');
+
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
-  color_identity: ['R'],
-  set: 'uma',
-  collector_number: '154',
+  color_identity: ['R', 'W'],
+  set: 'eld',
+  collector_number: '194',
   promo: false,
   digital: false,
   isToken: false,
   border_color: 'black',
-  name: 'Vexing Devil',
-  name_lower: 'vexing devil',
-  full_art: false,
-  full_name: 'Vexing Devil [uma-154]',
-  artist: 'Lucas Graciano',
-  scryfall_uri: 'https://scryfall.com/card/uma/154/vexing-devil?utm_source=api',
-  rarity: 'rare',
-  oracle_text:
-    'When Vexing Devil enters the battlefield, any opponent may have it deal 4 damage to them. If a player does, sacrifice Vexing Devil.',
-  _id: 'a5ebb551-6b0d-45fa-88c8-3746214094f6',
-  cmc: 1,
+  name: 'Inspiring Veteran',
+  name_lower: 'inspiring veteran',
+  full_name: 'Inspiring Veteran [eld-194]',
+  artist: 'Scott Murphy',
+  scryfall_uri: 'https://scryfall.com/card/eld/194/inspiring-veteran?utm_source=api',
+  rarity: 'uncommon',
+  oracle_text: 'Other Knights you control get +1/+1.',
+  _id: '0c3f372d-259d-4a31-9491-2d369b3f3f8b',
+  cmc: 2,
   legalities: {
     Legacy: true,
     Modern: true,
-    Standard: false,
+    Standard: true,
     Pauper: false,
   },
-  parsed_cost: ['r'],
-  colors: ['R'],
-  type: 'Creature — Devil',
-  tcgplayer_id: 180776,
-  power: '4',
-  toughness: '3',
+  parsed_cost: ['w', 'r'],
+  colors: ['R', 'W'],
+  type: 'Creature — Human Knight',
+  full_art: false,
   language: 'en',
-  image_small: 'https://img.scryfall.com/cards/small/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
-  image_normal: 'https://img.scryfall.com/cards/normal/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
-  art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/5/a5ebb551-6b0d-45fa-88c8-3746214094f6.jpg?1547517462',
-  colorcategory: 'r',
+  tcgplayer_id: 198561,
+  power: '2',
+  toughness: '2',
+  image_small: 'https://img.scryfall.com/cards/small/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+  colorcategory: 'm',
 };
 
 const convertedExampleDoubleFacedCard = {
@@ -69,8 +70,9 @@ const convertedExampleDoubleFacedCard = {
   },
   name: 'Scorned Villager',
   name_lower: 'scorned villager',
-  oracle_text: undefined,
-  parsed_cost: ['g', '1'],
+  oracle_text:
+    '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
+  parsed_cost: [''],
   power: '1',
   promo: false,
   rarity: 'common',
@@ -78,7 +80,7 @@ const convertedExampleDoubleFacedCard = {
   set: 'dka',
   tcgplayer_id: 57617,
   toughness: '1',
-  type: 'Creature — Human Werewolf ',
+  type: 'Creature — Human Werewolf',
 };
 
 const convertedExampleDoubleFacedCardFlipFace = {
@@ -88,15 +90,18 @@ const convertedExampleDoubleFacedCardFlipFace = {
   promo: false,
   digital: false,
   isToken: false,
+  language: 'en',
   border_color: 'black',
   name: 'Moonscarred Werewolf',
   name_lower: 'moonscarred werewolf',
   full_art: false,
   full_name: 'Moonscarred Werewolf [dka-125]',
+  full_art: false,
   artist: 'Cynthia Sheppard',
   scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   rarity: 'common',
-  oracle_text: undefined,
+  oracle_text:
+    '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   cmc: 0,
   language: 'en',
@@ -118,6 +123,70 @@ const convertedExampleDoubleFacedCardFlipFace = {
   art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
 
   colorcategory: 'g',
+};
+
+const convertedExampleAdventureCard = {
+  _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  artist: 'Gabor Szikszai',
+  border_color: 'black',
+  cmc: 1,
+  collector_number: '155',
+  color_identity: ['G'],
+  colorcategory: 'g',
+  colors: ['G'],
+  digital: false,
+  full_art: false,
+  full_name: 'Flaxen Intruder [eld-155]',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  isToken: false,
+  language: 'en',
+  legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+  name: 'Flaxen Intruder',
+  name_lower: 'flaxen intruder',
+  oracle_text:
+    'Whenever Flaxen Intruder deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment.\nCreate three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
+  parsed_cost: ['g', 'g', '5', 'split', 'g'],
+  power: '1',
+  promo: false,
+  rarity: 'uncommon',
+  scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
+  set: 'eld',
+  tcgplayer_id: 198574,
+  toughness: '2',
+  type: 'Creature — Human Berserker',
+};
+
+const convertedExampleAdventureCardAdventure = {
+  _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa2',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  artist: 'Gabor Szikszai',
+  border_color: 'black',
+  cmc: 0, // Adventures do not have cmc
+  collector_number: '155',
+  color_identity: ['G'],
+  colorcategory: 'g',
+  colors: [], // Adventures do not have colors, they use the main cards colors
+  digital: false,
+  full_art: false,
+  full_name: 'Welcome Home [eld-155]',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+  isToken: false,
+  language: 'en',
+  legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+  name: 'Welcome Home',
+  name_lower: 'welcome home',
+  oracle_text:
+    'Create three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
+  parsed_cost: ['g', 'g', '5'],
+  promo: false,
+  rarity: 'uncommon',
+  scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
+  set: 'eld',
+  tcgplayer_id: 198574,
+  type: 'Sorcery — Adventure',
 };
 
 const convertFnToAttribute = {
@@ -166,11 +235,8 @@ test("addCardToCatalog successfully adds a card's information to the internal st
   const card = convertedExampleCard;
   updatecards.addCardToCatalog(card);
   var catalog = updatecards.catalog;
-  const normalizedFullName = card.full_name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  const normalizedName = carddb.normalizedName(card);
+  const normalizedFullName = cardutil.normalizeName(card.full_name);
+  const normalizedName = cardutil.normalizeName(card.name);
   const expectedImagedictStructure = {
     uri: card.art_crop,
     artist: card.artist,
@@ -276,3 +342,66 @@ for (var convertFn in convertFnToAttribute) {
     expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
   });
 }
+
+test('convertCard returns a correctly converted Adventure card object', () => {
+  const result = updatecards.convertCard(examplecards.exampleAdventureCard, false);
+  expect(result).toEqual(convertedExampleAdventureCard);
+});
+
+for (var convertFn in convertFnToAttribute) {
+  attribute = convertFnToAttribute[convertFn];
+  test(convertFn + " properly converts an Adventure card's creature " + attribute, () => {
+    const result = updatecards[convertFn](examplecards.exampleAdventureCard, false);
+    expect(result).toBe(convertedExampleAdventureCard[attribute]);
+  });
+}
+for (var convertFn in convertFnToAttribute) {
+  attribute = convertFnToAttribute[convertFn];
+  test(convertFn + " properly converts an Adventure card's Adventure  " + attribute, () => {
+    const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
+    expect(result).toBe(convertedExampleAdventureCardAdventure[attribute]);
+  });
+}
+
+describe('convertName', () => {
+  test('handles ampersands', () => {
+    let card = { name: 'Kharis & the Beholder', layout: '' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Kharis & the Beholder');
+  });
+  test('handles double quotes', () => {
+    let card = { name: 'Kharis "The Beholder"', layout: '' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Kharis "The Beholder"');
+  });
+  test('handles single quotes', () => {
+    let card = { name: "Kharis 'The Beholder'", layout: '' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe("Kharis 'The Beholder'");
+  });
+  test('handles angle brackets', () => {
+    let card = { name: 'Kharis <The Beholder>', layout: '' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Kharis <The Beholder>');
+  });
+  test('handles question mark', () => {
+    let card = { name: 'Question Elemental?', layout: '' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Question Elemental?');
+  });
+  test('handles multi-face (first face)', () => {
+    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Kharis');
+  });
+  test('handles multi-face (second face)', () => {
+    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const result = updatecards.convertName(card, true);
+    expect(result).toBe('The Beholder');
+  });
+  test('handles split card', () => {
+    let card = { name: 'Kharis // The Beholder', layout: 'split' };
+    const result = updatecards.convertName(card);
+    expect(result).toBe('Kharis // The Beholder');
+  });
+});

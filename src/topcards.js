@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import FilterCollapse from './components/FilterCollapse';
 import SortableTable from './components/SortableTable';
 import withAutocard from './components/WithAutocard';
+import { encodeName } from './util/Card';
 
 const AutocardTd = withAutocard('td');
 
@@ -41,7 +42,7 @@ class TopCards extends Component {
       ) : (
         <tr key={name}>
           <AutocardTd front={img} back={img_flip || undefined}>
-            <a href={'/tool/card/' + name}>{name}</a>
+            <a href={'/tool/card/' + encodeName(name)}>{name}</a>
           </AutocardTd>
           <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
           <td>{picks}</td>

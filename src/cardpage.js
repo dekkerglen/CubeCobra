@@ -22,6 +22,7 @@ import CountTableRow from './components/CountTableRow';
 import CubePreview from './components/CubePreview';
 
 import Affiliate from './util/Affiliate';
+import { encodeName } from './util/Card';
 
 class CardPage extends Component {
   constructor(props) {
@@ -132,7 +133,7 @@ class CardPage extends Component {
             <CardBody>
               <Row>
                 {related.map((item) => (
-                  <a key={item.name} href={'/tool/card/' + item.name}>
+                  <a key={item.name} href={'/tool/card/' + encodeName(item.name)}>
                     <img width="150" height="210" src={item.image_normal} />
                   </a>
                 ))}

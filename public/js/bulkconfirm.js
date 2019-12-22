@@ -10,12 +10,9 @@ saveChangesButton.addEventListener('click', saveChangesButtonClick);
 var changes = [];
 
 function justAddButtonClick() {
-  var val = addInput.value.replace('?', '-q-');
-  while (val.includes('//')) {
-    val = val.replace('//', '-slash-');
-  }
+  var val = addInput.value;
   if (val.length > 0) {
-    fetch('/cube/api/getcard/' + val)
+    fetch('/cube/api/getcard/' + encodeURIComponent(val))
       .then((response) => response.json())
       .then(function(json) {
         if (json.card) {

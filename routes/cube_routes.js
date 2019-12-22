@@ -12,13 +12,14 @@ var {
   build_id_query,
   get_cube_id,
 } = require('../serverjs/cubefn.js');
-var analytics = require('../serverjs/analytics.js');
-var draftutil = require('../serverjs/draftutil.js');
-var carddb = require('../serverjs/cards.js');
+const analytics = require('../serverjs/analytics.js');
+const draftutil = require('../serverjs/draftutil.js');
+const cardutil = require('../dist/util/Card.js');
+const carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
-var util = require('../serverjs/util.js');
+const util = require('../serverjs/util.js');
 const { GetPrices } = require('../serverjs/prices.js');
-var mergeImages = require('merge-images');
+const mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
 Canvas.Image = Image;
@@ -862,8 +863,8 @@ router.get('/analysis/:id', function(req, res) {
             owner: user.username,
             activeLink: 'analysis',
             title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
+            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
             GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
@@ -881,8 +882,8 @@ router.get('/analysis/:id', function(req, res) {
             owner: user.username,
             activeLink: 'analysis',
             title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColor(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorCounts(cube.cards, carddb),
+            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
             curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
             GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
             metadata: generateMeta(
@@ -1109,17 +1110,19 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
       } else {
         let selected = undefined;
         //does not have set info
-        let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
+        let normalizedName = cardutil.normalizeName(item);
+        let potentialIds = carddb.getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
           //change this to grab a version that exists in the cube
           for (let i = 0; i < cube.cards.length; i++) {
-            if (carddb.cardFromId(cube.cards[i].cardID).name.toLowerCase() == item) {
+            if (carddb.cardFromId(cube.cards[i].cardID).name_lower == normalizedName) {
               selected = cube.cards[i];
               selected.details = carddb.cardFromId(cube.cards[i].cardID);
               selected.details.display_image = util.getCardImageURL(selected);
             }
           }
           if (!selected) {
+            // TODO: get most reasonable card?
             selected = { cardID: potentialIds[0] };
             selected.details = carddb.cardFromId(potentialIds[0]);
             selected.details.display_image = util.getCardImageURL(selected);
@@ -2328,10 +2331,10 @@ router.get('/api/cubetagcolors/:id', function(req, res) {
 router.get('/api/getcardfromcube/:id', function(req, res) {
   var split = req.params.id.split(';');
   var cube = split[0];
-  var cardname = split[1].toLowerCase().replace('-q-', '?');
-  while (cardname.includes('-slash-')) {
-    cardname = cardname.replace('-slash-', '//');
-  }
+  let cardname = split[1];
+  cardname = cardutil.decodeName(cardname);
+  cardname = cardutil.normalizeName(cardname);
+
   Cube.findOne(build_id_query(cube), function(err, cube) {
     var found = false;
     cube.cards.forEach(function(card, index) {
@@ -2868,15 +2871,7 @@ router.get('/deck/:id', async (req, res) => {
 });
 
 router.get('/api/getcard/:name', function(req, res) {
-  req.params.name = req.params.name
-    .toLowerCase()
-    .trim()
-    .replace('-q-', '?');
-  while (req.params.name.includes('-slash-')) {
-    req.params.name = req.params.name.replace('-slash-', '//');
-  }
-
-  let potentialIds = carddb.nameToId[req.params.name];
+  let potentialIds = carddb.getIdsFromName(cardutil.decodeName(req.params.name));
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
     let selected = nonPromo || potentialIds[0];
@@ -2893,14 +2888,7 @@ router.get('/api/getcard/:name', function(req, res) {
 });
 
 router.get('/api/getimage/:name', function(req, res) {
-  req.params.name = req.params.name
-    .toLowerCase()
-    .trim()
-    .replace('-q-', '?');
-  while (req.params.name.includes('-slash-')) {
-    req.params.name = req.params.name.replace('-slash-', '//');
-  }
-  var reasonable = carddb.getMostReasonable(carddb.nameToId[req.params.name]);
+  var reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
   var img = carddb.imagedict[reasonable.name];
   if (!img) {
     res.status(200).send({
