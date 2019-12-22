@@ -42,7 +42,7 @@ const TokenAnalysis = ({ tokens }) => (
       {sortTokens(tokens).map(([token, tokenCards]) => (
         <Col key={token._id} xs={6} md={4} lg={3}>
           <Card className="mb-3">
-            <a href={Affiliate.getTCGLink({details:token})}>
+            <a href={Affiliate.getTCGLink({ details: token })}>
               <img src={token.image_normal} className="card-img-top" />
             </a>
             <CardBody>
