@@ -143,7 +143,8 @@ class CardPage extends Component {
             <Row className="no-gutters">
               {cubes.length > 0 ? (
                 cubes.map((cube) => (
-                  <Col key={cube._id} xs="6" sm="4" md="3" lg="3">
+                  cube &&
+                  <Col key={cube._id} xs="12" sm="6" md="6" lg="4" xl="3">
                     <CubePreview cube={cube} />
                   </Col>
                 ))
