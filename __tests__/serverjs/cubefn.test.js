@@ -199,7 +199,7 @@ test('addAutocard correctly replaces autocard format strings', () => {
   return promise.then(function() {
     const exampleHtml = '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
     const expected =
-      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1571537886">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
+      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
     const result = cubefn.addAutocard(exampleHtml, carddb);
     expect(result).toBe(expected);
   });

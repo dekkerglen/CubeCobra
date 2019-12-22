@@ -9,7 +9,7 @@ var placeholderCard = {
   digital: false,
   full_name: 'Invalid Card',
   name: 'Invalid Card',
-  name_lower: 'Invalid Card',
+  name_lower: 'invalid card',
   artist: '',
   scryfall_uri: '',
   rarity: '',
@@ -56,45 +56,48 @@ test('unloadCardDb unloads the card database correctly', () => {
   });
 });
 
+const _RankleMasterofFixtures = {
+  _id: '93c2c11d-dfc3-4ba9-8c0f-a98114090396',
+  color_identity: ['B'],
+  set: 'eld',
+  collector_number: '101',
+  promo: false,
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Rankle, Master of Pranks',
+  name_lower: 'rankle, master of pranks',
+  full_name: 'Rankle, Master of Pranks [eld-101]',
+  artist: 'Dmitry Burmak',
+  scryfall_uri: 'https://scryfall.com/card/eld/101/rankle-master-of-pranks?utm_source=api',
+  rarity: 'mythic',
+  oracle_text:
+    'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
+  cmc: 4,
+  legalities: {
+    Legacy: true,
+    Modern: true,
+    Standard: true,
+    Pauper: false,
+  },
+  parsed_cost: ['b', 'b', '2'],
+  colors: ['B'],
+  type: 'Legendary Creature — Faerie Rogue',
+  full_art: false,
+  language: 'en',
+  tcgplayer_id: 198584,
+  power: '3',
+  toughness: '3',
+  image_small: 'https://img.scryfall.com/cards/small/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  colorcategory: 'b',
+};
+
 test('cardFromId returns a well-formed card object', () => {
   expect.assertions(1);
-  const _id = 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4';
-  const expected = {
-    _id: 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4',
-    art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    artist: 'Dmitry Burmak',
-    border_color: 'black',
-    cmc: 4,
-    collector_number: '356',
-    color_identity: ['B'],
-    colorcategory: 'b',
-    colors: ['B'],
-    digital: false,
-    full_name: 'Rankle, Master of Pranks [celd-356]',
-    full_name: 'Rankle, Master of Pranks [eld-356]',
-    image_normal: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    image_small: 'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    isToken: false,
-    legalities: {
-      Legacy: true,
-      Modern: true,
-      Pauper: false,
-      Standard: true,
-    },
-    name: 'Rankle, Master of Pranks',
-    name_lower: 'rankle, master of pranks',
-    oracle_text:
-      'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
-    parsed_cost: ['b', 'b', '2'],
-    power: '3',
-    promo: true,
-    rarity: 'mythic',
-    scryfall_uri: 'https://scryfall.com/card/eld/356/rankle-master-of-pranks?utm_source=api',
-    set: 'eld',
-    tcgplayer_id: 198372,
-    toughness: '3',
-    type: 'Legendary Creature — Faerie Rogue',
-  };
+  const _id = _RankleMasterofFixtures._id;
+  const expected = _RankleMasterofFixtures;
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.cardFromId(_id);
@@ -116,44 +119,11 @@ test('cardFromId returns a placeholder card object when given a nonexistent ID',
 
 test('getCardDetails returns a well-formed card object', () => {
   expect.assertions(1);
-  const _id = 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4';
-  const expected = {
-    _id: 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4',
-    art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    artist: 'Dmitry Burmak',
-    border_color: 'black',
-    cmc: 4,
-    collector_number: '356',
-    color_identity: ['B'],
-    colorcategory: 'b',
-    colors: ['B'],
-    digital: false,
-    display_image:
-      'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    full_name: 'Rankle, Master of Pranks [eld-356]',
-    image_normal: 'https://img.scryfall.com/cards/normal/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    image_small: 'https://img.scryfall.com/cards/small/front/e/e/ee4d196e-7ce4-4dc1-9d58-102a89aca2a4.jpg?1571746204',
-    isToken: false,
-    legalities: {
-      Legacy: true,
-      Modern: true,
-      Pauper: false,
-      Standard: true,
-    },
-    name: 'Rankle, Master of Pranks',
-    name_lower: 'rankle, master of pranks',
-    oracle_text:
-      'Flying, haste\nWhenever Rankle, Master of Pranks deals combat damage to a player, choose any number —\n• Each player discards a card.\n• Each player loses 1 life and draws a card.\n• Each player sacrifices a creature.',
-    parsed_cost: ['b', 'b', '2'],
-    power: '3',
-    promo: true,
-    rarity: 'mythic',
-    scryfall_uri: 'https://scryfall.com/card/eld/356/rankle-master-of-pranks?utm_source=api',
-    set: 'eld',
-    tcgplayer_id: 198372,
-    toughness: '3',
-    type: 'Legendary Creature — Faerie Rogue',
-  };
+  const _id = _RankleMasterofFixtures._id;
+  let expected = _RankleMasterofFixtures;
+  // getCardDetails includes 'display_image' atrribute
+  expected.display_image =
+    'https://img.scryfall.com/cards/normal/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217';
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.getCardDetails({
@@ -199,7 +169,7 @@ test('allIds correctly maps a cardname to an ID', () => {
   expect.assertions(2);
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
-    const expected = 'ee4d196e-7ce4-4dc1-9d58-102a89aca2a4';
+    const expected = _RankleMasterofFixtures._id;
     const result = carddb.allIds({
       name: 'Rankle, Master of Pranks',
     });
