@@ -1,10 +1,11 @@
 {
   "env": {
     "browser": true,
+    "jest/globals": true,
     "node": true
   },
   "extends": ["airbnb", "prettier"],
-  "plugins": ["prettier"],
+  "plugins": ["jest", "prettier"],
   "rules": {
     "prettier/prettier": ["error"],
     "no-console": "off",
