@@ -8,6 +8,7 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
+var schedule = require('node-schedule');
 
 const secrets = require('../cubecobrasecrets/secrets');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
@@ -139,6 +140,11 @@ app.use('/tool', tools);
 
 app.use((req, res) => {
   res.status(404).render('misc/404', {});
+});
+
+schedule.scheduleJob('0 0 * * *', function(){
+  console.log("Starting midnight cardbase update...");
+  updatedb.updateCardbase();
 });
 
 // Start server
