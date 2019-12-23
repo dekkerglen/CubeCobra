@@ -8,7 +8,7 @@ function init(newDraft) {
 }
 
 function pack() {
-  return draft.packs[0][0];
+  return draft.packs[0][0] || [];
 }
 
 function packPickNumber() {

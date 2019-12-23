@@ -11,8 +11,9 @@ import { arraysEqual } from './util/Util';
 
 import CardStack from './components/CardStack';
 import DraggableCard from './components/DraggableCard';
+import ErrorBoundary from './components/ErrorBoundary';
 
-const cmcToNumber = (card) => {
+const cmcColumn = (card) => {
   let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
   if (isNaN(cmc)) {
     cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
@@ -26,13 +27,14 @@ const cmcToNumber = (card) => {
   if (cmcInt > 7) {
     cmcInt = 7;
   }
+  return cmcInt;
 };
 
 const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
 
-const CubeDraft = ({ initialDraft }) => {
+const CubeDraft = () => {
   const [pack, setPack] = useState(Draft.pack());
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);
@@ -44,13 +46,17 @@ const CubeDraft = ({ initialDraft }) => {
   const update = useCallback(() => {
     // This is very bad architecture. The React component should manage the state.
     // TODO: Move state inside React.
-    setPack([...Draft.pack()]);
+    let pack = Draft.pack();
+    if (!Array.isArray(pack)) {
+      pack = [];
+    }
+    setPack([...pack]);
     const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
     setPackNumber(currentPackNumber);
     setPickNumber(currentPickNumber);
   });
 
-  const handleMoveCard = useCallback((source, target) => {
+  const handleMoveCard = useCallback(async (source, target) => {
     if (source.equals(target)) {
       return;
     }
@@ -65,7 +71,7 @@ const CubeDraft = ({ initialDraft }) => {
         newPicks[row][col] = [...newPicks[row][col]];
         newPicks[row][col].splice(index, 0, card);
         setPicks(newPicks);
-        Draft.pick(source.data);
+        await Draft.pick(source.data);
         update();
       } else {
         console.error('Can\'t move cards inside pack.');
@@ -76,7 +82,7 @@ const CubeDraft = ({ initialDraft }) => {
         const [targetRow, targetCol, targetIndex] = target.data;
         const newPicks = [...picks];
         if (newPicks[targetRow].length < 1 + targetCol) {
-          newPicks[targetRow] = newPicks[targetRow].concat(Array(1 + targetCol - newPicks[targetRow].length).fill([]));
+          newPicks[targetRow] = newPicks[targetRow].concat(new Array(1 + targetCol - newPicks[targetRow].length).fill([]));
         }
         newPicks[sourceRow][sourceCol] = [...newPicks[sourceRow][sourceCol]];
         newPicks[targetRow][targetCol] = [...newPicks[targetRow][targetCol]];
@@ -90,7 +96,7 @@ const CubeDraft = ({ initialDraft }) => {
     }
   }, [pack, picks]);
 
-  const handleClickCard = useCallback((event) => {
+  const handleClickCard = useCallback(async (event) => {
     event.preventDefault();
     /* global */ autocard_hide_card();
     const target = event.currentTarget;
@@ -98,72 +104,74 @@ const CubeDraft = ({ initialDraft }) => {
     const card = pack[cardIndex];
     const typeLine = (card.type_line || card.details.type).toLowerCase();
     const row = typeLine.includes('creature') ? 0 : 1;
-    const col = parseInt(card.cmc || card.details.cmc) || 0;
+    const col = cmcColumn(card);
     const newPicks = [...picks];
     if (newPicks[row].length < 1 + col) {
-      newPicks[row] = newPicks[row].concat(Array(1 + col - newPicks[row].length).fill([]));
+      newPicks[row] = newPicks[row].concat(new Array(1 + col - newPicks[row].length).fill([]));
     }
     const colIndex = newPicks[row][col].length;
     newPicks[row][col] = [...newPicks[row][col]];
     newPicks[row][col].splice(colIndex, 0, card);
     setPicks(newPicks);
-    Draft.pick(cardIndex);
+    await Draft.pick(cardIndex);
     update();
   }, [pack, picks]);
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <Card className="mt-3">
-        <CardHeader>
-          <CardTitle>
-            <h4>Pack {packNumber}, Pick {pickNumber}</h4>
-          </CardTitle>
-        </CardHeader>
-        <CardBody>
-          <Row noGutters>
-            {pack.map((card, index) =>
-              <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5">
-                <DraggableCard
-                  location={Location.pack(index)}
-                  data-index={index}
-                  card={card}
-                  canDrop={canDrop}
-                  onMoveCard={handleMoveCard}
-                  onClick={handleClickCard}
-                />
-              </Col>
-            )}
-          </Row>
-        </CardBody>
-      </Card>
-      <Card className="mt-3">
-        <CardHeader>
-          <CardTitle>
-            <h4>Picks</h4>
-          </CardTitle>
-        </CardHeader>
-        <CardBody className="pt-0">
-          {picks.map((row, index) =>
-            <Row key={index} className="draft-row">
-              {row.map((column, index2) =>
-                <CardStack key={index2} location={Location.picks([index, index2, 0])}>
-                  {column.map((card, index3) =>
-                    <div className="stacked" key={card.details._id}>
-                      <DraggableCard
-                        location={Location.picks([index, index2, index3 + 1])}
-                        card={card}
-                        canDrop={canDrop}
-                        onMoveCard={handleMoveCard}
-                      />
-                    </div>
-                  )}
-                </CardStack>
+    <ErrorBoundary>
+      <DndProvider backend={HTML5Backend}>
+        <Card className="mt-3">
+          <CardHeader>
+            <CardTitle>
+              <h4>Pack {packNumber}, Pick {pickNumber}</h4>
+            </CardTitle>
+          </CardHeader>
+          <CardBody>
+            <Row noGutters>
+              {pack.map((card, index) =>
+                <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5">
+                  <DraggableCard
+                    location={Location.pack(index)}
+                    data-index={index}
+                    card={card}
+                    canDrop={canDrop}
+                    onMoveCard={handleMoveCard}
+                    onClick={handleClickCard}
+                  />
+                </Col>
               )}
             </Row>
-          )}
-        </CardBody>
-      </Card>
-    </DndProvider>
+          </CardBody>
+        </Card>
+        <Card className="mt-3">
+          <CardHeader>
+            <CardTitle>
+              <h4>Picks</h4>
+            </CardTitle>
+          </CardHeader>
+          <CardBody className="pt-0">
+            {picks.map((row, index) =>
+              <Row key={index} className="draft-row">
+                {row.map((column, index2) =>
+                  <CardStack key={index2} location={Location.picks([index, index2, 0])}>
+                    {column.map((card, index3) =>
+                      <div className="stacked" key={card.details._id}>
+                        <DraggableCard
+                          location={Location.picks([index, index2, index3 + 1])}
+                          card={card}
+                          canDrop={canDrop}
+                          onMoveCard={handleMoveCard}
+                        />
+                      </div>
+                    )}
+                  </CardStack>
+                )}
+              </Row>
+            )}
+          </CardBody>
+        </Card>
+      </DndProvider>
+    </ErrorBoundary>
   );
 }
 
