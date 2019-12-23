@@ -67,7 +67,7 @@ class CubeOverview extends Component {
                 {cube.type && (
                   <>
                     <a>
-                      {cube.card_count} Card{cube.type} Cube
+                      {cube.card_count} Card {cube.type} Cube
                     </a>
                     <br />
                   </>

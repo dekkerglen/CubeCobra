@@ -1,9 +1,12 @@
-var util = require('./util.js');
-var carddb = require('./cards.js');
 const fs = require('fs');
+const path = require('path');
 const https = require('https');
+const cardutil = require('../dist/util/Card.js');
 
-var _catalog = {};
+const util = require('./util.js');
+const carddb = require('./cards.js');
+
+const _catalog = {};
 
 function initializeCatalog() {
   _catalog.dict = {};
@@ -46,11 +49,8 @@ function updateCardbase(filepath) {
 
 function addCardToCatalog(card, isExtra) {
   _catalog.dict[card._id] = card;
-  const normalizedFullName = card.full_name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  const normalizedName = carddb.normalizedName(card);
+  const normalizedFullName = cardutil.normalizeName(card.full_name);
+  const normalizedName = cardutil.normalizeName(card.name);
   _catalog.imagedict[normalizedFullName] = {
     uri: card.art_crop,
     artist: card.artist,
@@ -321,7 +321,7 @@ function addTokens(card) {
   }
 }
 
-function saveAllCards(arr) {
+function saveAllCards(arr, basePath = 'private') {
   arr.forEach(function(card, index) {
     if (card.layout == 'transform') {
       addCardToCatalog(convertCard(card, true), true);
@@ -331,17 +331,23 @@ function saveAllCards(arr) {
   arr.forEach(function(card, index) {
     addTokens(card);
   });
-  if (!fs.existsSync('private')) {
-    fs.mkdirSync('private');
+  return writeCatalog(basePath);
+}
+
+function writeCatalog(basePath = 'private') {
+  if (!fs.existsSync(basePath)) {
+    fs.mkdirSync(basePath);
   }
   var pendingWrites = [];
-  pendingWrites.push(writeFile('private/names.json', JSON.stringify(_catalog.names)));
-  pendingWrites.push(writeFile('private/cardtree.json', JSON.stringify(util.turnToTree(_catalog.names))));
-  pendingWrites.push(writeFile('private/carddict.json', JSON.stringify(_catalog.dict)));
-  pendingWrites.push(writeFile('private/nameToId.json', JSON.stringify(_catalog.nameToId)));
-  pendingWrites.push(writeFile('private/full_names.json', JSON.stringify(util.turnToTree(_catalog.full_names))));
-  pendingWrites.push(writeFile('private/imagedict.json', JSON.stringify(_catalog.imagedict)));
-  pendingWrites.push(writeFile('private/cardimages.json', JSON.stringify(_catalog.cardimages)));
+  pendingWrites.push(writeFile(path.join(basePath, 'names.json'), JSON.stringify(_catalog.names)));
+  pendingWrites.push(writeFile(path.join(basePath, 'cardtree.json'), JSON.stringify(util.turnToTree(_catalog.names))));
+  pendingWrites.push(writeFile(path.join(basePath, 'carddict.json'), JSON.stringify(_catalog.dict)));
+  pendingWrites.push(writeFile(path.join(basePath, 'nameToId.json'), JSON.stringify(_catalog.nameToId)));
+  pendingWrites.push(
+    writeFile(path.join(basePath, 'full_names.json'), JSON.stringify(util.turnToTree(_catalog.full_names))),
+  );
+  pendingWrites.push(writeFile(path.join(basePath, 'imagedict.json'), JSON.stringify(_catalog.imagedict)));
+  pendingWrites.push(writeFile(path.join(basePath, 'cardimages.json'), JSON.stringify(_catalog.cardimages)));
   var allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(function() {
     console.log('All JSON files saved.');
@@ -363,81 +369,107 @@ function convertLegalities(card, isExtra) {
       Modern: false,
       Standard: false,
       Pauper: false,
-    };
-  } else {
-    return {
-      Legacy: card.legalities.legacy == 'legal',
-      Modern: card.legalities.modern == 'legal' || card.legalities.modern == 'banned',
-      Standard: card.legalities.standard == 'legal' || card.legalities.standard == 'banned',
-      Pauper: card.legalities.pauper == 'legal' || card.legalities.pauper == 'banned',
+      Pioneer: false,
     };
   }
+  return {
+    Legacy: card.legalities.legacy === 'legal',
+    Modern: card.legalities.modern === 'legal' || card.legalities.modern === 'banned',
+    Standard: card.legalities.standard === 'legal' || card.legalities.standard === 'banned',
+    Pioneer: card.legalities.pioneer === 'legal' || card.legalities.pioneer === 'banned',
+    Pauper: card.legalities.pauper === 'legal' || card.legalities.pauper === 'banned',
+  };
 }
 
-function convertParsedCost(card, isExtra) {
+function convertParsedCost(card, isExtra = false) {
   if (isExtra) {
     return [];
-  } else {
-    var parsed_cost;
-    if (!card.card_faces || card.layout == 'flip') {
-      parsed_cost = card.mana_cost
-        .substr(1, card.mana_cost.length - 2)
-        .toLowerCase()
-        .split('}{')
-        .reverse();
-    } else if (card.layout == 'split') {
-      parsed_cost = card.mana_cost
-        .substr(1, card.mana_cost.length - 2)
-        .replace(' // ', '{split}')
-        .toLowerCase()
-        .split('}{')
-        .reverse();
-    } else if (card.card_faces[0].colors) {
-      parsed_cost = card.card_faces[0].mana_cost
-        .substr(1, card.card_faces[0].mana_cost.length - 2)
-        .toLowerCase()
-        .split('}{')
-        .reverse();
-    }
-    if (parsed_cost) {
-      parsed_cost.forEach(function(item, index) {
-        parsed_cost[index] = item.replace('/', '-');
-      });
-    }
-    return parsed_cost;
   }
+
+  if (!card.mana_cost) {
+    return [''];
+  }
+
+  let parsed_cost = [];
+  if (typeof card.card_faces === 'undefined' || card.layout == 'flip') {
+    parsed_cost = card.mana_cost
+      .substr(1, card.mana_cost.length - 2)
+      .toLowerCase()
+      .split('}{')
+      .reverse();
+  } else if (card.layout == 'split' || card.layout == 'adventure') {
+    parsed_cost = card.mana_cost
+      .substr(1, card.mana_cost.length - 2)
+      .replace(' // ', '{split}')
+      .toLowerCase()
+      .split('}{')
+      .reverse();
+  } else if (card.card_faces[0].colors) {
+    parsed_cost = card.card_faces[0].mana_cost
+      .substr(1, card.card_faces[0].mana_cost.length - 2)
+      .toLowerCase()
+      .split('}{')
+      .reverse();
+  } else {
+    console.log('Error converting parsed colors: (isExtra:', isExtra, ')', card.name);
+  }
+
+  if (parsed_cost) {
+    parsed_cost.forEach(function(item, index) {
+      parsed_cost[index] = item.replace('/', '-');
+    });
+  }
+  return parsed_cost;
 }
 
-function convertColors(card, isExtra) {
-  var colors = [];
+function convertColors(card, isExtra = false) {
   if (isExtra) {
-    return colors.concat(card.card_faces[1].colors);
-  } else {
-    if (!card.card_faces || card.layout == 'flip') {
-      return colors.concat(card.colors);
-    } else if (card.layout == 'split') {
-      return colors.concat(card.colors);
-    } else if (card.card_faces[0].colors) {
-      return colors.concat(card.card_faces[0].colors);
+    if (typeof card.card_faces === 'undefined' || card.card_faces.length < 2) {
+      console.log('Error converting colors: (isExtra:', isExtra, ')', card.name);
+      return [];
     }
+    // special case: Adventure faces currently do not have colors on Scryfall (but probably should)
+    if (card.layout == 'adventure') {
+      return Array.from(card.colors);
+    }
+    // TODO: handle cards with more than 2 faces
+    return Array.from(card.card_faces[1].colors);
   }
+
+  if (typeof card.card_faces === 'undefined') {
+    return Array.from(card.colors);
+  }
+
+  // card has faces
+  switch (card.layout) {
+    // NOTE: flip, split and Adventure cards include colors in the main details but not in the card faces
+    case 'flip':
+    case 'split':
+    case 'adventure':
+      return Array.from(card.colors);
+  }
+
+  // otherwise use the colors from the first face
+  if (card.card_faces[0].colors) {
+    return Array.from(card.card_faces[0].colors);
+  }
+
+  console.log('Error converting colors: (isExtra:', isExtra, ')', card.name);
+  console.log(card);
+  return [];
 }
 
 function convertType(card, isExtra) {
+  let _type = card.type_line;
   if (isExtra) {
-    return card.type_line.substring(card.type_line.indexOf('/') + 2).trim();
-  } else {
-    var _type;
-    if (card.type_line.includes('//')) {
-      _type = card.type_line.substring(0, card.type_line.indexOf('/'));
-    } else {
-      _type = card.type_line;
-    }
-    if (_type == 'Artifact — Contraption') {
-      _type = 'Artifact Contraption';
-    }
-    return _type;
+    _type = _type.substring(_type.indexOf('/') + 2);
+  } else if (_type.includes('//')) {
+    _type = _type.substring(0, _type.indexOf('/'));
   }
+  if (_type == 'Artifact — Contraption') {
+    _type = 'Artifact Contraption';
+  }
+  return _type.trim();
 }
 
 function convertId(card, isExtra) {
@@ -449,23 +481,16 @@ function convertId(card, isExtra) {
 }
 
 function convertName(card, isExtra) {
+  let str = card.name;
+
   if (isExtra) {
-    return card.name
-      .substring(card.name.indexOf('/') + 2)
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  } else {
-    if (card.name.includes('/') && card.layout != 'split') {
-      return card.name
-        .substring(0, card.name.indexOf('/'))
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-    } else {
-      return card.name;
-    }
+    str = str.substring(str.indexOf('/') + 2); // second name
+  } else if (card.name.includes('/') && card.layout != 'split') {
+    // NOTE: we want split cards to include both names
+    // but other double face to use the first name
+    str = str.substring(0, str.indexOf('/')); // first name
   }
+  return str.trim();
 }
 
 function CheckContentsEqualityOfArray(target, candidate) {
@@ -685,8 +710,7 @@ function convertCard(card, isExtra) {
     }
   }
   var name = convertName(card, isExtra);
-  newcard.color_identity = [];
-  newcard.color_identity = newcard.color_identity.concat(card.color_identity);
+  newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.collector_number = card.collector_number;
   newcard.promo =
@@ -702,12 +726,17 @@ function convertCard(card, isExtra) {
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
   newcard.name = name;
-  newcard.name_lower = name.toLowerCase();
+  newcard.name_lower = cardutil.normalizeName(name);
   newcard.full_name = name + ' [' + card.set + '-' + card.collector_number + ']';
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
-  newcard.oracle_text = card.oracle_text;
+  if (typeof card.card_faces === 'undefined') {
+    newcard.oracle_text = card.oracle_text;
+  } else {
+    // concatenate all card face text to allow it to be found in searches
+    newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
+  }
   newcard._id = convertId(card, isExtra);
   newcard.cmc = convertCmc(card, isExtra);
   newcard.legalities = convertLegalities(card, isExtra);
@@ -761,6 +790,7 @@ module.exports = {
   updateCardbase: updateCardbase,
   downloadDefaultCards: downloadDefaultCards,
   saveAllCards: saveAllCards,
+  writeCatalog: writeCatalog,
   convertCard: convertCard,
   convertName: convertName,
   convertId: convertId,

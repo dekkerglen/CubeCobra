@@ -1,5 +1,6 @@
 const fs = require('fs');
-var util = require('./util.js');
+const util = require('./util.js');
+const cardutil = require('../dist/util/Card.js');
 
 var data = {
   cardtree: {},
@@ -30,7 +31,7 @@ function getPlaceholderCard(_id) {
     digital: false,
     full_name: 'Invalid Card',
     name: 'Invalid Card',
-    name_lower: 'Invalid Card',
+    name_lower: 'invalid card',
     artist: '',
     scryfall_uri: '',
     rarity: '',
@@ -51,7 +52,7 @@ function cardFromId(id) {
   if (data._carddict[id]) {
     return data._carddict[id];
   } else {
-    console.log('Could not find: ' + id);
+    console.log('Could not find card from id: ' + id);
     return getPlaceholderCard(id);
   }
 }
@@ -63,7 +64,7 @@ function getCardDetails(card) {
     details.display_image = util.getCardImageURL(card);
     return details;
   } else {
-    console.log('Could not find: ' + card.cardID);
+    console.log('Could not find card details: ' + card.cardID);
     return getPlaceholderCard(card.cardID);
   }
 }
@@ -71,8 +72,15 @@ function getCardDetails(card) {
 function loadJSONFile(filename, attribute) {
   return new Promise((resolve, reject) => {
     fs.readFile(filename, 'utf8', function(err, contents) {
-      data[attribute] = JSON.parse(contents);
-      console.log(attribute + ' loaded');
+      if (!err) {
+        try {
+          data[attribute] = JSON.parse(contents);
+        } catch (e) {
+          console.log('Error parsing json from ', filename, ' : ', e);
+          err = e;
+        }
+        console.log(attribute + ' loaded');
+      }
       if (err) {
         reject(err);
       } else {
@@ -123,32 +131,48 @@ function notPromoOrDigitalCard(card) {
   return !card.promo && !card.digital && card.border_color != 'gold' && card.language == 'en' && card.tcgplayer_id;
 }
 
-function getMostReasonable(cardname) {
-  const cards = data.nameToId[cardname];
-  for (const card of cards) {
-    if (notPromoOrDigitalId(card)) {
-      return cardFromId(card);
+function getMostReasonable(cardName) {
+  const ids = getIdsFromName(cardName);
+  if (typeof ids === 'undefined' || ids.length == 0) {
+    return getMostReasonableById(cardName);
+  }
+
+  for (const id of ids) {
+    if (notPromoOrDigitalId(id)) {
+      return cardFromId(id);
     }
   }
-  return cardFromId(cards[0]);
+  return cardFromId(ids[0]);
+}
+
+function getMostReasonableById(id) {
+  let card = cardFromId(id);
+  if (card.error) {
+    console.log('Error finding most reasonable for id:', id);
+    return getPlaceholderCard(0);
+  }
+  return getMostReasonable(card.name);
+}
+
+function getIdsFromName(name) {
+  return data.nameToId[cardutil.normalizeName(name)];
 }
 
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;
-data.normalizedName = (card) =>
-  card.name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-data.allIds = (card) => data.nameToId[data.normalizedName(card)];
+data.getIdsFromName = getIdsFromName;
+data.allIds = (card) => getIdsFromName(card.name);
 data.allCards = () => Object.values(data._carddict);
 data.initializeCardDb = initializeCardDb;
 data.loadJSONFile = loadJSONFile;
 data.getPlaceholderCard = getPlaceholderCard;
 data.unloadCardDb = unloadCardDb;
 data.getMostReasonable = getMostReasonable;
+data.getMostReasonableById = getMostReasonableById;
 data.notPromoOrDigitalId = notPromoOrDigitalId;
 data.notPromoOrDigitalCard = notPromoOrDigitalCard;
+
+// deprecated: use card.name_lower or cardutil.normalizeName
+data.normalizedName = (card) => cardutil.normalizeName(card.name);
 
 module.exports = data;

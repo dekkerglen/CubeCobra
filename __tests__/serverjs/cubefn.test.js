@@ -94,15 +94,17 @@ test('intToLegality returns the expected values', () => {
   expect(cubefn.intToLegality(0)).toBe('Vintage');
   expect(cubefn.intToLegality(1)).toBe('Legacy');
   expect(cubefn.intToLegality(2)).toBe('Modern');
-  expect(cubefn.intToLegality(3)).toBe('Standard');
-  expect(cubefn.intToLegality(4)).toBe(undefined);
+  expect(cubefn.intToLegality(3)).toBe('Pioneer');
+  expect(cubefn.intToLegality(4)).toBe('Standard');
+  expect(cubefn.intToLegality(5)).toBe(undefined);
 });
 
 test('legalityToInt returns the expected values', () => {
   expect(cubefn.legalityToInt('Vintage')).toBe(0);
   expect(cubefn.legalityToInt('Legacy')).toBe(1);
   expect(cubefn.legalityToInt('Modern')).toBe(2);
-  expect(cubefn.legalityToInt('Standard')).toBe(3);
+  expect(cubefn.legalityToInt('Pioneer')).toBe(3);
+  expect(cubefn.legalityToInt('Standard')).toBe(4);
   expect(cubefn.legalityToInt('not a format')).toBe(undefined);
 });
 
@@ -197,7 +199,7 @@ test('addAutocard correctly replaces autocard format strings', () => {
   return promise.then(function() {
     const exampleHtml = '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
     const expected =
-      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1571537886">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
+      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
     const result = cubefn.addAutocard(exampleHtml, carddb);
     expect(result).toBe(expected);
   });

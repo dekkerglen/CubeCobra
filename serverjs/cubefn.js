@@ -59,7 +59,11 @@ function intToLegality(val) {
     case 2:
       return 'Modern';
     case 3:
+      return 'Pioneer';
+    case 4:
       return 'Standard';
+    default:
+      return undefined;
   }
 }
 
@@ -71,8 +75,12 @@ function legalityToInt(legality) {
       return 1;
     case 'Modern':
       return 2;
-    case 'Standard':
+    case 'Pioneer':
       return 3;
+    case 'Standard':
+      return 4;
+    default:
+      return undefined;
   }
 }
 
