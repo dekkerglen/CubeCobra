@@ -16,10 +16,10 @@ const handleMouseOver = (event) => {
 
 const handleMouseOut = (event) => /* global */ autocard_hide_card();
 
-const withAutocard = (Tag) => ({ card, front, back, ...props }) => {
+const withAutocard = (Tag) => ({ card, front, back, tags, ...props }) => {
   const { showCustomImages } = useContext(DisplayContext.Context);
   card = card || { details: {} };
-  const tags = card.tags || [];
+  tags = tags || card.tags || [];
   front = front || (showCustomImages ? card.imgUrl || card.details.display_image : false) || card.details.image_normal;
   back = back || card.details.image_flip;
   return (

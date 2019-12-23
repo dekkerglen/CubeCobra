@@ -2,21 +2,14 @@ import React, { useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 import ImageFallback from './ImageFallback';
+import withAutocard from './WithAutocard';
 
-const handleMouseOver = event => {
-  const target = event.target;
-  const front = target.getAttribute('data-front');
-  const back = target.getAttribute('data-back');
-  /* global */ autocard_show_card(front, back, false, null);
-}
+const CardImage = withAutocard(ImageFallback);
 
-const handleMouseOut = event => {
-  /* global */ autocard_hide_card();
-}
-
-const DraggableCard = ({ card, location, canDrop, onMoveCard }) => {
+const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, ...props }) => {
   const [{ isDragging }, drag] = useDrag({
     item: { type: 'card', location },
+    begin: (monitor) => /* global */ autocard_hide_card(),
     end: (item, monitor) => monitor.didDrop() && onMoveCard(item.location, monitor.getDropResult()),
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
@@ -41,18 +34,17 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard }) => {
   return (
     <div className="draggable-card" ref={drag}>
       <div ref={drop}>
-        <ImageFallback
+        <CardImage
           src={card.details.display_image}
           fallbackSrc="/content/default_card.png"
           alt={card.details.name}
-          width={150}
-          height={210}
-          data-front={card.details.display_image}
-          data-back={card.details.image_flip || undefined}
-          onMouseOver={handleMouseOver}
-          onMouseOut={handleMouseOut}
+          width={width || 150}
+          height={height || 210}
+          card={card}
+          tags={[]}
           className={isAcceptable ? 'outline' : ''}
           style={isDragging ? { opacity: 0.5 } : {}}
+          {...props}
         />
       </div>
     </div>

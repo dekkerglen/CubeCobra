@@ -69,7 +69,7 @@ const CubeDraft = ({ initialDraft }) => {
         console.error('Can\'t move cards from picks back to pack.');
       }
     }
-  }, [setCards]);
+  });
 
   return (
     <DndProvider backend={HTML5Backend}>

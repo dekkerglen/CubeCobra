@@ -16,9 +16,6 @@ const CardStack = ({ location, children, ...props }) => {
   return (
     <div ref={drop}>
       <Col className="stack pt-3" {...props}>
-        {!isAcceptable ? '' :
-          'Drop'
-        }
         {children}
       </Col>
     </div>
