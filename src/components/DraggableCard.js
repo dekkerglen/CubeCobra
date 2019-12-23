@@ -9,8 +9,16 @@ const CardImage = withAutocard(ImageFallback);
 const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
   const [{ isDragging }, drag] = useDrag({
     item: { type: 'card', location },
-    begin: (monitor) => /* global */ autocard_hide_card(),
-    end: (item, monitor) => monitor.didDrop() && onMoveCard(item.location, monitor.getDropResult()),
+    begin: (monitor) => {
+      /* global */ stopAutocard = true;
+      /* global */ autocard_hide_card();
+    },
+    end: (item, monitor) => {
+      /* global */ stopAutocard = false;
+      if (monitor.didDrop()) {
+        onMoveCard(item.location, monitor.getDropResult());
+      }
+    },
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -31,7 +39,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   );
 
   return (
-    <div className="draggable-card" ref={drag}>
+    <div ref={drag}>
       <div ref={drop}>
         <CardImage
           src={card.details.display_image}

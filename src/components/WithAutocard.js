@@ -11,7 +11,9 @@ const handleMouseOver = (event) => {
   const tags = JSON.parse(target.getAttribute('data-tags') || '[]');
   const foil = target.getAttribute('data-foil') === 'true';
   /* global */
-  autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil);
+  if (!stopAutocard) {
+    autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil);
+  }
 };
 
 const handleMouseOut = (event) => /* global */ autocard_hide_card();

@@ -17,3 +17,13 @@
 .draftcard {
   border-radius: 6px;
 }
+
+.card-stack {
+  width: 150px;
+  padding: 0;
+  margin: 0 2px;
+}
+
+.draft-row {
+  padding: 0 -2px;
+}

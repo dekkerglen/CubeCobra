@@ -12,9 +12,25 @@ import { arraysEqual } from './util/Util';
 import CardStack from './components/CardStack';
 import DraggableCard from './components/DraggableCard';
 
+const cmcToNumber = (card) => {
+  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
+  if (isNaN(cmc)) {
+    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
+  }
+  // Round to half-integer then take ceiling to support Little Girl
+  let cmcDoubleInt = Math.round(cmc * 2);
+  let cmcInt = Math.round((cmcDoubleInt + cmcDoubleInt % 2) / 2);
+  if (cmcInt < 0) {
+    cmcInt = 0;
+  }
+  if (cmcInt > 7) {
+    cmcInt = 7;
+  }
+};
+
 const canDrop = (source, target) => {
   return target.type === Location.PICKS;
-}
+};
 
 const CubeDraft = ({ initialDraft }) => {
   const [pack, setPack] = useState(Draft.pack());
@@ -23,7 +39,7 @@ const CubeDraft = ({ initialDraft }) => {
   const [pickNumber, setPickNumber] = useState(initialPickNumber);
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
-  const [picks, setPicks] = useState([[], []]);
+  const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
 
   const update = useCallback(() => {
     // This is very bad architecture. The React component should manage the state.
@@ -43,7 +59,7 @@ const CubeDraft = ({ initialDraft }) => {
         const card = pack[source.data];
         const [row, col, index] = target.data;
         const newPicks = [...picks];
-        if (newPicks[row].length < col) {
+        if (newPicks[row].length < 1 + col) {
           newPicks[row] = newPicks[row].concat(Array(1 + col - newPicks[row].length).fill([]));
         }
         newPicks[row][col] = [...newPicks[row][col]];
@@ -152,6 +168,5 @@ const CubeDraft = ({ initialDraft }) => {
 
 const draft = JSON.parse(document.getElementById("draftraw").value);
 Draft.init(draft);
-const element = <CubeDraft />;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(element, wrapper) : false;
+wrapper ? ReactDOM.render(<CubeDraft />, wrapper) : false;
