@@ -3,10 +3,6 @@ extends cube_layout
 block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
   input#draftraw(type='hidden', name='draftraw', value=draft_raw)
-  //hidden form to finish draft
-  form#submitDeckForm(method='POST', action='/cube/submitdeck/'+cube_id)
-    input(type='hidden', name='_csrf', value=csrfToken)
-    input#submitDeckHidden(type='hidden', name='body')
 
 block cube_content
   div#react-root

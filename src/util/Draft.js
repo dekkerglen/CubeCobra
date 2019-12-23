@@ -161,6 +161,11 @@ async function finish() {
       'Content-Type': 'application/json',
     },
   });
+
+  const form = document.getElementById('submitDeckForm');
+  if (form) {
+    form.submit();
+  }
 }
 
 export default { init, pack, packPickNumber, pick, finish };

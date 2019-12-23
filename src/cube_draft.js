@@ -3,13 +3,14 @@ import ReactDOM from 'react-dom';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstrap';
 
 import Draft from './util/Draft';
 import Location from './util/DraftLocation';
 import { arraysEqual } from './util/Util';
 
 import CardStack from './components/CardStack';
+import CSRFForm from './components/CSRFForm';
 import DraggableCard from './components/DraggableCard';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -119,6 +120,9 @@ const CubeDraft = () => {
 
   return (
     <ErrorBoundary>
+      <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${draft.cube}`}>
+        <Input type="hidden" name="body" value={draft._id} />
+      </CSRFForm>
       <DndProvider backend={HTML5Backend}>
         <Card className="mt-3">
           <CardHeader>
