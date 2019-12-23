@@ -5,7 +5,6 @@ const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/util/Card.js');
-const fs = require('fs');
 
 const cardsFixturePath = 'fixtures/cards_small.json';
 
