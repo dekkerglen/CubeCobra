@@ -1,1351 +1,1132 @@
 const exampleCube = {
-  "isListed": true,
-  "privatePrices": false,
-  "decks": [],
-  "default_sorts": [],
-  "cards": [{
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "0dbf3260-b956-40da-abc7-764781c9f26f",
-      "type_line": "Creature — Human Knight",
-      "addedTmsp": "2019-09-28T20:58:35.089Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "a8924faa-d5f5-4119-9fa1-be0789a5655d",
-      "type_line": "Creature — Faerie ",
-      "addedTmsp": "2019-09-28T20:58:35.092Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "84128e98-87d6-4c2f-909b-9435a7833e63",
-      "type_line": "Artifact",
-      "addedTmsp": "2019-09-28T20:58:35.093Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "bd6ccd0b-5279-431f-b65a-7fdbdffd1a90",
-      "type_line": "Creature — Human Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.093Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "21c6e2cf-3799-4d5b-99c2-feeec15580ec",
-      "type_line": "Legendary Creature — Elf Noble",
-      "addedTmsp": "2019-09-28T20:58:35.093Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 7,
-      "cardID": "49875f7a-31b9-4276-b971-8ead1e18fc81",
-      "type_line": "Creature — Giant ",
-      "addedTmsp": "2019-09-28T20:58:35.094Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "b0b03278-9ce8-4698-a8ca-135668384718",
-      "type_line": "Creature — Human Knight",
-      "addedTmsp": "2019-09-28T20:58:35.094Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "ff984a4c-1818-4f8f-a9d7-fce57e77937d",
-      "type_line": "Creature — Giant ",
-      "addedTmsp": "2019-09-28T20:58:35.094Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "d42a57b2-fbe9-4024-a593-f6dc711a2e9d",
-      "type_line": "Creature — Faerie Rogue ",
-      "addedTmsp": "2019-09-28T20:58:35.095Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "6f1383eb-aa7d-4d3b-bee4-8cffba9ae846",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.095Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "9954b9bb-21e7-40af-aaa7-b2001b8d1d45",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.096Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "aca10c34-010a-4a9f-a747-2592c4d58c5d",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.100Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "12b8c2e6-5256-4e7e-8d7d-4b386419780a",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.100Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "4113eeed-9399-4b59-a6d9-7d40190853c5",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.101Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "dd45820e-39be-448e-b446-44f3ebab555e",
-      "type_line": "Creature — Human Noble",
-      "addedTmsp": "2019-09-28T20:58:35.102Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "0cfe592d-7733-4f26-a395-3042817cc831",
-      "type_line": "Creature — Troll",
-      "addedTmsp": "2019-09-28T20:58:35.103Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "ec1f1041-f667-4b73-b1f2-e5bcae84095e",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.103Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "8a20f78f-32c6-4ba4-8389-1fde32ea42e4",
-      "type_line": "Creature — Human Peasant ",
-      "addedTmsp": "2019-09-28T20:58:35.104Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "d2804de2-5b13-493c-87ac-e59b3bb569a4",
-      "type_line": "Sorcery",
-      "addedTmsp": "2019-09-28T20:58:35.104Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "4e6d15f8-7ebc-43b7-b8fd-00555e74bcb0",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.104Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "939b8bcc-b9ac-4d8c-9db4-2bf91a853f03",
-      "type_line": "Legendary Artifact — Equipment",
-      "addedTmsp": "2019-09-28T20:58:35.105Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "13b553f1-8107-42a8-841a-91adf71cff72",
-      "type_line": "Creature — Human Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.105Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "157f343d-8583-4827-a77d-d916e6a5caa1",
-      "type_line": "Legendary Creature — Merfolk Wizard",
-      "addedTmsp": "2019-09-28T20:58:35.105Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G",
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "1bff641e-aad3-414f-ad5b-8d32c734efa9",
-      "type_line": "Sorcery",
-      "addedTmsp": "2019-09-28T20:58:35.106Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [],
-      "status": "Not Owned",
-      "cmc": 0,
-      "cardID": "57645743-27fa-4a75-9511-acfc32dd349a",
-      "type_line": "Land",
-      "addedTmsp": "2019-09-28T20:58:35.106Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "fbe0da77-7b53-41cc-b6e6-eed5092d38c5",
-      "type_line": "Creature — Faerie Wizard ",
-      "addedTmsp": "2019-09-28T20:58:35.106Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "77d54dca-d09b-49a6-a446-8144a7db6711",
-      "type_line": "Creature — Treefolk Druid",
-      "addedTmsp": "2019-09-28T20:58:35.107Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "ed03df49-7ea7-40ca-96d6-3907d75cc8e3",
-      "type_line": "Creature — Faerie ",
-      "addedTmsp": "2019-09-28T20:58:35.107Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "2f907f50-c02e-4348-a2d0-6697705e4047",
-      "type_line": "Creature — Troll Noble",
-      "addedTmsp": "2019-09-28T20:58:35.107Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "5e66e70e-354e-4c3c-9d5d-90f0bf1b857d",
-      "type_line": "Creature — Human Knight",
-      "addedTmsp": "2019-09-28T20:58:35.108Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "515aded7-16fc-498e-9736-f4853e6d5a72",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.108Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "489ae8ac-8329-49f0-a301-875f7ba37c97",
-      "type_line": "Creature — Human Berserker ",
-      "addedTmsp": "2019-09-28T20:58:35.108Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "40fb4518-406b-4673-afd9-61a9440e3335",
-      "type_line": "Artifact",
-      "addedTmsp": "2019-09-28T20:58:35.109Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "6a16f907-93df-419e-8a65-ee96938e4143",
-      "type_line": "Creature — Zombie Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.109Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "e73b89ce-fdb2-4730-b87c-e23aa131be24",
-      "type_line": "Legendary Creature — Human Wizard",
-      "addedTmsp": "2019-09-28T20:58:35.110Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "bb6b2759-c315-42cb-8842-dc4f0f42c01d",
-      "type_line": "Creature — Human Warrior ",
-      "addedTmsp": "2019-09-28T20:58:35.110Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B",
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "ea9f8dd7-b774-40c5-9e67-3eb87bb72541",
-      "type_line": "Legendary Planeswalker — Garruk",
-      "addedTmsp": "2019-09-28T20:58:35.110Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "d0960ccb-6952-4398-aa94-816e6fb04c2d",
-      "type_line": "Creature — Human Peasant ",
-      "addedTmsp": "2019-09-28T20:58:35.111Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "d274723a-27f3-49ec-ade0-d0b5e0e87d84",
-      "type_line": "Creature — Bird",
-      "addedTmsp": "2019-09-28T20:58:35.111Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "2728180c-c24d-4deb-a901-ae90232ad45d",
-      "type_line": "Artifact",
-      "addedTmsp": "2019-09-28T20:58:35.111Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "c38c9120-ac20-4f81-b8d8-9d490cc2a913",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.112Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "5ee91fd2-794f-4c6a-8ce6-3bd2b12f95bb",
-      "type_line": "Creature — Archon",
-      "addedTmsp": "2019-09-28T20:58:35.112Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "dda18da1-1ba4-421c-8980-a94984a5e12a",
-      "type_line": "Creature — Faerie",
-      "addedTmsp": "2019-09-28T20:58:35.112Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "cdb80c03-53a5-4142-a630-bcf489d6383d",
-      "type_line": "Creature — Faerie ",
-      "addedTmsp": "2019-09-28T20:58:35.113Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R",
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.114Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "eb96078d-8632-4e7e-93ae-c4c86c530d19",
-      "type_line": "Creature — Human Knight",
-      "addedTmsp": "2019-09-28T20:58:35.116Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "257a84d3-bc4e-4bb3-a435-6d243929bd8c",
-      "type_line": "Sorcery",
-      "addedTmsp": "2019-09-28T20:58:35.118Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "40ef45e3-b12a-403e-823c-44f4c95543e8",
-      "type_line": "Creature — Human Wizard",
-      "addedTmsp": "2019-09-28T20:58:35.118Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "896e5f61-6074-458d-9e8c-aff99fda75d7",
-      "type_line": "Enchantment — Aura",
-      "addedTmsp": "2019-09-28T20:58:35.119Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "052ab231-6575-4682-9208-13ac6b9d7910",
-      "type_line": "Legendary Creature — Human Noble",
-      "addedTmsp": "2019-09-28T20:58:35.119Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B",
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 6,
-      "cardID": "072648c6-a3ee-4db7-877e-67a5fab46272",
-      "type_line": "Creature — Serpent",
-      "addedTmsp": "2019-09-28T20:58:35.120Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 5,
-      "cardID": "b6a1b6c9-8e66-475b-807b-4dd6e88b366a",
-      "type_line": "Creature — Unicorn ",
-      "addedTmsp": "2019-09-28T20:58:35.120Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "341110e5-577d-45ee-bf62-53373a331c87",
-      "type_line": "Creature — Beast Noble ",
-      "addedTmsp": "2019-09-28T20:58:35.120Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "039c20ab-13c4-426a-888c-9093340a85a0",
-      "type_line": "Creature — Human Peasant ",
-      "addedTmsp": "2019-09-28T20:58:35.121Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 1,
-      "cardID": "8182c9e0-861e-4736-997b-e79e62a2fec5",
-      "type_line": "Creature — Merfolk Wizard ",
-      "addedTmsp": "2019-09-28T20:58:35.121Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "9eef0851-c2bb-4b11-b9c2-c659abadd0d9",
-      "type_line": "Artifact",
-      "addedTmsp": "2019-09-28T20:58:35.122Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "236b40cd-c359-41cc-b530-d7d6fbbe33bf",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.122Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "49c98e70-e8fe-4fea-b1d0-e7560780fda9",
-      "type_line": "Creature — Zombie Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.122Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "c389e04c-b009-4468-b760-5dd588cff9b9",
-      "type_line": "Creature — Elf Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.123Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "adc82c1f-3584-49d0-b39f-87d97d9153fc",
-      "type_line": "Creature — Human Knight",
-      "addedTmsp": "2019-09-28T20:58:35.123Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G",
-        "U"
-      ],
-      "status": "Not Owned",
-      "cmc": 3,
-      "cardID": "95da027e-34c1-4098-827d-1647693ad8f4",
-      "type_line": "Legendary Planeswalker — Oko",
-      "addedTmsp": "2019-09-28T20:58:35.123Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "G"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "f2ca07ab-32e9-477c-a263-721a03f778ff",
-      "type_line": "Instant",
-      "addedTmsp": "2019-09-28T20:58:35.124Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "b104f257-b3aa-4e7e-987c-7358b6ca7b12",
-      "type_line": "Creature — Dragon",
-      "addedTmsp": "2019-09-28T20:58:35.124Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "B"
-      ],
-      "status": "Not Owned",
-      "cmc": 2,
-      "cardID": "6d747619-3057-4973-aec7-a0e4674e94f7",
-      "type_line": "Creature — Human Knight ",
-      "addedTmsp": "2019-09-28T20:58:35.124Z"
-    },
-    {
-      "tags": [
-        "New"
-      ],
-      "colors": [
-        "R",
-        "W"
-      ],
-      "status": "Not Owned",
-      "cmc": 4,
-      "cardID": "505532ef-3791-4253-8a2a-b6f02ef45ab4",
-      "type_line": "Enchantment",
-      "addedTmsp": "2019-09-28T20:58:35.125Z"
-    }
+  isListed: true,
+  privatePrices: false,
+  decks: [],
+  default_sorts: [],
+  cards: [
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.089Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'c2089ec9-0665-448f-bfe9-d181de127814',
+      type_line: 'Creature — Faerie',
+      addedTmsp: '2019-09-28T20:58:35.092Z',
+    },
+    {
+      tags: ['New'],
+      colors: [],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '84128e98-87d6-4c2f-909b-9435a7833e63',
+      type_line: 'Artifact',
+      addedTmsp: '2019-09-28T20:58:35.093Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'c7d5e394-8e41-442e-ae97-a478a61e1b9d',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.093Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1',
+      type_line: 'Legendary Creature — Elf Noble',
+      addedTmsp: '2019-09-28T20:58:35.093Z',
+    },
+    {
+      tags: ['New'],
+      colors: [], // test override color identity, card is 'G'
+      status: 'Not Owned',
+      cmc: 7,
+      cardID: 'a66f5ea7-ddbb-4b89-b812-77bd17972cf9',
+      type_line: 'Creature — Giant',
+      addedTmsp: '2019-09-28T20:58:35.094Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: 'fe0a63bb-dd94-429f-aa9b-21f3d1c53ae5',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.094Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '09fd2d9c-1793-4beb-a3fb-7a869f660cd4',
+      type_line: 'Creature — Giant',
+      addedTmsp: '2019-09-28T20:58:35.094Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'c2089ec9-0665-448f-bfe9-d181de127814',
+      type_line: 'Creature — Faerie Rogue',
+      addedTmsp: '2019-09-28T20:58:35.095Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: '7f910495-8bd7-4134-a281-c16fd666d5cc',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.095Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: '8bb8512e-6913-4be6-8828-24cfcbec042e',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.096Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: 'e3c2c66c-f7f0-41d5-a805-a129aeaf1b75',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.100Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: '195383c1-4723-40b0-ba53-298dfd8e30d0',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.100Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: '0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.101Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: 'dcb94950-3f3e-4876-84f8-d5e4d9cfecee',
+      type_line: 'Creature — Human Noble',
+      addedTmsp: '2019-09-28T20:58:35.102Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 5,
+      cardID: '85929131-4df6-415c-b592-aefb2943c477',
+      type_line: 'Creature — Troll',
+      addedTmsp: '2019-09-28T20:58:35.103Z',
+    },
+    {
+      tags: ['New'],
+      colors: [],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: 'ec1f1041-f667-4b73-b1f2-e5bcae84095e',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.103Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '7f78a570-d776-42f2-a609-6da0156c8de7',
+      type_line: 'Creature — Human Peasant',
+      addedTmsp: '2019-09-28T20:58:35.104Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U', 'W'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '5dca90ef-1c17-4dcc-9fef-dab9ee92f590',
+      type_line: 'Sorcery',
+      addedTmsp: '2019-09-28T20:58:35.104Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B', 'W'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: 'e76c0c83-3e87-474d-bc72-1677eed32cfa',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.104Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 6,
+      cardID: 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6',
+      type_line: 'Legendary Artifact — Equipment',
+      addedTmsp: '2019-09-28T20:58:35.105Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '6cc73d16-5ed7-4104-91f6-0997a2080e2e',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.105Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'bf4b9a8a-b42a-46fb-b0d0-9cf800f63c8a',
+      type_line: 'Legendary Creature — Merfolk Wizard',
+      addedTmsp: '2019-09-28T20:58:35.105Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G', 'R'],
+      status: 'Not Owned',
+      cmc: 5,
+      cardID: '3e26c10b-179f-4a6e-bc8d-3ec1d6783fb9',
+      type_line: 'Sorcery',
+      addedTmsp: '2019-09-28T20:58:35.106Z',
+    },
+    {
+      tags: ['New'],
+      colors: [],
+      status: 'Not Owned',
+      cmc: 0,
+      cardID: 'b841bfa8-7c17-4df2-8466-780ab9a4a53a',
+      type_line: 'Land',
+      addedTmsp: '2019-09-28T20:58:35.106Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: 'e3435fd6-8f51-4d99-a278-4ddb088acfe1',
+      type_line: 'Creature — Faerie Wizard',
+      addedTmsp: '2019-09-28T20:58:35.106Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G', 'W'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '1ca29912-88b1-413f-ad9d-63d7d1b1ca16',
+      type_line: 'Creature — Treefolk Druid',
+      addedTmsp: '2019-09-28T20:58:35.107Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: 'e8bbece8-9620-44d9-b991-350fe952538a',
+      type_line: 'Creature — Faerie',
+      addedTmsp: '2019-09-28T20:58:35.107Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 6,
+      cardID: '9a6bb435-1205-416a-a5a0-ca6d37b4dcb2',
+      type_line: 'Creature — Troll Noble',
+      addedTmsp: '2019-09-28T20:58:35.107Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: 'c52d66db-5570-48a1-99cf-e0417517747b',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.108Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: 'a12b16b0-f75f-42d8-9b24-947c1908e0f7',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.108Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
+      type_line: 'Creature — Human Berserker',
+      addedTmsp: '2019-09-28T20:58:35.108Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '6afc67d1-1018-4a15-ab5f-377fd11dcd3d',
+      type_line: 'Artifact',
+      addedTmsp: '2019-09-28T20:58:35.109Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: 'c5f6c745-e46a-42eb-8eca-b7b74ab1245e',
+      type_line: 'Creature — Zombie Knight',
+      addedTmsp: '2019-09-28T20:58:35.109Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '62ddce0d-f22a-4fcd-9a4a-d71938750ba1',
+      type_line: 'Legendary Creature — Human Wizard',
+      addedTmsp: '2019-09-28T20:58:35.110Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: '194b7a1c-291a-470e-9a40-61b72a46793b',
+      type_line: 'Creature — Human Warrior',
+      addedTmsp: '2019-09-28T20:58:35.110Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B', 'G'],
+      status: 'Not Owned',
+      cmc: 6,
+      cardID: 'abef512f-8f1d-4257-b16f-c0eed58670ec',
+      type_line: 'Legendary Planeswalker — Garruk',
+      addedTmsp: '2019-09-28T20:58:35.110Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: '75754468-2850-42e6-ab22-61ff7b9d1214',
+      type_line: 'Creature — Human Peasant',
+      addedTmsp: '2019-09-28T20:58:35.111Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: '30377bf0-d9b1-4c14-8dde-f74b1e02d604',
+      type_line: 'Creature — Bird',
+      addedTmsp: '2019-09-28T20:58:35.111Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '562f1c51-d245-4771-bf61-415297e4f9d5',
+      type_line: 'Artifact',
+      addedTmsp: '2019-09-28T20:58:35.111Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'd32d85d5-a6f0-4cc5-9fd6-6b329aae2e5b',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.112Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 6,
+      cardID: 'c7093834-9627-4da2-9322-c03bfd5b3a71',
+      type_line: 'Creature — Archon',
+      addedTmsp: '2019-09-28T20:58:35.112Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '663b3e6f-1099-4de8-a0a7-6f1919c38010',
+      type_line: 'Creature — Faerie',
+      addedTmsp: '2019-09-28T20:58:35.112Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '7acbd812-b994-4e68-8f95-04222796e994',
+      type_line: 'Creature — Faerie',
+      addedTmsp: '2019-09-28T20:58:35.113Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R', 'U'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '0461867b-ec35-4d37-a398-5247e06c4afe',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.114Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R', 'W'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '0c3f372d-259d-4a31-9491-2d369b3f3f8b',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.116Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: 'b5bcf822-e129-45f6-9403-310ce9410f3b',
+      type_line: 'Sorcery',
+      addedTmsp: '2019-09-28T20:58:35.118Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '9a7b0ead-5629-429d-bede-8154f3fae96d',
+      type_line: 'Creature — Human Wizard',
+      addedTmsp: '2019-09-28T20:58:35.118Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '6da7cd39-1f8a-4f68-adb7-df2beac02263',
+      type_line: 'Enchantment — Aura',
+      addedTmsp: '2019-09-28T20:58:35.119Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'fa3ab467-be97-4b84-a73d-b03484d06b97',
+      type_line: 'Legendary Creature — Human Noble',
+      addedTmsp: '2019-09-28T20:58:35.119Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B', 'U'],
+      status: 'Not Owned',
+      cmc: 6,
+      cardID: '3287beea-747c-4cb6-aea5-051e85c5de8d',
+      type_line: 'Creature — Serpent',
+      addedTmsp: '2019-09-28T20:58:35.120Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'],
+      status: 'Not Owned',
+      cmc: 5,
+      cardID: '99083707-2152-42c0-b5c3-b4f97ec20190',
+      type_line: 'Creature — Unicorn',
+      addedTmsp: '2019-09-28T20:58:35.120Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '4ccdef9c-1e85-4358-8059-8972479f7556',
+      type_line: 'Creature — Beast Noble',
+      addedTmsp: '2019-09-28T20:58:35.120Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '0b4399b6-e67f-40d8-8676-f5db7e04a6c9',
+      type_line: 'Creature — Human Peasant',
+      addedTmsp: '2019-09-28T20:58:35.121Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 1,
+      cardID: 'ceb7308d-608c-4ede-9496-d795fc5bb271',
+      type_line: 'Creature — Merfolk Wizard',
+      addedTmsp: '2019-09-28T20:58:35.121Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '0f7f1148-7b1b-4969-a2f8-428de1e2e8ff',
+      type_line: 'Artifact',
+      addedTmsp: '2019-09-28T20:58:35.122Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'a10c1407-d397-4caa-b7b7-e7d91ffd4ee9',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.122Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: 'e73d8a84-2c0d-423c-89c7-71de0af9e1ac',
+      type_line: 'Creature — Zombie Knight',
+      addedTmsp: '2019-09-28T20:58:35.122Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['G', 'W'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: '8a665794-513f-4f78-92c9-1844ec27c79c',
+      type_line: 'Creature — Elf Knight',
+      addedTmsp: '2019-09-28T20:58:35.123Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '9173ffda-1d3b-4dab-8dcb-de44717de464',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.123Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['U'], // test override color identity, card is ['G', 'U']
+      status: 'Not Owned',
+      cmc: 3,
+      cardID: '3462a3d0-5552-49fa-9eb7-100960c55891',
+      type_line: 'Legendary Planeswalker — Oko',
+      addedTmsp: '2019-09-28T20:58:35.123Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['W'], // test override color identity, card is 'G'
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '4034e5ba-9974-43e3-bde7-8d9b4586c3a4',
+      type_line: 'Instant',
+      addedTmsp: '2019-09-28T20:58:35.124Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: '3fa16922-3583-4f5b-8805-509b95a8da49',
+      type_line: 'Creature — Dragon',
+      addedTmsp: '2019-09-28T20:58:35.124Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['B'],
+      status: 'Not Owned',
+      cmc: 2,
+      cardID: '330cc452-4382-401d-9432-ac27ae6e27ad',
+      type_line: 'Creature — Human Knight',
+      addedTmsp: '2019-09-28T20:58:35.124Z',
+    },
+    {
+      tags: ['New'],
+      colors: ['R', 'W'],
+      status: 'Not Owned',
+      cmc: 4,
+      cardID: '5d7585ab-a364-471c-8ef1-318e459b4020',
+      type_line: 'Enchantment',
+      addedTmsp: '2019-09-28T20:58:35.125Z',
+    },
   ],
-  "tag_colors": [],
-  "shortID": "2",
-  "name": "lkjglkejrge",
-  "owner": "5d671c495c4dcdeca1a2f7c8",
-  "description": "This is a brand new cube!",
-  "owner_name": "sensitiveemmett",
-  "date_updated": "2019-09-28T20:58:35.088Z",
-  "updated_string": "9/28/2019, 8:58:35 PM",
-  "type": "Vintage",
-  "card_count": 65,
-  "__v": 0
+  tag_colors: [],
+  shortID: '2',
+  name: 'lkjglkejrge',
+  owner: '5d671c495c4dcdeca1a2f7c8',
+  description: 'This is a brand new cube!',
+  owner_name: 'sensitiveemmett',
+  date_updated: '2019-09-28T20:58:35.088Z',
+  updated_string: '9/28/2019, 8:58:35 PM',
+  type: 'Vintage',
+  card_count: 65,
+  __v: 0,
 };
 
 const examplePack = {
-  pack: [{
-    _id: "21c6e2cf-3799-4d5b-99c2-feeec15580ec",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/2/1/21c6e2cf-3799-4d5b-99c2-feeec15580ec.jpg?1568658976",
-    artist: "Ryan Pancoast",
-    border_color: "black",
-    cmc: 3,
-    collector_number: "350",
-    color_identity: ["B"],
-    colorcategory: "b",
-    colors: ["B"],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/2/1/21c6e2cf-3799-4d5b-99c2-feeec15580ec.jpg?1568658976",
-    full_name: "Ayara, First of Locthwain [celd-350]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/2/1/21c6e2cf-3799-4d5b-99c2-feeec15580ec.jpg?1568658976",
-    image_small: "https://img.scryfall.com/cards/small/front/2/1/21c6e2cf-3799-4d5b-99c2-feeec15580ec.jpg?1568658976",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+  pack: [
+    {
+      color_identity: ['B'],
+      set: 'eld',
+      collector_number: '75',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Ayara, First of Locthwain',
+      name_lower: 'ayara, first of locthwain',
+      full_name: 'Ayara, First of Locthwain [eld-75]',
+      artist: 'Ryan Pancoast',
+      scryfall_uri: 'https://scryfall.com/card/eld/75/ayara-first-of-locthwain?utm_source=api',
+      rarity: 'rare',
+      oracle_text:
+        'Whenever Ayara, First of Locthwain or another black creature enters the battlefield under your control, each opponent loses 1 life and you gain 1 life.\n{T}, Sacrifice another black creature: Draw a card.',
+      _id: 'ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1',
+      cmc: 3,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['b', 'b', 'b'],
+      colors: ['B'],
+      type: 'Legendary Creature — Elf Noble',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198909,
+      power: '2',
+      toughness: '3',
+      image_small: 'https://img.scryfall.com/cards/small/front/e/d/ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1.jpg?1572490057',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/e/d/ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1.jpg?1572490057',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/d/ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1.jpg?1572490057',
+      colorcategory: 'b',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/e/d/ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1.jpg?1572490057',
     },
-    name: "Ayara, First of Locthwain",
-    name_lower: "ayara, first of locthwain",
-    oracle_text: "Whenever Ayara, First of Locthwain or another black creature enters the battlefield under your control, each opponent loses 1 life and you gain 1 life.\n{T}, Sacrifice another black creature: Draw a card.",
-    parsed_cost: ["b", "b", "b"],
-    power: "3",
-    promo: true,
-    rarity: "rare",
-    scryfall_uri: "https://scryfall.com/card/celd/350/ayara-first-of-locthwain?utm_source=api",
-    set: "celd",
-    type: "Legendary Creature — Elf Noble"
-  }, {
-    _id: "6a16f907-93df-419e-8a65-ee96938e4143",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/6/a/6a16f907-93df-419e-8a65-ee96938e4143.jpg?1567700595",
-    artist: "Rebecca On",
-    border_color: "black",
-    cmc: 1,
-    collector_number: "286",
-    color_identity: ["B"],
-    colorcategory: "b",
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/6/a/6a16f907-93df-419e-8a65-ee96938e4143.jpg?1567700595",
-    full_name: "Foulmire Knight [celd-286]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/6/a/6a16f907-93df-419e-8a65-ee96938e4143.jpg?1567700595",
-    image_small: "https://img.scryfall.com/cards/small/front/6/a/6a16f907-93df-419e-8a65-ee96938e4143.jpg?1567700595",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['B'],
+      set: 'eld',
+      collector_number: '90',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Foulmire Knight',
+      name_lower: 'foulmire knight',
+      full_name: 'Foulmire Knight [eld-90]',
+      artist: 'Alex Brock',
+      scryfall_uri: 'https://scryfall.com/card/eld/90/foulmire-knight-profane-insight?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text:
+        'Deathtouch\nYou draw a card and you lose 1 life. (Then exile this card. You may cast the creature later from exile.)',
+      _id: 'c5f6c745-e46a-42eb-8eca-b7b74ab1245e',
+      cmc: 1,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['b', '2', 'split', 'b'],
+      colors: ['B'],
+      type: 'Creature — Zombie Knight',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198404,
+      power: '1',
+      toughness: '1',
+      image_small: 'https://img.scryfall.com/cards/small/front/c/5/c5f6c745-e46a-42eb-8eca-b7b74ab1245e.jpg?1572490151',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/c/5/c5f6c745-e46a-42eb-8eca-b7b74ab1245e.jpg?1572490151',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/c/5/c5f6c745-e46a-42eb-8eca-b7b74ab1245e.jpg?1572490151',
+      colorcategory: 'b',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/c/5/c5f6c745-e46a-42eb-8eca-b7b74ab1245e.jpg?1572490151',
     },
-    name: "Foulmire Knight",
-    name_lower: "foulmire knight",
-    power: "1",
-    promo: true,
-    rarity: "uncommon",
-    scryfall_uri: "https://scryfall.com/card/celd/286/foulmire-knight-profane-insight?utm_source=api",
-    set: "celd",
-    type: "Creature — Zombie Knight "
-  }, {
-    _id: "939b8bcc-b9ac-4d8c-9db4-2bf91a853f03",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023",
-    artist: "Joe Slucher",
-    border_color: "black",
-    cmc: 6,
-    collector_number: "359",
-    color_identity: ["R"],
-    colorcategory: "r",
-    colors: ["R"],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023",
-    full_name: "Embercleave [celd-359]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023",
-    image_small: "https://img.scryfall.com/cards/small/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1568659023",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['R'],
+      set: 'eld',
+      collector_number: '120',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Embercleave',
+      name_lower: 'embercleave',
+      full_name: 'Embercleave [eld-120]',
+      artist: 'Joe Slucher',
+      scryfall_uri: 'https://scryfall.com/card/eld/120/embercleave?utm_source=api',
+      rarity: 'mythic',
+      oracle_text:
+        'Flash\nThis spell costs {1} less to cast for each attacking creature you control.\nWhen Embercleave enters the battlefield, attach it to target creature you control.\nEquipped creature gets +1/+1 and has double strike and trample.\nEquip {3}',
+      _id: 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6',
+      cmc: 6,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['r', 'r', '4'],
+      colors: ['R'],
+      type: 'Legendary Artifact — Equipment',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198755,
+      image_small: 'https://img.scryfall.com/cards/small/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333',
+      colorcategory: 'r',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333',
     },
-    name: "Embercleave",
-    name_lower: "embercleave",
-    oracle_text: "Flash\nThis spell costs {1} less to cast for each attacking creature you control.\nWhen Embercleave enters the battlefield, attach it to target creature you control.\nEquipped creature gets +1/+1 and has double strike and trample.\nEquip {3}",
-    parsed_cost: ["r", "r", "4"],
-    promo: true,
-    rarity: "mythic",
-    scryfall_uri: "https://scryfall.com/card/celd/359/embercleave?utm_source=api",
-    set: "celd",
-    type: "Legendary Artifact — Equipment"
-  }, {
-    _id: "13b553f1-8107-42a8-841a-91adf71cff72",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/1/3/13b553f1-8107-42a8-841a-91adf71cff72.jpg?1567700700",
-    artist: "Jeremy Wilson",
-    border_color: "black",
-    cmc: 2,
-    collector_number: "292",
-    color_identity: ["R"],
-    colorcategory: "r",
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/1/3/13b553f1-8107-42a8-841a-91adf71cff72.jpg?1567700700",
-    full_name: "Embereth Shieldbreaker [celd-292]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/1/3/13b553f1-8107-42a8-841a-91adf71cff72.jpg?1567700700",
-    image_small: "https://img.scryfall.com/cards/small/front/1/3/13b553f1-8107-42a8-841a-91adf71cff72.jpg?1567700700",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['R'],
+      set: 'eld',
+      collector_number: '122',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Embereth Shieldbreaker',
+      name_lower: 'embereth shieldbreaker',
+      full_name: 'Embereth Shieldbreaker [eld-122]',
+      artist: 'Randy Vargas',
+      scryfall_uri: 'https://scryfall.com/card/eld/122/embereth-shieldbreaker-battle-display?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text: '\nDestroy target artifact. (Then exile this card. You may cast the creature later from exile.)',
+      _id: '6cc73d16-5ed7-4104-91f6-0997a2080e2e',
+      cmc: 2,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['r', 'split', 'r', '1'],
+      colors: ['R'],
+      type: 'Creature — Human Knight',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198550,
+      power: '2',
+      toughness: '1',
+      image_small: 'https://img.scryfall.com/cards/small/front/6/c/6cc73d16-5ed7-4104-91f6-0997a2080e2e.jpg?1572490345',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/6/c/6cc73d16-5ed7-4104-91f6-0997a2080e2e.jpg?1572490345',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/c/6cc73d16-5ed7-4104-91f6-0997a2080e2e.jpg?1572490345',
+      colorcategory: 'r',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/6/c/6cc73d16-5ed7-4104-91f6-0997a2080e2e.jpg?1572490345',
     },
-    name: "Embereth Shieldbreaker",
-    name_lower: "embereth shieldbreaker",
-    power: "1",
-    promo: true,
-    rarity: "uncommon",
-    scryfall_uri: "https://scryfall.com/card/celd/292/embereth-shieldbreaker-battle-display?utm_source=api",
-    set: "celd",
-    type: "Creature — Human Knight "
-  }, {
-    _id: "489ae8ac-8329-49f0-a301-875f7ba37c97",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/4/8/489ae8ac-8329-49f0-a301-875f7ba37c97.jpg?1568342314",
-    artist: "Omar Rayyan",
-    border_color: "black",
-    cmc: 1,
-    collector_number: "297",
-    color_identity: ["G"],
-    colorcategory: "g",
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/4/8/489ae8ac-8329-49f0-a301-875f7ba37c97.jpg?1568342314",
-    full_name: "Flaxen Intruder [celd-297]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/4/8/489ae8ac-8329-49f0-a301-875f7ba37c97.jpg?1568342314",
-    image_small: "https://img.scryfall.com/cards/small/front/4/8/489ae8ac-8329-49f0-a301-875f7ba37c97.jpg?1568342314",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['G'],
+      set: 'eld',
+      collector_number: '155',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Flaxen Intruder',
+      name_lower: 'flaxen intruder',
+      full_name: 'Flaxen Intruder [eld-155]',
+      artist: 'Gabor Szikszai',
+      scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text:
+        'Whenever Flaxen Intruder deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment.\nCreate three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
+      _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
+      cmc: 1,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['g', 'g', '5', 'split', 'g'],
+      colors: ['G'],
+      type: 'Creature — Human Berserker',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198574,
+      power: '1',
+      toughness: '2',
+      image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
+      colorcategory: 'g',
+      tokens: [
+        { tokenId: 'b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e', sourceCardId: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa' },
+      ],
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
     },
-    name: "Flaxen Intruder",
-    name_lower: "flaxen intruder",
-    power: "2",
-    promo: true,
-    rarity: "uncommon",
-    scryfall_uri: "https://scryfall.com/card/celd/297/flaxen-intruder-welcome-home?utm_source=api",
-    set: "celd",
-    type: "Creature — Human Berserker "
-  }, {
-    _id: "e73b89ce-fdb2-4730-b87c-e23aa131be24",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/e/7/e73b89ce-fdb2-4730-b87c-e23aa131be24.jpg?1568659123",
-    artist: "Colin Boyer",
-    border_color: "black",
-    cmc: 3,
-    collector_number: "344",
-    color_identity: ["U"],
-    colorcategory: "u",
-    colors: ["U"],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/e/7/e73b89ce-fdb2-4730-b87c-e23aa131be24.jpg?1568659123",
-    full_name: "Gadwick, the Wizened [celd-344]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/e/7/e73b89ce-fdb2-4730-b87c-e23aa131be24.jpg?1568659123",
-    image_small: "https://img.scryfall.com/cards/small/front/e/7/e73b89ce-fdb2-4730-b87c-e23aa131be24.jpg?1568659123",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['U'],
+      set: 'eld',
+      collector_number: '48',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Gadwick, the Wizened',
+      name_lower: 'gadwick, the wizened',
+      full_name: 'Gadwick, the Wizened [eld-48]',
+      artist: 'Colin Boyer',
+      scryfall_uri: 'https://scryfall.com/card/eld/48/gadwick-the-wizened?utm_source=api',
+      rarity: 'rare',
+      oracle_text:
+        'When Gadwick, the Wizened enters the battlefield, draw X cards.\nWhenever you cast a blue spell, tap target nonland permanent an opponent controls.',
+      _id: '62ddce0d-f22a-4fcd-9a4a-d71938750ba1',
+      cmc: 3,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['u', 'u', 'u', 'x'],
+      colors: ['U'],
+      type: 'Legendary Creature — Human Wizard',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198943,
+      power: '3',
+      toughness: '3',
+      image_small: 'https://img.scryfall.com/cards/small/front/6/2/62ddce0d-f22a-4fcd-9a4a-d71938750ba1.jpg?1572489894',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/6/2/62ddce0d-f22a-4fcd-9a4a-d71938750ba1.jpg?1572489894',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/6/2/62ddce0d-f22a-4fcd-9a4a-d71938750ba1.jpg?1572489894',
+      colorcategory: 'u',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/6/2/62ddce0d-f22a-4fcd-9a4a-d71938750ba1.jpg?1572489894',
     },
-    name: "Gadwick, the Wizened",
-    name_lower: "gadwick, the wizened",
-    oracle_text: "When Gadwick, the Wizened enters the battlefield, draw X cards.\nWhenever you cast a blue spell, tap target nonland permanent an opponent controls.",
-    parsed_cost: ["u", "u", "u", "x"],
-    power: "3",
-    promo: true,
-    rarity: "rare",
-    scryfall_uri: "https://scryfall.com/card/celd/344/gadwick-the-wizened?utm_source=api",
-    set: "celd",
-    type: "Legendary Creature — Human Wizard"
-  }, {
-    _id: "49875f7a-31b9-4276-b971-8ead1e18fc81",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/4/9/49875f7a-31b9-4276-b971-8ead1e18fc81.jpg?1567701181",
-    artist: "Nick Southam",
-    border_color: "black",
-    cmc: 7,
-    collector_number: "295",
-    color_identity: ["G"],
-    colorcategory: "g",
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/4/9/49875f7a-31b9-4276-b971-8ead1e18fc81.jpg?1567701181",
-    full_name: "Beanstalk Giant [celd-295]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/4/9/49875f7a-31b9-4276-b971-8ead1e18fc81.jpg?1567701181",
-    image_small: "https://img.scryfall.com/cards/small/front/4/9/49875f7a-31b9-4276-b971-8ead1e18fc81.jpg?1567701181",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['G'],
+      set: 'eld',
+      collector_number: '149',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Beanstalk Giant',
+      name_lower: 'beanstalk giant',
+      full_name: 'Beanstalk Giant [eld-149]',
+      artist: 'Jason A. Engle',
+      scryfall_uri: 'https://scryfall.com/card/eld/149/beanstalk-giant-fertile-footsteps?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text:
+        "Beanstalk Giant's power and toughness are each equal to the number of lands you control.\nSearch your library for a basic land card, put it onto the battlefield, then shuffle your library. (Then exile this card. You may cast the creature later from exile.)",
+      _id: 'a66f5ea7-ddbb-4b89-b812-77bd17972cf9',
+      cmc: 7,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['g', '2', 'split', 'g', '6'],
+      colors: ['G'],
+      type: 'Creature — Giant',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198419,
+      power: '*',
+      toughness: '*',
+      image_small: 'https://img.scryfall.com/cards/small/front/a/6/a66f5ea7-ddbb-4b89-b812-77bd17972cf9.jpg?1572490506',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/a/6/a66f5ea7-ddbb-4b89-b812-77bd17972cf9.jpg?1572490506',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/6/a66f5ea7-ddbb-4b89-b812-77bd17972cf9.jpg?1572490506',
+      colorcategory: 'g',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/a/6/a66f5ea7-ddbb-4b89-b812-77bd17972cf9.jpg?1572490506',
     },
-    name: "Beanstalk Giant",
-    name_lower: "beanstalk giant",
-    power: "*",
-    promo: true,
-    rarity: "uncommon",
-    scryfall_uri: "https://scryfall.com/card/celd/295/beanstalk-giant-fertile-footsteps?utm_source=api",
-    set: "celd",
-    type: "Creature — Giant "
-  }, {
-    _id: "2728180c-c24d-4deb-a901-ae90232ad45d",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/2/7/2728180c-c24d-4deb-a901-ae90232ad45d.jpg?1568983171",
-    "artist": "Anastasia Ovchinnikova",
-    "border_color": "black",
-    "cmc": 2,
-    "collector_number": "393",
-    "color_identity": [
-      "W",
-    ],
-    "colorcategory": "w",
-    "colors": [
-      "W",
-    ],
-    "digital": false,
-    "display_image": "https://img.scryfall.com/cards/normal/front/2/7/2728180c-c24d-4deb-a901-ae90232ad45d.jpg?1568983171",
-    "full_name": "Glass Casket [peld-393]",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/2/7/2728180c-c24d-4deb-a901-ae90232ad45d.jpg?1568983171",
-    "image_small": "https://img.scryfall.com/cards/small/front/2/7/2728180c-c24d-4deb-a901-ae90232ad45d.jpg?1568983171",
-    "legalities": {
-      "Legacy": false,
-      "Modern": false,
-      "Pauper": false,
-      "Standard": false,
+    {
+      color_identity: ['W'],
+      set: 'eld',
+      collector_number: '15',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Glass Casket',
+      name_lower: 'glass casket',
+      full_name: 'Glass Casket [eld-15]',
+      artist: 'Anastasia Ovchinnikova',
+      scryfall_uri: 'https://scryfall.com/card/eld/15/glass-casket?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text:
+        'When Glass Casket enters the battlefield, exile target creature an opponent controls with converted mana cost 3 or less until Glass Casket leaves the battlefield.',
+      _id: '562f1c51-d245-4771-bf61-415297e4f9d5',
+      cmc: 2,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['w', '1'],
+      colors: ['W'],
+      type: 'Artifact',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 199004,
+      image_small: 'https://img.scryfall.com/cards/small/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690',
+      colorcategory: 'w',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690',
     },
-    "name": "Glass Casket",
-    "name_lower": "glass casket",
-    "oracle_text": "When Glass Casket enters the battlefield, exile target creature an opponent controls with converted mana cost 3 or less until Glass Casket leaves the battlefield.",
-    "parsed_cost": [
-      "w",
-      "1",
-    ],
-    "promo": true,
-    "rarity": "uncommon",
-    "scryfall_uri": "https://scryfall.com/card/peld/393/glass-casket?utm_source=api",
-    "set": "peld",
-    "type": "Artifact"
-  }, {
-    _id: "d42a57b2-fbe9-4024-a593-f6dc711a2e9d",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/d/4/d42a57b2-fbe9-4024-a593-f6dc711a2e9d.jpg?1568905821",
-    artist: "Iris Compiet",
-    border_color: "black",
-    cmc: 3,
-    collector_number: "281",
-    color_identity: ["U"],
-    colorcategory: "u",
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/d/4/d42a57b2-fbe9-4024-a593-f6dc711a2e9d.jpg?1568905821",
-    full_name: "Brazen Borrower [celd-281]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/d/4/d42a57b2-fbe9-4024-a593-f6dc711a2e9d.jpg?1568905821",
-    image_small: "https://img.scryfall.com/cards/small/front/d/4/d42a57b2-fbe9-4024-a593-f6dc711a2e9d.jpg?1568905821",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['U'],
+      set: 'eld',
+      collector_number: '39',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Brazen Borrower',
+      name_lower: 'brazen borrower',
+      full_name: 'Brazen Borrower [eld-39]',
+      artist: 'Eric Deschamps',
+      scryfall_uri: 'https://scryfall.com/card/eld/39/brazen-borrower-petty-theft?utm_source=api',
+      rarity: 'mythic',
+      oracle_text:
+        "Flash\nFlying\nBrazen Borrower can block only creatures with flying.\nReturn target nonland permanent an opponent controls to its owner's hand.",
+      _id: 'c2089ec9-0665-448f-bfe9-d181de127814',
+      cmc: 3,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['u', '1', 'split', 'u', 'u', '1'],
+      colors: ['U'],
+      type: 'Creature — Faerie Rogue',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 199387,
+      power: '3',
+      toughness: '1',
+      image_small: 'https://img.scryfall.com/cards/small/front/c/2/c2089ec9-0665-448f-bfe9-d181de127814.jpg?1572489838',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/c/2/c2089ec9-0665-448f-bfe9-d181de127814.jpg?1572489838',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/c/2/c2089ec9-0665-448f-bfe9-d181de127814.jpg?1572489838',
+      colorcategory: 'u',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/c/2/c2089ec9-0665-448f-bfe9-d181de127814.jpg?1572489838',
     },
-    name: "Brazen Borrower",
-    name_lower: "brazen borrower",
-    power: "1",
-    promo: true,
-    rarity: "mythic",
-    scryfall_uri: "https://scryfall.com/card/celd/281/brazen-borrower-petty-theft?utm_source=api",
-    set: "celd",
-    type: "Creature — Faerie Rogue "
-  }, {
-    _id: "dd45820e-39be-448e-b446-44f3ebab555e",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/d/d/dd45820e-39be-448e-b446-44f3ebab555e.jpg?1568659111",
-    artist: "Randy Vargas",
-    border_color: "black",
-    cmc: 2,
-    collector_number: "335",
-    color_identity: ["W"],
-    colorcategory: "w",
-    colors: ["W"],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/d/d/dd45820e-39be-448e-b446-44f3ebab555e.jpg?1568659111",
-    full_name: "Charming Prince [celd-335]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/d/d/dd45820e-39be-448e-b446-44f3ebab555e.jpg?1568659111",
-    image_small: "https://img.scryfall.com/cards/small/front/d/d/dd45820e-39be-448e-b446-44f3ebab555e.jpg?1568659111",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['W'],
+      set: 'eld',
+      collector_number: '8',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Charming Prince',
+      name_lower: 'charming prince',
+      full_name: 'Charming Prince [eld-8]',
+      artist: 'Randy Vargas',
+      scryfall_uri: 'https://scryfall.com/card/eld/8/charming-prince?utm_source=api',
+      rarity: 'rare',
+      oracle_text:
+        'When Charming Prince enters the battlefield, choose one —\n• Scry 2.\n• You gain 3 life.\n• Exile another target creature you own. Return it to the battlefield under your control at the beginning of the next end step.',
+      _id: 'dcb94950-3f3e-4876-84f8-d5e4d9cfecee',
+      cmc: 2,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['w', '1'],
+      colors: ['W'],
+      type: 'Creature — Human Noble',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198860,
+      power: '2',
+      toughness: '2',
+      image_small: 'https://img.scryfall.com/cards/small/front/d/c/dcb94950-3f3e-4876-84f8-d5e4d9cfecee.jpg?1572489646',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/d/c/dcb94950-3f3e-4876-84f8-d5e4d9cfecee.jpg?1572489646',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/d/c/dcb94950-3f3e-4876-84f8-d5e4d9cfecee.jpg?1572489646',
+      colorcategory: 'w',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/d/c/dcb94950-3f3e-4876-84f8-d5e4d9cfecee.jpg?1572489646',
     },
-    name: "Charming Prince",
-    name_lower: "charming prince",
-    oracle_text: "When Charming Prince enters the battlefield, choose one —\n• Scry 2.\n• You gain 3 life.\n• Exile another target creature you own. Return it to the battlefield under your control at the beginning of the next end step.",
-    parsed_cost: ["w", "1"],
-    power: "2",
-    promo: true,
-    rarity: "rare",
-    scryfall_uri: "https://scryfall.com/card/celd/335/charming-prince?utm_source=api",
-    set: "celd",
-    type: "Creature — Human Noble"
-  }, {
-    _id: "ec1f1041-f667-4b73-b1f2-e5bcae84095e",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1567713988",
-    artist: "Evan Shipard",
-    border_color: "black",
-    cmc: 0,
-    collector_number: "333",
-    color_identity: [],
-    colorcategory: "l",
-    colors: [],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1567713988",
-    full_name: "Command Tower [eld-333]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1567713988",
-    image_small: "https://img.scryfall.com/cards/small/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1567713988",
-    legalities: {
-      Legacy: true,
-      Modern: false,
-      Pauper: true,
-      Standard: false
+    {
+      color_identity: [],
+      set: 'eld',
+      collector_number: '333',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Command Tower',
+      name_lower: 'command tower',
+      full_name: 'Command Tower [eld-333]',
+      artist: 'Evan Shipard',
+      scryfall_uri: 'https://scryfall.com/card/eld/333/command-tower?utm_source=api',
+      rarity: 'common',
+      oracle_text: "{T}: Add one mana of any color in your commander's color identity.",
+      _id: 'ec1f1041-f667-4b73-b1f2-e5bcae84095e',
+      cmc: 0,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: true },
+      parsed_cost: [''],
+      colors: [],
+      type: 'Land',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198815,
+      image_small: 'https://img.scryfall.com/cards/small/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1572482858',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1572482858',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1572482858',
+      colorcategory: 'l',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/e/c/ec1f1041-f667-4b73-b1f2-e5bcae84095e.jpg?1572482858',
     },
-    name: "Command Tower",
-    name_lower: "command tower",
-    oracle_text: "{T}: Add one mana of any color in your commander's color identity.",
-    parsed_cost: [''],
-    promo: false,
-    rarity: "common",
-    scryfall_uri: "https://scryfall.com/card/eld/333/command-tower?utm_source=api",
-    set: "eld",
-    tcgplayer_id: 198815,
-    type: "Land"
-  }, {
-    _id: "4113eeed-9399-4b59-a6d9-7d40190853c5",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454",
-    artist: "John Avon",
-    border_color: "black",
-    cmc: 0,
-    collector_number: "390",
-    color_identity: ["U"],
-    colorcategory: "l",
-    colors: [],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454",
-    full_name: "Castle Vantress [celd-390]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454",
-    image_small: "https://img.scryfall.com/cards/small/front/4/1/4113eeed-9399-4b59-a6d9-7d40190853c5.jpg?1568703454",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['U'],
+      set: 'eld',
+      collector_number: '242',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Castle Vantress',
+      name_lower: 'castle vantress',
+      full_name: 'Castle Vantress [eld-242]',
+      artist: 'John Avon',
+      scryfall_uri: 'https://scryfall.com/card/eld/242/castle-vantress?utm_source=api',
+      rarity: 'rare',
+      oracle_text:
+        'Castle Vantress enters the battlefield tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.',
+      _id: '0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b',
+      cmc: 0,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: [''],
+      colors: [],
+      type: 'Land',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 199284,
+      image_small: 'https://img.scryfall.com/cards/small/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
+      colorcategory: 'l',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190',
     },
-    name: "Castle Vantress",
-    name_lower: "castle vantress",
-    oracle_text: "Castle Vantress enters the battlefield tapped unless you control an Island.\n{T}: Add {U}.\n{2}{U}{U}, {T}: Scry 2.",
-    parsed_cost: [''],
-    promo: true,
-    rarity: "rare",
-    scryfall_uri: "https://scryfall.com/card/celd/390/castle-vantress?utm_source=api",
-    set: "celd",
-    type: "Land"
-  }, {
-    _id: "eb96078d-8632-4e7e-93ae-c4c86c530d19",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/e/b/eb96078d-8632-4e7e-93ae-c4c86c530d19.jpg?1568983240",
-    "artist": "Scott Murphy",
-    "border_color": "black",
-    "cmc": 2,
-    "collector_number": "397",
-    "color_identity": [
-      "R",
-      "W",
-    ],
-    "colorcategory": "m",
-    "colors": [
-      "R",
-      "W",
-    ],
-
-    digital: false,
-    "display_image": "https://img.scryfall.com/cards/normal/front/e/b/eb96078d-8632-4e7e-93ae-c4c86c530d19.jpg?1568983240",
-    "full_name": "Inspiring Veteran [peld-397]",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/e/b/eb96078d-8632-4e7e-93ae-c4c86c530d19.jpg?1568983240",
-    "image_small": "https://img.scryfall.com/cards/small/front/e/b/eb96078d-8632-4e7e-93ae-c4c86c530d19.jpg?1568983240",
-    "legalities": {
-      "Legacy": false,
-      "Modern": false,
-      "Pauper": false,
-      "Standard": false,
+    {
+      color_identity: ['R', 'W'],
+      set: 'eld',
+      collector_number: '194',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Inspiring Veteran',
+      name_lower: 'inspiring veteran',
+      full_name: 'Inspiring Veteran [eld-194]',
+      artist: 'Scott Murphy',
+      scryfall_uri: 'https://scryfall.com/card/eld/194/inspiring-veteran?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text: 'Other Knights you control get +1/+1.',
+      _id: '0c3f372d-259d-4a31-9491-2d369b3f3f8b',
+      cmc: 2,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['w', 'r'],
+      colors: ['R', 'W'],
+      type: 'Creature — Human Knight',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 198561,
+      power: '2',
+      toughness: '2',
+      image_small: 'https://img.scryfall.com/cards/small/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
+      colorcategory: 'm',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
     },
-    "name": "Inspiring Veteran",
-    "name_lower": "inspiring veteran",
-    "oracle_text": "Other Knights you control get +1/+1.",
-    "parsed_cost": [
-      "w",
-      "r",
-    ],
-    "power": "2",
-    "promo": true,
-    "rarity": "uncommon",
-    "scryfall_uri": "https://scryfall.com/card/peld/397/inspiring-veteran?utm_source=api",
-    "set": "peld",
-    "type": "Creature — Human Knight",
-
-  }, {
-    _id: "eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/e/c/eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa.jpg?1568983210",
-    "artist": "Zoltan Boros",
-    "border_color": "black",
-    "cmc": 2,
-    "collector_number": "396",
-    "color_identity": [
-      "R",
-      "U",
-    ],
-    "colorcategory": "m",
-    "colors": [
-      "R",
-      "U",
-    ],
-    digital: false,
-    "display_image": "https://img.scryfall.com/cards/normal/front/e/c/eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa.jpg?1568983210",
-    "full_name": "Improbable Alliance [peld-396]",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/e/c/eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa.jpg?1568983210",
-    "image_small": "https://img.scryfall.com/cards/small/front/e/c/eceaa1d6-0d31-4f2d-8ffb-5a4e31712ffa.jpg?1568983210",
-    "legalities": {
-      "Legacy": false,
-      "Modern": false,
-      "Pauper": false,
-      "Standard": false,
+    {
+      color_identity: ['R', 'U'],
+      set: 'eld',
+      collector_number: '193',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Improbable Alliance',
+      name_lower: 'improbable alliance',
+      full_name: 'Improbable Alliance [eld-193]',
+      artist: 'Zoltan Boros',
+      scryfall_uri: 'https://scryfall.com/card/eld/193/improbable-alliance?utm_source=api',
+      rarity: 'uncommon',
+      oracle_text:
+        'Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying.\n{4}{U}{R}: Draw a card, then discard a card.',
+      _id: '0461867b-ec35-4d37-a398-5247e06c4afe',
+      cmc: 2,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['r', 'u'],
+      colors: ['R', 'U'],
+      type: 'Enchantment',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 199403,
+      image_small: 'https://img.scryfall.com/cards/small/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
+      colorcategory: 'm',
+      tokens: [
+        { tokenId: 'bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099', sourceCardId: '0461867b-ec35-4d37-a398-5247e06c4afe' },
+      ],
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
     },
-    "name": "Improbable Alliance",
-    "name_lower": "improbable alliance",
-    "oracle_text": "Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying.\n{4}{U}{R}: Draw a card, then discard a card.",
-    "parsed_cost": [
-      "r",
-      "u",
-    ],
-    "promo": true,
-    "rarity": "uncommon",
-    "scryfall_uri": "https://scryfall.com/card/peld/396/improbable-alliance?utm_source=api",
-    "set": "peld",
-    "type": "Enchantment",
-  }, {
-    _id: "40ef45e3-b12a-403e-823c-44f4c95543e8",
-    art_crop: "https://img.scryfall.com/cards/art_crop/front/4/0/40ef45e3-b12a-403e-823c-44f4c95543e8.jpg?1568898975",
-    artist: "Jason Rainville",
-    border_color: "black",
-    cmc: 3,
-    collector_number: "363",
-    color_identity: ["R"],
-    colorcategory: "r",
-    colors: ["R"],
-    digital: false,
-    display_image: "https://img.scryfall.com/cards/normal/front/4/0/40ef45e3-b12a-403e-823c-44f4c95543e8.jpg?1568898975",
-    full_name: "Irencrag Pyromancer [celd-363]",
-    image_normal: "https://img.scryfall.com/cards/normal/front/4/0/40ef45e3-b12a-403e-823c-44f4c95543e8.jpg?1568898975",
-    image_small: "https://img.scryfall.com/cards/small/front/4/0/40ef45e3-b12a-403e-823c-44f4c95543e8.jpg?1568898975",
-    legalities: {
-      Legacy: false,
-      Modern: false,
-      Pauper: false,
-      Standard: false
+    {
+      color_identity: ['R'],
+      set: 'eld',
+      collector_number: '128',
+      promo: false,
+      digital: false,
+      isToken: false,
+      border_color: 'black',
+      name: 'Irencrag Pyromancer',
+      name_lower: 'irencrag pyromancer',
+      full_name: 'Irencrag Pyromancer [eld-128]',
+      artist: 'Jason Rainville',
+      scryfall_uri: 'https://scryfall.com/card/eld/128/irencrag-pyromancer?utm_source=api',
+      rarity: 'rare',
+      oracle_text: 'Whenever you draw your second card each turn, Irencrag Pyromancer deals 3 damage to any target.',
+      _id: '9a7b0ead-5629-429d-bede-8154f3fae96d',
+      cmc: 3,
+      legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+      parsed_cost: ['r', '2'],
+      colors: ['R'],
+      type: 'Creature — Human Wizard',
+      full_art: false,
+      language: 'en',
+      tcgplayer_id: 199359,
+      power: '0',
+      toughness: '4',
+      image_small: 'https://img.scryfall.com/cards/small/front/9/a/9a7b0ead-5629-429d-bede-8154f3fae96d.jpg?1572490380',
+      image_normal:
+        'https://img.scryfall.com/cards/normal/front/9/a/9a7b0ead-5629-429d-bede-8154f3fae96d.jpg?1572490380',
+      art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/a/9a7b0ead-5629-429d-bede-8154f3fae96d.jpg?1572490380',
+      colorcategory: 'r',
+      display_image:
+        'https://img.scryfall.com/cards/normal/front/9/a/9a7b0ead-5629-429d-bede-8154f3fae96d.jpg?1572490380',
     },
-    name: "Irencrag Pyromancer",
-    name_lower: "irencrag pyromancer",
-    oracle_text: "Whenever you draw your second card each turn, Irencrag Pyromancer deals 3 damage to any target.",
-    parsed_cost: ["r", "2"],
-    power: "4",
-    promo: true,
-    rarity: "rare",
-    scryfall_uri: "https://scryfall.com/card/celd/363/irencrag-pyromancer?utm_source=api",
-    set: "celd",
-    type: "Creature — Human Wizard"
-  }],
-  seed: 1569704729
+  ],
+  seed: 1569704729,
 };
 
 module.exports = {
   exampleCube: exampleCube,
-  examplePack: examplePack
+  examplePack: examplePack,
 };

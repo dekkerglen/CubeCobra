@@ -11,11 +11,12 @@ function get_cube_id(cube) {
 function build_id_query(id) {
   if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
     return {
-      _id: id
+      _id: id,
     };
   }
   return {
-    $or: [{
+    $or: [
+      {
         shortID: id.toLowerCase(),
       },
       {
@@ -28,10 +29,10 @@ function build_id_query(id) {
 async function generate_short_id() {
   let cubes = await Cube.find({}, ['shortID', 'urlAlias']);
 
-  const short_ids = cubes.map(cube => cube.shortID);
-  const url_aliases = cubes.map(cube => cube.urlAlias);
+  const short_ids = cubes.map((cube) => cube.shortID);
+  const url_aliases = cubes.map((cube) => cube.urlAlias);
 
-  const ids = cubes.map(cube => util.from_base_36(cube.shortID));
+  const ids = cubes.map((cube) => util.from_base_36(cube.shortID));
   let max = Math.max(...ids);
 
   if (max < 0) {
@@ -43,9 +44,7 @@ async function generate_short_id() {
     max++;
     new_id = util.to_base_36(max);
 
-    if (!util.has_profanity(new_id) &&
-      !short_ids.includes(new_id) &&
-      !url_aliases.includes(new_id)) break;
+    if (!util.has_profanity(new_id) && !short_ids.includes(new_id) && !url_aliases.includes(new_id)) break;
   }
 
   return new_id;
@@ -60,7 +59,11 @@ function intToLegality(val) {
     case 2:
       return 'Modern';
     case 3:
+      return 'Pioneer';
+    case 4:
       return 'Standard';
+    default:
+      return undefined;
   }
 }
 
@@ -72,8 +75,12 @@ function legalityToInt(legality) {
       return 1;
     case 'Modern':
       return 2;
-    case 'Standard':
+    case 'Pioneer':
       return 3;
+    case 'Standard':
+      return 4;
+    default:
+      return undefined;
   }
 }
 
@@ -96,6 +103,9 @@ function cardsAreEquivalent(card, details) {
   if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
+  if (card.finish != details.finish) {
+    return false;
+  }
 
   return true;
 }
@@ -111,12 +121,12 @@ var methods = {
       options.forEach(function(option, index2) {
         var card = carddb.cardFromId(option);
         card.display_image = util.getCardImageURL({
-          details: card
+          details: card,
         });
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
-            details: card
+            details: card,
           };
         }
       });
@@ -145,8 +155,25 @@ var methods = {
   },
   sanitize: function(html) {
     return sanitizeHtml(html, {
-      allowedTags: ['div', 'p', 'strike', 'strong', 'b', 'i', 'em', 'u', 'a', 'h5', 'h6', 'ul', 'ol', 'li', 'span', 'br'],
-      selfClosing: ['br']
+      allowedTags: [
+        'div',
+        'p',
+        'strike',
+        'strong',
+        'b',
+        'i',
+        'em',
+        'u',
+        'a',
+        'h5',
+        'h6',
+        'ul',
+        'ol',
+        'li',
+        'span',
+        'br',
+      ],
+      selfClosing: ['br'],
     });
   },
   addAutocard: function(src, carddb) {
@@ -156,15 +183,20 @@ var methods = {
       if (carddb.nameToId[cardname.toLowerCase()]) {
         var card = carddb.cardFromId(carddb.nameToId[cardname.toLowerCase()][0]);
         if (card.image_flip) {
-          mid = '<a class="autocard" card="' + card.image_normal + '" card_flip="' + card.image_flip + '">' + card.name + '</a>';
+          mid =
+            '<a class="autocard" card="' +
+            card.image_normal +
+            '" card_flip="' +
+            card.image_flip +
+            '">' +
+            card.name +
+            '</a>';
         } else {
           mid = '<a class="autocard" card="' + card.image_normal + '">' + card.name + '</a>';
         }
       }
       //front + autocard + back
-      src = src.substring(0, src.indexOf('[[')) +
-        mid +
-        src.substring(src.indexOf(']]') + 2);
+      src = src.substring(0, src.indexOf('[[')) + mid + src.substring(src.indexOf(']]') + 2);
     }
     return src;
   },
@@ -176,10 +208,13 @@ var methods = {
       if (!seed) {
         seed = Date.now().toString();
       }
-      const pack = util.shuffle(cube.cards, seed).slice(0, 15).map(card => carddb.getCardDetails(card));
+      const pack = util
+        .shuffle(cube.cards, seed)
+        .slice(0, 15)
+        .map((card) => carddb.getCardDetails(card));
       callback(false, {
         seed,
-        pack
+        pack,
       });
     });
   },
@@ -187,7 +222,7 @@ var methods = {
   build_id_query,
   get_cube_id,
   intToLegality,
-  legalityToInt
+  legalityToInt,
 };
 
 module.exports = methods;

@@ -35,7 +35,6 @@
 	display: inline-block;
 	border: 1px solid #DEE2E6;
 	transition: all .1s linear;
-	cursor: pointer;
 }
 
 .tags-input .tag .close-tag::after {

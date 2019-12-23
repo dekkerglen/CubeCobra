@@ -20,13 +20,20 @@ class DynamicFlash extends Component {
   }
 
   render() {
-    return <>
-      {[].concat.apply([], Object.keys(this.state.messages).map(type =>
-        this.state.messages[type].map((message, index) =>
-          <UncontrolledAlert className="mb-0 mt-3" key={type + index} color={type}>{message}</UncontrolledAlert>
-        )
-      ))}
-    </>;
+    return (
+      <>
+        {[].concat.apply(
+          [],
+          Object.keys(this.state.messages).map((type) =>
+            this.state.messages[type].map((message, index) => (
+              <UncontrolledAlert className="mb-0 mt-3" key={type + index} color={type}>
+                {message}
+              </UncontrolledAlert>
+            )),
+          ),
+        )}
+      </>
+    );
   }
 }
 

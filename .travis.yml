@@ -1,9 +1,9 @@
 language: node_js
 node_js:
-    - "stable"
+  - 'stable'
 
-before_install: "npm install jest beautify-lint"
-install: "npm install"
+install: 'npm install'
 script:
-    - "npm run lint"
-    - "npm run test"
+  - 'npm run lint'
+  - 'npm run build'
+  - 'npm run test'

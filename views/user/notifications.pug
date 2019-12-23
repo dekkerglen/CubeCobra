@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+  include ../flash
+  br
+
+  #react-root
+  input#notificationData(type='hidden', value=notifications)
+	
+  script(src='/js/csrf.js')
+  script(src='/js/notifications.bundle.js')

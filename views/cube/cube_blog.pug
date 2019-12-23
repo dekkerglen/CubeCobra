@@ -13,69 +13,14 @@ block cube_toolbar
 
 block cube_content
   include ../flash
-  if pages
-    hr
-    nav(aria-label='pagination')
-      ul.pagination
-        each page, i in pages
-          if page.active
-            li.page-item.active(aria-current='page')
-              a.page-link(href=page.url)=page.content
-                span.sr-only (current)
-          else
-            li.page-item
-              a.page-link(href=page.url)=page.content
-    hr
-  if posts
-    each post, i in posts
-      .card.mt-3
-        .card-header
-            h5.card-title=post.title
-            h6.card-subtitle.mb-2.text-muted=post.date_formatted
-        if post.changelist && post.html
-          .row.no-gutters
-            .col.col-12.col-l-3.col-md-3.col-sm-12(style='border-right: 1px solid #DFDFDF;')
-              .card-body
-                p.card-text
-                  a !{post.changelist}
-            .col.col-9
-              .card-body
-                .card-text
-                  a !{post.html}
-        else
-          .card-body
-            if post.changelist
-              p.card-text
-                a !{post.changelist}
-            if post.body
-              p.card-text=post.body
-            if post.html
-              .card-text
-                a !{post.html}
-        if user && user.id == cube.owner
-          .card-footer
-            span
-              button.btn.btn-success.mr-2.editBlogButton(role='button' data-id=post._id) Edit
-              a
-              a.btn.btn-danger(data-toggle='collapse', href='#collapsepost'+i, role='button') Delete
-            .collapse(id='collapsepost'+i)
-              span
-                a Are you sure? This action cannot be undone.
-                button.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id=post._id ) Yes, delete this post
 
-    if pages
-      hr
-      nav(aria-label='pagination')
-        ul.pagination
-          each page, i in pages
-            if page.active
-              li.page-item.active(aria-current='page')
-                a.page-link(href=page.url)=page.content
-                  span.sr-only (current)
-            else
-              li.page-item
-                a.page-link(href=page.url)=page.content
-      hr
+  #react-root
+  input#blogData(type='hidden', value=posts)
+  input#blogPages(type='hidden', value=pages)
+  if user
+    input#userid(type='hidden', value=user._id)
+  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
+
   if user
     if user.id == cube.owner
       // edit overview modal
@@ -93,10 +38,25 @@ block cube_content
                   input#postBlogTitleInput.form-control(maxlength='200' name='title', type='text')
                   label Body:
                   input#postBlogHiddenId(type='hidden', name='id')
-                  input#postBlogHiddenHTML(type='hidden', name='html')
+                  input.postBlogHiddenHTML(type='hidden', name='html')
                   include ../texteditor
               .modal-footer
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-      script(src='/js/csrf.js')
-      script(src='/js/blog.js')
+
+      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+        .modal-dialog(role='document')
+          .modal-content
+            .modal-header
+              h5.modal-title Confirm Delete
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') ×
+            .modal-body
+              P Are you sure you wish to delete this post? This action cannot be undone.
+            .modal-footer
+              input.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id='', id="delete")
+              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
+
+  script(src='/js/csrf.js')
+  script(src='/js/blog.js')
+  script(src='/js/cube_blog.bundle.js')

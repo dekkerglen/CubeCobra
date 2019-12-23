@@ -9,6 +9,7 @@ import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
+import ErrorBoundary from './components/ErrorBoundary';
 import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
@@ -34,22 +35,12 @@ class CubeList extends Component {
     /* global */
     editListeners.push(() => this.setState({ openCollapse: 'edit' }));
     /* global, should be moved into a context */
-    updateCubeListeners.push(cards => this.setState({ cards }));
-  }
-
-  componentDidMount() {
-    /* global */
-    autocard_init('autocard');
-  }
-
-  componentDidUpdate() {
-    /* global */
-    autocard_init('autocard');
+    updateCubeListeners.push((cards) => this.setState({ cards }));
   }
 
   changeCubeView(cubeView) {
     if (cubeView === 'table') {
-      Hash.del('view')
+      Hash.del('view');
     } else {
       Hash.set('view', cubeView);
     }
@@ -67,18 +58,23 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cubeID, canEdit } = this.props;
+    const { cubeID, canEdit, defaultTagColors, defaultShowTagColors } = this.props;
     const { cards, cubeView, openCollapse, filter } = this.state;
-    const defaultTagSet = new Set([].concat.apply([], cards.map(card => card.tags)));
-    const defaultTags = [...defaultTagSet].map(tag => ({
+    const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
+    const defaultTags = [...defaultTagSet].map((tag) => ({
       id: tag,
       text: tag,
-    }))
-    const filteredCards = filter.length > 0 ? cards.filter(card => Filter.filterCard(card, filter)) : cards;
+    }));
+    const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
         <DisplayContext.Provider>
-          <TagContext.Provider defaultTags={defaultTags}>
+          <TagContext.Provider
+            cubeID={cubeID}
+            defaultTagColors={defaultTagColors}
+            defaultShowTagColors={defaultShowTagColors}
+            defaultTags={defaultTags}
+          >
             <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
               <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                 <CubeListNavbar
@@ -91,16 +87,20 @@ class CubeList extends Component {
                   filter={filter}
                   setFilter={this.setFilter}
                   cards={filteredCards}
-                  hasCustomImages={cards.some(card => card.imgUrl)}
+                  hasCustomImages={cards.some((card) => card.imgUrl)}
                 />
                 <DynamicFlash />
-                {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
-                {{
-                  'table': <TableView cards={filteredCards} />,
-                  'spoiler': <VisualSpoiler cards={filteredCards} />,
-                  'curve': <CurveView cards={filteredCards} />,
-                  'list': <ListView cubeID={cubeID} cards={filteredCards} />,
-                }[cubeView]}
+                <ErrorBoundary className="mt-3">
+                  {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+                  {
+                    {
+                      table: <TableView cards={filteredCards} />,
+                      spoiler: <VisualSpoiler cards={filteredCards} />,
+                      curve: <CurveView cards={filteredCards} />,
+                      list: <ListView cubeID={cubeID} cards={filteredCards} />,
+                    }[cubeView]
+                  }
+                </ErrorBoundary>
               </GroupModal>
             </CardModalForm>
           </TagContext.Provider>
@@ -117,6 +117,16 @@ cube.forEach((card, index) => {
 });
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
+const defaultTagColors = JSON.parse(document.getElementById('cubeTagColors').value);
+const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
 const wrapper = document.getElementById('react-root');
-const element = <CubeList defaultCards={cube} canEdit={canEdit} cubeID={cubeID} />;
+const element = (
+  <CubeList
+    defaultCards={cube}
+    canEdit={canEdit}
+    cubeID={cubeID}
+    defaultTagColors={defaultTagColors}
+    defaultShowTagColors={defaultShowTagColors}
+  />
+);
 wrapper ? ReactDOM.render(element, wrapper) : false;

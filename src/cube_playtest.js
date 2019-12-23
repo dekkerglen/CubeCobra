@@ -1,37 +1,52 @@
 import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, FormGroup, Input, Label, Row, UncontrolledAlert, UncontrolledCollapse } from 'reactstrap';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Col,
+  FormGroup,
+  Input,
+  Label,
+  Row,
+  UncontrolledAlert,
+  UncontrolledCollapse,
+} from 'reactstrap';
 
 import { csrfFetch } from './util/CSRF';
 
 import CSRFForm from './components/CSRFForm';
 import DynamicFlash from './components/DynamicFlash';
+import DeckPreview from './components/DeckPreview';
 
-const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map(n => n + lo);
-const rangeOptions = (lo, hi) => range(lo, hi).map(n => <option key={n}>{n}</option>);
+const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
+const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
 const CardTitleH5 = ({ ...props }) => <CardTitle tag="h5" className="mb-0" {...props} />;
 
 const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>
-    <Label xs="4" md="6" lg="5" htmlFor={htmlFor}>{label}</Label> 
+    <Label xs="4" md="6" lg="5" htmlFor={htmlFor}>
+      {label}
+    </Label>
     <Col xs="8" md="6" lg="7">
       {children}
     </Col>
   </FormGroup>
-)
+);
 
 const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...props }) => (
   <Card key={format} {...props}>
     <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
       <CardHeader>
-        <CardTitleH5>
-          Draft Custom Format: {format.title}
-        </CardTitleH5>
+        <CardTitleH5>Draft Custom Format: {format.title}</CardTitleH5>
       </CardHeader>
       <CardBody>
-        <div className="description-area" dangerouslySetInnerHTML={{__html: format.html}}/>
+        <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
         <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
           <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
             {rangeOptions(4, 11)}
@@ -43,18 +58,24 @@ const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...prop
         <Button type="submit" color="success" className="mr-2">
           Start Draft
         </Button>
-        {!canEdit ? '' : <>
-          <Button color="success" className="mr-2 editFormatButton" data-id={index}>
-            Edit
-          </Button>
-          <Button color="danger" id={`deleteToggler-${index}`}>Delete</Button>
-          <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
-            <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-            <Button color="danger" onClick={deleteFormat}>
-              Yes, delete this format
+        {!canEdit ? (
+          ''
+        ) : (
+          <>
+            <Button color="success" className="mr-2 editFormatButton" data-id={index}>
+              Edit
             </Button>
-          </UncontrolledCollapse>
-        </>}
+            <Button color="danger" id={`deleteToggler-${index}`}>
+              Delete
+            </Button>
+            <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
+              <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
+              <Button color="danger" onClick={deleteFormat}>
+                Yes, delete this format
+              </Button>
+            </UncontrolledCollapse>
+          </>
+        )}
       </CardFooter>
     </CSRFForm>
   </Card>
@@ -96,13 +117,10 @@ const DecksCard = ({ decks, cubeID, ...props }) => (
     <CardHeader>
       <CardTitleH5>Recent Decks</CardTitleH5>
     </CardHeader>
-    <CardBody>
-      {decks.map(deck =>
-        <Fragment key={deck._id}>
-          <a href={`/cube/deck/${deck._id}`}>{deck.name}</a>
-          <br />
-        </Fragment>
-      )}
+    <CardBody className="p-0">
+      {decks.map((deck) => (
+        <DeckPreview key={deck._id} deck={deck} />
+      ))}
     </CardBody>
     <CardFooter>
       <a href={`/cube/decks/${cubeID}`}>View all</a>
@@ -140,14 +158,10 @@ class SamplePackCard extends Component {
         <CardFooter>
           <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
             View Random
-              </Button>
-          <Button
-            color="success"
-            disabled={!this.state.seed}
-            href={`/cube/samplepack/${cubeID}/${this.state.seed}`}
-          >
+          </Button>
+          <Button color="success" disabled={!this.state.seed} href={`/cube/samplepack/${cubeID}/${this.state.seed}`}>
             View Seeded
-              </Button>
+          </Button>
         </CardFooter>
       </Card>
     );
@@ -173,7 +187,7 @@ class CubePlaytest extends Component {
     this.setState(({ modal, ...state }) => ({
       ...state,
       modal: !modal,
-    }))
+    }));
   }
 
   addAlert(data) {
@@ -185,25 +199,28 @@ class CubePlaytest extends Component {
   addFormat(format) {
     this.setState(({ draftFormats }) => ({
       draftFormats: [].concat(draftFormats, format),
-    }))
+    }));
   }
 
   deleteFormat(cube, formatID) {
     console.log(formatID);
     csrfFetch(`/cube/format/remove/${cube};${formatID}`, {
       method: 'DELETE',
-    }).then(response => {
-      this.addAlert({
-        color: 'success',
-        children: 'Format successfully deleted.',
-      });
-      this.setState(({ draftFormats }) => ({
-        draftFormats: [].concat(draftFormats.slice(0, formatID), draftFormats.slice(formatID + 1)),
-      }));
-    }, this.addAlert.bind(this, {
-      color: 'danger',
-      children: 'Failed to delete format.',
-    }));
+    }).then(
+      (response) => {
+        this.addAlert({
+          color: 'success',
+          children: 'Format successfully deleted.',
+        });
+        this.setState(({ draftFormats }) => ({
+          draftFormats: [].concat(draftFormats.slice(0, formatID), draftFormats.slice(formatID + 1)),
+        }));
+      },
+      this.addAlert.bind(this, {
+        color: 'danger',
+        children: 'Failed to delete format.',
+      }),
+    );
   }
 
   handleChange(event) {
@@ -212,7 +229,7 @@ class CubePlaytest extends Component {
     const name = target.name;
 
     this.setState({
-      [name]: value
+      [name]: value,
     });
   }
 
@@ -220,36 +237,36 @@ class CubePlaytest extends Component {
     const { canEdit, decks, cubeID } = this.props;
     const { alerts, draftFormats } = this.state;
 
-    return <>
-      <DynamicFlash />
-      {alerts.map(data =>
-        <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
-      )}
-      <Row className="justify-content-center">
-        <Col xs="12" md="6" xl="5">
-          {decks.length == 0 ? '' :
-            <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />
-          }
-          <SamplePackCard cubeID={cubeID} className="mt-3" />
-        </Col>
-        <Col xs="12" md="6" xl="5">
-          {!draftFormats ? '' :
-            draftFormats.map((format, index) =>
-              <CustomDraftCard
-                key={format}
-                format={format}
-                index={index}
-                cubeID={cubeID}
-                canEdit={canEdit}
-                deleteFormat={this.deleteFormat.bind(this, cubeID, index)}
-                className="mt-3"
-              />
-            )
-          }
-          <StandardDraftCard cubeID={cubeID} className="mt-3" />
-        </Col>
-      </Row>
-    </>;
+    return (
+      <>
+        <DynamicFlash />
+        {alerts.map((data) => (
+          <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
+        ))}
+        <Row className="justify-content-center">
+          <Col xs="12" md="6" xl="6">
+            {decks.length == 0 ? '' : <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
+            <SamplePackCard cubeID={cubeID} className="mt-3" />
+          </Col>
+          <Col xs="12" md="6" xl="6">
+            {!draftFormats
+              ? ''
+              : draftFormats.map((format, index) => (
+                  <CustomDraftCard
+                    key={format}
+                    format={format}
+                    index={index}
+                    cubeID={cubeID}
+                    canEdit={canEdit}
+                    deleteFormat={this.deleteFormat.bind(this, cubeID, index)}
+                    className="mt-3"
+                  />
+                ))}
+            <StandardDraftCard cubeID={cubeID} className="mt-3" />
+          </Col>
+        </Row>
+      </>
+    );
   }
 }
 

@@ -6,9 +6,16 @@ class ImageFallback extends Component {
 
     this.state = {
       fallback: false,
-    }
+      foilOverlayBorderRadius: '10px',
+    };
 
+    this.foilOverlay = React.createRef();
     this.handleError = this.handleError.bind(this);
+  }
+
+  componentDidMount() {
+    // magic cards have a border radius of 3mm and a width of 63mm
+    this.setState({ foilOverlayBorderRadius: (3 / 63) * this.foilOverlay.current.width });
   }
 
   componentDidUpdate(prevProps) {
@@ -23,9 +30,18 @@ class ImageFallback extends Component {
 
   render() {
     const { src, fallbackSrc, ...props } = this.props;
-
+    const cardImage = <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />;
     return (
-      <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />
+      <div style={{ position: 'relative' }}>
+        <img
+          hidden={this.props.finish !== 'Foil'}
+          src="/content/foilOverlay.png"
+          className="foilOverlay"
+          ref={this.foilOverlay}
+          style={{ borderRadius: this.state.foilOverlayBorderRadius }}
+        />
+        {cardImage}
+      </div>
     );
   }
 }

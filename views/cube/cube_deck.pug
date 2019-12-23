@@ -1,12 +1,31 @@
 extends cube_layout
 
 block cube_content
+  //edit controls
+  .usercontrols
+    nav.navbar.navbar-expand.navbar-light
+      .collapse.navbar-collapse
+        ul.navbar-nav        
+          if user
+            if user.id == owner.id
+              li.nav-item
+                a.nav-link.newBlogButton(href='/cube/deckbuilder/'+deckid) Edit
+          li.nav-item
+            a.nav-link.newBlogButton(href='/cube/redraft/'+deckid) Redraft
+          if user
+            li.nav-item
+              a.nav-link.newBlogButton(href='/cube/rebuild/'+deckid) Clone and Rebuild
+
   include ../flash
   link(rel='stylesheet' href='/css/draft.css')
   br
   if oldformat
     .container
-      h4 Drafted by #{drafter}
+      if drafter.profileUrl
+        h4 Drafted by 
+          a(href=drafter.profileUrl) #{drafter.name}
+      else
+        h4 Drafted by #{drafter.name}
       br
       .row
         each card, i in cards
@@ -15,7 +34,11 @@ block cube_content
   else
     .card.card-hover#deckhover
       .card-header
-        h4 Drafted by #{drafter}
+        if drafter.profileUrl
+          h4 Drafted by 
+            a(href=drafter.profileUrl) #{drafter.name}
+        else
+          h4 Drafted by #{drafter.name}
         span#customImageDisplayMenuItem
           input#customImageDisplayToggle(type='checkbox')
           label(for='customImageDisplayToggle') Show Custom Images

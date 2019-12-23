@@ -11,70 +11,36 @@ block cube_toolbar
               li.nav-item
                 a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
               li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#deleteModal') Delete Cube
+                a.nav-link(href='#' data-toggle='modal', data-target='#deleteCubeModal') Delete Cube
+                
+  include ../dynamic_flash
 block cube_content
-  include ../flash
-  .row
-    .col-md-4
-      .card.mt-3
-        .card-header
-          .row
-            .col-md-6
-              h3=cube.name
-            .col.md-6.pr-1
-              a.nav-link(href=`/cube/blog/${cube._id}/rss`, class="float-right") RSS
-        img.card-img-top.w-100(src=cube.image_uri)
-        em.text-right(style='padding: 2px;') Art by: #{cube.image_artist}
-        .card-body
-          if cube.type
-            a #{cube.card_count} Card #{cube.type} Cube
-            br
-          if cube.privatePrices == false
-            a Approx: $#{price}
-          em
-            h6 Designed by 
-              a(href='/user/view/'+owner) #{owner}
-    .col
-      .card.mt-3
-        .card-header
-          h5.card-title Description
-        .card-body
-          if cube.descriptionhtml
-            p.card-text !{cube.descriptionhtml}
-          else
-            p.card-text #{cube.description}
-  if post
-    .row
-      .col
-        .card.mt-3
-          if post.changelist && post.html
-            .card-header
-              h5.card-title=post.title
-              h6.card-subtitle.mb-2.text-muted=post.date_formatted
-            .row.no-gutters
-              .col-4(style='border-right: 1px solid #DFDFDF;')
-                .card-body
-                  p.card-text !{post.changelist}
-              .col-8
-                .card-body
-                  p.card-text !{post.html}
-          else if post.changelist
-            .card-header
-              h5.card-title=post.title
-              h6.card-subtitle.mb-2.text-muted=post.date_formatted
-            .card-body
-              p.card-text !{post.changelist}
-          else
-            .card-header
-              h5.card-title=post.title
-              h6.card-subtitle.mb-2.text-muted=post.date_formatted
-            .card-body
-              p=post.body
-              if post.html
-                p.card-text !{post.html}
+  #react-root
+  
+  input#blogData(type='hidden', value=(post?post:'false'))
+  input#cubeData(type='hidden', value=cube)
+  input#priceData(type='hidden', value=price)
+  input#ownerData(type='hidden', value=owner)
+  input#adminData(type='hidden', value=admin)
+  input#followedData(type='hidden', value=is_following)
+  if user
+    input#userid(type='hidden', value=user._id)
+  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
 
   if user
     if user.id == cube.owner
+      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+        .modal-dialog(role='document')
+          .modal-content
+            .modal-header
+              h5.modal-title Confirm Delete
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') ×
+            .modal-body
+              P Are you sure you wish to delete this post? This action cannot be undone.
+            .modal-footer
+              input.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id='', id="delete")
+              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
       // edit overview modal
       #overviewModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
         .modal-dialog.modal-lg(role='document')
@@ -102,7 +68,7 @@ block cube_content
                   form(autocomplete='off').form-inline
                     .mb-2.autocomplete
                       input.form-control#imageInput(name='imagename' type='text', value=cube.image_name)
-                  input#postBlogHiddenHTML(type='hidden', name='html')
+                  input.postBlogHiddenHTML(type='hidden', name='html')
                   label.col-form-label Cube Description:
                   include ../texteditor
                   label.col-form-label Custom URL:
@@ -111,7 +77,7 @@ block cube_content
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
+      #deleteCubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteCubeModalLabel', aria-hidden='true')
         .modal-dialog(role='document')
           .modal-content
             .modal-header
@@ -125,7 +91,8 @@ block cube_content
             .modal-footer
               input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube_id, disabled="", id="delete")
               button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
-      script(src='/js/csrf.js')
-      script(src='/js/image_autocomplete.js')
-      script(src='/js/blog.js')
-      script(src='/js/deleteconfirm.js')
+  script(src='/js/csrf.js')
+  script(src='/js/image_autocomplete.js')
+  script(src='/js/blog.js')
+  script(src='/js/deleteconfirm.js')
+  script(src='/js/cube_overview.bundle.js')

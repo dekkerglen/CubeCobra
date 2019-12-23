@@ -1,21 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const passport = require('passport');
-const emailconfig = require('../../cubecobrasecrets/email');
-const mailer = require("nodemailer");
-const fs = require('fs')
+var util = require('../serverjs/util.js');
 
-const {
-  ensureAuth,
-  csrfProtection
-} = require('./middleware');
+const { ensureAuth, csrfProtection } = require('./middleware');
 
 // Bring in models
-let User = require('../models/user')
-let Blog = require('../models/blog')
-
-var adminname = 'Dekkaru';
+let User = require('../models/user');
+let Blog = require('../models/blog');
 
 router.use(csrfProtection);
 
@@ -26,86 +17,87 @@ router.get('/blog', function(req, res) {
 router.get('/blog/:id', function(req, res) {
   if (!req.user) {
     req.user = {
-      _id: ''
+      _id: '',
     };
   }
   User.findById(req.user._id, function(err, user) {
-    var admin = false;
-    if (user && user.username == adminname) {
-      //admin
-      admin = true;
-    }
+    var admin = util.isAdmin(user);
+
     Blog.find({
-      dev: 'true'
-    }).sort('date').exec(function(err, blogs) {
-      blogs.forEach(function(item, index) {
-        if (!item.date_formatted) {
-          item.date_formatted = item.date.toLocaleString("en-US");
-        }
-      });
-      var pages = [];
-      blogs.reverse();
-      if (blogs.length > 10) {
-        var page = parseInt(req.params.id);
-        if (!page) {
-          page = 0;
-        }
-        for (i = 0; i < blogs.length / 10; i++) {
-          if (page == i) {
-            pages.push({
-              url: '/dev/blog/' + i,
-              content: (i + 1),
-              active: true
+      dev: 'true',
+    })
+      .sort('date')
+      .exec(function(err, blogs) {
+        blogs.forEach(function(item, index) {
+          if (!item.date_formatted) {
+            item.date_formatted = item.date.toLocaleString('en-US');
+          }
+        });
+        var pages = [];
+        blogs.reverse();
+        if (blogs.length > 10) {
+          var page = parseInt(req.params.id);
+          if (!page) {
+            page = 0;
+          }
+          for (i = 0; i < blogs.length / 10; i++) {
+            if (page == i) {
+              pages.push({
+                url: '/dev/blog/' + i,
+                content: i + 1,
+                active: true,
+              });
+            } else {
+              pages.push({
+                url: '/dev/blog/' + i,
+                content: i + 1,
+              });
+            }
+          }
+          blog_page = [];
+          for (i = 0; i < 10; i++) {
+            if (blogs[i + page * 10]) {
+              blog_page.push(blogs[i + page * 10]);
+            }
+          }
+
+          if (admin) {
+            res.render('blog/devblog', {
+              blogs: blog_page,
+              pages: pages,
+              admin: 'true',
+              loginCallback: '/dev/blog/' + req.params.id,
             });
           } else {
-            pages.push({
-              url: '/dev/blog/' + i,
-              content: (i + 1)
+            res.render('blog/devblog', {
+              blogs: blog_page,
+              pages: pages,
+              loginCallback: '/dev/blog/' + req.params.id,
+            });
+          }
+        } else {
+          if (admin) {
+            res.render('blog/devblog', {
+              blogs: blogs,
+              admin: 'true',
+              loginCallback: '/dev/blog/' + req.params.id,
+            });
+          } else {
+            res.render('blog/devblog', {
+              blogs: blogs,
+              loginCallback: '/dev/blog/' + req.params.id,
             });
           }
         }
-        blog_page = [];
-        for (i = 0; i < 10; i++) {
-          if (blogs[i + page * 10]) {
-            blog_page.push(blogs[i + page * 10]);
-          }
-        }
-
-        if (admin) {
-          res.render('blog/devblog', {
-            blogs: blog_page,
-            pages: pages,
-            admin: 'true',
-            loginCallback: '/dev/blog/' + req.params.id
-          });
-        } else {
-          res.render('blog/devblog', {
-            blogs: blog_page,
-            pages: pages,
-            loginCallback: '/dev/blog/' + req.params.id
-          });
-        }
-      } else {
-        if (admin) {
-          res.render('blog/devblog', {
-            blogs: blogs,
-            admin: 'true',
-            loginCallback: '/dev/blog/' + req.params.id
-          });
-        } else {
-          res.render('blog/devblog', {
-            blogs: blogs,
-            loginCallback: '/dev/blog/' + req.params.id
-          });
-        }
-      }
-    });
+      });
   });
 });
 
-router.post('/blogpost', ensureAuth, function(req, res) {
-  User.findById(req.user._id, function(err, user) {
-    if (user && user.username == adminname) {
+router.post('/blogpost', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user && util.isAdmin(user)) {
       var blogpost = new Blog();
       blogpost.title = req.body.title;
       if (req.body.html && req.body.html.length > 0) {
@@ -116,21 +108,20 @@ router.post('/blogpost', ensureAuth, function(req, res) {
       blogpost.owner = user._id;
       blogpost.date = Date.now();
       blogpost.dev = 'true';
-      blogpost.date_formatted = blogpost.date.toLocaleString("en-US");
+      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
 
-      //console.log(draft);
-      blogpost.save(function(err) {
-        if (err) {
-          console.log(err);
-        } else {
-          req.flash('success', 'Blog post successful');
-          res.redirect('/dev/blog');
-        }
-      });
-    } else {
-      res.status(404).render('misc/404', {});
+      await blogpost.save();
+
+      req.flash('success', 'Blog post successful');
+      res.redirect('/dev/blog');
     }
-  });
+  } catch (err) {
+    res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+    console.error(err);
+  }
 });
 
 module.exports = router;

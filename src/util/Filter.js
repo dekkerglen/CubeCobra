@@ -1,3 +1,5 @@
+import { normalizeName } from './Card';
+
 let rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
 let categoryMap = new Map([
@@ -21,6 +23,7 @@ let categoryMap = new Map([
   ['toughness', 'toughness'],
   ['name', 'name'],
   ['tag', 'tag'],
+  ['finish', 'finish'],
   ['price', 'price'],
   ['pricefoil', 'pricefoil'],
   ['p', 'price'],
@@ -33,7 +36,8 @@ let categoryMap = new Map([
   ['loyalty', 'loyalty'],
   ['a', 'artist'],
   ['art', 'artist'],
-  ['artist', 'artist']
+  ['artist', 'artist'],
+  ['is', 'is'],
 ]);
 
 function findEndingQuotePosition(filterText, num) {
@@ -51,12 +55,12 @@ function findEndingQuotePosition(filterText, num) {
 }
 
 function tokenizeInput(filterText, tokens) {
-  filterText = filterText.trim();
+  filterText = filterText.trim().toLowerCase();
   if (!filterText) {
     return true;
   }
 
-  const operators = '>=|<=|<|>|:|='
+  const operators = '>=|<=|<|>|:|!=|=';
   //split string based on list of operators
   let operators_re = new RegExp('(?:' + operators + ')');
 
@@ -64,7 +68,7 @@ function tokenizeInput(filterText, tokens) {
     if (findEndingQuotePosition(filterText, 0)) {
       let token = {
         type: 'open',
-      }
+      };
       tokens.push(token);
       return tokenizeInput(filterText.slice(1), tokens);
     } else {
@@ -74,15 +78,15 @@ function tokenizeInput(filterText, tokens) {
 
   if (filterText.indexOf(')') == 0) {
     let token = {
-      type: 'close'
-    }
+      type: 'close',
+    };
     tokens.push(token);
     return tokenizeInput(filterText.slice(1), tokens);
   }
 
   if (filterText.indexOf('or ') == 0 || (filterText.length == 2 && filterText.indexOf('or') == 0)) {
     tokens.push({
-      type: 'or'
+      type: 'or',
     });
     return tokenizeInput(filterText.slice(2), tokens);
   }
@@ -107,8 +111,7 @@ function tokenizeInput(filterText, tokens) {
   //find operand
   let operand = firstTerm[0].match(operators_re);
   if (operand) {
-    operand = operand[0];
-    token.operand = operand;
+    token.operand = operand[0];
   } else {
     token.operand = 'none';
   }
@@ -144,13 +147,14 @@ function tokenizeInput(filterText, tokens) {
     token.arg = firstTerm[0].split(')')[0];
   }
 
-
-  filterText = filterText.slice((token.operand == 'none' ? (token.arg.length) : (token.arg.length + token.operand.length + category.length)) + (parens ? 2 : 0));
+  filterText = filterText.slice(
+    (token.operand == 'none' ? token.arg.length : token.arg.length + token.operand.length + category.length) +
+      (parens ? 2 : 0),
+  );
 
   if (!categoryMap.has(category)) {
     return false;
   }
-
 
   token.category = categoryMap.get(category);
   token.arg = simplifyArg(token.arg, token.category);
@@ -162,7 +166,6 @@ function tokenizeInput(filterText, tokens) {
   } else {
     return false;
   }
-
 }
 
 const colorMap = new Map([
@@ -191,27 +194,25 @@ const colorMap = new Map([
   ['jeskai', 'urw'],
   ['sultai', 'bgu'],
   ['mardu', 'rwb'],
-  ['temur', 'rug']
+  ['temur', 'rug'],
 ]);
+
+const rarityMap = new Map([['c', 'common'], ['u', 'uncommon'], ['r', 'rare'], ['m', 'mythic']]);
 
 //change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
-  let res = '';
+  let res = arg.toLowerCase();
   switch (category) {
     case 'color':
     case 'identity':
-      if (colorMap.has(arg.toLowerCase())) {
-        res = colorMap.get(arg.toLowerCase());
-      } else {
-        res = arg;
-      }
+      res = colorMap.get(res) || res;
       res = res.toUpperCase().split('');
       break;
     case 'mana':
-      res = parseManaCost(arg)
+      res = parseManaCost(res);
       break;
-    default:
-      res = arg;
+    case 'rarity':
+      res = rarityMap.get(res) || res;
       break;
   }
   return res;
@@ -221,7 +222,7 @@ const verifyTokens = (tokens) => {
   let temp = tokens;
   let inBounds = (num) => {
     return num > -1 && num < temp.length;
-  }
+  };
   let type = (i) => temp[i].type;
   let token = (i) => temp[i];
 
@@ -245,21 +246,25 @@ const verifyTokens = (tokens) => {
         case 'identity':
           let verifyColors = (element) => {
             return element.search(/^[WUBRGC]$/) < 0;
-          }
+          };
           if (token(i).arg.every(verifyColors)) {
             return false;
           }
           break;
-        case 'cmc':
         case 'power':
         case 'toughness':
+          if (token(i).arg.search(/^[-\+]?((\d+(\.5)?)|(\.5))$/) < 0) return false;
+          break;
+        case 'cmc':
+          if (token(i).arg.search(/^\+?((\d+(\.5)?)|(\.5))$/) < 0) return false;
+          break;
         case 'loyalty':
           if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
         case 'mana':
           let verifyMana = (element) => {
             element.search(/^(\d+|[wubrgscxyz]|{([wubrg2]\-[wubrg]|[wubrg]\-p)})$/) < 0;
-          }
+          };
           if (token(i).arg.every(verifyMana)) {
             return false;
           }
@@ -268,13 +273,15 @@ const verifyTokens = (tokens) => {
           if (token(i).arg.search(/^(common|uncommon|rare|mythic)$/) < 0) return false;
           break;
         case 'artist':
-          return true;
+          break;
+        case 'is':
+          if (token(i).arg.search(/^(gold|hybrid|phyrexian)$/) < 0) return false;
+          break;
       }
     }
-
   }
   return true;
-}
+};
 
 const hybridMap = new Map([
   ['u-w', 'w-u'],
@@ -286,7 +293,7 @@ const hybridMap = new Map([
   ['g-r', 'r-g'],
   ['w-r', 'r-w'],
   ['w-g', 'g-w'],
-  ['u-g', 'g-u']
+  ['u-g', 'g-u'],
 ]);
 
 function parseManaCost(cost) {
@@ -344,7 +351,7 @@ const findClose = (tokens, pos) => {
     }
   }
   return false;
-}
+};
 
 const parseTokens = (tokens) => {
   let peek = () => tokens[0];
@@ -370,7 +377,7 @@ const parseTokens = (tokens) => {
       return result;
     }
   }
-}
+};
 
 /* inCube should be true when we are using a cube's card object and false otherwise (e.g. in Top Cards). */
 function filterCard(card, filters, inCube) {
@@ -382,12 +389,27 @@ function filterCard(card, filters, inCube) {
     }
   } else {
     if (filters.type == 'or') {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) || (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      return (
+        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
+        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      );
     } else {
-      return (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) && (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      return (
+        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) &&
+        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+      );
     }
   }
+}
 
+function filterCards(cards, filter, inCube) {
+  return cards.filter((card) => filterCard(card, filter, inCube));
+}
+
+function filterCardsDetails(cardsDetails, filter) {
+  const cards = cardsDetails.map((details) => ({ details }));
+  const filtered = filterCards(cards, filter, /* inCube */ false);
+  return filtered.map((card) => card.details);
 }
 
 function areArraysEqualSets(a1, a2) {
@@ -416,23 +438,34 @@ function areArraysEqualSets(a1, a2) {
 }
 
 function arrayContainsOtherArray(arr1, arr2) {
-  return arr2.every(v => arr1.includes(v));
+  return arr2.every((v) => arr1.includes(v));
 }
 
 function filterApply(card, filter, inCube) {
   let res = null;
+  if (filter.operand === '!=') {
+    filter.not = true;
+    filter.operand = '=';
+  }
+
+  // handle cube overrides to colors
   if (typeof inCube === 'undefined') {
     inCube = true;
   }
   let cmc = inCube ? card.cmc : card.details.cmc;
-  let colors = inCube ? card.colors : card.details.color_identity;
+  // NOTE: color naming is confusing:
+  // colors = colors in mana cost
+  // color_identity = (Commander style) colors anywhere on card
+  // card.colors is an override for card.details.color_identity
+  let color_identity = inCube ? card.colors : card.details.color_identity;
+
   if (filter.category == 'name') {
-    res = card.details.name_lower.indexOf(filter.arg.toLowerCase()) > -1;
+    res = card.details.name_lower.indexOf(normalizeName(filter.arg)) > -1;
   }
   if (filter.category == 'oracle' && card.details.oracle_text) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (filter.category == 'color' && card.details.colors) {
+  if (filter.category == 'color' && card.details.colors !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
@@ -443,63 +476,69 @@ function filterApply(card, filter, inCube) {
         }
         break;
       case '<':
-        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
+        res =
+          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
+        res =
+          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
+        res =
+          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
+        res =
+          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
         break;
     }
   }
-  if (filter.category == 'identity' && colors) {
+  if (filter.category == 'identity' && color_identity !== undefined) {
     switch (filter.operand) {
       case ':':
       case '=':
         if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = colors.length === 0;
+          res = color_identity.length === 0;
         } else {
-          res = areArraysEqualSets(colors, filter.arg);
+          res = areArraysEqualSets(color_identity, filter.arg);
         }
         break;
       case '<':
-        res = arrayContainsOtherArray(filter.arg, colors) && colors.length < filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length < filter.arg.length;
         break;
       case '>':
-        res = arrayContainsOtherArray(colors, filter.arg) && colors.length > filter.arg.length;
+        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length > filter.arg.length;
         break;
       case '<=':
-        res = arrayContainsOtherArray(filter.arg, colors) && colors.length <= filter.arg.length;
+        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length <= filter.arg.length;
         break;
       case '>=':
-        res = arrayContainsOtherArray(colors, filter.arg) && colors.length >= filter.arg.length;
+        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length >= filter.arg.length;
         break;
     }
   }
   if (filter.category == 'mana' && card.details.parsed_cost) {
     res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
   }
-  if (filter.category == 'cmc' && cmc) {
+  if (filter.category == 'cmc' && cmc !== undefined) {
+    let arg = parseInt(filter.arg, 10);
+    cmc = parseInt(cmc, 10);
     switch (filter.operand) {
       case ':':
       case '=':
-        res = filter.arg == cmc;
+        res = arg == cmc;
         break;
       case '<':
-        res = cmc < filter.arg;
+        res = cmc < arg;
         break;
       case '>':
-        res = cmc > filter.arg;
+        res = cmc > arg;
         break;
       case '<=':
-        res = cmc <= filter.arg;
+        res = cmc <= arg;
         break;
       case '>=':
-        res = cmc >= filter.arg;
+        res = cmc >= arg;
         break;
     }
   }
@@ -515,74 +554,83 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'power') {
     if (card.details.power) {
+      let cardPower = parseInt(card.details.power, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == card.details.power;
+          res = arg == cardPower;
           break;
         case '<':
-          res = card.details.power < filter.arg;
+          res = cardPower < arg;
           break;
         case '>':
-          res = card.details.power > filter.arg;
+          res = cardPower > arg;
           break;
         case '<=':
-          res = card.details.power <= filter.arg;
+          res = cardPower <= arg;
           break;
         case '>=':
-          res = card.details.power >= filter.arg;
+          res = cardPower >= arg;
           break;
       }
     }
   }
   if (filter.category == 'toughness') {
     if (card.details.toughness) {
+      let cardToughness = parseInt(card.details.toughness, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == card.details.toughness;
+          res = arg == cardToughness;
           break;
         case '<':
-          res = card.details.toughness < filter.arg;
+          res = cardToughness < arg;
           break;
         case '>':
-          res = card.details.toughness > filter.arg;
+          res = cardToughness > arg;
           break;
         case '<=':
-          res = card.details.toughness <= filter.arg;
+          res = cardToughness <= arg;
           break;
         case '>=':
-          res = card.details.toughness >= filter.arg;
+          res = cardToughness >= arg;
           break;
       }
     }
   }
   if (filter.category == 'loyalty') {
     if (card.details.loyalty) {
+      let cardLoyalty = parseInt(card.details.loyalty, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = card.details.loyalty == filter.arg;
+          res = cardLoyalty == arg;
           break;
         case '<':
-          res = card.details.loyalty < filter.arg;
+          res = cardLoyalty < arg;
           break;
         case '>':
-          res = card.details.loyalty > filter.arg;
+          res = cardLoyalty > arg;
           break;
         case '<=':
-          res = card.details.loyalty <= filter.arg;
+          res = cardLoyalty <= arg;
           break;
         case '>=':
-          res = card.details.loyalty >= filter.arg;
+          res = cardLoyalty >= arg;
           break;
       }
     }
   }
   if (filter.category == 'tag') {
-    res = card.tags.some(element => {
+    res = card.tags.some((element) => {
       return element.toLowerCase() == filter.arg.toLowerCase();
     });
+  }
+  if (filter.category == 'finish') {
+    return card.finish.toLowerCase() === filter.arg.toLowerCase();
   }
   if (filter.category == 'status') {
     if (card.status.toLowerCase() == filter.arg.toLowerCase()) {
@@ -598,47 +646,55 @@ function filterApply(card, filter, inCube) {
       price = card.details.price_foil;
     }
     if (price) {
+      price = parseInt(price, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == price;
+          res = arg == price;
           break;
         case '<':
-          res = price < filter.arg;
+          res = price < arg;
           break;
         case '>':
-          res = price > filter.arg;
+          res = price > arg;
           break;
         case '<=':
-          res = price <= filter.arg;
+          res = price <= arg;
           break;
         case '>=':
-          res = price >= filter.arg;
+          res = price >= arg;
           break;
       }
+    } else {
+      res = true;
     }
   }
   if (filter.category == 'pricefoil') {
-    var price = card.details.price_foil || null
+    var price = card.details.price_foil || null;
     if (price) {
+      price = parseInt(price, 10);
+      let arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
-          res = filter.arg == price;
+          res = arg == price;
           break;
         case '<':
-          res = price < filter.arg;
+          res = price < arg;
           break;
         case '>':
-          res = price > filter.arg;
+          res = price > arg;
           break;
         case '<=':
-          res = price <= filter.arg;
+          res = price <= arg;
           break;
         case '>=':
-          res = price >= filter.arg;
+          res = price >= arg;
           break;
       }
+    } else {
+      res = true;
     }
   }
   if (filter.category == 'rarity') {
@@ -665,6 +721,16 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'artist') {
     res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
+  if (filter.category == 'is') {
+    switch (filter.arg) {
+      case 'gold':
+      case 'hybrid':
+      case 'phyrexian':
+        let type = filter.arg.substring(0, 1).toUpperCase() + filter.arg.substring(1);
+        res = cardIsLabel(card, type, 'Manacost Type');
+        break;
+    }
+  }
 
   if (filter.not) {
     return !res;
@@ -673,4 +739,4 @@ function filterApply(card, filter, inCube) {
   }
 }
 
-export default { tokenizeInput, verifyTokens, parseTokens, filterCard };
+export default { tokenizeInput, verifyTokens, parseTokens, filterCard, filterCards, filterCardsDetails };

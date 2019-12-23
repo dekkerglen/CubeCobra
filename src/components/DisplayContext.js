@@ -5,7 +5,6 @@ import React, { Component } from 'react';
 
 const DisplayContextRaw = React.createContext({
   showCustomImages: true,
-  tagColors: [],
 });
 
 class DisplayContextProvider extends React.Component {
@@ -14,17 +13,9 @@ class DisplayContextProvider extends React.Component {
 
     this.state = {
       showCustomImages: true,
-      showTagColors: /* global */ show_tag_colors,
-      tagColors: /* global */ cubeTagColors,
     };
 
     this.toggleShowCustomImages = this.toggleShowCustomImages.bind(this);
-
-    /* global */
-    tagColorsListeners.push(() => this.setState({
-      showTagColors: /* global */ show_tag_colors,
-      tagColors: /* global */ cubeTagColors,
-    }));
   }
 
   toggleShowCustomImages(value) {
@@ -38,19 +29,16 @@ class DisplayContextProvider extends React.Component {
       ...this.state,
       toggleShowCustomImages: this.toggleShowCustomImages,
     };
-    return (
-      <DisplayContextRaw.Provider value={value} {...this.props} />
-    );
+    return <DisplayContextRaw.Provider value={value} {...this.props} />;
   }
 }
 
 const DisplayContext = {
+  Context: DisplayContextRaw,
   Provider: DisplayContextProvider,
   Consumer: DisplayContextRaw.Consumer,
-  Wrapped: Component => props => (
-    <DisplayContextRaw.Consumer>
-      { value => <Component {...value} {...props} /> }
-    </DisplayContextRaw.Consumer>
+  Wrapped: (Component) => (props) => (
+    <DisplayContextRaw.Consumer>{(value) => <Component {...value} {...props} />}</DisplayContextRaw.Consumer>
   ),
 };
 

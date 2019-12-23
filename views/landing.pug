@@ -1,0 +1,46 @@
+extends layout
+
+block content
+	include flash
+	.card.mt-3.p-3(style="background: #F8FCF4")
+		img.centered-max400.card-img.mb-4(src='/content/banner-light.png' alt='...')
+		h5.mb-4.text-center Build, playtest, and share your Magic the Gathering cube!
+		p.text-center 
+			b #{numusers} 
+			|  Users, 
+			b #{numcubes} 
+			|  Cubes, 
+			b #{numdrafts} 
+			|  Completed Drafts
+		.row.centered-max800.py-2
+			.col-lg-3.col-md-3.col-sm-6.col-xs-12
+				.card.my-1(style="background: #FDFFFC")
+					.card-body.text-center
+						| Completely free to sign up and use!
+			.col-lg-3.col-md-3.col-sm-6.col-xs-12
+				.card.my-1(style="background: #FDFFFC")
+					.card-body.text-center
+						| Powered by Scryfall, cards available as they are spoiled.
+			.col-lg-3.col-md-3.col-sm-6.col-xs-12
+				.card.my-1(style="background: #FDFFFC")
+					.card-body.text-center
+						| Easy to upload, import, or paste your list.
+			.col-lg-3.col-md-3.col-sm-6.col-xs-12
+				.card.my-1(style="background: #FDFFFC")
+					.card-body.text-center
+						| Open source, updates released every two weeks!
+		p.mt-3.text-center First time here?
+		a.w-100.centered-max400.btn.btn-success(href='/user/register', role='button') Create Account
+		a.w-100.mt-2.centered-max400.btn.btn-outline-success(href='/explore', role='button') Explore Cubes
+		p.mt-3.text-center New to cubing?
+		a.w-100.centered-max400.btn.btn-outline-success(href='https://www.youtube.com/watch?v=TiwPcD1ZjEY', role='button') What is MTG Cube?
+		a.w-100.mt-2.centered-max400.btn.btn-outline-success(href='https://magic.wizards.com/en/articles/archive/how-build/building-your-first-cube-2016-05-19', role='button') Building Your First Cube
+		hr.y-4
+		p.text-center View the project on 
+			a(href="https://github.com/dekkerglen/CubeCobra") Github.
+			|  View the most recent updates on the 
+			a(href="/dev/blog") Dev Blog.
+		p.text-center Want to support Cube Cobra?  
+			a(href="/donate") Donate Here!
+			|  Questions or Feedback? Contact us 
+			a(href="/contact") here.

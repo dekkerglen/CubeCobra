@@ -3,435 +3,145 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');
-const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
-var schedule = require('node-schedule');
 const http = require('http');
-var fileUpload = require('express-fileupload');
-var util = require('./serverjs/util.js');
-var updatedb = require('./serverjs/updatecards.js');
+const fileUpload = require('express-fileupload');
+const MongoDBStore = require('connect-mongodb-session')(session);
+
 const secrets = require('../cubecobrasecrets/secrets');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
-const mongoDBStore = require('connect-mongodb-session')(session);
-
-const {
-  csrfProtection,
-} = require('./routes/middleware');
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
-let db = mongoose.connection;
-db.once('open', function() {
+const db = mongoose.connection;
+db.once('open', () => {
   console.log('connected to nodecube db');
 });
 
 // Check for db errors
-db.on('error', function(err) {
+db.on('error', (err) => {
   console.log(err);
 });
 
 // Init app
 const app = express();
 
-var store = new mongoDBStore({
-  uri: mongosecrets.connectionString,
-  databaseName: mongosecrets.dbname,
-  collection: 'session_data'
-}, function(err) {
-  if (err) {
-    console.log('store failed to connect to mongoDB:\n' + err);
-  }
-});
+const store = new MongoDBStore({
+    uri: mongosecrets.connectionString,
+    databaseName: mongosecrets.dbname,
+    collection: 'session_data',
+  },
+  (err) => {
+    if (err) {
+      console.log(`store failed to connect to mongoDB:\n${err}`);
+    }
+  },
+);
 
-// Bring in models
-let Cube = require('./models/cube')
-let Blog = require('./models/blog')
-let Deck = require('./models/deck')
-
-//upload file middleware
+// upload file middleware
 app.use(fileUpload());
 
 // Body parser middleware
-app.use(bodyParser.urlencoded({
-  limit: '50mb',
-  extended: true
-}));
-app.use(bodyParser.json({
-  limit: '50mb',
-  extended: true
-}));
+app.use(
+  bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true,
+  }),
+);
+app.use(
+  bodyParser.json({
+    limit: '50mb',
+    extended: true,
+  }),
+);
 
-//Load view engine
+// Load view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'dist')));
-app.use('/jquery-ui', express.static(__dirname + '/node_modules/jquery-ui-dist/'));
+app.use(
+  '/jquery-ui',
+  express.static(`${__dirname}/node_modules/jquery-ui-dist/`),
+);
 
-let session_options = {
+const sessionOptions = {
   secret: secrets.session,
-  store: store,
+  store,
   resave: true,
   saveUninitialized: true,
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7 //1 week
-  }
-}
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+  },
+};
 
-if (secrets.environment == 'production') {
+if (secrets.environment === 'production') {
   app.set('trust proxy', 1);
-  session_options.cookie.secure = true;
+  sessionOptions.cookie.secure = true;
 }
 
 // Express session middleware
-app.use(session(session_options));
+app.use(session(sessionOptions));
 
-//Express messages middleware
+// Express messages middleware
 app.use(require('connect-flash')());
-app.use(function(req, res, next) {
+
+app.use((req, res, next) => {
   res.locals.messages = require('express-messages')(req, res);
   next();
 });
 
 // Express validator middleware
-app.use(expressValidator({
-  errorFormatter: function(param, msg, value) {
-    var namespace = param.split('.'),
-      root = namespace.shift(),
-      formParam = root;
+app.use(
+  expressValidator({
+    errorFormatter(param, msg, value) {
+      const namespace = param.split('.');
+      const root = namespace.shift();
+      let formParam = root;
 
-    while (namespace.length) {
-      formParam += '[' + namespace.shift() + ']';
-    }
-    return {
-      param: formParam,
-      msg: msg,
-      value: value
-    };
-  }
-}));
+      while (namespace.length) {
+        formParam += `[${namespace.shift()}]`;
+      }
+      return {
+        param: formParam,
+        msg,
+        value,
+      };
+    },
+  }),
+);
 
 // Passport config and middleware
 require('./config/passport')(passport);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('*', function(req, res, next) {
+app.get('*', (req, res, next) => {
   res.locals.user = req.user || null;
   next();
 });
 
 // Route files; they manage their own CSRF protection
-let cubes = require('./routes/cube_routes');
-let users = require('./routes/users_routes');
-let devs = require('./routes/dev_routes');
-let tools = require('./routes/tools_routes');
+const cubes = require('./routes/cube_routes');
+const users = require('./routes/users_routes');
+const devs = require('./routes/dev_routes');
+const tools = require('./routes/tools_routes');
+app.use('', require('./routes/root'));
+
 app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
 app.use('/tool', tools);
 
-// CSRF protection for this file
-app.use(csrfProtection);
-
-// Home route
-app.get('/', function(req, res) {
-  const routeReady = () => {
-    if (recents && drafted && blog && decks) {
-      decklinks = decks.splice(Math.max(decks.length - 10, 0), decks.length);
-      res.render('index', {
-        devblog: blog.length > 0 ? blog[0] : null,
-        recents: recents,
-        drafted: drafted,
-        decks: decklinks
-      });
-    }
-  };
-
-  var user_id = '';
-  var recents, drafted, blog, decks;
-
-  if (req.user) user_id = req.user._id;
-  Cube.find({
-    $or: [{
-        $and: [{
-          'card_count': {
-            $gt: 200
-          }
-        }, {
-          'isListed': true
-        }]
-      },
-      {
-        'owner': user_id
-      }
-    ]
-  }).sort({
-    'date_updated': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      recents = [];
-      console.log('recents failed to load');
-    }
-
-    if (result) {
-      recents = result;
-    }
-
-    routeReady();
-  });
-
-  Cube.find({
-    $or: [{
-      'isListed': true
-    }, {
-      'isListed': null
-    }, {
-      'owner': user_id
-    }]
-  }).sort({
-    'numDecks': -1
-  }).limit(12).exec(function(err, result) {
-    if (err) {
-      drafted = [];
-      console.log('drafted failed to load');
-    }
-
-    if (result) {
-      drafted = result;
-    }
-
-    routeReady();
-  });
-
-  Blog.find({
-    dev: 'true'
-  }).sort({
-    'date': -1
-  }).exec(function(err, result) {
-    if (err) {
-      blog = [];
-      console.log('blog failed to load');
-    }
-
-    if (result) {
-      blog = result;
-    }
-
-    routeReady();
-  });
-
-  Deck.find().sort({
-    'date': -1
-  }).limit(10).exec(function(err, result) {
-    if (err) {
-      decks = [];
-      console.log('decks failed to load');
-    }
-
-    if (result) {
-      decks = result;
-    }
-
-    routeReady();
-  });
-});
-
-
-//format: {search};{search};{search}:{page}
-//list like:
-//{property}{symbol}{value};
-//properties:
-//name, owner
-//symbols:
-//=,~(contains)
-app.get('/advanced_search', function(req, res) {
-  res.render('search/advanced_search', {
-    loginCallback: '/advanced_search'
-  });
-});
-
-app.post('/advanced_search', function(req, res) {
-  var url = '/search/';
-  if (req.body.name && req.body.name.length > 0) {
-    url += 'name' + req.body.nameType + req.body.name + ';';
-  }
-  if (req.body.owner && req.body.owner.length > 0) {
-    url += 'owner_name' + req.body.ownerType + req.body.owner + ';';
-  }
-  res.redirect(url)
-});
-
-app.post('/search', function(req, res) {
-  if (!req.body.search || req.body.search.length == 0) {
-    req.flash('danger', 'No Search Parameters');
-    res.redirect('/advanced_search');
-  } else {
-    var query = req.body.search;
-    if (query.includes(';')) {
-      res.redirect('/search/' + query)
-    } else {
-      res.redirect('/search/name~' + query);
-    }
-  }
-});
-
-app.get('/search/:id', function(req, res) {
-  var raw_split = req.params.id.split(':');
-  var raw_queries = raw_split[0].split(';');
-  var page = parseInt(raw_split[1]);
-  var query = {};
-  var terms = [];
-  raw_queries.forEach(function(val, index) {
-    if (val.includes('=')) {
-      var split = val.split('=');
-      query[split[0]] = split[1];
-      terms.push(split[0].replace('owner_name', 'owner') + ' is exactly ' + split[1]);
-    } else if (val.includes('~')) {
-      var split = val.split('~');
-      query[split[0]] = {
-        "$regex": split[1],
-        "$options": "i"
-      };
-      terms.push(split[0].replace('owner_name', 'owner') + ' contains ' + split[1]);
-    }
-  });
-
-  var user_id = '';
-  if (req.user) user_id = req.user._id;
-  query = {
-    $and: [query,
-      {
-        $or: [{
-            'isListed': true
-          },
-          {
-            'owner': user_id
-          }
-        ]
-      }
-    ]
-  };
-
-  Cube.find(query).sort({
-    'date_updated': -1
-  }).exec(function(err, cubes) {
-    var pages = [];
-    if (cubes.length > 12) {
-      if (!page) {
-        page = 0;
-      }
-      for (i = 0; i < cubes.length / 12; i++) {
-        if (page == i) {
-          pages.push({
-            url: raw_split[0] + ':' + i,
-            content: (i + 1),
-            active: true
-          });
-        } else {
-          pages.push({
-            url: raw_split[0] + ':' + i,
-            content: (i + 1)
-          });
-        }
-      }
-      cube_page = [];
-      for (i = 0; i < 12; i++) {
-        if (cubes[i + page * 12]) {
-          cube_page.push(cubes[i + page * 12]);
-        }
-      }
-      res.render('search', {
-        results: cube_page,
-        search: req.params.id,
-        terms: terms,
-        pages: pages,
-        numresults: cubes.length,
-        loginCallback: '/search/' + req.params.id
-      });
-    } else {
-      res.render('search', {
-        results: cubes,
-        search: req.params.id,
-        terms: terms,
-        numresults: cubes.length,
-        loginCallback: '/search/' + req.params.id
-      });
-    }
-  });
-});
-
-app.get('/contact', function(req, res) {
-  res.render('info/contact', {
-    loginCallback: '/contact'
-  });
-});
-
-app.get('/tos', function(req, res) {
-  res.render('info/tos', {
-    loginCallback: '/tos'
-  });
-});
-
-app.get('/filters', function(req, res) {
-  res.render('info/filters', {
-    loginCallback: '/filters'
-  });
-});
-
-app.get('/privacy', function(req, res) {
-  res.render('info/privacy_policy', {
-    loginCallback: '/privacy'
-  });
-});
-
-app.get('/cookies', function(req, res) {
-  res.render('info/cookies', {
-    loginCallback: '/cookies'
-  });
-});
-
-app.get('/ourstory', function(req, res) {
-  res.render('info/ourstory', {
-    loginCallback: '/ourstory'
-  });
-});
-
-app.get('/faq', function(req, res) {
-  res.render('info/faq', {
-    loginCallback: '/faq'
-  });
-});
-
-app.get('/donate', function(req, res) {
-  res.render('info/donate', {
-    loginCallback: '/donate'
-  });
-});
-
-app.get('/404', function(req, res) {
-  res.render('misc/404', {});
-});
-
-app.get('/c/:id', function(req, res) {
-  res.redirect('/cube/list/' + req.params.id);
-});
-
-app.use(function(req, res) {
+app.use((req, res) => {
   res.status(404).render('misc/404', {});
 });
 
-/*
-schedule.scheduleJob('0 0 * * *', function(){
-  console.log("Starting midnight cardbase update...");
-  updatedb.updateCardbase();
-});
-*/
-
 // Start server
-http.createServer(app).listen(5000, 'localhost', function() {
+http.createServer(app).listen(5000, 'localhost', () => {
   console.log('server started on port 5000...');
 });

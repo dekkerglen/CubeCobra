@@ -8,8 +8,8 @@ block cube_toolbar
   input#cubeID(type='hidden', name='cubeID', value=cube_id)
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
   input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-  input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors))
-  input#hideTagColors(type='hidden', name='hideTagColors', value=(!!user && user.hide_tag_colors === true).toString())
+  input#cubeTagColors(type='hidden', value=JSON.stringify(cube.tag_colors))
+  input#showTagColors(type='hidden', value=(!user || !user.hide_tag_colors).toString())
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
@@ -22,212 +22,6 @@ block cube_toolbar
 block cube_content
   #react-root
 
-  // Filter Modal
-  #filterModal.modal.fade(tabindex='-1', role='dialog')
-    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-      .modal-content
-        .modal-header
-          h5.modal-title Advanced Filter
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Card Name
-            input#filterName.form-control(type='text', placeholder='Any words in the name, e.g. "Fire"')       
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Oracle Text
-            input#filterOracle.form-control(type='text', placeholder='Any text, e.g. "Draw a card"')        
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text CMC
-            select.custom-select#filterCMCOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-              option(value='!') not equal to
-            input#filterCMC.form-control(type='text', placeholder='Any value, e.g. "2"')   
-          hr
-          h6.span Color: 
-            .form-check.form-check-inline
-              input#filterColorW.form-check-input(type='checkbox', value='option1')
-              label.form-check-label(for='groupContextModalCheckboxW')
-                img(src='/content/symbols/w.png' alt='White' title='White')
-            .form-check.form-check-inline
-              input#filterColorU.form-check-input(type='checkbox', value='option2')
-              label.form-check-label(for='groupContextModalCheckboxU')
-                img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-            .form-check.form-check-inline
-              input#filterColorB.form-check-input(type='checkbox', value='option3')
-              label.form-check-label(for='groupContextModalCheckboxB')
-                img(src='/content/symbols/b.png' alt='Black' title='Black')
-            .form-check.form-check-inline
-              input#filterColorR.form-check-input(type='checkbox', value='option4')
-              label.form-check-label(for='groupContextModalCheckboxR')
-                img(src='/content/symbols/r.png' alt='Red' title='Red')
-            .form-check.form-check-inline
-              input#filterColorG.form-check-input(type='checkbox', value='option5')
-              label.form-check-label(for='groupContextModalCheckboxG')
-                img(src='/content/symbols/g.png' alt='Green' title='Green')
-            .form-check.form-check-inline
-              input#filterColorC.form-check-input(type='checkbox', value='option6')
-              label.form-check-label(for='groupContextModalCheckboxC')
-                img(src='/content/symbols/c.png' alt='Colorless' title='Colorless')
-          select.custom-select#filterColorOp
-            option(value='=' selected='') Exactly these colors
-            option(value='>=') Including these colors
-            option(value='<=') At most these colors
-          hr
-          h6.span Color Identity: 
-            .form-check.form-check-inline
-              input#filterColorIdentityW.form-check-input(type='checkbox', value='option1')
-              label.form-check-label(for='groupContextModalCheckboxW')
-                img(src='/content/symbols/w.png' alt='White' title='White')
-            .form-check.form-check-inline
-              input#filterColorIdentityU.form-check-input(type='checkbox', value='option2')
-              label.form-check-label(for='groupContextModalCheckboxU')
-                img(src='/content/symbols/u.png' alt='Blue' title='Blue')
-            .form-check.form-check-inline
-              input#filterColorIdentityB.form-check-input(type='checkbox', value='option3')
-              label.form-check-label(for='groupContextModalCheckboxB')
-                img(src='/content/symbols/b.png' alt='Black' title='Black')
-            .form-check.form-check-inline
-              input#filterColorIdentityR.form-check-input(type='checkbox', value='option4')
-              label.form-check-label(for='groupContextModalCheckboxR')
-                img(src='/content/symbols/r.png' alt='Red' title='Red')
-            .form-check.form-check-inline
-              input#filterColorIdentityG.form-check-input(type='checkbox', value='option5')
-              label.form-check-label(for='groupContextModalCheckboxG')
-                img(src='/content/symbols/g.png' alt='Green' title='Green')
-            .form-check.form-check-inline
-              input#filterColorIdentityC.form-check-input(type='checkbox', value='option6')
-              label.form-check-label(for='groupContextModalCheckboxC')
-                img(src='/content/symbols/c.png' alt='Colorless' title='Colorless')
-          select.custom-select#filterColorIdentityOp
-            option(value='=' selected='') Exactly these colors
-            option(value='>=') Including these colors
-            option(value='<=') At most these colors
-          hr 
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Mana Cost
-            input#filterMana.form-control(type='text', placeholder='Any mana cost, e.g. "{1}{W}"')
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Type Line
-            input#filterType.form-control(type='text', placeholder='Choose any card type, supertype, or subtypes to match')
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Tag
-            input#filterTag.form-control(type='text', placeholder='Any text, e.g. "Zombie Testing"')            
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Status
-            select.custom-select#filterStatus
-              option(selected='')
-              option(value='Not Owned') Not Owned
-              option(value='Ordered') Ordered
-              option(value='Owned') Owned
-              option(value='Premium Owned') Premium Owned
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Price
-            select.custom-select#filterPriceOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-            input#filterPrice.form-control(type='text', placeholder='Any decimal number, e.g. "3.50"')        
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Foil Price
-            select.custom-select#filterPriceFoilOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-            input#filterPriceFoil.form-control(type='text', placeholder='Any decimal number, e.g. "3.50"')  
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Power
-            select.custom-select#filterPowerOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-              option(value='!') not equal to
-            input#filterPower.form-control(type='text', placeholder='Any value, e.g. "2"')   
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Toughness
-            select.custom-select#filterToughnessOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-              option(value='!') not equal to
-            input#filterToughness.form-control(type='text', placeholder='Any value, e.g. "2"')
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Loyalty
-            select.custom-select#filterLoyaltyOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-            input#filterLoyalty.form-control(type='text', placeholder='Any value, e.g. "3"')
-          .input-group.mb-3
-            .input-group-prepend
-              span.input-group-text Rarity
-            select.custom-select#filterRarityOp
-              option(value='=' selected='') equal to
-              option(value='<') less than
-              option(value='>') greater than
-              option(value='<=') less than or equal to
-              option(value='>=') greater than or equal to
-            input#filterRarity.form-control(type='text', placeholder='Any rarity, e.g. "common"')
-        .modal-footer
-          button.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close') Cancel
-          button.btn.btn-success#applyAdvancedFilterButton(type='button') Apply
-
-  // Modal
-  #tagColorsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='exampleModalCenterTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-centered.modal-lg(role='document')
-      .modal-content
-        .modal-header
-          h5#tagColorsTitle.modal-title
-            if user && user.id == cube.owner
-              | Set Tag Colors
-            else
-              | View Tag Colors
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        #showTagColors
-          .form-check.form-check-inline
-            input#showTagColorsCheckbox.form-check-input(type='checkbox')
-            label.form-check-label(for='showTagColorsCheckbox') Show Tag Colors in Card List 
-          if user && user.id == cube.owner
-            div
-              span(style="font-style: italic;") (Drag the tags below into a priority order to use for cards that have more than one tag)
-        #tagsColumn.col
-
-        .modal-footer
-          button#tagColorsCancel.btn.btn-danger(type='button', data-dismiss='modal', aria-label='Close')
-            if user && user.id == cube.owner
-              | Cancel
-            else
-              | Close
-          if user && user.id == cube.owner
-            button#tagColorsSubmit.btn.btn-success(type='button') Save
-
   // Paste bulk Modal
   #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
     .modal-dialog.modal-dialog-scrollable(role='document')
@@ -239,7 +33,7 @@ block cube_content
             button.close(type='button', data-dismiss='modal', aria-label='Close')
               span(aria-hidden='true') ×
           .modal-body
-            p Acceptable plain text with one card name per line.
+            p Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x island"
             textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Cube Here (max length 20000)", name='body')
           .modal-footer
             #bulkspinner.collapse.spinner-border.text-success(role='status')
@@ -320,6 +114,4 @@ block cube_content
   script(src='/js/sortfilter.js')
   script(src='/js/tags.js')
   script(src='/js/editcube.js')
-  // FIXME: this can be removed once edit collapse is in React.
-  script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
   script(src='/js/cube_list.bundle.js')
