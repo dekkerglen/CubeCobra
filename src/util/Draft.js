@@ -7,6 +7,14 @@ function init(newDraft) {
   draft = newDraft;
 }
 
+function id() {
+  return draft._id;
+}
+
+function cube() {
+  return draft.cube;
+}
+
 function pack() {
   return draft.packs[0][0] || [];
 }
@@ -168,4 +176,4 @@ async function finish() {
   }
 }
 
-export default { init, pack, packPickNumber, pick, finish };
+export default { init, id, cube, pack, packPickNumber, pick, finish };
