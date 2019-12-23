@@ -2,7 +2,6 @@ const rimraf = require('rimraf');
 const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
-const fs = require('fs');
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
