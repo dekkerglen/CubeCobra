@@ -38,6 +38,9 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
     isDragging ? ['transparent'] : [],
   );
 
+  const typeLine = (card.type_line || card.details.type).toLowerCase();
+  const cnc = typeLine.includes('creature') ? 0 : 1;
+
   return (
     <div ref={drag}>
       <div ref={drop}>
@@ -49,6 +52,9 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
           card={card}
           tags={[]}
           className={classes.join(' ')}
+          data-location-type={location.type}
+          data-location-data={JSON.stringify(location.data)}
+          data-cnc={cnc.toString()}
           {...props}
         />
       </div>

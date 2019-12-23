@@ -5,6 +5,7 @@ block cube_toolbar
   input#draftraw(type='hidden', name='draftraw', value=draft_raw)
 
 block cube_content
-  div#react-root
+  include ../flash
+  #react-root
   script(src='/js/autocard.js')
   script(src='/js/cube_draft.bundle.js')

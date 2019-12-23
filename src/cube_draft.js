@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
 import Draft from './util/Draft';

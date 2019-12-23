@@ -10,6 +10,7 @@ import { arraysEqual } from '../util/Util';
 
 import CardStack from './CardStack';
 import CSRFForm from './CSRFForm';
+import DeckStacks from './DeckStacks';
 import DraggableCard from './DraggableCard';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -42,52 +43,6 @@ const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) =>
     </CardBody>
   </Card>;
 
-const Picks = ({ picks, onMoveCard }) =>
-  <Card className="mt-3">
-    <CardHeader>
-      <CardTitle>
-        <h4>Picks</h4>
-      </CardTitle>
-    </CardHeader>
-    <CardBody className="pt-0">
-      {picks.map((row, index) =>
-        <Row key={index} className="draft-row">
-          {row.map((column, index2) =>
-            <CardStack key={index2} location={Location.picks([index, index2, 0])}>
-              {column.map((card, index3) =>
-                <div className="stacked" key={card.details._id}>
-                  <DraggableCard
-                    location={Location.picks([index, index2, index3 + 1])}
-                    card={card}
-                    canDrop={canDrop}
-                    onMoveCard={onMoveCard}
-                  />
-                </div>
-              )}
-            </CardStack>
-          )}
-        </Row>
-      )}
-    </CardBody>
-  </Card>;
-
-const cmcColumn = (card) => {
-  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
-  if (isNaN(cmc)) {
-    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
-  }
-  // Round to half-integer then take ceiling to support Little Girl
-  let cmcDoubleInt = Math.round(cmc * 2);
-  let cmcInt = Math.round((cmcDoubleInt + cmcDoubleInt % 2) / 2);
-  if (cmcInt < 0) {
-    cmcInt = 0;
-  }
-  if (cmcInt > 7) {
-    cmcInt = 7;
-  }
-  return cmcInt;
-};
-
 const DraftView = () => {
   const [pack, setPack] = useState(Draft.pack());
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
@@ -116,15 +71,7 @@ const DraftView = () => {
     }
     if (source.type === Location.PACK) {
       if (target.type === Location.PICKS) {
-        const card = pack[source.data];
-        const [row, col, index] = target.data;
-        const newPicks = [...picks];
-        if (newPicks[row].length < 1 + col) {
-          newPicks[row] = newPicks[row].concat(Array(1 + col - newPicks[row].length).fill([]));
-        }
-        newPicks[row][col] = [...newPicks[row][col]];
-        newPicks[row][col].splice(index, 0, card);
-        setPicks(newPicks);
+        setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
         await Draft.pick(source.data);
         update();
       } else {
@@ -132,17 +79,7 @@ const DraftView = () => {
       }
     } else if (source.type === Location.PICKS) {
       if (target.type === Location.PICKS) {
-        const [sourceRow, sourceCol, sourceIndex] = source.data;
-        const [targetRow, targetCol, targetIndex] = target.data;
-        const newPicks = [...picks];
-        if (newPicks[targetRow].length < 1 + targetCol) {
-          newPicks[targetRow] = newPicks[targetRow].concat(new Array(1 + targetCol - newPicks[targetRow].length).fill([]));
-        }
-        newPicks[sourceRow][sourceCol] = [...newPicks[sourceRow][sourceCol]];
-        newPicks[targetRow][targetCol] = [...newPicks[targetRow][targetCol]];
-        const [card] = newPicks[sourceRow][sourceCol].splice(sourceIndex - 1, 1);
-        newPicks[targetRow][targetCol].splice(targetIndex, 0, card);
-        setPicks(newPicks);
+        setPicks(DeckStacks.moveOrAddCard(picks, target.data, source.data));
         update();
       } else {
         console.error('Can\'t move cards from picks back to pack.');
@@ -158,15 +95,9 @@ const DraftView = () => {
     const card = pack[cardIndex];
     const typeLine = (card.type_line || card.details.type).toLowerCase();
     const row = typeLine.includes('creature') ? 0 : 1;
-    const col = cmcColumn(card);
-    const newPicks = [...picks];
-    if (newPicks[row].length < 1 + col) {
-      newPicks[row] = newPicks[row].concat(new Array(1 + col - newPicks[row].length).fill([]));
-    }
-    const colIndex = newPicks[row][col].length;
-    newPicks[row][col] = [...newPicks[row][col]];
-    newPicks[row][col].splice(colIndex, 0, card);
-    setPicks(newPicks);
+    const col = DeckStacks.cmcColumn(card);
+    const colIndex = picks[row][col].length;
+    setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
     await Draft.pick(cardIndex);
     update();
   }, [pack, picks]);
@@ -178,10 +109,12 @@ const DraftView = () => {
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
         <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} onMoveCard={handleMoveCard} onClickCard={handleClickCard} />
-        <Picks picks={picks} onMoveCard={handleMoveCard} />
+        <DeckStacks cards={picks} title="Picks" locationType={Location.PICKS} canDrop={canDrop} onMoveCard={handleMoveCard} className="mt-3" />
       </DndProvider>
     </ErrorBoundary>
   );
 }
+
+DraftView.propTypes = {};
 
 export default DraftView;

@@ -14,6 +14,14 @@ class DraftLocation {
     return new DraftLocation(DraftLocation.PICKS, data);
   }
 
+  static deck(data) {
+    return new DraftLocation(DraftLocation.DECK, data);
+  }
+
+  static sideboard(data) {
+    return new DraftLocation(DraftLocation.SIDEBOARD, data);
+  }
+
   equals(other) {
     if (this.type !== other.type) {
       return false;
@@ -32,5 +40,7 @@ class DraftLocation {
 }
 DraftLocation.PACK = 'pack';
 DraftLocation.PICKS = 'picks';
+DraftLocation.DECK = 'deck';
+DraftLocation.SIDEBOARD = 'sideboard';
 
 export default DraftLocation;

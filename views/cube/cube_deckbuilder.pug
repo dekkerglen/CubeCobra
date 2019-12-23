@@ -2,10 +2,7 @@ extends cube_layout
 
 block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
-  input#basicsraw(type='hidden', name='basicsraw', value=basics_raw)
-  form#submitDeckForm(method='POST', action='/cube/editdeck/'+deckid)
-    input(type='hidden', name='_csrf', value=csrfToken)
-    input#deckraw(type='hidden', name='draftraw', value=deck_raw)
+  input#deckraw(type='hidden', value=deck_raw)
 
   #dragelement(style='position:absolute;z-index: 9999;')
   .usercontrols
@@ -23,18 +20,7 @@ block cube_toolbar
 
 block cube_content
   include ../flash
-  br
-  .card.card-hover#deckhover
-    .card-header
-      h4#deckName Deck
-    .card-body
-      #deckarea(style='margin: 3px;')
-  br
-  .card.card-hover#sideboardhover
-    .card-header
-      h4 Sideboard
-    .card-body
-      #sideboardarea(style='margin: 3px;')
+  #react-root
 
   #basicsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
     .modal-dialog.modal-sm(role='document')
@@ -165,7 +151,5 @@ block cube_content
         .modal-footer
           button#addBasicsButton.btn.btn-success(type='submit',value='Add') Add
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-  script(src='/js/csrf.js')
-  script(src='/js/utils.js')
-  script(src='/js/deckbuilder.js')
+  script(src='/js/cube_deckbuilder.bundle.js')
 
