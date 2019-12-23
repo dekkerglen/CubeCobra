@@ -34,16 +34,20 @@ export function arrayShuffle(array) {
   return array;
 };
 
-export function randomElement(array) {
-  const randomIndex = Math.floor(Math.random() * array.length);
-  return array[randomIndex];
-}
-
 export function arrayMove(arr, oldIndex, newIndex) {
   const result = [...arr];
   const [element] = result.splice(oldIndex, 1);
   result.splice(newIndex, 0, element);
   return result;
+}
+
+export function arrayIsSubset(needles, haystack) {
+  return needles.every((x) => haystack.includes(x));
+}
+
+export function randomElement(array) {
+  const randomIndex = Math.floor(Math.random() * array.length);
+  return array[randomIndex];
 }
 
 export function fromEntries(entries) {
@@ -54,4 +58,4 @@ export function fromEntries(entries) {
   return obj;
 }
 
-export default { arraysEqual, arrayRotate, arrayMove, fromEntries };
+export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries };

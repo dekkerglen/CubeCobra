@@ -25,12 +25,6 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, ...
     }),
   });
 
-  useEffect(() => {
-    if (isDragging) {
-      autocard_hide_card();
-    }
-  });
-
   return (
     <div className="draggable-card" ref={drag}>
       <div ref={drop}>
