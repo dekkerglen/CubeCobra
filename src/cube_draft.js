@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 import Draft from './util/Draft';
 import Location from './util/DraftLocation';
@@ -120,17 +120,18 @@ const CubeDraft = ({ initialDraft }) => {
           </CardTitle>
         </CardHeader>
         <CardBody>
-          <Row>
+          <Row noGutters>
             {pack.map((card, index) =>
-              <DraggableCard
-                key={index}
-                location={Location.pack(index)}
-                data-index={index}
-                card={card}
-                canDrop={canDrop}
-                onMoveCard={handleMoveCard}
-                onClick={handleClickCard}
-              />
+              <Col key={card.details._id} className="col-1-5">
+                <DraggableCard
+                  location={Location.pack(index)}
+                  data-index={index}
+                  card={card}
+                  canDrop={canDrop}
+                  onMoveCard={handleMoveCard}
+                  onClick={handleClickCard}
+                />
+              </Col>
             )}
           </Row>
         </CardBody>
@@ -143,7 +144,7 @@ const CubeDraft = ({ initialDraft }) => {
         </CardHeader>
         <CardBody className="pt-0">
           {picks.map((row, index) =>
-            <Row key={index}>
+            <Row key={index} className="draft-row">
               {row.map((column, index2) =>
                 <CardStack key={index2} location={Location.picks([index, index2, 0])}>
                   {column.map((card, index3) =>

@@ -7,23 +7,27 @@
 }
 
 .stacked {
-  margin-top: -185px;
+  /* This is calculated relative to containing width */
+  margin-top: -124%;
 }
 
 .stack {
-  padding-top: 185px;
+  padding-top: 124%;
 }
 
-.draftcard {
-  border-radius: 6px;
+.draft-card {
+  border-radius: 4% / 2.858%;
 }
 
 .card-stack {
-  width: 150px;
-  padding: 0;
-  margin: 0 2px;
+  padding: 0 2px;
 }
 
 .draft-row {
-  padding: 0 -2px;
+  margin: 0 -2px;
+}
+
+.col-1-5 {
+  flex: 0 0 12.5%;
+  max-width: 12.5%;
 }

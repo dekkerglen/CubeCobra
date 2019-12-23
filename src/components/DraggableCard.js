@@ -33,7 +33,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
     }),
   });
 
-  const classes = ['draftcard'].concat(
+  const classes = ['draft-card'].concat(
     isAcceptable ? ['outline'] : [],
     isDragging ? ['transparent'] : [],
   );
@@ -45,8 +45,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
           src={card.details.display_image}
           fallbackSrc="/content/default_card.png"
           alt={card.details.name}
-          width={width || 150}
-          height={height || 210}
+          width="100%"
           card={card}
           tags={[]}
           className={classes.join(' ')}

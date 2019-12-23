@@ -13,14 +13,14 @@ const CardStack = ({ location, children, ...props }) => {
     }),
   });
 
-  let className = 'mt-3 card-stack'
+  let className = 'mt-3 col-1-5 card-stack'
   if (isAcceptable) {
     className += ' outline';
   }
 
   return (
-    <div ref={drop}>
-      <Col className={className} {...props}>
+    <Col className={className} {...props}>
+      <div ref={drop}>
         {!Array.isArray(children) ? '' :
           <div className="w-100 text-center mb-1">
             <b>{children.length}</b>
@@ -29,8 +29,8 @@ const CardStack = ({ location, children, ...props }) => {
         <div className="stack">
           {children}
         </div>
-      </Col>
-    </div>
+      </div>
+    </Col>
   );
 };
 
