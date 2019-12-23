@@ -122,7 +122,7 @@ const CubeDraft = ({ initialDraft }) => {
         <CardBody>
           <Row noGutters>
             {pack.map((card, index) =>
-              <Col key={card.details._id} className="col-1-5">
+              <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5">
                 <DraggableCard
                   location={Location.pack(index)}
                   data-index={index}
