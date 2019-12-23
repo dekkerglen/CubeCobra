@@ -26,7 +26,9 @@ const CubeDraft = ({ initialDraft }) => {
   const [picks, setPicks] = useState([[], []]);
 
   const update = useCallback(() => {
-    setPack(Draft.pack());
+    // This is very bad architecture. The React component should manage the state.
+    // TODO: Move state inside React.
+    setPack([...Draft.pack()]);
     const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
     setPackNumber(currentPackNumber);
     setPickNumber(currentPickNumber);
@@ -57,12 +59,12 @@ const CubeDraft = ({ initialDraft }) => {
         const [sourceRow, sourceCol, sourceIndex] = source.data;
         const [targetRow, targetCol, targetIndex] = target.data;
         const newPicks = [...picks];
-        if (newPicks[targetRow].length < targetCol) {
-          newPicks[targetRow] = newPicks[targetRow].concat(1 + Array(col - newPicks[row].length).fill([]));
+        if (newPicks[targetRow].length < 1 + targetCol) {
+          newPicks[targetRow] = newPicks[targetRow].concat(Array(1 + targetCol - newPicks[targetRow].length).fill([]));
         }
-        newPicks[sourceRow][sourceCol] = [...newPicks[sourceRow][soureCol]];
-        newPicks[targetRow][targetCol] = [...newPicks[targetRow][soureCol]];
-        const [card] = newPicks[sourceRow][sourceCol].splice(sourceIndex, 1);
+        newPicks[sourceRow][sourceCol] = [...newPicks[sourceRow][sourceCol]];
+        newPicks[targetRow][targetCol] = [...newPicks[targetRow][targetCol]];
+        const [card] = newPicks[sourceRow][sourceCol].splice(sourceIndex - 1, 1);
         newPicks[targetRow][targetCol].splice(targetIndex, 0, card);
         setPicks(newPicks);
         update();
@@ -90,6 +92,7 @@ const CubeDraft = ({ initialDraft }) => {
     newPicks[row][col].splice(colIndex, 0, card);
     setPicks(newPicks);
     Draft.pick(cardIndex);
+    update();
   }, [pack, picks]);
 
   return (
@@ -128,13 +131,14 @@ const CubeDraft = ({ initialDraft }) => {
               {row.map((column, index2) =>
                 <CardStack key={index2} location={Location.picks([index, index2, 0])}>
                   {column.map((card, index3) =>
-                    <DraggableCard
-                      key={card.details.name}
-                      location={Location.picks([index, index2, index3 + 1])}
-                      card={card}
-                      canDrop={canDrop}
-                      onMoveCard={handleMoveCard}
-                    />
+                    <div className="stacked" key={card.details._id}>
+                      <DraggableCard
+                        location={Location.picks([index, index2, index3 + 1])}
+                        card={card}
+                        canDrop={canDrop}
+                        onMoveCard={handleMoveCard}
+                      />
+                    </div>
                   )}
                 </CardStack>
               )}

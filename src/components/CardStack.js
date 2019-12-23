@@ -15,7 +15,7 @@ const CardStack = ({ location, children, ...props }) => {
 
   return (
     <div ref={drop}>
-      <Col className="stack pt-3" {...props}>
+      <Col className="stack mt-3" {...props}>
         {children}
       </Col>
     </div>

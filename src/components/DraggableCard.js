@@ -6,7 +6,7 @@ import withAutocard from './WithAutocard';
 
 const CardImage = withAutocard(ImageFallback);
 
-const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, ...props }) => {
+const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
   const [{ isDragging }, drag] = useDrag({
     item: { type: 'card', location },
     begin: (monitor) => /* global */ autocard_hide_card(),
@@ -25,6 +25,11 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, ...
     }),
   });
 
+  const classes = ['draftcard'].concat(
+    isAcceptable ? ['outline'] : [],
+    isDragging ? ['transparent'] : [],
+  );
+
   return (
     <div className="draggable-card" ref={drag}>
       <div ref={drop}>
@@ -36,8 +41,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, ...
           height={height || 210}
           card={card}
           tags={[]}
-          className={isAcceptable ? 'outline' : ''}
-          style={isDragging ? { opacity: 0.5 } : {}}
+          className={classes.join(' ')}
           {...props}
         />
       </div>
