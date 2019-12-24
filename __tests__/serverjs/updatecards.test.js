@@ -5,7 +5,6 @@ const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/util/Card.js');
-const fs = require('fs');
 
 const cardsFixturePath = 'fixtures/cards_small.json';
 
@@ -29,8 +28,8 @@ const convertedExampleCard = {
   legalities: {
     Legacy: true,
     Modern: true,
-    Standard: false,
-    Pioneer: false,
+    Standard: true,
+    Pioneer: true,
     Pauper: false,
   },
   parsed_cost: ['w', 'r'],
@@ -147,7 +146,7 @@ const convertedExampleAdventureCard = {
   image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   isToken: false,
   language: 'en',
-  legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+  legalities: { Legacy: true, Modern: true, Standard: true, Pioneer: true, Pauper: false },
   name: 'Flaxen Intruder',
   name_lower: 'flaxen intruder',
   oracle_text:

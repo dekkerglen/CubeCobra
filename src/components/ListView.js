@@ -151,7 +151,6 @@ class ListViewRaw extends Component {
               .then((response) => response.json())
               .then((json) => {
                 cube[index].details = json.card;
-                cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
                 cubeDict[cube[index].index] = cube[index];
               })
               .catch((err) => console.error(err));
