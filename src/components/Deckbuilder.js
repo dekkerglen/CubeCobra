@@ -36,7 +36,14 @@ const makeInitialStacks = (playerDeck) => {
 
 const Deckbuilder = ({ initialDeck }) => {
   const [deck, setDeck] = useState(makeInitialStacks(initialDeck.playerdeck));
-  const [sideboard, setSideboard] = useState([initialDeck.playersideboard.slice(0, 8)]);
+  const [sideboard, setSideboard] = useState(() => {
+    const initial = initialDeck.playersideboard;
+    if (!initial || !Array.isArray(initial) || initial.length === 0) {
+      return [new Array(8).fill([])];
+    } else {
+      return [initialDeck.playersideboard.slice(0, 8)]
+    }
+  });
 
   const locationMap = {
     [Location.DECK]: [deck, setDeck],
