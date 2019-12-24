@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
@@ -43,7 +44,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
               canDrop={canDrop}
               onMoveCard={picking === null ? onMoveCard : undefined}
               onClick={picking === null ? onClickCard : undefined}
-              style={picking === index ? { opacity: 0.5 } : undefined}
+              className={picking === index ? 'transparent' : undefined}
             />
           </Col>
         ))}
@@ -51,6 +52,15 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
     </CardBody>
   </Card>
 );
+
+Pack.propTypes = {
+  pack: PropTypes.arrayOf(PropTypes.object).isRequired,
+  packNumber: PropTypes.number.isRequired,
+  pickNumber: PropTypes.number.isRequired,
+  picking: PropTypes.number,
+  onMoveCard: PropTypes.func.isRequired,
+  onClickCard: PropTypes.func.isRequired,
+};
 
 const DraftView = () => {
   const [pack, setPack] = useState([...Draft.pack()]);
@@ -115,10 +125,7 @@ const DraftView = () => {
       const col = cmcColumn(card);
       const colIndex = picks[row][col].length;
       setPicking(cardIndex);
-      // await new Promise(resolve => setTimeout(resolve, 20000));
-      console.log('await');
       await Draft.pick(cardIndex);
-      console.log('done');
       setPicking(null);
       setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
       update();

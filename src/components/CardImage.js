@@ -13,7 +13,7 @@ const CardImage = ({ card, noAutocard, className, ...props }) => {
   const Tag = noAutocard ? ImageFallback : ImageAutocard;
   return (
     <Tag
-      card={card}
+      card={noAutocard ? undefined : card}
       src={imageSrc}
       fallbackSrc="/content/default_card.png"
       alt={card.details.name}
