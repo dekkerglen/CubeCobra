@@ -21,7 +21,7 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
           {row.map((column, index2) => (
             <CardStack key={index2} location={new Location(locationType, [index, index2, 0])}>
               {column.map((card, index3) => (
-                <div className="stacked" key={card.details._id}>
+                <div className="stacked" key={index3}>
                   <DraggableCard
                     location={new Location(locationType, [index, index2, index3 + 1])}
                     card={card}

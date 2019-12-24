@@ -20,31 +20,41 @@ import {
 import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 
-const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
+const COLORS = [['White', 'W', 'Plains'], ['Blue', 'U', 'Island'], ['Black', 'B', 'Swamp'], ['Red', 'R', 'Mountain'], ['Green', 'G', 'Forest']];
 const MAX_BASICS = 20;
 
-const BasicsModal = ({ isOpen, toggle, handleAddBasics }) => {
+const BasicsModal = ({ isOpen, toggle, addBasics }) => {
   const refs = {};
-  for (const [long, short] of COLORS) {
-    refs[short] = useRef(0);
+  for (const [long, short, basic] of COLORS) {
+    refs[basic] = useRef();
   }
+
+  const handleAddBasics = useCallback(() => {
+    const numBasics = {};
+    for (const basic in refs) {
+      numBasics[basic] = parseInt(refs[basic].current.value);
+    }
+    addBasics(numBasics);
+    toggle();
+  }, [addBasics, toggle]);
+
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="sm">
       <ModalHeader toggle={toggle}>Add Basic Lands</ModalHeader>
       <ModalBody>
-        {COLORS.map(([long, short]) => (
+        {COLORS.map(([long, short, basic]) => (
           <Form key={short} className="mb-1" inline>
             <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={long} title={long} className="mr-1" />
-            <Input type="select" name={long} defaultValue={0} ref={refs[short]}>
+            <Input type="select" name={long} defaultValue={0} innerRef={refs[basic]}>
               {Array.from(new Array(MAX_BASICS).keys()).map((n) => (
-                <option key={n}>{n}</option>
+                <option key={n} value={n}>{n}</option>
               ))}
             </Input>
           </Form>
         ))}
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success">
+        <Button type="submit" color="success" onClick={handleAddBasics}>
           Add
         </Button>
         <Button color="secondary" onClick={toggle}>
@@ -61,7 +71,7 @@ BasicsModal.propTypes = {
   handleAddBasics: PropTypes.func,
 };
 
-const DeckbuilderNavbar = ({ deck }) => {
+const DeckbuilderNavbar = ({ deck, addBasics }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -75,7 +85,7 @@ const DeckbuilderNavbar = ({ deck }) => {
 
   const toggleBasicsModal = useCallback(
     (event) => {
-      event.preventDefault();
+      event && event.preventDefault();
       setBasicsModalOpen(!basicsModalOpen);
     },
     [basicsModalOpen],
@@ -110,7 +120,7 @@ const DeckbuilderNavbar = ({ deck }) => {
               <NavLink href="#" onClick={toggleBasicsModal}>
                 Add Basic Lands
               </NavLink>
-              <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} />
+              <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
             </NavItem>
             <CustomImageToggler />
           </Nav>

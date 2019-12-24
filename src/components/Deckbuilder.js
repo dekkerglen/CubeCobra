@@ -35,7 +35,7 @@ const makeInitialStacks = (playerDeck) => {
   }
 };
 
-const Deckbuilder = ({ initialDeck }) => {
+const Deckbuilder = ({ initialDeck, basics }) => {
   const [deck, setDeck] = useState(makeInitialStacks(initialDeck.playerdeck));
   const [sideboard, setSideboard] = useState(() => {
     const initial = initialDeck.playersideboard;
@@ -89,13 +89,21 @@ const Deckbuilder = ({ initialDeck }) => {
     [handleMoveCard],
   );
 
+  const addBasics = useCallback((numBasics) => {
+    const addedLists = Object.entries(numBasics).map(([basic, count]) => new Array(count).fill(basics[basic]));
+    const added = addedLists.flat();
+    const newDeck = [...deck];
+    newDeck[1][0] = [].concat(newDeck[1][0], added);
+    setDeck(newDeck);
+  }, [deck]);
+
   const currentDeck = { ...initialDeck };
   currentDeck.playerdeck = [...deck[0], ...deck[1]];
   currentDeck.playersideboard = sideboard[0];
 
   return (
     <DisplayContextProvider>
-      <DeckbuilderNavbar deck={currentDeck} />
+      <DeckbuilderNavbar deck={currentDeck} addBasics={addBasics} />
       <DynamicFlash />
       <ErrorBoundary>
         <DndProvider backend={HTML5Backend}>

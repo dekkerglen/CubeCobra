@@ -47,7 +47,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
               </div>
               <div className="stack">
                 {column.map((card, index3) => (
-                  <div className="stacked" key={card.details._id}>
+                  <div className="stacked" key={index3}>
                     <CardImage card={card} tags={[]} />
                   </div>
                 ))}
@@ -157,7 +157,7 @@ DraftDeck.propTypes = {
   oldFormat: PropTypes.bool.isRequired,
   drafter: PropTypes.object.isRequired,
   cards: PropTypes.arrayOf(PropTypes.object),
-  deck: PropTypes.object,
+  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)),
   botDecks: PropTypes.arrayOf(PropTypes.array).isRequired,
   bots: PropTypes.arrayOf(PropTypes.string).isRequired,
   canEdit: PropTypes.bool.isRequired,
