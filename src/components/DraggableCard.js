@@ -30,12 +30,9 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
       image.src = card.imgUrl || card.details.image_normal;
       div.appendChild(image);
       image.onload = () => {
-        console.log('loaded');
         if (imageRef.current) {
-          console.log('setting', imageRef.current.clientWidth);
           div.style.width = imageRef.current.clientWidth;
           div.style.height = 'auto';
-          console.log('result', image.width);
         }
         div.style.borderRadius = '4% / 2.858%';
         div.style.opacity = '0.8';
