@@ -39,9 +39,9 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
     </CardHeader>
     <CardBody className="pt-0">
       {cards.map((row, index) => (
-        <Row key={index} className="draft-row">
+        <Row key={index} className="row-low-padding">
           {row.map((column, index2) => (
-            <Col key={index2} className="mt-3 card-stack col-md-1-5" xs={4} sm={3}>
+            <Col key={index2} className="mt-3 card-stack col-md-1-5 col-low-padding" xs={4} sm={3}>
               <div className="w-100 text-center mb-1">
                 <b>{column.length}</b>
               </div>
@@ -59,6 +59,11 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
     </CardBody>
   </Card>
 );
+
+DeckStacksStatic.propTypes = {
+  title: PropTypes.string.isRequired,
+  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
+};
 
 const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
   const [isOpen, setIsOpen] = useState(false);

@@ -8,11 +8,12 @@ import Location from '../util/DraftLocation';
 import CardStack from './CardStack';
 import DraggableCard from './DraggableCard';
 
-const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
+const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
   <Card {...props}>
     <CardHeader>
-      <CardTitle className="mb-0">
-        <h4 className="mb-0">{title}</h4>
+      <CardTitle className="mb-0 d-flex flex-row align-items-end">
+        <h4 className="mb-0 mr-auto">{title}</h4>
+        <h6 className="mb-0 font-weight-normal d-none d-md-block">{subtitle}</h6>
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
@@ -42,6 +43,7 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
 DeckStacks.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
   title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string,
   locationType: PropTypes.string,
   onMoveCard: PropTypes.func,
   onClickCard: PropTypes.func,

@@ -24,8 +24,8 @@ const canDrop = (source, target) => {
 const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
-      <CardTitle>
-        <h4>
+      <CardTitle className="mb-0">
+        <h4 className="mb-0">
           Pack {packNumber}, Pick {pickNumber}
         </h4>
       </CardTitle>
@@ -133,6 +133,13 @@ const DraftView = () => {
     [pack, picks],
   );
 
+  const allCards = picks.flat().flat();
+  const allTypes = allCards.map(card => (card.type_line || card.details.type).toLowerCase());
+  const numCreatures = allTypes.filter(type => type.includes('creature')).length;
+  const numLands = allTypes.filter(type => type.includes('land')).length;
+  const numOther = allCards.length - numLands - numCreatures;
+  const subtitle = `${numLands} land${numLands === 1 ? '' : 's'}, ` + `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` + `${numOther} other`;
+
   return (
     <DisplayContextProvider>
       <div className="usercontrols">
@@ -159,6 +166,7 @@ const DraftView = () => {
         <DeckStacks
           cards={picks}
           title="Picks"
+          subtitle={subtitle}
           locationType={Location.PICKS}
           canDrop={canDrop}
           onMoveCard={handleMoveCard}
