@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, forwardRef } from 'react';
 
 import DisplayContext from './DisplayContext';
 
@@ -18,7 +18,7 @@ const handleMouseOver = (event) => {
 
 const handleMouseOut = (event) => /* global */ autocard_hide_card();
 
-const withAutocard = (Tag) => ({ card, front, back, tags, ...props }) => {
+const withAutocard = (Tag) => forwardRef(({ card, front, back, tags, ...props }, ref) => {
   const { showCustomImages } = useContext(DisplayContext.Context);
   card = card || { details: {} };
   tags = tags || card.tags || [];
@@ -26,6 +26,7 @@ const withAutocard = (Tag) => ({ card, front, back, tags, ...props }) => {
   back = back || card.details.image_flip;
   return (
     <Tag
+      ref={ref}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       data-front={front}
@@ -35,6 +36,6 @@ const withAutocard = (Tag) => ({ card, front, back, tags, ...props }) => {
       {...props}
     />
   );
-};
+});
 
 export default withAutocard;

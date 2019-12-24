@@ -29,8 +29,8 @@ class ImageFallback extends Component {
   }
 
   render() {
-    const { src, fallbackSrc, ...props } = this.props;
-    const cardImage = <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} {...props} />;
+    const { src, fallbackSrc, innerRef, ...props } = this.props;
+    const cardImage = <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} ref={innerRef} {...props} />;
     return (
       <div style={{ position: 'relative' }}>
         <img

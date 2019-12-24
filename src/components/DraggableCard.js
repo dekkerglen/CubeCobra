@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import React, { useEffect, useRef } from 'react';
+import { DragPreviewImage, useDrag, useDrop } from 'react-dnd';
 
 import CardImage from './CardImage';
 
 const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     item: { type: 'card', location },
     begin: (monitor) => {
       /* global */ stopAutocard = true;
@@ -20,6 +20,32 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
       isDragging: !!monitor.isDragging(),
     }),
   });
+
+  const imageRef = useRef();
+
+  useEffect(() => {
+    if (!preview.current) {
+      const div = document.createElement('div');
+      const image = new Image();
+      image.src = card.imgUrl || card.details.image_normal;
+      div.appendChild(image);
+      image.onload = () => {
+        console.log('loaded');
+        if (imageRef.current) {
+          console.log('setting', imageRef.current.clientWidth);
+          div.style.width = imageRef.current.clientWidth;
+          div.style.height = 'auto';
+          console.log('result', image.width);
+        }
+        div.style.borderRadius = '4% / 2.858%';
+        div.style.opacity = '0.8';
+        preview(div);
+      };
+      image.onerror = () => {
+        image.src = '/content/default_card.png';
+      };
+    }
+  }, [drag, preview]);
 
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
@@ -44,6 +70,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
         <CardImage
           card={card}
           tags={[]}
+          innerRef={imageRef}
           className={classes.join(' ')}
           data-location-type={location.type}
           data-location-data={JSON.stringify(location.data)}
