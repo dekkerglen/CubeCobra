@@ -2,10 +2,11 @@ extends cube_layout
 
 block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
-  input#draftraw(type='hidden', name='draftraw', value=draft_raw)
 
 block cube_content
   include ../flash
   #react-root
+  script(type='text/javascript').
+    var initialDraft = !{draft_raw};
   script(src='/js/autocard.js')
   script(src='/js/cube_draft.bundle.js')

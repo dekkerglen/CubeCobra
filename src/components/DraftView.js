@@ -6,7 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstr
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
-import { arraysEqual } from '../util/Util';
+import { arraysEqual, cmcColumn } from '../util/Util';
 
 import CardStack from './CardStack';
 import CSRFForm from './CSRFForm';
@@ -95,7 +95,7 @@ const DraftView = () => {
     const card = pack[cardIndex];
     const typeLine = (card.type_line || card.details.type).toLowerCase();
     const row = typeLine.includes('creature') ? 0 : 1;
-    const col = DeckStacks.cmcColumn(card);
+    const col = cmcColumn(card);
     const colIndex = picks[row][col].length;
     setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
     await Draft.pick(cardIndex);

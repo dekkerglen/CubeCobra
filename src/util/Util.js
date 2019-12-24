@@ -64,7 +64,7 @@ export function alphaCompare(a, b) {
   return textA < textB ? -1 : textA > textB ? 1 : 0;
 };
 
-function cmcColumn(card) {
+export function cmcColumn(card) {
   let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
   if (isNaN(cmc)) {
     cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
@@ -107,4 +107,4 @@ export function sortDeck(deck) {
 };
 
 
-export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare, sortDeck };
+export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare, cmcColumn, sortDeck };
