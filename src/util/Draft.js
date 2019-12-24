@@ -48,11 +48,11 @@ function botRating(botColors, card) {
   // Prioritize on-color or overlapping fetches.
   // Then overlapping lands, then overlapping spells.
   if (subset || (isFetch && overlap)) {
-    rating -= 0.4;
-  } else if (isLand && overlap) {
     rating -= 0.3;
-  } else if (overlap) {
+  } else if (isLand && overlap) {
     rating -= 0.2;
+  } else if (overlap) {
+    rating -= 0.15;
   }
   return rating;
 }
