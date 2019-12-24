@@ -1,10 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
-import ImageFallback from './ImageFallback';
-import withAutocard from './WithAutocard';
-
-const CardImage = withAutocard(ImageFallback);
+import CardImage from './CardImage';
 
 const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -45,10 +42,6 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
     <div ref={drag}>
       <div ref={drop}>
         <CardImage
-          src={card.details.display_image}
-          fallbackSrc="/content/default_card.png"
-          alt={card.details.name}
-          width="100%"
           card={card}
           tags={[]}
           className={classes.join(' ')}

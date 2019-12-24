@@ -6,6 +6,7 @@ module.exports = {
     cube_analysis: ['./cube_analysis.js'],
     cube_blog: ['./cube_blog.js'],
     cube_compare: ['./cube_compare.js'],
+    cube_deck: ['./cube_deck.js'],
     cube_deckbuilder: ['./cube_deckbuilder.js'],
     cube_draft: ['./cube_draft.js'],
     cube_list: ['./cube_list.js'],

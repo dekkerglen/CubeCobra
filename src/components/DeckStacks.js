@@ -17,7 +17,7 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
     </CardHeader>
     <CardBody className="pt-0">
       {cards.map((row, index) =>
-        <Row key={index} className="draft-row">
+        <Row key={index} className="row-low-padding">
           {row.map((column, index2) =>
             <CardStack key={index2} location={new Location(locationType, [index, index2, 0])}>
               {column.map((card, index3) =>
@@ -41,8 +41,8 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
 DeckStacks.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
   title: PropTypes.string.isRequired,
-  locationType: PropTypes.string.isRequired,
-  onMoveCard: PropTypes.func.isRequired,
+  locationType: PropTypes.string,
+  onMoveCard: PropTypes.func,
   onClickCard: PropTypes.func,
 };
 

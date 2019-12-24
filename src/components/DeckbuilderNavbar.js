@@ -99,3 +99,5 @@ DeckbuilderNavbar.propTypes = {
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
   }).isRequired,
 };
+
+export default DeckbuilderNavbar;

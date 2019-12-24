@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
@@ -15,24 +16,6 @@ import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 
 const canDrop = (source, target) => true;
-
-/* FIXME: use arrangement of cards from the draft */
-const sortInitialDeck = (initialDeck) => {
-  const result = [new Array(8).fill([]), new Array(8).fill([])];
-  for (const column of initialDeck.playerdeck) {
-    for (const card of column) {
-      const typeLine = (card.type_line || card.details.type).toLowerCase();
-      const row = typeLine.includes('creature') ? 0 : 1;
-      const cmcColumn = DeckStacks.cmcColumn(card);
-      if (result[row][cmcColumn].length === 0) {
-        result[row][cmcColumn] = [card];
-      } else {
-        result[row][cmcColumn].push(card);
-      }
-    }
-  }
-  return result;
-};
 
 const oppositeLocation = {
   [Location.DECK]: Location.SIDEBOARD,
@@ -95,6 +78,12 @@ const Deckbuilder = ({ initialDeck }) => {
   );
 }
 
-Deckbuilder.propTypes = {};
+Deckbuilder.propTypes = {
+  initialDeck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+  }).isRequired,
+};
 
 export default Deckbuilder;

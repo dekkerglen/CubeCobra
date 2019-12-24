@@ -13,7 +13,7 @@ const CardStack = ({ location, children, ...props }) => {
     }),
   });
 
-  let className = 'mt-3 col-md-1-5 card-stack'
+  let className = 'mt-3 col-md-1-5 col-low-padding'
   if (isAcceptable) {
     className += ' outline';
   }

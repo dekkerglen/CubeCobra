@@ -19,11 +19,11 @@
   border-radius: 4% / 2.858%;
 }
 
-.card-stack {
+.col-low-padding {
   padding: 0 2px;
 }
 
-.draft-row {
+.row-low-padding {
   margin: 0 -2px;
 }
 
@@ -31,5 +31,10 @@
   .col-md-1-5 {
     flex: 0 0 12.5%;
     max-width: 12.5%;
+  }
+
+  .col-md-1-4285 {
+    flex: 0 0 14.285%;
+    max-width: 14.285%;
   }
 }
