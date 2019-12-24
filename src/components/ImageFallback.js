@@ -13,14 +13,7 @@ const ImageFallback = ({ src, fallbackSrc, innerRef, ...props }) => {
     setFallback(false);
   }, [src]);
 
-  return (
-    <img
-      src={fallback ? fallbackSrc : src}
-      onError={handleError}
-      ref={innerRef}
-      {...props}
-    />
-  );
+  return <img src={fallback ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />;
 };
 
 export default ImageFallback;

@@ -89,13 +89,16 @@ const Deckbuilder = ({ initialDeck, basics }) => {
     [handleMoveCard],
   );
 
-  const addBasics = useCallback((numBasics) => {
-    const addedLists = Object.entries(numBasics).map(([basic, count]) => new Array(count).fill(basics[basic]));
-    const added = addedLists.flat();
-    const newDeck = [...deck];
-    newDeck[1][0] = [].concat(newDeck[1][0], added);
-    setDeck(newDeck);
-  }, [deck]);
+  const addBasics = useCallback(
+    (numBasics) => {
+      const addedLists = Object.entries(numBasics).map(([basic, count]) => new Array(count).fill(basics[basic]));
+      const added = addedLists.flat();
+      const newDeck = [...deck];
+      newDeck[1][0] = [].concat(newDeck[1][0], added);
+      setDeck(newDeck);
+    },
+    [deck],
+  );
 
   const currentDeck = { ...initialDeck };
   currentDeck.playerdeck = [...deck[0], ...deck[1]];

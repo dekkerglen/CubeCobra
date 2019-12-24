@@ -45,10 +45,7 @@ const CardModal = ({
       <ModalBody>
         <Row>
           <Col xs="12" sm="4">
-            <FoilCardImage
-              card={card}
-              finish={values.finish}
-            />
+            <FoilCardImage card={card} finish={values.finish} />
             <div className="price-area">
               {!card.details.price ? (
                 ''

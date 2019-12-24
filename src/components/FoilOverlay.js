@@ -9,16 +9,10 @@ const FoilOverlay = (Tag) => (props) => {
   }
   return (
     <div>
-      {finish !== 'Foil' ? '' :
-        <img
-          src="/content/foilOverlay.png"
-          className="foilOverlay card-border"
-          width="100%"
-        />
-      }
+      {finish !== 'Foil' ? '' : <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" />}
       <Tag {...props} />
     </div>
   );
-}
+};
 
 export default FoilOverlay;

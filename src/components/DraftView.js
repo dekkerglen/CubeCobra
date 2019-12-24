@@ -33,10 +33,13 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
-          <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
-            {picking !== index ? false :
-              <Spinner className="position-absolute" />
-            }
+          <Col
+            key={card.details._id}
+            xs={4}
+            sm={3}
+            className="col-md-1-5 d-flex justify-content-center align-items-center"
+          >
+            {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard
               location={Location.pack(index)}
               data-index={index}
@@ -134,11 +137,14 @@ const DraftView = () => {
   );
 
   const allCards = picks.flat().flat();
-  const allTypes = allCards.map(card => (card.type_line || card.details.type).toLowerCase());
-  const numCreatures = allTypes.filter(type => type.includes('creature')).length;
-  const numLands = allTypes.filter(type => type.includes('land')).length;
+  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
   const numOther = allCards.length - numLands - numCreatures;
-  const subtitle = `${numLands} land${numLands === 1 ? '' : 's'}, ` + `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` + `${numOther} other`;
+  const subtitle =
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numOther} other`;
 
   return (
     <DisplayContextProvider>

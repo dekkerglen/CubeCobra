@@ -20,7 +20,13 @@ import {
 import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 
-const COLORS = [['White', 'W', 'Plains'], ['Blue', 'U', 'Island'], ['Black', 'B', 'Swamp'], ['Red', 'R', 'Mountain'], ['Green', 'G', 'Forest']];
+const COLORS = [
+  ['White', 'W', 'Plains'],
+  ['Blue', 'U', 'Island'],
+  ['Black', 'B', 'Swamp'],
+  ['Red', 'R', 'Mountain'],
+  ['Green', 'G', 'Forest'],
+];
 const MAX_BASICS = 20;
 
 const BasicsModal = ({ isOpen, toggle, addBasics }) => {
@@ -47,7 +53,9 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
             <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={long} title={long} className="mr-1" />
             <Input type="select" name={long} defaultValue={0} innerRef={refs[basic]}>
               {Array.from(new Array(MAX_BASICS).keys()).map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
             </Input>
           </Form>
