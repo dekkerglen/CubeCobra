@@ -2,11 +2,14 @@ extends cube_layout
 
 block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
-  input#deckraw(type='hidden', value=deck_raw)
 
 block cube_content
   include ../dynamic_flash
   #react-root
 
+  script(type='text/javascript').
+    var reactProps = {
+      initialDeck: !{deck_raw},
+    };
   script(src='/js/cube_deckbuilder.bundle.js')
 

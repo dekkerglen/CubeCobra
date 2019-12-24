@@ -55,7 +55,7 @@ const sortDeck = (cards) => {
   return result;
 };
 
-const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots }) => {
+const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
   const title = (
     <Fragment>
       Drafted by{' '}

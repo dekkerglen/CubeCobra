@@ -5,14 +5,16 @@ block cube_toolbar
 
 block cube_content
   include ../dynamic_flash
-  input#oldformat(type='hidden', value=oldformat.toString())
-  input#drafter(type='hidden', value=drafter)
-  input#cards(type='hidden', value=cards || [])
-  input#deckraw(type='hidden', value=deck || [])
-  input#botdecks(type='hidden', value=bot_decks)
-  input#bots(type='hidden', value=bots)
-  input#canEdit(type='hidden', value=user && user.id == deck.owner ? 'true' : 'false')
   #react-root
 
-  script(src='/js/utils.js')
+  script(type='text/javascript').
+    var reactProps = {
+      oldFormat: !{oldformat},
+      drafter: !{JSON.stringify(drafter)},
+      cards: !{cards ? JSON.stringify(cards) : '[]'},
+      deck: !{deck || []},
+      botDecks: !{JSON.stringify(bot_decks)},
+      bots: !{JSON.stringify(bots)},
+      canEdit: !{user && user.id === deck.owner},
+    };
   script(src='/js/cube_deck.bundle.js')
