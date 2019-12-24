@@ -42,7 +42,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   return (
     <>
       <CardImage card={card} noAutocard innerRef={imageRef} className="off-screen" />
-      <div ref={drag}>
+      <div ref={drag} className={(onMoveCard || props.onClick) ? 'clickable' : undefined}>
         <div ref={drop}>
           <CardImage
             card={card}

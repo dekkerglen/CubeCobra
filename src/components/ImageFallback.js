@@ -1,30 +1,26 @@
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-class ImageFallback extends Component {
-  constructor(props) {
-    super(props);
+import { Spinner } from 'reactstrap';
 
-    this.state = {
-      fallback: false,
-    };
+const ImageFallback = ({ src, fallbackSrc, innerRef, ...props }) => {
+  const [fallback, setFallback] = useState(false);
 
-    this.handleError = this.handleError.bind(this);
-  }
+  const handleError = useCallback((event) => {
+    setFallback(true);
+  });
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.src !== this.props.src) {
-      this.setState({ fallback: false });
-    }
-  }
+  useEffect(() => {
+    setFallback(false);
+  }, [src]);
 
-  handleError(event) {
-    this.setState({ fallback: true });
-  }
-
-  render() {
-    const { src, fallbackSrc, innerRef, ...props } = this.props;
-    return <img src={this.state.fallback ? fallbackSrc : src} onError={this.handleError} ref={innerRef} {...props} />;
-  }
-}
+  return (
+    <img
+      src={fallback ? fallbackSrc : src}
+      onError={handleError}
+      ref={innerRef}
+      {...props}
+    />
+  );
+};
 
 export default ImageFallback;

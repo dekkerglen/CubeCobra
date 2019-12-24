@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
@@ -20,7 +20,7 @@ const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
 
-const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) => (
+const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle>
@@ -32,14 +32,18 @@ const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) => (
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
-          <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5">
+          <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
+            {picking !== index ? false :
+              <Spinner className="position-absolute" />
+            }
             <DraggableCard
               location={Location.pack(index)}
               data-index={index}
               card={card}
               canDrop={canDrop}
-              onMoveCard={onMoveCard}
-              onClick={onClickCard}
+              onMoveCard={picking === null ? onMoveCard : undefined}
+              onClick={picking === null ? onClickCard : undefined}
+              style={picking === index ? { opacity: 0.5 } : undefined}
             />
           </Col>
         ))}
@@ -49,13 +53,16 @@ const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) => (
 );
 
 const DraftView = () => {
-  const [pack, setPack] = useState(Draft.pack());
+  const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);
   const [pickNumber, setPickNumber] = useState(initialPickNumber);
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
+
+  // State for showing loading while waiting for next pick.
+  const [picking, setPicking] = useState(null);
 
   const update = useCallback(() => {
     // This is very bad architecture. The React component should manage the state.
@@ -78,8 +85,8 @@ const DraftView = () => {
       }
       if (source.type === Location.PACK) {
         if (target.type === Location.PICKS) {
-          setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
           await Draft.pick(source.data);
+          setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
           update();
         } else {
           console.error("Can't move cards inside pack.");
@@ -107,8 +114,13 @@ const DraftView = () => {
       const row = typeLine.includes('creature') ? 0 : 1;
       const col = cmcColumn(card);
       const colIndex = picks[row][col].length;
-      setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
+      setPicking(cardIndex);
+      // await new Promise(resolve => setTimeout(resolve, 20000));
+      console.log('await');
       await Draft.pick(cardIndex);
+      console.log('done');
+      setPicking(null);
+      setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
       update();
     },
     [pack, picks],
@@ -133,6 +145,7 @@ const DraftView = () => {
           pack={pack}
           packNumber={packNumber}
           pickNumber={pickNumber}
+          picking={picking}
           onMoveCard={handleMoveCard}
           onClickCard={handleClickCard}
         />
