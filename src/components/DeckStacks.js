@@ -8,7 +8,7 @@ import Location from '../util/DraftLocation';
 import CardStack from './CardStack';
 import DraggableCard from './DraggableCard';
 
-const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCard, ...props }) =>
+const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
   <Card {...props}>
     <CardHeader>
       <CardTitle className="mb-0">
@@ -16,11 +16,11 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
-      {cards.map((row, index) =>
+      {cards.map((row, index) => (
         <Row key={index} className="row-low-padding">
-          {row.map((column, index2) =>
+          {row.map((column, index2) => (
             <CardStack key={index2} location={new Location(locationType, [index, index2, 0])}>
-              {column.map((card, index3) =>
+              {column.map((card, index3) => (
                 <div className="stacked" key={card.details._id}>
                   <DraggableCard
                     location={new Location(locationType, [index, index2, index3 + 1])}
@@ -30,13 +30,14 @@ const DeckStacks = ({ cards, title, locationType, canDrop, onMoveCard, onClickCa
                     onClick={onClickCard}
                   />
                 </div>
-              )}
+              ))}
             </CardStack>
-          )}
+          ))}
         </Row>
-      )}
+      ))}
     </CardBody>
-  </Card>;
+  </Card>
+);
 
 DeckStacks.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,

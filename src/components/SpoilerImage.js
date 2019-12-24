@@ -19,9 +19,7 @@ const SpoilerImage = ({ index, tags, finish, ...props }) => {
     [openCardModal],
   );
   const card = { tags, finish, details: props };
-  return (
-    <FoilCardImage card={card} data-index={index} onClick={handleClick} />
-  );
+  return <FoilCardImage card={card} data-index={index} onClick={handleClick} />;
 };
 
 export default SpoilerImage;

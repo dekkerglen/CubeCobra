@@ -6,14 +6,14 @@ import { Col } from 'reactstrap';
 const CardStack = ({ location, children, ...props }) => {
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
-    drop: (item, monitor) => monitor.didDrop() ? undefined : location,
-    canDrop: item => true,
-    collect: monitor => ({
+    drop: (item, monitor) => (monitor.didDrop() ? undefined : location),
+    canDrop: (item) => true,
+    collect: (monitor) => ({
       isAcceptable: !!monitor.isOver({ shallow: true }) && !!monitor.canDrop(),
     }),
   });
 
-  let className = 'mt-3 col-md-1-5 col-low-padding'
+  let className = 'mt-3 col-md-1-5 col-low-padding';
   if (isAcceptable) {
     className += ' outline';
   }
@@ -21,14 +21,14 @@ const CardStack = ({ location, children, ...props }) => {
   return (
     <Col className={className} xs={4} sm={3} {...props}>
       <div ref={drop}>
-        {!Array.isArray(children) ? '' :
+        {!Array.isArray(children) ? (
+          ''
+        ) : (
           <div className="w-100 text-center mb-1">
             <b>{children.length}</b>
           </div>
-        }
-        <div className="stack">
-          {children}
-        </div>
+        )}
+        <div className="stack">{children}</div>
       </div>
     </Col>
   );

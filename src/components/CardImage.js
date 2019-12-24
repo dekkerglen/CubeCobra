@@ -19,6 +19,6 @@ const CardImage = ({ card, noAutocard, className, ...props }) => {
       {...props}
     />
   );
-}
+};
 
 export default CardImage;

@@ -18,16 +18,18 @@ const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
 
-const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) =>
+const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle>
-        <h4>Pack {packNumber}, Pick {pickNumber}</h4>
+        <h4>
+          Pack {packNumber}, Pick {pickNumber}
+        </h4>
       </CardTitle>
     </CardHeader>
     <CardBody>
       <Row noGutters>
-        {pack.map((card, index) =>
+        {pack.map((card, index) => (
           <Col key={card.details._id} xs={4} sm={3} className="col-md-1-5">
             <DraggableCard
               location={Location.pack(index)}
@@ -38,10 +40,11 @@ const Pack = ({ pack, packNumber, pickNumber, onMoveCard, onClickCard }) =>
               onClick={onClickCard}
             />
           </Col>
-        )}
+        ))}
       </Row>
     </CardBody>
-  </Card>;
+  </Card>
+);
 
 const DraftView = () => {
   const [pack, setPack] = useState(Draft.pack());
@@ -65,42 +68,48 @@ const DraftView = () => {
     setPickNumber(currentPickNumber);
   });
 
-  const handleMoveCard = useCallback(async (source, target) => {
-    if (source.equals(target)) {
-      return;
-    }
-    if (source.type === Location.PACK) {
-      if (target.type === Location.PICKS) {
-        setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
-        await Draft.pick(source.data);
-        update();
-      } else {
-        console.error('Can\'t move cards inside pack.');
+  const handleMoveCard = useCallback(
+    async (source, target) => {
+      if (source.equals(target)) {
+        return;
       }
-    } else if (source.type === Location.PICKS) {
-      if (target.type === Location.PICKS) {
-        setPicks(DeckStacks.moveOrAddCard(picks, target.data, source.data));
-        update();
-      } else {
-        console.error('Can\'t move cards from picks back to pack.');
+      if (source.type === Location.PACK) {
+        if (target.type === Location.PICKS) {
+          setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
+          await Draft.pick(source.data);
+          update();
+        } else {
+          console.error("Can't move cards inside pack.");
+        }
+      } else if (source.type === Location.PICKS) {
+        if (target.type === Location.PICKS) {
+          setPicks(DeckStacks.moveOrAddCard(picks, target.data, source.data));
+          update();
+        } else {
+          console.error("Can't move cards from picks back to pack.");
+        }
       }
-    }
-  }, [pack, picks]);
+    },
+    [pack, picks],
+  );
 
-  const handleClickCard = useCallback(async (event) => {
-    event.preventDefault();
-    /* global */ autocard_hide_card();
-    const target = event.currentTarget;
-    const cardIndex = parseInt(target.getAttribute('data-index'));
-    const card = pack[cardIndex];
-    const typeLine = (card.type_line || card.details.type).toLowerCase();
-    const row = typeLine.includes('creature') ? 0 : 1;
-    const col = cmcColumn(card);
-    const colIndex = picks[row][col].length;
-    setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
-    await Draft.pick(cardIndex);
-    update();
-  }, [pack, picks]);
+  const handleClickCard = useCallback(
+    async (event) => {
+      event.preventDefault();
+      /* global */ autocard_hide_card();
+      const target = event.currentTarget;
+      const cardIndex = parseInt(target.getAttribute('data-index'));
+      const card = pack[cardIndex];
+      const typeLine = (card.type_line || card.details.type).toLowerCase();
+      const row = typeLine.includes('creature') ? 0 : 1;
+      const col = cmcColumn(card);
+      const colIndex = picks[row][col].length;
+      setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
+      await Draft.pick(cardIndex);
+      update();
+    },
+    [pack, picks],
+  );
 
   return (
     <ErrorBoundary>
@@ -108,12 +117,25 @@ const DraftView = () => {
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
-        <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} onMoveCard={handleMoveCard} onClickCard={handleClickCard} />
-        <DeckStacks cards={picks} title="Picks" locationType={Location.PICKS} canDrop={canDrop} onMoveCard={handleMoveCard} className="mt-3" />
+        <Pack
+          pack={pack}
+          packNumber={packNumber}
+          pickNumber={pickNumber}
+          onMoveCard={handleMoveCard}
+          onClickCard={handleClickCard}
+        />
+        <DeckStacks
+          cards={picks}
+          title="Picks"
+          locationType={Location.PICKS}
+          canDrop={canDrop}
+          onMoveCard={handleMoveCard}
+          className="mt-3"
+        />
       </DndProvider>
     </ErrorBoundary>
   );
-}
+};
 
 DraftView.propTypes = {};
 

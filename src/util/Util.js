@@ -32,7 +32,7 @@ export function arrayShuffle(array) {
   }
 
   return array;
-};
+}
 
 export function arrayMove(arr, oldIndex, newIndex) {
   const result = [...arr];
@@ -62,7 +62,7 @@ export function alphaCompare(a, b) {
   const textA = a.details.name.toUpperCase();
   const textB = b.details.name.toUpperCase();
   return textA < textB ? -1 : textA > textB ? 1 : 0;
-};
+}
 
 export function cmcColumn(card) {
   let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
@@ -71,7 +71,7 @@ export function cmcColumn(card) {
   }
   // Round to half-integer then take ceiling to support Little Girl
   let cmcDoubleInt = Math.round(cmc * 2);
-  let cmcInt = Math.round((cmcDoubleInt + cmcDoubleInt % 2) / 2);
+  let cmcInt = Math.round((cmcDoubleInt + (cmcDoubleInt % 2)) / 2);
   if (cmcInt < 0) {
     cmcInt = 0;
   }
@@ -79,7 +79,7 @@ export function cmcColumn(card) {
     cmcInt = 7;
   }
   return cmcInt;
-};
+}
 
 function sortInto(card, result) {
   const typeLine = (card.type_line || card.details.type).toLowerCase();
@@ -104,7 +104,17 @@ export function sortDeck(deck) {
     }
   }
   return result;
+}
+
+export default {
+  arraysEqual,
+  arrayRotate,
+  arrayShuffle,
+  arrayMove,
+  arrayIsSubset,
+  randomElement,
+  fromEntries,
+  alphaCompare,
+  cmcColumn,
+  sortDeck,
 };
-
-
-export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare, cmcColumn, sortDeck };

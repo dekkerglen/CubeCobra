@@ -17,7 +17,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
         onMoveCard(item.location, monitor.getDropResult());
       }
     },
-    collect: monitor => ({
+    collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   });
@@ -28,28 +28,20 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
     drop: () => location,
-    canDrop: item => canDrop(item.location, location),
-    collect: monitor => ({
+    canDrop: (item) => canDrop(item.location, location),
+    collect: (monitor) => ({
       isAcceptable: !!monitor.isOver() && !!monitor.canDrop(),
     }),
   });
 
-  const classes = ['card-border'].concat(
-    isAcceptable ? ['outline'] : [],
-    isDragging ? ['transparent'] : [],
-  );
+  const classes = ['card-border'].concat(isAcceptable ? ['outline'] : [], isDragging ? ['transparent'] : []);
 
   const typeLine = (card.type_line || card.details.type).toLowerCase();
   const cnc = typeLine.includes('creature');
 
   return (
     <>
-      <CardImage
-        card={card}
-        noAutocard
-        innerRef={imageRef}
-        className="off-screen"
-      />
+      <CardImage card={card} noAutocard innerRef={imageRef} className="off-screen" />
       <div ref={drag}>
         <div ref={drop}>
           <CardImage
@@ -65,6 +57,6 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
       </div>
     </>
   );
-}
+};
 
 export default DraggableCard;

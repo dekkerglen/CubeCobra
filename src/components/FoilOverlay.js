@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FoilOverlay = (Tag) => (props) =>
+const FoilOverlay = (Tag) => (props) => (
   <div>
     <img
       src="/content/foilOverlay.png"
@@ -8,6 +8,7 @@ const FoilOverlay = (Tag) => (props) =>
       width="100%"
     />
     <Tag {...props} />
-  </div>;
+  </div>
+);
 
 export default FoilOverlay;
