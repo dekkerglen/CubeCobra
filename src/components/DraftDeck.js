@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, ListGroup, ListGroupItem, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
+import { sortDeck } from '../util/Util';
+
 import CardImage from './CardImage';
 import DeckStacks from './DeckStacks';
 import DynamicFlash from './DynamicFlash';
@@ -39,21 +41,6 @@ const DeckStacksStatic = ({ title, cards, ...props }) =>
       )}
     </CardBody>
   </Card>;
-
-const sortDeck = (cards) => {
-  const result = [new Array(8).fill([]), new Array(8).fill([])];
-  for (const card of cards) {
-    const typeLine = (card.type_line || card.details.type).toLowerCase();
-    const row = typeLine.includes('creature') ? 0 : 1;
-    const cmcColumn = DeckStacks.cmcColumn(card);
-    if (result[row][cmcColumn].length === 0) {
-      result[row][cmcColumn] = [card];
-    } else {
-      result[row][cmcColumn].push(card);
-    }
-  }
-  return result;
-};
 
 const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
   const title = (

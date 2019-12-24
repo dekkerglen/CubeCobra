@@ -76,21 +76,4 @@ DeckStacks.removeCard = (cards, source) => {
   return [card, newCards];
 };
 
-DeckStacks.cmcColumn = (card) => {
-  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
-  if (isNaN(cmc)) {
-    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
-  }
-  // Round to half-integer then take ceiling to support Little Girl
-  let cmcDoubleInt = Math.round(cmc * 2);
-  let cmcInt = Math.round((cmcDoubleInt + cmcDoubleInt % 2) / 2);
-  if (cmcInt < 0) {
-    cmcInt = 0;
-  }
-  if (cmcInt > 7) {
-    cmcInt = 7;
-  }
-  return cmcInt;
-};
-
 export default DeckStacks;

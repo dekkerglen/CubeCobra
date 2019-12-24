@@ -7,7 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstr
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
-import { arraysEqual } from '../util/Util';
+import { arraysEqual, sortDeck } from '../util/Util';
 
 import CSRFForm from './CSRFForm';
 import DeckbuilderNavbar from './DeckbuilderNavbar';
@@ -22,8 +22,20 @@ const oppositeLocation = {
   [Location.SIDEBOARD]: Location.DECK,
 };
 
+const makeInitialStacks = (playerDeck) => {
+  if (playerDeck.length === 2 && Array.isArray(playerDeck[0]) && Array.isArray(playerDeck[0][0])) {
+    // Already good.
+    return playerDeck;
+  } else if (playerDeck.length === 16) {
+    // Already in stacks. Split into rows.
+    return [playerDeck.slice(0, 8), playerDeck.slice(8, 16)];
+  } else {
+    return sortDeck(playerDeck);
+  }
+};
+
 const Deckbuilder = ({ initialDeck }) => {
-  const [deck, setDeck] = useState([initialDeck.playerdeck.slice(0, 8), initialDeck.playerdeck.slice(8, 16)]);
+  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.playerdeck));
   const [sideboard, setSideboard] = useState([initialDeck.playersideboard.slice(0, 8)]);
 
   const locationMap = {

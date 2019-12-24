@@ -64,4 +64,47 @@ export function alphaCompare(a, b) {
   return textA < textB ? -1 : textA > textB ? 1 : 0;
 };
 
-export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare };
+function cmcColumn(card) {
+  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
+  if (isNaN(cmc)) {
+    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
+  }
+  // Round to half-integer then take ceiling to support Little Girl
+  let cmcDoubleInt = Math.round(cmc * 2);
+  let cmcInt = Math.round((cmcDoubleInt + cmcDoubleInt % 2) / 2);
+  if (cmcInt < 0) {
+    cmcInt = 0;
+  }
+  if (cmcInt > 7) {
+    cmcInt = 7;
+  }
+  return cmcInt;
+};
+
+function sortInto(card, result) {
+  const typeLine = (card.type_line || card.details.type).toLowerCase();
+  const row = typeLine.includes('creature') ? 0 : 1;
+  const column = cmcColumn(card);
+  if (result[row][column].length === 0) {
+    result[row][column] = [card];
+  } else {
+    result[row][column].push(card);
+  }
+}
+
+export function sortDeck(deck) {
+  const result = [new Array(8).fill([]), new Array(8).fill([])];
+  for (const item of deck) {
+    if (Array.isArray(item)) {
+      for (const card of item) {
+        sortInto(card, result);
+      }
+    } else {
+      sortInto(item, result);
+    }
+  }
+  return result;
+};
+
+
+export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare, sortDeck };
