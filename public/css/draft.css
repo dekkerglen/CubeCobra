@@ -15,10 +15,6 @@
   padding-top: 124%;
 }
 
-.draft-card {
-  border-radius: 4% / 2.858%;
-}
-
 .col-low-padding {
   padding: 0 2px;
 }
@@ -37,4 +33,9 @@
     flex: 0 0 14.285%;
     max-width: 14.285%;
   }
+}
+
+.off-screen {
+  position: absolute;
+  z-index: -10000;
 }

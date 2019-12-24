@@ -29,7 +29,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) =>
               <div className="stack">
                 {column.map((card, index3) =>
                   <div className="stacked" key={card.details._id}>
-                    <CardImage card={card} tags={[]} className="draft-card" />
+                    <CardImage card={card} tags={[]} />
                   </div>
                 )}
               </div>

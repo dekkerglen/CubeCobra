@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { DragPreviewImage, useDrag, useDrop } from 'react-dnd';
 
 import CardImage from './CardImage';
+import ImageFallback from './ImageFallback';
 
 const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
   const [{ isDragging }, drag, preview] = useDrag({
@@ -22,27 +23,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   });
 
   const imageRef = useRef();
-
-  useEffect(() => {
-    if (!preview.current) {
-      const div = document.createElement('div');
-      const image = new Image();
-      image.src = card.imgUrl || card.details.image_normal;
-      div.appendChild(image);
-      image.onload = () => {
-        if (imageRef.current) {
-          div.style.width = imageRef.current.clientWidth;
-          div.style.height = 'auto';
-        }
-        div.style.borderRadius = '4% / 2.858%';
-        div.style.opacity = '0.8';
-        preview(div);
-      };
-      image.onerror = () => {
-        image.src = '/content/default_card.png';
-      };
-    }
-  }, [drag, preview]);
+  preview(imageRef);
 
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
@@ -53,7 +34,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
     }),
   });
 
-  const classes = ['draft-card'].concat(
+  const classes = ['card-border'].concat(
     isAcceptable ? ['outline'] : [],
     isDragging ? ['transparent'] : [],
   );
@@ -62,20 +43,27 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   const cnc = typeLine.includes('creature');
 
   return (
-    <div ref={drag}>
-      <div ref={drop}>
-        <CardImage
-          card={card}
-          tags={[]}
-          innerRef={imageRef}
-          className={classes.join(' ')}
-          data-location-type={location.type}
-          data-location-data={JSON.stringify(location.data)}
-          data-cnc={cnc.toString()}
-          {...props}
-        />
+    <>
+      <CardImage
+        card={card}
+        noAutocard
+        innerRef={imageRef}
+        className="off-screen"
+      />
+      <div ref={drag}>
+        <div ref={drop}>
+          <CardImage
+            card={card}
+            tags={[]}
+            className={classes.join(' ')}
+            data-location-type={location.type}
+            data-location-data={JSON.stringify(location.data)}
+            data-cnc={cnc.toString()}
+            {...props}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

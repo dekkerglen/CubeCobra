@@ -253,6 +253,17 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup2,
+#autocard_popup,
+#autocard_popup_info {
+	user-drag: none;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
 #autocard_popup_info {
   background-color: #F8F9FA;
 	border-bottom-left-radius: 10px;
@@ -536,4 +547,8 @@ body.busy-cursor {
 	height:60px;
 	float: left;
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.card-border {
+	border-radius: 4.72% / 3.37%;
 }
