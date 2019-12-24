@@ -309,12 +309,6 @@ border-bottom: none;
     background-size: 125px 175px;
 }
 
-.visualSpoilerCardContainer {
-    display: inline-block;
-    width: 150px;
-    vertical-align: top;
-}
-
 .foilOverlay {
 	position: absolute;
 	pointer-events: none;
@@ -551,4 +545,16 @@ body.busy-cursor {
 
 .card-border {
 	border-radius: 4.72% / 3.37%;
+}
+
+@media(min-width: 768px) {
+  .col-md-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+
+  .col-md-1-4285 {
+    flex: 0 0 14.285%;
+    max-width: 14.285%;
+  }
 }
