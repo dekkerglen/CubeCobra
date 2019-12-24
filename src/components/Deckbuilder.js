@@ -8,10 +8,10 @@ import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
 import { arraysEqual } from '../util/Util';
 
-import CardStack from './CardStack';
 import CSRFForm from './CSRFForm';
+import DeckbuilderNavbar from './DeckbuilderNavbar';
 import DeckStacks from './DeckStacks';
-import DraggableCard from './DraggableCard';
+import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 
 const canDrop = (source, target) => true;
@@ -77,12 +77,16 @@ const Deckbuilder = ({ initialDeck }) => {
       // Pick row based on CNC.
       target.data[0] = eventTarget.getAttribute('data-cnc') === 'true' ? 0 : 1;
     }
-    console.log(`move: ${source}, ${target}`);
     handleMoveCard(source, target);
-  });
+  }, [handleMoveCard]);
+
+  const currentDeck = { ...initialDeck };
+  currentDeck.playerdeck = [...deck[0], ...deck[1]];
+  currentDeck.playersideboard = sideboard[0];
 
   return (
     <ErrorBoundary>
+      <DeckbuilderNavbar deck={currentDeck} />
       <DndProvider backend={HTML5Backend}>
         <DeckStacks className="mt-3" cards={deck} title="Deck" locationType={Location.DECK} canDrop={canDrop} onMoveCard={handleMoveCard} onClickCard={handleClickCard} />
         <DeckStacks className="mt-3" cards={sideboard} title="Sideboard" locationType={Location.SIDEBOARD} canDrop={canDrop} onMoveCard={handleMoveCard} onClickCard={handleClickCard} />

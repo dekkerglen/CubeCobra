@@ -4,22 +4,8 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
   input#deckraw(type='hidden', value=deck_raw)
 
-  #dragelement(style='position:absolute;z-index: 9999;')
-  .usercontrols
-    nav.navbar.navbar-expand.navbar-light
-      .collapse.navbar-collapse
-        ul.navbar-nav
-          li.nav-item
-            a#saveDeckButton.nav-link(href='#' ) Save Deck
-          li.nav-item
-            a.nav-link(href='#' data-toggle='modal', data-target='#basicsModal') Add Basic Lands
-          li.nav-item
-            span#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
-              input#customImageDisplayToggle(type='checkbox')
-              label(for='customImageDisplayToggle') Show Custom Images
-
 block cube_content
-  include ../flash
+  include ../dynamic_flash
   #react-root
 
   #basicsModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
