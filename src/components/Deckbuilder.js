@@ -40,8 +40,8 @@ const oppositeLocation = {
 };
 
 const Deckbuilder = ({ initialDeck }) => {
-  const [deck, setDeck] = useState(sortInitialDeck(initialDeck));
-  const [sideboard, setSideboard] = useState([new Array(8).fill([])]);
+  const [deck, setDeck] = useState([initialDeck.playerdeck.slice(0, 8), initialDeck.playerdeck.slice(8, 16)]);
+  const [sideboard, setSideboard] = useState([initialDeck.playersideboard.slice(0, 8)]);
 
   const locationMap = {
     [Location.DECK]: [deck, setDeck],

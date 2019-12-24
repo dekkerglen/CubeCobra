@@ -39,7 +39,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   );
 
   const typeLine = (card.type_line || card.details.type).toLowerCase();
-  const cnc = typeLine.includes('creature') ? 0 : 1;
+  const cnc = typeLine.includes('creature');
 
   return (
     <div ref={drag}>
