@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
+import { alphaCompare } from '../util/Util';
+
 import SortContext from './SortContext';
 import SpoilerImage from './SpoilerImage';
 
@@ -24,7 +26,7 @@ const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, changeSort, ...
               getLabels(tertiary)
                 .filter((label3) => groups[label1][label2][label3])
                 .map((label3) =>
-                  groups[label1][label2][label3].map(({ index, tags, finish, details }) => (
+                  groups[label1][label2][label3].sort(alphaCompare).map(({ index, tags, finish, details }) => (
                     <Col key={index} xs={6} sm={4} className="col-md-1-5">
                       <SpoilerImage index={index} tags={tags} finish={finish} {...details} />
                     </Col>

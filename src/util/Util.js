@@ -58,4 +58,10 @@ export function fromEntries(entries) {
   return obj;
 }
 
-export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries };
+export function alphaCompare(a, b) {
+  const textA = a.details.name.toUpperCase();
+  const textB = b.details.name.toUpperCase();
+  return textA < textB ? -1 : textA > textB ? 1 : 0;
+};
+
+export default { arraysEqual, arrayRotate, arrayShuffle, arrayMove, arrayIsSubset, randomElement, fromEntries, alphaCompare };
