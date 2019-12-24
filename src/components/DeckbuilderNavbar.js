@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { Button, Collapse, Form, Modal, ModalBody, ModalFooter, ModalHeader, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'reactstrap';
 
@@ -37,8 +38,13 @@ const BasicsModal = ({ isOpen, toggle, handleAddBasics }) => {
   );
 };
 
+BasicsModal.propTypes = {
+  isOpen: PropTypes.bool,
+  toggle: PropTypes.func,
+  handleAddBasics: PropTypes.func,
+};
 
-export default ({ deck }) => {
+const DeckbuilderNavbar = ({ deck }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -84,4 +90,12 @@ export default ({ deck }) => {
       </Navbar>
     </div>
   );
+};
+
+DeckbuilderNavbar.propTypes = {
+  deck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+  }).isRequired,
 };
