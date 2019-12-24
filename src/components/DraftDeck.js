@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -13,6 +13,7 @@ import {
   ListGroupItem,
   Nav,
   Navbar,
+  NavbarToggler,
   NavItem,
   NavLink,
   Row,
@@ -21,6 +22,7 @@ import {
 import { sortDeck } from '../util/Util';
 
 import CardImage from './CardImage';
+import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
 import DynamicFlash from './DynamicFlash';
 import { getCardColorClass } from './TagContext';
@@ -59,6 +61,15 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
 );
 
 const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleNavbar = useCallback(
+    (event) => {
+      event.preventDefault();
+      setIsOpen(!isOpen);
+    },
+    [isOpen],
+  );
+
   const title = (
     <Fragment>
       Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
@@ -90,8 +101,9 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
   return (
     <>
       <div className="usercontrols">
-        <Navbar expand="xs" light>
-          <Collapse navbar>
+        <Navbar expand="md" light>
+          <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+          <Collapse isOpen={isOpen} navbar>
             <Nav navbar>
               {!canEdit ? (
                 ''
@@ -103,9 +115,10 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
               <NavItem>
                 <NavLink href={`/cube/redraft/${deckID}`}>Redraft</NavLink>
               </NavItem>
-              <NavItem>
+              <NavItem className="mr-auto">
                 <NavLink href={`/cube/rebuild/${deckID}`}>Clone and Rebuild</NavLink>
               </NavItem>
+              <CustomImageToggler />
             </Nav>
           </Collapse>
         </Navbar>
@@ -138,6 +151,16 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       </Row>
     </>
   );
+};
+
+DraftDeck.propTypes = {
+  oldFormat: PropTypes.bool.isRequired,
+  drafter: PropTypes.object.isRequired,
+  cards: PropTypes.arrayOf(PropTypes.object),
+  deck: PropTypes.object,
+  botDecks: PropTypes.arrayOf(PropTypes.array).isRequired,
+  bots: PropTypes.arrayOf(PropTypes.string).isRequired,
+  canEdit: PropTypes.bool.isRequired,
 };
 
 export default DraftDeck;

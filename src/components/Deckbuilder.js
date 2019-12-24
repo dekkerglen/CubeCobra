@@ -12,6 +12,7 @@ import { arraysEqual, sortDeck } from '../util/Util';
 import CSRFForm from './CSRFForm';
 import DeckbuilderNavbar from './DeckbuilderNavbar';
 import DeckStacks from './DeckStacks';
+import { DisplayContextProvider } from './DisplayContext';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -93,29 +94,32 @@ const Deckbuilder = ({ initialDeck }) => {
   currentDeck.playersideboard = sideboard[0];
 
   return (
-    <ErrorBoundary>
+    <DisplayContextProvider>
       <DeckbuilderNavbar deck={currentDeck} />
-      <DndProvider backend={HTML5Backend}>
-        <DeckStacks
-          className="mt-3"
-          cards={deck}
-          title="Deck"
-          locationType={Location.DECK}
-          canDrop={canDrop}
-          onMoveCard={handleMoveCard}
-          onClickCard={handleClickCard}
-        />
-        <DeckStacks
-          className="mt-3"
-          cards={sideboard}
-          title="Sideboard"
-          locationType={Location.SIDEBOARD}
-          canDrop={canDrop}
-          onMoveCard={handleMoveCard}
-          onClickCard={handleClickCard}
-        />
-      </DndProvider>
-    </ErrorBoundary>
+      <DynamicFlash />
+      <ErrorBoundary>
+        <DndProvider backend={HTML5Backend}>
+          <DeckStacks
+            className="mt-3"
+            cards={deck}
+            title="Deck"
+            locationType={Location.DECK}
+            canDrop={canDrop}
+            onMoveCard={handleMoveCard}
+            onClickCard={handleClickCard}
+          />
+          <DeckStacks
+            className="mt-3"
+            cards={sideboard}
+            title="Sideboard"
+            locationType={Location.SIDEBOARD}
+            canDrop={canDrop}
+            onMoveCard={handleMoveCard}
+            onClickCard={handleClickCard}
+          />
+        </DndProvider>
+      </ErrorBoundary>
+    </DisplayContextProvider>
   );
 };
 

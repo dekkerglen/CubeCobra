@@ -18,6 +18,7 @@ import {
 } from 'reactstrap';
 
 import CSRFForm from './CSRFForm';
+import CustomImageToggler from './CustomImageToggler';
 
 const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
 const MAX_BASICS = 20;
@@ -94,7 +95,7 @@ const DeckbuilderNavbar = ({ deck }) => {
   return (
     <div className="usercontrols">
       <Navbar expand="md" light>
-        <NavbarToggler onClick={toggleNavbar} />
+        <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
         <Collapse isOpen={isOpen} navbar>
           <Nav navbar>
             <NavItem>
@@ -111,9 +112,7 @@ const DeckbuilderNavbar = ({ deck }) => {
               </NavLink>
               <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} />
             </NavItem>
-            <NavItem>
-              <NavLink href="#">Show Custom Images</NavLink>
-            </NavItem>
+            <CustomImageToggler />
           </Nav>
         </Collapse>
       </Navbar>

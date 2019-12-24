@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row } from 'reactstrap';
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
@@ -10,7 +10,9 @@ import { arraysEqual, cmcColumn } from '../util/Util';
 
 import CardStack from './CardStack';
 import CSRFForm from './CSRFForm';
+import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
+import { DisplayContextProvider } from './DisplayContext';
 import DraggableCard from './DraggableCard';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -112,7 +114,16 @@ const DraftView = () => {
   );
 
   return (
-    <ErrorBoundary>
+    <DisplayContextProvider>
+      <div className="usercontrols">
+        <Navbar expand="xs" light>
+          <Collapse navbar>
+            <Nav navbar>
+              <CustomImageToggler />
+            </Nav>
+          </Collapse>
+        </Navbar>
+      </div>
       <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
@@ -133,7 +144,7 @@ const DraftView = () => {
           className="mt-3"
         />
       </DndProvider>
-    </ErrorBoundary>
+    </DisplayContextProvider>
   );
 };
 
