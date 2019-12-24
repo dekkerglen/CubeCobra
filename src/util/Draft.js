@@ -23,6 +23,14 @@ function packPickNumber() {
   return [draft.packNumber, draft.pickNumber];
 }
 
+function arrangePicks(picks) {
+  if (!Array.isArray(picks) || picks.length !== 16) {
+    throw new Error('Picks must be an array of length 16.');
+  }
+
+  draft.picks[0] = [...picks];
+}
+
 const fetchLands = [
   'Arid Mesa',
   'Bloodstained Mire',
@@ -123,10 +131,6 @@ function passPack() {
 
 async function pick(cardIndex) {
   const [card] = draft.packs[0][0].splice(cardIndex, 1);
-  if (!draft.picks[0][cardIndex]) {
-    draft.picks[0][cardIndex] = [];
-  }
-  draft.picks[0][cardIndex].push(card);
   draft.pickOrder.push(card.cardID);
   passPack();
   await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
@@ -176,4 +180,4 @@ async function finish() {
   }
 }
 
-export default { init, id, cube, pack, packPickNumber, pick, finish };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish };

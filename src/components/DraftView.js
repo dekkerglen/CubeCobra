@@ -68,7 +68,8 @@ const DraftView = () => {
     const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
     setPackNumber(currentPackNumber);
     setPickNumber(currentPickNumber);
-  });
+    Draft.arrangePicks([].concat(picks[0], picks[1]));
+  }, [picks]);
 
   const handleMoveCard = useCallback(
     async (source, target) => {

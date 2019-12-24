@@ -19,7 +19,7 @@ import {
 
 import ButtonLink from './ButtonLink';
 import ColorCheck from './ColorCheck';
-import ImageFallback from './ImageFallback';
+import FoilCardImage from './FoilCardImage';
 import TagInput from './TagInput';
 
 import Affiliate from '../util/Affiliate';
@@ -45,11 +45,8 @@ const CardModal = ({
       <ModalBody>
         <Row>
           <Col xs="12" sm="4">
-            <ImageFallback
-              className="w-100"
-              src={card.details.display_image}
-              fallbackSrc="/content/default_card.png"
-              alt={card.name}
+            <FoilCardImage
+              card={card}
               finish={values.finish}
             />
             <div className="price-area">

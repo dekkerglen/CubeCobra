@@ -1745,13 +1745,6 @@ router.get('/draft/:id', function(req, res) {
           });
         });
       });
-      // TODO this only handles the user picks (item 0 of draft picks), so custom images won't work with bot picks.
-      draft.picks[0].forEach(function(col, index) {
-        col.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
-          card.details.display_image = util.getCardImageURL(card);
-        });
-      });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
         draft.ratings = ratings;
         Cube.findOne(build_id_query(draft.cube), function(err, cube) {

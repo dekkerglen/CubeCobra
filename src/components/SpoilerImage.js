@@ -1,11 +1,8 @@
 import React, { useCallback, useContext } from 'react';
 
-import CardImage from './CardImage';
 import CardModalContext from './CardModalContext';
 import DisplayContext from './DisplayContext';
-import FoilOverlay from './FoilOverlay';
-
-const FoilCardImage = FoilOverlay(CardImage);
+import FoilCardImage from './FoilCardImage';
 
 const SpoilerImage = ({ index, tags, finish, ...props }) => {
   const openCardModal = useContext(CardModalContext);
