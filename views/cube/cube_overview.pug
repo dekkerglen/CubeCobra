@@ -91,6 +91,7 @@ block cube_content
             .modal-footer
               input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube_id, disabled="", id="delete")
               button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
+  include ../react
   script(src='/js/csrf.js')
   script(src='/js/image_autocomplete.js')
   script(src='/js/blog.js')
