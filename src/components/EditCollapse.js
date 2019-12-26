@@ -1,15 +1,6 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import {
-  Button,
-  Col,
-  Collapse,
-  Form,
-  Input,
-  Label,
-  Row,
-  UncontrolledAlert,
-} from 'reactstrap';
+import { Button, Col, Collapse, Form, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
@@ -56,52 +47,61 @@ const EditCollapse = ({ cubeID, ...props }) => {
     }[event.target.name](event.target.value);
   });
 
-  const handleAdd = useCallback(async (event, newValue) => {
-    event.preventDefault();
-    try {
-      const card = await getCard(newValue || addValue);
-      if (!card) {
-        return;
-      }
-      addChange({ add: card });
-      setAddValue('');
-      setRemoveValue('');
-      addInput.current && addInput.current.focus();
-    } catch (e) {
-      console.error(e);
-    }
-  }, [addChange, addValue, addInput]);
-
-  const handleRemoveReplace = useCallback(async (event, newValue) => {
-    event.preventDefault();
-    const replace = addValue.length > 0;
-    try {
-      const cardOut = await getCard(newValue || removeValue);
-      if (!cardOut) {
-        return;
-      }
-      if (replace) {
-        const cardIn = await getCard(addValue);
-        if (!cardIn) {
+  const handleAdd = useCallback(
+    async (event, newValue) => {
+      event.preventDefault();
+      try {
+        const card = await getCard(newValue || addValue);
+        if (!card) {
           return;
         }
-        addChange({ replace: [cardOut, cardIn] });
-      } else {
-        addChange({ remove: cardOut });
+        addChange({ add: card });
+        setAddValue('');
+        setRemoveValue('');
+        addInput.current && addInput.current.focus();
+      } catch (e) {
+        console.error(e);
       }
-      setAddValue('');
-      setRemoveValue('');
-      /* If replace, put focus back in addInput; otherwise leave it here. */
-      const focus = replace ? addInput : removeInput;
-      focus.current && focus.current.focus();
-    } catch (e) {
-      console.error(e);
-    }
-  }, [addChange, addInput, addValue, removeInput, removeValue]);
+    },
+    [addChange, addValue, addInput],
+  );
 
-  const handleDiscardAll = useCallback((event) => {
-    setChanges([]);
-  }, [setChanges]);
+  const handleRemoveReplace = useCallback(
+    async (event, newValue) => {
+      event.preventDefault();
+      const replace = addValue.length > 0;
+      try {
+        const cardOut = await getCard(newValue || removeValue);
+        if (!cardOut) {
+          return;
+        }
+        if (replace) {
+          const cardIn = await getCard(addValue);
+          if (!cardIn) {
+            return;
+          }
+          addChange({ replace: [cardOut, cardIn] });
+        } else {
+          addChange({ remove: cardOut });
+        }
+        setAddValue('');
+        setRemoveValue('');
+        /* If replace, put focus back in addInput; otherwise leave it here. */
+        const focus = replace ? addInput : removeInput;
+        focus.current && focus.current.focus();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [addChange, addInput, addValue, removeInput, removeValue],
+  );
+
+  const handleDiscardAll = useCallback(
+    (event) => {
+      setChanges([]);
+    },
+    [setChanges],
+  );
 
   const handleSaveChanges = useCallback((event) => {
     changelistForm.current && changelistForm.current.submit();
@@ -131,7 +131,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
               autoComplete="off"
               data-lpignore
             />
-            <Button color="success" type="submit">Just Add</Button>
+            <Button color="success" type="submit">
+              Just Add
+            </Button>
           </Form>
         </Col>
         <Col xs="12" sm="auto">
@@ -150,7 +152,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
               autoComplete="off"
               data-lpignore
             />
-            <Button color="success" type="submit">Remove/Replace</Button>
+            <Button color="success" type="submit">
+              Remove/Replace
+            </Button>
           </Form>
         </Col>
       </Row>

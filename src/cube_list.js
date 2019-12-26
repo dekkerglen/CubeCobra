@@ -87,17 +87,19 @@ class CubeList extends Component {
                     filter={filter}
                     setFilter={this.setFilter}
                     cards={filteredCards}
-                    hasCustomImages={cards.some(card => card.imgUrl)}
+                    hasCustomImages={cards.some((card) => card.imgUrl)}
                   />
                   <DynamicFlash />
                   <ErrorBoundary className="mt-3">
                     {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
-                    {{
-                      'table': <TableView cards={filteredCards} />,
-                      'spoiler': <VisualSpoiler cards={filteredCards} />,
-                      'curve': <CurveView cards={filteredCards} />,
-                      'list': <ListView cubeID={cubeID} cards={filteredCards} />,
-                    }[cubeView]}
+                    {
+                      {
+                        table: <TableView cards={filteredCards} />,
+                        spoiler: <VisualSpoiler cards={filteredCards} />,
+                        curve: <CurveView cards={filteredCards} />,
+                        list: <ListView cubeID={cubeID} cards={filteredCards} />,
+                      }[cubeView]
+                    }
                   </ErrorBoundary>
                 </GroupModal>
               </CardModalForm>
@@ -118,7 +120,7 @@ const wrapper = document.getElementById('react-root');
 const element = (
   <CubeContextProvider initialCube={cube}>
     <CubeContext.Consumer>
-      {({ cube }) =>
+      {({ cube }) => (
         <CubeList
           cards={cube}
           canEdit={canEdit}
@@ -126,7 +128,7 @@ const element = (
           defaultTagColors={defaultTagColors}
           defaultShowTagColors={defaultShowTagColors}
         />
-      }
+      )}
     </CubeContext.Consumer>
   </CubeContextProvider>
 );

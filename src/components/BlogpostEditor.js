@@ -19,7 +19,7 @@ const clickToolbar = (event) => {
   } else document.execCommand(command, false, null);
 };
 
-const BlogpostEditor = ({ name, value, onChange }) =>
+const BlogpostEditor = ({ name, value, onChange }) => (
   <>
     <h6>Blog Post</h6>
     <FormGroup>
@@ -60,6 +60,7 @@ const BlogpostEditor = ({ name, value, onChange }) =>
       </Card>
       <FormText>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</FormText>
     </FormGroup>
-  </>;
+  </>
+);
 
 export default BlogpostEditor;

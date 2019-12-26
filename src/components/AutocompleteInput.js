@@ -182,93 +182,109 @@ const fetchTree = async (treeUrl, treePath) => {
   return json[treePath];
 };
 
-const AutocompleteInput = forwardRef(({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, ...props }, ref) => {
-  const [tree, setTree] = useState({});
-  const [position, setPosition] = useState(-1);
-  const [visible, setVisible] = useState(false);
-  let [inputValue, setInputValue] = useState(defaultValue || '');
+const AutocompleteInput = forwardRef(
+  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, ...props }, ref) => {
+    const [tree, setTree] = useState({});
+    const [position, setPosition] = useState(-1);
+    const [visible, setVisible] = useState(false);
+    let [inputValue, setInputValue] = useState(defaultValue || '');
 
-  if (typeof value !== 'undefined') {
-    inputValue = value;
-  }
-
-  useEffect(() => {
-    const wrapper = async () => {
-      try {
-        if (!treeCache[treeUrl]) {
-          treeCache[treeUrl] = fetchTree(treeUrl, treePath);
-        }
-        setTree(await treeCache[treeUrl]);
-      } catch(e) {
-        console.error('Error getting autocomplete tree.', e);
-      }
-    };
-    wrapper();
-  }, [treeUrl]);
-
-  const handleChange = useCallback((event) => {
-    setInputValue(event.target.value);
-    setVisible(true);
-    onChange(event);
-  }, [onChange]);
-
-  const acceptSuggestion = useCallback((newValue) => {
-    const target = {
-      name: props.name,
-      value: newValue,
-    };
-    setInputValue(newValue);
-    setVisible(false);
-    setPosition(-1);
-    onChange({
-      target,
-      currentTarget: target,
-    });
-  }, [onChange, props.name]);
-
-  const handleClickSuggestion = useCallback((event) => {
-    event.preventDefault();
-    acceptSuggestion(event.target.textContent);
-  }, [acceptSuggestion]);
-
-  const matches = useMemo(() => getAllMatches(tree, inputValue), [tree, inputValue]);
-  const showMatches = visible && inputValue && !(matches.length === 1 && matches[0] === inputValue);
-
-  const handleKeyDown = useCallback((event) => {
-    if (event.keyCode == 40) {
-      // DOWN key
-      event.preventDefault();
-      setPosition(position => position < 9 ? position + 1 : position);
-    } else if (event.keyCode == 38) {
-      // UP key
-      event.preventDefault();
-      setPosition(position => position > -1 ? position - 1 : position);
-    } else if (event.keyCode == 9 || event.keyCode == 13) {
-      // TAB or ENTER key
-      if (showMatches) {
-        const goodPosition = position >= 0 && position < matches.length ? position : 0;
-        const match = matches[goodPosition];
-        acceptSuggestion(match);
-      }
-      if (event.keyCode == 13 && onSubmit) {
-        // ENTER key
-        onSubmit(event, match);
-      }
+    if (typeof value !== 'undefined') {
+      inputValue = value;
     }
-  }, [position, acceptSuggestion, matches, showMatches, onSubmit]);
 
-  return (
-    <div>
-      <Input ref={ref} value={inputValue} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
-      {showMatches &&
-        <ul className="autocomplete-list">
-          {matches.map((match, index) =>
-            <li key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined} >{match}</li>
-          )}
-        </ul>
-      }
-    </div>
-  );
-});
+    useEffect(() => {
+      const wrapper = async () => {
+        try {
+          if (!treeCache[treeUrl]) {
+            treeCache[treeUrl] = fetchTree(treeUrl, treePath);
+          }
+          setTree(await treeCache[treeUrl]);
+        } catch (e) {
+          console.error('Error getting autocomplete tree.', e);
+        }
+      };
+      wrapper();
+    }, [treeUrl]);
+
+    const handleChange = useCallback(
+      (event) => {
+        setInputValue(event.target.value);
+        setVisible(true);
+        onChange(event);
+      },
+      [onChange],
+    );
+
+    const acceptSuggestion = useCallback(
+      (newValue) => {
+        const target = {
+          name: props.name,
+          value: newValue,
+        };
+        setInputValue(newValue);
+        setVisible(false);
+        setPosition(-1);
+        onChange({
+          target,
+          currentTarget: target,
+        });
+      },
+      [onChange, props.name],
+    );
+
+    const handleClickSuggestion = useCallback(
+      (event) => {
+        event.preventDefault();
+        acceptSuggestion(event.target.textContent);
+      },
+      [acceptSuggestion],
+    );
+
+    const matches = useMemo(() => getAllMatches(tree, inputValue), [tree, inputValue]);
+    const showMatches = visible && inputValue && !(matches.length === 1 && matches[0] === inputValue);
+
+    const handleKeyDown = useCallback(
+      (event) => {
+        if (event.keyCode == 40) {
+          // DOWN key
+          event.preventDefault();
+          setPosition((position) => (position < 9 ? position + 1 : position));
+        } else if (event.keyCode == 38) {
+          // UP key
+          event.preventDefault();
+          setPosition((position) => (position > -1 ? position - 1 : position));
+        } else if (event.keyCode == 9 || event.keyCode == 13) {
+          // TAB or ENTER key
+          if (showMatches) {
+            const goodPosition = position >= 0 && position < matches.length ? position : 0;
+            const match = matches[goodPosition];
+            acceptSuggestion(match);
+          }
+          if (event.keyCode == 13 && onSubmit) {
+            // ENTER key
+            onSubmit(event, match);
+          }
+        }
+      },
+      [position, acceptSuggestion, matches, showMatches, onSubmit],
+    );
+
+    return (
+      <div>
+        <Input ref={ref} value={inputValue} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
+        {showMatches && (
+          <ul className="autocomplete-list">
+            {matches.map((match, index) => (
+              <li key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
+                {match}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  },
+);
 
 export default AutocompleteInput;
