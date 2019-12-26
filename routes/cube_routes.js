@@ -2882,7 +2882,7 @@ router.get('/api/getcard/:name', function(req, res) {
     });
   } else {
     res.status(200).send({
-      success: 'true',
+      success: 'false',
     });
   }
 });
@@ -2892,7 +2892,7 @@ router.get('/api/getimage/:name', function(req, res) {
   var img = carddb.imagedict[reasonable.name];
   if (!img) {
     res.status(200).send({
-      success: 'true',
+      success: 'false',
     });
   } else {
     res.status(200).send({
@@ -2912,7 +2912,7 @@ router.get('/api/getcardfromid/:id', function(req, res) {
   GetPrices(tcg).then(function(price_dict) {
     if (card.error) {
       res.status(200).send({
-        success: 'true',
+        success: 'false',
       });
     } else {
       if (price_dict[card.tcgplayer_id]) {
