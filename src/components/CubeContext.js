@@ -17,7 +17,18 @@ export const CubeContextProvider = ({ initialCube, ...props }) => {
     [cube],
   );
 
-  const value = { cube, updateCubeCard };
+  const updateCubeCards = useCallback(
+    (newCards) => {
+      const newCube = [...cube];
+      for (const card of newCards) {
+        newCube[card.index] = card;
+      }
+      setCube(newCube);
+    },
+    [cube],
+  );
+
+  const value = { cube, updateCubeCard, updateCubeCards };
 
   return <CubeContext.Provider value={value} {...props} />;
 };

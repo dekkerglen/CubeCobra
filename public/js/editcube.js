@@ -1,19 +1,3 @@
-var canEdit = $('#edittoken').val();
-var changes = [];
-
-function getCsrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]');
-  return meta ? meta.getAttribute('content') : null;
-}
-
-function csrfFetch(resource, init) {
-  init.credentials = init.credentials || 'same-origin';
-  init.headers = Object.assign(init.headers, {
-    'CSRF-Token': getCsrfToken(),
-  });
-  return fetch(resource, init);
-}
-
 var comparing = false;
 if ($('#in_both').length) {
   comparing = true;
@@ -519,16 +503,4 @@ function sortIntoGroups(cards, sort) {
     }
   });
   return groups;
-}
-
-function columnLength(sort, label) {
-  var res = 0;
-  var cards = filteredCube();
-
-  cards.forEach(function(card, cardindex) {
-    if (cardIsLabel(card, label, sort)) {
-      res += 1;
-    }
-  });
-  return res;
 }
