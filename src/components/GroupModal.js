@@ -58,11 +58,12 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const close = useCallback(() => setIsOpen(false));
 
   const error = useCallback((message) => {
-    setAlerts(alerts => [
-      ...alerts, {
-          color: 'danger',
-          message,
-      }
+    setAlerts((alerts) => [
+      ...alerts,
+      {
+        color: 'danger',
+        message,
+      },
     ]);
   });
 
@@ -78,7 +79,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
       extra.addTags = false;
     }
 
-    setFormValues(formValues => ({
+    setFormValues((formValues) => ({
       ...formValues,
       [name]: value,
       ...extra,
@@ -88,96 +89,100 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const handleRemoveCard = useCallback((event) => {
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
-    setCardIndices(cards => cards.filter((c) => c.index !== parseInt(index)));
+    setCardIndices((cards) => cards.filter((c) => c.index !== parseInt(index)));
   });
 
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
-  const addTag = useCallback((tag) => setTags(tags => [...tags, tag]));
+  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
   const deleteTag = useCallback((tagIndex) => {
-    setTags(tags => tags.filter((tag, i) => i !== tagIndex));
+    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
   });
   const reorderTag = useCallback((tag, currIndex, newIndex) => {
-    setTags(tags => arrayMove(tags, currIndex, newIndex));
+    setTags((tags) => arrayMove(tags, currIndex, newIndex));
   });
 
-  const handleApply = useCallback(async (event) => {
-    event.preventDefault();
+  const handleApply = useCallback(
+    async (event) => {
+      event.preventDefault();
 
-    const selected = cardIndices;
-    const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
-    const updated = { ...formValues };
-    updated.cmc = parseInt(updated.cmc);
-    if (isNaN(updated.cmc)) {
-      delete updated.cmc;
-    }
-    updated.colors = colors;
-    if (updated.colors.length === 0) {
-      delete updated.colors;
-    }
-    [...'WUBRG'].forEach((color) => delete updated[`color${color}`]);
-
-    try {
-      const response = await csrfFetch(`/cube/api/updatecards/${cubeID}`, {
-        method: 'POST',
-        body: JSON.stringify({ selected, updated }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const json = await response.json()
-      if (json.success === 'true') {
-        // Make shallow copy of each card.
-        const updatedCards = cardIndices.map((index) => ({ ...cube[index] }));
-        for (const card of updatedCards) {
-          updated.status && (card.status = updated.status);
-          updated.finish && (card.finish = updated.finish);
-          !isNaN(updated.cmc) && (card.cmc = updated.cmc);
-          updated.type_line && (card.type_line = updated.type_line);
-          if (updated.addTags) {
-            card.tags = [...card.tags, ...updated.tags.filter((tag) => !card.tags.includes(tag))];
-          }
-          if (updated.deleteTags) {
-            card.tags = card.tags.filter((tag) => !updated.tags.includes(tag));
-          }
-
-          if (colors.length > 0) {
-            card.colors = [...colors];
-          }
-          if (updated.colorC) {
-            card.colors = [];
-          }
-        }
-        updateCubeCards(updatedCards);
-
-        close();
+      const selected = cardIndices;
+      const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
+      const updated = { ...formValues };
+      updated.cmc = parseInt(updated.cmc);
+      if (isNaN(updated.cmc)) {
+        delete updated.cmc;
       }
-    } catch(e) {
-      console.error(e);
-      error(e);
-    }
-  }, [cardIndices, formValues, updateCubeCards, close, error]);
+      updated.colors = colors;
+      if (updated.colors.length === 0) {
+        delete updated.colors;
+      }
+      [...'WUBRG'].forEach((color) => delete updated[`color${color}`]);
 
-  const handleRemoveAll = useCallback((event) => {
-    event.preventDefault();
-    const cards = cardIndices.map((index) => cube[index]);
-    for (const card of cards) {
-      addChange({
-        remove: card.details,
-      });
-    }
-    setOpenCollapse(() => 'edit');
-    close();
-  }, [cardIndices, cube, setOpenCollapse, close]);
+      try {
+        const response = await csrfFetch(`/cube/api/updatecards/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ selected, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await response.json();
+        if (json.success === 'true') {
+          // Make shallow copy of each card.
+          const updatedCards = cardIndices.map((index) => ({ ...cube[index] }));
+          for (const card of updatedCards) {
+            updated.status && (card.status = updated.status);
+            updated.finish && (card.finish = updated.finish);
+            !isNaN(updated.cmc) && (card.cmc = updated.cmc);
+            updated.type_line && (card.type_line = updated.type_line);
+            if (updated.addTags) {
+              card.tags = [...card.tags, ...updated.tags.filter((tag) => !card.tags.includes(tag))];
+            }
+            if (updated.deleteTags) {
+              card.tags = card.tags.filter((tag) => !updated.tags.includes(tag));
+            }
+
+            if (colors.length > 0) {
+              card.colors = [...colors];
+            }
+            if (updated.colorC) {
+              card.colors = [];
+            }
+          }
+          updateCubeCards(updatedCards);
+
+          close();
+        }
+      } catch (e) {
+        console.error(e);
+        error(e);
+      }
+    },
+    [cardIndices, formValues, updateCubeCards, close, error],
+  );
+
+  const handleRemoveAll = useCallback(
+    (event) => {
+      event.preventDefault();
+      const cards = cardIndices.map((index) => cube[index]);
+      for (const card of cards) {
+        addChange({
+          remove: card.details,
+        });
+      }
+      setOpenCollapse(() => 'edit');
+      close();
+    },
+    [cardIndices, cube, setOpenCollapse, close],
+  );
 
   const cards = cardIndices.map((index) => cube[index]);
-  const setCards = useCallback((cards) => setCardIndices(cards.map(card => card.index)));
+  const setCards = useCallback((cards) => setCardIndices(cards.map((card) => card.index)));
 
   const contextChildren = (
-    <GroupModalContext.Provider
-      value={{ groupModalCards: cards, openGroupModal: open, setGroupModalCards: setCards }}
-    >
+    <GroupModalContext.Provider value={{ groupModalCards: cards, openGroupModal: open, setGroupModalCards: setCards }}>
       {children}
     </GroupModalContext.Provider>
   );
@@ -191,14 +196,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const totalPrice = cards.length ? cards.reduce(accumulator, 0) : 0;
   const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0) : 0;
 
-  const checkColors = [
-    ['White', 'W'],
-    ['Blue', 'U'],
-    ['Black', 'B'],
-    ['Red', 'R'],
-    ['Green', 'G'],
-    ['Colorless', 'C'],
-  ];
+  const checkColors = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G'], ['Colorless', 'C']];
   return (
     <>
       {contextChildren}
@@ -211,16 +209,11 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
           <Row>
             <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
               <ListGroup className="list-outline">
-                {cards.map((card) =>
+                {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal>
-                    <Button
-                      close
-                      className="float-none mr-1"
-                      data-index={card.index}
-                      onClick={handleRemoveCard}
-                    />
+                    <Button close className="float-none mr-1" data-index={card.index} onClick={handleRemoveCard} />
                   </AutocardListItem>
-                )}
+                ))}
               </ListGroup>
             </Col>
             <Col xs="8">
@@ -289,8 +282,8 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                 <FormGroup tag="fieldset">
                   <FormGroup check>
                     <Label check>
-                      <Input type="radio" name="addTags" checked={formValues.addTags} onChange={handleChange} /> Add tags to
-                      all
+                      <Input type="radio" name="addTags" checked={formValues.addTags} onChange={handleChange} /> Add
+                      tags to all
                     </Label>
                   </FormGroup>
                   <FormGroup check>
@@ -323,6 +316,6 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
       </Modal>
     </>
   );
-}
+};
 
 export default GroupModal;

@@ -22,12 +22,12 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
-  const addTag = useCallback((tag) => setTags(tags => [...tags, tag]));
+  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
   const deleteTag = useCallback((tagIndex) => {
-    setTags(tags => tags.filter((tag, i) => i !== tagIndex));
+    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
   });
   const reorderTag = useCallback((tag, currIndex, newIndex) => {
-    setTags(tags => arrayMove(tags, currIndex, newIndex));
+    setTags((tags) => arrayMove(tags, currIndex, newIndex));
   });
 
   const handleChange = useCallback((event) => {
@@ -35,7 +35,7 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
 
-    setFormValues(formValues => ({
+    setFormValues((formValues) => ({
       ...formValues,
       [name]: value,
     }));
@@ -92,7 +92,7 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
         updateCubeCard(cardIndex, newCard);
         setIsOpen(false);
       }
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     }
   }, [card, formValues, updateCubeCard]);
@@ -105,35 +105,38 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
     setIsOpen(false);
   }, [card, addChange, setOpenCollapse]);
 
-  const openCardModal = useCallback((newCardIndex) => {
-    const card = cube[newCardIndex];
-    setCardIndex(newCardIndex);
-    setVersions([card.details]);
-    setFormValues({
-      version: card.cardID,
-      status: card.status,
-      finish: card.finish,
-      cmc: card.cmc,
-      type_line: card.type_line,
-      imgUrl: card.imgUrl,
-      tags: card.tags.map((tag) => ({ id: tag, text: tag })),
-      colorW: card.colors.includes('W'),
-      colorU: card.colors.includes('U'),
-      colorB: card.colors.includes('B'),
-      colorR: card.colors.includes('R'),
-      colorG: card.colors.includes('G'),
-    });
-    setIsOpen(true);
-    const currentCard = card;
-    fetch(`/cube/api/getversions/${card.cardID}`)
-      .then((response) => response.json())
-      .then((json) => {
-        // Otherwise the modal has changed in between.
-        if (currentCard.details.name == cube[newCardIndex].details.name) {
-          setVersions(json.cards);
-        }
+  const openCardModal = useCallback(
+    (newCardIndex) => {
+      const card = cube[newCardIndex];
+      setCardIndex(newCardIndex);
+      setVersions([card.details]);
+      setFormValues({
+        version: card.cardID,
+        status: card.status,
+        finish: card.finish,
+        cmc: card.cmc,
+        type_line: card.type_line,
+        imgUrl: card.imgUrl,
+        tags: card.tags.map((tag) => ({ id: tag, text: tag })),
+        colorW: card.colors.includes('W'),
+        colorU: card.colors.includes('U'),
+        colorB: card.colors.includes('B'),
+        colorR: card.colors.includes('R'),
+        colorG: card.colors.includes('G'),
       });
-  }, [cube]);
+      setIsOpen(true);
+      const currentCard = card;
+      fetch(`/cube/api/getversions/${card.cardID}`)
+        .then((response) => response.json())
+        .then((json) => {
+          // Otherwise the modal has changed in between.
+          if (currentCard.details.name == cube[newCardIndex].details.name) {
+            setVersions(json.cards);
+          }
+        });
+    },
+    [cube],
+  );
 
   const closeCardModal = useCallback(() => setIsOpen(false));
 
@@ -157,6 +160,6 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
       />
     </CardModalContext.Provider>
   );
-}
+};
 
 export default CardModalForm;
