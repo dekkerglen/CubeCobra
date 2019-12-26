@@ -43,7 +43,7 @@ const AutocardListItemRaw = ({ card, noCardModal, cardColorClass, openCardModal,
             ? undefined
             : (e) => {
                 e.preventDefault();
-                openCardModal(card);
+                openCardModal(card.index);
               }
         }
       >

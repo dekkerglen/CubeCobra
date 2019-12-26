@@ -5,6 +5,7 @@ import Filter from './util/Filter';
 import Hash from './util/Hash';
 
 import CardModalForm from './components/CardModalForm';
+import CubeContext, { CubeContextProvider } from './components/CubeContext';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
 import DisplayContext from './components/DisplayContext';
@@ -22,7 +23,6 @@ class CubeList extends Component {
     super(props);
 
     this.state = {
-      cards: this.props.defaultCards,
       cubeView: Hash.get('view', 'table'),
       openCollapse: Hash.get('f', false) ? 'filter' : null,
       filter: [],
@@ -34,8 +34,6 @@ class CubeList extends Component {
 
     /* global */
     editListeners.push(() => this.setState({ openCollapse: 'edit' }));
-    /* global, should be moved into a context */
-    updateCubeListeners.push((cards) => this.setState({ cards }));
   }
 
   changeCubeView(cubeView) {
@@ -58,8 +56,8 @@ class CubeList extends Component {
   }
 
   render() {
-    const { cubeID, canEdit, defaultTagColors, defaultShowTagColors } = this.props;
-    const { cards, cubeView, openCollapse, filter } = this.state;
+    const { cards, cubeID, canEdit, defaultCards, defaultTagColors, defaultShowTagColors } = this.props;
+    const { cubeView, openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
     const defaultTags = [...defaultTagSet].map((tag) => ({
       id: tag,
@@ -111,22 +109,24 @@ class CubeList extends Component {
 }
 
 const cube = JSON.parse(document.getElementById('cuberaw').value);
-cube.forEach((card, index) => {
-  card.index = index;
-  cubeDict[index] = card;
-});
 const cubeID = document.getElementById('cubeID').value;
 const canEdit = document.getElementById('canEdit').value === 'true';
 const defaultTagColors = JSON.parse(document.getElementById('cubeTagColors').value);
 const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeList
-    defaultCards={cube}
-    canEdit={canEdit}
-    cubeID={cubeID}
-    defaultTagColors={defaultTagColors}
-    defaultShowTagColors={defaultShowTagColors}
-  />
+  <CubeContextProvider initialCube={cube}>
+    <CubeContext.Consumer>
+      {({ cube }) =>
+        <CubeList
+          cards={cube}
+          canEdit={canEdit}
+          cubeID={cubeID}
+          defaultTagColors={defaultTagColors}
+          defaultShowTagColors={defaultShowTagColors}
+        />
+      }
+    </CubeContext.Consumer>
+  </CubeContextProvider>
 );
-wrapper ? ReactDOM.render(element, wrapper) : false;
+wrapper && ReactDOM.render(element, wrapper);

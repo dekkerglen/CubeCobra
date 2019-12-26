@@ -4,8 +4,9 @@ import { csrfFetch } from '../util/CSRF';
 
 import CardModal from './CardModal';
 import CardModalContext from './CardModalContext';
+import CubeContext from './CubeContext';
 
-class CardModalForm extends Component {
+class CardModalFormRaw extends Component {
   constructor(props) {
     super(props);
 
@@ -16,8 +17,6 @@ class CardModalForm extends Component {
       formValues: { tags: [] },
     };
 
-    this.changeCardVersion = this.changeCardVersion.bind(this);
-    this.changeCardFinish = this.changeCardFinish.bind(this);
     this.openCardModal = this.openCardModal.bind(this);
     this.closeCardModal = this.closeCardModal.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -71,25 +70,6 @@ class CardModalForm extends Component {
         [name]: value,
       },
     }));
-
-    if (name === 'version') {
-      // This should guarantee that version array is non-null.
-      const { versions } = this.state;
-      const newDetails = versions.find((version) => version._id === value);
-      if (versions.length > 0 && newDetails) {
-        this.setState(({ card }) => ({
-          card: {
-            ...card,
-            details: {
-              ...newDetails,
-              display_image: card.imgUrl || newDetails.image_normal,
-            },
-          },
-        }));
-      } else {
-        console.error("Can't find version");
-      }
-    }
   }
 
   async saveChanges() {
@@ -105,7 +85,9 @@ class CardModalForm extends Component {
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    const { card } = this.state;
+    const { index } = this.state;
+    const { cube } = this.props;
+    const card = cube[index];
 
     if (
       updated.cardID === card.cardID &&
@@ -133,22 +115,16 @@ class CardModalForm extends Component {
       const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`).catch((err) => console.error(err));
       const cardJson = await cardResponse.json().catch((err) => console.error(err));
 
-      const { index } = card;
       const newCard = {
-        ...cube[index],
+        ...card,
         ...updated,
-        index,
         details: {
           ...cardJson.card,
           display_image: updated.imgUrl || cardJson.card.image_normal,
         },
       };
-
-      // magical incantation to get the global state right.
-      cube[index] = newCard;
-      cubeDict[cube[index].index] = newCard;
+      this.props.updateCubeCard(index, newCard);
       this.setState({ card: newCard, isOpen: false });
-      updateCubeList();
     }
   }
 
@@ -164,36 +140,12 @@ class CardModalForm extends Component {
     this.setState({ isOpen: false });
   }
 
-  getCardVersions(card) {
-    fetch(`/cube/api/getversions/${card.cardID}`)
-      .then((response) => response.json())
-      .then((json) => {
-        // Otherwise the modal has changed in between.
-        if (card.details.name == this.state.card.details.name) {
-          this.setState({
-            versions: json.cards,
-          });
-        }
-      });
-  }
-
-  changeCardVersion(card) {
+  openCardModal(index) {
+    const { cube } = this.props;
+    const card = cube[index];
     this.setState({
-      card,
-      versions: [],
-    });
-  }
-
-  changeCardFinish(card) {
-    this.setState({
-      card,
-    });
-  }
-
-  openCardModal(card) {
-    this.setState({
-      card,
-      versions: [],
+      index,
+      versions: [card.details],
       formValues: {
         version: card.cardID,
         status: card.status,
@@ -210,7 +162,16 @@ class CardModalForm extends Component {
       },
       isOpen: true,
     });
-    this.getCardVersions(card);
+    fetch(`/cube/api/getversions/${card.cardID}`)
+      .then((response) => response.json())
+      .then((json) => {
+        // Otherwise the modal has changed in between.
+        if (card.details.name == this.props.cube[index].details.name) {
+          this.setState({
+            versions: json.cards,
+          });
+        }
+      });
   }
 
   closeCardModal() {
@@ -218,17 +179,21 @@ class CardModalForm extends Component {
   }
 
   render() {
-    const { canEdit, setOpenCollapse, children, ...props } = this.props;
+    const { canEdit, setOpenCollapse, children, cube, updateCubeCard, ...props } = this.props;
+    const { index, isOpen, versions, formValues } = this.state;
+    const baseCard = typeof index !== 'undefined' ? cube[index] : { details: {}, tags: [] };
+    const details = versions.find(version => version._id === formValues.version) || baseCard.details;
+    const card = { ...baseCard, details };
     return (
       <CardModalContext.Provider value={this.openCardModal}>
         {children}
         <CardModal
-          values={this.state.formValues}
+          values={formValues}
           onChange={this.handleChange}
-          card={this.state.card}
-          versions={this.state.versions}
+          card={card}
+          versions={versions}
           toggle={this.closeCardModal}
-          isOpen={this.state.isOpen}
+          isOpen={isOpen}
           disabled={!canEdit}
           saveChanges={this.saveChanges}
           queueRemoveCard={this.queueRemoveCard}
@@ -243,5 +208,12 @@ class CardModalForm extends Component {
     );
   }
 }
+
+const CardModalForm = (props) =>
+  <CubeContext.Consumer>
+    {({ cube, updateCubeCard }) =>
+      <CardModalFormRaw {...{ cube, updateCubeCard}} {...props} />
+    }
+  </CubeContext.Consumer>;
 
 export default CardModalForm;

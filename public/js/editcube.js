@@ -23,18 +23,9 @@ if ($('#in_both').length) {
   view = 'table';
 }
 
-var cubeDict = {},
-  hasCustomImages = false;
-$('#customImageDisplayMenuItem').hide();
 var cube = JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
   card.index = index;
-  cubeDict[index] = card;
-  if (!hasCustomImages && card.imgUrl !== undefined) {
-    hasCustomImages = true;
-    $('#customImageDisplayToggle').prop('checked', true);
-    $('#customImageDisplayMenuItem').show();
-  }
 });
 
 $('#customImageDisplayToggle').click(function(e) {
@@ -43,7 +34,6 @@ $('#customImageDisplayToggle').click(function(e) {
   cube.forEach(function(card, index) {
     adjustDisplayImage(card, enabled);
   });
-  updateCubeList();
 });
 
 var editListeners = [];
@@ -542,19 +532,3 @@ function columnLength(sort, label) {
   });
   return res;
 }
-
-var updateCubeListeners = [];
-
-function updateCubeList() {
-  updateCubeListeners.forEach((listener) => listener(cube));
-  autocard_init('autocard');
-  autocard_hide_card();
-}
-
-var prev_handler = window.onload;
-window.onload = function() {
-  if (prev_handler) {
-    prev_handler();
-  }
-  updateCubeList();
-};

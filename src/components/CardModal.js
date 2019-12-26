@@ -47,7 +47,7 @@ const CardModal = ({
           <Col xs="12" sm="4">
             <ImageFallback
               className="w-100"
-              src={card.details.display_image}
+              src={values.imgUrl || card.details.image_normal}
               fallbackSrc="/content/default_card.png"
               alt={card.name}
               finish={values.finish}
