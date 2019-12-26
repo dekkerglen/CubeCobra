@@ -117,7 +117,7 @@ const wrapper = document.getElementById('react-root');
 const element = (
   <CubeContextProvider initialCube={cube}>
     <CubeContext.Consumer>
-      {({ cube }) =>
+      {({ cube }) => (
         <CubeList
           cards={cube}
           canEdit={canEdit}
@@ -125,7 +125,7 @@ const element = (
           defaultTagColors={defaultTagColors}
           defaultShowTagColors={defaultShowTagColors}
         />
-      }
+      )}
     </CubeContext.Consumer>
   </CubeContextProvider>
 );

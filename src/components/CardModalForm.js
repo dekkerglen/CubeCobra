@@ -185,7 +185,7 @@ class CardModalFormRaw extends Component {
     const { canEdit, setOpenCollapse, children, cube, updateCubeCard, ...props } = this.props;
     const { index, isOpen, versions, formValues } = this.state;
     const baseCard = typeof index !== 'undefined' ? cube[index] : { details: {}, tags: [] };
-    const details = versions.find(version => version._id === formValues.version) || baseCard.details;
+    const details = versions.find((version) => version._id === formValues.version) || baseCard.details;
     const card = { ...baseCard, details };
     return (
       <CardModalContext.Provider value={this.openCardModal}>
@@ -212,11 +212,10 @@ class CardModalFormRaw extends Component {
   }
 }
 
-const CardModalForm = (props) =>
+const CardModalForm = (props) => (
   <CubeContext.Consumer>
-    {({ cube, updateCubeCard }) =>
-      <CardModalFormRaw {...{ cube, updateCubeCard}} {...props} />
-    }
-  </CubeContext.Consumer>;
+    {({ cube, updateCubeCard }) => <CardModalFormRaw {...{ cube, updateCubeCard }} {...props} />}
+  </CubeContext.Consumer>
+);
 
 export default CardModalForm;

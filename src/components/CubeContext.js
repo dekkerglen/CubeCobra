@@ -8,11 +8,14 @@ const CubeContext = React.createContext({
 export const CubeContextProvider = ({ initialCube, ...props }) => {
   const [cube, setCube] = useState(initialCube.map((card, index) => ({ ...card, index })));
 
-  const updateCubeCard = useCallback((index, newCard) => {
-    const newCube = [...cube];
-    newCube[index] = newCard;
-    setCube(newCube);
-  }, [cube]);
+  const updateCubeCard = useCallback(
+    (index, newCard) => {
+      const newCube = [...cube];
+      newCube[index] = newCard;
+      setCube(newCube);
+    },
+    [cube],
+  );
 
   const value = { cube, updateCubeCard };
 
