@@ -11,6 +11,7 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
+import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
 import Changelist from './Changelist';
 import ChangelistContext from './ChangelistContext';
@@ -55,10 +56,10 @@ const EditCollapse = ({ cubeID, ...props }) => {
     }[event.target.name](event.target.value);
   });
 
-  const handleAdd = useCallback(async (event) => {
+  const handleAdd = useCallback(async (event, newValue) => {
     event.preventDefault();
     try {
-      const card = await getCard(addValue);
+      const card = await getCard(newValue || addValue);
       if (!card) {
         return;
       }
@@ -71,11 +72,11 @@ const EditCollapse = ({ cubeID, ...props }) => {
     }
   }, [addChange, addValue, addInput]);
 
-  const handleRemoveReplace = useCallback(async (event) => {
+  const handleRemoveReplace = useCallback(async (event, newValue) => {
     event.preventDefault();
     const replace = addValue.length > 0;
     try {
-      const cardOut = await getCard(removeValue);
+      const cardOut = await getCard(newValue || removeValue);
       if (!cardOut) {
         return;
       }
@@ -116,50 +117,52 @@ const EditCollapse = ({ cubeID, ...props }) => {
       <Row>
         <Col xs="12" sm="auto">
           <Form inline className="mb-2" onSubmit={handleAdd}>
-            <div className="autocomplete">
-              <Input
-                type="text"
-                className="mr-2"
-                ref={addInput}
-                name="add"
-                value={addValue}
-                onChange={handleChange}
-                placeholder="Card to Add"
-                autoComplete="off"
-                data-lpignore
-              />
-            </div>
+            <AutocompleteInput
+              treeUrl="/cube/api/cardnames"
+              treePath="cardnames"
+              type="text"
+              className="mr-2"
+              ref={addInput}
+              name="add"
+              value={addValue}
+              onChange={handleChange}
+              onSubmit={handleAdd}
+              placeholder="Card to Add"
+              autoComplete="off"
+              data-lpignore
+            />
             <Button color="success" type="submit">Just Add</Button>
           </Form>
         </Col>
         <Col xs="12" sm="auto">
           <Form inline className="mb-2" onSubmit={handleRemoveReplace}>
-            <div className="autocomplete">
-              <Input
-                type="text"
-                className="mr-2"
-                ref={removeInput}
-                name="remove"
-                value={removeValue}
-                onChange={handleChange}
-                placeholder="Card to Remove"
-                autoComplete="off"
-                data-lpignore
-              />
-            </div>
+            <AutocompleteInput
+              treeUrl={`/cube/api/cubecardnames/${cubeID}`}
+              treePath="cardnames"
+              type="text"
+              className="mr-2"
+              ref={removeInput}
+              name="remove"
+              value={removeValue}
+              onChange={handleChange}
+              onSubmit={handleRemoveReplace}
+              placeholder="Card to Remove"
+              autoComplete="off"
+              data-lpignore
+            />
             <Button color="success" type="submit">Remove/Replace</Button>
           </Form>
         </Col>
       </Row>
-      <Collapse isOpen={changes.length > 0}>
+      <Collapse isOpen={changes.length > 0} className="pt-1">
         <CSRFForm ref={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>
           <Row>
             <Col>
-              <Label>Changelist:</Label>
+              <h6>Changelist</h6>
               <Changelist />
             </Col>
             <Col>
-              <BlogpostEditor />
+              <BlogpostEditor value={postContent} onChange={handleChange} />
             </Col>
           </Row>
           <Row className="mb-2">

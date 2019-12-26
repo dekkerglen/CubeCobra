@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Card, CardHeader, Col, FormGroup, Input, Label, Row } from 'reactstrap';
+import { Card, CardHeader, Col, FormGroup, FormText, Input, Label, Row } from 'reactstrap';
 
 import ContentEditable from './ContentEditable';
 
@@ -21,13 +21,13 @@ const clickToolbar = (event) => {
 
 const BlogpostEditor = ({ name, value, onChange }) =>
   <>
+    <h6>Blog Post</h6>
     <FormGroup>
-      <Label>Blog Title:</Label>
+      <Label className="sr-only">Blog Title</Label>
       <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
     </FormGroup>
     <FormGroup>
-      <Label>Body:</Label>
-      <em>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</em>
+      <Label className="sr-only">Blog Body</Label>
       <Card>
         <CardHeader className="p-0">
           <Toolbar>
@@ -55,9 +55,10 @@ const BlogpostEditor = ({ name, value, onChange }) =>
             </Row>
           </Toolbar>
         </CardHeader>
-        <ContentEditable value={value} onChange={onChange} />
+        <ContentEditable className="blogpost-editor" value={value} onChange={onChange} />
         <Input type="hidden" name={name} value={value} />
       </Card>
+      <FormText>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</FormText>
     </FormGroup>
   </>;
 
