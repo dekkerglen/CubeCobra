@@ -15,6 +15,8 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
+import Changelist from './Changelist';
+import ChangelistContext from './ChangelistContext';
 import ContentEditable from './ContentEditable';
 import CSRFForm from './CSRFForm';
 
@@ -33,75 +35,97 @@ function clickToolbar(event) {
 const Toolbar = (props) => <div className="toolbar" {...props} />;
 const ToolbarItem = (props) => <a href="#" className="toolbar-item" onClick={clickToolbar} {...props} />;
 
-function saveChanges() {
-  var val = '';
-  changes.forEach(function(change, index) {
-    if (index != 0) {
-      val += ';';
+async function getCard(name) {
+  if (name && name.length > 0) {
+    const normalized = name.replace('?', '-q-');
+    while (normalized.includes('//')) {
+      normalized = normalized.replace('//', '-slash-');
     }
-    if (change.add) {
-      val += '+' + change.add._id;
-    } else if (change.remove) {
-      val += '-' + change.remove._id;
-    } else if (change.replace) {
-      val += '/' + change.replace[0]._id + '>';
-      val += change.replace[1]._id;
+    const response = await fetch(`/cube/api/getcard/${normalized}`);
+    if (!response.ok) {
+      throw new Error(`Couldn\'t get card: ${response.status}.`);
     }
-  });
-  $('#changelistFormBody').val(val);
-  document.getElementById('changelistForm').submit();
+
+    const json = await response.json();
+    return json.card;
+  }
 }
 
-function discardAll() {
-  changes = [];
-  updateCollapse();
-}
-
-class EditCollapse extends Component {
+class EditCollapseRaw extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       postContent: '',
+      add: '',
+      remove: '',
     };
 
+    this.addInput = React.createRef();
+    this.removeInput = React.createRef();
+
     this.handlePostChange = this.handlePostChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);
     this.handleAdd = this.handleAdd.bind(this);
     this.handleRemoveReplace = this.handleRemoveReplace.bind(this);
-  }
-
-  componentDidMount() {
-    /* global */
-    updateCollapse();
-  }
-
-  componentDidUpdate() {
-    /* global */
-    updateCollapse();
+    this.handleDiscardAll = this.handleDiscardAll.bind(this);
   }
 
   handlePostChange(event) {
     this.setState({ postContent: event.target.value });
   }
 
-  handleAdd(event) {
-    event.preventDefault();
-    /* global */ justAdd();
-    document.getElementById('addInput').focus();
+  handleChange(event) {
+    this.setState({
+      [event.target.name]: event.target.value,
+    });
   }
 
-  handleRemoveReplace(event) {
+  async handleAdd(event) {
+    const { addChange } = this.props;
+    const { add } = this.state;
+    const addInput = this.addInput.current;
     event.preventDefault();
-    const addInput = document.getElementById('addInput');
-    const removeInput = document.getElementById('removeInput');
-    const replace = addInput.value.length > 0;
-    /* global */ remove();
-    /* If replace, put focus back in addInput; otherwise leave it here. */
-    (replace ? addInput : removeInput).focus();
+    try {
+      const card = await getCard(add);
+      addChange({ add: card });
+      this.setState({ add: '', remove: '' });
+      addInput.focus();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async handleRemoveReplace(event) {
+    const { addChange } = this.props;
+    const { add, remove } = this.state;
+    event.preventDefault();
+    const addInput = this.addInput.current;
+    const removeInput = this.removeInput.current;
+    const replace = add.length > 0;
+    try {
+      const cardOut = await getCard(remove);
+      if (replace) {
+        const cardIn = await getCard(add);
+        addChange({ replace: [cardOut, cardIn] });
+      } else {
+        addChange({ remove: cardOut });
+      }
+      this.setState({ add: '', remove: '' });
+      /* If replace, put focus back in addInput; otherwise leave it here. */
+      (replace ? addInput : removeInput).focus();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  handleDiscardAll(event) {
+    this.props.setChanges([]);
   }
 
   render() {
-    const { cubeID, ...props } = this.props;
+    const { cubeID, changes, addChange, setChanges, ...props } = this.props;
+    const { add, remove } = this.state;
     return (
       <Collapse {...props}>
         <Container>
@@ -117,16 +141,16 @@ class EditCollapse extends Component {
                   <Input
                     type="text"
                     className="mr-2"
-                    id="addInput"
+                    ref={this.addInput}
+                    name="add"
+                    value={add}
+                    onChange={this.handleChange}
                     placeholder="Card to Add"
-                    data-button="justAddButton"
                     autoComplete="off"
                     data-lpignore
                   />
                 </div>
-                <Button color="success" type="submit" id="justAddButton">
-                  Just Add
-                </Button>
+                <Button color="success" type="submit">Just Add</Button>
               </Form>
             </Col>
             <Col xs="12" sm="auto">
@@ -135,27 +159,25 @@ class EditCollapse extends Component {
                   <Input
                     type="text"
                     className="mr-2"
-                    id="removeInput"
+                    ref={this.removeInput}
+                    name="remove"
+                    value={remove}
+                    onChange={this.handleChange}
                     placeholder="Card to Remove"
-                    data-button="removeButton"
                     autoComplete="off"
                     data-lpignore
                   />
                 </div>
-                <Button color="success" type="submit" id="removeButton">
-                  Remove/Replace
-                </Button>
+                <Button color="success" type="submit">Remove/Replace</Button>
               </Form>
             </Col>
           </Row>
-          <div className="collapse editForm">
+          <Collapse isOpen={changes.length > 0}>
             <CSRFForm id="changelistForm" method="POST" action={`/cube/edit/${cubeID}`}>
               <Row>
                 <Col>
                   <Label>Changelist:</Label>
-                  <div className="editarea">
-                    <p className="editlist" id="changelist" />
-                  </div>
+                  <Changelist />
                 </Col>
                 <Col>
                   <FormGroup>
@@ -194,7 +216,6 @@ class EditCollapse extends Component {
                       </CardHeader>
                       <ContentEditable id="editor" value={this.state.postContent} onChange={this.handlePostChange} />
                       <Input type="hidden" name="blog" value={this.state.postContent} />
-                      <Input type="hidden" id="changelistFormBody" name="body" />
                     </Card>
                   </FormGroup>
                 </Col>
@@ -210,11 +231,18 @@ class EditCollapse extends Component {
                 </Col>
               </Row>
             </CSRFForm>
-          </div>
+          </Collapse>
         </Container>
       </Collapse>
     );
   }
 }
+
+const EditCollapse = (props) =>
+  <ChangelistContext.Consumer>
+    {({ changes, addChange, setChanges }) =>
+      <EditCollapseRaw changes={changes} addChange={addChange} setChanges={setChanges} {...props} />
+    }
+  </ChangelistContext.Consumer>;
 
 export default EditCollapse;
