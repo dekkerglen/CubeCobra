@@ -130,8 +130,11 @@ class CardModalFormRaw extends Component {
 
   queueRemoveCard() {
     // FIXME: Bring all this state inside React-world.
+    const { cube } = this.props;
+    const { index } = this.state;
+    const card = cube[index];
     changes.push({
-      remove: this.state.card.details,
+      remove: card.details,
     });
     updateCollapse();
     $('#navedit').collapse('show');
