@@ -69,13 +69,13 @@ const EditCollapse = ({ cubeID, ...props }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [addChange, addInput]);
+  }, [addChange, addValue, addInput]);
 
   const handleRemoveReplace = useCallback(async (event) => {
     event.preventDefault();
-    const replace = addVale.length > 0;
+    const replace = addValue.length > 0;
     try {
-      const cardOut = await getCard(remove);
+      const cardOut = await getCard(removeValue);
       if (!cardOut) {
         return;
       }
@@ -96,7 +96,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [addChange, addInput, removeInput]);
+  }, [addChange, addInput, addValue, removeInput, removeValue]);
 
   const handleDiscardAll = useCallback((event) => {
     setChanges([]);
