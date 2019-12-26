@@ -7,9 +7,8 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navba
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
-import { arraysEqual, cmcColumn } from '../util/Util';
+import { cmcColumn } from '../util/Util';
 
-import CardStack from './CardStack';
 import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
@@ -63,6 +62,10 @@ Pack.propTypes = {
   picking: PropTypes.number,
   onMoveCard: PropTypes.func.isRequired,
   onClickCard: PropTypes.func.isRequired,
+};
+
+Pack.defaultProps = {
+  picking: null,
 };
 
 const DraftView = () => {
@@ -161,23 +164,27 @@ const DraftView = () => {
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
-        <Pack
-          pack={pack}
-          packNumber={packNumber}
-          pickNumber={pickNumber}
-          picking={picking}
-          onMoveCard={handleMoveCard}
-          onClickCard={handleClickCard}
-        />
-        <DeckStacks
-          cards={picks}
-          title="Picks"
-          subtitle={subtitle}
-          locationType={Location.PICKS}
-          canDrop={canDrop}
-          onMoveCard={handleMoveCard}
-          className="mt-3"
-        />
+        <ErrorBoundary>
+          <Pack
+            pack={pack}
+            packNumber={packNumber}
+            pickNumber={pickNumber}
+            picking={picking}
+            onMoveCard={handleMoveCard}
+            onClickCard={handleClickCard}
+          />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <DeckStacks
+            cards={picks}
+            title="Picks"
+            subtitle={subtitle}
+            locationType={Location.PICKS}
+            canDrop={canDrop}
+            onMoveCard={handleMoveCard}
+            className="mt-3"
+          />
+        </ErrorBoundary>
       </DndProvider>
     </DisplayContextProvider>
   );
