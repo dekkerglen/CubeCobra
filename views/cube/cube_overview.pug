@@ -1,19 +1,8 @@
 extends cube_layout
 
-block cube_toolbar
-  //edit controls
-  if user
-    if user.id == cube.owner
-      .usercontrols
-        nav.navbar.navbar-expand.navbar-light
-          .collapse.navbar-collapse
-            ul.navbar-nav.flex-wrap
-              li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#overviewModal') Edit Overview
-              li.nav-item
-                a.nav-link(href='#' data-toggle='modal', data-target='#deleteCubeModal') Delete Cube
-                
+block cube_toolbar               
   include ../dynamic_flash
+  
 block cube_content
   #react-root
   

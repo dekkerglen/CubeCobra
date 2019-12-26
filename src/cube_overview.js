@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardText, Button } from 'reactstrap';
+import { Row, Col, Card, CardHeader, CardBody, CardText, Button, Navbar } from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
 import CSRFForm from './components/CSRFForm';
+import CubeOverviewModal from './components/CubeOverviewModal';
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -47,9 +48,25 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, cube, price, owner, admin } = this.props;
+    const { post, cube, price, owner, admin, canEdit } = this.props;
     return (
       <>
+        {canEdit &&
+          <div className="usercontrols">
+            <Navbar expand="md" className="navbar-light">
+            <div className="collapse navbar-collapse">
+              <ul className="navbar-nav flex-wrap">
+                <li className="nav-item">
+                  <CubeOverviewModal cube={cube}/>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">Delete Cube</a>
+                </li>
+              </ul>
+            </div>
+            </Navbar>
+          </div>
+        }
         <DynamicFlash />
         <Row>
           <Col md="4">
@@ -145,6 +162,6 @@ const admin = JSON.parse(document.getElementById('adminData').value) == true;
 const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeOverview post={blog || null} cube={cube} price={price} owner={owner} admin={admin} followed={followed} />
+  <CubeOverview post={blog || null} cube={cube} price={price} owner={owner} admin={admin} followed={followed} canEdit={canEdit}/>
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;

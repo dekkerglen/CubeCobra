@@ -34,6 +34,10 @@ const cubeSchema = mongoose.Schema({
     default: false,
     index: true,
   },
+  tags: {
+    type: [String],
+    default: [],
+  },
   cards: [
     {
       tags: [String],
