@@ -36,7 +36,11 @@ const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
                 {getLabels(secondary)
                   .filter((label) => column[label])
                   .map((label) => (
-                    <AutocardListGroup key={label} heading={`${label} (${column[label].length})`} cards={column[label]} />
+                    <AutocardListGroup
+                      key={label}
+                      heading={`${label} (${column[label].length})`}
+                      cards={column[label]}
+                    />
                   ))}
               </Col>
             );
