@@ -268,6 +268,15 @@ border-bottom: none;
 	overflow: hidden;
 	background: #fff;
 }
+
+@media(min-width: 768px) {
+	#autocard_popup_info,
+	#autocard_popup2,
+	#autocard_popup {
+		display: none !important;
+	}
+}
+
 .deckcard, .packcard, .sideboardcard {
 	border-radius: 6px;
 	overflow: hidden;
@@ -536,4 +545,36 @@ body.busy-cursor {
 	height:60px;
 	float: left;
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.table-view.row {
+	margin: 0 -2px;
+}
+
+.table-view .table-col {
+	padding: 0 2px;
+}
+
+@media(max-width: 991.98px) {
+	/* On screens where not all columns display at once, scroll cubes horizontally. */
+	.table-view-container {
+		/* Size to viewport. Have to do this so that scroll displays to edge of screen. */
+		overflow: hidden;
+		width: 100vw;
+		padding: 0 calc(50vw - 50%);
+		margin: 0 calc(-50vw + 50%);
+	}
+
+	.table-view.row {
+		overflow: auto hidden;
+		flex-wrap: nowrap;
+		padding: 0 calc(50vw - 50% - 2px);
+		margin: 0 calc(-50vw + 50%);
+	}
+
+	.table-view.row:after {
+		content: '';
+		min-width: calc(50vw - 50% - 2px);
+		height: 1px;
+	}
 }
