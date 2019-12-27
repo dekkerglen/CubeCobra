@@ -24,4 +24,6 @@ export function fromEntries(entries) {
   return obj;
 }
 
-export default { arraysEqual, arrayMove, fromEntries };
+export const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
+
+export default { arraysEqual, arrayMove, fromEntries, COLORS };

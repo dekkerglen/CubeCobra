@@ -537,3 +537,16 @@ body.busy-cursor {
 	float: left;
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
+
+.input-group-prepend + .input-group-append > .color-check-button {
+	border-left: 0;
+}
+
+.color-check-button {
+	border-color: #ced4da !important;
+}
+
+.color-check-button.active, .color-check-button:hover {
+	border-color: #ced4da !important;
+	background-color: #e9ecef !important;
+}
