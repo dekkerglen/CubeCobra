@@ -3242,14 +3242,12 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
       var updatedRating = (cards_per_pack - draft.packs[0][0].length + 1) / cards_per_pack;
 
       if (rating) {
-        rating.value =
-          rating.value * (rating.picks / (rating.picks + 1)) +
-          updatedRating * (1 / (rating.picks + 1));
+        rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
         rating.picks += 1;
       } else {
         rating = new CardRating();
         rating.name = req.body.pick;
-        rating.value = updatedRating
+        rating.value = updatedRating;
         rating.elo = ELO_BASE + ELO_RANGE / 2;
         rating.picks = 1;
       }
@@ -3272,7 +3270,7 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
         const diff = other.elo - rating.elo;
         // Expected performance for pick.
         const expectedA = 1 / (1 + Math.pow(10, diff / 400));
-        const expectedB = 1 - expectedA
+        const expectedB = 1 - expectedA;
         const adjustmentA = 2 * (1 - expectedA);
         const adjustmentB = 2 * (0 - expectedB);
         rating.elo += adjustmentA;
@@ -3281,10 +3279,7 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
       }
 
       try {
-        await Promise.all([
-          rating.save(),
-          packRatings.map(r => r.save()),
-        ]);
+        await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
       } catch (err) {
         console.error(err);
         res.status(500).send({

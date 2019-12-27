@@ -90,7 +90,14 @@ async function topCards(filter, res) {
     const rating = ratingDict.get(v.name);
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-    return [v.name, v.image_normal, v.image_flip || null, rating ? adjust(rating) : null, rating ? rating.picks : null, (rating && rating.elo) ? rating.elo : null];
+    return [
+      v.name,
+      v.image_normal,
+      v.image_flip || null,
+      rating ? adjust(rating) : null,
+      rating ? rating.picks : null,
+      rating && rating.elo ? rating.elo : null,
+    ];
   });
   const nonNullData = fullData.filter((x) => x[3] !== null);
   const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));

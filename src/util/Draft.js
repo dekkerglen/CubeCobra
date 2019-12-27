@@ -139,7 +139,7 @@ async function pick(cardIndex) {
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: pack.map(c => c.details.name),
+      pack: pack.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
