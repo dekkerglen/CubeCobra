@@ -2137,6 +2137,39 @@ router.post('/api/editcomment', ensureAuth, async (req, res) => {
   }
 });
 
+router.post('/api/editoverview', ensureAuth, async (req, res) => {
+  try {    
+    const updatedCube = req.body;
+
+    cube = await Cube.findById(req.body.cube._id);
+    if(!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube Not Found',
+      });
+    }
+
+    user = await User.findById(req.user._id);
+    if (!user || user._id != cube.owner) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    cube.name = updatedCube.name;
+
+    await cube.save();
+  }
+  catch (err) {  
+    console.log(err);
+    return res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
+});
+
 router.post('/api/postcomment', ensureAuth, async (req, res) => {
   const userq = User.findById(req.user._id);
   const postq = Blog.findById(req.body.id);

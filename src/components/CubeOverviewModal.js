@@ -13,6 +13,7 @@ import {
   Label,
   Input,
   CardBody,
+  Button,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
@@ -39,6 +40,7 @@ class CubeOverviewModal extends Component {
     this.addTag = this.addTag.bind(this);
     this.deleteTag = this.deleteTag.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleApply = this.handleApply.bind(this);
     this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
     this.imageNameChange = this.imageNameChange.bind(this);
     this.imageNameSubmit = this.imageNameSubmit.bind(this);
@@ -204,8 +206,17 @@ class CubeOverviewModal extends Component {
   async handleApply(event) {
     event.preventDefault();
     
+    var cube = this.state.cube;
 
-    this.close();    
+    await csrfFetch('/cube/api/editoverview', {
+      method: 'POST',
+      body: JSON.stringify(cube),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch((err) => this.error(err));
+
+    this.close();
   }
 
   render() {
@@ -323,6 +334,11 @@ class CubeOverviewModal extends Component {
                 <br/>
                 
               </ModalBody>
+              <ModalFooter>
+                <Button color="secondary" onClick={this.close}>Close</Button>
+                {' '}
+                <Button color="success" onClick={this.handleApply}>Save Changes</Button>
+              </ModalFooter>
             </form>
 
           </Modal>
