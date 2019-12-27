@@ -120,7 +120,11 @@ class CubeOverview extends Component {
                 {cube.type && (
                   <>
                     <a>
-                      {cube.card_count} Card {cube.type} Cube
+                      {cube.overrideCategory ?
+                        cube.card_count + ' Card ' + (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') + cube.categoryOverride + ' Cube'
+                      :
+                        cube.card_count + ' Card ' + cube.type + ' Cube'
+                      }
                     </a>
                     <br />
                   </>

@@ -43,7 +43,6 @@ class CubeOverviewModal extends Component {
     this.handleApply = this.handleApply.bind(this);
     this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
     this.imageNameChange = this.imageNameChange.bind(this);
-    this.imageNameSubmit = this.imageNameSubmit.bind(this);
 
     this.tagActions = {
       addTag: this.addTag,
@@ -110,7 +109,6 @@ class CubeOverviewModal extends Component {
     if(this.state.image_dict[value]) {
       var url = this.state.image_dict[value].uri;
       var artist = this.state.image_dict[value].artist;
-      console.log(url, artist);
       this.setState(prevState => ({
         cube: {
             ...prevState.cube,
@@ -119,10 +117,6 @@ class CubeOverviewModal extends Component {
         }
       }))
     }
-  }
-
-  async imageNameSubmit(e, value) {
-    console.log('value');
   }
 
   handleChange(e) {
@@ -206,7 +200,6 @@ class CubeOverviewModal extends Component {
     
     var cube = this.state.cube;
     cube.tags = this.state.tags;
-    console.log(cube.tags);
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -227,7 +220,6 @@ class CubeOverviewModal extends Component {
 
   render() {
     const { cube, tags, isOpen } = this.state;
-    console.log(tags);
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>Edit Overview</a>
