@@ -92,8 +92,8 @@ router.use(csrfProtection);
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
   try {
-    if (req.body.name.length < 5) {
-      req.flash('danger', 'Cube name should be at least 5 characters long.');
+    if (req.body.name.length < 5 || req.body.name.length > 100) {
+      req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
       return res.redirect('/user/view/' + req.user._id);
     }
 
@@ -2141,7 +2141,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
   try {    
     const updatedCube = req.body;
 
-    cube = await Cube.findById(req.body.cube._id);
+    cube = await Cube.findById(updatedCube._id);
     if(!cube) {
       return res.status(404).send({
         success: 'false',
@@ -2157,11 +2157,109 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       });
     }
 
+    if (updatedCube.name.length < 5 || updatedCube.name.length > 100) {
+      res.statusMessage = 'Cube name should be at least 5 characters long, and shorter than 100 characters.';
+      return res.status(400).send({
+        success: 'false',
+      });
+    }
+
+    if (util.has_profanity(updatedCube.name)) {
+      res.statusMessage = 'Cube name should not use profanity.';
+      return res.status(400).send({
+        success: 'false',
+      });
+    }
+
+    if(updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias != cube.urlAlias) {
+      let urlAliasMaxLength = 100;
+
+      if (!updatedCube.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {
+        res.statusMessage = 'Custom URL must contain only alphanumeric characters or underscores.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      if (updatedCube.urlAlias.length > urlAliasMaxLength) {
+        res.statusMessage = 'Custom URL may not be longer than ' + urlAliasMaxLength + ' characters.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      if (util.has_profanity(updatedCube.urlAlias)) {
+        res.statusMessage = 'Custom URL may not contain profanity.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      const taken = await Cube.findOne(build_id_query(updatedCube.urlAlias));
+
+      if(taken) {
+        res.statusMessage = 'Custom URL already taken.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+      
+      cube.urlAlias = updatedCube.urlAlias;
+    } else if(!updatedCube.urlAlias || updatedCube.urlAlias == '') {
+      cube.urlAlias = null;
+    }
+
     cube.name = updatedCube.name;
+    cube.isListed = updatedCube.isListed;
+    cube.privatePrices = updatedCube.privatePrices;
+    cube.overrideCategory = updatedCube.overrideCategory;
+    
+    const image = carddb.imagedict[updatedCube.image_name.toLowerCase()];
+
+    if (image) {
+      cube.image_uri = updatedCube.image_uri;
+      cube.image_artist = updatedCube.image_artist;
+      cube.image_name = updatedCube.image_name;
+    }
+
+    cube.descriptionhtml = sanitize(updatedCube.descriptionhtml);
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    //cube category override
+    if(cube.overrideCategory) {
+      const categories = ['Vintage','Legacy+','Legacy','Modern','Pioneer','Standard','Set']
+      const prefixes = ['Powered','Unpowered','Pauper','Peasant','Budget','Silver-bordered'];
+
+      if(!categories.includes(updatedCube.categoryOverride)) {
+        res.statusMessage = 'Not a valid category override.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      for(var i = 0; i < updatedCube.categoryPrefixes.length; i++) {        
+        if(!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+          res.statusMessage = 'Not a valid category prefix.';
+          return res.status(400).send({
+            success: 'false',
+          });
+        }
+      }
+
+      cube.categoryOverride = updatedCube.categoryOverride;
+      cube.categoryPrefixes = updatedCube.categoryPrefixes;
+    }
+
+    //cube tags
+    cube.tags = updatedCube.tags.map((tag) => tag.text);
 
     await cube.save();
+    return res.status(200).send({success:'true'});
   }
   catch (err) {  
+    res.statusMessage = err;
     console.log(err);
     return res.status(500).send({
       success: 'false',

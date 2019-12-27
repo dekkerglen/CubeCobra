@@ -29,7 +29,7 @@ class CubeOverviewModal extends Component {
 
     this.state = {
       isOpen: false,
-      tags: props.cube.tags,
+      tags: props.cube.tags.map((tag) => ({id:tag, text:tag})),
       cube: JSON.parse(JSON.stringify(props.cube)),
       description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description,
       image_dict:{},
@@ -57,7 +57,7 @@ class CubeOverviewModal extends Component {
     //load the card images
     const image_resp = await fetch('/cube/api/imagedict');
     const image_json = await image_resp.json();
-    this.setState({ image_dict:  image_json.dict });
+    this.setState({ image_dict: image_json.dict });
   }
 
   open() {
@@ -73,19 +73,17 @@ class CubeOverviewModal extends Component {
   }
 
   error(message) {
-    this.setState(({ alerts }) => ({
-      alerts: [
-        ...alerts,
-        {
-          color: 'danger',
-          message,
-        },
-      ],
-    }));
+    this.props.onError(message);
   }
 
-  handleDescriptionChange(event) {
-    this.setState({ description: event.target.value });
+  handleDescriptionChange(e) {
+    var value = e.target.value;
+    this.setState(prevState => ({
+      cube: {
+          ...prevState.cube,
+          descriptionhtml: value,
+      }
+    }))
   }
 
   addTag(tag) {
@@ -207,22 +205,29 @@ class CubeOverviewModal extends Component {
     event.preventDefault();
     
     var cube = this.state.cube;
-
+    cube.tags = this.state.tags;
+    console.log(cube.tags);
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
       headers: {
         'Content-Type': 'application/json',
       },
+    }).then((response) => {
+      if(response.status == 200)
+      {
+        this.props.onCubeUpdate(this.state.cube);
+        this.close();
+      } else {
+        this.error(response.statusText);
+        this.close();
+      }
     }).catch((err) => this.error(err));
-
-    this.close();
   }
 
   render() {
-    const { defaultTagColors, defaultShowTagColors, ...props } = this.props;
     const { cube, tags, isOpen } = this.state;
-    
+    console.log(tags);
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>Edit Overview</a>
@@ -231,9 +236,9 @@ class CubeOverviewModal extends Component {
             cubeID={cube._id}
             defaultTagColors={cube.tag_colors}
             defaultShowTagColors={false}
-            defaultTags={cube.tags}
+            defaultTags={[]}
           >
-          <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>
+          <Modal size="lg" isOpen={isOpen} toggle={this.close}>
             <ModalHeader toggle={this.close}>Edit Overview</ModalHeader>
             
             <form id="postBlogForm" method="POST" action="/cube/editoverview/cedh" autoComplete="off">
@@ -317,7 +322,7 @@ class CubeOverviewModal extends Component {
                 <br/>
                 
                 <h6>Description</h6>
-                <TextEntry content={this.state.description} handleChange={this.handleDescriptionChange}/>
+                <TextEntry content={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''} handleChange={this.handleDescriptionChange}/>
                 <br/>
                 
                 <h6>Tags</h6>
@@ -328,9 +333,9 @@ class CubeOverviewModal extends Component {
                 <input className="form-control" 
                   name="urlAlias" 
                   type="text"
-                  value={cube.urlAlias} 
+                  value={cube.urlAlias ? cube.urlAlias : ''} 
                   onChange={this.handleChange} 
-                  placeholder="Give this cube an easy to remember URL."></input>
+                  placeholder="Give this cube an easy to remember URL."/>
                 <br/>
                 
               </ModalBody>

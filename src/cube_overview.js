@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardText, Button, Navbar } from 'reactstrap';
+import { Row, Col, Card, CardHeader, CardBody, CardText, Button, Navbar, UncontrolledAlert } from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
@@ -13,10 +13,39 @@ class CubeOverview extends Component {
 
     this.follow = this.follow.bind(this);
     this.unfollow = this.unfollow.bind(this);
+    this.error = this.error.bind(this);
+    this.onCubeUpdate = this.onCubeUpdate.bind(this);
 
     this.state = {
       followed: this.props.followed,
+      alerts: [],
+      cube: props.cube,
     };
+  }
+
+  onCubeUpdate(updated) {
+    this.setState(({ alerts }) => ({
+      alerts: [
+        ...alerts,
+        {
+          color: 'success',
+          message:'Update Successful',
+        },
+      ],
+      cube: updated 
+    }));
+  }
+
+  error(message) {
+    this.setState(({ alerts }) => ({
+      alerts: [
+        ...alerts,
+        {
+          color: 'danger',
+          message,
+        },
+      ],
+    }));
   }
 
   follow() {
@@ -48,7 +77,8 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, cube, price, owner, admin, canEdit } = this.props;
+    const { post, price, owner, admin, canEdit } = this.props;
+    const cube = this.state.cube;
     return (
       <>
         {canEdit &&
@@ -57,7 +87,7 @@ class CubeOverview extends Component {
             <div className="collapse navbar-collapse">
               <ul className="navbar-nav flex-wrap">
                 <li className="nav-item">
-                  <CubeOverviewModal cube={cube}/>
+                  <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate}/>
                 </li>
                 <li className="nav-item">
                   <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">Delete Cube</a>
@@ -66,8 +96,14 @@ class CubeOverview extends Component {
             </div>
             </Navbar>
           </div>
-        }
+        }        
         <DynamicFlash />
+        {this.state.alerts.map(({ color, message }) => (
+          <div key={message}>
+            <br/>
+            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
+          </div>
+        ))}
         <Row>
           <Col md="4">
             <Card className="mt-3">
