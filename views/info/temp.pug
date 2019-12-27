@@ -1,29 +1,22 @@
 p
-	a I feel I need to apologize for putting out this update late. Last week I was very sick with the flu, and that didn't give me a lot of time to make sure this update was up to quality, so I decided to postpone to now. You may have noticed significantly more downtime during the deployment of this update, and that's because we've switched to an improved, scalable server infrastructure. This will keep everything fast, despite more people trying to access the site. In addition to the infrastructure changes, we have a nice collection of new features to share.
+	a This update marks the start of site-wide card analytics. We've added card pages that show some useful information regarding individual card inclusion rates, cards drafted frequently with a given card, and a basic way to see a few cubes that run a particular card. 
 p
 	a New Features:
 p
 	ul
-		li 'Top Cards' can now be accessed from About->Top Cards. Cards are rated based on draft data
-		li 'Feature Cubes' section added to homepage. We will use this section to show off some extra special cubes! 
-		li Cards can now be middle clicked to bring up the TCGPlayer page
-		li Line breaks are now allowed in blog posts
-		li Added RSS feeds for cubes. Links can be found underneath the cube image, under cube overview
-		li Added an API to fetch cube lists. If you're interested in integrating, PM Dekkaru on the Cube Cobra Discord server
-		li Add CSRF protection. This makes our site more secure against attackers!
+		li Card Pages. You can see card pages by clicking on a card from the 'Top Cards' page, or by middle clicking, or ctrl+clicking a card from a cube.
+		li Default versions of cards are now more 'reasonable' (no more anime WAR walkers!)
+		li Added in several missing tokens.
+		li Notifications can be cleared without causing a page refresh.
+		li Visible tags are now imported from CubeTutor. (imported tags must have the color set on CT).
+		li Advanced search is no longer case sensitive.
+		li Cube Owners can now upload decklists to their cube.
+		li Added price filter to top cards.
 p
 	a Bugfixes:
 	ul
-		li Removed duplicate tag suggestions
-		li Fixed issue with Listview crashing, related to changing color identity or status
-		li Fixed issue with advanced filter UI and filtering by status
-		li Filter syntax is no longer case sensitive
-		li Fixed tag color display in compare view
-		li Issue fixed when time stamps are off by on month
-		li Import from CSV now adds time stamps correctly
-		li Fixed an issue with automatic blog post titles not being correct
-		li Adding lands reset correctly now
-		li Fixed issue with invalid color attributes with a csv import
-		li Fixed several issues related to updated a group of cards
-		li CMCs with large values, and fractional values, are now accounted for
-
+		li Fixed an issue where the draft bots wouldn't take into account the card type properly.
+		li Fixed issue where the card modal wouldn't open up in visual spoiler.
+		li Fixed an issue where the time elapsed would erraneously show over a month ago.
+		li DFCs now display the back side in card preview correctly again.
+		li Fixed an issue where dropdowns needed to be double-clicked.

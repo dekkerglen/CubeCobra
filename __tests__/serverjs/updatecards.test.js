@@ -146,7 +146,13 @@ const convertedExampleAdventureCard = {
   image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   isToken: false,
   language: 'en',
-  legalities: { Legacy: true, Modern: true, Standard: true, Pioneer: true, Pauper: false },
+  legalities: {
+    Legacy: true,
+    Modern: true,
+    Pauper: false,
+    Pioneer: true,
+    Standard: true,
+  },
   name: 'Flaxen Intruder',
   name_lower: 'flaxen intruder',
   oracle_text:
