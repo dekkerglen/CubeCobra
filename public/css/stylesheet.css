@@ -253,6 +253,19 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup_info,
+#autocard_popup2,
+#autocard_popup {
+	position: absolute;
+	z-index: 500;
+}
+
+.modal #autocard_popup_info,
+.modal #autocard_popup2,
+.modal #autocard_popup {
+	z-index: 1500;
+}
+
 #autocard_popup_info {
   background-color: #F8F9FA;
 	border-bottom-left-radius: 10px;
