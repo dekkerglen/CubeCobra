@@ -3226,6 +3226,9 @@ router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
   });
 });
 
+const ELO_BASE = 400;
+const ELO_RANGE = 1600;
+const ELO_SPEED = 1000;
 router.post('/api/draftpickcard/:id', async function(req, res) {
   try {
     const draftQ = Draft.findById({ _id: req.body.draft_id });
@@ -3247,20 +3250,20 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
         rating = new CardRating();
         rating.name = req.body.pick;
         rating.value = updatedRating
-        rating.elo = 1200;
+        rating.elo = ELO_BASE + ELO_RANGE / 2;
         rating.picks = 1;
       }
 
       if (isNaN(rating.elo)) {
-        rating.elo = 400 + 1600 / (1 + Math.pow(1000, -(0.5 - rating.value)));
+        rating.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - rating.value)));
       }
       // Update ELO.
       for (const other of packRatings) {
         if (isNaN(other.elo)) {
           if (isNaN(other.rating)) {
-            other.elo = 1200;
+            other.elo = ELO_BASE + ELO_RANGE / 2;
           } else {
-            other.elo = 400 + 1600 / (1 + Math.pow(1000, -(0.5 - other.value)));
+            other.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - other.value)));
           }
         }
 
