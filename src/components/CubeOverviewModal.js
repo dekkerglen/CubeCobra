@@ -122,6 +122,15 @@ class CubeOverviewModal extends Component {
           }
         }))
         break;
+      case 'overrideCategory':
+        var value = e.target.checked;
+        this.setState(prevState => ({
+          cube: {
+              ...prevState.cube,
+              overrideCategory: value,
+          }
+        }))
+        break;
     }
   }
 
@@ -164,6 +173,10 @@ class CubeOverviewModal extends Component {
                   <input className="form-check-input" name="privatePrices" type="checkbox" checked={cube.privatePrices} onChange={this.handleChange}/>
                   <label className="form-check-label">Hide Total Price</label>
                 </div>
+                <div className="form-check">
+                  <input className="form-check-input" name="overrideCategory" type="checkbox" checked={cube.overrideCategory} onChange={this.handleChange}/>
+                  <label className="form-check-label">Override Cube Category</label>
+                </div>
                 <br/>
 
                 <h6>Category</h6>
@@ -173,7 +186,7 @@ class CubeOverviewModal extends Component {
                       {['Vintage','Legacy','Modern','Pioneer','Standard','Set'].map((label) => 
                         <FormGroup check key={label}>
                           <Label check>
-                            <Input type="radio" name={label} />{' '}
+                            <Input type="radio" name='category' value={label} disabled={cube.overrideCategory ? false : true} checked={cube.categoryOverride == label}/>{' '}
                             {label}
                           </Label>
                         </FormGroup>
@@ -183,7 +196,7 @@ class CubeOverviewModal extends Component {
                   <Col>                  
                    {['Powered','Unpowered','Pauper','Peasant','Budget','Silver-bordered'].map((label) =>                    
                     <div className="form-check" key={label}>
-                      <input className="form-check-input" name={label} type="checkbox" checked={false} onChange={this.handleChange}/>
+                      <input className="form-check-input" name='category_check' value={label} type="checkbox" checked={cube.categoryPrefixes.includes(label)} onChange={this.handleChange} disabled={cube.overrideCategory ? false : true}/>
                       <label className="form-check-label">{label}</label>
                     </div>
                     )}
