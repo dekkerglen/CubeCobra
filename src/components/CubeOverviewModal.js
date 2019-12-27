@@ -1,22 +1,14 @@
 import React, { Component } from 'react';
 
 import {
-  Button,
-  Row,
-  Col,
-  Form,
-  FormGroup,
-  Input,
-  Label,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  ListGroup,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
-  UncontrolledAlert,
+  Card,
+  CardHeader,
+  Row,
+  Col,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
@@ -172,6 +164,14 @@ class CubeOverviewModal extends Component {
                 <br/>
 
                 <h6>Image</h6>
+                <Row>
+                  <Col xs="12" sm="6" md="6" lg="6">
+                    <Card>
+                      <CardHeader>Preview</CardHeader>
+                      <img className='card-img-top w-100' src={cube.image_uri} />
+                    </Card>
+                  </Col>
+                </Row>
                 <br/>
                 
                 <h6>Description</h6>
