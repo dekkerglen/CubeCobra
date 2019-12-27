@@ -3,6 +3,7 @@ let mongoose = require('mongoose');
 // Cube schema
 let cardRatingSchema = mongoose.Schema({
   value: Number,
+  elo: Number,
   picks: Number,
   name: String,
 });

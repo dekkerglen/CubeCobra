@@ -131,13 +131,15 @@ function passPack() {
 
 async function pick(cardIndex) {
   const [card] = draft.packs[0][0].splice(cardIndex, 1);
+  const pack = draft.packs[0][0];
   draft.pickOrder.push(card.cardID);
   passPack();
   await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
-      card,
+      pick: card.details.name,
+      pack: pack.map(c => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
