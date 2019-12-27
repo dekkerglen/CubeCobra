@@ -9,6 +9,9 @@ import {
   CardHeader,
   Row,
   Col,
+  FormGroup,
+  Label,
+  Input,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
@@ -163,6 +166,30 @@ class CubeOverviewModal extends Component {
                 </div>
                 <br/>
 
+                <h6>Category</h6>
+                <Row>
+                  <Col>
+                    <FormGroup tag="fieldset">
+                      {['Vintage','Legacy','Modern','Pioneer','Standard','Set'].map((label) => 
+                        <FormGroup check key={label}>
+                          <Label check>
+                            <Input type="radio" name={label} />{' '}
+                            {label}
+                          </Label>
+                        </FormGroup>
+                      )}
+                    </FormGroup>
+                  </Col>
+                  <Col>                  
+                   {['Powered','Unpowered','Pauper','Peasant','Budget','Silver-bordered'].map((label) =>                    
+                    <div className="form-check" key={label}>
+                      <input className="form-check-input" name={label} type="checkbox" checked={false} onChange={this.handleChange}/>
+                      <label className="form-check-label">{label}</label>
+                    </div>
+                    )}
+                  </Col>
+                </Row>
+
                 <h6>Image</h6>
                 <Row>
                   <Col xs="12" sm="6" md="6" lg="6">
@@ -172,6 +199,8 @@ class CubeOverviewModal extends Component {
                     </Card>
                   </Col>
                 </Row>
+                <br/>
+                <input className="form-control" name="name" type="text" value={cube.name} onChange={this.handleChange}></input>
                 <br/>
                 
                 <h6>Description</h6>
