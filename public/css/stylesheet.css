@@ -269,7 +269,7 @@ border-bottom: none;
 	background: #fff;
 }
 
-@media(min-width: 768px) {
+@media(max-width: 767.98px) {
 	#autocard_popup_info,
 	#autocard_popup2,
 	#autocard_popup {
@@ -566,7 +566,7 @@ body.busy-cursor {
 	}
 
 	.table-view.row {
-		overflow: auto hidden;
+		overflow: auto;
 		flex-wrap: nowrap;
 		padding: 0 calc(50vw - 50% - 2px);
 		margin: 0 calc(-50vw + 50%);
