@@ -131,6 +131,32 @@ class CubeOverviewModal extends Component {
           }
         }))
         break;
+      case 'category':
+        var value = e.target.value;
+        this.setState(prevState => ({
+          cube: {
+              ...prevState.cube,
+              categoryOverride: value,
+          }
+        }))
+        break;
+      case 'category_prefix':
+        var value = e.target.checked;
+        var id = e.target.value;
+        var prefixes = this.state.cube.categoryPrefixes;
+
+        if(prefixes.includes(id) && !value) {
+          prefixes = prefixes.filter(function(e) { return e !== id });
+        } else if(!prefixes.includes(id) && value) {
+          prefixes.push(id);
+        }
+        this.setState(prevState => ({
+          cube: {
+              ...prevState.cube,
+              categoryPrefixes: prefixes,
+          }
+        }))
+        break;
     }
   }
 
@@ -180,13 +206,20 @@ class CubeOverviewModal extends Component {
                 <br/>
 
                 <h6>Category</h6>
+                
+                <input className="form-control" name="name" type="text" disabled value={cube.overrideCategory ?
+                  cube.card_count + ' Card ' + cube.categoryPrefixes.join(' ') + ' ' + cube.categoryOverride + ' Cube'
+                :
+                  cube.card_count + ' Card ' + cube.type + ' Cube'
+                }/>
+                
                 <Row>
                   <Col>
                     <FormGroup tag="fieldset">
-                      {['Vintage','Legacy','Modern','Pioneer','Standard','Set'].map((label) => 
+                      {['Vintage','Legacy+','Legacy','Modern','Pioneer','Standard','Set'].map((label) => 
                         <FormGroup check key={label}>
                           <Label check>
-                            <Input type="radio" name='category' value={label} disabled={cube.overrideCategory ? false : true} checked={cube.categoryOverride == label}/>{' '}
+                            <Input type="radio" name='category' value={label} disabled={cube.overrideCategory ? false : true} checked={cube.categoryOverride == label} onChange={this.handleChange}/>{' '}
                             {label}
                           </Label>
                         </FormGroup>
@@ -196,7 +229,7 @@ class CubeOverviewModal extends Component {
                   <Col>                  
                    {['Powered','Unpowered','Pauper','Peasant','Budget','Silver-bordered'].map((label) =>                    
                     <div className="form-check" key={label}>
-                      <input className="form-check-input" name='category_check' value={label} type="checkbox" checked={cube.categoryPrefixes.includes(label)} onChange={this.handleChange} disabled={cube.overrideCategory ? false : true}/>
+                      <input className="form-check-input" name='category_prefix' value={label} type="checkbox" checked={cube.categoryPrefixes.includes(label)} onChange={this.handleChange} disabled={cube.overrideCategory ? false : true}/>
                       <label className="form-check-label">{label}</label>
                     </div>
                     )}
