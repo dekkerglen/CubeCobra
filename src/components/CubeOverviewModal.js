@@ -12,6 +12,7 @@ import {
   FormGroup,
   Label,
   Input,
+  CardBody,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
@@ -19,6 +20,7 @@ import { fromEntries } from '../util/Util';
 import TagInput from './TagInput';
 import TagContext from './TagContext';
 import TextEntry from './TextEntry';
+import AutocompleteInput from './AutocompleteInput';
 
 class CubeOverviewModal extends Component {
   constructor(props) {
@@ -28,7 +30,8 @@ class CubeOverviewModal extends Component {
       isOpen: false,
       tags: props.cube.tags,
       cube: JSON.parse(JSON.stringify(props.cube)),
-      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description
+      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description,
+      image_dict:{},
     };
 
     this.open = this.open.bind(this);
@@ -37,11 +40,22 @@ class CubeOverviewModal extends Component {
     this.deleteTag = this.deleteTag.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
+    this.imageNameChange = this.imageNameChange.bind(this);
+    this.imageNameSubmit = this.imageNameSubmit.bind(this);
 
     this.tagActions = {
       addTag: this.addTag,
       deleteTag: this.deleteTag,
     };
+
+    this.loadImageDict();
+  }
+
+  async loadImageDict () {
+    //load the card images
+    const image_resp = await fetch('/cube/api/imagedict');
+    const image_json = await image_resp.json();
+    this.setState({ image_dict:  image_json.dict });
   }
 
   open() {
@@ -82,6 +96,33 @@ class CubeOverviewModal extends Component {
     this.setState(({ tags }) => ({
       tags: tags.filter((tag, i) => i !== tagIndex),
     }));
+  }
+
+
+  imageNameChange(e) {
+    var value = e.target.value;
+    this.setState(prevState => ({
+      cube: {
+          ...prevState.cube,
+          image_name: value,
+      }
+    }));
+    if(this.state.image_dict[value]) {
+      var url = this.state.image_dict[value].uri;
+      var artist = this.state.image_dict[value].artist;
+      console.log(url, artist);
+      this.setState(prevState => ({
+        cube: {
+            ...prevState.cube,
+            image_artist: artist,
+            image_uri: url,
+        }
+      }))
+    }
+  }
+
+  async imageNameSubmit(e, value) {
+    console.log('value');
   }
 
   handleChange(e) {
@@ -208,7 +249,7 @@ class CubeOverviewModal extends Component {
                 <h6>Category</h6>
                 
                 <input className="form-control" name="name" type="text" disabled value={cube.overrideCategory ?
-                  cube.card_count + ' Card ' + cube.categoryPrefixes.join(' ') + ' ' + cube.categoryOverride + ' Cube'
+                  cube.card_count + ' Card ' + (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') + cube.categoryOverride + ' Cube'
                 :
                   cube.card_count + ' Card ' + cube.type + ' Cube'
                 }/>
@@ -242,11 +283,26 @@ class CubeOverviewModal extends Component {
                     <Card>
                       <CardHeader>Preview</CardHeader>
                       <img className='card-img-top w-100' src={cube.image_uri} />
+                      <CardBody>
+                        <a>Art by: {cube.image_artist}</a>
+                      </CardBody>
                     </Card>
                   </Col>
                 </Row>
                 <br/>
-                <input className="form-control" name="name" type="text" value={cube.name} onChange={this.handleChange}></input>
+                <AutocompleteInput
+                  treeUrl={'/cube/api/fullnames'}
+                  treePath="cardnames"
+                  type="text"
+                  className="mr-2"
+                  name="remove"
+                  value={cube.image_name}
+                  onChange={this.imageNameChange}
+                  onSubmit={this.imageNameSubmit}
+                  placeholder="Cardname for Image"
+                  autoComplete="off"
+                  data-lpignore
+                />
                 <br/>
                 
                 <h6>Description</h6>
