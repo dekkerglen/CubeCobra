@@ -24,29 +24,48 @@ export const ColorChecks = ({ prefix, values, onChange }) =>
 export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
   const handleClick = useCallback((event) => {
     event.preventDefault();
-    const target = event.target;
-    const color = target.getAttribute('data-color');
     const name = prefix + short;
     onChange({
       target: { name, value: !value },
     });
-  }, [prefix, value, onChange]);
+    if (short === 'C' && !value) {
+      for (const other of [...'WUBRG']) {
+        onChange({
+          target: {
+            name: prefix + other,
+            value: false,
+          }
+        });
+      }
+    } else if ([...'WUBRG'].includes(short) && !value) {
+      onChange({
+        target: {
+          name: prefix + 'C',
+          value: false,
+        }
+      });
+    }
+  }, [prefix, color, short, value, onChange]);
   return (
     <Button
       className={'color-check-button' + (value ? ' active' : '')}
       outline={!value}
-      data-color={short}
       onClick={handleClick}
+      aria-label={color}
     >
       <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
     </Button>
   );
 };
 
-export const ColorChecksAddon = ({ addonType, prefix, values, onChange }) => {
+export const ColorChecksAddon = ({ addonType, colorless, prefix, values, onChange }) => {
+  const colors = [...COLORS];
+  if (colorless) {
+    colors.push(['Colorless', 'C']);
+  }
   return (
     <Fragment>
-      {COLORS.map(([color, short]) =>
+      {colors.map(([color, short]) =>
         <InputGroupAddon key={short} addonType={addonType}>
           <ColorCheckButton
             prefix={prefix}
@@ -63,6 +82,7 @@ export const ColorChecksAddon = ({ addonType, prefix, values, onChange }) => {
 
 ColorChecksAddon.defaultProps = {
   addonType: 'prepend',
+  colorless: false,
   prefix: 'color',
 };
 

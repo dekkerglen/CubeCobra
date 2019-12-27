@@ -6,6 +6,7 @@ import {
   Col,
   Form,
   FormGroup,
+  FormText,
   Input,
   Label,
   InputGroup,
@@ -23,7 +24,7 @@ import { csrfFetch } from '../util/CSRF';
 import { fromEntries } from '../util/Util';
 
 import AutocardListItem from './AutocardListItem';
-import ColorCheck from './ColorCheck';
+import { ColorChecksAddon } from './ColorCheck';
 import GroupModalContext from './GroupModalContext';
 import MassBuyButton from './MassBuyButton';
 import TagInput from './TagInput';
@@ -257,14 +258,6 @@ class GroupModal extends Component {
     const totalPrice = cards.length ? cards.reduce(accumulator, 0) : 0;
     const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0) : 0;
 
-    const checkColors = [
-      ['White', 'W'],
-      ['Blue', 'U'],
-      ['Black', 'B'],
-      ['Red', 'R'],
-      ['Green', 'G'],
-      ['Colorless', 'C'],
-    ];
     return (
       <>
         {contextChildren}
@@ -329,32 +322,23 @@ class GroupModal extends Component {
                     </InputGroupAddon>
                     <Input type="text" name="cmc" value={cmc} onChange={this.handleChange} />
                   </InputGroup>
-                  <InputGroup className="mb-3">
+                  <InputGroup className="mb-2">
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Type</InputGroupText>
                     </InputGroupAddon>
                     <Input type="text" name="type_line" value={type_line} onChange={this.handleChange} />
                   </InputGroup>
-
-                  <h5>Color Identity Override</h5>
-                  <div>
-                    {checkColors.map((color) => (
-                      <ColorCheck
-                        key={color[1]}
-                        color={color[0]}
-                        short={color[1]}
-                        value={this.state['color' + color[1]]}
-                        onChange={this.handleChange}
-                      />
-                    ))}
-                  </div>
-                  <p>
-                    <em>
-                      Selecting no mana symbols will cause the selected cards' color identity to remain unchanged.
-                      Selecting only colorless will cause the selected cards' color identity to be set to colorless.
-                    </em>
-                  </p>
-                  <h5>Edit Tags</h5>
+                  <InputGroup>
+                    <InputGroupAddon addonType="prepend">
+                      <InputGroupText>Color Identity</InputGroupText>
+                    </InputGroupAddon>
+                    <ColorChecksAddon colorless prefix="color" values={this.state} onChange={this.handleChange} />
+                  </InputGroup>
+                  <FormText>
+                    Selecting no mana symbols will cause the selected cards' color identity to remain unchanged.
+                    Selecting only colorless will cause the selected cards' color identity to be set to colorless.
+                  </FormText>
+                  <h5 className="mt-3">Edit Tags</h5>
                   <FormGroup tag="fieldset">
                     <FormGroup check>
                       <Label check>
