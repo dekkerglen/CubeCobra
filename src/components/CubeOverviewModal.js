@@ -23,6 +23,7 @@ import { csrfFetch } from '../util/CSRF';
 import { fromEntries } from '../util/Util';
 import TagInput from './TagInput';
 import TagContext from './TagContext';
+import TextEntry from './TextEntry';
 
 class CubeOverviewModal extends Component {
   constructor(props) {
@@ -30,8 +31,9 @@ class CubeOverviewModal extends Component {
 
     this.state = {
       isOpen: false,
-      tags: [],
-      cube: JSON.parse(JSON.stringify(props.cube))
+      tags: props.cube.tags,
+      cube: JSON.parse(JSON.stringify(props.cube)),
+      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description
     };
 
     this.open = this.open.bind(this);
@@ -39,6 +41,7 @@ class CubeOverviewModal extends Component {
     this.addTag = this.addTag.bind(this);
     this.deleteTag = this.deleteTag.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleDescriptionChange = this.handleDescriptionChange.bind(this);
 
     this.tagActions = {
       addTag: this.addTag,
@@ -68,6 +71,10 @@ class CubeOverviewModal extends Component {
         },
       ],
     }));
+  }
+
+  handleDescriptionChange(event) {
+    this.setState({ description: event.target.value });
   }
 
   addTag(tag) {
@@ -168,6 +175,7 @@ class CubeOverviewModal extends Component {
                 <br/>
                 
                 <h6>Description</h6>
+                <TextEntry content={this.state.description} handleChange={this.handleDescriptionChange}/>
                 <br/>
                 
                 <h6>Tags</h6>
