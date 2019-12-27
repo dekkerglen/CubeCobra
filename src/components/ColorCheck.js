@@ -22,30 +22,33 @@ export const ColorChecks = ({ prefix, values, onChange }) =>
   ));
 
 export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
-  const handleClick = useCallback((event) => {
-    event.preventDefault();
-    const name = prefix + short;
-    onChange({
-      target: { name, value: !value },
-    });
-    if (short === 'C' && !value) {
-      for (const other of [...'WUBRG']) {
+  const handleClick = useCallback(
+    (event) => {
+      event.preventDefault();
+      const name = prefix + short;
+      onChange({
+        target: { name, value: !value },
+      });
+      if (short === 'C' && !value) {
+        for (const other of [...'WUBRG']) {
+          onChange({
+            target: {
+              name: prefix + other,
+              value: false,
+            },
+          });
+        }
+      } else if ([...'WUBRG'].includes(short) && !value) {
         onChange({
           target: {
-            name: prefix + other,
+            name: prefix + 'C',
             value: false,
-          }
+          },
         });
       }
-    } else if ([...'WUBRG'].includes(short) && !value) {
-      onChange({
-        target: {
-          name: prefix + 'C',
-          value: false,
-        }
-      });
-    }
-  }, [prefix, color, short, value, onChange]);
+    },
+    [prefix, color, short, value, onChange],
+  );
   return (
     <Button
       className={'color-check-button' + (value ? ' active' : '')}
@@ -65,7 +68,7 @@ export const ColorChecksAddon = ({ addonType, colorless, prefix, values, onChang
   }
   return (
     <Fragment>
-      {colors.map(([color, short]) =>
+      {colors.map(([color, short]) => (
         <InputGroupAddon key={short} addonType={addonType}>
           <ColorCheckButton
             prefix={prefix}
@@ -75,10 +78,10 @@ export const ColorChecksAddon = ({ addonType, colorless, prefix, values, onChang
             onChange={onChange}
           />
         </InputGroupAddon>
-      )}
+      ))}
     </Fragment>
   );
-}
+};
 
 ColorChecksAddon.defaultProps = {
   addonType: 'prepend',
@@ -87,12 +90,7 @@ ColorChecksAddon.defaultProps = {
 };
 
 const ColorCheck = ({ prefix, color, short, value, onChange }) => (
-  <Input
-    type="checkbox"
-    name={`${prefix || 'color'}${short.toUpperCase()}`}
-    checked={value}
-    onChange={onChange}
-  />
+  <Input type="checkbox" name={`${prefix || 'color'}${short.toUpperCase()}`} checked={value} onChange={onChange} />
 );
 
 export default ColorCheck;

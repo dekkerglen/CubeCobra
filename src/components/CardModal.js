@@ -139,12 +139,7 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Color Identity Override</InputGroupText>
                 </InputGroupAddon>
-                <ColorChecksAddon
-                  addonType="append"
-                  prefix="color"
-                  values={values}
-                  onChange={onChange}
-                />
+                <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
               </InputGroup>
 
               <h5>Tags</h5>

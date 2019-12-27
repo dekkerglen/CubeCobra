@@ -255,7 +255,7 @@ class FilterCollapse extends Component {
       ...fromEntries(allFields.map((n) => [n, ''])),
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
-      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map(c => [n + c, false])).flat()),
+      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
     };
 
     this.toggleAdvanced = this.toggleAdvanced.bind(this);
