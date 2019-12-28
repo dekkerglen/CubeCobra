@@ -663,7 +663,6 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
             pids.push(card.details.tcgplayer_id);
           }
-          card.details.display_image = util.getCardImageURL(card);
         });
         cubeB.cards.forEach(function(card, index) {
           card.details = carddb.cardFromId(card.cardID);
@@ -673,7 +672,6 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
           if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
             pids.push(card.details.tcgplayer_id);
           }
-          card.details.display_image = util.getCardImageURL(card);
         });
         GetPrices(pids).then(function(price_dict) {
           cubeA.cards.forEach(function(card, index) {
@@ -760,7 +758,6 @@ router.get('/list/:id', function(req, res) {
         card.details = {
           ...carddb.cardFromId(card.cardID),
         };
-        card.details.display_image = util.getCardImageURL(card);
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
@@ -1118,14 +1115,12 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
             if (carddb.cardFromId(cube.cards[i].cardID).name_lower == normalizedName) {
               selected = cube.cards[i];
               selected.details = carddb.cardFromId(cube.cards[i].cardID);
-              selected.details.display_image = util.getCardImageURL(selected);
             }
           }
           if (!selected) {
             // TODO: get most reasonable card?
             selected = { cardID: potentialIds[0] };
             selected.details = carddb.cardFromId(potentialIds[0]);
-            selected.details.display_image = util.getCardImageURL(selected);
           }
         }
         if (selected) {
@@ -1741,15 +1736,7 @@ router.get('/draft/:id', function(req, res) {
             if (!names.includes(card.details.name)) {
               names.push(card.details.name);
             }
-            card.details.display_image = util.getCardImageURL(card);
           });
-        });
-      });
-      // TODO this only handles the user picks (item 0 of draft picks), so custom images won't work with bot picks.
-      draft.picks[0].forEach(function(col, index) {
-        col.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
-          card.details.display_image = util.getCardImageURL(card);
         });
       });
       draftutil.getCardRatings(names, CardRating, function(ratings) {
@@ -2680,12 +2667,10 @@ router.get('/deckbuilder/:id', async (req, res) => {
               cardID: item,
             };
             item.details = carddb.cardFromId(item.cardID);
-            item.details.display_image = util.getCardImageURL(item);
           }
         });
       } else {
         card.details = carddb.cardFromId(card);
-        card.details.display_image = util.getCardImageURL(card);
       }
     });
 
@@ -2771,7 +2756,6 @@ router.get('/deck/:id', async (req, res) => {
       //old format
       deck.cards[0].forEach(function(card, index) {
         card.details = carddb.cardFromId(card);
-        card.details.display_image = util.getCardImageURL(card);
         player_deck.push(card.details);
       });
       for (i = 1; i < deck.cards.length; i++) {
@@ -2783,9 +2767,6 @@ router.get('/deck/:id', async (req, res) => {
             );
           } else {
             var details = carddb.cardFromId(card[0].cardID);
-            details.display_image = util.getCardImageURL({
-              details,
-            });
             bot_deck.push(details);
           }
         });
@@ -2816,11 +2797,6 @@ router.get('/deck/:id', async (req, res) => {
         loginCallback: '/cube/deck/' + req.params.id,
       });
     } else {
-      deck.playerdeck.forEach(function(col, ind) {
-        col.forEach(function(card, index) {
-          card.details.display_image = util.getCardImageURL(card);
-        });
-      });
       //new format
       for (i = 0; i < deck.cards.length; i++) {
         var bot_deck = [];
@@ -2831,9 +2807,6 @@ router.get('/deck/:id', async (req, res) => {
             );
           } else {
             var details = carddb.cardFromId(cardid);
-            details.display_image = util.getCardImageURL({
-              details,
-            });
             bot_deck.push(details);
           }
         });

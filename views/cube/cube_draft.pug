@@ -2,35 +2,11 @@ extends cube_layout
 
 block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
-  input#draftraw(type='hidden', name='draftraw', value=draft_raw)
-  #dragelement(style='position:absolute;z-index: 9999;')
-  //hidden form to finish draft
-  form#submitDeckForm(method='POST', action='/cube/submitdeck/'+cube_id)
-    input(type='hidden', name='_csrf', value=csrfToken)
-    input#submitDeckHidden(type='hidden', name='body')
 
 block cube_content
-  br
-  .card#packhover
-    .card-header
-      h4#packTitle
-      div#customImageDisplayMenuItem.nav-link.text-sm-left.text-center
-        input#customImageDisplayToggle(type='checkbox')
-        label(for='customImageDisplayToggle') Show Custom Images
-      h6#packSubtitle
-        //.form-check
-          input#autopass.form-check-input(type='checkbox', value='true' checked)
-          label.form-check-label(for='autopass') Autopass
-          br
-          button.btn.btn-success#passpack(type='button')  Pass pack
-    #packarea(style='margin: 3px;')
-  br
-  .card.card-hover#pickshover
-    .card-header
-      h4 Picks
-    .card-body
-      #picksarea(style='margin: 3px;')
-  script(src='/js/csrf.js')
-  script(src='/js/utils.js')
-  script(src='/js/draft.js')
-
+  include ../flash
+  #react-root
+  script(type='text/javascript').
+    var initialDraft = !{draft_raw};
+  script(src='/js/autocard.js')
+  script(src='/js/cube_draft.bundle.js')
