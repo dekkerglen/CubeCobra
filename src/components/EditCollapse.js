@@ -19,7 +19,6 @@ import ContentEditable from './ContentEditable';
 import CSRFForm from './CSRFForm';
 import TextEntry from './TextEntry';
 
-
 function saveChanges() {
   var val = '';
   changes.forEach(function(change, index) {
@@ -151,9 +150,9 @@ class EditCollapse extends Component {
                   </FormGroup>
                   <FormGroup>
                     <Label>Body:</Label>
-                    <br/>
+                    <br />
                     <em className="small">To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</em>
-                    <TextEntry content={this.state.postContent} handleChange={this.handlePostChange}/>
+                    <TextEntry content={this.state.postContent} handleChange={this.handlePostChange} />
                   </FormGroup>
                 </Col>
               </Row>

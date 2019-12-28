@@ -24,13 +24,15 @@ class CubePreview extends React.Component {
           </div>
           <div className="cube-preview-body py-1 px-2">
             <h5 className="text-muted cube-preview-text my-0">{cube.name}</h5>
-              <div className="text-muted cube-category">
-                {cube.overrideCategory ?
-                  cube.card_count + ' Card ' + (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') + cube.categoryOverride + ' Cube'
-                :
-                  cube.card_count + ' Card ' + cube.type + ' Cube'
-                }
-              </div>
+            <div className="text-muted cube-category">
+              {cube.overrideCategory
+                ? cube.card_count +
+                  ' Card ' +
+                  (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
+                  cube.categoryOverride +
+                  ' Cube'
+                : cube.card_count + ' Card ' + cube.type + ' Cube'}
+            </div>
             <em className="text-muted">
               Designed by <a href={'/user/view/' + cube.owner}>{cube.owner_name}</a>
             </em>

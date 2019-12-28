@@ -2,12 +2,7 @@ import React from 'react';
 
 import ContentEditable from './ContentEditable';
 
-import {
-  Card,
-  CardHeader,
-  Input,
-  Row,
-} from 'reactstrap';
+import { Card, CardHeader, Input, Row } from 'reactstrap';
 
 function clickToolbar(event) {
   event.preventDefault();
@@ -30,7 +25,7 @@ class TextEntry extends React.Component {
   }
 
   render() {
-    const {content, handleChange} = this.props;
+    const { content, handleChange } = this.props;
     return (
       <Card>
         <CardHeader className="p-0">

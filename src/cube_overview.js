@@ -1,6 +1,17 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardFooter, CardText, Button, Navbar, UncontrolledAlert } from 'reactstrap';
+import {
+  Row,
+  Col,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  CardText,
+  Button,
+  Navbar,
+  UncontrolledAlert,
+} from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
@@ -29,10 +40,10 @@ class CubeOverview extends Component {
         ...alerts,
         {
           color: 'success',
-          message:'Update Successful',
+          message: 'Update Successful',
         },
       ],
-      cube: updated 
+      cube: updated,
     }));
   }
 
@@ -81,26 +92,28 @@ class CubeOverview extends Component {
     const cube = this.state.cube;
     return (
       <>
-        {canEdit &&
+        {canEdit && (
           <div className="usercontrols">
             <Navbar expand="md" className="navbar-light">
-            <div className="collapse navbar-collapse">
-              <ul className="navbar-nav flex-wrap">
-                <li className="nav-item">
-                  <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate}/>
-                </li>
-                <li className="nav-item">
-                  <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">Delete Cube</a>
-                </li>
-              </ul>
-            </div>
+              <div className="collapse navbar-collapse">
+                <ul className="navbar-nav flex-wrap">
+                  <li className="nav-item">
+                    <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
+                  </li>
+                  <li className="nav-item">
+                    <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
+                      Delete Cube
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </Navbar>
           </div>
-        }        
+        )}
         <DynamicFlash />
         {this.state.alerts.map(({ color, message }) => (
           <div key={message}>
-            <br/>
+            <br />
             <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
           </div>
         ))}
@@ -120,11 +133,13 @@ class CubeOverview extends Component {
                 {cube.type && (
                   <>
                     <a>
-                      {cube.overrideCategory ?
-                        cube.card_count + ' Card ' + (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') + cube.categoryOverride + ' Cube'
-                      :
-                        cube.card_count + ' Card ' + cube.type + ' Cube'
-                      }
+                      {cube.overrideCategory
+                        ? cube.card_count +
+                          ' Card ' +
+                          (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
+                          cube.categoryOverride +
+                          ' Cube'
+                        : cube.card_count + ' Card ' + cube.type + ' Cube'}
                     </a>
                     <br />
                   </>
@@ -182,15 +197,17 @@ class CubeOverview extends Component {
                   <CardText>{cube.description}</CardText>
                 )}
               </CardBody>
-              {cube.tags.length > 0 &&
-              <CardFooter>
-                <div className="autocard-tags">
-                  {cube.tags.map((tag) => 
-                    <span key={tag} className='tag'>{tag}</span>
-                  )}
-                </div>
-              </CardFooter>
-              }
+              {cube.tags.length > 0 && (
+                <CardFooter>
+                  <div className="autocard-tags">
+                    {cube.tags.map((tag) => (
+                      <span key={tag} className="tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </CardFooter>
+              )}
             </Card>
           </Col>
         </Row>
@@ -211,6 +228,14 @@ const admin = JSON.parse(document.getElementById('adminData').value) == true;
 const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeOverview post={blog || null} cube={cube} price={price} owner={owner} admin={admin} followed={followed} canEdit={canEdit}/>
+  <CubeOverview
+    post={blog || null}
+    cube={cube}
+    price={price}
+    owner={owner}
+    admin={admin}
+    followed={followed}
+    canEdit={canEdit}
+  />
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;
