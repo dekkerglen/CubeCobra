@@ -19,10 +19,12 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
 
   const card = cube[cardIndex] || { colors: [], details: {}, tags: [] };
 
-  const setTagInput = useCallback((value) => setFormValues((formValues) => ({
-    ...formValues,
-    tagInput: value
-  })));
+  const setTagInput = useCallback((value) =>
+    setFormValues((formValues) => ({
+      ...formValues,
+      tagInput: value,
+    })),
+  );
 
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
