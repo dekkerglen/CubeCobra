@@ -19,10 +19,19 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
 
   const card = cube[cardIndex] || { colors: [], details: {}, tags: [] };
 
+  const setTagInput = useCallback((value) => setFormValues((formValues) => ({
+    ...formValues,
+    tagInput: value
+  })));
+
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
-  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
+  const addTag = useCallback((tag) => {
+    setTags((tags) => [...tags, tag]);
+    setTagInput('');
+  });
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }));
   const deleteTag = useCallback((tagIndex) => {
     setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
   });
@@ -118,6 +127,7 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
         type_line: card.type_line,
         imgUrl: card.imgUrl,
         tags: card.tags.map((tag) => ({ id: tag, text: tag })),
+        tagInput: '',
         colorW: card.colors.includes('W'),
         colorU: card.colors.includes('U'),
         colorB: card.colors.includes('B'),
@@ -155,6 +165,8 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
         disabled={!canEdit}
         saveChanges={saveChanges}
         queueRemoveCard={queueRemoveCard}
+        setTagInput={setTagInput}
+        addTagText={addTagText}
         tagActions={{ addTag, deleteTag, reorderTag }}
         {...props}
       />

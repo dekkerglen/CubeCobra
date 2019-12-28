@@ -33,6 +33,8 @@ const CardModal = ({
   onChange,
   saveChanges,
   queueRemoveCard,
+  setTagInput,
+  addTagText,
   tagActions,
   cardFinishActions,
   ...props
@@ -150,7 +152,7 @@ const CardModal = ({
               </div>
 
               <h5>Tags</h5>
-              <TagInput tags={values.tags} readOnly={disabled} {...tagActions} />
+              <TagInput tags={values.tags} readOnly={disabled} inputValue={values.tagInput} handleInputChange={setTagInput} handleInputBlur={addTagText} {...tagActions} />
             </fieldset>
           </Col>
         </Row>
