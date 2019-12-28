@@ -64,6 +64,7 @@ class ListViewRaw extends Component {
         [`tdfinish${index}`, card.finish],
         [`tdcmc${index}`, card.cmc],
         [`tdcolors${index}`, (card.colors || ['C']).join('')],
+        [`tdtaginput${index}`, ''],
         [`tags${index}`, (card.tags || []).map((tag) => ({ id: tag, text: tag }))],
       ]),
     );
@@ -111,7 +112,7 @@ class ListViewRaw extends Component {
   }
 
   syncCard(index, updated, setStateCallback) {
-    const { cube, cubeId, updateCubeCard } = this.props;
+    const { cube, cubeID, updateCubeCard } = this.props;
     const card = cube[index];
 
     updated = { ...card, ...updated };
@@ -154,30 +155,45 @@ class ListViewRaw extends Component {
               })
               .catch((err) => console.error(err));
           }
-          setStateCallback();
+          if (setStateCallback) {
+            setStateCallback();
+          }
         }
       })
       .catch((err) => console.error(err));
   }
 
+  setTagInput(cardIndex, value) {
+    this.setState({
+      [`tdtaginput${cardIndex}`]: value,
+    });
+  }
+
+  tagBlur(cardIndex, tag) {
+    if (tag.trim()) {
+      this.addTag(cardIndex, {
+        id: tag.trim(),
+        text: tag.trim(),
+      });
+    }
+  }
+
   addTag(cardIndex, tag) {
     const name = `tags${cardIndex}`;
     const newTags = [...this.state[name], tag];
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
-      this.setState({
-        [name]: newTags,
-      });
+    this.setState({
+      [name]: newTags,
     });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   deleteTag(cardIndex, tagIndex) {
     const name = `tags${cardIndex}`;
     const newTags = this.state[name].filter((tag, i) => i !== tagIndex);
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
-      this.setState({
-        [name]: newTags,
-      });
+    this.setState({
+      [name]: newTags,
     });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   reorderTag(cardIndex, tag, currIndex, newIndex) {
@@ -185,11 +201,10 @@ class ListViewRaw extends Component {
     const newTags = [...this.state[name]];
     newTags.splice(currIndex, 1);
     newTags.splice(newIndex, 0, tag);
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) }, () => {
-      this.setState({
-        [name]: newTags,
-      });
+    this.setState({
+      [name]: newTags,
     });
+    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
   }
 
   getChecked() {
@@ -346,6 +361,10 @@ class ListViewRaw extends Component {
                       <td style={{ minWidth: '15rem' }}>
                         <TagInput
                           tags={this.state[`tags${index}`]}
+                          value={this.state[`tdtaginput${index}`]}
+                          name={`tdtaginput${index}`}
+                          onChange={this.handleChange}
+                          handleInputBlur={this.tagBlur.bind(this, index)}
                           addTag={this.addTag.bind(this, index)}
                           deleteTag={this.deleteTag.bind(this, index)}
                           reorderTag={this.reorderTag.bind(this, index)}
