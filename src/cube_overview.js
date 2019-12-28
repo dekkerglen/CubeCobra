@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardText, Button, Navbar, UncontrolledAlert } from 'reactstrap';
+import { Row, Col, Card, CardHeader, CardBody, CardFooter, CardText, Button, Navbar, UncontrolledAlert } from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
@@ -182,6 +182,15 @@ class CubeOverview extends Component {
                   <CardText>{cube.description}</CardText>
                 )}
               </CardBody>
+              {cube.tags.length > 0 &&
+              <CardFooter>
+                <div className="autocard-tags">
+                  {cube.tags.map((tag) => 
+                    <span key={tag} className='tag'>{tag}</span>
+                  )}
+                </div>
+              </CardFooter>
+              }
             </Card>
           </Col>
         </Row>
