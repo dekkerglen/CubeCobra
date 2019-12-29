@@ -1,43 +1,29 @@
-
-.dragcard {
-  position: absolute;
-  z-index: 9;
-  background-color: #f1f1f1;
-  border: 1px solid #d3d3d3;
-  text-align: center;
-}
-/*
-.card-hover:hover{
+.outline {
   box-shadow: 0px 0px 15px 0px rgb(89, 155, 255);
 }
-.pickscol:hover
-{
-   background: #3374C2;
+
+.transparent {
+  opacity: 0.5;
 }
 
-*/
-#packarea{
-  min-height: 25px;
+.stacked {
+  /* This is calculated relative to containing width */
+  margin-top: -124%;
 }
 
-.pickscol{
-  position: relative;
-  width: 129px;
-  min-height: 25px;
-  /*border: 1px solid;*/
-  overflow: hidden;
+.stack {
+  padding-top: 124%;
 }
-.deckcol{
-  position: relative;
-  width: 129px;
-  min-height: 25px;
-  /*border: 1px solid;*/
-  overflow: hidden;
+
+.col-low-padding {
+  padding: 0 2px;
 }
-.sideboardcol{
-  position: relative;
-  width: 129px;
-  min-height: 25px;
-  /*border: 1px solid;*/
-  overflow: hidden;
+
+.row-low-padding {
+  margin: 0 -2px;
+}
+
+.off-screen {
+  position: absolute;
+  z-index: -10000;
 }

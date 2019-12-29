@@ -28,14 +28,6 @@ cube.forEach(function(card, index) {
   card.index = index;
 });
 
-$('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'),
-    display_image;
-  cube.forEach(function(card, index) {
-    adjustDisplayImage(card, enabled);
-  });
-});
-
 function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';

@@ -26,6 +26,7 @@ import AutocardListItem from './AutocardListItem';
 import ColorCheck from './ColorCheck';
 import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
+import LoadingButton from './LoadingButton';
 import MassBuyButton from './MassBuyButton';
 import TagInput from './TagInput';
 
@@ -384,9 +385,9 @@ class GroupModal extends Component {
               Remove all from cube
             </Button>
             <MassBuyButton cards={cards}>Buy all</MassBuyButton>
-            <Button color="success" onClick={this.handleApply}>
+            <LoadingButton color="success" onClick={this.handleApply}>
               Apply to all
-            </Button>
+            </LoadingButton>
           </ModalFooter>
         </Modal>
       </>

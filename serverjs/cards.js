@@ -61,7 +61,6 @@ function getCardDetails(card) {
   if (data._carddict[card.cardID]) {
     var details = data._carddict[card.cardID];
     card.details = details;
-    details.display_image = util.getCardImageURL(card);
     return details;
   } else {
     console.log('Could not find card details: ' + card.cardID);

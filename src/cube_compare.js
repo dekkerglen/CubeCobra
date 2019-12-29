@@ -7,7 +7,7 @@ import Hash from './util/Hash';
 import CardModalForm from './components/CardModalForm';
 import CompareView from './components/CompareView';
 import CubeCompareNavbar from './components/CubeCompareNavbar';
-import DisplayContext from './components/DisplayContext';
+import { DisplayContextProvider } from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import SortContext from './components/SortContext';
@@ -59,7 +59,7 @@ class CubeCompare extends Component {
     const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
-        <DisplayContext.Provider>
+        <DisplayContextProvider>
           <TagContext.Provider
             cubeID={cubeID}
             defaultTagColors={defaultTagColors}
@@ -80,7 +80,7 @@ class CubeCompare extends Component {
               </CardModalForm>
             </ErrorBoundary>
           </TagContext.Provider>
-        </DisplayContext.Provider>
+        </DisplayContextProvider>
       </SortContext.Provider>
     );
   }

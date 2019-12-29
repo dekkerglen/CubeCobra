@@ -118,10 +118,7 @@ class CardModalFormRaw extends Component {
       const newCard = {
         ...card,
         ...updated,
-        details: {
-          ...cardJson.card,
-          display_image: updated.imgUrl || cardJson.card.image_normal,
-        },
+        details: cardJson.card,
       };
       this.props.updateCubeCard(index, newCard);
       this.setState({ card: newCard, isOpen: false });
