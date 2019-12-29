@@ -17,6 +17,7 @@ import {
 
 import { arrayMove } from '../util/Util';
 
+import LoadingButton from './LoadingButton';
 import TagContext, { getTagColorClass } from './TagContext';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
@@ -167,9 +168,9 @@ class TagColorsModalRaw extends Component {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button color="success" className="ml-auto" onClick={this.handleSubmit}>
+          <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
             Submit
-          </Button>
+          </LoadingButton>
         </ModalFooter>
       </Modal>
     );

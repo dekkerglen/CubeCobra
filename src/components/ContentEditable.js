@@ -15,7 +15,6 @@ class ContentEditable extends Component {
 
   componentDidUpdate() {
     if (this.props.value !== this.elementRef.current.innerHTML) {
-      console.log('resetting');
       this.elementRef.current.innerHTML = this.props.value;
     }
   }

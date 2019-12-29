@@ -253,6 +253,25 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup_info,
+#autocard_popup2,
+#autocard_popup {
+	position: absolute;
+	z-index: 500;
+	user-drag: none;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+.modal #autocard_popup_info,
+.modal #autocard_popup2,
+.modal #autocard_popup {
+	z-index: 1500;
+}
+
 #autocard_popup_info {
   background-color: #F8F9FA;
 	border-bottom-left-radius: 10px;
@@ -268,6 +287,15 @@ border-bottom: none;
 	overflow: hidden;
 	background: #fff;
 }
+
+@media(max-width: 767.98px) {
+	#autocard_popup_info,
+	#autocard_popup2,
+	#autocard_popup {
+		display: none !important;
+	}
+}
+
 .deckcard, .packcard, .sideboardcard {
 	border-radius: 6px;
 	overflow: hidden;
@@ -296,12 +324,6 @@ border-bottom: none;
     height: 175px;
     width: 125px;
     background-size: 125px 175px;
-}
-
-.visualSpoilerCardContainer {
-    display: inline-block;
-    width: 150px;
-    vertical-align: top;
 }
 
 .foilOverlay {
@@ -536,6 +558,60 @@ body.busy-cursor {
 	height:60px;
 	float: left;
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.table-view.row {
+	margin: 0 -2px;
+}
+
+.table-view .table-col {
+	padding: 0 2px;
+}
+
+@media(max-width: 991.98px) {
+	/* On screens where not all columns display at once, scroll cubes horizontally. */
+	.table-view-container {
+		/* Size to viewport. Have to do this so that scroll displays to edge of screen. */
+		overflow: hidden;
+		width: 100vw;
+		padding: 0 calc(50vw - 50%);
+		margin: 0 calc(-50vw + 50%);
+	}
+
+	.table-view.row {
+		overflow: auto;
+		flex-wrap: nowrap;
+		padding: 0 calc(50vw - 50% - 2px);
+		margin: 0 calc(-50vw + 50%);
+	}
+
+	.table-view.row:after {
+		content: '';
+		min-width: calc(50vw - 50% - 2px);
+		height: 1px;
+	}
+}
+
+.cube-category {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.card-border {
+	border-radius: 4.72% / 3.37%;
+}
+
+@media(min-width: 768px) {
+  .col-md-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+
+  .col-md-1-4285 {
+    flex: 0 0 14.285%;
+    max-width: 14.285%;
+  }
 }
 
 .input-group-prepend + .input-group-append > .color-check-button {

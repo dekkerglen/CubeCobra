@@ -4,12 +4,15 @@ module.exports = {
   context: path.resolve(__dirname, 'src'),
   entry: {
     cube_analysis: ['./cube_analysis.js'],
+    cube_blog: ['./cube_blog.js'],
     cube_compare: ['./cube_compare.js'],
+    cube_deck: ['./cube_deck.js'],
+    cube_deckbuilder: ['./cube_deckbuilder.js'],
+    cube_draft: ['./cube_draft.js'],
     cube_list: ['./cube_list.js'],
+    cube_overview: ['./cube_overview.js'],
     cube_playtest: ['./cube_playtest.js'],
     topcards: ['./topcards.js'],
-    cube_blog: ['./cube_blog.js'],
-    cube_overview: ['./cube_overview.js'],
     dashboard: ['./dashboard.js'],
     blogpost: ['./blogpost.js'],
     notifications: ['./notifications.js'],
@@ -44,9 +47,9 @@ module.exports = {
       },
     ],
   },
-  /*externals: {
+  externals: {
     react: 'React',
     'react-dom': 'ReactDOM',
-  },*/
+  },
   devtool: 'source-map',
 };

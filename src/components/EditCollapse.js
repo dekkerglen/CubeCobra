@@ -1,220 +1,188 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import {
-  Button,
-  Card,
-  CardHeader,
-  Col,
-  Collapse,
-  Container,
-  Form,
-  FormGroup,
-  Input,
-  Label,
-  Row,
-  UncontrolledAlert,
-} from 'reactstrap';
+import { Button, Col, Collapse, Form, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
 
+import AutocompleteInput from './AutocompleteInput';
+import BlogpostEditor from './BlogpostEditor';
+import Changelist from './Changelist';
+import ChangelistContext from './ChangelistContext';
 import ContentEditable from './ContentEditable';
 import CSRFForm from './CSRFForm';
 
-function clickToolbar(event) {
-  event.preventDefault();
-  const command = event.currentTarget.getAttribute('data-command');
-  if (command == 'h5' || command == 'h6') {
-    document.execCommand('formatBlock', false, command);
-  } else if (command == 'AC') {
-    card = /* global */ prompt('Enter the card name here: ', '');
-    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + '</a>');
-    /* global */ autocard_init('autocard');
-  } else document.execCommand(command, false, null);
+async function getCard(name) {
+  if (name && name.length > 0) {
+    const normalized = name.replace('?', '-q-');
+    while (normalized.includes('//')) {
+      normalized = normalized.replace('//', '-slash-');
+    }
+    const response = await fetch(`/cube/api/getcard/${normalized}`);
+    if (!response.ok) {
+      throw new Error(`Couldn\'t get card: ${response.status}.`);
+    }
+
+    const json = await response.json();
+    if (json.success !== 'true' || !json.card) {
+      return null;
+    }
+    return json.card;
+  }
 }
 
-const Toolbar = (props) => <div className="toolbar" {...props} />;
-const ToolbarItem = (props) => <a href="#" className="toolbar-item" onClick={clickToolbar} {...props} />;
+const EditCollapse = ({ cubeID, ...props }) => {
+  const [postContent, setPostContent] = useState('');
+  const [addValue, setAddValue] = useState('');
+  const [removeValue, setRemoveValue] = useState('');
 
-function saveChanges() {
-  var val = '';
-  changes.forEach(function(change, index) {
-    if (index != 0) {
-      val += ';';
-    }
-    if (change.add) {
-      val += '+' + change.add._id;
-    } else if (change.remove) {
-      val += '-' + change.remove._id;
-    } else if (change.replace) {
-      val += '/' + change.replace[0]._id + '>';
-      val += change.replace[1]._id;
-    }
+  const { changes, addChange, setChanges } = useContext(ChangelistContext);
+
+  const addInput = useRef();
+  const removeInput = useRef();
+  const changelistForm = useRef();
+
+  const handleChange = useCallback((event) => {
+    return {
+      postContent: setPostContent,
+      add: setAddValue,
+      remove: setRemoveValue,
+    }[event.target.name](event.target.value);
   });
-  $('#changelistFormBody').val(val);
-  document.getElementById('changelistForm').submit();
-}
 
-function discardAll() {
-  changes = [];
-  updateCollapse();
-}
+  const handleAdd = useCallback(
+    async (event, newValue) => {
+      event.preventDefault();
+      try {
+        const card = await getCard(newValue || addValue);
+        if (!card) {
+          return;
+        }
+        addChange({ add: card });
+        setAddValue('');
+        setRemoveValue('');
+        addInput.current && addInput.current.focus();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [addChange, addValue, addInput],
+  );
 
-class EditCollapse extends Component {
-  constructor(props) {
-    super(props);
+  const handleRemoveReplace = useCallback(
+    async (event, newValue) => {
+      event.preventDefault();
+      const replace = addValue.length > 0;
+      try {
+        const cardOut = await getCard(newValue || removeValue);
+        if (!cardOut) {
+          return;
+        }
+        if (replace) {
+          const cardIn = await getCard(addValue);
+          if (!cardIn) {
+            return;
+          }
+          addChange({ replace: [cardOut, cardIn] });
+        } else {
+          addChange({ remove: cardOut });
+        }
+        setAddValue('');
+        setRemoveValue('');
+        /* If replace, put focus back in addInput; otherwise leave it here. */
+        const focus = replace ? addInput : removeInput;
+        focus.current && focus.current.focus();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [addChange, addInput, addValue, removeInput, removeValue],
+  );
 
-    this.state = {
-      postContent: '',
-    };
+  const handleDiscardAll = useCallback(
+    (event) => {
+      setChanges([]);
+    },
+    [setChanges],
+  );
 
-    this.handlePostChange = this.handlePostChange.bind(this);
-    this.handleAdd = this.handleAdd.bind(this);
-    this.handleRemoveReplace = this.handleRemoveReplace.bind(this);
-  }
+  const handleSaveChanges = useCallback((event) => {
+    changelistForm.current && changelistForm.current.submit();
+  });
 
-  componentDidMount() {
-    /* global */
-    updateCollapse();
-  }
-
-  componentDidUpdate() {
-    /* global */
-    updateCollapse();
-  }
-
-  handlePostChange(event) {
-    this.setState({ postContent: event.target.value });
-  }
-
-  handleAdd(event) {
-    event.preventDefault();
-    /* global */ justAdd();
-    document.getElementById('addInput').focus();
-  }
-
-  handleRemoveReplace(event) {
-    event.preventDefault();
-    const addInput = document.getElementById('addInput');
-    const removeInput = document.getElementById('removeInput');
-    const replace = addInput.value.length > 0;
-    /* global */ remove();
-    /* If replace, put focus back in addInput; otherwise leave it here. */
-    (replace ? addInput : removeInput).focus();
-  }
-
-  render() {
-    const { cubeID, ...props } = this.props;
-    return (
-      <Collapse {...props}>
-        <Container>
-          <Row className="collapse warnings">
-            <Col>
-              <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
-            </Col>
-          </Row>
+  return (
+    <Collapse className="px-3" {...props}>
+      <Row className="collapse warnings">
+        <Col>
+          <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs="12" sm="auto">
+          <Form inline className="mb-2" onSubmit={handleAdd}>
+            <AutocompleteInput
+              treeUrl="/cube/api/cardnames"
+              treePath="cardnames"
+              type="text"
+              className="mr-2"
+              ref={addInput}
+              name="add"
+              value={addValue}
+              onChange={handleChange}
+              onSubmit={handleAdd}
+              placeholder="Card to Add"
+              autoComplete="off"
+              data-lpignore
+            />
+            <Button color="success" type="submit">
+              Just Add
+            </Button>
+          </Form>
+        </Col>
+        <Col xs="12" sm="auto">
+          <Form inline className="mb-2" onSubmit={handleRemoveReplace}>
+            <AutocompleteInput
+              treeUrl={`/cube/api/cubecardnames/${cubeID}`}
+              treePath="cardnames"
+              type="text"
+              className="mr-2"
+              ref={removeInput}
+              name="remove"
+              value={removeValue}
+              onChange={handleChange}
+              onSubmit={handleRemoveReplace}
+              placeholder="Card to Remove"
+              autoComplete="off"
+              data-lpignore
+            />
+            <Button color="success" type="submit">
+              Remove/Replace
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+      <Collapse isOpen={changes.length > 0} className="pt-1">
+        <CSRFForm ref={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>
           <Row>
-            <Col xs="12" sm="auto">
-              <Form inline className="mb-2" onSubmit={this.handleAdd}>
-                <div className="autocomplete">
-                  <Input
-                    type="text"
-                    className="mr-2"
-                    id="addInput"
-                    placeholder="Card to Add"
-                    data-button="justAddButton"
-                    autoComplete="off"
-                    data-lpignore
-                  />
-                </div>
-                <Button color="success" type="submit" id="justAddButton">
-                  Just Add
-                </Button>
-              </Form>
+            <Col>
+              <h6>Changelist</h6>
+              <Changelist />
             </Col>
-            <Col xs="12" sm="auto">
-              <Form inline className="mb-2" onSubmit={this.handleRemoveReplace}>
-                <div className="autocomplete">
-                  <Input
-                    type="text"
-                    className="mr-2"
-                    id="removeInput"
-                    placeholder="Card to Remove"
-                    data-button="removeButton"
-                    autoComplete="off"
-                    data-lpignore
-                  />
-                </div>
-                <Button color="success" type="submit" id="removeButton">
-                  Remove/Replace
-                </Button>
-              </Form>
+            <Col>
+              <BlogpostEditor value={postContent} onChange={handleChange} />
             </Col>
           </Row>
-          <div className="collapse editForm">
-            <CSRFForm id="changelistForm" method="POST" action={`/cube/edit/${cubeID}`}>
-              <Row>
-                <Col>
-                  <Label>Changelist:</Label>
-                  <div className="editarea">
-                    <p className="editlist" id="changelist" />
-                  </div>
-                </Col>
-                <Col>
-                  <FormGroup>
-                    <Label>Blog Title:</Label>
-                    <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
-                  </FormGroup>
-                  <FormGroup>
-                    <Label>Body:</Label>
-                    <em>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</em>
-                    <Card>
-                      <CardHeader className="p-0">
-                        <Toolbar>
-                          <Row noGutters>
-                            <ToolbarItem data-command="bold">
-                              <strong>B</strong>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="italic">
-                              <em>I</em>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="underline">
-                              <u>U</u>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="strikethrough">
-                              <s>S</s>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="h5">
-                              <h5>H1</h5>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="h6">
-                              <h6>H2</h6>
-                            </ToolbarItem>
-                            <ToolbarItem data-command="insertUnorderedList">ul</ToolbarItem>
-                            <ToolbarItem data-command="insertOrderedList">ol</ToolbarItem>
-                          </Row>
-                        </Toolbar>
-                      </CardHeader>
-                      <ContentEditable id="editor" value={this.state.postContent} onChange={this.handlePostChange} />
-                      <Input type="hidden" name="blog" value={this.state.postContent} />
-                      <Input type="hidden" id="changelistFormBody" name="body" />
-                    </Card>
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row className="mb-2">
-                <Col>
-                  <Button color="success" className="mr-2" onClick={saveChanges}>
-                    Save Changes
-                  </Button>
-                  <Button color="danger" onClick={discardAll}>
-                    Discard All
-                  </Button>
-                </Col>
-              </Row>
-            </CSRFForm>
-          </div>
-        </Container>
+          <Row className="mb-2">
+            <Col>
+              <Button color="success" className="mr-2" onClick={handleSaveChanges}>
+                Save Changes
+              </Button>
+              <Button color="danger" onClick={handleDiscardAll}>
+                Discard All
+              </Button>
+            </Col>
+          </Row>
+        </CSRFForm>
       </Collapse>
-    );
-  }
-}
+    </Collapse>
+  );
+};
 
 export default EditCollapse;
