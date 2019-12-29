@@ -15,7 +15,7 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
         }}
         handleDelete={deleteTag}
         handleDrag={reorderTag}
-        placeholder="Tag..."
+        placeholder="Tag (hit tab)..."
         maxLength={24}
         autofocus={false}
         {...props}

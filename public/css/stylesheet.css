@@ -399,7 +399,8 @@ div.ReactTags__selected {
 /* Styles for selected tags */
 div.ReactTags__selected span.ReactTags__tag {
 	border: 1px solid #ced4da;
-	background: #eee;
+	background-color: #e9ecef;
+	color: #495057;
 	display: block;
 	padding: 0.25rem 0.5rem;
 	margin-right: 0.3rem;
