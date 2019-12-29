@@ -105,9 +105,10 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           value={values.cmc}
           onChange={onChange}
         />
-        <hr />
-        <h6>Color:</h6>
-        <InputGroup>
+        <InputGroup className="mb-3">
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>Color</InputGroupText>
+          </InputGroupAddon>
           <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
           <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
@@ -115,8 +116,10 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             <option value="<=">At most these colors</option>
           </CustomInput>
         </InputGroup>
-        <hr />
-        <InputGroup>
+        <InputGroup className="mb-3">
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>Color Identity</InputGroupText>
+          </InputGroupAddon>
           <ColorChecksAddon prefix="identity" values={values} onChange={onChange} />
           <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
@@ -124,7 +127,6 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             <option value="<=">At most these colors</option>
           </CustomInput>
         </InputGroup>
-        <hr />
         <TextField
           name="mana"
           humanName="Mana Cost"
