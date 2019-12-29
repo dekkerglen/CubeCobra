@@ -79,9 +79,6 @@
 .tag-color > a {
   color: #ffffff !important;
 }
-.tag-no-color {
-  color: black !important;
-}
 .tag-red {
   background-color: #8e1600 !important;
 }
