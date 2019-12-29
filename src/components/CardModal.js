@@ -146,7 +146,7 @@ const CardModal = ({
               </div>
 
               <h5>Tags</h5>
-              <TagInput tags={cube.tags} readOnly={true} />
+              <TagInput tags={values.tags} readOnly={true} {...tagActions} />
             </fieldset>
           </Col>
         </Row>
