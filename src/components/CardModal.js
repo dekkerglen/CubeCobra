@@ -21,6 +21,7 @@ import ButtonLink from './ButtonLink';
 import ColorCheck from './ColorCheck';
 import ImageFallback from './ImageFallback';
 import LoadingButton from './LoadingButton';
+import FoilCardImage from './FoilCardImage';
 import TagInput from './TagInput';
 
 import Affiliate from '../util/Affiliate';
@@ -46,13 +47,7 @@ const CardModal = ({
       <ModalBody>
         <Row>
           <Col xs="12" sm="4">
-            <ImageFallback
-              className="w-100"
-              src={card.details.display_image}
-              fallbackSrc="/content/default_card.png"
-              alt={card.name}
-              finish={values.finish}
-            />
+            <FoilCardImage card={card} finish={values.finish} />
             <div className="price-area">
               {!card.details.price ? (
                 ''
@@ -151,7 +146,7 @@ const CardModal = ({
               </div>
 
               <h5>Tags</h5>
-              <TagInput tags={values.tags} readOnly={disabled} {...tagActions} />
+              <TagInput tags={cube.tags} readOnly={true} />
             </fieldset>
           </Col>
         </Row>
@@ -168,6 +163,10 @@ const CardModal = ({
         <ButtonLink color="secondary" href={card.details.scryfall_uri}>
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
+        </ButtonLink>
+        <ButtonLink color="secondary" href={'/tool/card/' + card.cardID}>
+          <span className="d-none d-sm-inline">View card analytics</span>
+          <span className="d-sm-none">Analytics</span>
         </ButtonLink>
         <ButtonLink color="secondary" href={Affiliate.getTCGLink(card)}>
           Buy

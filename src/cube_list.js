@@ -7,7 +7,7 @@ import Hash from './util/Hash';
 import CardModalForm from './components/CardModalForm';
 import CubeListNavbar from './components/CubeListNavbar';
 import CurveView from './components/CurveView';
-import DisplayContext from './components/DisplayContext';
+import { DisplayContextProvider } from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import GroupModal from './components/GroupModal';
@@ -68,7 +68,7 @@ class CubeList extends Component {
     const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
       <SortContext.Provider>
-        <DisplayContext.Provider>
+        <DisplayContextProvider>
           <TagContext.Provider
             cubeID={cubeID}
             defaultTagColors={defaultTagColors}
@@ -104,7 +104,7 @@ class CubeList extends Component {
               </GroupModal>
             </CardModalForm>
           </TagContext.Provider>
-        </DisplayContext.Provider>
+        </DisplayContextProvider>
       </SortContext.Provider>
     );
   }

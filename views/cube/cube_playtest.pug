@@ -20,7 +20,6 @@ block cube_content
   input#canEdit(type='hidden', value=user && user.id == cube.owner)
   input#draftFormats(type='hidden', value=cube.draft_formats)
   #react-root
-  script(src='/js/cube_playtest.bundle.js')
   if user
     if user.id == cube.owner
       // Paste bulk Modal
@@ -77,3 +76,5 @@ block cube_content
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
       script(src='/js/packcraft.js')
+  include ../react
+  script(src='/js/cube_playtest.bundle.js')

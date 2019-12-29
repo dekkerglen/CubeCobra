@@ -1,10 +1,22 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Card, CardHeader, CardBody, CardText, Button } from 'reactstrap';
+import {
+  Row,
+  Col,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  CardText,
+  Button,
+  Navbar,
+  UncontrolledAlert,
+} from 'reactstrap';
 
 import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
 import CSRFForm from './components/CSRFForm';
+import CubeOverviewModal from './components/CubeOverviewModal';
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -12,10 +24,39 @@ class CubeOverview extends Component {
 
     this.follow = this.follow.bind(this);
     this.unfollow = this.unfollow.bind(this);
+    this.error = this.error.bind(this);
+    this.onCubeUpdate = this.onCubeUpdate.bind(this);
 
     this.state = {
       followed: this.props.followed,
+      alerts: [],
+      cube: props.cube,
     };
+  }
+
+  onCubeUpdate(updated) {
+    this.setState(({ alerts }) => ({
+      alerts: [
+        ...alerts,
+        {
+          color: 'success',
+          message: 'Update Successful',
+        },
+      ],
+      cube: updated,
+    }));
+  }
+
+  error(message) {
+    this.setState(({ alerts }) => ({
+      alerts: [
+        ...alerts,
+        {
+          color: 'danger',
+          message,
+        },
+      ],
+    }));
   }
 
   follow() {
@@ -47,10 +88,35 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, cube, price, owner, admin } = this.props;
+    const { post, price, owner, admin, canEdit } = this.props;
+    const cube = this.state.cube;
     return (
       <>
+        {canEdit && (
+          <div className="usercontrols">
+            <Navbar expand="md" className="navbar-light">
+              <div className="collapse navbar-collapse">
+                <ul className="navbar-nav flex-wrap">
+                  <li className="nav-item">
+                    <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
+                  </li>
+                  <li className="nav-item">
+                    <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
+                      Delete Cube
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </Navbar>
+          </div>
+        )}
         <DynamicFlash />
+        {this.state.alerts.map(({ color, message }) => (
+          <div key={message}>
+            <br />
+            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
+          </div>
+        ))}
         <Row>
           <Col md="4">
             <Card className="mt-3">
@@ -67,7 +133,13 @@ class CubeOverview extends Component {
                 {cube.type && (
                   <>
                     <a>
-                      {cube.card_count} Card {cube.type} Cube
+                      {cube.overrideCategory
+                        ? cube.card_count +
+                          ' Card ' +
+                          (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
+                          cube.categoryOverride +
+                          ' Cube'
+                        : cube.card_count + ' Card ' + cube.type + ' Cube'}
                     </a>
                     <br />
                   </>
@@ -125,6 +197,17 @@ class CubeOverview extends Component {
                   <CardText>{cube.description}</CardText>
                 )}
               </CardBody>
+              {cube.tags.length > 0 && (
+                <CardFooter>
+                  <div className="autocard-tags">
+                    {cube.tags.map((tag) => (
+                      <span key={tag} className="tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </CardFooter>
+              )}
             </Card>
           </Col>
         </Row>
@@ -145,6 +228,14 @@ const admin = JSON.parse(document.getElementById('adminData').value) == true;
 const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeOverview post={blog || null} cube={cube} price={price} owner={owner} admin={admin} followed={followed} />
+  <CubeOverview
+    post={blog || null}
+    cube={cube}
+    price={price}
+    owner={owner}
+    admin={admin}
+    followed={followed}
+    canEdit={canEdit}
+  />
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;
