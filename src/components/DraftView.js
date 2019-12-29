@@ -14,6 +14,7 @@ import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
 import { DisplayContextProvider } from './DisplayContext';
 import DraggableCard from './DraggableCard';
+import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 
 const canDrop = (source, target) => {
@@ -160,6 +161,7 @@ const DraftView = () => {
           </Collapse>
         </Navbar>
       </div>
+      <DynamicFlash />
       <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
@@ -174,7 +176,7 @@ const DraftView = () => {
             onClickCard={handleClickCard}
           />
         </ErrorBoundary>
-        <ErrorBoundary>
+        <ErrorBoundary className="mt-3">
           <DeckStacks
             cards={picks}
             title="Picks"
