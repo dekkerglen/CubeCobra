@@ -11,4 +11,6 @@ const CSRFForm = forwardRef(({ children, ...props }, ref) => (
   </Form>
 ));
 
+CSRFForm.propTypes = {};
+
 export default CSRFForm;

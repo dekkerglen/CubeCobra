@@ -2,14 +2,10 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
+import { alphaCompare } from '../util/Util';
+
 import AutocardListItem from './AutocardListItem';
 import GroupModalContext from './GroupModalContext';
-
-const alphaCompare = (a, b) => {
-  const textA = a.details.name.toUpperCase();
-  const textB = b.details.name.toUpperCase();
-  return textA < textB ? -1 : textA > textB ? 1 : 0;
-};
 
 const AutocardListGroup = ({ cards, heading, sort }) => {
   const groups = sortIntoGroups(cards, sort);

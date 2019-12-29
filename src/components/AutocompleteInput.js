@@ -260,10 +260,10 @@ const AutocompleteInput = forwardRef(
             const goodPosition = position >= 0 && position < matches.length ? position : 0;
             const match = matches[goodPosition];
             acceptSuggestion(match);
-          }
-          if (event.keyCode == 13 && onSubmit) {
-            // ENTER key
-            onSubmit(event, match);
+            if (event.keyCode == 13 && onSubmit) {
+              // ENTER key
+              onSubmit(event, match);
+            }
           }
         }
       },

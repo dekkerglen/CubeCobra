@@ -18,8 +18,7 @@ function handleAuxEvent(event, card) {
 }
 
 const AutocardListItemRaw = ({ card, noCardModal, cardColorClass, openCardModal, children }) => {
-  let { display_image, image_normal, image_flip, name } = card.details;
-  let { tags } = card;
+  let { name } = card.details;
 
   return (
     <AutocardDiv

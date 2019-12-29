@@ -84,10 +84,7 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
         const newCard = {
           ...card,
           ...updated,
-          details: {
-            ...cardJson.card,
-            display_image: updated.imgUrl || cardJson.card.image_normal,
-          },
+          details: cardJson.card,
         };
         updateCubeCard(cardIndex, newCard);
         setIsOpen(false);

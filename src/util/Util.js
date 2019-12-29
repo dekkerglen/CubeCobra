@@ -9,6 +9,31 @@ export function arraysEqual(a, b) {
   return true;
 }
 
+export function arrayRotate(arr, reverse) {
+  if (reverse) arr.unshift(arr.pop());
+  else arr.push(arr.shift());
+  return arr;
+}
+
+export function arrayShuffle(array) {
+  let currentIndex = array.length;
+  let temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 export function arrayMove(arr, oldIndex, newIndex) {
   const result = [...arr];
   const [element] = result.splice(oldIndex, 1);
@@ -22,6 +47,15 @@ export function arrayDelete(arr, index) {
   return result;
 }
 
+export function arrayIsSubset(needles, haystack) {
+  return needles.every((x) => haystack.includes(x));
+}
+
+export function randomElement(array) {
+  const randomIndex = Math.floor(Math.random() * array.length);
+  return array[randomIndex];
+}
+
 export function fromEntries(entries) {
   const obj = {};
   for (const [k, v] of entries) {
@@ -30,4 +64,64 @@ export function fromEntries(entries) {
   return obj;
 }
 
-export default { arraysEqual, arrayMove, fromEntries };
+export function alphaCompare(a, b) {
+  const textA = a.details.name.toUpperCase();
+  const textB = b.details.name.toUpperCase();
+  return textA < textB ? -1 : textA > textB ? 1 : 0;
+}
+
+export function cmcColumn(card) {
+  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
+  if (isNaN(cmc)) {
+    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
+  }
+  // Round to half-integer then take ceiling to support Little Girl
+  let cmcDoubleInt = Math.round(cmc * 2);
+  let cmcInt = Math.round((cmcDoubleInt + (cmcDoubleInt % 2)) / 2);
+  if (cmcInt < 0) {
+    cmcInt = 0;
+  }
+  if (cmcInt > 7) {
+    cmcInt = 7;
+  }
+  return cmcInt;
+}
+
+function sortInto(card, result) {
+  const typeLine = (card.type_line || card.details.type).toLowerCase();
+  const row = typeLine.includes('creature') ? 0 : 1;
+  const column = cmcColumn(card);
+  if (result[row][column].length === 0) {
+    result[row][column] = [card];
+  } else {
+    result[row][column].push(card);
+  }
+}
+
+export function sortDeck(deck) {
+  const result = [new Array(8).fill([]), new Array(8).fill([])];
+  for (const item of deck) {
+    if (Array.isArray(item)) {
+      for (const card of item) {
+        sortInto(card, result);
+      }
+    } else {
+      sortInto(item, result);
+    }
+  }
+  return result;
+}
+
+export default {
+  arraysEqual,
+  arrayRotate,
+  arrayShuffle,
+  arrayMove,
+  arrayDelete,
+  arrayIsSubset,
+  randomElement,
+  fromEntries,
+  alphaCompare,
+  cmcColumn,
+  sortDeck,
+};

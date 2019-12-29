@@ -28,6 +28,7 @@ import ChangelistContext from './ChangelistContext';
 import ColorCheck from './ColorCheck';
 import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
+import LoadingButton from './LoadingButton';
 import MassBuyButton from './MassBuyButton';
 import TagInput from './TagInput';
 
@@ -309,9 +310,9 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
             Remove all from cube
           </Button>
           <MassBuyButton cards={cards}>Buy all</MassBuyButton>
-          <Button color="success" onClick={handleApply}>
+          <LoadingButton color="success" onClick={handleApply}>
             Apply to all
-          </Button>
+          </LoadingButton>
         </ModalFooter>
       </Modal>
     </>
