@@ -38,11 +38,7 @@ cube.forEach(function(card, index) {
 });
 
 $('#customImageDisplayToggle').click(function(e) {
-  var enabled = $(this).prop('checked'),
-    display_image;
-  cube.forEach(function(card, index) {
-    adjustDisplayImage(card, enabled);
-  });
+  var enabled = $(this).prop('checked');
   updateCubeList();
 });
 
