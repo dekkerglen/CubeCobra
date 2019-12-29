@@ -36,7 +36,7 @@ class TopCards extends Component {
   }
 
   render() {
-    const rowF = ([name, img, img_flip, rating, picks]) =>
+    const rowF = ([name, img, img_flip, rating, picks, elo]) =>
       rating === null ? (
         []
       ) : (
@@ -45,6 +45,7 @@ class TopCards extends Component {
             <a href={'/tool/card/' + encodeName(name)}>{name}</a>
           </AutocardTd>
           <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
+          <td>{elo === null ? '' : elo.toFixed(0)}</td>
           <td>{picks}</td>
         </tr>
       );
@@ -63,9 +64,14 @@ class TopCards extends Component {
           />
         </div>
         <SortableTable
-          sorts={{ Rating: (row) => row[3], 'Total Picks': (row) => -row[4] }}
+          sorts={{ Rating: (row) => row[3], Elo: (row) => -(row[5] || -1), 'Total Picks': (row) => -row[4] }}
           defaultSort="Rating"
-          headers={{ Name: {}, Rating: { style: { width: '10rem' } }, 'Total Picks': { style: { width: '10rem' } } }}
+          headers={{
+            Name: {},
+            Rating: { style: { width: '10rem' } },
+            Elo: { style: { width: '10rem' } },
+            'Total Picks': { style: { width: '10rem' } },
+          }}
           data={this.state.data}
           rowF={rowF}
         />

@@ -3266,73 +3266,79 @@ router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
   });
 });
 
-router.post('/api/draftpickcard/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    Draft.findById(
-      {
-        _id: req.body.draft_id,
-      },
-      function(err, draft) {
-        CardRating.findOne(
-          {
-            name: req.body.card.details.name,
-          },
-          function(err, cardrating) {
-            if (draft.packs[0][0]) {
-              const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
-              var rating = (cards_per_pack - draft.packs[0][0].length + 1) / cards_per_pack;
+const ELO_BASE = 400;
+const ELO_RANGE = 1600;
+const ELO_SPEED = 1000;
+router.post('/api/draftpickcard/:id', async function(req, res) {
+  try {
+    const draftQ = Draft.findById({ _id: req.body.draft_id });
+    const ratingQ = CardRating.findOne({ name: req.body.pick });
+    const packQ = CardRating.find({ name: { $in: req.body.pack } });
 
-              if (cardrating) {
-                cardrating.value =
-                  cardrating.value * (cardrating.picks / (cardrating.picks + 1)) +
-                  rating * (1 / (cardrating.picks + 1));
-                cardrating.picks += 1;
-                CardRating.updateOne(
-                  {
-                    _id: cardrating._id,
-                  },
-                  cardrating,
-                  function(err) {
-                    if (err) {
-                      console.log(err, req);
-                      res.status(500).send({
-                        success: 'false',
-                        message: 'Error saving pick rating',
-                      });
-                      return;
-                    }
-                  },
-                );
-              } else {
-                cardrating = new CardRating();
-                cardrating.name = req.body.card.details.name;
-                cardrating.value = rating;
-                cardrating.picks = 1;
-                cardrating.save(function(err) {
-                  if (err) {
-                    console.log(err, req);
-                    res.status(500).send({
-                      success: 'false',
-                      message: 'Error saving pick rating',
-                    });
-                    return;
-                  }
-                });
-              }
-              res.status(200).send({
-                success: 'true',
-              });
-            } else {
-              //last card of the draft
-              res.status(200).send({
-                success: 'true',
-              });
-            }
-          },
-        );
-      },
-    );
-  });
+    let [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
+
+    if (draft && draft.packs[0] && draft.packs[0][0]) {
+      const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
+      var updatedRating = (cards_per_pack - draft.packs[0][0].length + 1) / cards_per_pack;
+
+      if (rating) {
+        rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
+        rating.picks += 1;
+      } else {
+        rating = new CardRating();
+        rating.name = req.body.pick;
+        rating.value = updatedRating;
+        rating.elo = ELO_BASE + ELO_RANGE / 2;
+        rating.picks = 1;
+      }
+
+      if (isNaN(rating.elo)) {
+        rating.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - rating.value)));
+      }
+      // Update ELO.
+      for (const other of packRatings) {
+        if (isNaN(other.elo)) {
+          if (isNaN(other.rating)) {
+            other.elo = ELO_BASE + ELO_RANGE / 2;
+          } else {
+            other.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - other.value)));
+          }
+        }
+
+        // console.log(`[${rating.name}] over [${other.name}]:`);
+        // console.log('Initial:', rating.elo, other.elo);
+        const diff = other.elo - rating.elo;
+        // Expected performance for pick.
+        const expectedA = 1 / (1 + Math.pow(10, diff / 400));
+        const expectedB = 1 - expectedA;
+        const adjustmentA = 2 * (1 - expectedA);
+        const adjustmentB = 2 * (0 - expectedB);
+        rating.elo += adjustmentA;
+        other.elo += adjustmentB;
+        // console.log('Updated:', rating.elo, other.elo);
+      }
+
+      try {
+        await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({
+          success: 'false',
+          message: 'Error saving pick rating',
+        });
+        return;
+      }
+    }
+    res.status(200).send({
+      success: 'true',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
 });
 
 router.post('/api/draftpick/:id', function(req, res) {
