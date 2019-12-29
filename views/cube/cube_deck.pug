@@ -1,76 +1,21 @@
 extends cube_layout
 
-block cube_content
-  //edit controls
-  .usercontrols
-    nav.navbar.navbar-expand.navbar-light
-      .collapse.navbar-collapse
-        ul.navbar-nav        
-          if user
-            if user.id == owner.id
-              li.nav-item
-                a.nav-link.newBlogButton(href='/cube/deckbuilder/'+deckid) Edit
-          li.nav-item
-            a.nav-link.newBlogButton(href='/cube/redraft/'+deckid) Redraft
-          if user
-            li.nav-item
-              a.nav-link.newBlogButton(href='/cube/rebuild/'+deckid) Clone and Rebuild
-
-  include ../flash
+block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
-  br
-  if oldformat
-    .container
-      if drafter.profileUrl
-        h4 Drafted by 
-          a(href=drafter.profileUrl) #{drafter.name}
-      else
-        h4 Drafted by #{drafter.name}
-      br
-      .row
-        each card, i in cards
-          a.autocard(card=card.display_image)
-            img( src=card.display_image, width='150', height='210')
-  else
-    .card.card-hover#deckhover
-      .card-header
-        if drafter.profileUrl
-          h4 Drafted by 
-            a(href=drafter.profileUrl) #{drafter.name}
-        else
-          h4 Drafted by #{drafter.name}
-        span#customImageDisplayMenuItem
-          input#customImageDisplayToggle(type='checkbox')
-          label(for='customImageDisplayToggle') Show Custom Images
-      .card-body
-        input#deckraw(type='hidden', name='deckraw', value=deck)
-        #deckarea(style='margin: 3px;')
-  br
-  h5 Bot Decks
-  br
-  .row
-    each deck, i in bot_decks
-      .col
-        div.list-group.list-outline
-          span.list-group-heading.list-group-item #{bots[i]}
-          each card, j in bot_decks[i]
-            if card.colorcategory == 'w'
-              a.list-group-item.autocard.white.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'u'
-              a.list-group-item.autocard.blue.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'b'
-              a.list-group-item.autocard.black.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'r'
-              a.list-group-item.autocard.red.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'g'
-              a.list-group-item.autocard.green.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'c'
-              a.list-group-item.autocard.colorless.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'm'
-              a.list-group-item.autocard.multi.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
-            if card.colorcategory == 'l'
-              a.list-group-item.autocard.lands.card-list-item(card=card.display_image card_flip=card.image_flip)= card.name
 
-  script(src='/js/csrf.js')
-  script(src='/js/utils.js')
-  script(src='/js/deck.js')
+block cube_content
+  include ../dynamic_flash
+  #react-root
+
+  script(type='text/javascript').
+    var reactProps = {
+      oldFormat: !{oldformat},
+      drafter: !{JSON.stringify(drafter)},
+      cards: !{cards ? JSON.stringify(cards) : '[]'},
+      deck: !{deck || []},
+      botDecks: !{JSON.stringify(bot_decks)},
+      bots: !{JSON.stringify(bots)},
+      canEdit: !{user && user.id === deck.owner},
+    };
+  include ../react
+  script(src='/js/cube_deck.bundle.js')

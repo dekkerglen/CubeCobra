@@ -34,6 +34,22 @@ const cubeSchema = mongoose.Schema({
     default: false,
     index: true,
   },
+  overrideCategory: {
+    type: Boolean,
+    default: false,
+  },
+  categoryOverride: {
+    type: String,
+    default: 'Vintage',
+  },
+  categoryPrefixes: {
+    type: [String],
+    default: [],
+  },
+  tags: {
+    type: [String],
+    default: [],
+  },
   cards: [
     {
       tags: [String],

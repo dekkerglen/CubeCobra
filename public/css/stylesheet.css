@@ -253,6 +253,7 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+<<<<<<< HEAD
 #autocard_popup_info,
 #autocard_popup2,
 #autocard_popup {
@@ -264,6 +265,17 @@ border-bottom: none;
 .modal #autocard_popup2,
 .modal #autocard_popup {
 	z-index: 1500;
+=======
+#autocard_popup2,
+#autocard_popup,
+#autocard_popup_info {
+	user-drag: none;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+>>>>>>> master
 }
 
 #autocard_popup_info {
@@ -318,12 +330,6 @@ border-bottom: none;
     height: 175px;
     width: 125px;
     background-size: 125px 175px;
-}
-
-.visualSpoilerCardContainer {
-    display: inline-block;
-    width: 150px;
-    vertical-align: top;
 }
 
 .foilOverlay {
@@ -590,4 +596,26 @@ body.busy-cursor {
 		min-width: calc(50vw - 50% - 2px);
 		height: 1px;
 	}
+}
+
+.cube-category {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.card-border {
+	border-radius: 4.72% / 3.37%;
+}
+
+@media(min-width: 768px) {
+  .col-md-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+
+  .col-md-1-4285 {
+    flex: 0 0 14.285%;
+    max-width: 14.285%;
+  }
 }

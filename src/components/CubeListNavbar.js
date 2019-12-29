@@ -92,7 +92,7 @@ class CubeListNavbarRaw extends Component {
     const cards = this.props.groupModalCards;
     if (this.props.cubeView === 'list') {
       if (cards.length === 1) {
-        this.props.openCardModal(cards[0]);
+        this.props.openCardModal(cards[0].index);
       } else if (cards.length > 1) {
         this.props.openGroupModal();
       }

@@ -153,7 +153,7 @@ test('getBasics returns the expected set of basic lands', () => {
       // copy necessary because getBasics modifies carddb (bad)
       details: JSON.parse(JSON.stringify(exampleLand)),
     };
-    expectedLandObject.details.display_image = expectedDisplayImages[name.toLowerCase()];
+    expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
     expected[name] = expectedLandObject;
   });
   const initialCarddict = carddb._carddict;

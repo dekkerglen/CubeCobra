@@ -1,100 +1,49 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { csrfFetch } from '../util/CSRF';
+import { arrayMove } from '../util/Util';
 
 import CardModal from './CardModal';
 import CardModalContext from './CardModalContext';
+import ChangelistContext from './ChangelistContext';
+import CubeContext from './CubeContext';
 
-class CardModalForm extends Component {
-  constructor(props) {
-    super(props);
+const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [cardIndex, setCardIndex] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const [formValues, setFormValues] = useState({ tags: [] });
 
-    this.state = {
-      card: { details: {}, colors: [] },
-      versions: [],
-      isOpen: false,
-      formValues: { tags: [] },
-    };
+  const { addChange } = useContext(ChangelistContext);
+  const { cube, updateCubeCard } = useContext(CubeContext);
 
-    this.changeCardVersion = this.changeCardVersion.bind(this);
-    this.changeCardFinish = this.changeCardFinish.bind(this);
-    this.openCardModal = this.openCardModal.bind(this);
-    this.closeCardModal = this.closeCardModal.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.saveChanges = this.saveChanges.bind(this);
-    this.queueRemoveCard = this.queueRemoveCard.bind(this);
-    this.addTag = this.addTag.bind(this);
-    this.deleteTag = this.deleteTag.bind(this);
-    this.reorderTag = this.reorderTag.bind(this);
-  }
+  const card = cube[cardIndex] || { colors: [], details: {}, tags: [] };
 
-  addTag(tag) {
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        tags: [...formValues.tags, tag],
-      },
+  const setTags = useCallback((tagF) => {
+    setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
+  });
+  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
+  const deleteTag = useCallback((tagIndex) => {
+    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
+  });
+  const reorderTag = useCallback((tag, currIndex, newIndex) => {
+    setTags((tags) => arrayMove(tags, currIndex, newIndex));
+  });
+
+  const handleChange = useCallback((event) => {
+    const target = event.target;
+    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
+    const name = target.name;
+
+    setFormValues((formValues) => ({
+      ...formValues,
+      [name]: value,
     }));
-  }
+  });
 
-  deleteTag(tagIndex) {
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        tags: formValues.tags.filter((tag, i) => i !== tagIndex),
-      },
-    }));
-  }
-
-  reorderTag(tag, currIndex, newIndex) {
-    this.setState(({ formValues }) => {
-      const tags = [...formValues.tags];
-      tags.splice(currIndex, 1);
-      tags.splice(newIndex, 0, tag);
-      return {
-        formValues: {
-          ...formValues,
-          tags,
-        },
-      };
-    });
-  }
-
-  handleChange(event) {
-    const { target } = event;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const { name } = target;
-
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        [name]: value,
-      },
-    }));
-
-    if (name === 'version') {
-      // This should guarantee that version array is non-null.
-      const { versions } = this.state;
-      const newDetails = versions.find((version) => version._id === value);
-      if (versions.length > 0 && newDetails) {
-        this.setState(({ card }) => ({
-          card: {
-            ...card,
-            details: {
-              ...newDetails,
-              display_image: card.imgUrl || newDetails.image_normal,
-            },
-          },
-        }));
-      } else {
-        console.error("Can't find version");
-      }
-    }
-  }
-
-  async saveChanges() {
-    const colors = [...'WUBRG'].filter((color) => this.state.formValues[`color${color}`]);
-    const updated = { ...this.state.formValues, colors };
+  const saveChanges = useCallback(async () => {
+    const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
+    const updated = { ...formValues, colors };
     for (const color of [...'WUBRG']) {
       delete updated[`color${color}`];
     }
@@ -104,8 +53,6 @@ class CardModalForm extends Component {
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
-
-    const { card } = this.state;
 
     if (
       updated.cardID === card.cardID &&
@@ -121,80 +68,46 @@ class CardModalForm extends Component {
       return;
     }
 
-    const response = await csrfFetch(`/cube/api/updatecard/${document.getElementById('cubeID').value}`, {
-      method: 'POST',
-      body: JSON.stringify({ src: card, updated }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch((err) => console.error(err));
-    const json = await response.json().catch((err) => console.error(err));
-    if (json.success === 'true') {
-      const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`).catch((err) => console.error(err));
-      const cardJson = await cardResponse.json().catch((err) => console.error(err));
-
-      const { index } = card;
-      const newCard = {
-        ...cube[index],
-        ...updated,
-        index,
-        details: {
-          ...cardJson.card,
-          display_image: updated.imgUrl || cardJson.card.image_normal,
+    try {
+      const response = await csrfFetch(`/cube/api/updatecard/${document.getElementById('cubeID').value}`, {
+        method: 'POST',
+        body: JSON.stringify({ src: card, updated }),
+        headers: {
+          'Content-Type': 'application/json',
         },
-      };
-
-      // magical incantation to get the global state right.
-      cube[index] = newCard;
-      cubeDict[cube[index].index] = newCard;
-      this.setState({ card: newCard, isOpen: false });
-      updateCubeList();
-    }
-  }
-
-  queueRemoveCard() {
-    // FIXME: Bring all this state inside React-world.
-    changes.push({
-      remove: this.state.card.details,
-    });
-    updateCollapse();
-    $('#navedit').collapse('show');
-    $('.warnings').collapse('hide');
-    this.props.setOpenCollapse(() => 'edit');
-    this.setState({ isOpen: false });
-  }
-
-  getCardVersions(card) {
-    fetch(`/cube/api/getversions/${card.cardID}`)
-      .then((response) => response.json())
-      .then((json) => {
-        // Otherwise the modal has changed in between.
-        if (card.details.name == this.state.card.details.name) {
-          this.setState({
-            versions: json.cards,
-          });
-        }
       });
-  }
+      const json = await response.json();
+      if (json.success === 'true') {
+        const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+        const cardJson = await cardResponse.json();
 
-  changeCardVersion(card) {
-    this.setState({
-      card,
-      versions: [],
+        const newCard = {
+          ...card,
+          ...updated,
+          details: cardJson.card,
+        };
+        updateCubeCard(cardIndex, newCard);
+        setIsOpen(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [card, formValues, updateCubeCard]);
+
+  const queueRemoveCard = useCallback(() => {
+    addChange({
+      remove: card.details,
     });
-  }
+    setOpenCollapse(() => 'edit');
+    setIsOpen(false);
+  }, [card, addChange, setOpenCollapse]);
 
-  changeCardFinish(card) {
-    this.setState({
-      card,
-    });
-  }
-
-  openCardModal(card) {
-    this.setState({
-      card,
-      versions: [],
-      formValues: {
+  const openCardModal = useCallback(
+    (newCardIndex) => {
+      const card = cube[newCardIndex];
+      setCardIndex(newCardIndex);
+      setVersions([card.details]);
+      setFormValues({
         version: card.cardID,
         status: card.status,
         finish: card.finish,
@@ -207,41 +120,43 @@ class CardModalForm extends Component {
         colorB: card.colors.includes('B'),
         colorR: card.colors.includes('R'),
         colorG: card.colors.includes('G'),
-      },
-      isOpen: true,
-    });
-    this.getCardVersions(card);
-  }
+      });
+      setIsOpen(true);
+      const currentCard = card;
+      fetch(`/cube/api/getversions/${card.cardID}`)
+        .then((response) => response.json())
+        .then((json) => {
+          // Otherwise the modal has changed in between.
+          if (currentCard.details.name == cube[newCardIndex].details.name) {
+            setVersions(json.cards);
+          }
+        });
+    },
+    [cube],
+  );
 
-  closeCardModal() {
-    this.setState({ isOpen: false });
-  }
+  const closeCardModal = useCallback(() => setIsOpen(false));
 
-  render() {
-    const { canEdit, setOpenCollapse, children, ...props } = this.props;
-    return (
-      <CardModalContext.Provider value={this.openCardModal}>
-        {children}
-        <CardModal
-          values={this.state.formValues}
-          onChange={this.handleChange}
-          card={this.state.card}
-          versions={this.state.versions}
-          toggle={this.closeCardModal}
-          isOpen={this.state.isOpen}
-          disabled={!canEdit}
-          saveChanges={this.saveChanges}
-          queueRemoveCard={this.queueRemoveCard}
-          tagActions={{
-            addTag: this.addTag,
-            deleteTag: this.deleteTag,
-            reorderTag: this.reorderTag,
-          }}
-          {...props}
-        />
-      </CardModalContext.Provider>
-    );
-  }
-}
+  const details = versions.find((version) => version._id === formValues.version) || card.details;
+  const renderCard = { ...card, details };
+  return (
+    <CardModalContext.Provider value={openCardModal}>
+      {children}
+      <CardModal
+        values={formValues}
+        onChange={handleChange}
+        card={renderCard}
+        versions={versions}
+        toggle={closeCardModal}
+        isOpen={isOpen}
+        disabled={!canEdit}
+        saveChanges={saveChanges}
+        queueRemoveCard={queueRemoveCard}
+        tagActions={{ addTag, deleteTag, reorderTag }}
+        {...props}
+      />
+    </CardModalContext.Provider>
+  );
+};
 
 export default CardModalForm;
