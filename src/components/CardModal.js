@@ -162,6 +162,10 @@ const CardModal = ({
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
         </ButtonLink>
+        <ButtonLink color="secondary" href={'/tool/card/' + card.cardID}>
+          <span className="d-none d-sm-inline">View card analytics</span>
+          <span className="d-sm-none">Analytics</span>
+        </ButtonLink>
         <ButtonLink color="secondary" href={Affiliate.getTCGLink(card)}>
           Buy
         </ButtonLink>
