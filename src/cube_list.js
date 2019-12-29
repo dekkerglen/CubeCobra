@@ -31,9 +31,6 @@ class CubeList extends Component {
     this.changeCubeView = this.changeCubeView.bind(this);
     this.setOpenCollapse = this.setOpenCollapse.bind(this);
     this.setFilter = this.setFilter.bind(this);
-
-    /* global */
-    editListeners.push(() => this.setState({ openCollapse: 'edit' }));
   }
 
   changeCubeView(cubeView) {

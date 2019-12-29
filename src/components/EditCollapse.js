@@ -58,12 +58,12 @@ class EditCollapse extends Component {
 
   componentDidMount() {
     /* global */
-    updateCollapse();
+    /* updateCollapse(); */
   }
 
   componentDidUpdate() {
     /* global */
-    updateCollapse();
+    /* updateCollapse(); */
   }
 
   handlePostChange(event) {
