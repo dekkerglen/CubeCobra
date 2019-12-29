@@ -543,6 +543,12 @@ body.busy-cursor {
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
+.cube-category {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .card-border {
 	border-radius: 4.72% / 3.37%;
 }

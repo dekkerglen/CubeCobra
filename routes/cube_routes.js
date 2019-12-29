@@ -92,8 +92,8 @@ router.use(csrfProtection);
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
   try {
-    if (req.body.name.length < 5) {
-      req.flash('danger', 'Cube name should be at least 5 characters long.');
+    if (req.body.name.length < 5 || req.body.name.length > 100) {
+      req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
       return res.redirect('/user/view/' + req.user._id);
     }
 
@@ -1789,96 +1789,6 @@ router.get('/draft/:id', function(req, res) {
 });
 
 // Edit Submit POST Route
-router.post('/editoverview/:id', ensureAuth, function(req, res) {
-  console.log(req.body);
-  req.body.html = sanitize(req.body.html);
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      req.flash('danger', 'Server Error');
-      res.redirect('/cube/overview/' + req.params.id);
-    } else if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/cube/overview/' + req.params.id);
-    } else {
-      const old_alias = cube.urlAlias;
-      const used_alias = cube.urlAlias === req.params.id;
-
-      var image = carddb.imagedict[req.body.imagename.toLowerCase()];
-      var name = req.body.name;
-
-      if (name.length < 5) {
-        req.flash('danger', 'Cube name should be at least 5 characters long.');
-        res.redirect('/cube/overview/' + req.params.id);
-      } else if (util.has_profanity(name)) {
-        req.flash('danger', 'Cube name should not use profanity.');
-        res.redirect('/cube/overview/' + req.params.id);
-      } else {
-        let urlAliasMaxLength = 100;
-        if (req.body.urlAlias && cube.urlAlias !== req.body.urlAlias) {
-          if (!req.body.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {
-            req.flash('danger', 'Custom URL must contain only alphanumeric characters or underscores.');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else if (req.body.urlAlias.length > urlAliasMaxLength) {
-            req.flash('danger', 'Custom URL may not be longer than ' + urlAliasMaxLength + ' characters.');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else {
-            if (util.has_profanity(req.body.urlAlias)) {
-              req.flash('danger', 'Custom URL may not contain profanity.');
-              res.redirect('/cube/overview/' + req.params.id);
-            } else {
-              Cube.findOne(build_id_query(req.body.urlAlias), function(err, takenAlias) {
-                if (takenAlias) {
-                  req.flash('danger', 'Custom URL already taken.');
-                  res.redirect('/cube/overview/' + req.params.id);
-                } else {
-                  update_cube();
-                }
-              });
-            }
-          }
-        } else {
-          update_cube();
-        }
-
-        function update_cube() {
-          if (image) {
-            cube.image_uri = image.uri;
-            cube.image_artist = image.artist;
-            cube.image_name = req.body.imagename;
-          }
-          cube.descriptionhtml = req.body.html;
-          cube.name = name;
-          cube.isListed = req.body.isListed ? true : false;
-          cube.privatePrices = req.body.privatePrices ? true : false;
-          cube.urlAlias = req.body.urlAlias ? req.body.urlAlias.toLowerCase() : null;
-          cube.date_updated = Date.now();
-          cube.updated_string = cube.date_updated.toLocaleString('en-US');
-
-          let url = req.params.id;
-          if (used_alias) {
-            if (!cube.urlAlias) url = get_cube_id(cube);
-            else if (cube.urlAlias !== req.params.id) url = cube.urlAlias;
-          } else if (!old_alias && cube.urlAlias) {
-            url = cube.urlAlias;
-          }
-
-          cube = setCubeType(cube, carddb);
-          cube.save(function(err) {
-            if (err) {
-              req.flash('danger', 'Server Error');
-              res.redirect('/cube/overview/' + url);
-            } else {
-              req.flash('success', 'Cube updated successfully.');
-              res.redirect('/cube/overview/' + url);
-            }
-          });
-        }
-      }
-    }
-  });
-});
-
-// Edit Submit POST Route
 router.post('/edit/:id', ensureAuth, function(req, res) {
   req.body.blog = sanitize(req.body.blog);
   Cube.findOne(build_id_query(req.params.id), function(err, cube) {
@@ -2116,6 +2026,136 @@ router.post('/api/editcomment', ensureAuth, async (req, res) => {
       success: 'true',
     });
   } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
+});
+
+router.post('/api/editoverview', ensureAuth, async (req, res) => {
+  try {
+    const updatedCube = req.body;
+
+    cube = await Cube.findById(updatedCube._id);
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube Not Found',
+      });
+    }
+
+    user = await User.findById(req.user._id);
+    if (!user || user._id != cube.owner) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    if (updatedCube.name.length < 5 || updatedCube.name.length > 100) {
+      res.statusMessage = 'Cube name should be at least 5 characters long, and shorter than 100 characters.';
+      return res.status(400).send({
+        success: 'false',
+      });
+    }
+
+    if (util.has_profanity(updatedCube.name)) {
+      res.statusMessage = 'Cube name should not use profanity.';
+      return res.status(400).send({
+        success: 'false',
+      });
+    }
+
+    if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias != cube.urlAlias) {
+      let urlAliasMaxLength = 100;
+
+      if (!updatedCube.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {
+        res.statusMessage = 'Custom URL must contain only alphanumeric characters or underscores.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      if (updatedCube.urlAlias.length > urlAliasMaxLength) {
+        res.statusMessage = 'Custom URL may not be longer than ' + urlAliasMaxLength + ' characters.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      if (util.has_profanity(updatedCube.urlAlias)) {
+        res.statusMessage = 'Custom URL may not contain profanity.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      const taken = await Cube.findOne(build_id_query(updatedCube.urlAlias));
+
+      if (taken) {
+        res.statusMessage = 'Custom URL already taken.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      cube.urlAlias = updatedCube.urlAlias;
+    } else if (!updatedCube.urlAlias || updatedCube.urlAlias == '') {
+      cube.urlAlias = null;
+    }
+
+    cube.name = updatedCube.name;
+    cube.isListed = updatedCube.isListed;
+    cube.privatePrices = updatedCube.privatePrices;
+    cube.overrideCategory = updatedCube.overrideCategory;
+
+    const image = carddb.imagedict[updatedCube.image_name.toLowerCase()];
+
+    if (image) {
+      cube.image_uri = updatedCube.image_uri;
+      cube.image_artist = updatedCube.image_artist;
+      cube.image_name = updatedCube.image_name;
+    }
+
+    cube.descriptionhtml = sanitize(updatedCube.descriptionhtml);
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    //cube category override
+    if (cube.overrideCategory) {
+      const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
+      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered'];
+
+      if (!categories.includes(updatedCube.categoryOverride)) {
+        res.statusMessage = 'Not a valid category override.';
+        return res.status(400).send({
+          success: 'false',
+        });
+      }
+
+      for (var i = 0; i < updatedCube.categoryPrefixes.length; i++) {
+        if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+          res.statusMessage = 'Not a valid category prefix.';
+          return res.status(400).send({
+            success: 'false',
+          });
+        }
+      }
+
+      cube.categoryOverride = updatedCube.categoryOverride;
+      cube.categoryPrefixes = updatedCube.categoryPrefixes;
+    }
+
+    //cube tags
+    cube.tags = updatedCube.tags.map((tag) => tag.text);
+
+    await cube.save();
+    return res.status(200).send({ success: 'true' });
+  } catch (err) {
+    res.statusMessage = err;
     console.log(err);
     return res.status(500).send({
       success: 'false',
