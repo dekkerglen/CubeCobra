@@ -19,6 +19,8 @@ import {
 
 import ButtonLink from './ButtonLink';
 import ColorCheck from './ColorCheck';
+import ImageFallback from './ImageFallback';
+import LoadingButton from './LoadingButton';
 import FoilCardImage from './FoilCardImage';
 import TagInput from './TagInput';
 
@@ -172,10 +174,10 @@ const CardModal = ({
         {disabled ? (
           ''
         ) : (
-          <Button color="success" onClick={saveChanges}>
+          <LoadingButton color="success" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
-          </Button>
+          </LoadingButton>
         )}
       </ModalFooter>
     </Modal>
