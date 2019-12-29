@@ -121,9 +121,6 @@ test('getCardDetails returns a well-formed card object', () => {
   expect.assertions(1);
   const _id = _RankleMasterofFixtures._id;
   let expected = _RankleMasterofFixtures;
-  // getCardDetails includes 'display_image' atrribute
-  expected.display_image =
-    'https://img.scryfall.com/cards/normal/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217';
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.getCardDetails({

@@ -253,6 +253,17 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
+#autocard_popup2,
+#autocard_popup,
+#autocard_popup_info {
+	user-drag: none;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
 #autocard_popup_info {
   background-color: #F8F9FA;
 	border-bottom-left-radius: 10px;
@@ -296,12 +307,6 @@ border-bottom: none;
     height: 175px;
     width: 125px;
     background-size: 125px 175px;
-}
-
-.visualSpoilerCardContainer {
-    display: inline-block;
-    width: 150px;
-    vertical-align: top;
 }
 
 .foilOverlay {
@@ -542,4 +547,20 @@ body.busy-cursor {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.card-border {
+	border-radius: 4.72% / 3.37%;
+}
+
+@media(min-width: 768px) {
+  .col-md-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+
+  .col-md-1-4285 {
+    flex: 0 0 14.285%;
+    max-width: 14.285%;
+  }
 }

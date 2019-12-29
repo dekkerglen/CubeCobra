@@ -120,9 +120,6 @@ var methods = {
       var options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
         var card = carddb.cardFromId(option);
-        card.display_image = util.getCardImageURL({
-          details: card,
-        });
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {

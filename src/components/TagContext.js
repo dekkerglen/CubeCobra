@@ -110,8 +110,8 @@ class TagContextProvider extends Component {
 }
 
 export const getCardColorClass = (card) => {
-  const type = card.type_line;
-  const colors = card.colors;
+  const type = card.type_line || card.details.type;
+  const colors = card.colors || card.details.color_identity;
   if (type.toLowerCase().includes('land')) {
     return 'lands';
   } else if (colors.length == 0) {
