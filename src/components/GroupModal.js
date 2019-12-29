@@ -268,8 +268,8 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                   <ColorChecksAddon colorless prefix="color" values={formValues} onChange={handleChange} />
                 </InputGroup>
                 <FormText>
-                  Selecting no mana symbols will cause the selected cards' color identity to remain unchanged.
-                  Selecting only colorless will cause the selected cards' color identity to be set to colorless.
+                  Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
+                  only colorless will cause the selected cards' color identity to be set to colorless.
                 </FormText>
 
                 <h5 className="mt-3">Edit Tags</h5>
