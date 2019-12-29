@@ -41,6 +41,12 @@ export function arrayMove(arr, oldIndex, newIndex) {
   return result;
 }
 
+export function arrayDelete(arr, index) {
+  const result = [...arr];
+  result.splice(arr, 1);
+  return result;
+}
+
 export function arrayIsSubset(needles, haystack) {
   return needles.every((x) => haystack.includes(x));
 }
@@ -111,6 +117,7 @@ export default {
   arrayRotate,
   arrayShuffle,
   arrayMove,
+  arrayDelete,
   arrayIsSubset,
   randomElement,
   fromEntries,
