@@ -19,16 +19,19 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
     }
   }, [changes]);
 
-  const addChange = useCallback((change) => {
-    const highestId = Math.max(changes.map((change) => change.id));
-    setChanges([
-      ...changes,
-      {
-        ...change,
-        id: highestId + 1,
-      },
-    ]);
-  }, [changes]);
+  const addChange = useCallback(
+    (change) => {
+      const highestId = Math.max(changes.map((change) => change.id));
+      setChanges([
+        ...changes,
+        {
+          ...change,
+          id: highestId + 1,
+        },
+      ]);
+    },
+    [changes],
+  );
   const removeChange = useCallback((changeId) => {
     setChanges((changes) => changes.filter((change) => change.id !== changeId));
   });
