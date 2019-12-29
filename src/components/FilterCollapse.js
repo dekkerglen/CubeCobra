@@ -6,12 +6,13 @@ import {
   Container,
   Row,
   Collapse,
+  CustomInput,
   Form,
   Input,
-  Label,
   InputGroup,
   InputGroupAddon,
   InputGroupText,
+  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -21,9 +22,9 @@ import {
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
 import Query from '../util/Query';
-import { fromEntries } from '../util/Util';
+import { fromEntries, COLORS } from '../util/Util';
 
-import { ColorChecks } from './ColorCheck';
+import { ColorChecksAddon } from './ColorCheck';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -39,14 +40,14 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
     <InputGroupAddon addonType="prepend">
       <InputGroupText>{humanName}</InputGroupText>
     </InputGroupAddon>
-    <Input type="select" name={`${name}Op`} value={valueOp} onChange={onChange}>
+    <CustomInput type="select" id={`${name}Op`} name={`${name}Op`} value={valueOp} onChange={onChange}>
       <option value="=">equal to</option>
       <option value="<">less than</option>
       <option value=">">greater than</option>
       <option value="<=">less than or equal to</option>
       <option value=">=">greater than or equal to</option>
       <option value="!=">not equal to</option>
-    </Input>
+    </CustomInput>
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>
 );
@@ -55,8 +56,6 @@ const allFields = [
   'name',
   'oracle',
   'cmc',
-  'color',
-  'colorIdentity',
   'mana',
   'type',
   'set',
@@ -73,6 +72,7 @@ const allFields = [
   'is',
 ];
 const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
   <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
@@ -107,19 +107,23 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         />
         <hr />
         <h6>Color:</h6>
-        <ColorChecks prefix="color" values={values} onChange={onChange} />
-        <Input type="select" name="colorOp" value={values.colorOp} onChange={onChange}>
-          <option value="=">Exactly these colors</option>
-          <option value=">=">Including these colors</option>
-          <option value="<=">At most these colors</option>
-        </Input>
+        <InputGroup>
+          <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
+          <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
+            <option value="=">Exactly these colors</option>
+            <option value=">=">Including these colors</option>
+            <option value="<=">At most these colors</option>
+          </CustomInput>
+        </InputGroup>
         <hr />
-        <ColorChecks prefix="colorIdentity" values={values} onChange={onChange} />
-        <Input type="select" name="colorIdentityOp" value={values.colorIdentityOp} onChange={onChange}>
-          <option value="=">Exactly these colors</option>
-          <option value=">=">Including these colors</option>
-          <option value="<=">At most these colors</option>
-        </Input>
+        <InputGroup>
+          <ColorChecksAddon prefix="identity" values={values} onChange={onChange} />
+          <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
+            <option value="=">Exactly these colors</option>
+            <option value=">=">Including these colors</option>
+            <option value="<=">At most these colors</option>
+          </CustomInput>
+        </InputGroup>
         <hr />
         <TextField
           name="mana"
@@ -250,6 +254,8 @@ class FilterCollapse extends Component {
       filterInput: this.store().get('f', ''),
       ...fromEntries(allFields.map((n) => [n, ''])),
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
+      ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
+      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
     };
 
     this.toggleAdvanced = this.toggleAdvanced.bind(this);
@@ -286,6 +292,18 @@ class FilterCollapse extends Component {
           value = `"${value}"`;
         }
         tokens.push(`${name}${op}${value}`);
+      }
+    }
+    for (const name of colorFields) {
+      const colors = [];
+      const op = this.state[name + 'Op'] || '=';
+      for (const color of [...'WUBRG']) {
+        if (this.state[name + color]) {
+          colors.push(color);
+        }
+      }
+      if (colors.length > 0) {
+        tokens.push(`${name}${op}${colors.join('')}`);
       }
     }
     const filterInput = tokens.join(' ');

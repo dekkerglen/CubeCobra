@@ -112,6 +112,8 @@ export function sortDeck(deck) {
   return result;
 }
 
+export const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -124,4 +126,5 @@ export default {
   alphaCompare,
   cmcColumn,
   sortDeck,
+  COLORS,
 };

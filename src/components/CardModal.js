@@ -18,7 +18,7 @@ import {
 } from 'reactstrap';
 
 import ButtonLink from './ButtonLink';
-import ColorCheck from './ColorCheck';
+import { ColorChecksAddon } from './ColorCheck';
 import ImageFallback from './ImageFallback';
 import LoadingButton from './LoadingButton';
 import FoilCardImage from './FoilCardImage';
@@ -133,19 +133,12 @@ const CardModal = ({
                 </InputGroupAddon>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
               </InputGroup>
-
-              <h5>Color Identity Override</h5>
-              <div className="mb-3">
-                {[['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']].map((color) => (
-                  <ColorCheck
-                    key={color[1]}
-                    color={color[0]}
-                    short={color[1]}
-                    value={values[`color${color[1]}`]}
-                    onChange={onChange}
-                  />
-                ))}
-              </div>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Color Identity Override</InputGroupText>
+                </InputGroupAddon>
+                <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
+              </InputGroup>
 
               <h5>Tags</h5>
               <TagInput

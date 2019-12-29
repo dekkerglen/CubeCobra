@@ -253,29 +253,23 @@ border-bottom: none;
   border: 1px solid #CED4DA;
 }
 
-<<<<<<< HEAD
 #autocard_popup_info,
 #autocard_popup2,
 #autocard_popup {
 	position: absolute;
 	z-index: 500;
-}
-
-.modal #autocard_popup_info,
-.modal #autocard_popup2,
-.modal #autocard_popup {
-	z-index: 1500;
-=======
-#autocard_popup2,
-#autocard_popup,
-#autocard_popup_info {
 	user-drag: none;
 	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
->>>>>>> master
+}
+
+.modal #autocard_popup_info,
+.modal #autocard_popup2,
+.modal #autocard_popup {
+	z-index: 1500;
 }
 
 #autocard_popup_info {
@@ -619,4 +613,17 @@ body.busy-cursor {
     flex: 0 0 14.285%;
     max-width: 14.285%;
   }
+}
+
+.input-group-prepend + .input-group-append > .color-check-button {
+	border-left: 0;
+}
+
+.color-check-button {
+	border-color: #ced4da !important;
+}
+
+.color-check-button.active, .color-check-button:hover {
+	border-color: #ced4da !important;
+	background-color: #e9ecef !important;
 }
