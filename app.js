@@ -92,6 +92,7 @@ app.use(require('connect-flash')());
 
 app.use((req, res, next) => {
   res.locals.messages = require('express-messages')(req, res);
+  res.locals.node_env = app.get('env');
   next();
 });
 

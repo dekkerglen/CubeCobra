@@ -17,4 +17,5 @@ block cube_content
       bots: !{JSON.stringify(bots)},
       canEdit: !{user && user.id === deck.owner},
     };
+  include ../react
   script(src='/js/cube_deck.bundle.js')

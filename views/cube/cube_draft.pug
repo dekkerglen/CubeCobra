@@ -4,9 +4,10 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/draft.css')
 
 block cube_content
-  include ../flash
+  include ../dynamic_flash
   #react-root
   script(type='text/javascript').
     var initialDraft = !{draft_raw};
+  include ../react
   script(src='/js/autocard.js')
   script(src='/js/cube_draft.bundle.js')
