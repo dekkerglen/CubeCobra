@@ -1,21 +1,34 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 const ChangelistContext = React.createContext([]);
 
-export const ChangelistContextProvider = (props) => {
-  const [changes, setChanges] = useState([]);
-  const addChange = useCallback((change) => {
-    setChanges((changes) => {
-      const highestId = Math.max(changes.map((change) => change.id));
-      return [
-        ...changes,
-        {
-          ...change,
-          id: highestId + 1,
-        },
-      ];
-    });
+export const ChangelistContextProvider = ({ cubeID, ...props }) => {
+  const storageKey = `changelist-${cubeID}`;
+
+  const [changes, setChanges] = useState(() => {
+    if (localStorage && typeof cubeID !== 'undefined') {
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
+    } else {
+      return [];
+    }
   });
+
+  useEffect(() => {
+    if (localStorage && typeof cubeID !== 'undefined') {
+      localStorage.setItem(storageKey, JSON.stringify(changes));
+    }
+  }, [changes]);
+
+  const addChange = useCallback((change) => {
+    const highestId = Math.max(changes.map((change) => change.id));
+    setChanges([
+      ...changes,
+      {
+        ...change,
+        id: highestId + 1,
+      },
+    ]);
+  }, [changes]);
   const removeChange = useCallback((changeId) => {
     setChanges((changes) => changes.filter((change) => change.id !== changeId));
   });
