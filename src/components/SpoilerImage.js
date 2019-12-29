@@ -11,7 +11,7 @@ const SpoilerImage = ({ index, tags, finish, ...props }) => {
       const target = event.target;
       const index = target.getAttribute('data-index');
       event.preventDefault();
-      openCardModal(/* global */ cube[index]);
+      openCardModal(index);
     },
     [openCardModal],
   );

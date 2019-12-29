@@ -24,6 +24,7 @@ import { fromEntries } from '../util/Util';
 
 import AutocardListItem from './AutocardListItem';
 import ColorCheck from './ColorCheck';
+import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
 import LoadingButton from './LoadingButton';
 import MassBuyButton from './MassBuyButton';
@@ -211,10 +212,8 @@ class GroupModal extends Component {
         if (colorC) {
           card.colors = [];
         }
-        cube[card.index] = card;
-        cubeDict[card.index] = card;
+        updateCubeCard(card.index, card);
       }
-      /* global */ updateCubeList();
 
       this.close();
     }

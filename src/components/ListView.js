@@ -5,6 +5,7 @@ import { Input } from 'reactstrap';
 import { csrfFetch } from '../util/CSRF';
 import { arraysEqual, fromEntries } from '../util/Util';
 
+import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
 import PagedTable from './PagedTable';
 import SortContext from './SortContext';
@@ -110,8 +111,7 @@ class ListViewRaw extends Component {
   }
 
   syncCard(index, updated, setStateCallback) {
-    /* globals */
-    const cubeID = document.getElementById('cubeID').value;
+    const { cube, cubeId, updateCubeCard } = this.props;
     const card = cube[index];
 
     updated = { ...card, ...updated };
@@ -144,14 +144,13 @@ class ListViewRaw extends Component {
       .catch((err) => console.error(err))
       .then((json) => {
         if (json.success === 'true') {
-          cube[index] = { ...cube[index], ...updated };
+          updateCubeCard(index, { ...card, ...updated });
           if (updated.cardID !== card.cardID) {
             // changed version
             fetch(`/cube/api/getcardfromid/${updated.cardID}`)
               .then((response) => response.json())
               .then((json) => {
-                cube[index].details = json.card;
-                cubeDict[cube[index].index] = cube[index];
+                updateCubeCard(index, json.card);
               })
               .catch((err) => console.error(err));
           }
@@ -390,7 +389,15 @@ const ListView = (props) => (
         {({ cardColorClass }) => (
           <GroupModalContext.Consumer>
             {({ setGroupModalCards, openGroupModal }) => (
-              <ListViewRaw {...sortValue} {...{ cardColorClass, setGroupModalCards, openGroupModal }} {...props} />
+              <CubeContext.Consumer>
+                {({ cube, updateCubeCard }) => (
+                  <ListViewRaw
+                    {...sortValue}
+                    {...{ cardColorClass, setGroupModalCards, openGroupModal, cube, updateCubeCard }}
+                    {...props}
+                  />
+                )}
+              </CubeContext.Consumer>
             )}
           </GroupModalContext.Consumer>
         )}
