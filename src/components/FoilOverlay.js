@@ -8,7 +8,7 @@ const FoilOverlay = (Tag) => (props) => {
     finish = props.card.finish;
   }
   return (
-    <div>
+    <div className="position-relative">
       {finish !== 'Foil' ? '' : <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" />}
       <Tag {...props} />
     </div>
