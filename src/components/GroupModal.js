@@ -89,6 +89,8 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   });
 
   const handleRemoveCard = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
     setCardIndices((cards) => cards.filter((c) => c.index !== parseInt(index)));

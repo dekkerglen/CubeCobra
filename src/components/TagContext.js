@@ -2,14 +2,14 @@ import React, { Component } from 'react';
 
 import { csrfFetch } from '../util/CSRF';
 
-const TagContextRaw = React.createContext({
+const TagContext = React.createContext({
   addSuggestion: () => {
     console.error('Error: No TagContext!');
   },
   allSuggestions: [],
 });
 
-class TagContextProvider extends Component {
+export class TagContextProvider extends Component {
   constructor(props) {
     super(props);
 
@@ -105,7 +105,7 @@ class TagContextProvider extends Component {
       cardColorClass: this.cardColorClass,
       tagColorClass: this.tagColorClass,
     };
-    return <TagContextRaw.Provider value={value}>{this.props.children}</TagContextRaw.Provider>;
+    return <TagContext.Provider value={value}>{this.props.children}</TagContext.Provider>;
   }
 }
 
@@ -148,25 +148,18 @@ export const getTagColorClass = (tagColors, tag) => {
   }
 };
 
-const TagContext = {
-  Provider: TagContextProvider,
-  Consumer: TagContextRaw.Consumer,
-  colors: [
-    ['None', null],
-    ['Red', 'red'],
-    ['Brown', 'brown'],
-    ['Orange', 'orange'],
-    ['Yellow', 'yellow'],
-    ['Green', 'green'],
-    ['Turquoise', 'turquoise'],
-    ['Blue', 'blue'],
-    ['Purple', 'purple'],
-    ['Violet', 'violet'],
-    ['Pink', 'pink'],
-  ],
-  getCardColorClass,
-  getCardTagColorClass,
-  getTagColorClass,
-};
+export const tagColors = [
+  ['None', null],
+  ['Red', 'red'],
+  ['Brown', 'brown'],
+  ['Orange', 'orange'],
+  ['Yellow', 'yellow'],
+  ['Green', 'green'],
+  ['Turquoise', 'turquoise'],
+  ['Blue', 'blue'],
+  ['Purple', 'purple'],
+  ['Violet', 'violet'],
+  ['Pink', 'pink'],
+];
 
 export default TagContext;

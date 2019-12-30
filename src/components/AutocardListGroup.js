@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
@@ -9,24 +9,17 @@ import GroupModalContext from './GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort }) => {
   const groups = sortIntoGroups(cards, sort);
+  const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
+  const handleClick = useCallback((event) => {
+    event.preventDefault();
+    setGroupModalCards(cards);
+    openGroupModal();
+  }, [cards, openGroupModal, setGroupModalCards]);
   return (
     <ListGroup className="list-outline">
-      <GroupModalContext.Consumer>
-        {({ openGroupModal, setGroupModalCards }) => (
-          <ListGroupItem
-            tag="a"
-            href="#"
-            className="list-group-heading"
-            onClick={(e) => {
-              e.preventDefault();
-              setGroupModalCards(cards);
-              openGroupModal();
-            }}
-          >
-            {heading}
-          </ListGroupItem>
-        )}
-      </GroupModalContext.Consumer>
+      <ListGroupItem tag="a" href="#" className="list-group-heading" onClick={handleClick}>
+        {heading}
+      </ListGroupItem>
       {getLabels(sort)
         .filter((cmc) => groups[cmc])
         .map((cmc) => (

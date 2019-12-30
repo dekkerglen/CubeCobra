@@ -140,7 +140,7 @@
     cursor: pointer;
 }
 
-.card-list-item a {
+.card-list-item {
 	font-size: 8.5pt;
 	white-space: nowrap;
 	overflow: hidden;

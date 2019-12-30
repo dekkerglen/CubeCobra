@@ -11,7 +11,7 @@ import { DisplayContextProvider } from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import SortContext from './components/SortContext';
-import TagContext from './components/TagContext';
+import { TagContextProvider } from './components/TagContext';
 
 const deduplicateTags = (tagColors) => {
   const used = new Set();
@@ -60,7 +60,7 @@ class CubeCompare extends Component {
     return (
       <SortContext.Provider>
         <DisplayContextProvider>
-          <TagContext.Provider
+          <TagContextProvider
             cubeID={cubeID}
             defaultTagColors={defaultTagColors}
             defaultShowTagColors={defaultShowTagColors}
@@ -79,7 +79,7 @@ class CubeCompare extends Component {
                 <CompareView cards={filteredCards} {...props} />
               </CardModalForm>
             </ErrorBoundary>
-          </TagContext.Provider>
+          </TagContextProvider>
         </DisplayContextProvider>
       </SortContext.Provider>
     );

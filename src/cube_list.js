@@ -16,7 +16,7 @@ import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
 import SortContext from './components/SortContext';
 import TableView from './components/TableView';
-import TagContext from './components/TagContext';
+import { TagContextProvider } from './components/TagContext';
 import VisualSpoiler from './components/VisualSpoiler';
 
 class CubeList extends Component {
@@ -65,7 +65,7 @@ class CubeList extends Component {
     return (
       <SortContext.Provider>
         <DisplayContextProvider>
-          <TagContext.Provider
+          <TagContextProvider
             cubeID={cubeID}
             defaultTagColors={defaultTagColors}
             defaultShowTagColors={defaultShowTagColors}
@@ -101,7 +101,7 @@ class CubeList extends Component {
                 </GroupModal>
               </CardModalForm>
             </ChangelistContextProvider>
-          </TagContext.Provider>
+          </TagContextProvider>
         </DisplayContextProvider>
       </SortContext.Provider>
     );
