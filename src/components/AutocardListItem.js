@@ -17,13 +17,14 @@ function handleAuxEvent(event, card) {
   }
 }
 
-const AutocardListItemRaw = ({ card, noCardModal, cardColorClass, openCardModal, children }) => {
+const AutocardListItemRaw = ({ card, noCardModal, inModal, cardColorClass, openCardModal, children }) => {
   let { name } = card.details;
 
   return (
     <AutocardDiv
       className={`card-list-item list-group-item autocard d-flex flex-row ${cardColorClass(card)}`}
       card={card}
+      inModal={inModal}
       cardindex={card.index}
     >
       <a

@@ -54,7 +54,7 @@ function autocard_init(classname) {
     });
 }
 
-function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil) {
+function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in_modal) {
   var w = card_flip ? 425 : 250;
   var h = show_art_crop ? 175 : 325;
 
@@ -73,6 +73,14 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil) {
     var x_offset = e.clientX + self.pageXOffset - parentPos.left;
     var y_offset = e.clientY + self.pageYOffset - parentPos.top;
     let tag_offset = tags ? $(document.getElementById('autocard_popup_info')).outerHeight() : 0;
+
+    let zIndex = 500;
+    if (in_modal) {
+      zIndex = 1500;
+    }
+    document.getElementById('autocard_popup').style.zIndex = zIndex;
+    document.getElementById('autocard_popup2').style.zIndex = zIndex;
+    document.getElementById('autocard_popup_info').style.zIndex = zIndex;
 
     if (rightPixelSpace > w) {
       //display on right
