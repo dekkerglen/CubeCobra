@@ -108,23 +108,12 @@ class CubeList extends Component {
   }
 }
 
-const cube = JSON.parse(document.getElementById('cuberaw').value);
-const cubeID = document.getElementById('cubeID').value;
-const canEdit = document.getElementById('canEdit').value === 'true';
-const defaultTagColors = JSON.parse(document.getElementById('cubeTagColors').value);
-const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeContextProvider initialCube={cube}>
+  <CubeContextProvider initialCube={reactProps.cards}>
     <CubeContext.Consumer>
       {({ cube }) => (
-        <CubeList
-          cards={cube}
-          canEdit={canEdit}
-          cubeID={cubeID}
-          defaultTagColors={defaultTagColors}
-          defaultShowTagColors={defaultShowTagColors}
-        />
+        <CubeList {...reactProps} />
       )}
     </CubeContext.Consumer>
   </CubeContextProvider>

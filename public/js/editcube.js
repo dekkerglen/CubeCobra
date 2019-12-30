@@ -7,7 +7,7 @@ if ($('#in_both').length) {
   view = 'table';
 }
 
-var cube = JSON.parse($('#cuberaw').val());
+var cube = reactProps.cards || JSON.parse($('#cuberaw').val());
 cube.forEach(function(card, index) {
   card.index = index;
 });

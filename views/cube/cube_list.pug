@@ -5,11 +5,6 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/editcube.css')
   link(rel='stylesheet' href='/css/texteditor.css')
 
-  input#cubeID(type='hidden', name='cubeID', value=cube_id)
-  input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
-  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-  input#cubeTagColors(type='hidden', value=JSON.stringify(cube.tag_colors))
-  input#showTagColors(type='hidden', value=(!user || !user.hide_tag_colors).toString())
   if user && user.id == cube.owner
     input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
@@ -107,6 +102,14 @@ block cube_content
         .modal-footer
           button.btn.btn-secondary(type='button', data-dismiss='modal') OK
 
+  script(type='text/javascript').
+    var reactProps = {
+      canEdit: !{user && user.id == cube.owner},
+      cubeID: !{cube_id},
+      defaultTagColors: !{JSON.stringify(cube.tag_colors)},
+      defaultShowTagColors: !{!user || !user.hide_tag_colors},
+      cards: !{cube_raw},
+    };
   include ../react
   script(src='/js/csrf.js')
   script(src='/js/autocard.js')
