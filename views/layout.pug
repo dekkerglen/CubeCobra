@@ -20,12 +20,12 @@ html
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
 		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
-		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.css')
+		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
 		#autocard_popup
 		#autocard_popup2
 		#autocard_popup_info
-		script(src='/bower_components/jquery/dist/jquery.js')
+		script(src='/bower_components/jquery/dist/jquery.slim.min.js')
 		script(src='/jquery-ui/jquery-ui.min.js')
 	body
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
@@ -135,7 +135,7 @@ html
 					a  | 
 					a(href='/cookies') Cookies Policy
 
-		script(src='/bower_components/bootstrap/dist/js/bootstrap.js')  
+		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
 		script(src='/js/csrf.js')
 		script(src='/js/main.js')
 		script(src='/js/autocard.js')
