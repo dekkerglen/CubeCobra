@@ -106,7 +106,7 @@ html
 							li.nav-item
 								a.nav-link(href='/user/register') Register
 							li.nav-item
-								a(href='/user/login').login-link.nav-link Login
+								a.nav-link(href='/user/login', data-toggle='modal', data-target='#loginModal') Login
 		.container
 			block content
 			br
@@ -137,8 +137,7 @@ html
 
 		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
 		script(src='/js/csrf.js')
-		script(src='/js/main.js')
-		script(src='/js/autocard.js')
+		script(src='/js/toolbar.js')
 
 // Login modal
 #loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
