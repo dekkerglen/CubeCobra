@@ -7,5 +7,7 @@ block cube_content
   input#typeData(type='hidden', value=TypeByColor)
   input#multicolorData(type='hidden', value=MulticoloredCounts)
   input#generatedTokensData(type='hidden',value=GeneratedTokensCounts)
+
+block scripts
   include ../react
   script(src='/js/cube_analysis.bundle.js')

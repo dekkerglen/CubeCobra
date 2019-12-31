@@ -28,8 +28,6 @@ const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 
-//grabbing sortfilter.cardIsLabel from client-side
-var sortfilter = require('../public/js/sortfilter.js');
 const router = express.Router();
 // Bring in models
 let Cube = require('../models/cube');
@@ -725,7 +723,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
                 in_both: JSON.stringify(in_both.map((card) => card.details.name)),
                 only_a: JSON.stringify(a_names),
                 only_b: JSON.stringify(b_names),
-                cube_raw: JSON.stringify(all_cards),
+                cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
                 metadata: generateMeta(
                   'Cube Cobra Compare Cubes',
                   `Comparing "${cubeA.name}" To "${cubeB.name}"`,
@@ -777,11 +775,11 @@ router.get('/list/:id', function(req, res) {
           }
         });
         res.render('cube/cube_list', {
-          cube: cube,
+          cube,
           activeLink: 'list',
           cube_id: req.params.id,
           title: `${abbreviate(cube.name)} - List`,
-          cube_raw: JSON.stringify(cube.cards),
+          cube_raw: JSON.stringify(cube.cards.map((card, index) => Object.assign(card, { index }))),
           metadata: generateMeta(
             `Cube Cobra List: ${cube.name}`,
             cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

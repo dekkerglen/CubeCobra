@@ -1,4 +1,5 @@
 import { normalizeName } from './Card';
+import { cardIsLabel } from './Sort';
 
 let rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 

@@ -102,18 +102,16 @@ block cube_content
         .modal-footer
           button.btn.btn-secondary(type='button', data-dismiss='modal') OK
 
+block scripts
   script(type='text/javascript').
     var reactProps = {
-      canEdit: !{user && user.id == cube.owner},
-      cubeID: !{cube_id},
+      canEdit: !{JSON.stringify(user && user.id == cube.owner)},
+      cubeID: !{JSON.stringify(cube._id)},
       defaultTagColors: !{JSON.stringify(cube.tag_colors)},
-      defaultShowTagColors: !{!user || !user.hide_tag_colors},
+      defaultShowTagColors: !{JSON.stringify(!user || !user.hide_tag_colors)},
       cards: !{cube_raw},
     };
+
   include ../react
-  script(src='/js/csrf.js')
-  script(src='/js/autocard.js')
-  script(src='/js/sortfilter.js')
-  script(src='/js/tags.js')
-  script(src='/js/editcube.js')
+  script(src='/js/autocard.js', async)
   script(src='/js/cube_list.bundle.js')

@@ -2,8 +2,12 @@ import React, { Fragment, useEffect } from 'react';
 
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
+import { getLabels, sortIntoGroups } from '../util/Sort';
+
 import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';
+
+const cmc2Labels = getLabels(null, 'CMC2');
 
 const TypeRow = ({ cardType, groups, count, primary }) => (
   <Fragment key={cardType}>
@@ -11,8 +15,8 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
       {cardType} ({count})
     </h6>
     <Row className="row-low-padding mb-2">
-      {getLabels('CMC2').map((cmc) => (
-        <div key={cmc} className="col-low-padding" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
+      {cmc2Labels.map((cmc) => (
+        <div key={cmc} className="col-low-padding" style={{ width: 100 / cmc2Labels.length + '%' }}>
           <AutocardListGroup
             heading={`${cmc} (${(groups[cmc] || []).length})`}
             cards={groups[cmc] || []}
@@ -32,7 +36,7 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
       </h5>
     </CardHeader>
     <CardBody>
-      {getLabels('CNC')
+      {getLabels(null, 'CNC')
         .filter((cardType) => groups[cardType])
         .map((cardType) => (
           <TypeRow key={cardType} cardType={cardType} groups={groups[cardType]} count={typeCounts[cardType]} />
@@ -76,7 +80,7 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
   return (
     <Row className="mt-3" {...props}>
       <Col>
-        {getLabels(primary)
+        {getLabels(cards, primary)
           .filter((color) => groups[color])
           .map((color) => (
             <ColorCard

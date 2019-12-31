@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useState } from 'react';
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
+import { getSorts } from '../util/Sort';
 
 import CubeContext from './CubeContext';
 import SortContext from './SortContext';

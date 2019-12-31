@@ -2,13 +2,14 @@ import React, { useCallback, useContext } from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
+import { sortDeep } from '../util/Sort';
 import { alphaCompare } from '../util/Util';
 
 import AutocardListItem from './AutocardListItem';
 import GroupModalContext from './GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort }) => {
-  const groups = sortIntoGroups(cards, sort);
+  const sorted = sortDeep(cards, sort);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
   const handleClick = useCallback((event) => {
     event.preventDefault();
@@ -20,17 +21,15 @@ const AutocardListGroup = ({ cards, heading, sort }) => {
       <ListGroupItem tag="a" href="#" className="list-group-heading" onClick={handleClick}>
         {heading}
       </ListGroupItem>
-      {getLabels(sort)
-        .filter((cmc) => groups[cmc])
-        .map((cmc) =>
-          groups[cmc].sort(alphaCompare).map((card, index) => (
-            <AutocardListItem
-              key={typeof card.index === 'undefined' ? index : card.index}
-              card={card}
-              className={index === 0 ? 'cmc-group' : undefined}
-            />
-          ))
-        )}
+      {sorted.map(([label, group]) =>
+        group.sort(alphaCompare).map((card, index) => (
+          <AutocardListItem
+            key={typeof card.index === 'undefined' ? index : card.index}
+            card={card}
+            className={index === 0 ? 'cmc-group' : undefined}
+          />
+        ))
+      )}
     </ListGroup>
   );
 };

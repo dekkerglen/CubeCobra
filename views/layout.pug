@@ -25,7 +25,6 @@ html
 		#autocard_popup
 		#autocard_popup2
 		#autocard_popup_info
-		script(src='/bower_components/jquery/dist/jquery.slim.min.js')
 	body
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
 			.container
@@ -108,7 +107,6 @@ html
 								a.nav-link(href='/user/login', data-toggle='modal', data-target='#loginModal') Login
 		.container
 			block content
-			br
 			hr
 			footer
 				p.center(style='text-align: center; font-size:12px')
@@ -134,50 +132,52 @@ html
 					a  | 
 					a(href='/cookies') Cookies Policy
 
-		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
-		script(src='/js/csrf.js')
-		script(src='/js/toolbar.js')
+		// Login modal
+		#loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
+			.modal-dialog(role='document')
+				.modal-content
+					form(method='POST', action='/user/login')
+						input(type='hidden', name='_csrf', value=csrfToken)
+						.modal-header
+							h5#loginModalLabel.modal-title Login
+							button.close(type='button', data-dismiss='modal', aria-label='Close')
+								span(aria-hidden='true') ×
+						.modal-body
+							.form-group
+								label.col-form-label Username or Email Address:
+								input#username.form-control(name='username', type='text')
+							.form-group
+								label.col-form-label Password:
+								input#password.form-control(name='password', type='password')
+							a(href='/user/lostpassword') Forgot password?
+							if loginCallback
+								input(type='hidden', name='loginCallback', value=loginCallback)     
+							br
+						.modal-footer
+							input.btn.btn-success(type='submit',value='Login')
+							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-// Login modal
-#loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
-	.modal-dialog(role='document')
-		.modal-content
-			form(method='POST', action='/user/login')
-				input(type='hidden', name='_csrf', value=csrfToken)
-				.modal-header
-					h5#loginModalLabel.modal-title Login
-					button.close(type='button', data-dismiss='modal', aria-label='Close')
-						span(aria-hidden='true') ×
-				.modal-body
-					.form-group
-						label.col-form-label Username or Email Address:
-						input#username.form-control(name='username', type='text')
-					.form-group
-						label.col-form-label Password:
-						input#password.form-control(name='password', type='password')
-					a(href='/user/lostpassword') Forgot password?
-					if loginCallback
-						input(type='hidden', name='loginCallback', value=loginCallback)     
-					br
-				.modal-footer
-					input.btn.btn-success(type='submit',value='Login')
-					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+		// Add cube modal
+		#cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
+			.modal-dialog(role='document')
+				.modal-content
+					form(method='POST', action='/cube/add')
+						input(type='hidden', name='_csrf', value=csrfToken)
+						.modal-header
+							h5#loginModalLabel.modal-title Create New Cube
+							button.close(type='button', data-dismiss='modal', aria-label='Close')
+								span(aria-hidden='true') ×
+						.modal-body
+							.form-group
+								label.col-form-label Cube Name:
+								input.form-control(name='name', type='text')
+							br
+						.modal-footer
+							input.btn.btn-success(type='submit',value='Create')
+							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-// Add cube modal
-#cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-	.modal-dialog(role='document')
-		.modal-content
-			form(method='POST', action='/cube/add')
-				input(type='hidden', name='_csrf', value=csrfToken)
-				.modal-header
-					h5#loginModalLabel.modal-title Create New Cube
-					button.close(type='button', data-dismiss='modal', aria-label='Close')
-						span(aria-hidden='true') ×
-				.modal-body
-					.form-group
-						label.col-form-label Cube Name:
-						input.form-control(name='name', type='text')
-					br
-				.modal-footer
-					input.btn.btn-success(type='submit',value='Create')
-					button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+		script(src='/bower_components/jquery/dist/jquery.slim.min.js')
+		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
+		script(src='/js/csrf.js', async)
+		script(src='/js/toolbar.js', async)
+		block scripts

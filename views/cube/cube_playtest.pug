@@ -75,6 +75,8 @@ block cube_content
                 input#customDraftHiddenId(type='hidden', name='id')
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-      script(src='/js/packcraft.js')
+
+block scripts
+  script(src='/js/packcraft.js')
   include ../react
   script(src='/js/cube_playtest.bundle.js')
