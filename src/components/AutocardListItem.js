@@ -27,7 +27,7 @@ const AutocardListItem = ({ card, noCardModal, className, children }) => {
   }, [card.details._id]);
   return (
     <AutocardDiv
-      className={`card-list-item list-group-item ${cardColorClass(card)} ${className}`}
+      className={`card-list-item list-group-item ${cardColorClass(card)} ${className || ''}`}
       card={card}
       onAuxClick={noCardModal ? undefined : handleAuxClick}
       onClick={noCardModal ? undefined : handleClick}
