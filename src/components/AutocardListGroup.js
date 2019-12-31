@@ -22,18 +22,15 @@ const AutocardListGroup = ({ cards, heading, sort }) => {
       </ListGroupItem>
       {getLabels(sort)
         .filter((cmc) => groups[cmc])
-        .map((cmc) => (
-          <Row key={cmc} noGutters className="cmc-group">
-            <Col>
-              {groups[cmc].sort(alphaCompare).map((card) => (
-                <AutocardListItem
-                  key={typeof card.index === 'undefined' ? card.details.name : card.index}
-                  card={card}
-                />
-              ))}
-            </Col>
-          </Row>
-        ))}
+        .map((cmc) =>
+          groups[cmc].sort(alphaCompare).map((card, index) => (
+            <AutocardListItem
+              key={typeof card.index === 'undefined' ? index : card.index}
+              card={card}
+              className={index === 0 ? 'cmc-group' : undefined}
+            />
+          ))
+        )}
     </ListGroup>
   );
 };

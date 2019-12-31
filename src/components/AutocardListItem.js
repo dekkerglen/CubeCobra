@@ -9,9 +9,9 @@ import withAutocard from './WithAutocard';
 
 import Affiliate from '../util/Affiliate';
 
-const AutocardDiv = withAutocard('div');
+const AutocardDiv = withAutocard('li');
 
-const AutocardListItem = ({ card, noCardModal, children }) => {
+const AutocardListItem = ({ card, noCardModal, className, children }) => {
   const { name } = card.details;
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
@@ -27,7 +27,7 @@ const AutocardListItem = ({ card, noCardModal, children }) => {
   }, [card.details._id]);
   return (
     <AutocardDiv
-      className={`card-list-item list-group-item autocard d-flex flex-row ${cardColorClass(card)}`}
+      className={`card-list-item list-group-item ${cardColorClass(card)} ${className}`}
       card={card}
       onAuxClick={noCardModal ? undefined : handleAuxClick}
       onClick={noCardModal ? undefined : handleClick}
