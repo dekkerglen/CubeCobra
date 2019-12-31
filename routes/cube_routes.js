@@ -42,6 +42,8 @@ let CardRating = require('../models/cardrating');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
 
+const NODE_ENV = process.env.NODE_ENV;
+
 function cardHtml(card) {
   if (card.image_flip) {
     return (
@@ -794,9 +796,9 @@ router.get('/list/:id', async function(req, res) {
     };
 
     res.render('cube/cube_list', {
-      reactHTML: await ReactDOMServer.renderToString(
+      reactHTML: NODE_ENV === 'production' ? await ReactDOMServer.renderToString(
         React.createElement(CubeListPage, reactProps)
-      ),
+      ) : undefined,
       reactProps,
       cube,
       activeLink: 'list',
