@@ -8,14 +8,14 @@ import CardModalContext from './CardModalContext';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 
-const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
+const CardModalForm = ({ setOpenCollapse, children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cardIndex, setCardIndex] = useState(null);
   const [versions, setVersions] = useState([]);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
-  const { cube, updateCubeCard } = useContext(CubeContext);
+  const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
   const card = cube[cardIndex] || { colors: [], details: {}, tags: [] };
 
@@ -80,7 +80,7 @@ const CardModalForm = ({ canEdit, setOpenCollapse, children, ...props }) => {
     }
 
     try {
-      const response = await csrfFetch(`/cube/api/updatecard/${document.getElementById('cubeID').value}`, {
+      const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
         method: 'POST',
         body: JSON.stringify({ src: card, updated }),
         headers: {

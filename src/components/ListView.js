@@ -388,10 +388,10 @@ const ListView = (props) => (
           <GroupModalContext.Consumer>
             {({ setGroupModalCards, openGroupModal }) => (
               <CubeContext.Consumer>
-                {({ cube, updateCubeCard }) => (
+                {({ cube, cubeID, updateCubeCard }) => (
                   <ListViewRaw
                     {...sortValue}
-                    {...{ cardColorClass, setGroupModalCards, openGroupModal, cube, updateCubeCard }}
+                    {...{ cardColorClass, setGroupModalCards, openGroupModal, cube, cubeID, updateCubeCard }}
                     {...props}
                   />
                 )}

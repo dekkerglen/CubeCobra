@@ -751,20 +751,22 @@ router.get('/list/:id', function(req, res) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});
     } else {
-      var pids = [];
-      cube.cards.forEach(function(card, index) {
+      const pids = new Set();
+      const cards = [...cube.cards];
+      cards.forEach(function(card, index) {
         card.details = {
           ...carddb.cardFromId(card.cardID),
         };
+        card.index = index;
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
-        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-          pids.push(card.details.tcgplayer_id);
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
         }
       });
-      GetPrices(pids).then(function(price_dict) {
-        cube.cards.forEach(function(card, index) {
+      GetPrices([...pids]).then(function(price_dict) {
+        cards.forEach(function(card, index) {
           if (card.details.tcgplayer_id) {
             if (price_dict[card.details.tcgplayer_id]) {
               card.details.price = price_dict[card.details.tcgplayer_id];
@@ -774,12 +776,18 @@ router.get('/list/:id', function(req, res) {
             }
           }
         });
+        console.log('index:', cards[5].index);
         res.render('cube/cube_list', {
+           reactProps: {
+             canEdit: req.user && req.user.id === cube.owner,
+             cubeID: cube._id,
+             defaultTagColors: cube.tag_colors,
+             defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+             cards,
+          },
           cube,
           activeLink: 'list',
-          cube_id: req.params.id,
           title: `${abbreviate(cube.name)} - List`,
-          cube_raw: JSON.stringify(cube.cards.map((card, index) => Object.assign(card, { index }))),
           metadata: generateMeta(
             `Cube Cobra List: ${cube.name}`,
             cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

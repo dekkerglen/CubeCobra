@@ -104,13 +104,7 @@ block cube_content
 
 block scripts
   script(type='text/javascript').
-    var reactProps = {
-      canEdit: !{JSON.stringify(user && user.id == cube.owner)},
-      cubeID: !{JSON.stringify(cube._id)},
-      defaultTagColors: !{JSON.stringify(cube.tag_colors)},
-      defaultShowTagColors: !{JSON.stringify(!user || !user.hide_tag_colors)},
-      cards: !{cube_raw},
-    };
+    var reactProps = !{JSON.stringify(reactProps)};
 
   include ../react
   script(src='/js/autocard.js', async)

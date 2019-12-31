@@ -19,7 +19,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className={this.props.className}>
+        <div className={'mt-3' || this.props.className}>
           <h1 className="text-center">Something went wrong.</h1>
           <p className="text-center">You may want to try reloading the page.</p>
         </div>
