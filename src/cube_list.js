@@ -110,7 +110,7 @@ class CubeList extends Component {
 
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeContextProvider initialCube={reactProps.cards}>
+  <CubeContextProvider initialCube={reactProps.cards} cubeID={reactProps.cubeID}>
     <CubeContext.Consumer>
       {({ cube }) => (
         <CubeList {...reactProps} />

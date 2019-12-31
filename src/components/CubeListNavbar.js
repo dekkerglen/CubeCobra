@@ -33,6 +33,7 @@ const CompareCollapse = (props) => {
   const { cubeID } = useContext(CubeContext);
   const compareRef = useRef();
   const handleCompare = useCallback((event) => {
+    event.preventDefault();
     window.location.href = `/cube/compare/${cubeID}/to/${compareRef.current.value}`;
   }, [cubeID, compareRef]);
 
@@ -42,7 +43,7 @@ const CompareCollapse = (props) => {
         <Row>
           <Col>
             <Form inline onSubmit={handleCompare}>
-              <Input type="text" ref={compareRef} className="mb-2 mr-2" placeholder="Comparison Cube ID" />
+              <Input type="text" innerRef={compareRef} className="mb-2 mr-2" placeholder="Comparison Cube ID" />
               <Button type="submit" color="success" className="mb-2">
                 Compare Cubes
               </Button>
