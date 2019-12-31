@@ -2,13 +2,13 @@
 
 import React, { Component } from 'react';
 
-const SortContextRaw = React.createContext({
+const SortContext = React.createContext({
   primary: 'Color Category',
   secondary: 'Types-Multicolor',
   tertiary: 'CMC2',
 });
 
-class SortContextProvider extends React.Component {
+export class SortContextProvider extends React.Component {
   constructor(props) {
     super(props);
 
@@ -42,16 +42,15 @@ class SortContextProvider extends React.Component {
       ...this.state,
       changeSort: this.changeSort,
     };
-    return <SortContextRaw.Provider value={value} {...this.props} />;
+    return <SortContext.Provider value={value} {...this.props} />;
   }
 }
 
-const SortContext = {
-  Provider: SortContextProvider,
-  Consumer: SortContextRaw.Consumer,
-  Wrapped: (Component) => (props) => (
-    <SortContextRaw.Consumer>{(value) => <Component {...value} {...props} />}</SortContextRaw.Consumer>
-  ),
-};
+SortContext.Wrapped = (Tag) => (props) =>
+  <SortContext.Consumer>
+    {(value) =>
+      <Tag {...props} {...value} />
+    }
+  </SortContext.Consumer>;
 
 export default SortContext;

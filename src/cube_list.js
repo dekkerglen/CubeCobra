@@ -14,7 +14,7 @@ import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import GroupModal from './components/GroupModal';
 import ListView from './components/ListView';
-import SortContext from './components/SortContext';
+import { SortContextProvider } from './components/SortContext';
 import TableView from './components/TableView';
 import { TagContextProvider } from './components/TagContext';
 import VisualSpoiler from './components/VisualSpoiler';
@@ -63,7 +63,7 @@ class CubeList extends Component {
     }));
     const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
-      <SortContext.Provider>
+      <SortContextProvider>
         <DisplayContextProvider>
           <TagContextProvider
             cubeID={cubeID}
@@ -103,7 +103,7 @@ class CubeList extends Component {
             </ChangelistContextProvider>
           </TagContextProvider>
         </DisplayContextProvider>
-      </SortContext.Provider>
+      </SortContextProvider>
     );
   }
 }

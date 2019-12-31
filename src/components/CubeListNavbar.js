@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useCallback, useContext, useRef } from 'react';
 
 import {
   Button,
@@ -21,6 +21,7 @@ import {
 } from 'reactstrap';
 
 import CardModalContext from './CardModalContext';
+import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
@@ -28,34 +29,30 @@ import GroupModalContext from './GroupModalContext';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
 
-// FIXME: Bring into React
-function compare(event) {
-  event.preventDefault();
-  const id_a = $('#cubeID').val();
-  let id_b = $('#compareInput').val();
-  if (id_b.includes('/')) {
-    let parts = id_b.split('/');
-    id_b = parts[parts.length - 1];
-  }
-  if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
-}
+const CompareCollapse = (props) => {
+  const { cubeID } = useContext(CubeContext);
+  const compareRef = useRef();
+  const handleCompare = useCallback((event) => {
+    window.location.href = `/cube/compare/${cubeID}/to/${compareRef.current.value}`;
+  }, [cubeID, compareRef]);
 
-const CompareCollapse = (props) => (
-  <Collapse {...props}>
-    <Container>
-      <Row>
-        <Col>
-          <Form inline onSubmit={compare}>
-            <Input type="text" id="compareInput" className="mb-2 mr-2" placeholder="Comparison Cube ID" />
-            <Button type="submit" color="success" className="mb-2">
-              Compare Cubes
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
-  </Collapse>
-);
+  return (
+    <Collapse {...props}>
+      <Container>
+        <Row>
+          <Col>
+            <Form inline onSubmit={handleCompare}>
+              <Input type="text" ref={compareRef} className="mb-2 mr-2" placeholder="Comparison Cube ID" />
+              <Button type="submit" color="success" className="mb-2">
+                Compare Cubes
+              </Button>
+            </Form>
+          </Col>
+        </Row>
+      </Container>
+    </Collapse>
+  );
+}
 
 class CubeListNavbarRaw extends Component {
   constructor(props) {

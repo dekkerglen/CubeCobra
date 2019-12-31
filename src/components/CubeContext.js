@@ -2,10 +2,12 @@ import React, { useCallback, useState } from 'react';
 
 const CubeContext = React.createContext({
   cube: [],
+  canEdit: false,
+  cubeID: null,
   updateCubeCard: (index, newCard) => {},
 });
 
-export const CubeContextProvider = ({ initialCube, ...props }) => {
+export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) => {
   const [cube, setCube] = useState(initialCube.map((card, index) => ({ ...card, index })));
 
   const updateCubeCard = useCallback(
@@ -28,7 +30,7 @@ export const CubeContextProvider = ({ initialCube, ...props }) => {
     [cube],
   );
 
-  const value = { cube, updateCubeCard, updateCubeCards };
+  const value = { cube, cubeID, updateCubeCard, updateCubeCards };
 
   return <CubeContext.Provider value={value} {...props} />;
 };

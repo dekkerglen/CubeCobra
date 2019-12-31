@@ -10,7 +10,7 @@ import CubeCompareNavbar from './components/CubeCompareNavbar';
 import { DisplayContextProvider } from './components/DisplayContext';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
-import SortContext from './components/SortContext';
+import { SortContextProvider } from './components/SortContext';
 import { TagContextProvider } from './components/TagContext';
 
 const deduplicateTags = (tagColors) => {
@@ -58,7 +58,7 @@ class CubeCompare extends Component {
     }));
     const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
-      <SortContext.Provider>
+      <SortContextProvider>
         <DisplayContextProvider>
           <TagContextProvider
             cubeID={cubeID}
@@ -81,7 +81,7 @@ class CubeCompare extends Component {
             </ErrorBoundary>
           </TagContextProvider>
         </DisplayContextProvider>
-      </SortContext.Provider>
+      </SortContextProvider>
     );
   }
 }
