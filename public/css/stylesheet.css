@@ -3,24 +3,11 @@
 	border-left: 1px solid #DEE2E6;
 }
 
-.usercontrols
-{
+.usercontrols {
 	background-image: linear-gradient(white, #EFEFEF);
-		border-right: 1px solid #DEE2E6;
-		border-left: 1px solid #DEE2E6;
-		border-bottom: 1px solid #DEE2E6;
-}
-
-.alert-error {
-	color: #a94442;
-	background-color: #f2dede;
-	border-color: #ebccd1;
-}
-
-.alert-success-msg {
-	color: #3c763d;
-	background-color: #dff0d8;
-	border-color: #d6e9c6;
+	border-right: 1px solid #DEE2E6;
+	border-left: 1px solid #DEE2E6;
+	border-bottom: 1px solid #DEE2E6;
 }
 
 .nav-pills .nav-link.active {
@@ -69,23 +56,6 @@
 	border: solid 1px #28A745;
 }
 
-.dropdown-menu>li>a:hover {
-	background-color: red;
-	background-image: none;
-}
-
-.even-cols .col-even {
-	padding: 1px 2px;
-}
-
-.list-group-item {
-	padding: 1px 2px
-}
-
-.list-group {
-	padding: 0px 0px;
-}
-
 .list-group.list-outline {
 	border:1px solid #bbb;
 	border-radius:5px;
@@ -108,16 +78,13 @@
 	font-size: 9pt;
 	font-weight: 600;
 	border-bottom: 1px solid #bbb;
-    margin-bottom: 0px;
+	margin-bottom: 0px;
 }
+
 .list-group-item.list-group-heading:hover {
 	background-color: #FCFCFC !Important;
 	color: black;
 	text-decoration: none;
-}
-
-.col-md-1 {
-	padding: 3px
 }
 
 .editarea {
@@ -289,34 +256,8 @@
 	}
 }
 
-.deckcard, .packcard, .sideboardcard {
-	border-radius: 6px;
-	overflow: hidden;
-	background: #fff;
-}
-
-.color-column {
-	padding: 2px 2px;
-}
-
 .form-check {
 	border: none;
-}
-
-.defaultCardImage:before {
-    content: ' ';
-    display: block;
-    position: absolute;
-    background-image: url(/content/default_card.png);
-    height: 210px;
-    width: 150px;
-    background-size: 150px 210px;
-}
-
-.packcard.defaultCardImage:before, .pickscard.defaultCardImage:before, .deckcard.defaultCardImage:before {
-    height: 175px;
-    width: 125px;
-    background-size: 125px 175px;
 }
 
 .foilOverlay {
@@ -325,10 +266,6 @@
 	width: 100%;
 	height: 100%;
 	opacity: 70%;
-}
-
-#packTitle, .card-header h4 {
-    display: inline-block;
 }
 
 #syntax-accordion .card, #syntax-accordion {
@@ -431,22 +368,25 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 .sortable-item {
 	z-index: 10000 !important;
 }
+
 .clickable {
 	cursor: pointer;
 }
 
+/* Give cards sharp borders. */
 div.card {
 	box-shadow:  2px 2px 6px 0 rgba(0, 0, 0, 0.06);
 	border-radius: 0px;
-  }
+}
 
 body.busy-cursor {
 	cursor: progress;
-
 }
+
 .centered-max400 {
 	margin: auto; max-width: 400px;
 }
+
 .cube-preview-image {
 	width: 100%;
 	height: auto;
@@ -456,9 +396,8 @@ body.busy-cursor {
 	cursor: pointer;
 }
 .no-underline-hover:hover{
-    text-decoration: none;
-  }
-
+	text-decoration: none;
+}
 
 /* Styles for Analysis */
 
@@ -620,3 +559,12 @@ body.busy-cursor {
 	border-color: #ced4da !important;
 	background-color: #e9ecef !important;
 }
+
+.col-low-padding {
+  padding: 0 2px;
+}
+
+.row-low-padding {
+  margin: 0 -2px;
+}
+

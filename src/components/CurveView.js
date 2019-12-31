@@ -7,14 +7,12 @@ import SortContext from './SortContext';
 
 const TypeRow = ({ cardType, groups, count, primary }) => (
   <Fragment key={cardType}>
-    <Row className="mt-2">
-      <h6 className="ml-1">
-        {cardType} ({count})
-      </h6>
-    </Row>
-    <Row className="even-cols">
+    <h6>
+      {cardType} ({count})
+    </h6>
+    <Row className="row-low-padding mb-2">
       {getLabels('CMC2').map((cmc) => (
-        <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
+        <div key={cmc} className="col-low-padding" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
           <AutocardListGroup
             heading={`${cmc} (${(groups[cmc] || []).length})`}
             cards={groups[cmc] || []}
@@ -27,9 +25,9 @@ const TypeRow = ({ cardType, groups, count, primary }) => (
 );
 
 const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
-  <Card>
+  <Card className="mb-3">
     <CardHeader>
-      <h5>
+      <h5 className="mb-0">
         {color} {count}
       </h5>
     </CardHeader>
