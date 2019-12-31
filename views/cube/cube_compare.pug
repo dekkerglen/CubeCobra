@@ -26,8 +26,8 @@ block content
   input#cubeTagColors(type='hidden', name='cubeTagColors', value=JSON.stringify(cube.tag_colors.concat(cubeB.tag_colors)))
   input#showTagColors(type='hidden', name='hideTagColors', value=(!user || !user.hide_tag_colors).toString())
   if cube.default_sorts
-    input#sort1(type='hidden', name='edittoken', value=cube.default_sorts[0])
-    input#sort2(type='hidden', name='edittoken', value=cube.default_sorts[1])
+    input#sort1(type='hidden', value=cube.default_sorts[0])
+    input#sort2(type='hidden', value=cube.default_sorts[1])
 
   //Cube list
   #react-root

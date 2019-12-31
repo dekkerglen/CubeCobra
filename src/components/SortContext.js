@@ -13,8 +13,8 @@ export class SortContextProvider extends React.Component {
     super(props);
 
     this.state = {
-      primary: document.getElementById('sort1').value || 'Color Category',
-      secondary: document.getElementById('sort2').value || 'Types-Multicolor',
+      primary: this.props.defaultSorts[0] || 'Color Category',
+      secondary: this.props.defaultSorts[1] || 'Types-Multicolor',
       tertiary: 'CMC2',
     };
 

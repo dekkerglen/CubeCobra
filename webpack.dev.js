@@ -3,9 +3,15 @@ const merge = require('webpack-merge');
 
 const common = require('./webpack.common.js');
 
-module.exports = merge(common, {
+const config = {
   mode: 'development',
   devtool: 'inline-source-map',
+  optimization: {
+    usedExports: true,
+  },
+};
+
+const clientConfig = merge(common.clientConfig, config, {
   devServer: {
     compress: true,
     contentBase: path.join(__dirname, 'dist'),
@@ -15,7 +21,8 @@ module.exports = merge(common, {
       target: 'http://localhost:5000',
     }],
   },
-  optimization: {
-    usedExports: true,
-  },
 });
+
+const serverConfig = merge(common.serverConfig, config, {});
+
+module.exports = [clientConfig, serverConfig];

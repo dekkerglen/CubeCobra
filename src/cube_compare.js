@@ -49,7 +49,7 @@ class CubeCompare extends Component {
   }
 
   render() {
-    const { cards, cubeID, defaultTagColors, defaultShowTagColors, ...props } = this.props;
+    const { cards, cubeID, defaultTagColors, defaultShowTagColors, defaultSorts, ...props } = this.props;
     const { openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
     const defaultTags = [...defaultTagSet].map((tag) => ({
@@ -58,7 +58,7 @@ class CubeCompare extends Component {
     }));
     const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     return (
-      <SortContextProvider>
+      <SortContextProvider defaultSorts={defaultSorts}>
         <DisplayContextProvider>
           <TagContextProvider
             cubeID={cubeID}
@@ -91,6 +91,10 @@ const cubeID = document.getElementById('cubeID').value;
 const cards = cube.map((card, index) => Object.assign(card, { index }));
 const defaultTagColors = deduplicateTags(JSON.parse(document.getElementById('cubeTagColors').value));
 const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
+const defaultSorts = [
+  document.getElementById('sort1').value,
+  document.getElementById('sort2').value,
+];
 const wrapper = document.getElementById('react-root');
 const element = (
   <CubeCompare
@@ -101,6 +105,7 @@ const element = (
     cubeID={cubeID}
     defaultTagColors={defaultTagColors}
     defaultShowTagColors={defaultShowTagColors}
+    defaultSorts={defaultSorts}
   />
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;

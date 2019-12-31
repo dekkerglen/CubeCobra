@@ -12,11 +12,17 @@ class DynamicFlash extends Component {
   constructor(props) {
     super(props);
 
-    const flashInput = document.getElementById('flash');
-    const flashValue = flashInput ? flashInput.value : '[]';
-    this.state = {
-      messages: JSON.parse(flashValue),
-    };
+    if (typeof document !== 'undefined') {
+      const flashInput = document.getElementById('flash');
+      const flashValue = flashInput ? flashInput.value : '[]';
+      this.state = {
+        messages: JSON.parse(flashValue),
+      };
+    } else {
+      this.state = {
+        messages: [],
+      };
+    }
   }
 
   render() {

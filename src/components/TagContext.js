@@ -19,8 +19,10 @@ export class TagContextProvider extends Component {
       tags: [...(this.props.defaultTags || [])],
     };
 
-    window.globalTagColors = this.props.defaultTagColors;
-    window.globalShowTagColors = !!this.props.defaultShowTagColors;
+    if (typeof window !== 'undefined') {
+      window.globalTagColors = this.props.defaultTagColors;
+      window.globalShowTagColors = !!this.props.defaultShowTagColors;
+    }
 
     this.addTag = this.addTag.bind(this);
     this.setTagColors = this.setTagColors.bind(this);

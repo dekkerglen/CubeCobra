@@ -24,6 +24,9 @@ const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
 Canvas.Image = Image;
 
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
+
 const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -745,60 +748,74 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
   });
 });
 
-router.get('/list/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+const CubeListPage = require('../dist/components/CubeListPage').default;
+router.get('/list/:id', async function(req, res) {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});
-    } else {
-      const pids = new Set();
-      const cards = [...cube.cards];
-      cards.forEach(function(card, index) {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        card.index = index;
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
-      });
-      GetPrices([...pids]).then(function(price_dict) {
-        cards.forEach(function(card, index) {
-          if (card.details.tcgplayer_id) {
-            if (price_dict[card.details.tcgplayer_id]) {
-              card.details.price = price_dict[card.details.tcgplayer_id];
-            }
-            if (price_dict[card.details.tcgplayer_id + '_foil']) {
-              card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-            }
-          }
-        });
-        console.log('index:', cards[5].index);
-        res.render('cube/cube_list', {
-           reactProps: {
-             canEdit: req.user && req.user.id === cube.owner,
-             cubeID: cube._id,
-             defaultTagColors: cube.tag_colors,
-             defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
-             cards,
-          },
-          cube,
-          activeLink: 'list',
-          title: `${abbreviate(cube.name)} - List`,
-          metadata: generateMeta(
-            `Cube Cobra List: ${cube.name}`,
-            cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-            cube.image_uri,
-            `https://cubecobra.com/cube/list/${req.params.id}`,
-          ),
-          loginCallback: '/cube/list/' + req.params.id,
-        });
-      });
     }
-  });
+
+    const pids = new Set();
+    const cards = cube.cards.map(card => card.toObject());
+    cards.forEach(function(card, index) {
+      card.details = {
+        ...carddb.cardFromId(card.cardID),
+      };
+      card.index = index;
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+    });
+
+    const price_dict = await GetPrices([...pids]);
+    for (const card of cards) {
+      if (card.details.tcgplayer_id) {
+        if (price_dict[card.details.tcgplayer_id]) {
+          card.details.price = price_dict[card.details.tcgplayer_id];
+        }
+        if (price_dict[card.details.tcgplayer_id + '_foil']) {
+          card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+        }
+      }
+    }
+
+    const reactProps = {
+      canEdit: req.user && req.user.id === cube.owner,
+      cubeID: cube._id.toString(),
+      defaultTagColors: cube.tag_colors,
+      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      defaultSorts: cube.default_sorts,
+      cards,
+    };
+
+    res.render('cube/cube_list', {
+      reactHTML: await ReactDOMServer.renderToString(
+        React.createElement(CubeListPage, reactProps)
+      ),
+      reactProps,
+      cube,
+      activeLink: 'list',
+      title: `${abbreviate(cube.name)} - List`,
+      metadata: generateMeta(
+        `Cube Cobra List: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/list/${req.params.id}`,
+      ),
+      loginCallback: '/cube/list/' + req.params.id,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
 });
 
 router.get('/playtest/:id', async (req, res) => {

@@ -19,7 +19,7 @@ import TableView from '../components/TableView';
 import { TagContextProvider } from '../components/TagContext';
 import VisualSpoiler from '../components/VisualSpoiler';
 
-const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTagColors }) => {
+const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   const [cubeView, setCubeView] = useState(Hash.get('view', 'table'));
   const [openCollapse, setOpenCollapse] = useState(Hash.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState([]);
@@ -42,7 +42,7 @@ const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTag
   const filteredCards = filter.length > 0 ? cardsIndex.filter((card) => Filter.filterCard(card, filter)) : cardsIndex;
   return (
     <CubeContextProvider initialCube={cardsIndex} cubeID={cubeID} canEdit={canEdit}>
-      <SortContextProvider>
+      <SortContextProvider defaultSorts={defaultSorts}>
         <DisplayContextProvider>
           <TagContextProvider
             cubeID={cubeID}
@@ -92,6 +92,7 @@ CubeListPage.propTypes = {
     color: PropTypes.string.isRequired,
   })).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default CubeListPage;

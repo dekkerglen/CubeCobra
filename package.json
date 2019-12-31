@@ -5,7 +5,7 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "beautify": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js'",
+    "beautify": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' webpack.'*'.js",
     "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js'",
     "nodemon": "nodemon --ignore src --ignore public",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
@@ -87,6 +87,7 @@
     "webpack": "^4.41.1",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.9.0",
-    "webpack-merge": "^4.2.2"
+    "webpack-merge": "^4.2.2",
+    "webpack-node-externals": "^1.7.2"
   }
 }

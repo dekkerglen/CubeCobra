@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 const common = require('./webpack.common.js');
 
-module.exports = merge(common, {
+const config = {
   mode: 'production',
   devtool: false,
   plugins: [
@@ -27,4 +27,9 @@ module.exports = merge(common, {
       }),
     ],
   }
-});
+};
+
+const clientConfig = merge(common.clientConfig, config, {});
+const serverConfig = merge(common.serverConfig, config, {});
+
+module.exports = [clientConfig, serverConfig];
