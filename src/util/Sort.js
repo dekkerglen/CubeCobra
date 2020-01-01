@@ -101,6 +101,8 @@ export function getSorts() {
   ];
 }
 
+const ALL_CMCS = Array.from(Array(33).keys()).map((x) => (x / 2).toString()).concat(['1000000']);
+
 export function getLabels(cube, sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
@@ -112,9 +114,7 @@ export function getLabels(cube, sort) {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
   } else if (sort == 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
-    return Array.from(Array(33).keys())
-      .map((x) => (x / 2).toString())
-      .concat(['1000000']);
+    return ALL_CMCS;
   } else if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort == 'Type') {

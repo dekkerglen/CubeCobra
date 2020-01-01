@@ -753,14 +753,14 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 const CubeListPage = require('../dist/components/CubeListPage').default;
 router.get('/list/:id', async function(req, res) {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id)).setOptions({ lean: true });
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
+      return res.status(404).render('misc/404', {});
     }
 
     const pids = new Set();
-    const cards = cube.cards.map(card => card.toObject());
+    const cards = [...cube.cards];
     cards.forEach(function(card, index) {
       card.details = {
         ...carddb.cardFromId(card.cardID),
