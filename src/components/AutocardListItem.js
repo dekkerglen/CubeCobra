@@ -15,16 +15,22 @@ const AutocardListItem = ({ card, noCardModal, className, children }) => {
   const { name } = card.details;
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
-  const handleClick = useCallback((event) => {
-    event.preventDefault();
-    openCardModal(card.index);
-  }, [card.index, openCardModal]);
-  const handleAuxClick = useCallback((event) => {
-    if (event.button == 1) {
+  const handleClick = useCallback(
+    (event) => {
       event.preventDefault();
-      window.open('/tool/card/' + card.details._id);
-    }
-  }, [card.details._id]);
+      openCardModal(card.index);
+    },
+    [card.index, openCardModal],
+  );
+  const handleAuxClick = useCallback(
+    (event) => {
+      if (event.button == 1) {
+        event.preventDefault();
+        window.open('/tool/card/' + card.details._id);
+      }
+    },
+    [card.details._id],
+  );
   return (
     <AutocardDiv
       className={`card-list-item list-group-item ${cardColorClass(card)} ${className || ''}`}

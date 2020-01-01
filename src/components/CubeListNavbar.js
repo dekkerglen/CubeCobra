@@ -40,7 +40,13 @@ const CompareCollapse = (props) => {
         <Row>
           <Col>
             <Form inline>
-              <Input type="text" className="mb-2 mr-2" placeholder="Comparison Cube ID" value={compareID} onChange={handleChange} />
+              <Input
+                type="text"
+                className="mb-2 mr-2"
+                placeholder="Comparison Cube ID"
+                value={compareID}
+                onChange={handleChange}
+              />
               <Button type="submit" color="success" className="mb-2" href={`/cube/compare/${cubeID}/to/${compareID}`}>
                 Compare Cubes
               </Button>
@@ -50,7 +56,7 @@ const CompareCollapse = (props) => {
       </Container>
     </Collapse>
   );
-}
+};
 
 const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCollapse, filter, setFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,34 +66,43 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
   const openCardModal = useContext(CardModalContext);
 
-  const toggle = useCallback(() => setIsOpen(open => !open));
+  const toggle = useCallback(() => setIsOpen((open) => !open));
 
-  const handleChangeCubeView = useCallback((event) => {
-    const target = event.target;
-    const value = target.value;
-    setCubeView(value);
-  }, [setCubeView]);
+  const handleChangeCubeView = useCallback(
+    (event) => {
+      const target = event.target;
+      const value = target.value;
+      setCubeView(value);
+    },
+    [setCubeView],
+  );
 
-  const handleMassEdit = useCallback((event) => {
-    event.preventDefault();
-    const cards = groupModalCards;
-    if (cubeView === 'list') {
-      if (cards.length === 1) {
-        openCardModal(cards[0].index);
-      } else if (cards.length > 1) {
-        openGroupModal();
+  const handleMassEdit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const cards = groupModalCards;
+      if (cubeView === 'list') {
+        if (cards.length === 1) {
+          openCardModal(cards[0].index);
+        } else if (cards.length > 1) {
+          openGroupModal();
+        }
+      } else {
+        setCubeView('list');
       }
-    } else {
-      setCubeView('list');
-    }
-  }, [groupModalCards, openCardModal, openGroupModal, setCubeView]);
+    },
+    [groupModalCards, openCardModal, openGroupModal, setCubeView],
+  );
 
-  const handleOpenCollapse = useCallback((event) => {
-    event.preventDefault();
-    const target = event.target;
-    const collapse = target.getAttribute('data-target');
-    setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
-  }, [setOpenCollapse]);
+  const handleOpenCollapse = useCallback(
+    (event) => {
+      event.preventDefault();
+      const target = event.target;
+      const collapse = target.getAttribute('data-target');
+      setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
+    },
+    [setOpenCollapse],
+  );
 
   const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true));
   const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false));
@@ -206,13 +221,9 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
         isOpen={openCollapse === 'filter'}
       />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
-      <TagColorsModal
-        canEdit={canEdit}
-        isOpen={tagColorsModalOpen}
-        toggle={handleToggleTagColorsModal}
-      />
+      <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
     </div>
   );
-}
+};
 
 export default CubeListNavbar;

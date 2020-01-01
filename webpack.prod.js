@@ -15,7 +15,7 @@ const config = {
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
-      debug: false
+      debug: false,
     }),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   ],
@@ -26,7 +26,7 @@ const config = {
         parallel: true,
       }),
     ],
-  }
+  },
 };
 
 const clientConfig = merge(common.clientConfig, config, {});

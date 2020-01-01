@@ -27,11 +27,7 @@ const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
               <br />({countGroup(column)})
             </h6>
             {column.map(([label, row]) => (
-              <AutocardListGroup
-                key={label}
-                heading={`${label} (${countGroup(row)})`}
-                cards={row}
-              />
+              <AutocardListGroup key={label} heading={`${label} (${countGroup(row)})`} cards={row} />
             ))}
           </Col>
         ))}

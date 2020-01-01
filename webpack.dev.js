@@ -16,10 +16,12 @@ const clientConfig = merge(common.clientConfig, config, {
     compress: true,
     contentBase: path.join(__dirname, 'dist'),
     publicPath: '/js/',
-    proxy: [{
-      context: ['!/js/*.bundle.js', '**'],
-      target: 'http://localhost:5000',
-    }],
+    proxy: [
+      {
+        context: ['!/js/*.bundle.js', '**'],
+        target: 'http://localhost:5000',
+      },
+    ],
   },
 });
 

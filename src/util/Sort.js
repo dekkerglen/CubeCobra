@@ -101,7 +101,9 @@ export function getSorts() {
   ];
 }
 
-const ALL_CMCS = Array.from(Array(33).keys()).map((x) => (x / 2).toString()).concat(['1000000']);
+const ALL_CMCS = Array.from(Array(33).keys())
+  .map((x) => (x / 2).toString())
+  .concat(['1000000']);
 
 export function getLabels(cube, sort) {
   if (sort == 'Color Category') {
@@ -195,7 +197,7 @@ export function getLabels(cube, sort) {
       const split = card.type_line.split(/[-–—]/);
       if (split.length > 1) {
         const subtypes = split[1].trim().split(' ');
-        subtypes.filter(x => x.trim()).forEach(subtype => types.add(subtype.trim()));
+        subtypes.filter((x) => x.trim()).forEach((subtype) => types.add(subtype.trim()));
       }
     }
     return [...types];
@@ -389,7 +391,7 @@ const WEDGE_MAP = {
   UBG: 'Sultai',
   WBR: 'Mardu',
   URG: 'Temur',
-}
+};
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
@@ -400,7 +402,7 @@ export function cardGetLabels(card, sort) {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
     } else {
-      return card.details.colors.map(c => COLOR_MAP[c]).filter(c => c);
+      return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
   } else if (sort == '4+ Color') {
     if (card.colors.length < 4) {
@@ -408,7 +410,7 @@ export function cardGetLabels(card, sort) {
     } else if (card.colors.length === 5) {
       return ['Five-Color'];
     } else {
-      return [...'WUBRG'].filter(c => !card.colors.includes(c)).map(c => `Non-${COLOR_MAP[c]}`);
+      return [...'WUBRG'].filter((c) => !card.colors.includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
   } else if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
@@ -434,9 +436,17 @@ export function cardGetLabels(card, sort) {
     const split = card.type_line.split(/[-–—]/);
     let types = null;
     if (split.length > 1) {
-      types = split[0].trim().split(' ').map(x => x.trim()).filter(x => x);
+      types = split[0]
+        .trim()
+        .split(' ')
+        .map((x) => x.trim())
+        .filter((x) => x);
     } else {
-      types = card.type_line.trim().split(' ').map(x => x.trim()).filter(x => x);
+      types = card.type_line
+        .trim()
+        .split(' ')
+        .map((x) => x.trim())
+        .filter((x) => x);
     }
     if (types.includes('Contraption')) {
       return ['Contraption'];
@@ -444,7 +454,7 @@ export function cardGetLabels(card, sort) {
       return ['Plane'];
     } else {
       const labels = getLabels(null, sort);
-      return types.filter(t => labels.includes(t));
+      return types.filter((t) => labels.includes(t));
     }
   } else if (sort == 'Tags') {
     return card.tags;
@@ -462,14 +472,14 @@ export function cardGetLabels(card, sort) {
     if (card.colors.length != 2) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter(c => card.colors.includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => card.colors.includes(c)).join('');
       return [GUILD_MAP[ordered]];
     }
   } else if (sort == 'Shards / Wedges') {
     if (card.colors.length != 3) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter(c => card.colors.includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => card.colors.includes(c)).join('');
       return [WEDGE_MAP[ordered]];
     }
   } else if (sort == 'Color Count') {
@@ -482,7 +492,7 @@ export function cardGetLabels(card, sort) {
     const split = card.type_line.split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
-      return subtypes.map(subtype => subtype.trim()).filter(x => x);
+      return subtypes.map((subtype) => subtype.trim()).filter((x) => x);
     } else {
       return [];
     }
@@ -514,33 +524,42 @@ export function cardGetLabels(card, sort) {
         return [type];
       }
     } else {
-      return [...cardGetLabels(card, 'Guilds'), ...cardGetLabels(card, 'Shards / Wedges'), ...cardGetLabels(card, '4+ Color')];
+      return [
+        ...cardGetLabels(card, 'Guilds'),
+        ...cardGetLabels(card, 'Shards / Wedges'),
+        ...cardGetLabels(card, '4+ Color'),
+      ];
     }
   } else if (sort == 'Artist') {
     return [card.details.artist];
   } else if (sort == 'Legality') {
-    return Object.entries(card.details.legalities).filter(([k, v]) => v).map(([k, v]) => k);
+    return Object.entries(card.details.legalities)
+      .filter(([k, v]) => v)
+      .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
-      return [parseInt(card.details.power)]
+      return [parseInt(card.details.power)];
     }
     return [];
   } else if (sort == 'Toughness') {
     if (card.details.toughness) {
-      return [parseInt(card.details.toughness)]
+      return [parseInt(card.details.toughness)];
     }
     return [];
   } else if (sort == 'Loyalty') {
     if (card.details.loyalty) {
-      return [parseInt(card.details.loyalty)]
+      return [parseInt(card.details.loyalty)];
     }
     return [];
   } else if (sort == 'Manacost Type') {
-    if (card.details.colors.length > 1 && card.details.parsed_cost.every(symbol => !symbol.includes('-'))) {
+    if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
       return ['Gold'];
-    } else if (card.details.colors.length > 1 && card.details.parsed_cost.some(symbol => symbol.includes('-') && !symbol.includes('-p'))) {
+    } else if (
+      card.details.colors.length > 1 &&
+      card.details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
+    ) {
       return ['Hybrid'];
-    } else if (card.details.parsed_cost.some(symbol => symbol.includes('-p'))) {
+    } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       return ['Phyrexian'];
     }
   } else if (sort == 'CNC') {
@@ -600,7 +619,7 @@ export function sortIntoGroups(cards, sort) {
 
 function sortGroupsOrdered(cards, sort) {
   const labels = getLabels(cards, sort);
-  const allCardLabels = cards.map(card => [card, cardGetLabels(card, sort)]);
+  const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
   for (const [card, cardLabels] of allCardLabels) {
@@ -613,7 +632,7 @@ function sortGroupsOrdered(cards, sort) {
       byLabel[label].push(card);
     }
   }
-  return labels.filter(label => byLabel[label]).map(label => [label, byLabel[label]]);
+  return labels.filter((label) => byLabel[label]).map((label) => [label, byLabel[label]]);
 }
 
 export function sortDeep(cards, ...sorts) {

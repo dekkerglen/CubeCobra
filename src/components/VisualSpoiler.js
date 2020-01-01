@@ -19,9 +19,9 @@ const VisualSpoiler = ({ cards, ...props }) => {
               <Col key={index} xs={6} sm={4} className="col-md-1-5">
                 <SpoilerImage index={index} tags={tags} finish={finish} {...details} />
               </Col>
-            ))
-          )
-        )
+            )),
+          ),
+        ),
       )}
     </Row>
   );

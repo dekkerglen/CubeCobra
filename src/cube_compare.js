@@ -91,10 +91,7 @@ const cubeID = document.getElementById('cubeID').value;
 const cards = cube.map((card, index) => Object.assign(card, { index }));
 const defaultTagColors = deduplicateTags(JSON.parse(document.getElementById('cubeTagColors').value));
 const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
-const defaultSorts = [
-  document.getElementById('sort1').value,
-  document.getElementById('sort2').value,
-];
+const defaultSorts = [document.getElementById('sort1').value, document.getElementById('sort2').value];
 const wrapper = document.getElementById('react-root');
 const element = (
   <CubeCompare

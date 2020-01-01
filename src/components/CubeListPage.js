@@ -82,15 +82,17 @@ const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTag
       </SortContextProvider>
     </CubeContextProvider>
   );
-}
+};
 
 CubeListPage.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.object).isRequired,
   cubeID: PropTypes.string.isRequired,
-  defaultTagColors: PropTypes.arrayOf(PropTypes.shape({
-    tag: PropTypes.string.isRequired,
-    color: PropTypes.string.isRequired,
-  })).isRequired,
+  defaultTagColors: PropTypes.arrayOf(
+    PropTypes.shape({
+      tag: PropTypes.string.isRequired,
+      color: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

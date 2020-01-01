@@ -5,7 +5,8 @@ const nodeExternals = require('webpack-node-externals');
 const config = {
   context: path.resolve(__dirname, 'src'),
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.jsx?$/,
         exclude: /node_modules/,
         use: {
@@ -35,7 +36,7 @@ const clientConfig = merge(config, {
     dashboard: './dashboard.js',
     blogpost: './blogpost.js',
     notifications: './notifications.js',
-    cardpage: './cardpage.js'
+    cardpage: './cardpage.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -51,7 +52,7 @@ const clientConfig = merge(config, {
 const serverConfig = merge(config, {
   target: 'node',
   entry: {
-    CubeListPage: './components/CubeListPage.js'
+    CubeListPage: './components/CubeListPage.js',
   },
   output: {
     filename: '[name].js',

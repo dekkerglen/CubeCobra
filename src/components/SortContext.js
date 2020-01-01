@@ -46,11 +46,8 @@ export class SortContextProvider extends React.Component {
   }
 }
 
-SortContext.Wrapped = (Tag) => (props) =>
-  <SortContext.Consumer>
-    {(value) =>
-      <Tag {...props} {...value} />
-    }
-  </SortContext.Consumer>;
+SortContext.Wrapped = (Tag) => (props) => (
+  <SortContext.Consumer>{(value) => <Tag {...props} {...value} />}</SortContext.Consumer>
+);
 
 export default SortContext;

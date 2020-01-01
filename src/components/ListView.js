@@ -299,12 +299,7 @@ class ListViewRaw extends Component {
               {details.name}
             </AutocardTd>
             <td>
-              <Input
-                {...inputProps(index, 'version')}
-                type="select"
-                style={{ maxWidth: '6rem' }}
-                className="w-100"
-              >
+              <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
                 {(this.state.versionDict[card.cardID] || []).map((version) => (
                   <option key={version.id} value={version.id}>
                     {version.version}
@@ -352,8 +347,8 @@ class ListViewRaw extends Component {
               />
             </td>
           </tr>
-        ))
-      )
+        )),
+      ),
     );
 
     return (

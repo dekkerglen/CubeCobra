@@ -796,9 +796,10 @@ router.get('/list/:id', async function(req, res) {
     };
 
     res.render('cube/cube_list', {
-      reactHTML: NODE_ENV === 'production' ? await ReactDOMServer.renderToString(
-        React.createElement(CubeListPage, reactProps)
-      ) : undefined,
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+          : undefined,
       reactProps,
       cube,
       activeLink: 'list',

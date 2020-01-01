@@ -15,19 +15,22 @@ const SortCollapse = (props) => {
 
   const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]));
 
-  const handleSave = useCallback((event) => {
-    csrfFetch(`/cube/api/savesorts/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        sorts: [primary, secondary],
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(() => addAlert('success', 'Default sorts saved.'))
-      .catch((err) => addAlert('danger', 'Error saving default sorts.'));
-  }, [addAlert, cubeID, primary, secondary]);
+  const handleSave = useCallback(
+    (event) => {
+      csrfFetch(`/cube/api/savesorts/${cubeID}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          sorts: [primary, secondary],
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(() => addAlert('success', 'Default sorts saved.'))
+        .catch((err) => addAlert('danger', 'Error saving default sorts.'));
+    },
+    [addAlert, cubeID, primary, secondary],
+  );
 
   return (
     <Collapse {...props}>
@@ -63,14 +66,16 @@ const SortCollapse = (props) => {
           <Col>
             <p className="my-2">
               <em>
-                Cards will be appear as duplicates if they fit in multiple categories. The counts will still only
-                count each item once.
+                Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
+                each item once.
               </em>
             </p>
           </Col>
         </Row>
         <Row className="mb-3">
-          {!canEdit ? false : (
+          {!canEdit ? (
+            false
+          ) : (
             <Col>
               <Button color="success" onClick={handleSave}>
                 Save as Default Sort

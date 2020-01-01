@@ -11,24 +11,29 @@ import GroupModalContext from './GroupModalContext';
 const AutocardListGroup = ({ cards, heading, sort }) => {
   const sorted = sortDeep(cards, sort);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
-  const handleClick = useCallback((event) => {
-    event.preventDefault();
-    setGroupModalCards(cards);
-    openGroupModal();
-  }, [cards, openGroupModal, setGroupModalCards]);
+  const handleClick = useCallback(
+    (event) => {
+      event.preventDefault();
+      setGroupModalCards(cards);
+      openGroupModal();
+    },
+    [cards, openGroupModal, setGroupModalCards],
+  );
   return (
     <ListGroup className="list-outline">
       <ListGroupItem tag="a" href="#" className="list-group-heading" onClick={handleClick}>
         {heading}
       </ListGroupItem>
       {sorted.map(([label, group]) =>
-        group.sort(alphaCompare).map((card, index) => (
-          <AutocardListItem
-            key={typeof card.index === 'undefined' ? index : card.index}
-            card={card}
-            className={index === 0 ? 'cmc-group' : undefined}
-          />
-        ))
+        group
+          .sort(alphaCompare)
+          .map((card, index) => (
+            <AutocardListItem
+              key={typeof card.index === 'undefined' ? index : card.index}
+              card={card}
+              className={index === 0 ? 'cmc-group' : undefined}
+            />
+          )),
       )}
     </ListGroup>
   );

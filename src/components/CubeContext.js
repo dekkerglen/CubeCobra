@@ -32,7 +32,7 @@ export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) 
     [cube],
   );
 
-  const hasCustomImages = cube.some(card => card.imgUrl && card.imgUrl.length > 0);
+  const hasCustomImages = cube.some((card) => card.imgUrl && card.imgUrl.length > 0);
 
   const value = { cube, canEdit, cubeID, hasCustomImages, updateCubeCard, updateCubeCards };
 
