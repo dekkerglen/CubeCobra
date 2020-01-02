@@ -211,7 +211,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
             <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
               <ListGroup className="list-outline">
                 {cards.map((card) => (
-                  <AutocardListItem key={card.index} card={card} noCardModal>
+                  <AutocardListItem key={card.index} card={card} noCardModal inModal>
                     <Button close className="float-none mr-1" data-index={card.index} onClick={handleRemoveCard} />
                   </AutocardListItem>
                 ))}

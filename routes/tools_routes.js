@@ -13,7 +13,7 @@ const Cube = require('../models/cube');
 const router = express.Router();
 
 /* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 1;
+const MIN_PICKS = 40;
 /* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 1000;
 

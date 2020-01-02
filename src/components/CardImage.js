@@ -7,13 +7,13 @@ import withAutocard from './WithAutocard';
 
 const ImageAutocard = withAutocard(ImageFallback);
 
-const CardImage = ({ card, noAutocard, className, ...props }) => {
+const CardImage = ({ card, autocard, className, ...props }) => {
   const { showCustomImages } = useContext(DisplayContext);
   const imageSrc = (showCustomImages && card.imgUrl) || card.details.image_normal;
-  const Tag = noAutocard ? ImageFallback : ImageAutocard;
+  const Tag = autocard ? ImageAutocard : ImageFallback;
   return (
     <Tag
-      card={noAutocard ? undefined : card}
+      card={autocard ? card : undefined}
       src={imageSrc}
       fallbackSrc="/content/default_card.png"
       alt={card.details.name}
@@ -32,7 +32,7 @@ CardImage.propTypes = {
       image_normal: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  noAutocard: PropTypes.bool,
+  autocard: PropTypes.bool,
   className: PropTypes.string,
 };
 

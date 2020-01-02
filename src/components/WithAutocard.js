@@ -10,16 +10,17 @@ const handleMouseOver = (event) => {
   const back = target.getAttribute('data-back');
   const tags = JSON.parse(target.getAttribute('data-tags') || '[]');
   const foil = target.getAttribute('data-foil') === 'true';
-  /* global */
+  const inModal = target.getAttribute('data-in-modal') === 'true';
   if (!stopAutocard) {
-    autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil);
+    /* global */
+    autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil, inModal);
   }
 };
 
 const handleMouseOut = (event) => /* global */ autocard_hide_card();
 
 const withAutocard = (Tag) =>
-  forwardRef(({ card, front, back, tags, ...props }, ref) => {
+  forwardRef(({ card, front, back, tags, inModal, ...props }, ref) => {
     const { showCustomImages } = useContext(DisplayContext);
     card = card || { details: {} };
     tags = tags || card.tags || [];
@@ -34,6 +35,7 @@ const withAutocard = (Tag) =>
         data-back={back}
         data-tags={JSON.stringify(tags)}
         data-foil={card.finish === 'Foil'}
+        data-in-modal={!!inModal}
         {...props}
       />
     );
