@@ -138,7 +138,7 @@ async function pick(cardIndex) {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
-      pick: card.details.name,
+      picks: [card.details.name],
       pack: pack.map((c) => c.details.name),
     }),
     headers: {
@@ -168,7 +168,7 @@ async function finish() {
     }
   }
   //save draft. if we fail, we fail
-  await csrfFetch('/cube/api/draftpick/' + draft.cube, {
+  await csrfFetch('/cube/api/savedraft/' + draft.cube, {
     method: 'POST',
     body: JSON.stringify(temp),
     headers: {

@@ -3,8 +3,12 @@ import ReactDOM from 'react-dom';
 
 import Draft from './util/Draft';
 
-import DraftView from './components/DraftView';
+import BoosterDraftPage from './components/BoosterDraftPage';
+import GridDraftPage from './components/GridDraftPage';
 
-Draft.init(initialDraft);
+const element = {
+  booster: Draft.init(initialDraft) || <BoosterDraftPage />,
+  grid: <GridDraftPage initialDraft={initialDraft} />,
+}[initialDraft.type || 'booster'];
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<DraftView />, wrapper) : false;
+wrapper && ReactDOM.render(element, wrapper);

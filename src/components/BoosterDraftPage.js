@@ -69,7 +69,7 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const DraftView = () => {
+const BoosterDraftPage = () => {
   const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);
@@ -192,6 +192,6 @@ const DraftView = () => {
   );
 };
 
-DraftView.propTypes = {};
+BoosterDraftPage.propTypes = {};
 
-export default DraftView;
+export default BoosterDraftPage;

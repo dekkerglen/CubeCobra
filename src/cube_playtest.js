@@ -105,7 +105,19 @@ const StandardDraftCard = ({ cubeID }) => (
         </LabelRow>
       </CardBody>
       <CardFooter>
-        <Input type="hidden" name="id" value="-1" />
+        <Button color="success">Start Draft</Button>
+      </CardFooter>
+    </CSRFForm>
+  </Card>
+);
+
+const GridDraftCard = ({ cubeID }) => (
+  <Card className="mt-3">
+    <CSRFForm method="POST" action={`/cube/startdraft/grid/${cubeID}`}>
+      <CardHeader>
+        <CardTitleH5>Start a grid draft</CardTitleH5>
+      </CardHeader>
+      <CardFooter>
         <Button color="success">Start Draft</Button>
       </CardFooter>
     </CSRFForm>
@@ -263,6 +275,7 @@ class CubePlaytest extends Component {
                   />
                 ))}
             <StandardDraftCard cubeID={cubeID} className="mt-3" />
+            <GridDraftCard cubeID={cubeID} className="mt-3" />
           </Col>
         </Row>
       </>

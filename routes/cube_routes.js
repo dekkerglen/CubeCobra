@@ -271,7 +271,7 @@ router.post('/follow/:id', ensureAuth, async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).send({
+      return res.status(404).send({
         success: 'false',
       });
     }
@@ -1712,7 +1712,7 @@ router.post('/startdraft/booster/:id', async function(req, res) {
       }
     }
     draft.packs = draftPacks;
-    draft.initial_state = draft.packs.map(pack => pack.slice(0));
+    draft.initial_state = draft.packs.map(seat => seat.slice(0));
 
     await draft.save();
     res.redirect(`/cube/draft/${draft._id}`);
@@ -1723,7 +1723,53 @@ router.post('/startdraft/booster/:id', async function(req, res) {
   }
 });
 
-router.post('/startdraft/grid/:id', function(req, res) {
+const GRID_PACKS = 18;
+const GRID_ROWS = 3;
+const GRID_COLUMNS = 3;
+router.post('/startdraft/grid/:id', async function(req, res) {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    //setup draft conditions
+    let cardpool = util.shuffle(cube.cards.slice(0));
+    const draft = new Draft();
+    draft.type = 'grid';
+
+    const cards = GRID_ROWS * GRID_COLUMNS;
+    const totalCards = GRID_PACKS * cards;
+    if (cardpool.length < totalCards) {
+      req.flash(
+        'danger',
+        `Requested draft requires ${totalCards} cards, but this cube only has ${cardpool.length} cards.`,
+      );
+      return res.redirect('/cube/playtest/' + cube._id);
+    }
+
+    draft.picks = arrayRepeat(() => [], 2);
+    draft.cube = cube._id;
+    draft.packNumber = 1;
+    draft.pickNumber = 1;
+
+    const draftPacks = [];
+    for (let i = 0; i < GRID_PACKS; i++) {
+      const pack = cardpool.slice(0, cards);
+      draftPacks.push(pack);
+      cardpool = cardpool.slice(cards);
+    }
+    draft.packs = draftPacks;
+    draft.initial_state = draft.packs.map(pack => pack.slice(0));
+
+    await draft.save();
+    res.redirect(`/cube/draft/${draft._id}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('Error starting draft.');
+    res.redirect(`/cube/playtest/${req.id}`);
+  }
 });
 
 router.get('/draft/:id', function(req, res) {
@@ -1740,18 +1786,23 @@ router.get('/draft/:id', function(req, res) {
       if (packsleft == 1) {
         subtitle = packsleft + ' unopened pack left.';
       }
-      names = [];
+      const namesSet = new Set();
       //add in details to all cards
-      draft.packs.forEach(function(seat, index) {
-        seat.forEach(function(pack, index2) {
-          pack.forEach(function(card, index3) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (!names.includes(card.details.name)) {
-              names.push(card.details.name);
+      for (const seatOrPack of draft.packs) {
+        for (const packOrCard of seatOrPack) {
+          if (Array.isArray(packOrCard)) {
+            for (const card of packOrCard) {
+              card.details = carddb.cardFromId(card.cardID);
+              namesSet.add(card.details.name);
             }
-          });
-        });
-      });
+          } else {
+            const card = packOrCard;
+            card.details = carddb.cardFromId(card.cardID);
+            namesSet.add(card.details.name);
+          }
+        }
+      }
+      const names = [...namesSet];
       draftutil.getCardRatings(names, CardRating, function(ratings) {
         draft.ratings = ratings;
         Cube.findOne(build_id_query(draft.cube), function(err, cube) {
@@ -3279,30 +3330,49 @@ router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
   });
 });
 
+// Constants for draft elo system.
 const ELO_BASE = 400;
 const ELO_RANGE = 1600;
 const ELO_SPEED = 1000;
 router.post('/api/draftpickcard/:id', async function(req, res) {
   try {
     const draftQ = Draft.findById({ _id: req.body.draft_id });
-    const ratingQ = CardRating.findOne({ name: req.body.pick });
+    const ratingQ = CardRating.findOne({ name: { $in: req.body.picks } });
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 
-    let [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
+    let [draft, pickRatings, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
-    if (draft && draft.packs[0] && draft.packs[0][0]) {
-      const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
-      var updatedRating = (cards_per_pack - draft.packs[0][0].length + 1) / cards_per_pack;
+    const pickRatingMap = {};
+    for (const pickRating of pickRatings) {
+      pickRatingMap[pickRating.name] = pickRating;
+    }
 
+    if (!draft) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Couldn\'t find draft.',
+      });
+    }
+
+    const cardsPerPack = {
+      grid: GRID_ROWS * GRID_COLUMNS,
+      booster: req.body.pack.length + draft.pickNumber - 1,
+    }[draft.type || 'booster'];
+    const cardsLeftInPack = req.body.pack.length;
+
+    for (const ratingName of req.body.picks) {
+      let rating = pickRatingMap[ratingName];
+      const updatedRating = (cardsPerPack - cardsLeftInPack) / cardsPerPack;
       if (rating) {
         rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
         rating.picks += 1;
       } else {
         rating = new CardRating();
-        rating.name = req.body.pick;
+        rating.name = ratingName;
         rating.value = updatedRating;
         rating.elo = ELO_BASE + ELO_RANGE / 2;
         rating.picks = 1;
+        pickRatingMap[ratingName] = rating;
       }
 
       if (isNaN(rating.elo)) {
@@ -3332,19 +3402,21 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
       }
 
       try {
-        await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
+        await Promise.all([
+          ...pickRatingMap.values().map((r) => r.save()),
+          ...packRatings.map((r) => r.save())
+        ]);
+        res.status(200).send({
+          success: 'true',
+        });
       } catch (err) {
         console.error(err);
-        res.status(500).send({
+        return res.status(500).send({
           success: 'false',
           message: 'Error saving pick rating',
         });
-        return;
       }
     }
-    res.status(200).send({
-      success: 'true',
-    });
   } catch (err) {
     console.error(err);
     res.status(500).send({
@@ -3354,36 +3426,37 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
   }
 });
 
-router.post('/api/draftpick/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    User.findById(cube.owner, function(err, owner) {
-      if (!req.body) {
-        res.status(400).send({
-          success: 'false',
-          message: 'No draft passed',
-        });
-      } else {
-        Draft.updateOne(
-          {
-            _id: req.body._id,
-          },
-          req.body,
-          function(err) {
-            if (err) {
-              res.status(500).send({
-                success: 'false',
-                message: 'Error saving cube',
-              });
-            } else {
-              res.status(200).send({
-                success: 'true',
-              });
-            }
-          },
-        );
-      }
+router.post('/api/savedraft/:id', async function(req, res) {
+  if (!req.body) {
+    return res.status(400).send({
+      success: 'false',
+      message: 'No draft passed',
     });
-  });
+  }
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).send({
+        success: 'false',
+      });
+    }
+    await Draft.updateOne(
+      {
+        _id: req.body._id,
+      },
+      req.body,
+    );
+    return res.status(200).send({
+      success: 'true',
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
 });
 
 router.get('/api/p1p1/:id', function(req, res) {

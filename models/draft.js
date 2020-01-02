@@ -2,8 +2,10 @@ let mongoose = require('mongoose');
 
 // Cube schema
 let draftSchema = mongoose.Schema({
+  // Types are 'booster' and 'grid'.
+  type: { type: String, default: 'booster' },
   picks: [[]],
-  packs: [[[]]],
+  packs: [[]],
   cube: String,
   bots: [[]],
   pickOrder: [],
