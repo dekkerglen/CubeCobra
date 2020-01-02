@@ -181,8 +181,8 @@ var methods = {
         var possible = carddb.nameToId[cardname.toLowerCase()];
         var cardID = null;
         if (cube && cube.cards) {
-          var allIds = cube.cards.map(card => card.cardID);
-          var matchingNameIds = allIds.filter(id => possible.includes(id))
+          var allIds = cube.cards.map((card) => card.cardID);
+          var matchingNameIds = allIds.filter((id) => possible.includes(id));
           cardID = matchingNameIds[0];
         }
         if (!cardID) {
