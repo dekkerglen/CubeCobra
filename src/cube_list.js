@@ -23,9 +23,16 @@ class CubeList extends Component {
   constructor(props) {
     super(props);
 
+    let openCollapse = null;
+    if (props.cubeID && localStorage.getItem(`changelist-${props.cubeID}`)) {
+      openCollapse = 'edit';
+    } else if (Hash.get('f', false)) {
+      openCollapse = 'filter';
+    }
+
     this.state = {
       cubeView: Hash.get('view', 'table'),
-      openCollapse: Hash.get('f', false) ? 'filter' : null,
+      openCollapse,
       filter: [],
     };
 
@@ -71,7 +78,7 @@ class CubeList extends Component {
             defaultShowTagColors={defaultShowTagColors}
             defaultTags={defaultTags}
           >
-            <ChangelistContextProvider>
+            <ChangelistContextProvider cubeID={cubeID}>
               <CardModalForm canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                 <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={this.setOpenCollapse}>
                   <CubeListNavbar
