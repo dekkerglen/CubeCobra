@@ -41,7 +41,7 @@ const LabelRow = ({ htmlFor, label, children, ...props }) => (
 
 const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...props }) => (
   <Card key={format} {...props}>
-    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+    <CSRFForm method="POST" action={`/cube/startdraft/custom/${cubeID}`}>
       <CardHeader>
         <CardTitleH5>Draft Custom Format: {format.title}</CardTitleH5>
       </CardHeader>
@@ -83,7 +83,7 @@ const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...prop
 
 const StandardDraftCard = ({ cubeID }) => (
   <Card className="mt-3">
-    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+    <CSRFForm method="POST" action={`/cube/startdraft/booster/${cubeID}`}>
       <CardHeader>
         <CardTitleH5>Start a new draft</CardTitleH5>
       </CardHeader>

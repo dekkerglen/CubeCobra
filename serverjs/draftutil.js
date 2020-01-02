@@ -1,8 +1,8 @@
 var util = require('./util.js');
 
 var methods = {
-  getDraftBots: function(params) {
-    var botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
+  getDraftBots: function(seats) {
+    var botcolors = Math.ceil(((seats - 1) * 2) / 5);
     var draftbots = [];
     var colors = [];
     for (let i = 0; i < botcolors; i++) {
@@ -13,7 +13,7 @@ var methods = {
       colors.push('G');
     }
     colors = util.shuffle(colors);
-    for (let i = 0; i < params.seats - 1; i++) {
+    for (let i = 0; i < seats - 1; i++) {
       var colorcombo = [colors.pop(), colors.pop()];
       draftbots.push(colorcombo);
     }
