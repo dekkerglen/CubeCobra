@@ -173,12 +173,22 @@ var methods = {
       selfClosing: ['br'],
     });
   },
-  addAutocard: function(src, carddb) {
+  addAutocard: function(src, carddb, cube) {
     while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
       var cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
       var mid = cardname;
       if (carddb.nameToId[cardname.toLowerCase()]) {
-        var card = carddb.cardFromId(carddb.nameToId[cardname.toLowerCase()][0]);
+        var possible = carddb.nameToId[cardname.toLowerCase()];
+        var cardID = null;
+        if (cube && cube.cards) {
+          var allIds = cube.cards.map((card) => card.cardID);
+          var matchingNameIds = allIds.filter((id) => possible.includes(id));
+          cardID = matchingNameIds[0];
+        }
+        if (!cardID) {
+          cardID = possible[0];
+        }
+        var card = carddb.cardFromId(cardID);
         if (card.image_flip) {
           mid =
             '<a class="autocard" card="' +

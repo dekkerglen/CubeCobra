@@ -445,7 +445,7 @@ router.get('/overview/:id', async (req, res) => {
           item.date_formatted = item.date.toLocaleString('en-US');
         }
         if (item.html) {
-          item.html = addAutocard(item.html, carddb);
+          item.html = addAutocard(item.html, carddb, cube);
         }
       });
       if (blogs.length > 0) {
@@ -455,7 +455,7 @@ router.get('/overview/:id', async (req, res) => {
     cube.raw_desc = cube.body;
     if (cube.descriptionhtml) {
       cube.raw_desc = cube.descriptionhtml;
-      cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb);
+      cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb, cube);
     }
     return res.render('cube/cube_overview', {
       cube: cube,
@@ -530,7 +530,7 @@ router.get('/blog/:id/:page', async (req, res) => {
         item.date_formatted = item.date.toLocaleString('en-US');
       }
       if (item.html) {
-        item.html = addAutocard(item.html, carddb);
+        item.html = addAutocard(item.html, carddb, cube);
       }
     });
 
