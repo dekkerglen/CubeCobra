@@ -17,33 +17,88 @@ import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 import FoilCardImage from './FoilCardImage';
 
-const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol }) =>
-  <Card className="mt-3">
-    <CardHeader>
-      <CardTitle className="mb-0">
-        <h4 className="mb-0">
-          Pack {packNumber}, Pick {pickNumber}
-        </h4>
-      </CardTitle>
-    </CardHeader>
-    <CardBody>
-      <Row className="row-low-padding">
-        {pack.map((card, index) => (
-          <Col
-            key={index}
-            xs={4}
-            className="col-low-padding mt-1"
-          >
-            {picking !== index ? false : <Spinner className="position-absolute" />}
-            <FoilCardImage
-              card={card}
-              className={picking.includes(index) ? 'transparent' : undefined}
-            />
+const GridLine = (type, index) => ({ type, index });
+
+const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol }) => {
+  const [hover, setHover] = useState(null);
+
+  const handleClick = useCallback((event) => {
+    const target = event.target;
+    const line = JSON.parse(target.getAttribute('data-line'));
+    if (line.type === 'row') {
+      onClickRow(line.index);
+    } else {
+      onClickColumn(line.index);
+    }
+  }, []);
+  const handleMouseOver = useCallback((event) => {
+    const target = event.target;
+    const newHover = JSON.parse(target.getAttribute('data-line'));
+    setHover(newHover);
+  }, []);
+  const handleMouseOut = useCallback(() => setHover(null), []);
+
+  const columns = [0, 1, 2].map((n) => GridLine('column', n));
+  const gridded = [
+    [[0, 1, 2], pack.slice(0, 3), GridLine('row', 0)],
+    [[3, 4, 5], pack.slice(3, 6), GridLine('row', 1)],
+    [[6, 7, 8], pack.slice(6, 9), GridLine('row', 2)],
+  ];
+  return (
+    <Card className="mt-3">
+      <CardHeader>
+        <CardTitle className="mb-0">
+          <h4 className="mb-0">
+            Pack {packNumber}, Pick {pickNumber}
+          </h4>
+        </CardTitle>
+      </CardHeader>
+      <CardBody>
+        <Row noGutters>
+          <Col xs={2} />
+          <Col xs={8}>
+            <Row>
+              {columns.map((line, index) =>
+                <Col key={index} xs={4} className="text-center clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
+                  <h4 className="mb-0">{index + 1}</h4>
+                </Col>
+              )}
+            </Row>
           </Col>
-        ))}
-      </Row>
-    </CardBody>
-  </Card>;
+        </Row>
+        {gridded.map(([indices, cards, line], rowIndex) =>
+          <Row key={rowIndex} noGutters className={hover && hover.type === 'row' && hover.index === rowIndex ? 'outline' : undefined}>
+            <Col xs={2} className="d-flex clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
+              <h4 className="align-self-center ml-auto mr-2">{rowIndex + 1}</h4>
+            </Col>
+            <Col xs={8}>
+              <Row className="row-grid my-2">
+                {cards.map((card, index) => (
+                  <Col
+                    key={index}
+                    xs={4}
+                    className="col-grid"
+                  >
+                    {!card ? false :
+                      <>
+                        {!picking.includes(index) ? false : <Spinner className="position-absolute" />}
+                        <FoilCardImage
+                          card={card}
+                          className={picking.includes(index) ? 'transparent' : undefined}
+                        />
+                      </>
+                    }
+                  </Col>
+                ))}
+              </Row>
+            </Col>
+            <Col xs={2} className="clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick} />
+          </Row>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
 
 const GridDraftPage = ({ initialDraft }) => {
   const [draft, setDraft] = useState(initialDraft);

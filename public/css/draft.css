@@ -23,6 +23,14 @@
   margin: 0 -2px;
 }
 
+.row-grid {
+  margin: 0 -0.5rem;
+}
+
+.col-grid {
+  padding: 0 0.5rem;
+}
+
 .off-screen {
   position: absolute;
   z-index: -10000;
