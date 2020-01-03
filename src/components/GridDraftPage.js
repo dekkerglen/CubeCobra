@@ -7,7 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navba
 
 import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
-import { cmcColumn } from '../util/Util';
+import { classes, cmcColumn } from '../util/Util';
 
 import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
@@ -32,7 +32,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol })
     }
   }, []);
   const handleMouseOver = useCallback((event) => {
-    const target = event.target;
+    const target = event.currentTarget;
     const newHover = JSON.parse(target.getAttribute('data-line'));
     setHover(newHover);
   }, []);
@@ -53,26 +53,37 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol })
           </h4>
         </CardTitle>
       </CardHeader>
-      <CardBody>
+      <CardBody className="position-relative">
         <Row noGutters>
           <Col xs={2} />
-          <Col xs={8}>
-            <Row>
+          <Col xs={8} className="position-static">
+            <Row className="row-grid">
               {columns.map((line, index) =>
-                <Col key={index} xs={4} className="text-center clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
+                <Col
+                  key={index}
+                  xs={4}
+                  className="text-center clickable col-grid position-static"
+                  data-line={JSON.stringify(line)}
+                  onMouseOver={handleMouseOver}
+                  onMouseOut={handleMouseOut}
+                  onClick={handleClick}
+                >
                   <h4 className="mb-0">{index + 1}</h4>
+                  {hover && hover.type === 'column' && hover.index === index && (
+                    <div className="grid-hover column-hover" />
+                  )}
                 </Col>
               )}
             </Row>
           </Col>
         </Row>
         {gridded.map(([indices, cards, line], rowIndex) =>
-          <Row key={rowIndex} noGutters className={hover && hover.type === 'row' && hover.index === rowIndex ? 'outline' : undefined}>
-            <Col xs={2} className="d-flex clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
+          <Row key={rowIndex} noGutters className={hover && hover.type === 'row' && hover.index === rowIndex ? 'grid-hover' : undefined}>
+            <Col xs={2} className="d-flex clickable py-2" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
               <h4 className="align-self-center ml-auto mr-2">{rowIndex + 1}</h4>
             </Col>
             <Col xs={8}>
-              <Row className="row-grid my-2">
+              <Row className="row-grid">
                 {cards.map((card, index) => (
                   <Col
                     key={index}
@@ -84,7 +95,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol })
                         {!picking.includes(index) ? false : <Spinner className="position-absolute" />}
                         <FoilCardImage
                           card={card}
-                          className={picking.includes(index) ? 'transparent' : undefined}
+                          className={classes('my-2', picking.includes(index) && 'transparent')}
                         />
                       </>
                     }

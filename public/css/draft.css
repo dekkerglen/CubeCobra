@@ -31,6 +31,24 @@
   padding: 0 0.5rem;
 }
 
+.grid-hover {
+  border: 2px solid black;
+  border-radius: 10px;
+}
+
+.grid-hover.row.no-gutters {
+  margin: -2px;
+}
+
+.column-hover {
+  position: absolute;
+  width: calc((100% - 1rem) * 2 / 9);
+  margin: 0 -0.5rem;
+  top: 1rem;
+  bottom: 1rem;
+  pointer-events: none;
+}
+
 .off-screen {
   position: absolute;
   z-index: -10000;

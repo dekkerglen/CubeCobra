@@ -112,6 +112,10 @@ export function sortDeck(deck) {
   return result;
 }
 
+export function classes(...args) {
+  return args.flat().flat().filter(x => x).join(' ');
+}
+
 export const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
 
 export default {

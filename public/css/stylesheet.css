@@ -263,6 +263,7 @@ border-bottom: none;
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
+	pointer-events: none;
 }
 
 #autocard_popup_info {
