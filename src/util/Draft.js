@@ -44,8 +44,8 @@ const fetchLands = [
   'Wooded Foothills',
 ];
 
-function botRating(botColors, card) {
-  let rating = draft.ratings[card.details.name];
+export function botRating(draft, botColors, card) {
+  let rating = draft.ratings[card.details.name] || 0.5;
   const colors = card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors);
   const overlap = botColors.some((c) => colors.includes(c));
@@ -81,7 +81,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[x]) - botRating(botColors, pack[y]);
+      return botRating(draft, botColors, pack[x]) - botRating(draft, botColors, pack[y]);
     });
     arrayShuffle(unratedPicks);
 

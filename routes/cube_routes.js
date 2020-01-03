@@ -1738,6 +1738,7 @@ router.post('/startdraft/grid/:id', async function(req, res) {
     let cardpool = util.shuffle(cube.cards.slice(0));
     const draft = new Draft();
     draft.type = 'grid';
+    draft.bots = draftutil.getDraftBots(2);
 
     const cards = GRID_ROWS * GRID_COLUMNS;
     const totalCards = GRID_PACKS * cards;

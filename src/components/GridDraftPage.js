@@ -5,7 +5,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from '../util/Draft';
+import { botRating } from '../util/Draft';
 import Location from '../util/DraftLocation';
 import { classes, cmcColumn } from '../util/Util';
 
@@ -17,19 +17,49 @@ import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 import FoilCardImage from './FoilCardImage';
 
-const GridLine = (type, index) => ({ type, index });
+class GridLine {
+  constructor(type, index) {
+    this.type = type;
+    this.index = index;
+  }
+
+  static fromString(str) {
+    const obj = JSON.parse(str);
+    return new GridLine(obj.type, obj.index);
+  }
+
+  toString() {
+    return JSON.stringify({ type: this.type, index: this.index });
+  }
+
+  is(type, index) {
+    return this.equals(new GridLine(type, index));
+  }
+
+  equals(other) {
+    return this.type === other.type && this.index === other.index;
+  }
+
+  indices() {
+    if (this.type === 'row') {
+      return [0, 1, 2].map((n) => 3 * this.index + n);
+    } else {
+      return [0, 1, 2].map((n) => 3 * n + this.index);
+    }
+  }
+}
 
 const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
   const [hover, setHover] = useState(null);
 
   const handleClick = useCallback((event) => {
     const target = event.currentTarget;
-    const line = JSON.parse(target.getAttribute('data-line'));
+    const line = GridLine.fromString(target.getAttribute('data-line'));
     onClick(line);
   }, [onClick]);
   const handleMouseOver = useCallback((event) => {
     const target = event.currentTarget;
-    const newHover = JSON.parse(target.getAttribute('data-line'));
+    const newHover = GridLine.fromString(target.getAttribute('data-line'));
     setHover(newHover);
   }, []);
   const handleMouseOut = useCallback(() => setHover(null), []);
@@ -39,11 +69,11 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
     onMouseOut: handleMouseOut,
   };
 
-  const columns = [0, 1, 2].map((n) => GridLine('column', n));
+  const columns = [0, 1, 2].map((n) => new GridLine('column', n));
   const gridded = [
-    [[0, 1, 2], pack.slice(0, 3), GridLine('row', 0)],
-    [[3, 4, 5], pack.slice(3, 6), GridLine('row', 1)],
-    [[6, 7, 8], pack.slice(6, 9), GridLine('row', 2)],
+    [[0, 1, 2], pack.slice(0, 3), new GridLine('row', 0)],
+    [[3, 4, 5], pack.slice(3, 6), new GridLine('row', 1)],
+    [[6, 7, 8], pack.slice(6, 9), new GridLine('row', 2)],
   ];
   return (
     <Card className="mt-3">
@@ -68,7 +98,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
                   {...interactProps}
                 >
                   <h4 className="mb-0">{index + 1}</h4>
-                  {picking.length === 0 && hover && hover.type === 'column' && hover.index === index && (
+                  {picking.length === 0 && hover && hover.is('column', index) && (
                     <div className="grid-hover column-hover" />
                   )}
                 </Col>
@@ -77,7 +107,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
           </Col>
         </Row>
         {gridded.map(([indices, cards, line], rowIndex) =>
-          <Row key={rowIndex} noGutters className={picking.length === 0 && hover && hover.type === 'row' && hover.index === rowIndex ? 'grid-hover' : undefined}>
+          <Row key={rowIndex} noGutters className={picking.length === 0 && hover && hover.is('row', rowIndex) ? 'grid-hover' : undefined}>
             <Col xs={2} className={classes('d-flex py-2', picking.length === 0 && 'clickable')}  data-line={JSON.stringify(line)} {...interactProps}>
               <h4 className="align-self-center ml-auto mr-2">{rowIndex + 1}</h4>
             </Col>
@@ -107,7 +137,39 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
       </CardBody>
     </Card>
   );
-}
+};
+
+// Returns updated draft.
+const options = [
+  ...[0, 1, 2].map((n) => new GridLine('column', n)),
+  ...[0, 1, 2].map((n) => new GridLine('row', n)),
+];
+const makeBotPicks = (draft) => {
+  const newDraft = { ...draft };
+  const pack = draft.packs[0];
+  const botColors = draft.bots[0];
+  let maxScore = 0;
+  let maxOption = options[0];
+  for (const option of options) {
+    const optionCards = option.indices().map((i) => pack[i]);
+    const optionScores = optionCards.map((card) => card ? (1 - botRating(draft, botColors, card)) : 0);
+    const score = optionScores.reduce((a, b) => a + b);
+    if (score >= maxScore) {
+      maxScore = score;
+      maxOption = option;
+    }
+  }
+
+  const newPack = [...pack];
+  const newBotPicks = [...draft.picks[1]];
+  for (const index of maxOption.indices()) {
+    newBotPicks.push(pack[index]);
+    newPack[index] = null;
+  }
+  newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
+  newDraft.picks = [newDraft.picks[0], newBotPicks];
+  return newDraft;
+};
 
 const GridDraftPage = ({ initialDraft }) => {
   const [draft, setDraft] = useState(initialDraft);
@@ -123,7 +185,7 @@ const GridDraftPage = ({ initialDraft }) => {
   const pickCards = useCallback(async (pickIndices) => {
     setPicking(pickIndices);
 
-    const newDraft = { ...draft };
+    let newDraft = { ...draft };
     const second = pack.some(card => card === null);
 
     const pickedCards = [];
@@ -134,15 +196,18 @@ const GridDraftPage = ({ initialDraft }) => {
     }
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    setPicking([]);
     if (second) {
-      // This is the second pick from the pack, so pass.
+      // This is the second pick from the pack, so pass and then you pick again.
       newDraft.packs = newDraft.packs.slice(1);
     } else {
+      // This is the first pick from the pack, so bots pick, pass, and bots pick again.
       newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
+      newDraft = makeBotPicks(newDraft);
+      newDraft.packs = newDraft.packs.slice(1);
+      newDraft = makeBotPicks(newDraft);
     }
+    setPicking([]);
     setDraft(newDraft);
-
   }, [draft, pack]);
 
   const handleClick = useCallback(({ type, index }) => {
@@ -179,7 +244,7 @@ const GridDraftPage = ({ initialDraft }) => {
         </Navbar>
       </div>
       <DynamicFlash />
-      <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
+      <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${initialDraft.cubeID}`}>
         <Input type="hidden" name="body" value={initialDraft.id} />
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
