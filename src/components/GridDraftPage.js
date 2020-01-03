@@ -33,6 +33,10 @@ class GridLine {
     return JSON.stringify({ type: this.type, index: this.index });
   }
 
+  repr() {
+    return `GridLine('${this.type}', ${this.index})`;
+  }
+
   is(type, index) {
     return this.equals(new GridLine(type, index));
   }
@@ -48,6 +52,10 @@ class GridLine {
       return [0, 1, 2].map((n) => 3 * n + this.index);
     }
   }
+
+  cards(pack) {
+    return this.indices().map((i) => pack[i]);
+  }
 }
 
 const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
@@ -56,14 +64,18 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
   const handleClick = useCallback((event) => {
     const target = event.currentTarget;
     const line = GridLine.fromString(target.getAttribute('data-line'));
-    onClick(line);
-    setHover(null);
+    if (line && line.cards(pack).some(card => card !== null)) {
+      onClick(line);
+      setHover(null);
+    }
   }, [onClick]);
   const handleMouseOver = useCallback((event) => {
     const target = event.currentTarget;
     const newHover = GridLine.fromString(target.getAttribute('data-line'));
-    setHover(newHover);
-  }, []);
+    if (newHover && newHover.cards(pack).some(card => card !== null)) {
+      setHover(newHover);
+    }
+  }, [pack]);
   const handleMouseOut = useCallback(() => setHover(null), []);
   const interactProps = picking.length > 0 ? {} : {
     onClick: handleClick,
@@ -199,6 +211,7 @@ const GridDraftPage = ({ initialDraft }) => {
     let newDraft = { ...draft };
     const second = pack.some(card => card === null);
 
+    const pickedCardNames = [];
     const newPack = [...pack];
     newDraft.picks = [...newDraft.picks];
     newDraft.picks[0] = [...newDraft.picks[0]];
@@ -210,12 +223,23 @@ const GridDraftPage = ({ initialDraft }) => {
       const col = cmcColumn(card);
       const colIndex = picks[row][col].length;
       newDraft.picks[0].push(card);
+      pickedCardNames.push(card.details.name);
 
       setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
       newPack[index] = null;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
+      method: 'POST',
+      body: JSON.stringify({
+        draft_id: draft._id,
+        picks: pickedCardNames,
+        pack: pack.filter((c) => c !== null).map((c) => c.details.name),
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (second) {
       // This is the second pick from the pack, so pass and then you pick again.
@@ -250,7 +274,7 @@ const GridDraftPage = ({ initialDraft }) => {
     }
     setPicking([]);
     setDraft(newDraft);
-  }, [draft, pack, picks]);
+  }, [draft, pack, picks, botPicks]);
 
   const handleClick = useCallback(({ type, index }) => {
     if (type === 'row') {

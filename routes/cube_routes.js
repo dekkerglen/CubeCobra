@@ -3338,7 +3338,7 @@ const ELO_SPEED = 1000;
 router.post('/api/draftpickcard/:id', async function(req, res) {
   try {
     const draftQ = Draft.findById({ _id: req.body.draft_id });
-    const ratingQ = CardRating.findOne({ name: { $in: req.body.picks } });
+    const ratingQ = CardRating.find({ name: { $in: req.body.picks } });
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 
     let [draft, pickRatings, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
@@ -3404,7 +3404,7 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
 
       try {
         await Promise.all([
-          ...pickRatingMap.values().map((r) => r.save()),
+          ...Object.values(pickRatingMap).map((r) => r.save()),
           ...packRatings.map((r) => r.save())
         ]);
         res.status(200).send({
