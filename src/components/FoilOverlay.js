@@ -4,7 +4,7 @@ const FoilOverlay = (Tag) => (props) => {
   let finish = 'Non-foil';
   if (props.hasOwnProperty('finish')) {
     finish = props.finish;
-  } else if (props.hasOwnProperty('card') && props.card.hasOwnProperty('finish')) {
+  } else if (props.card && props.card.hasOwnProperty('finish')) {
     finish = props.card.finish;
   }
   return (

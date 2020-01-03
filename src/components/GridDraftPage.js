@@ -19,24 +19,25 @@ import FoilCardImage from './FoilCardImage';
 
 const GridLine = (type, index) => ({ type, index });
 
-const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol }) => {
+const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
   const [hover, setHover] = useState(null);
 
   const handleClick = useCallback((event) => {
-    const target = event.target;
+    const target = event.currentTarget;
     const line = JSON.parse(target.getAttribute('data-line'));
-    if (line.type === 'row') {
-      onClickRow(line.index);
-    } else {
-      onClickColumn(line.index);
-    }
-  }, []);
+    onClick(line);
+  }, [onClick]);
   const handleMouseOver = useCallback((event) => {
     const target = event.currentTarget;
     const newHover = JSON.parse(target.getAttribute('data-line'));
     setHover(newHover);
   }, []);
   const handleMouseOut = useCallback(() => setHover(null), []);
+  const interactProps = picking.length > 0 ? {} : {
+    onClick: handleClick,
+    onMouseOver: handleMouseOver,
+    onMouseOut: handleMouseOut,
+  };
 
   const columns = [0, 1, 2].map((n) => GridLine('column', n));
   const gridded = [
@@ -64,12 +65,10 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol })
                   xs={4}
                   className="text-center clickable col-grid position-static"
                   data-line={JSON.stringify(line)}
-                  onMouseOver={handleMouseOver}
-                  onMouseOut={handleMouseOut}
-                  onClick={handleClick}
+                  {...interactProps}
                 >
                   <h4 className="mb-0">{index + 1}</h4>
-                  {hover && hover.type === 'column' && hover.index === index && (
+                  {picking.length === 0 && hover && hover.type === 'column' && hover.index === index && (
                     <div className="grid-hover column-hover" />
                   )}
                 </Col>
@@ -78,32 +77,31 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClickRow, onClickCol })
           </Col>
         </Row>
         {gridded.map(([indices, cards, line], rowIndex) =>
-          <Row key={rowIndex} noGutters className={hover && hover.type === 'row' && hover.index === rowIndex ? 'grid-hover' : undefined}>
-            <Col xs={2} className="d-flex clickable py-2" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick}>
+          <Row key={rowIndex} noGutters className={picking.length === 0 && hover && hover.type === 'row' && hover.index === rowIndex ? 'grid-hover' : undefined}>
+            <Col xs={2} className={classes('d-flex py-2', picking.length === 0 && 'clickable')}  data-line={JSON.stringify(line)} {...interactProps}>
               <h4 className="align-self-center ml-auto mr-2">{rowIndex + 1}</h4>
             </Col>
             <Col xs={8}>
               <Row className="row-grid">
-                {cards.map((card, index) => (
-                  <Col
-                    key={index}
-                    xs={4}
-                    className="col-grid"
-                  >
-                    {!card ? false :
-                      <>
-                        {!picking.includes(index) ? false : <Spinner className="position-absolute" />}
-                        <FoilCardImage
-                          card={card}
-                          className={classes('my-2', picking.includes(index) && 'transparent')}
-                        />
-                      </>
-                    }
-                  </Col>
-                ))}
+                {cards.map((card, index) => {
+                  const isPicking = card && picking.includes(rowIndex * 3 + index);
+                  return (
+                    <Col
+                      key={index}
+                      xs={4}
+                      className="col-grid d-flex justify-content-center align-items-center"
+                    >
+                      {!isPicking ? false : <Spinner className="position-absolute" />}
+                      <FoilCardImage
+                        card={card}
+                        className={classes('my-2', isPicking && 'transparent')}
+                      />
+                    </Col>
+                  );
+                })}
               </Row>
             </Col>
-            <Col xs={2} className="clickable" data-line={JSON.stringify(line)} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} onClick={handleClick} />
+            <Col xs={2} className={classes(picking.length === 0 && 'clickable')} data-line={JSON.stringify(line)} {...interactProps} />
           </Row>
         )}
       </CardBody>
@@ -122,11 +120,11 @@ const GridDraftPage = ({ initialDraft }) => {
   // Array of indexes.
   const [picking, setPicking] = useState([]);
 
-  const handlePick = useCallback((pickIndices) => {
+  const pickCards = useCallback(async (pickIndices) => {
     setPicking(pickIndices);
 
     const newDraft = { ...draft };
-    const [pack, ...newPacks] = newDraft.packs;
+    const second = pack.some(card => card === null);
 
     const pickedCards = [];
     const newPack = [...pack];
@@ -134,12 +132,26 @@ const GridDraftPage = ({ initialDraft }) => {
       pickedCards.push(newPack[index]);
       newPack[index] = null;
     }
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    if (newPacks.length === 0) {
-      // Done.
+    setPicking([]);
+    if (second) {
+      // This is the second pick from the pack, so pass.
+      newDraft.packs = newDraft.packs.slice(1);
     } else {
+      newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
     }
-  });
+    setDraft(newDraft);
+
+  }, [draft, pack]);
+
+  const handleClick = useCallback(({ type, index }) => {
+    if (type === 'row') {
+      pickCards([index * 3, index * 3 + 1, index * 3 + 2]);
+    } else {
+      pickCards([index, index + 3, index + 6]);
+    }
+  }, [pickCards]);
 
   const handleMoveCard = useCallback((source, target) => {
     setPicks(DeckStacks.moveOrAddCard(picks, target.data, source.data));
@@ -174,9 +186,10 @@ const GridDraftPage = ({ initialDraft }) => {
         <ErrorBoundary>
           <Pack
             pack={pack}
-            pickNumber={0}
-            packNumber={0}
-            picking={[]}
+            pickNumber={draft.pickNumber}
+            packNumber={draft.packNumber}
+            picking={picking}
+            onClick={handleClick}
           />
         </ErrorBoundary>
         <ErrorBoundary className="mt-3">
