@@ -147,7 +147,7 @@ async function pick(cardIndex) {
   });
 }
 
-async function finish() {
+export async function saveDraft(draft) {
   const temp = JSON.parse(JSON.stringify(draft));
   for (const seat of temp.packs) {
     for (const pack of seat) {
@@ -175,11 +175,14 @@ async function finish() {
       'Content-Type': 'application/json',
     },
   });
+}
 
+async function finish() {
+  await saveDraft(draft);
   const form = document.getElementById('submitDeckForm');
   if (form) {
     form.submit();
   }
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, saveDraft, finish };

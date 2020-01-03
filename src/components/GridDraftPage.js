@@ -1,11 +1,11 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import { botRating } from '../util/Draft';
+import { botRating, saveDraft } from '../util/Draft';
 import Location from '../util/DraftLocation';
 import { classes, cmcColumn } from '../util/Util';
 
@@ -205,6 +205,17 @@ const GridDraftPage = ({ initialDraft }) => {
   // Array of indexes.
   const [picking, setPicking] = useState([]);
 
+  const submitForm = useRef();
+
+  const finishDraft = useCallback(async (newDraft) => {
+    // Arrange picks as user has them.
+    newDraft.picks[0] = [...picks[0], ...picks[1]];
+    await saveDraft(newDraft);
+    if (submitForm.current) {
+      submitForm.current.submit();
+    }
+  }, [submitForm, picks]);
+
   const pickCards = useCallback(async (pickIndices) => {
     setPicking(pickIndices);
 
@@ -246,6 +257,9 @@ const GridDraftPage = ({ initialDraft }) => {
       newDraft.packs = newDraft.packs.slice(1);
       newDraft.pickNumber = 1;
       newDraft.packNumber += 1;
+      if (newDraft.packs.length === 0) {
+        return await finishDraft(newDraft);
+      }
     } else {
       // This is the first pick from the pack, so bots pick, pass, and bots pick again.
       let numBotPicks = newDraft.picks[1].length;
@@ -262,6 +276,10 @@ const GridDraftPage = ({ initialDraft }) => {
       // pass
       newDraft.packs = newDraft.packs.slice(1);
       newDraft.packNumber += 1;
+      if (newDraft.packs.length === 0) {
+        setBotPicks(newBotPicks);
+        return await finishDraft(newDraft);
+      }
 
       // bot pick again.
       newDraft = makeBotPicks(newDraft);
@@ -274,7 +292,7 @@ const GridDraftPage = ({ initialDraft }) => {
     }
     setPicking([]);
     setDraft(newDraft);
-  }, [draft, pack, picks, botPicks]);
+  }, [draft, pack, picks, botPicks, finishDraft]);
 
   const handleClick = useCallback(({ type, index }) => {
     if (type === 'row') {
@@ -310,8 +328,8 @@ const GridDraftPage = ({ initialDraft }) => {
         </Navbar>
       </div>
       <DynamicFlash />
-      <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${initialDraft.cubeID}`}>
-        <Input type="hidden" name="body" value={initialDraft.id} />
+      <CSRFForm className="d-none" innerRef={submitForm} method="POST" action={`/cube/submitdeck/${initialDraft.cube}`}>
+        <Input type="hidden" name="body" value={initialDraft._id} />
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
         <ErrorBoundary>

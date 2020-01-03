@@ -1782,7 +1782,7 @@ router.get('/draft/:id', function(req, res) {
       var pickNumber = draft.pickNumber;
       var packNumber = draft.packNumber;
       var title = 'Pack ' + packNumber + ', Pick ' + pickNumber;
-      var packsleft = draft.packs[0].length + 1 - packNumber;
+      var packsleft = (draft.type === 'booster' ? draft.packs[0].length : draft.packs.length) + 1 - packNumber;
       var subtitle = packsleft + ' unopened packs left.';
       if (packsleft == 1) {
         subtitle = packsleft + ' unopened pack left.';
@@ -3407,7 +3407,7 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
           ...Object.values(pickRatingMap).map((r) => r.save()),
           ...packRatings.map((r) => r.save())
         ]);
-        res.status(200).send({
+        return res.status(200).send({
           success: 'true',
         });
       } catch (err) {
