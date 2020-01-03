@@ -11,7 +11,7 @@ import Affiliate from '../util/Affiliate';
 
 const AutocardDiv = withAutocard('li');
 
-const AutocardListItem = ({ card, noCardModal, className, children }) => {
+const AutocardListItem = ({ card, noCardModal, inModal, className, children }) => {
   const { name } = card.details;
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
@@ -37,6 +37,7 @@ const AutocardListItem = ({ card, noCardModal, className, children }) => {
       card={card}
       onAuxClick={noCardModal ? undefined : handleAuxClick}
       onClick={noCardModal ? undefined : handleClick}
+      inModal={inModal}
     >
       {name}
       {children}

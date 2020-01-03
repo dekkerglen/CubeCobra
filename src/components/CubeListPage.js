@@ -20,8 +20,16 @@ import { TagContextProvider } from '../components/TagContext';
 import VisualSpoiler from '../components/VisualSpoiler';
 
 const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+  let initialOpenCollapse = null;
+  const savedChanges = typeof localStorage !== undefined && localStorage.getItem(`changelist-${cubeID}`);
+  if (cubeID && savedChanges && savedChanges.length > 2) {
+    initialOpenCollapse = 'edit';
+  } else if (Hash.get('f', false)) {
+    initialOpenCollapse = 'filter';
+  }
+
   const [cubeView, setCubeView] = useState(Hash.get('view', 'table'));
-  const [openCollapse, setOpenCollapse] = useState(Hash.get('f', false) ? 'filter' : null);
+  const [openCollapse, setOpenCollapse] = useState(initialOpenCollapse);
   const [filter, setFilter] = useState([]);
 
   const cardsIndex = useMemo(() => cards.map((card, index) => ({ ...card, index })), [cards]);
@@ -50,7 +58,7 @@ const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTag
             defaultShowTagColors={defaultShowTagColors}
             defaultTags={defaultTags}
           >
-            <ChangelistContextProvider>
+            <ChangelistContextProvider cubeID={cubeID}>
               <CardModalForm canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
                 <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
                   <CubeListNavbar

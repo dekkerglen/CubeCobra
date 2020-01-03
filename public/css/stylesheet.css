@@ -217,19 +217,12 @@
 #autocard_popup2,
 #autocard_popup {
 	position: absolute;
-	z-index: 500;
 	user-drag: none;
 	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
-}
-
-.modal #autocard_popup_info,
-.modal #autocard_popup2,
-.modal #autocard_popup {
-	z-index: 1500;
 }
 
 #autocard_popup_info {
