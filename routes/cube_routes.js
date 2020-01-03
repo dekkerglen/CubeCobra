@@ -3108,7 +3108,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
       const allUpdates = {
         $set: {},
       };
-      for (const { index } of selected) {
+      for (const index of selected) {
         if (typeof index !== 'number' || !cube.cards[index]) {
           continue;
         }
