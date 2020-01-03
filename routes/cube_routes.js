@@ -1912,7 +1912,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
                   console.log(err, req);
                 } else {
                   req.flash('success', 'Cube Updated');
-                  res.redirect('/cube/list/' + req.params.id);
+                  res.redirect(`/cube/list/${req.params.id}?updated=true`);
                 }
               },
             );
