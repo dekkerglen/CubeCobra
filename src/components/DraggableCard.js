@@ -45,12 +45,13 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
 
   return (
     <>
-      <CardImage card={card} noAutocard innerRef={imageRef} className="off-screen" />
+      <CardImage card={card} innerRef={imageRef} className="off-screen" />
       <div ref={drag} className={onMoveCard || props.onClick ? 'clickable' : undefined}>
         <div ref={drop}>
           <FoilCardImage
             card={card}
             tags={[]}
+            autocard
             className={classes.join(' ')}
             data-location-type={location.type}
             data-location-data={JSON.stringify(location.data)}

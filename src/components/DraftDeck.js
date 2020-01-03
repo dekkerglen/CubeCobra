@@ -24,46 +24,12 @@ import { sortDeck } from '../util/Util';
 import CardImage from './CardImage';
 import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
+import DeckStacksStatic from './DeckStacksStatic';
 import DynamicFlash from './DynamicFlash';
 import { getCardColorClass } from './TagContext';
 import withAutocard from './WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);
-
-const DeckStacksStatic = ({ title, cards, ...props }) => (
-  <Card {...props}>
-    <CardHeader>
-      <CardTitle className="mb-0">
-        <h4 className="mb-0">{title}</h4>
-      </CardTitle>
-    </CardHeader>
-    <CardBody className="pt-0">
-      {cards.map((row, index) => (
-        <Row key={index} className="row-low-padding">
-          {row.map((column, index2) => (
-            <Col key={index2} className="mt-3 card-stack col-md-1-5 col-low-padding" xs={4} sm={3}>
-              <div className="w-100 text-center mb-1">
-                <b>{column.length}</b>
-              </div>
-              <div className="stack">
-                {column.map((card, index3) => (
-                  <div className="stacked" key={index3}>
-                    <CardImage card={card} tags={[]} />
-                  </div>
-                ))}
-              </div>
-            </Col>
-          ))}
-        </Row>
-      ))}
-    </CardBody>
-  </Card>
-);
-
-DeckStacksStatic.propTypes = {
-  title: PropTypes.string.isRequired,
-  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
-};
 
 const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
   const [isOpen, setIsOpen] = useState(false);

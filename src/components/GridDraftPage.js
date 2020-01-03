@@ -12,6 +12,7 @@ import { classes, cmcColumn } from '../util/Util';
 import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
+import DeckStacksStatic from './DeckStacksStatic';
 import { DisplayContextProvider } from './DisplayContext';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
@@ -56,6 +57,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
     const target = event.currentTarget;
     const line = GridLine.fromString(target.getAttribute('data-line'));
     onClick(line);
+    setHover(null);
   }, [onClick]);
   const handleMouseOver = useCallback((event) => {
     const target = event.currentTarget;
@@ -139,7 +141,15 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
   );
 };
 
-// Returns updated draft.
+Pack.propTypes = {
+  pack: PropTypes.arrayOf(PropTypes.object).isRequired,
+  packNumber: PropTypes.number.isRequired,
+  pickNumber: PropTypes.number.isRequired,
+  picking: PropTypes.arrayOf(PropTypes.number),
+  onClick: PropTypes.func.isRequired,
+};
+
+// Returns [updated draft, selected cards].
 const options = [
   ...[0, 1, 2].map((n) => new GridLine('column', n)),
   ...[0, 1, 2].map((n) => new GridLine('row', n)),
@@ -161,13 +171,13 @@ const makeBotPicks = (draft) => {
   }
 
   const newPack = [...pack];
-  const newBotPicks = [...draft.picks[1]];
+  const pickedCards = [];
   for (const index of maxOption.indices()) {
-    newBotPicks.push(pack[index]);
+    pickedCards.push(pack[index]);
     newPack[index] = null;
   }
   newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
-  newDraft.picks = [newDraft.picks[0], newBotPicks];
+  newDraft.picks = [newDraft.picks[0], [...newDraft.picks[1], ...pickedCards]];
   return newDraft;
 };
 
@@ -177,6 +187,7 @@ const GridDraftPage = ({ initialDraft }) => {
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
+  const [botPicks, setBotPicks] = useState([new Array(8).fill([])]);
 
   // State for showing loading while waiting for next pick.
   // Array of indexes.
@@ -188,27 +199,58 @@ const GridDraftPage = ({ initialDraft }) => {
     let newDraft = { ...draft };
     const second = pack.some(card => card === null);
 
-    const pickedCards = [];
     const newPack = [...pack];
+    newDraft.picks = [...newDraft.picks];
+    newDraft.picks[0] = [...newDraft.picks[0]];
     for (const index of pickIndices) {
-      pickedCards.push(newPack[index]);
+      const card = newPack[index];
+      if (!card) continue;
+      const typeLine = (card.type_line || card.details.type).toLowerCase();
+      const row = typeLine.includes('creature') ? 0 : 1;
+      const col = cmcColumn(card);
+      const colIndex = picks[row][col].length;
+      newDraft.picks[0].push(card);
+
+      setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
       newPack[index] = null;
     }
-    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (second) {
       // This is the second pick from the pack, so pass and then you pick again.
       newDraft.packs = newDraft.packs.slice(1);
+      newDraft.pickNumber = 1;
+      newDraft.packNumber += 1;
     } else {
       // This is the first pick from the pack, so bots pick, pass, and bots pick again.
+      let numBotPicks = newDraft.picks[1].length;
       newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
       newDraft = makeBotPicks(newDraft);
+
+      let picked = newDraft.picks[1].slice(numBotPicks);
+      let newBotPicks = botPicks;
+      for (const card of picked) {
+        newBotPicks = DeckStacks.moveOrAddCard(newBotPicks, [0, (newDraft.packNumber - 1) % 8, -1], card);
+      }
+      numBotPicks += picked.length;
+
+      // pass
       newDraft.packs = newDraft.packs.slice(1);
+      newDraft.packNumber += 1;
+
+      // bot pick again.
       newDraft = makeBotPicks(newDraft);
+      picked = newDraft.picks[1].slice(numBotPicks);
+      for (const card of picked) {
+        newBotPicks = DeckStacks.moveOrAddCard(newBotPicks, [0, (newDraft.packNumber - 1) % 8, -1], card);
+      }
+      newDraft.pickNumber = 2;
+      setBotPicks(newBotPicks);
     }
     setPicking([]);
     setDraft(newDraft);
-  }, [draft, pack]);
+  }, [draft, pack, picks]);
 
   const handleClick = useCallback(({ type, index }) => {
     if (type === 'row') {
@@ -255,6 +297,13 @@ const GridDraftPage = ({ initialDraft }) => {
             packNumber={draft.packNumber}
             picking={picking}
             onClick={handleClick}
+          />
+        </ErrorBoundary>
+        <ErrorBoundary className="mt-3">
+          <DeckStacksStatic
+            title="Bot Picks"
+            className="mt-3"
+            cards={botPicks}
           />
         </ErrorBoundary>
         <ErrorBoundary className="mt-3">
