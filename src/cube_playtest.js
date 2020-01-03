@@ -117,6 +117,13 @@ const GridDraftCard = ({ cubeID }) => (
       <CardHeader>
         <CardTitleH5>Start a grid draft</CardTitleH5>
       </CardHeader>
+      <CardBody>
+        <LabelRow htmlFor="packs" label="Number of Packs" className="mb-0">
+          <Input type="select" name="packs" id="packs" defaultValue="18">
+            {rangeOptions(10, 31)}
+          </Input>
+        </LabelRow>
+      </CardBody>
       <CardFooter>
         <Button color="success">Start Draft</Button>
       </CardFooter>

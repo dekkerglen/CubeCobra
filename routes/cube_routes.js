@@ -1723,7 +1723,6 @@ router.post('/startdraft/booster/:id', async function(req, res) {
   }
 });
 
-const GRID_PACKS = 18;
 const GRID_ROWS = 3;
 const GRID_COLUMNS = 3;
 router.post('/startdraft/grid/:id', async function(req, res) {
@@ -1740,8 +1739,9 @@ router.post('/startdraft/grid/:id', async function(req, res) {
     draft.type = 'grid';
     draft.bots = draftutil.getDraftBots(2);
 
+    const packs = parseInt(req.body.packs);
     const cards = GRID_ROWS * GRID_COLUMNS;
-    const totalCards = GRID_PACKS * cards;
+    const totalCards = packs * cards;
     if (cardpool.length < totalCards) {
       req.flash(
         'danger',
@@ -1756,7 +1756,7 @@ router.post('/startdraft/grid/:id', async function(req, res) {
     draft.pickNumber = 1;
 
     const draftPacks = [];
-    for (let i = 0; i < GRID_PACKS; i++) {
+    for (let i = 0; i < packs; i++) {
       const pack = cardpool.slice(0, cards);
       draftPacks.push(pack);
       cardpool = cardpool.slice(cards);
