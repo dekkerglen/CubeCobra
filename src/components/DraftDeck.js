@@ -21,10 +21,10 @@ import {
 
 import { sortDeck } from '../util/Util';
 
-import CardImage from './CardImage';
 import CustomImageToggler from './CustomImageToggler';
-import DeckStacks from './DeckStacks';
+import { DisplayContextProvider } from './DisplayContext';
 import DynamicFlash from './DynamicFlash';
+import FoilCardImage from './FoilCardImage';
 import { getCardColorClass } from './TagContext';
 import withAutocard from './WithAutocard';
 
@@ -48,7 +48,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
               <div className="stack">
                 {column.map((card, index3) => (
                   <div className="stacked" key={index3}>
-                    <CardImage card={card} tags={[]} />
+                    <FoilCardImage card={card} tags={[]} autocard />
                   </div>
                 ))}
               </div>
@@ -61,7 +61,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
 );
 
 DeckStacksStatic.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.node.isRequired,
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
@@ -104,7 +104,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
   const deckID = components[components.length - 1];
 
   return (
-    <>
+    <DisplayContextProvider>
       <div className="usercontrols">
         <Navbar expand="md" light>
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -154,7 +154,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
           </Col>
         ))}
       </Row>
-    </>
+    </DisplayContextProvider>
   );
 };
 
