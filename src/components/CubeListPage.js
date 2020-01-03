@@ -21,7 +21,7 @@ import VisualSpoiler from '../components/VisualSpoiler';
 
 const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   let initialOpenCollapse = null;
-  const savedChanges = typeof localStorage !== undefined && localStorage.getItem(`changelist-${cubeID}`);
+  const savedChanges = typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
   if (cubeID && savedChanges && savedChanges.length > 2) {
     initialOpenCollapse = 'edit';
   } else if (Hash.get('f', false)) {

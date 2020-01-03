@@ -6,7 +6,7 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
   const storageKey = `changelist-${cubeID}`;
 
   const [changes, setChanges] = useState(() => {
-    if (localStorage && typeof cubeID !== 'undefined') {
+    if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
       return JSON.parse(localStorage.getItem(storageKey) || '[]');
     } else {
       return [];
@@ -14,7 +14,7 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
   });
 
   useEffect(() => {
-    if (localStorage && typeof cubeID !== 'undefined') {
+    if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
       localStorage.setItem(storageKey, JSON.stringify(changes));
     }
   }, [changes]);
