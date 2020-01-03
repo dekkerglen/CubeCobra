@@ -208,6 +208,7 @@ const GridDraftPage = ({ initialDraft }) => {
   const submitForm = useRef();
 
   const finishDraft = useCallback(async (newDraft) => {
+    newDraft.pickOrder = newDraft.picks[0].map(card => card.cardID);
     // Arrange picks as user has them.
     newDraft.picks[0] = [...picks[0], ...picks[1]];
     await saveDraft(newDraft);
