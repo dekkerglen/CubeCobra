@@ -1,22 +1,36 @@
 p
-	a This update marks the start of site-wide card analytics. We've added card pages that show some useful information regarding individual card inclusion rates, cards drafted frequently with a given card, and a basic way to see a few cubes that run a particular card. 
+	a I hope everyone had a great holiday season, and I'm very excited to get back into doing our regularly scheduled updates. Today's update mainly includes feature-neutral front end changes that will make it easier for us to build add and improve features moving forward. That said, there are signficant bugfixes and very nice quality of life improvements including in this update. 
 p
 	a New Features:
 p
 	ul
-		li Card Pages. You can see card pages by clicking on a card from the 'Top Cards' page, or by middle clicking, or ctrl+clicking a card from a cube.
-		li Default versions of cards are now more 'reasonable' (no more anime WAR walkers!)
-		li Added in several missing tokens.
-		li Notifications can be cleared without causing a page refresh.
-		li Visible tags are now imported from CubeTutor. (imported tags must have the color set on CT).
-		li Advanced search is no longer case sensitive.
-		li Cube Owners can now upload decklists to their cube.
-		li Added price filter to top cards.
+		li "Finish" field on cards to specify Foil/NonFoil, with a visual overlay
+		li Multi-face cards now have oracle text of both faces
+		li Added Pioneer as a cube classification
+		li Improved bot draft log styling
+		li DFC backs now visible during draft
+		li Drag and drop draft now works correctly on touch devices
+		li Card page links added to card context modals
+		li Cubes can now be tagged
+		li Cube one-line descriptions can now be overriden
+		li Several Improvements to reduce page sizes
+		li Spinners added to buttons for long-running actions
+		li Cube lists can now be scrolled horizontally on narrow devices
+		li Elo system implemented for card ratings
+		li New color selector added
+		li Changelist now stored locally, page refreshes, or crashes will no longer clear the list
+		li Blog post autocards now match the version in the cube
+		li Landing updated with new video
 p
 	a Bugfixes:
 	ul
-		li Fixed an issue where the draft bots wouldn't take into account the card type properly.
-		li Fixed issue where the card modal wouldn't open up in visual spoiler.
-		li Fixed an issue where the time elapsed would erraneously show over a month ago.
-		li DFCs now display the back side in card preview correctly again.
-		li Fixed an issue where dropdowns needed to be double-clicked.
+		li Invalid tgplayer credentials now generate an error (for devs only)
+		li Adventure Cards are now properly handled
+		li Some uncommon special characters in card names won't crash anymore (I'm looking at you, Kharis &amp; the Beholder)
+		li Fixed color and color identity filters
+		li Fixed links on token's page back to link to tcgplayer 
+		li Fixed issue where card page would not load due to invalid cube being passed through
+		li Fixed issue with number of columns when viewing a deck drafted from a differently sized device
+		li Draft uses override CMC value for auto-ordering
+		li Fixed an issue with the scryfall scheduled imports
+		li Tags are accepted in a card's context modal if form is submitted without the tag being submitted
