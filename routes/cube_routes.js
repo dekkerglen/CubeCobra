@@ -1803,6 +1803,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
     } else {
       var edits = req.body.body.split(';');
       var removes = [];
+      var adds = [];
       var changelog = '';
       for (let edit of edits) {
         if (edit.charAt(0) == '+') {
@@ -1811,7 +1812,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           if (!details) {
             console.log('Card not found: ' + edit, req);
           } else {
-            util.addCardToCube(cube, details);
+            adds.push(details);
             changelog += addCardHtml(details);
           }
         } else if (edit.charAt(0) == '-') {
@@ -1830,7 +1831,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           if (!detailsIn) {
             console.log('Card not found: ' + edit, req);
           } else {
-            util.addCardToCube(cube, detailsIn);
+            adds.push(detailsIn);
           }
 
           const indexOut = parseInt(indexOutStr);
@@ -1850,6 +1851,9 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       removes.sort();
       for (let i = removes.length - 1; i >= 0; i--) {
         cube.cards.splice(removes[i], 1);
+      }
+      for (let i = 0; i < adds.length; i++) {
+        util.addCardToCube(cube, adds[i]);
       }
 
       var blogpost = new Blog();
