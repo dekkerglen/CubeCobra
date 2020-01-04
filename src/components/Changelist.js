@@ -16,23 +16,23 @@ const CloseButton = ({ changeId, close }) => (
 const Add = ({ card, changeId, close }) => (
   <li>
     <CloseButton changeId={changeId} close={close} /> <Badge color="success">+</Badge>{' '}
-    <TextAutocard card={{ details: card }}>{card.name}</TextAutocard>
+    <TextAutocard card={card}>{card.details.name}</TextAutocard>
   </li>
 );
 
 const Remove = ({ card, changeId, close }) => (
   <li>
     <CloseButton changeId={changeId} close={close} /> <Badge color="danger">-</Badge>{' '}
-    <TextAutocard card={{ details: card }}>{card.name}</TextAutocard>
+    <TextAutocard card={card}>{card.details.name}</TextAutocard>
   </li>
 );
 
 const Replace = ({ cards, changeId, close }) => (
   <li>
     <CloseButton changeId={changeId} close={close} /> <Badge color="primary">→</Badge>{' '}
-    <TextAutocard card={{ details: cards[0] }}>{cards[0].name}</TextAutocard>
+    <TextAutocard card={cards[0]}>{cards[0].details.name}</TextAutocard>
     {' > '}
-    <TextAutocard card={{ details: cards[1] }}>{cards[1].name}</TextAutocard>
+    <TextAutocard card={cards[1]}>{cards[1].details.name}</TextAutocard>
   </li>
 );
 
@@ -52,11 +52,11 @@ const Changelist = () => {
   const changelistData = changes
     .map((change) => {
       if (change.add) {
-        return '+' + change.add._id;
+        return '+' + (change.add.details._id || change.add.cardID);
       } else if (change.remove) {
-        return '-' + change.remove._id;
+        return '-' + change.remove.index;
       } else if (change.replace) {
-        return `/${change.replace[0]._id}>${change.replace[1]._id}`;
+        return `/${change.replace[0].index}>${change.replace[1].details._id || change.replace[1].cardID}`;
       }
     })
     .join(';');

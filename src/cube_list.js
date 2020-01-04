@@ -25,7 +25,7 @@ class CubeList extends Component {
     super(props);
 
     let openCollapse = null;
-    if (props.cubeID && localStorage.getItem(`changelist-${props.cubeID}`) && !Query.get('updated', false) === 'true') {
+    if (props.cubeID && typeof localStorage !== 'undefined' && (localStorage.getItem(`changelist-${props.cubeID}`) || '').length > 2 && Query.get('updated', false) !== 'true') {
       openCollapse = 'edit';
     } else if (Hash.get('f', false)) {
       openCollapse = 'filter';

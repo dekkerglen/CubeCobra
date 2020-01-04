@@ -51,7 +51,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
 
   const { cube, updateCubeCards } = useContext(CubeContext);
-  const { addChange } = useContext(ChangelistContext);
+  const { addChanges } = useContext(ChangelistContext);
 
   const open = useCallback(() => {
     setFormValues(DEFAULT_FORM_VALUES);
@@ -171,16 +171,13 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const handleRemoveAll = useCallback(
     (event) => {
       event.preventDefault();
-      const cards = cardIndices.map((index) => cube[index]);
-      for (const card of cards) {
-        addChange({
-          remove: card.details,
-        });
-      }
+      addChanges(cardIndices.map((index) => ({
+        remove: cube[index],
+      })));
       setOpenCollapse(() => 'edit');
       close();
     },
-    [cardIndices, cube, setOpenCollapse, close],
+    [addChanges, cardIndices, cube, setOpenCollapse, close],
   );
 
   const cards = cardIndices.map((index) => cube[index]);

@@ -1,39 +1,42 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { Button, Col, Collapse, Form, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
+import { Button, Col, Collapse, Form, Row, UncontrolledAlert } from 'reactstrap';
+
+import { encodeName } from '../util/Card';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
 import Changelist from './Changelist';
 import ChangelistContext from './ChangelistContext';
-import ContentEditable from './ContentEditable';
+import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
 
-async function getCard(name) {
-  if (name && name.length > 0) {
-    const normalized = name.replace('?', '-q-');
-    while (normalized.includes('//')) {
-      normalized = normalized.replace('//', '-slash-');
-    }
-    const response = await fetch(`/cube/api/getcard/${normalized}`);
-    if (!response.ok) {
-      throw new Error(`Couldn\'t get card: ${response.status}.`);
-    }
-
-    const json = await response.json();
-    if (json.success !== 'true' || !json.card) {
-      return null;
-    }
-    return json.card;
-  }
-}
-
 const EditCollapse = ({ cubeID, ...props }) => {
+  const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
 
   const { changes, addChange, setChanges } = useContext(ChangelistContext);
+  const { cube } = useContext(CubeContext);
+
+  const getCard = useCallback(async (name) => {
+    if (name && name.length > 0) {
+      const normalized = encodeName(name);
+      const response = await fetch(`/cube/api/getcard/${normalized}`);
+      if (!response.ok) {
+        setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
+        return null;
+      }
+
+      const json = await response.json();
+      if (json.success !== 'true' || !json.card) {
+        setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
+        return null;
+      }
+      return json.card;
+    }
+  }, []);
 
   const addInput = useRef();
   const removeInput = useRef();
@@ -45,7 +48,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
       add: setAddValue,
       remove: setRemoveValue,
     }[event.target.name](event.target.value);
-  });
+  }, []);
 
   const handleAdd = useCallback(
     async (event, newValue) => {
@@ -55,7 +58,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
         if (!card) {
           return;
         }
-        addChange({ add: card });
+        addChange({ add: { details: card } });
         setAddValue('');
         setRemoveValue('');
         addInput.current && addInput.current.focus();
@@ -71,8 +74,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = await getCard(newValue || removeValue);
+        const cardOut = cube.find(card => card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase());
         if (!cardOut) {
+          setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` }]);
           return;
         }
         if (replace) {
@@ -80,7 +84,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
           if (!cardIn) {
             return;
           }
-          addChange({ replace: [cardOut, cardIn] });
+          addChange({ replace: [cardOut, { details: cardIn }] });
         } else {
           addChange({ remove: cardOut });
         }
@@ -93,14 +97,14 @@ const EditCollapse = ({ cubeID, ...props }) => {
         console.error(e);
       }
     },
-    [addChange, addInput, addValue, removeInput, removeValue],
+    [addChange, addInput, addValue, removeInput, removeValue, cube],
   );
 
   const handleDiscardAll = useCallback(
     (event) => {
       setChanges([]);
     },
-    [setChanges],
+    [],
   );
 
   const handleSaveChanges = useCallback((event) => {
@@ -109,11 +113,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   return (
     <Collapse className="px-3" {...props}>
-      <Row className="collapse warnings">
-        <Col>
-          <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
-        </Col>
-      </Row>
+      {alerts.map(({ color, message }) => (
+        <UncontrolledAlert color={color} className="mt-2">{message}</UncontrolledAlert>
+      ))}
       <Row>
         <Col xs="12" sm="auto">
           <Form inline className="mb-2" onSubmit={handleAdd}>
@@ -131,7 +133,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               autoComplete="off"
               data-lpignore
             />
-            <Button color="success" type="submit">
+            <Button color="success" type="submit" disabled={addValue.length === 0}>
               Just Add
             </Button>
           </Form>
@@ -152,7 +154,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               autoComplete="off"
               data-lpignore
             />
-            <Button color="success" type="submit">
+            <Button color="success" type="submit" disabled={removeValue.length === 0}>
               Remove/Replace
             </Button>
           </Form>

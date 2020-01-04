@@ -309,17 +309,17 @@ class ListViewRaw extends Component {
                     const textB = b.details.name.toUpperCase();
                     return textA < textB ? -1 : textA > textB ? 1 : 0;
                   })
-                  .map(({ index, details, ...card }) => (
-                    <tr key={index} className={cardColorClass(card)}>
+                  .map((card) => (
+                    <tr key={card.index} className={cardColorClass(card)}>
                       <td className="align-middle">
-                        <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
+                        <Input {...inputProps(card.index, 'check')} type="checkbox" className="d-block mx-auto" />
                       </td>
-                      <AutocardTd className="align-middle text-truncate" card={{ details, ...card }}>
-                        {details.name}
+                      <AutocardTd className="align-middle text-truncate" card={card}>
+                        {card.details.name}
                       </AutocardTd>
                       <td>
                         <Input
-                          {...inputProps(index, 'version')}
+                          {...inputProps(card.index, 'version')}
                           type="select"
                           style={{ maxWidth: '6rem' }}
                           className="w-100"
@@ -332,27 +332,27 @@ class ListViewRaw extends Component {
                         </Input>
                       </td>
                       <td>
-                        <Input {...inputProps(index, 'type')} type="text" />
+                        <Input {...inputProps(card.index, 'type')} type="text" />
                       </td>
                       <td>
-                        <Input {...inputProps(index, 'status')} type="select">
+                        <Input {...inputProps(card.index, 'status')} type="select">
                           {getLabels('Status').map((status) => (
                             <option key={status}>{status}</option>
                           ))}
                         </Input>
                       </td>
                       <td>
-                        <Input {...inputProps(index, 'finish')} type="select">
+                        <Input {...inputProps(card.index, 'finish')} type="select">
                           {getLabels('Finish').map((finish) => (
                             <option key={finish}>{finish}</option>
                           ))}
                         </Input>
                       </td>
                       <td>
-                        <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
+                        <Input {...inputProps(card.index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
                       </td>
                       <td>
-                        <Input {...inputProps(index, 'colors')} type="select">
+                        <Input {...inputProps(card.index, 'colors')} type="select">
                           {colorCombos.map((combo) => (
                             <option key={combo}>{combo}</option>
                           ))}
@@ -360,14 +360,14 @@ class ListViewRaw extends Component {
                       </td>
                       <td style={{ minWidth: '15rem' }}>
                         <TagInput
-                          tags={this.state[`tags${index}`]}
-                          value={this.state[`tdtaginput${index}`]}
-                          name={`tdtaginput${index}`}
+                          tags={this.state[`tags${card.index}`]}
+                          value={this.state[`tdtaginput${card.index}`]}
+                          name={`tdtaginput${card.index}`}
                           onChange={this.handleChange}
-                          handleInputBlur={this.tagBlur.bind(this, index)}
-                          addTag={this.addTag.bind(this, index)}
-                          deleteTag={this.deleteTag.bind(this, index)}
-                          reorderTag={this.reorderTag.bind(this, index)}
+                          handleInputBlur={this.tagBlur.bind(this, card.index)}
+                          addTag={this.addTag.bind(this, card.index)}
+                          deleteTag={this.deleteTag.bind(this, card.index)}
+                          reorderTag={this.reorderTag.bind(this, card.index)}
                         />
                       </td>
                     </tr>
