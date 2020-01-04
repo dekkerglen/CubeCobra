@@ -63,6 +63,9 @@ class BlogPost extends React.Component {
 
   render() {
     var post = this.props.post;
+    if(post.html == "undefined") {
+      post.html = null;
+    }
     return (
       <Card className="shadowed rounded-0 mt-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
