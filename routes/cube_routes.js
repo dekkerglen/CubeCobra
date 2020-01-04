@@ -1912,7 +1912,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
                   console.log(err, req);
                 } else {
                   req.flash('success', 'Cube Updated');
-                  res.redirect('/cube/list/' + req.params.id);
+                  res.redirect(`/cube/list/${req.params.id}?updated=true`);
                 }
               },
             );
@@ -3108,7 +3108,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
       const allUpdates = {
         $set: {},
       };
-      for (const { index } of selected) {
+      for (const index of selected) {
         if (typeof index !== 'number' || !cube.cards[index]) {
           continue;
         }

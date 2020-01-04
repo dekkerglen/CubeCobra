@@ -26,9 +26,9 @@ const VisualSpoilerRaw = ({ cards, primary, secondary, tertiary, changeSort, ...
               getLabels(tertiary)
                 .filter((label3) => groups[label1][label2][label3])
                 .map((label3) =>
-                  groups[label1][label2][label3].sort(alphaCompare).map(({ index, tags, finish, details }) => (
-                    <Col key={index} xs={6} sm={4} className="col-md-1-5">
-                      <SpoilerImage index={index} tags={tags} finish={finish} {...details} />
+                  groups[label1][label2][label3].sort(alphaCompare).map((card) => (
+                    <Col key={card.index} xs={6} sm={4} className="col-md-1-5">
+                      <SpoilerImage card={card} />
                     </Col>
                   )),
                 ),

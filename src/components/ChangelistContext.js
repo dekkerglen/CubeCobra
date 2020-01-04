@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import Query from '../util/Query';
+
 const ChangelistContext = React.createContext([]);
 
 export const ChangelistContextProvider = ({ cubeID, ...props }) => {
@@ -7,6 +9,11 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
 
   const [changes, setChanges] = useState(() => {
     if (localStorage && typeof cubeID !== 'undefined') {
+      if (Query.get('updated', false) === 'true') {
+        Query.del('updated');
+        localStorage.setItem(storageKey, '[]');
+        return [];
+      }
       return JSON.parse(localStorage.getItem(storageKey) || '[]');
     } else {
       return [];
