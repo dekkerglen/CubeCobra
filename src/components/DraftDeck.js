@@ -30,11 +30,12 @@ import withAutocard from './WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const DeckStacksStatic = ({ title, cards, ...props }) => (
+const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
   <Card {...props}>
     <CardHeader>
-      <CardTitle className="mb-0">
-        <h4 className="mb-0">{title}</h4>
+      <CardTitle className="mb-0 d-flex flex-row align-items-end">
+        <h4 className="mb-0 mr-auto">{title}</h4>
+        <h6 className="mb-0 font-weight-normal d-none d-md-block">{subtitle}</h6>
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
@@ -80,6 +81,16 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
     </Fragment>
   );
+
+  const allCards = deck.flat().flat();
+  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numOther = allCards.length - numLands - numCreatures;
+  const subtitle =
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numOther} other`;
 
   let stackedDeck;
   if (oldFormat) {
@@ -131,7 +142,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       <DynamicFlash />
       <Row className="mt-3">
         <Col>
-          <DeckStacksStatic cards={stackedDeck} title={title} />
+          <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle} />
         </Col>
       </Row>
       <h4 className="mt-3">Bot Decks</h4>
