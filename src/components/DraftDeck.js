@@ -21,20 +21,21 @@ import {
 
 import { sortDeck } from '../util/Util';
 
-import CardImage from './CardImage';
 import CustomImageToggler from './CustomImageToggler';
-import DeckStacks from './DeckStacks';
+import { DisplayContextProvider } from './DisplayContext';
 import DynamicFlash from './DynamicFlash';
+import FoilCardImage from './FoilCardImage';
 import { getCardColorClass } from './TagContext';
 import withAutocard from './WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const DeckStacksStatic = ({ title, cards, ...props }) => (
+const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
   <Card {...props}>
     <CardHeader>
-      <CardTitle className="mb-0">
-        <h4 className="mb-0">{title}</h4>
+      <CardTitle className="mb-0 d-flex flex-row align-items-end">
+        <h4 className="mb-0 mr-auto">{title}</h4>
+        <h6 className="mb-0 font-weight-normal d-none d-md-block">{subtitle}</h6>
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
@@ -48,7 +49,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
               <div className="stack">
                 {column.map((card, index3) => (
                   <div className="stacked" key={index3}>
-                    <CardImage card={card} tags={[]} />
+                    <FoilCardImage card={card} tags={[]} autocard />
                   </div>
                 ))}
               </div>
@@ -61,7 +62,7 @@ const DeckStacksStatic = ({ title, cards, ...props }) => (
 );
 
 DeckStacksStatic.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.node.isRequired,
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
@@ -80,6 +81,16 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
     </Fragment>
   );
+
+  const allCards = deck.flat().flat();
+  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numOther = allCards.length - numLands - numCreatures;
+  const subtitle =
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numOther} other`;
 
   let stackedDeck;
   if (oldFormat) {
@@ -104,7 +115,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
   const deckID = components[components.length - 1];
 
   return (
-    <>
+    <DisplayContextProvider>
       <div className="usercontrols">
         <Navbar expand="md" light>
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -131,7 +142,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       <DynamicFlash />
       <Row className="mt-3">
         <Col>
-          <DeckStacksStatic cards={stackedDeck} title={title} />
+          <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle} />
         </Col>
       </Row>
       <h4 className="mt-3">Bot Decks</h4>
@@ -154,7 +165,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
           </Col>
         ))}
       </Row>
-    </>
+    </DisplayContextProvider>
   );
 };
 

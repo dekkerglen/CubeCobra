@@ -111,7 +111,10 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
 
       const selected = cardIndices;
       const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
-      const updated = { ...formValues };
+      const updated = {
+        ...formValues,
+        tags: formValues.tags.map((tag) => tag.text),
+      };
       updated.cmc = parseInt(updated.cmc);
       if (isNaN(updated.cmc)) {
         delete updated.cmc;

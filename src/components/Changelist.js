@@ -68,7 +68,7 @@ const Changelist = () => {
           if (change.add) {
             return <Add key={change.id} card={change.add} changeId={change.id} close={close} />;
           } else if (change.remove) {
-            return <Remove key={change.id} card={change.add} changeId={change.id} close={close} />;
+            return <Remove key={change.id} card={change.remove} changeId={change.id} close={close} />;
           } else if (change.replace) {
             return <Replace key={change.id} cards={change.replace} changeId={change.id} close={close} />;
           }

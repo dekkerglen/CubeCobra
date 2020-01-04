@@ -3,13 +3,9 @@ import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstrap';
-
-import Draft from '../util/Draft';
 import Location from '../util/DraftLocation';
-import { arraysEqual, sortDeck } from '../util/Util';
+import { sortDeck } from '../util/Util';
 
-import CSRFForm from './CSRFForm';
 import DeckbuilderNavbar from './DeckbuilderNavbar';
 import DeckStacks from './DeckStacks';
 import { DisplayContextProvider } from './DisplayContext';
@@ -45,6 +41,16 @@ const Deckbuilder = ({ initialDeck, basics }) => {
       return [initialDeck.playersideboard.slice(0, 8)];
     }
   });
+
+  const allCards = deck.flat().flat();
+  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numOther = allCards.length - numLands - numCreatures;
+  const subtitle =
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numOther} other`;
 
   const locationMap = {
     [Location.DECK]: [deck, setDeck],
@@ -114,6 +120,7 @@ const Deckbuilder = ({ initialDeck, basics }) => {
             className="mt-3"
             cards={deck}
             title="Deck"
+            subtitle={subtitle}
             locationType={Location.DECK}
             canDrop={canDrop}
             onMoveCard={handleMoveCard}

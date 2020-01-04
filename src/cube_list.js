@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import Filter from './util/Filter';
 import Hash from './util/Hash';
+import Query from './util/Query';
 
 import CardModalForm from './components/CardModalForm';
 import { ChangelistContextProvider } from './components/ChangelistContext';
@@ -24,7 +25,7 @@ class CubeList extends Component {
     super(props);
 
     let openCollapse = null;
-    if (props.cubeID && localStorage.getItem(`changelist-${props.cubeID}`)) {
+    if (props.cubeID && localStorage.getItem(`changelist-${props.cubeID}`) && !Query.get('updated', false) === 'true') {
       openCollapse = 'edit';
     } else if (Hash.get('f', false)) {
       openCollapse = 'filter';
