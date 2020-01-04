@@ -25,13 +25,13 @@ const EditCollapse = ({ cubeID, ...props }) => {
       const normalized = encodeName(name);
       const response = await fetch(`/cube/api/getcard/${normalized}`);
       if (!response.ok) {
-        setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
+        setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
         return null;
       }
 
       const json = await response.json();
       if (json.success !== 'true' || !json.card) {
-        setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
+        setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
         return null;
       }
       return json.card;
@@ -74,9 +74,14 @@ const EditCollapse = ({ cubeID, ...props }) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = cube.find(card => card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase());
+        const cardOut = cube.find(
+          (card) => card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase(),
+        );
         if (!cardOut) {
-          setAlerts(alerts => [...alerts, { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` }]);
+          setAlerts((alerts) => [
+            ...alerts,
+            { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` },
+          ]);
           return;
         }
         if (replace) {
@@ -100,12 +105,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
     [addChange, addInput, addValue, removeInput, removeValue, cube],
   );
 
-  const handleDiscardAll = useCallback(
-    (event) => {
-      setChanges([]);
-    },
-    [],
-  );
+  const handleDiscardAll = useCallback((event) => {
+    setChanges([]);
+  }, []);
 
   const handleSaveChanges = useCallback((event) => {
     changelistForm.current && changelistForm.current.submit();
@@ -114,7 +116,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
   return (
     <Collapse className="px-3" {...props}>
       {alerts.map(({ color, message }) => (
-        <UncontrolledAlert color={color} className="mt-2">{message}</UncontrolledAlert>
+        <UncontrolledAlert color={color} className="mt-2">
+          {message}
+        </UncontrolledAlert>
       ))}
       <Row>
         <Col xs="12" sm="auto">
