@@ -122,7 +122,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               treePath="cardnames"
               type="text"
               className="mr-2"
-              ref={addInput}
+              innerRef={addInput}
               name="add"
               value={addValue}
               onChange={handleChange}
@@ -143,7 +143,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               treePath="cardnames"
               type="text"
               className="mr-2"
-              ref={removeInput}
+              innerRef={removeInput}
               name="remove"
               value={removeValue}
               onChange={handleChange}

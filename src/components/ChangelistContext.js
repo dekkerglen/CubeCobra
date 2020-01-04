@@ -29,11 +29,12 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
   const addChange = useCallback(
     (change) => {
       const highestId = Math.max(changes.map((change) => change.id));
+      const newId = !isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * (1 << 20));
       setChanges([
         ...changes,
         {
           ...change,
-          id: highestId + 1,
+          id: newId,
         },
       ]);
     },
