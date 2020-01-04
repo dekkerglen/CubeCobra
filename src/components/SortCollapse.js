@@ -8,7 +8,6 @@ import SortContext from './SortContext';
 
 class SortCollapseRaw extends Component {
   constructor(props) {
-
     super(props);
 
     this.state = {
