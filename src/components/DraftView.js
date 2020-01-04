@@ -34,7 +34,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
       <Row noGutters>
         {pack.map((card, index) => (
           <Col
-            key={card.details._id}
+            key={index}
             xs={4}
             sm={3}
             className="col-md-1-5 d-flex justify-content-center align-items-center"
