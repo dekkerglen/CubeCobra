@@ -171,9 +171,11 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const handleRemoveAll = useCallback(
     (event) => {
       event.preventDefault();
-      addChanges(cardIndices.map((index) => ({
-        remove: cube[index],
-      })));
+      addChanges(
+        cardIndices.map((index) => ({
+          remove: cube[index],
+        })),
+      );
       setOpenCollapse(() => 'edit');
       close();
     },

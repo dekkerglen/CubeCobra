@@ -63,7 +63,7 @@ class BlogPost extends React.Component {
 
   render() {
     var post = this.props.post;
-    if(post.html == "undefined") {
+    if (post.html == 'undefined') {
       post.html = null;
     }
     return (

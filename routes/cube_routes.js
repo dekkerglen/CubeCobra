@@ -1848,8 +1848,8 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       }
 
       removes.sort();
-      for(let i = removes.length -1 ; i >= 0; i--) {
-        cube.cards.splice(removes[i],1);
+      for (let i = removes.length - 1; i >= 0; i--) {
+        cube.cards.splice(removes[i], 1);
       }
 
       var blogpost = new Blog();

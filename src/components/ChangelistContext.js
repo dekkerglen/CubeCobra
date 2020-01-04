@@ -21,10 +21,14 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
         return [];
       }
       if (result.length > 0) {
-        if (result.some((update) =>
-          (update.add && !update.add.details) ||
-          (update.remove && !update.remove.details) ||
-          (update.replace && !update.replace.every(card => card.details)))) {
+        if (
+          result.some(
+            (update) =>
+              (update.add && !update.add.details) ||
+              (update.remove && !update.remove.details) ||
+              (update.replace && !update.replace.every((card) => card.details)),
+          )
+        ) {
           // Old save format. Reset.
           return [];
         }
@@ -59,15 +63,13 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
   const addChanges = useCallback(
     (addedChanges) => {
       const highestId = Math.max(changes.map((change) => change.id));
-      let newId = !isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * (1 << 20))
+      let newId = !isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * (1 << 20));
       const newChanges = [...changes];
       for (const change of addedChanges) {
-        newChanges.push(
-          {
-            ...change,
-            id: newId,
-          },
-        );
+        newChanges.push({
+          ...change,
+          id: newId,
+        });
         newId += 1;
       }
       setChanges(newChanges);
