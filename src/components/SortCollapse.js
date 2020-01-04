@@ -8,6 +8,7 @@ import SortContext from './SortContext';
 
 class SortCollapseRaw extends Component {
   constructor(props) {
+
     super(props);
 
     this.state = {
@@ -40,7 +41,7 @@ class SortCollapseRaw extends Component {
   }
 
   render() {
-    const { primary, secondary, changeSort, ...props } = this.props;
+    const { primary, secondary, changeSort, canEdit, ...props } = this.props;
     return (
       <Collapse {...props}>
         <Container>

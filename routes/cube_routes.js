@@ -1802,7 +1802,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       res.redirect('/cube/list/' + req.params.id);
     } else {
       var edits = req.body.body.split(';');
-      var fail_remove = [];
+      var removes = [];
       var changelog = '';
       for (let edit of edits) {
         if (edit.charAt(0) == '+') {
@@ -1819,9 +1819,10 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           const indexOut = parseInt(edit.substring(1));
           if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
             req.flash('danger', 'Bad request format.');
-            res.redirect('/cube/list/' + req.params.id);
+            return res.redirect('/cube/list/' + req.params.id);
           }
-          const [card] = cube.cards.splice(indexOut, 1);
+          removes.push(indexOut);
+          const card = cube.cards[indexOut];
           changelog += removeCardHtml(carddb.cardFromId(card.cardID));
         } else if (edit.charAt(0) == '/') {
           const [indexOutStr, idIn] = edit.substring(1).split('>');
@@ -1830,20 +1831,25 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             console.log('Card not found: ' + edit, req);
           } else {
             util.addCardToCube(cube, detailsIn);
-            changelog += addCardHtml(detailsIn);
           }
 
           const indexOut = parseInt(indexOutStr);
           if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
             req.flash('danger', 'Bad request format.');
-            res.redirect('/cube/list/' + req.params.id);
+            return res.redirect('/cube/list/' + req.params.id);
           }
-          const [cardOut] = cube.cards.splice(indexOut, 1);
+          removes.push(indexOut);
+          const cardOut = cube.cards[indexOut];
           changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
         } else {
           req.flash('danger', 'Bad request format.');
-          res.redirect('/cube/list/' + req.params.id);
+          return res.redirect('/cube/list/' + req.params.id);
         }
+      }
+
+      removes.sort();
+      for (let i = removes.length - 1; i >= 0; i--) {
+        cube.cards.splice(removes[i], 1);
       }
 
       var blogpost = new Blog();
