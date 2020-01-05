@@ -227,7 +227,7 @@ class CubeListNavbarRaw extends Component {
           </Collapse>
         </Navbar>
         {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={this.props.openCollapse === 'edit'} />}
-        <SortCollapse isOpen={this.props.openCollapse === 'sort'} />
+        <SortCollapse canEdit={canEdit} isOpen={this.props.openCollapse === 'sort'} />
         <FilterCollapse
           filter={filter}
           setFilter={setFilter}

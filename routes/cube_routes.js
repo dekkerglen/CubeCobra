@@ -1847,8 +1847,8 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           return res.redirect('/cube/list/' + req.params.id);
         }
       }
-
-      removes.sort();
+      //need to do numerical sort..
+      removes.sort((a, b) => a - b);
       for (let i = removes.length - 1; i >= 0; i--) {
         cube.cards.splice(removes[i], 1);
       }
@@ -3019,8 +3019,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         card.type_line = carddb.cardFromId(card.cardID).type;
       }
       if (!cardsAreEquivalent(src, card)) {
-        console.log(src);
-        console.log(card);
         res.status(400).send({
           success: 'false',
           message: 'Cards not equivalent',
@@ -3039,8 +3037,6 @@ router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
         cube.cards[src.index] = updated;
 
         cube = setCubeType(cube, carddb);
-
-        console.log(updated);
 
         cube.save(function(err) {
           if (err) {
