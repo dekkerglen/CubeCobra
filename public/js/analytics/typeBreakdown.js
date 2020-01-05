@@ -224,10 +224,6 @@ onmessage = (e) => {
       { header: '{c}', key: 'Colorless' },
       { header: '{m}', key: 'Multi' },
       { header: 'Total', key: 'Total' },
-  
-  
-  
-  
     ],
     data: [
       TypeByColor['Creatures'],

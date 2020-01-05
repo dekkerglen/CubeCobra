@@ -123,7 +123,7 @@ onmessage = (e) => {
       Total: 0,
     },
   };
-  var asfan
+  var asfan;
   cards.forEach(function(card, index) {
     asfan = card.asfan || 15 / cards.length;
     var type = {};

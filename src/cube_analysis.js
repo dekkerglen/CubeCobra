@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Col, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, Nav, NavLink, Row } from 'reactstrap';
+import { Col, Container, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, Nav, NavLink, Row } from 'reactstrap';
 
 import Filter from './util/Filter';
 import Hash from './util/Hash';
 
 import AddAnalyticModal from './components/AddAnalyticModal';
 import AddAnalyticModalContext from './components/AddAnalyticModalContext';
+import AnalyticsBarChart from './components/AnalyticsBarChart';
 import AnalyticsTable from './components/AnalyticsTable';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -26,8 +27,9 @@ class CubeAnalysis extends Component {
         cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
         typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
         typeBreakdownAsfan: { url: '/js/analytics/typeBreakdownAsfan.js', title: 'Type Breakdown Asfans' },
+        curve: { url: '/js/analytics/colorCurve.js', title: 'Curve' },
       },
-      analytics_order: ['colorCount', 'cumulativeColorCount', 'typeBreakdown', 'typeBreakdownAsfan'],
+      analytics_order: ['colorCount', 'cumulativeColorCount', 'typeBreakdown', 'typeBreakdownAsfan', 'curve'],
       filter: [],
       openCollapse: null,
       cardsWithAsfan: null,
@@ -220,7 +222,7 @@ class CubeAnalysis extends Component {
 
   render() {
     const { cube } = this.props;
-    const { analytics, analytics_order, filter, formatDropdownOpen } = this.state;
+    const { analytics, analytics_order, filter, formatDropdownOpen, formatId } = this.state;
     const active = this.state.nav;
     const cards = cube.cards;
     const filteredCards =
@@ -234,30 +236,41 @@ class CubeAnalysis extends Component {
       let result = <p>Loading Data</p>;
       if (data) {
         if (data.type == 'table') result = <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
+        else if (data.type == 'bar')
+          result = <AnalyticsBarChart data={this.state.data} title={analytics[active].title} />;
       }
       return result;
     };
     var dropdownElement;
     if (cube.draft_formats) {
       dropdownElement = (
-        <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
-          <DropdownToggle caret>Draft Format</DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
-              Default Draft Format
-            </DropdownItem>
-            <DropdownItem header key="customformatsheader">
-              Custom Formats
-            </DropdownItem>
-            {cube.draft_formats
-              ? cube.draft_formats.map((format, formatIndex) => (
-                  <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
-                    {format.title}
+        <Container>
+          <Row>
+            <Col>
+              <h5>{formatId >= 0 ? cube.draft_formats[formatId] : 'Default Draft Format'}</h5>
+            </Col>
+            <Col>
+              <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
+                <DropdownToggle caret>Change Draft Format</DropdownToggle>
+                <DropdownMenu>
+                  <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
+                    Default Draft Format
                   </DropdownItem>
-                ))
-              : ''}
-          </DropdownMenu>
-        </Dropdown>
+                  <DropdownItem header key="customformatsheader">
+                    Custom Formats
+                  </DropdownItem>
+                  {cube.draft_formats
+                    ? cube.draft_formats.map((format, formatIndex) => (
+                        <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
+                          {format.title}
+                        </DropdownItem>
+                      ))
+                    : ''}
+                </DropdownMenu>
+              </Dropdown>
+            </Col>
+          </Row>
+        </Container>
       );
     } else {
       dropdownElement = <h5>Default Draft Format</h5>;
