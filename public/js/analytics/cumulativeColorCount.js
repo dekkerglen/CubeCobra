@@ -94,8 +94,8 @@ onmessage = (e) => {
     type: 'table',
     columns: [
       { header: 'Color Combination', key: 'label' },
-      { header: 'AsFan Playable In', key: 'asfan' },
-      { header: 'Count Playable In', key: 'count' },
+      { header: 'AsFan of Contained In', key: 'asfan' },
+      { header: 'Count of Contained In', key: 'count' },
     ],
     data: datapoints,
   });

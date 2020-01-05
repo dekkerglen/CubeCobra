@@ -22,15 +22,17 @@ class CubeAnalysis extends Component {
       data: { type: 'none' },
       workers: {},
       analytics: {
-        colorCount: { url: '/js/analytics/colorCount.js', title: 'Count By Color' },
-        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Count By Color' },
+        colorCount: { url: '/js/analytics/colorCount.js', title: 'Color Counts' },
+        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
+        typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
+        typeBreakdownAsfan: { url: '/js/analytics/typeBreakdownAsfan.js', title: 'Type Breakdown Asfans' },
       },
-      analytics_order: ['colorCount', 'cumulativeColorCount'],
+      analytics_order: ['colorCount', 'cumulativeColorCount', 'typeBreakdown', 'typeBreakdownAsfan'],
       filter: [],
       openCollapse: null,
       cardsWithAsfan: null,
       filteredWithAsfan: null,
-      formatId: -1,
+      formatId: Hash.get('formatId', -1),
       formatDropdownOpen: false,
     };
 
@@ -200,6 +202,7 @@ class CubeAnalysis extends Component {
   }
 
   setFormat(formatId) {
+    Hash.set('formatId', formatId);
     this.setState({ formatId }, this.updateAsfan);
   }
 
