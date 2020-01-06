@@ -95,7 +95,7 @@ function passPack() {
   draft.pickNumber += 1;
   botPicks();
   //check if pack is done
-  if (draft.packs.every(seat => seat[0].length === 0)) {
+  if (draft.packs.every((seat) => seat[0].length === 0)) {
     draft.packNumber += 1;
     draft.pickNumber = 1;
     //splice the first pack out

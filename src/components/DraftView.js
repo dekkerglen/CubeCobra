@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
@@ -99,13 +99,15 @@ const DraftView = () => {
   }, []);
 
   useEffect(() => {
-    if (finished) {
-      await Draft.finish();
-      if (submitDeckForm.current) {
-        submitDeckForm.current.submit();
+    (async () => {
+      if (finished) {
+        await Draft.finish();
+        if (submitDeckForm.current) {
+          submitDeckForm.current.submit();
+        }
       }
-    }
-  }, [finished])
+    })();
+  }, [finished]);
 
   const handleMoveCard = useCallback(
     async (source, target) => {
