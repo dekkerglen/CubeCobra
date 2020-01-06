@@ -107,7 +107,7 @@ const CardModalForm = ({ setOpenCollapse, children, ...props }) => {
 
   const queueRemoveCard = useCallback(() => {
     addChange({
-      remove: card.details,
+      remove: card,
     });
     setOpenCollapse(() => 'edit');
     setIsOpen(false);

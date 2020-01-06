@@ -15,9 +15,9 @@ const VisualSpoiler = ({ cards, ...props }) => {
       {sorted.map(([label1, group1]) =>
         group1.map(([label2, group2]) =>
           group2.map(([label3, group3]) =>
-            group3.map(({ index, tags, finish, details }) => (
-              <Col key={index} xs={6} sm={4} className="col-md-1-5">
-                <SpoilerImage index={index} tags={tags} finish={finish} {...details} />
+            group3.map((card) => (
+              <Col key={card.index} xs={6} sm={4} className="col-md-1-5">
+                <SpoilerImage card={card} />
               </Col>
             )),
           ),

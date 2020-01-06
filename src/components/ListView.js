@@ -109,7 +109,7 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
-  syncCard(index, updated, setStateCallback) {
+  async syncCard(index, updated, setStateCallback) {
     const { cube, cubeID, updateCubeCard } = this.props;
     const card = cube[index];
 
@@ -129,36 +129,34 @@ class ListViewRaw extends Component {
       return;
     }
 
-    csrfFetch(`/cube/api/updatecard/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        src: card,
-        updated,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .catch((err) => console.error(err))
-      .then((json) => {
-        if (json.success === 'true') {
-          updateCubeCard(index, { ...card, ...updated });
-          if (updated.cardID !== card.cardID) {
-            // changed version
-            fetch(`/cube/api/getcardfromid/${updated.cardID}`)
-              .then((response) => response.json())
-              .then((json) => {
-                updateCubeCard(index, json.card);
-              })
-              .catch((err) => console.error(err));
-          }
-          if (setStateCallback) {
-            setStateCallback();
-          }
+    try {
+      const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          src: card,
+          updated,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const json = await response.json();
+
+      if (json.success === 'true') {
+        updateCubeCard(index, { ...card, ...updated });
+        if (updated.cardID !== card.cardID) {
+          // changed version
+          const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+          const getJson = await getResponse.json();
+          updateCubeCard(index, { ...card, details: getJson.card });
         }
-      })
-      .catch((err) => console.error(err));
+        if (setStateCallback) {
+          setStateCallback();
+        }
+      }
+    } catch(err) {
+      console.error(err);
+    }
   }
 
   setTagInput(cardIndex, value) {
@@ -290,16 +288,21 @@ class ListViewRaw extends Component {
 
     const rows = sorted.map(([label1, group1]) =>
       group1.map(([label2, group2]) =>
-        group2.map(({ index, details, ...card }) => (
-          <tr key={index} className={cardColorClass(card)}>
+        group2.map((card) => (
+          <tr key={card.index} className={cardColorClass(card)}>
             <td className="align-middle">
-              <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
+              <Input {...inputProps(card.index, 'check')} type="checkbox" className="d-block mx-auto" />
             </td>
-            <AutocardTd className="align-middle text-truncate" card={{ details, ...card }}>
-              {details.name}
+            <AutocardTd className="align-middle text-truncate" card={card}>
+              {card.details.name}
             </AutocardTd>
             <td>
-              <Input {...inputProps(index, 'version')} type="select" style={{ maxWidth: '6rem' }} className="w-100">
+              <Input
+                {...inputProps(card.index, 'version')}
+                type="select"
+                style={{ maxWidth: '6rem' }}
+                className="w-100"
+              >
                 {(this.state.versionDict[card.cardID] || []).map((version) => (
                   <option key={version.id} value={version.id}>
                     {version.version}
@@ -308,27 +311,27 @@ class ListViewRaw extends Component {
               </Input>
             </td>
             <td>
-              <Input {...inputProps(index, 'type')} type="text" />
+              <Input {...inputProps(card.index, 'type')} type="text" />
             </td>
             <td>
-              <Input {...inputProps(index, 'status')} type="select">
+              <Input {...inputProps(card.index, 'status')} type="select">
                 {getLabels(null, 'Status').map((status) => (
                   <option key={status}>{status}</option>
                 ))}
               </Input>
             </td>
             <td>
-              <Input {...inputProps(index, 'finish')} type="select">
+              <Input {...inputProps(card.index, 'finish')} type="select">
                 {getLabels(null, 'Finish').map((finish) => (
                   <option key={finish}>{finish}</option>
                 ))}
               </Input>
             </td>
             <td>
-              <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
+              <Input {...inputProps(card.index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
             </td>
             <td>
-              <Input {...inputProps(index, 'colors')} type="select">
+              <Input {...inputProps(card.index, 'colors')} type="select">
                 {colorCombos.map((combo) => (
                   <option key={combo}>{combo}</option>
                 ))}
@@ -336,14 +339,14 @@ class ListViewRaw extends Component {
             </td>
             <td style={{ minWidth: '15rem' }}>
               <TagInput
-                tags={this.state[`tags${index}`]}
-                value={this.state[`tdtaginput${index}`]}
-                name={`tdtaginput${index}`}
+                tags={this.state[`tags${card.index}`]}
+                value={this.state[`tdtaginput${card.index}`]}
+                name={`tdtaginput${card.index}`}
                 onChange={this.handleChange}
-                handleInputBlur={this.tagBlur.bind(this, index)}
-                addTag={this.addTag.bind(this, index)}
-                deleteTag={this.deleteTag.bind(this, index)}
-                reorderTag={this.reorderTag.bind(this, index)}
+                handleInputBlur={this.tagBlur.bind(this, card.index)}
+                addTag={this.addTag.bind(this, card.index)}
+                deleteTag={this.deleteTag.bind(this, card.index)}
+                reorderTag={this.reorderTag.bind(this, card.index)}
               />
             </td>
           </tr>
@@ -352,7 +355,7 @@ class ListViewRaw extends Component {
     );
 
     return (
-      <form className="form-inline">
+      <form className="form-inline mt-3">
         <PagedTable rows={rows} size="sm">
           <thead>
             <tr>

@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import Filter from '../util/Filter';
 import Hash from '../util/Hash';
+import Query from '../util/Query';
 
 import CardModalForm from '../components/CardModalForm';
 import { ChangelistContextProvider } from '../components/ChangelistContext';
-import { CubeContextProvider } from '../components/CubeContext';
+import CubeContext, { CubeContextProvider } from '../components/CubeContext';
 import CubeListNavbar from '../components/CubeListNavbar';
 import CurveView from '../components/CurveView';
 import { DisplayContextProvider } from '../components/DisplayContext';
@@ -19,10 +20,14 @@ import TableView from '../components/TableView';
 import { TagContextProvider } from '../components/TagContext';
 import VisualSpoiler from '../components/VisualSpoiler';
 
-const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   let initialOpenCollapse = null;
-  const savedChanges = typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
-  if (cubeID && savedChanges && savedChanges.length > 2) {
+  const savedChanges = cubeID && typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
+  if (
+    savedChanges &&
+    savedChanges.length > 2 &&
+    Query.get('updated', false) !== 'true'
+  ) {
     initialOpenCollapse = 'edit';
   } else if (Hash.get('f', false)) {
     initialOpenCollapse = 'filter';
@@ -32,7 +37,7 @@ const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTag
   const [openCollapse, setOpenCollapse] = useState(initialOpenCollapse);
   const [filter, setFilter] = useState([]);
 
-  const cardsIndex = useMemo(() => cards.map((card, index) => ({ ...card, index })), [cards]);
+  const { cube, cubeID, canEdit } = useContext(CubeContext);
 
   useEffect(() => {
     if (cubeView === 'table') {
@@ -42,55 +47,58 @@ const CubeListPage = ({ cards, cubeID, canEdit, defaultTagColors, defaultShowTag
     }
   }, [cubeView]);
 
-  const defaultTagSet = new Set([].concat.apply([], cardsIndex.map((card) => card.tags)));
+  const defaultTagSet = new Set([].concat.apply([], cube.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
   }));
-  const filteredCards = filter.length > 0 ? cardsIndex.filter((card) => Filter.filterCard(card, filter)) : cardsIndex;
+  const filteredCards = filter.length > 0 ? cube.filter((card) => Filter.filterCard(card, filter)) : cube;
   return (
-    <CubeContextProvider initialCube={cardsIndex} cubeID={cubeID} canEdit={canEdit}>
-      <SortContextProvider defaultSorts={defaultSorts}>
-        <DisplayContextProvider>
-          <TagContextProvider
-            cubeID={cubeID}
-            defaultTagColors={defaultTagColors}
-            defaultShowTagColors={defaultShowTagColors}
-            defaultTags={defaultTags}
-          >
-            <ChangelistContextProvider cubeID={cubeID}>
-              <CardModalForm canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
-                <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
-                  <CubeListNavbar
-                    cubeView={cubeView}
-                    setCubeView={setCubeView}
-                    openCollapse={openCollapse}
-                    setOpenCollapse={setOpenCollapse}
-                    filter={filter}
-                    setFilter={setFilter}
-                    cards={filteredCards}
-                  />
-                  <DynamicFlash />
-                  <ErrorBoundary className="mt-3">
-                    {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+    <SortContextProvider defaultSorts={defaultSorts}>
+      <DisplayContextProvider>
+        <TagContextProvider
+          cubeID={cubeID}
+          defaultTagColors={defaultTagColors}
+          defaultShowTagColors={defaultShowTagColors}
+          defaultTags={defaultTags}
+        >
+          <ChangelistContextProvider cubeID={cubeID}>
+            <CardModalForm canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
+              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
+                <CubeListNavbar
+                  cubeView={cubeView}
+                  setCubeView={setCubeView}
+                  openCollapse={openCollapse}
+                  setOpenCollapse={setOpenCollapse}
+                  filter={filter}
+                  setFilter={setFilter}
+                  cards={filteredCards}
+                />
+                <DynamicFlash />
+                <ErrorBoundary className="mt-3">
+                  {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+                  {
                     {
-                      {
-                        table: <TableView cards={filteredCards} />,
-                        spoiler: <VisualSpoiler cards={filteredCards} />,
-                        curve: <CurveView cards={filteredCards} />,
-                        list: <ListView cards={filteredCards} />,
-                      }[cubeView]
-                    }
-                  </ErrorBoundary>
-                </GroupModal>
-              </CardModalForm>
-            </ChangelistContextProvider>
-          </TagContextProvider>
-        </DisplayContextProvider>
-      </SortContextProvider>
-    </CubeContextProvider>
+                      table: <TableView cards={filteredCards} />,
+                      spoiler: <VisualSpoiler cards={filteredCards} />,
+                      curve: <CurveView cards={filteredCards} />,
+                      list: <ListView cards={filteredCards} />,
+                    }[cubeView]
+                  }
+                </ErrorBoundary>
+              </GroupModal>
+            </CardModalForm>
+          </ChangelistContextProvider>
+        </TagContextProvider>
+      </DisplayContextProvider>
+    </SortContextProvider>
   );
 };
+
+const CubeListPage = ({ cards, cubeID, canEdit, ...props }) =>
+  <CubeContextProvider initialCube={cards} cubeID={cubeID} canEdit={canEdit}>
+    <CubeListPageRaw {...props} />
+  </CubeContextProvider>;
 
 CubeListPage.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.object).isRequired,

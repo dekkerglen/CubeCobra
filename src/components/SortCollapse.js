@@ -13,7 +13,7 @@ const SortCollapse = (props) => {
   const { canEdit, cubeID } = useContext(CubeContext);
   const { primary, secondary, changeSort } = useContext(SortContext);
 
-  const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]));
+  const addAlert = useCallback((color, message) => setAlerts((alerts) => [...alerts, { color, message }]), []);
 
   const handleSave = useCallback(
     (event) => {
@@ -37,9 +37,9 @@ const SortCollapse = (props) => {
       <Container>
         <Row>
           <Col>
-            {alerts.map((alert, index) => (
-              <UncontrolledAlert key={index} className="w-100 mb-1" color={alert.color}>
-                {alert.message}
+            {alerts.map(({ color, message }, index) => (
+              <UncontrolledAlert key={index} className="w-100 mb-1" color={color}>
+                {message}
               </UncontrolledAlert>
             ))}
           </Col>

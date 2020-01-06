@@ -1,5 +1,5 @@
 function query() {
-  return typeof window !== 'undefined' ? window.location.searc.slice(1) : '';
+  return typeof window !== 'undefined' ? window.location.search.slice(1) : '';
 }
 function changeQuery(params) {
   if (typeof window === 'undefined') {
