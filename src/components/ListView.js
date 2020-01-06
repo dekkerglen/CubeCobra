@@ -154,7 +154,7 @@ class ListViewRaw extends Component {
           setStateCallback();
         }
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   }

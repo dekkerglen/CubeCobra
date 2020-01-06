@@ -13,29 +13,23 @@ const CubeContext = React.createContext({
 export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) => {
   const [cube, setCube] = useState(initialCube.map((card, index) => ({ ...card, index })));
 
-  const updateCubeCard = useCallback(
-    (index, newCard) => {
-      setCube((cube) => {
-        const newCube = [...cube];
-        newCube[index] = newCard;
-        return newCube;
-      });
-    },
-    [],
-  );
+  const updateCubeCard = useCallback((index, newCard) => {
+    setCube((cube) => {
+      const newCube = [...cube];
+      newCube[index] = newCard;
+      return newCube;
+    });
+  }, []);
 
-  const updateCubeCards = useCallback(
-    (newCards) => {
-      setCube((cube) => {
-        const newCube = [...cube];
-        for (const card of newCards) {
-          newCube[card.index] = card;
-        }
-        return newCube;
-      });
-    },
-    [],
-  );
+  const updateCubeCards = useCallback((newCards) => {
+    setCube((cube) => {
+      const newCube = [...cube];
+      for (const card of newCards) {
+        newCube[card.index] = card;
+      }
+      return newCube;
+    });
+  }, []);
 
   const hasCustomImages = cube.some((card) => card.imgUrl && card.imgUrl.length > 0);
 

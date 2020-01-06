@@ -23,11 +23,7 @@ import VisualSpoiler from '../components/VisualSpoiler';
 const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   let initialOpenCollapse = null;
   const savedChanges = cubeID && typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
-  if (
-    savedChanges &&
-    savedChanges.length > 2 &&
-    Query.get('updated', false) !== 'true'
-  ) {
+  if (savedChanges && savedChanges.length > 2 && Query.get('updated', false) !== 'true') {
     initialOpenCollapse = 'edit';
   } else if (Hash.get('f', false)) {
     initialOpenCollapse = 'filter';
@@ -95,10 +91,11 @@ const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts 
   );
 };
 
-const CubeListPage = ({ cards, cubeID, canEdit, ...props }) =>
+const CubeListPage = ({ cards, cubeID, canEdit, ...props }) => (
   <CubeContextProvider initialCube={cards} cubeID={cubeID} canEdit={canEdit}>
     <CubeListPageRaw {...props} />
-  </CubeContextProvider>;
+  </CubeContextProvider>
+);
 
 CubeListPage.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.object).isRequired,
