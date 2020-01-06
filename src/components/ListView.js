@@ -111,7 +111,7 @@ class ListViewRaw extends Component {
 
   async syncCard(index, updated, setStateCallback) {
     const { cube, cubeID, updateCubeCard } = this.props;
-    const card = cube[index];
+    let card = cube[index];
 
     updated = { ...card, ...updated };
     delete updated.details;
@@ -143,8 +143,10 @@ class ListViewRaw extends Component {
       const json = await response.json();
 
       if (json.success === 'true') {
-        updateCubeCard(index, { ...card, ...updated });
-        if (updated.cardID !== card.cardID) {
+        const oldCardID = card.cardID;
+        card = { ...card, ...updated };
+        updateCubeCard(index, card);
+        if (updated.cardID !== oldCardID) {
           // changed version
           const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
           const getJson = await getResponse.json();

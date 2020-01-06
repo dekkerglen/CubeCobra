@@ -48,7 +48,11 @@ const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts 
     id: tag,
     text: tag,
   }));
-  const filteredCards = filter.length > 0 ? cube.filter((card) => Filter.filterCard(card, filter)) : cube;
+
+  const filteredCards = useMemo(() => {
+    return filter.length > 0 ? cube.filter((card) => Filter.filterCard(card, filter)) : cube;
+  }, [filter, cube]);
+
   return (
     <SortContextProvider defaultSorts={defaultSorts}>
       <DisplayContextProvider>
