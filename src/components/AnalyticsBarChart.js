@@ -40,6 +40,7 @@ const AnalyticsBarChart = ({ data, title, ...props }) => {
       <Row {...props}>
         <Col>
           <h4 className="d-lg-block d-none">{title}</h4>
+          Click the labels to filter them out of the datasets.
         </Col>
       </Row>
       <Row>

@@ -9,6 +9,7 @@ import Hash from './util/Hash';
 import AddAnalyticModal from './components/AddAnalyticModal';
 import AddAnalyticModalContext from './components/AddAnalyticModalContext';
 import AnalyticsBarChart from './components/AnalyticsBarChart';
+import AnalyticsCloud from './components/AnalyticsCloud';
 import AnalyticsTable from './components/AnalyticsTable';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -28,8 +29,16 @@ class CubeAnalysis extends Component {
         typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
         typeBreakdownAsfan: { url: '/js/analytics/typeBreakdownAsfan.js', title: 'Type Breakdown Asfans' },
         curve: { url: '/js/analytics/colorCurve.js', title: 'Curve' },
+        tagCloud: { url: '/js/analytics/tagCloud.js', title: 'Tag Cloud' },
       },
-      analytics_order: ['colorCount', 'cumulativeColorCount', 'typeBreakdown', 'typeBreakdownAsfan', 'curve'],
+      analytics_order: [
+        'colorCount',
+        'cumulativeColorCount',
+        'typeBreakdown',
+        'typeBreakdownAsfan',
+        'curve',
+        'tagCloud',
+      ],
       filter: [],
       openCollapse: null,
       cardsWithAsfan: null,
@@ -238,39 +247,39 @@ class CubeAnalysis extends Component {
         if (data.type == 'table') result = <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
         else if (data.type == 'bar')
           result = <AnalyticsBarChart data={this.state.data} title={analytics[active].title} />;
+        else if (data.type == 'cloud')
+          result = <AnalyticsCloud data={this.state.data} title={analytics[active].title} />;
       }
       return result;
     };
     var dropdownElement;
     if (cube.draft_formats) {
       dropdownElement = (
-        <Container>
-          <Row>
-            <Col>
-              <h5>{formatId >= 0 ? cube.draft_formats[formatId] : 'Default Draft Format'}</h5>
-            </Col>
-            <Col>
-              <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
-                <DropdownToggle caret>Change Draft Format</DropdownToggle>
-                <DropdownMenu>
-                  <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
-                    Default Draft Format
-                  </DropdownItem>
-                  <DropdownItem header key="customformatsheader">
-                    Custom Formats
-                  </DropdownItem>
-                  {cube.draft_formats
-                    ? cube.draft_formats.map((format, formatIndex) => (
-                        <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
-                          {format.title}
-                        </DropdownItem>
-                      ))
-                    : ''}
-                </DropdownMenu>
-              </Dropdown>
-            </Col>
-          </Row>
-        </Container>
+        <Row>
+          <Col>
+            <h5>{formatId >= 0 ? cube.draft_formats[formatId].title : 'Default Draft Format'}</h5>
+          </Col>
+          <Col>
+            <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
+              <DropdownToggle caret>Change Draft Format</DropdownToggle>
+              <DropdownMenu>
+                <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
+                  Default Draft Format
+                </DropdownItem>
+                <DropdownItem header key="customformatsheader">
+                  Custom Formats
+                </DropdownItem>
+                {cube.draft_formats
+                  ? cube.draft_formats.map((format, formatIndex) => (
+                      <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
+                        {format.title}
+                      </DropdownItem>
+                    ))
+                  : ''}
+              </DropdownMenu>
+            </Dropdown>
+          </Col>
+        </Row>
       );
     } else {
       dropdownElement = <h5>Default Draft Format</h5>;

@@ -93,7 +93,7 @@ onmessage = (e) => {
       ['Total', curve.total, '#000000'],
     ].map((color) => ({
       label: color[0],
-      data: color[1],
+      data: color[1].map((af) => af.toFixed(2)),
       fill: false,
       backgroundColor: color[2],
       borderColor: color[2],
