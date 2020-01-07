@@ -5,7 +5,8 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "beautify": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' webpack.'*'.js",
+    "beautify": "npm run prettier",
+    "prettier": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' webpack.'*'.js",
     "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js'",
     "nodemon": "nodemon --ignore src --ignore public",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
