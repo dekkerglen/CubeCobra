@@ -75,7 +75,13 @@ const EditCollapse = ({ cubeID, ...props }) => {
       const replace = addValue.length > 0;
       try {
         const cardOut = cube.find(
-          (card) => card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase(),
+          (card) =>
+            card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
+            !changes.some(
+              (change) =>
+                change.remove.index === card.index ||
+                (Array.isArray(change.replace) && change.replace[0].index === card.index),
+            ),
         );
         if (!cardOut) {
           setAlerts((alerts) => [
@@ -102,7 +108,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
         console.error(e);
       }
     },
-    [addChange, addInput, addValue, removeInput, removeValue, cube],
+    [addChange, addInput, addValue, removeInput, removeValue, cube, changes],
   );
 
   const handleDiscardAll = useCallback((event) => {

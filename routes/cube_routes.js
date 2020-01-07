@@ -1831,7 +1831,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       res.redirect('/cube/list/' + req.params.id);
     } else {
       var edits = req.body.body.split(';');
-      var removes = [];
+      var removes = new Set();
       var adds = [];
       var changelog = '';
       for (let edit of edits) {
@@ -1851,7 +1851,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             req.flash('danger', 'Bad request format.');
             return res.redirect('/cube/list/' + req.params.id);
           }
-          removes.push(indexOut);
+          removes.add(indexOut);
           const card = cube.cards[indexOut];
           changelog += removeCardHtml(carddb.cardFromId(card.cardID));
         } else if (edit.charAt(0) == '/') {
@@ -1868,7 +1868,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             req.flash('danger', 'Bad request format.');
             return res.redirect('/cube/list/' + req.params.id);
           }
-          removes.push(indexOut);
+          removes.add(indexOut);
           const cardOut = cube.cards[indexOut];
           changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
         } else {
@@ -1877,9 +1877,10 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
         }
       }
       //need to do numerical sort..
-      removes.sort((a, b) => a - b);
-      for (let i = removes.length - 1; i >= 0; i--) {
-        cube.cards.splice(removes[i], 1);
+      const removesArray = [...removes];
+      removesArray.sort((a, b) => a - b);
+      for (let i = removesArray.length - 1; i >= 0; i--) {
+        cube.cards.splice(removesArray[i], 1);
       }
       for (let i = 0; i < adds.length; i++) {
         util.addCardToCube(cube, adds[i]);
