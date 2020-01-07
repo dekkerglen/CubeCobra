@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import { DndProvider } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
@@ -13,6 +11,7 @@ import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
 import { DisplayContextProvider } from './DisplayContext';
+import DndProvider from './DndProvider';
 import DraggableCard from './DraggableCard';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
@@ -160,7 +159,7 @@ const DraftView = () => {
       <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
-      <DndProvider backend={HTML5Backend}>
+      <DndProvider>
         <ErrorBoundary>
           <Pack
             pack={pack}
