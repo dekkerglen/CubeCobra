@@ -124,8 +124,8 @@ export function isTouchDevice() {
 
   const mq = (query) => window.matchMedia(query).matches;
 
-  if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
-      return true;
+  if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
+    return true;
   }
 
   // include the 'heartz' as a way to have a non matching MQ to help terminate the join

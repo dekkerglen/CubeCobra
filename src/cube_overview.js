@@ -51,7 +51,8 @@ class CubeOverview extends Component {
   error(message) {
     this.setState(({ alerts }) => ({
       alerts: [
-        ...alerts, {
+        ...alerts,
+        {
           color: 'danger',
           message,
         },
