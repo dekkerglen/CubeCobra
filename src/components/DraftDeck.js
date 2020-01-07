@@ -23,6 +23,7 @@ import { sortDeck } from '../util/Util';
 
 import CustomImageToggler from './CustomImageToggler';
 import { DisplayContextProvider } from './DisplayContext';
+import { subtitle } from './DraftView';
 import DynamicFlash from './DynamicFlash';
 import FoilCardImage from './FoilCardImage';
 import { getCardColorClass } from './TagContext';
@@ -82,16 +83,6 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
     </Fragment>
   );
 
-  const allCards = deck.flat().flat();
-  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
-  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
-  const numLands = allTypes.filter((type) => type.includes('land')).length;
-  const numOther = allCards.length - numLands - numCreatures;
-  const subtitle =
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numOther} other`;
-
   let stackedDeck;
   if (oldFormat) {
     stackedDeck = sortDeck(cards);
@@ -142,7 +133,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       <DynamicFlash />
       <Row className="mt-3">
         <Col>
-          <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle} />
+          <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle(deck.flat().flat())} />
         </Col>
       </Row>
       <h4 className="mt-3">Bot Decks</h4>
