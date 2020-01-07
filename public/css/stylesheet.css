@@ -170,6 +170,27 @@
 	width: calc(100% / 8);
 }
 
+@media(max-width: 649.98px) {
+	.compressed .table-col {
+		margin-top: 0.375rem !important;
+	}
+	.compressed .card-list-heading {
+		font-size: 7pt;
+		margin-bottom: 0.375rem !important;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.compressed .list-group-heading {
+		padding: 2px 4px;
+		font-size: 5pt;
+	}
+	.compressed .card-list-item {
+		font-size: 5pt;
+		padding: 1px 1px;
+		text-overflow: clip;
+	}
+}
+
 .card-list-item button.close {
 	font-size: 1rem;
 }
