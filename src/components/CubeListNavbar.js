@@ -168,11 +168,11 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
                 <DropdownItem onClick={handleOpenTagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
-                {!hasCustomImages &&
+                {!hasCustomImages && (
                   <DropdownItem onClick={toggleShowCustomImages}>
                     {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
                   </DropdownItem>
-                }
+                )}
                 <DropdownItem onClick={toggleCompressedView}>
                   {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
                 </DropdownItem>
