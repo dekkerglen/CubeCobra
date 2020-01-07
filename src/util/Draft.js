@@ -95,28 +95,12 @@ function passPack() {
   draft.pickNumber += 1;
   botPicks();
   //check if pack is done
-  let done = true;
-  for (const drafter of draft.packs) {
-    if (drafter[0].length > 0) {
-      done = false;
-    }
-  }
-  if (done) {
+  if (draft.packs.every((seat) => seat[0].length === 0)) {
     draft.packNumber += 1;
     draft.pickNumber = 1;
     //splice the first pack out
     for (const drafter of draft.packs) {
       drafter.splice(0, 1);
-    }
-    //check if draft is done (no packs left)
-    done = true;
-    for (const drafter of draft.packs) {
-      if (drafter.length > 0) {
-        done = false;
-      }
-    }
-    if (done) {
-      finish();
     }
   } else {
     if (draft.packs[0].length % 2 == 0) {
@@ -175,11 +159,6 @@ async function finish() {
       'Content-Type': 'application/json',
     },
   });
-
-  const form = document.getElementById('submitDeckForm');
-  if (form) {
-    form.submit();
-  }
 }
 
 export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish };
