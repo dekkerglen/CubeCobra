@@ -165,6 +165,11 @@
 	}
 }
 
+.table-view.compressed .table-col {
+	flex: 0 0 calc(100% / 8);
+	width: calc(100% / 8);
+}
+
 .card-list-item button.close {
 	font-size: 1rem;
 }
