@@ -36,7 +36,7 @@ const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
     <CardHeader>
       <CardTitle className="mb-0 d-flex flex-row align-items-end">
         <h4 className="mb-0 mr-auto">{title}</h4>
-        <h6 className="mb-0 font-weight-normal d-none d-md-block">{subtitle}</h6>
+        <h6 className="mb-0 font-weight-normal d-none d-sm-block">{subtitle}</h6>
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
