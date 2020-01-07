@@ -24,12 +24,13 @@ const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
 Canvas.Image = Image;
 
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
+
 const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 
-//grabbing sortfilter.cardIsLabel from client-side
-var sortfilter = require('../public/js/sortfilter.js');
 const router = express.Router();
 // Bring in models
 let Cube = require('../models/cube');
@@ -40,6 +41,8 @@ let Draft = require('../models/draft');
 let CardRating = require('../models/cardrating');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
+
+const NODE_ENV = process.env.NODE_ENV;
 
 function cardHtml(card) {
   if (card.image_flip) {
@@ -725,7 +728,7 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
                 in_both: JSON.stringify(in_both.map((card) => card.details.name)),
                 only_a: JSON.stringify(a_names),
                 only_b: JSON.stringify(b_names),
-                cube_raw: JSON.stringify(all_cards),
+                cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
                 metadata: generateMeta(
                   'Cube Cobra Compare Cubes',
                   `Comparing "${cubeA.name}" To "${cubeB.name}"`,
@@ -747,52 +750,78 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
   });
 });
 
-router.get('/list/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+let CubeListPage = null;
+if (NODE_ENV === 'production') {
+  CubeListPage = require('../dist/components/CubeListPage').default;
+}
+router.get('/list/:id', async function(req, res) {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id)).setOptions({ lean: true });
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      var pids = [];
-      cube.cards.forEach(function(card, index) {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
-        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-          pids.push(card.details.tcgplayer_id);
-        }
-      });
-      GetPrices(pids).then(function(price_dict) {
-        cube.cards.forEach(function(card, index) {
-          if (card.details.tcgplayer_id) {
-            if (price_dict[card.details.tcgplayer_id]) {
-              card.details.price = price_dict[card.details.tcgplayer_id];
-            }
-            if (price_dict[card.details.tcgplayer_id + '_foil']) {
-              card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-            }
-          }
-        });
-        res.render('cube/cube_list', {
-          cube: cube,
-          activeLink: 'list',
-          cube_id: req.params.id,
-          title: `${abbreviate(cube.name)} - List`,
-          cube_raw: JSON.stringify(cube.cards),
-          metadata: generateMeta(
-            `Cube Cobra List: ${cube.name}`,
-            cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-            cube.image_uri,
-            `https://cubecobra.com/cube/list/${req.params.id}`,
-          ),
-          loginCallback: '/cube/list/' + req.params.id,
-        });
-      });
+      return res.status(404).render('misc/404', {});
     }
-  });
+
+    const pids = new Set();
+    const cards = [...cube.cards];
+    cards.forEach(function(card, index) {
+      card.details = {
+        ...carddb.cardFromId(card.cardID),
+      };
+      card.index = index;
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+    });
+
+    const price_dict = await GetPrices([...pids]);
+    for (const card of cards) {
+      if (card.details.tcgplayer_id) {
+        if (price_dict[card.details.tcgplayer_id]) {
+          card.details.price = price_dict[card.details.tcgplayer_id];
+        }
+        if (price_dict[card.details.tcgplayer_id + '_foil']) {
+          card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+        }
+      }
+    }
+
+    const reactProps = {
+      canEdit: req.user && req.user.id === cube.owner,
+      cubeID: cube._id.toString(),
+      defaultTagColors: cube.tag_colors,
+      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      defaultSorts: cube.default_sorts,
+      cards,
+    };
+
+    res.render('cube/cube_list', {
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+          : undefined,
+      reactProps,
+      cube,
+      activeLink: 'list',
+      title: `${abbreviate(cube.name)} - List`,
+      metadata: generateMeta(
+        `Cube Cobra List: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/list/${req.params.id}`,
+      ),
+      loginCallback: '/cube/list/' + req.params.id,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
 });
 
 router.get('/playtest/:id', async (req, res) => {

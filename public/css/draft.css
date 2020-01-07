@@ -15,14 +15,6 @@
   padding-top: 124%;
 }
 
-.col-low-padding {
-  padding: 0 2px;
-}
-
-.row-low-padding {
-  margin: 0 -2px;
-}
-
 .off-screen {
   position: absolute;
   z-index: -10000;

@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
+import { getLabels, sortIntoGroups } from '../util/Sort';
+
 import AutocardListItem from './AutocardListItem';
 import SortContext from './SortContext';
 
@@ -20,7 +22,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
           <Col>({onlyB.length})</Col>
         </Row>
       </ListGroupItem>
-      {getLabels('CMC')
+      {getLabels(null, 'CMC')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">
@@ -78,7 +80,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
 
   return (
     <>
-      {getLabels(primary)
+      {getLabels(cards, primary)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
           let column = columns[columnLabel];
@@ -112,7 +114,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                     </Col>
                   </Row>
                 </div>
-                {getLabels(secondary)
+                {getLabels(column, secondary)
                   .filter((label) => column[label])
                   .map((label) => {
                     let group = column[label];

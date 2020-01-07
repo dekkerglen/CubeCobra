@@ -12,14 +12,14 @@ block content
             |  (#{cube.card_count} Card #{cube.type} Cube)
       .d-flex.flex-row.flex-wrap
         li.nav-item
-          a.nav-link(href='/cube/overview/'+cube_id, class=activeLink === 'overview' && 'active') Overview
+          a.nav-link(href='/cube/overview/'+cube._id, class=activeLink === 'overview' && 'active') Overview
         li.nav-item
-          a.nav-link(href='/cube/list/'+cube_id, class=activeLink === 'list' && 'active') List
+          a.nav-link(href='/cube/list/'+cube._id, class=activeLink === 'list' && 'active') List
         li.nav-item
-          a.nav-link(href='/cube/playtest/'+cube_id, class=activeLink === 'playtest' && 'active') Playtest
+          a.nav-link(href='/cube/playtest/'+cube._id, class=activeLink === 'playtest' && 'active') Playtest
         li.nav-item
-          a.nav-link(href='/cube/analysis/'+cube_id, class=activeLink === 'analysis' && 'active') Analysis
+          a.nav-link(href='/cube/analysis/'+cube._id, class=activeLink === 'analysis' && 'active') Analysis
         li.nav-item
-          a.nav-link(href='/cube/blog/'+cube_id, class=activeLink === 'blog' && 'active') Blog
+          a.nav-link(href='/cube/blog/'+cube._id, class=activeLink === 'blog' && 'active') Blog
   block cube_toolbar
   block cube_content

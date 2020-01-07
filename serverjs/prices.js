@@ -59,6 +59,10 @@ function GetPrices(card_ids, callback) {
 async function GetPricesPromise(card_ids) {
   var price_dict = {};
 
+  if (!tcgconfig.Public_Key || !tcgconfig.Private_Key) {
+    return price_dict;
+  }
+
   //trim card_ids if we have a recent cached date
   for (i = card_ids.length - 1; i >= 0; i--) {
     if (cached_prices[card_ids[i]] && cached_prices[card_ids[i]].expires < Date.now()) {

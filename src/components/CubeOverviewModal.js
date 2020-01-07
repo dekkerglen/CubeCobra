@@ -19,7 +19,7 @@ import {
 import { csrfFetch } from '../util/CSRF';
 import { fromEntries } from '../util/Util';
 import TagInput from './TagInput';
-import TagContext from './TagContext';
+import { TagContextProvider } from './TagContext';
 import TextEntry from './TextEntry';
 import AutocompleteInput from './AutocompleteInput';
 
@@ -228,7 +228,7 @@ class CubeOverviewModal extends Component {
           Edit Overview
         </a>
 
-        <TagContext.Provider
+        <TagContextProvider
           cubeID={cube._id}
           defaultTagColors={cube.tag_colors}
           defaultShowTagColors={false}
@@ -398,7 +398,7 @@ class CubeOverviewModal extends Component {
               </ModalFooter>
             </form>
           </Modal>
-        </TagContext.Provider>
+        </TagContextProvider>
       </>
     );
   }
