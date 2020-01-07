@@ -65,6 +65,7 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
   const openCardModal = useContext(CardModalContext);
+  const { showCustomImages, toggleShowCustomImages, compressedView, toggleCompressedView } = useContext(DisplayContext);
 
   const toggle = useCallback(() => setIsOpen((open) => !open));
 
@@ -167,17 +168,14 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
                 <DropdownItem onClick={handleOpenTagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
-                <DisplayContext.Consumer>
-                  {({ showCustomImages, toggleShowCustomImages }) =>
-                    !hasCustomImages ? (
-                      ''
-                    ) : (
-                      <DropdownItem onClick={toggleShowCustomImages}>
-                        {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
-                      </DropdownItem>
-                    )
-                  }
-                </DisplayContext.Consumer>
+                {!hasCustomImages && (
+                  <DropdownItem onClick={toggleShowCustomImages}>
+                    {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
+                  </DropdownItem>
+                )}
+                <DropdownItem onClick={toggleCompressedView}>
+                  {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
+                </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
             <UncontrolledDropdown nav inNavbar>

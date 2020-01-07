@@ -1,28 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useContext } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
 import { countGroup, sortDeep } from '../util/Sort';
 
 import AutocardListGroup from './AutocardListGroup';
+import DisplayContext from './DisplayContext';
 import SortContext from './SortContext';
 
-const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+const TableView = ({ cards, ...props }) => {
+  const { primary, secondary } = useContext(SortContext);
+  const { compressedView } = useContext(DisplayContext);
+
   const sorted = sortDeep(cards, primary, secondary);
 
   return (
     <div className="table-view-container">
-      <Row className="table-view" {...props}>
+      <Row className={'table-view' + (compressedView ? ' compressed' : '')} {...props}>
         {sorted.map(([columnLabel, column]) => (
           <Col
             key={columnLabel}
-            xs="6"
-            md="3"
-            lg="auto"
+            md="auto"
             className="mt-3 table-col"
             style={{ width: `${100 / Math.min(sorted.length, 8)}%` }}
           >
-            <h6 className="text-center">
+            <h6 className="text-center card-list-heading">
               {columnLabel}
               <br />({countGroup(column)})
             </h6>
@@ -35,7 +37,5 @@ const TableViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
     </div>
   );
 };
-
-const TableView = SortContext.Wrapped(TableViewRaw);
 
 export default TableView;
