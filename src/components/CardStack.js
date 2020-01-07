@@ -19,7 +19,7 @@ const CardStack = ({ location, children, ...props }) => {
   }
 
   return (
-    <Col className={className} xs={4} sm={3} {...props}>
+    <Col className={className} xs={3} {...props}>
       <div ref={drop}>
         {!Array.isArray(children) ? (
           ''
