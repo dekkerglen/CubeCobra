@@ -21,7 +21,9 @@ export const subtitle = (cards) => {
   const numCards = cards.length;
   const allTypes = cards.map((card) => (card.type_line || card.details.type).toLowerCase());
   const numLands = allTypes.filter((type) => type.includes('land')).length;
-  const numNonlands = numCards - numLands;
+  const numNonlands = allTypes.filter(
+    (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
+  ).length;
   return (
     `${numCards} card${numCards === 1 ? '' : 's'}, ` +
     `${numLands} land${numLands === 1 ? '' : 's'}, ` +
