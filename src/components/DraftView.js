@@ -17,6 +17,20 @@ import DraggableCard from './DraggableCard';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 
+export const subtitle = (cards) => {
+  const numCards = cards.length;
+  const allTypes = cards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numNonlands = allTypes.filter(
+    (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
+  ).length;
+  return (
+    `${numCards} card${numCards === 1 ? '' : 's'}, ` +
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numNonlands} nonland`
+  );
+};
+
 const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
@@ -154,16 +168,6 @@ const DraftView = () => {
     [pack, picks],
   );
 
-  const allCards = picks.flat().flat();
-  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
-  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
-  const numLands = allTypes.filter((type) => type.includes('land')).length;
-  const numOther = allCards.length - numLands - numCreatures;
-  const subtitle =
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numOther} other`;
-
   return (
     <DisplayContextProvider>
       <div className="usercontrols">
@@ -194,7 +198,7 @@ const DraftView = () => {
           <DeckStacks
             cards={picks}
             title="Picks"
-            subtitle={subtitle}
+            subtitle={subtitle(picks.flat().flat())}
             locationType={Location.PICKS}
             canDrop={canDrop}
             onMoveCard={handleMoveCard}
