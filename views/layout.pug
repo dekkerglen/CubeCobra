@@ -28,15 +28,13 @@ html(lang='en')
 	body
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
 			.container
-				.d-flex.flex-row.flex-nowrap.justify-content-between(style='flex: 1 1 auto; min-width: 0')
-					.overflow-hidden
+				.d-flex.flex-nowrap.w-100(style='flex: 10000 1 auto; min-width: 0')
+					.overflow-hidden.mr-auto
 						a(href='/')
 							img(src="/content/banner.png" style='height: 45px; margin: 0 0' alt="Cube Cobra: a site for Magic: the Gathering Cubing")
 					button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbar', aria-controls='navbar', aria-expanded='false', aria-label='Toggle navigation')
 						span.navbar-toggler-icon
-				#navbar.collapse.navbar-collapse(style='flex: 10000 1 auto')
-					ul.navbar-nav.mr-auto
-
+				#navbar.collapse.navbar-collapse(style='flex: 0 1 auto')
 					ul.navbar-nav
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
