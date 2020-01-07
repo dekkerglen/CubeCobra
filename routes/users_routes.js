@@ -5,6 +5,7 @@ const passport = require('passport');
 const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require('nodemailer');
 const fs = require('fs');
+const { sanitize } = require('../serverjs/cubefn.js');
 const util = require('../serverjs/util.js');
 
 // Bring in models
@@ -584,7 +585,7 @@ router.get('/view/:id', async (req, res) => {
       user_limited: {
         username: user.username,
         email: user.email,
-        about: user.about,
+        about: sanitize(user.about.trim().split(/[\n\r]+/).join('<br />')),
         id: user._id,
       },
       cubes: cubes,

@@ -31,7 +31,7 @@ block content
 			h5 About:
 		.card-body
 			if user_limited.about
-				p #{user_limited.about}
+				| !{user_limited.about}
 			else
 				em This user has not filled out their about section.
 		if user && user.id == user_limited.id
