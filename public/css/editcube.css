@@ -1,4 +1,3 @@
-  
 .clickx
 {
 	color:black;
@@ -10,6 +9,11 @@
 	color:red;
 	font-weight: bold;
 	text-decoration:none;
+}
+
+.changelist-container {
+	max-height: 19rem;
+	overflow: scroll;
 }
 
 .changelist {
