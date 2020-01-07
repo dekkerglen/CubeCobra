@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { DndProvider } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
@@ -13,6 +11,7 @@ import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import DeckStacks from './DeckStacks';
 import { DisplayContextProvider } from './DisplayContext';
+import DndProvider from './DndProvider';
 import DraggableCard from './DraggableCard';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
@@ -47,7 +46,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
-          <Col key={index} xs={4} sm={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
+          <Col key={index} xs={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
             {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard
               location={Location.pack(index)}
@@ -183,7 +182,7 @@ const DraftView = () => {
       <CSRFForm className="d-none" innerRef={submitDeckForm} method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
-      <DndProvider backend={HTML5Backend}>
+      <DndProvider>
         <ErrorBoundary>
           <Pack
             pack={pack}

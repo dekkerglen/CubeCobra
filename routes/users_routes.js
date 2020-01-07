@@ -580,6 +580,7 @@ router.get('/view/:id', async (req, res) => {
       owner: user._id,
     });
 
+    console.log(user.about);
     return res.render('user/user_view', {
       user_limited: {
         username: user.username,

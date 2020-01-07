@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+
 import {
   Row,
   Col,
@@ -13,10 +14,10 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import DynamicFlash from './components/DynamicFlash';
 import BlogPost from './components/BlogPost';
 import CSRFForm from './components/CSRFForm';
 import CubeOverviewModal from './components/CubeOverviewModal';
+import DynamicFlash from './components/DynamicFlash';
 
 class CubeOverview extends Component {
   constructor(props) {

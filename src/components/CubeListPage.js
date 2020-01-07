@@ -21,6 +21,8 @@ import { TagContextProvider } from '../components/TagContext';
 import VisualSpoiler from '../components/VisualSpoiler';
 
 const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+  const { cube, cubeID, canEdit } = useContext(CubeContext);
+
   let initialOpenCollapse = null;
   const savedChanges = cubeID && typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
   if (savedChanges && savedChanges.length > 2 && Query.get('updated', false) !== 'true') {
@@ -32,8 +34,6 @@ const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts 
   const [cubeView, setCubeView] = useState(Hash.get('view', 'table'));
   const [openCollapse, setOpenCollapse] = useState(initialOpenCollapse);
   const [filter, setFilter] = useState([]);
-
-  const { cube, cubeID, canEdit } = useContext(CubeContext);
 
   useEffect(() => {
     if (cubeView === 'table') {

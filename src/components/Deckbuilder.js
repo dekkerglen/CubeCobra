@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import { DndProvider } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
 
 import Location from '../util/DraftLocation';
 import { sortDeck } from '../util/Util';
@@ -9,6 +7,7 @@ import { sortDeck } from '../util/Util';
 import DeckbuilderNavbar from './DeckbuilderNavbar';
 import DeckStacks from './DeckStacks';
 import { DisplayContextProvider } from './DisplayContext';
+import DndProvider from './DndProvider';
 import { subtitle } from './DraftView';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
@@ -106,7 +105,7 @@ const Deckbuilder = ({ initialDeck, basics }) => {
       <DeckbuilderNavbar deck={currentDeck} addBasics={addBasics} />
       <DynamicFlash />
       <ErrorBoundary>
-        <DndProvider backend={HTML5Backend}>
+        <DndProvider>
           <DeckStacks
             className="mt-3"
             cards={deck}

@@ -169,7 +169,9 @@ const EditCollapse = ({ cubeID, ...props }) => {
           <Row>
             <Col>
               <h6>Changelist</h6>
-              <Changelist />
+              <div className="changelist-container mb-2">
+                <Changelist />
+              </div>
             </Col>
             <Col>
               <BlogpostEditor value={postContent} onChange={handleChange} />

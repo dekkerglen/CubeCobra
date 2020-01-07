@@ -242,7 +242,8 @@ const AutocompleteInput = forwardRef(
     );
 
     const matches = useMemo(() => getAllMatches(tree, inputValue), [tree, inputValue]);
-    const showMatches = visible && inputValue && !(matches.length === 1 && matches[0] === inputValue);
+    const showMatches =
+      visible && inputValue && matches.length > 0 && !(matches.length === 1 && matches[0] === inputValue);
 
     const handleKeyDown = useCallback(
       (event) => {
