@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Input } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
+import { getLabels, sortDeep } from '../util/Sort';
 import { arraysEqual, fromEntries } from '../util/Util';
 
 import CubeContext from './CubeContext';
@@ -101,9 +102,6 @@ class ListViewRaw extends Component {
   }
 
   componentDidMount() {
-    /* global */
-    activateTags();
-
     this.updateVersions();
   }
 
@@ -111,9 +109,9 @@ class ListViewRaw extends Component {
     this.updateVersions();
   }
 
-  syncCard(index, updated, setStateCallback) {
+  async syncCard(index, updated, setStateCallback) {
     const { cube, cubeID, updateCubeCard } = this.props;
-    const card = cube[index];
+    let card = cube[index];
 
     updated = { ...card, ...updated };
     delete updated.details;
@@ -131,36 +129,36 @@ class ListViewRaw extends Component {
       return;
     }
 
-    csrfFetch(`/cube/api/updatecard/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        src: card,
-        updated,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .catch((err) => console.error(err))
-      .then((json) => {
-        if (json.success === 'true') {
-          updateCubeCard(index, { ...card, ...updated });
-          if (updated.cardID !== card.cardID) {
-            // changed version
-            fetch(`/cube/api/getcardfromid/${updated.cardID}`)
-              .then((response) => response.json())
-              .then((json) => {
-                updateCubeCard(index, json.card);
-              })
-              .catch((err) => console.error(err));
-          }
-          if (setStateCallback) {
-            setStateCallback();
-          }
+    try {
+      const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          src: card,
+          updated,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const json = await response.json();
+
+      if (json.success === 'true') {
+        const oldCardID = card.cardID;
+        card = { ...card, ...updated };
+        updateCubeCard(index, card);
+        if (updated.cardID !== oldCardID) {
+          // changed version
+          const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+          const getJson = await getResponse.json();
+          updateCubeCard(index, { ...card, details: getJson.card });
         }
-      })
-      .catch((err) => console.error(err));
+        if (setStateCallback) {
+          setStateCallback();
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   setTagInput(cardIndex, value) {
@@ -278,11 +276,8 @@ class ListViewRaw extends Component {
   }
 
   render() {
-    const { cards, primary, secondary, tertiary, changeSort, cardColorClass } = this.props;
-    const groups = {};
-    for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
-      groups[label1] = sortIntoGroups(primaryGroup, secondary);
-    }
+    const { cards, primary, secondary, changeSort, cardColorClass } = this.props;
+    const sorted = sortDeep(cards, primary, secondary);
 
     const inputProps = (index, field) => ({
       bsSize: 'sm',
@@ -293,92 +288,76 @@ class ListViewRaw extends Component {
       [field === 'check' ? 'checked' : 'value']: this.state[`td${field}${index}`],
     });
 
-    const rows = [].concat.apply(
-      [],
-      getLabels(primary)
-        .filter((label1) => groups[label1])
-        .map((label1) =>
-          [].concat.apply(
-            [],
-            getLabels(secondary)
-              .filter((label2) => groups[label1][label2])
-              .map((label2) =>
-                groups[label1][label2]
-                  .sort(function(a, b) {
-                    const textA = a.details.name.toUpperCase();
-                    const textB = b.details.name.toUpperCase();
-                    return textA < textB ? -1 : textA > textB ? 1 : 0;
-                  })
-                  .map((card) => (
-                    <tr key={card.index} className={cardColorClass(card)}>
-                      <td className="align-middle">
-                        <Input {...inputProps(card.index, 'check')} type="checkbox" className="d-block mx-auto" />
-                      </td>
-                      <AutocardTd className="align-middle text-truncate" card={card}>
-                        {card.details.name}
-                      </AutocardTd>
-                      <td>
-                        <Input
-                          {...inputProps(card.index, 'version')}
-                          type="select"
-                          style={{ maxWidth: '6rem' }}
-                          className="w-100"
-                        >
-                          {(this.state.versionDict[card.cardID] || []).map((version) => (
-                            <option key={version.id} value={version.id}>
-                              {version.version}
-                            </option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td>
-                        <Input {...inputProps(card.index, 'type')} type="text" />
-                      </td>
-                      <td>
-                        <Input {...inputProps(card.index, 'status')} type="select">
-                          {getLabels('Status').map((status) => (
-                            <option key={status}>{status}</option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td>
-                        <Input {...inputProps(card.index, 'finish')} type="select">
-                          {getLabels('Finish').map((finish) => (
-                            <option key={finish}>{finish}</option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td>
-                        <Input {...inputProps(card.index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
-                      </td>
-                      <td>
-                        <Input {...inputProps(card.index, 'colors')} type="select">
-                          {colorCombos.map((combo) => (
-                            <option key={combo}>{combo}</option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td style={{ minWidth: '15rem' }}>
-                        <TagInput
-                          tags={this.state[`tags${card.index}`]}
-                          value={this.state[`tdtaginput${card.index}`]}
-                          name={`tdtaginput${card.index}`}
-                          onChange={this.handleChange}
-                          handleInputBlur={this.tagBlur.bind(this, card.index)}
-                          addTag={this.addTag.bind(this, card.index)}
-                          deleteTag={this.deleteTag.bind(this, card.index)}
-                          reorderTag={this.reorderTag.bind(this, card.index)}
-                        />
-                      </td>
-                    </tr>
-                  )),
-              ),
-          ),
-        ),
+    const rows = sorted.map(([label1, group1]) =>
+      group1.map(([label2, group2]) =>
+        group2.map((card) => (
+          <tr key={card.index} className={cardColorClass(card)}>
+            <td className="align-middle">
+              <Input {...inputProps(card.index, 'check')} type="checkbox" className="d-block mx-auto" />
+            </td>
+            <AutocardTd className="align-middle text-truncate" card={card}>
+              {card.details.name}
+            </AutocardTd>
+            <td>
+              <Input
+                {...inputProps(card.index, 'version')}
+                type="select"
+                style={{ maxWidth: '6rem' }}
+                className="w-100"
+              >
+                {(this.state.versionDict[card.cardID] || []).map((version) => (
+                  <option key={version.id} value={version.id}>
+                    {version.version}
+                  </option>
+                ))}
+              </Input>
+            </td>
+            <td>
+              <Input {...inputProps(card.index, 'type')} type="text" />
+            </td>
+            <td>
+              <Input {...inputProps(card.index, 'status')} type="select">
+                {getLabels(null, 'Status').map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </Input>
+            </td>
+            <td>
+              <Input {...inputProps(card.index, 'finish')} type="select">
+                {getLabels(null, 'Finish').map((finish) => (
+                  <option key={finish}>{finish}</option>
+                ))}
+              </Input>
+            </td>
+            <td>
+              <Input {...inputProps(card.index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
+            </td>
+            <td>
+              <Input {...inputProps(card.index, 'colors')} type="select">
+                {colorCombos.map((combo) => (
+                  <option key={combo}>{combo}</option>
+                ))}
+              </Input>
+            </td>
+            <td style={{ minWidth: '15rem' }}>
+              <TagInput
+                tags={this.state[`tags${card.index}`]}
+                value={this.state[`tdtaginput${card.index}`]}
+                name={`tdtaginput${card.index}`}
+                onChange={this.handleChange}
+                handleInputBlur={this.tagBlur.bind(this, card.index)}
+                addTag={this.addTag.bind(this, card.index)}
+                deleteTag={this.deleteTag.bind(this, card.index)}
+                reorderTag={this.reorderTag.bind(this, card.index)}
+              />
+            </td>
+          </tr>
+        )),
+      ),
     );
 
     return (
-      <form className="form-inline">
+      <form className="form-inline mt-3">
         <PagedTable rows={rows} size="sm">
           <thead>
             <tr>
@@ -409,10 +388,10 @@ const ListView = (props) => (
           <GroupModalContext.Consumer>
             {({ setGroupModalCards, openGroupModal }) => (
               <CubeContext.Consumer>
-                {({ cube, updateCubeCard }) => (
+                {({ cube, cubeID, updateCubeCard }) => (
                   <ListViewRaw
                     {...sortValue}
-                    {...{ cardColorClass, setGroupModalCards, openGroupModal, cube, updateCubeCard }}
+                    {...{ cardColorClass, setGroupModalCards, openGroupModal, cube, cubeID, updateCubeCard }}
                     {...props}
                   />
                 )}

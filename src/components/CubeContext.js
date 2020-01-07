@@ -1,36 +1,47 @@
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 
 const CubeContext = React.createContext({
   cube: [],
+  canEdit: false,
+  cubeID: null,
+  hasCustomImages: false,
   updateCubeCard: (index, newCard) => {},
+  updateCubeCards: (newCards) => {},
 });
 
-export const CubeContextProvider = ({ initialCube, ...props }) => {
+export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) => {
   const [cube, setCube] = useState(initialCube.map((card, index) => ({ ...card, index })));
 
-  const updateCubeCard = useCallback(
-    (index, newCard) => {
+  const updateCubeCard = useCallback((index, newCard) => {
+    setCube((cube) => {
       const newCube = [...cube];
       newCube[index] = newCard;
-      setCube(newCube);
-    },
-    [cube],
-  );
+      return newCube;
+    });
+  }, []);
 
-  const updateCubeCards = useCallback(
-    (newCards) => {
+  const updateCubeCards = useCallback((newCards) => {
+    setCube((cube) => {
       const newCube = [...cube];
       for (const card of newCards) {
         newCube[card.index] = card;
       }
-      setCube(newCube);
-    },
-    [cube],
-  );
+      return newCube;
+    });
+  }, []);
 
-  const value = { cube, updateCubeCard, updateCubeCards };
+  const hasCustomImages = cube.some((card) => card.imgUrl && card.imgUrl.length > 0);
+
+  const value = { cube, canEdit, cubeID, hasCustomImages, updateCubeCard, updateCubeCards };
 
   return <CubeContext.Provider value={value} {...props} />;
+};
+
+CubeContextProvider.propTypes = {
+  initialCube: PropTypes.arrayOf(PropTypes.object).isRequired,
+  canEdit: PropTypes.bool.isRequired,
+  cubeID: PropTypes.string.isRequired,
 };
 
 export default CubeContext;

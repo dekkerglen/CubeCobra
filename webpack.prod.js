@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 const common = require('./webpack.common.js');
 
-module.exports = merge(common, {
+const config = {
   mode: 'production',
   devtool: false,
   plugins: [
@@ -15,7 +15,7 @@ module.exports = merge(common, {
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
-      debug: false
+      debug: false,
     }),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   ],
@@ -26,5 +26,10 @@ module.exports = merge(common, {
         parallel: true,
       }),
     ],
-  }
-});
+  },
+};
+
+const clientConfig = merge(common.clientConfig, config, {});
+const serverConfig = merge(common.serverConfig, config, {});
+
+module.exports = [clientConfig, serverConfig];

@@ -5,22 +5,14 @@ block cube_toolbar
   link(rel='stylesheet' href='/css/editcube.css')
   link(rel='stylesheet' href='/css/texteditor.css')
 
-  input#cubeID(type='hidden', name='cubeID', value=cube_id)
-  input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
-  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-  input#cubeTagColors(type='hidden', value=JSON.stringify(cube.tag_colors))
-  input#showTagColors(type='hidden', value=(!user || !user.hide_tag_colors).toString())
-  if user && user.id == cube.owner
-    input#edittoken(type='hidden', name='edittoken', value='edit')
   if cube.default_sorts
     input#sort1(type='hidden', value=cube.default_sorts[0])
     input#sort2(type='hidden', value=cube.default_sorts[1])
 
   include ../dynamic_flash
 
-
 block cube_content
-  #react-root
+  #react-root !{reactHTML}
 
   // Paste bulk Modal
   #pasteBulkModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='pasteBulkModalTitle', aria-hidden='true')
@@ -81,6 +73,7 @@ block cube_content
         .modal-footer
           button.btn.btn-success(type='submit' form='importForm') Import
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
+
   // cubetutor import
   #selectEmptyModal.modal.fade(tabindex='-1', role='dialog')
     .modal-dialog.modal-dialog-scrollable(role='document')
@@ -95,22 +88,10 @@ block cube_content
         .modal-footer
           button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-  #cubeSaveModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeSaveModalTitle', aria-hidden='true')
-    .modal-dialog.modal-dialog-scrollable(role='document')
-      .modal-content
-        .modal-header
-          h5#cubeSaveModalTitle.modal-title Success
-          button.close(type='button', data-dismiss='modal', aria-label='Close')
-            span(aria-hidden='true') ×
-        .modal-body
-          p Default sorts saved successfully
-        .modal-footer
-          button.btn.btn-secondary(type='button', data-dismiss='modal') OK
-
+block scripts
   include ../react
-  script(src='/js/csrf.js')
-  script(src='/js/autocard.js')
-  script(src='/js/sortfilter.js')
-  script(src='/js/tags.js')
-  script(src='/js/editcube.js')
-  script(src='/js/cube_list.bundle.js')
+
+  script(src='/js/autocard.js', async)
+  script(type='text/javascript').
+    var reactProps = !{JSON.stringify(reactProps)};
+  script(src='/js/cube_list.bundle.js', async)

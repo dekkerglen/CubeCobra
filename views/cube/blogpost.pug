@@ -10,6 +10,7 @@ block content
   if user
     input#userid(type='hidden', value=user._id)
 
+block scripts
   include ../react
   script(src='/js/csrf.js')
   script(src='/js/blog.js')

@@ -89,6 +89,8 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   });
 
   const handleRemoveCard = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
     setCardIndices((cards) => cards.filter((c) => c.index !== parseInt(index)));
@@ -214,7 +216,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
               <ListGroup className="list-outline">
                 {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                    <Button close className="float-none mr-1" data-index={card.index} onClick={handleRemoveCard} />
+                    <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
                   </AutocardListItem>
                 ))}
               </ListGroup>

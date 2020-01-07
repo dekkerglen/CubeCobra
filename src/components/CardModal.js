@@ -17,14 +17,15 @@ import {
   Row,
 } from 'reactstrap';
 
+import Affiliate from '../util/Affiliate';
+import { getLabels } from '../util/Sort';
+
 import ButtonLink from './ButtonLink';
 import { ColorChecksAddon } from './ColorCheck';
 import ImageFallback from './ImageFallback';
 import LoadingButton from './LoadingButton';
 import FoilCardImage from './FoilCardImage';
 import TagInput from './TagInput';
-
-import Affiliate from '../util/Affiliate';
 
 const CardModal = ({
   card,
@@ -100,7 +101,7 @@ const CardModal = ({
                   <InputGroupText>Status</InputGroupText>
                 </InputGroupAddon>
                 <Input type="select" name="status" value={values.status} onChange={onChange}>
-                  {getLabels('Status').map((status) => (
+                  {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
                   ))}
                 </Input>
@@ -110,7 +111,7 @@ const CardModal = ({
                   <InputGroupText>Finish</InputGroupText>
                 </InputGroupAddon>
                 <Input type="select" name="finish" value={values.finish} onChange={onChange}>
-                  {getLabels('Finish').map((finish) => (
+                  {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
                   ))}
                 </Input>
