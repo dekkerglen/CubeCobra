@@ -6,10 +6,10 @@ block cube_toolbar
 block cube_content
   include ../dynamic_flash
   #react-root
-  script(type='text/javascript').
-    var initialDraft = !{draft_raw};
 
 block scripts
   include ../react
   script(src='/js/autocard.js')
+  script(type='text/javascript').
+    var initialDraft = !{draft_raw};
   script(src='/js/cube_draft.bundle.js')

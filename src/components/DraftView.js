@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
@@ -15,6 +15,20 @@ import DndProvider from './DndProvider';
 import DraggableCard from './DraggableCard';
 import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
+
+export const subtitle = (cards) => {
+  const numCards = cards.length;
+  const allTypes = cards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numNonlands = allTypes.filter(
+    (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
+  ).length;
+  return (
+    `${numCards} card${numCards === 1 ? '' : 's'}, ` +
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numNonlands} nonland`
+  );
+};
 
 const canDrop = (source, target) => {
   return target.type === Location.PICKS;
@@ -75,19 +89,38 @@ const DraftView = () => {
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
 
-  const update = useCallback(() => {
+  const [finished, setFinished] = useState(false);
+
+  const submitDeckForm = useRef();
+
+  const update = useCallback(async (newPicks) => {
     // This is very bad architecture. The React component should manage the state.
     // TODO: Move state inside React.
-    let pack = Draft.pack();
-    if (!Array.isArray(pack)) {
-      pack = [];
-    }
-    setPack([...pack]);
     const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
     setPackNumber(currentPackNumber);
     setPickNumber(currentPickNumber);
-    Draft.arrangePicks([].concat(picks[0], picks[1]));
-  }, [picks]);
+    setPicks(newPicks);
+    Draft.arrangePicks([].concat(newPicks[0], newPicks[1]));
+
+    let pack = Draft.pack();
+    if (!Array.isArray(pack) || pack.length === 0) {
+      // should only happen when draft is over.
+      setFinished(true);
+      pack = [];
+    }
+    setPack([...pack]);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (finished) {
+        await Draft.finish();
+        if (submitDeckForm.current) {
+          submitDeckForm.current.submit();
+        }
+      }
+    })();
+  }, [finished]);
 
   const handleMoveCard = useCallback(
     async (source, target) => {
@@ -97,15 +130,15 @@ const DraftView = () => {
       if (source.type === Location.PACK) {
         if (target.type === Location.PICKS) {
           await Draft.pick(source.data);
-          setPicks(DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]));
-          update();
+          const newPicks = DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]);
+          update(newPicks);
         } else {
           console.error("Can't move cards inside pack.");
         }
       } else if (source.type === Location.PICKS) {
         if (target.type === Location.PICKS) {
-          setPicks(DeckStacks.moveOrAddCard(picks, target.data, source.data));
-          update();
+          const newPicks = DeckStacks.moveOrAddCard(picks, target.data, source.data);
+          update(newPicks);
         } else {
           console.error("Can't move cards from picks back to pack.");
         }
@@ -128,21 +161,11 @@ const DraftView = () => {
       setPicking(cardIndex);
       await Draft.pick(cardIndex);
       setPicking(null);
-      setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
-      update();
+      const newPicks = DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card);
+      update(newPicks);
     },
     [pack, picks],
   );
-
-  const allCards = picks.flat().flat();
-  const allTypes = allCards.map((card) => (card.type_line || card.details.type).toLowerCase());
-  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
-  const numLands = allTypes.filter((type) => type.includes('land')).length;
-  const numOther = allCards.length - numLands - numCreatures;
-  const subtitle =
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numOther} other`;
 
   return (
     <DisplayContextProvider>
@@ -156,7 +179,7 @@ const DraftView = () => {
         </Navbar>
       </div>
       <DynamicFlash />
-      <CSRFForm className="d-none" id="submitDeckForm" method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
+      <CSRFForm className="d-none" innerRef={submitDeckForm} method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
         <Input type="hidden" name="body" value={Draft.id()} />
       </CSRFForm>
       <DndProvider>
@@ -174,7 +197,7 @@ const DraftView = () => {
           <DeckStacks
             cards={picks}
             title="Picks"
-            subtitle={subtitle}
+            subtitle={subtitle(picks.flat().flat())}
             locationType={Location.PICKS}
             canDrop={canDrop}
             onMoveCard={handleMoveCard}
