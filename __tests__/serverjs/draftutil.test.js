@@ -33,6 +33,7 @@ test('it can get bots with the correct properties', () => {
   expect(result[0][0] === result[0][1]).toBe(false);
 });
 
+/*
 test('it returns the index of the first instance of a tag from a list of cards', () => {
   const cards = [
     {},
@@ -57,6 +58,7 @@ test('it returns -1 if a tag is not found in a list of cards', () => {
 
   expect(result).toBe(-1);
 });
+*/
 
 test('getCardRatings returns a mapping of card names to values', () => {
   var dummyModel = {
