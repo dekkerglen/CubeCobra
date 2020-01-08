@@ -8,7 +8,7 @@ import CardModalContext from './CardModalContext';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 
-const CardModalForm = ({ setOpenCollapse, children, ...props }) => {
+const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cardIndex, setCardIndex] = useState(null);
   const [versions, setVersions] = useState([]);
@@ -109,9 +109,8 @@ const CardModalForm = ({ setOpenCollapse, children, ...props }) => {
     addChange({
       remove: card,
     });
-    setOpenCollapse(() => 'edit');
     setIsOpen(false);
-  }, [card, addChange, setOpenCollapse]);
+  }, [card, addChange]);
 
   const openCardModal = useCallback(
     (newCardIndex) => {

@@ -1883,8 +1883,12 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       for (let i = removesArray.length - 1; i >= 0; i--) {
         cube.cards.splice(removesArray[i], 1);
       }
-      for (let i = 0; i < adds.length; i++) {
-        util.addCardToCube(cube, adds[i]);
+      for (const add of adds) {
+        util.addCardToCube(cube, add);
+        const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
+        if (maybeIndex !== -1) {
+          cube.maybe.splice(maybeIndex, 1);
+        }
       }
 
       var blogpost = new Blog();

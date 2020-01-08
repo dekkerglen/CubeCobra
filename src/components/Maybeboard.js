@@ -19,13 +19,15 @@ const AutocardItem = withAutocard(ListGroupItem);
 const MaybeboardListItem = ({ card, className }) => {
   const { cubeID } = useContext(CubeContext);
   const { removeMaybeboardCard } = useContext(MaybeboardContext);
+  const { addChange } = useContext(ChangelistContext);
   const [loading, setLoading] = useState(false);
 
-  const handleClick = useCallback(
+  const handleClickCard = useCallback(
     (event) => {
       event.preventDefault();
+      addChange({ add: { details: card.details } });
     },
-    [],
+    [card, addChange],
   );
 
   const handleRemove = useCallback(
@@ -65,6 +67,8 @@ const MaybeboardListItem = ({ card, className }) => {
     <AutocardItem
       className={`d-flex card-list-item ${getCardColorClass(card)} ${className || ''}`}
       card={card}
+      data-index={card.index}
+      onClick={handleClickCard}
     >
       <div className="name">{card.details.name}</div>
       {loading ?
@@ -161,8 +165,8 @@ const MaybeboardView = ({ filter, ...props }) => {
   );
 };
 
-const Maybeboard = ({ initialCards, ...props }) =>
-  <MaybeboardContextProvider initialCards={initialCards}>
+const Maybeboard = ({ initialCards, setOpenCollapse, ...props }) =>
+  <MaybeboardContextProvider initialCards={initialCards} setOpenCollapse={setOpenCollapse}>
     <MaybeboardView {...props} />
   </MaybeboardContextProvider>;
 

@@ -63,9 +63,9 @@ const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaul
           defaultShowTagColors={defaultShowTagColors}
           defaultTags={defaultTags}
         >
-          <ChangelistContextProvider cubeID={cubeID}>
-            <CardModalForm canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
-              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
+          <ChangelistContextProvider cubeID={cubeID} setOpenCollapse={setOpenCollapse}>
+            <CardModalForm canEdit={canEdit}>
+              <GroupModal cubeID={cubeID} canEdit={canEdit}>
                 <CubeListNavbar
                   cubeView={cubeView}
                   setCubeView={setCubeView}
