@@ -145,11 +145,12 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
               {deck.map((card, cardIndex) => (
                 <AutocardItem
                   key={cardIndex}
-                  tag="div"
+                  tag="a"
                   card={{ details: card }}
                   className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+                  href={card._id ? '/tool/card/' + card._id : null}
                 >
-                  <a className="w-100">{card.name}</a>
+                  {card.name}
                 </AutocardItem>
               ))}
             </ListGroup>

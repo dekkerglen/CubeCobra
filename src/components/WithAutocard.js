@@ -28,6 +28,7 @@ const withAutocard = (Tag) =>
     back = back || card.details.image_flip;
     return (
       <Tag
+        href={props.href ? props.href : null}
         cardid={card.cardID}
         ref={ref}
         onMouseOver={handleMouseOver}
