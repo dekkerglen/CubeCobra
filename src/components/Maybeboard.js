@@ -18,7 +18,7 @@ import withAutocard from './WithAutocard';
 const AutocardItem = withAutocard(ListGroupItem);
 
 const MaybeboardListItem = ({ card, className }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { canEdit, cubeID } = useContext(CubeContext);
   const { removeMaybeboardCard } = useContext(MaybeboardContext);
   const { addChange } = useContext(ChangelistContext);
   const [loading, setLoading] = useState(false);
@@ -69,20 +69,21 @@ const MaybeboardListItem = ({ card, className }) => {
       className={`d-flex card-list-item ${getCardColorClass(card)} ${className || ''}`}
       card={card}
       data-index={card.index}
-      onClick={handleClickCard}
+      onClick={canEdit ? handleClickCard : undefined}
     >
       <div className="name">{card.details.name}</div>
-      {loading ?
+      {canEdit &&
+      (loading ?
         <Spinner size="sm" className="ml-auto" />
           :
-        <Button size="sm" close className="ml-auto float-none" data-index={card.index} onClick={handleRemove} />
+        <Button size="sm" close className="ml-auto float-none" data-index={card.index} onClick={canEdit ? handleRemove : undefined} />)
       }
     </AutocardItem>
   );
 };
 
 const MaybeboardView = ({ filter, ...props }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { canEdit, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
   const { maybeboard, addMaybeboardCard } = useContext(MaybeboardContext);
   const addInput = useRef();
@@ -147,29 +148,31 @@ const MaybeboardView = ({ filter, ...props }) => {
           </Button>
         </Col>
       </Row>
-      <Form className="mt-2 w-100" onSubmit={handleAdd}>
-        <Row noGutters>
-          <Col xs="9" sm="auto" className="pr-2">
-            <AutocompleteInput
-              treeUrl="/cube/api/cardnames"
-              treePath="cardnames"
-              type="text"
-              className="w-100"
-              disabled={loading}
-              innerRef={addInput}
-              onSubmit={handleAdd}
-              placeholder="Card to Add"
-              autoComplete="off"
-              data-lpignore
-            />
-          </Col>
-          <Col xs="3" sm="auto">
-            <LoadingButton color="success" type="submit" className="w-100" loading={loading}>
-              Add
-            </LoadingButton>
-          </Col>
-        </Row>
-      </Form>
+      {canEdit && (
+        <Form className="mt-2 w-100" onSubmit={handleAdd}>
+          <Row noGutters>
+            <Col xs="9" sm="auto" className="pr-2">
+              <AutocompleteInput
+                treeUrl="/cube/api/cardnames"
+                treePath="cardnames"
+                type="text"
+                className="w-100"
+                disabled={loading}
+                innerRef={addInput}
+                onSubmit={handleAdd}
+                placeholder="Card to Add"
+                autoComplete="off"
+                data-lpignore
+              />
+            </Col>
+            <Col xs="3" sm="auto">
+              <LoadingButton color="success" type="submit" className="w-100" loading={loading}>
+                Add
+              </LoadingButton>
+            </Col>
+          </Row>
+        </Form>
+      )}
       {maybeboard.length === 0 ?
         <h5 className="mt-3">
           No cards in maybeboard
