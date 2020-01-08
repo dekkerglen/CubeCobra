@@ -61,7 +61,7 @@ const MaybeboardListItem = ({ card, className }) => {
         }
       }
     },
-    [removeMaybeboardCard, cubeID]
+    [removeMaybeboardCard, cubeID],
   );
 
   return (
@@ -73,11 +73,17 @@ const MaybeboardListItem = ({ card, className }) => {
     >
       <div className="name">{card.details.name}</div>
       {canEdit &&
-      (loading ?
-        <Spinner size="sm" className="ml-auto" />
-          :
-        <Button size="sm" close className="ml-auto float-none" data-index={card.index} onClick={canEdit ? handleRemove : undefined} />)
-      }
+        (loading ? (
+          <Spinner size="sm" className="ml-auto" />
+        ) : (
+          <Button
+            size="sm"
+            close
+            className="ml-auto float-none"
+            data-index={card.index}
+            onClick={canEdit ? handleRemove : undefined}
+          />
+        ))}
     </AutocardItem>
   );
 };
@@ -132,7 +138,9 @@ const MaybeboardView = ({ filter, ...props }) => {
   const maybeboardIndex = useMemo(() => maybeboard.map((card, index) => ({ ...card, index })), [maybeboard]);
 
   const filteredMaybeboard = useMemo(() => {
-    return (filter && filter.length > 0) ? maybeboardIndex.filter((card) => Filter.filterCard(card, filter)) : maybeboardIndex;
+    return filter && filter.length > 0
+      ? maybeboardIndex.filter((card) => Filter.filterCard(card, filter))
+      : maybeboardIndex;
   }, [filter, maybeboardIndex]);
 
   return (
@@ -173,22 +181,23 @@ const MaybeboardView = ({ filter, ...props }) => {
           </Row>
         </Form>
       )}
-      {maybeboard.length === 0 ?
+      {maybeboard.length === 0 ? (
         <h5 className="mt-3">
           No cards in maybeboard
-          {(filter && filter.length > 0) ? ' matching filter.' : '.'}
+          {filter && filter.length > 0 ? ' matching filter.' : '.'}
         </h5>
-        :
+      ) : (
         <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
-      }
+      )}
       <hr />
     </>
   );
 };
 
-const Maybeboard = ({ initialCards, setOpenCollapse, ...props }) =>
+const Maybeboard = ({ initialCards, setOpenCollapse, ...props }) => (
   <MaybeboardContextProvider initialCards={initialCards} setOpenCollapse={setOpenCollapse}>
     <MaybeboardView {...props} />
-  </MaybeboardContextProvider>;
+  </MaybeboardContextProvider>
+);
 
 export default Maybeboard;

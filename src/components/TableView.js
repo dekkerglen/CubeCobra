@@ -29,7 +29,13 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
               <br />({countGroup(column)})
             </h6>
             {column.map(([label, row]) => (
-              <AutocardListGroup key={label} heading={`${label} (${countGroup(row)})`} cards={row} rowTag={rowTag} noGroupModal={noGroupModal} />
+              <AutocardListGroup
+                key={label}
+                heading={`${label} (${countGroup(row)})`}
+                cards={row}
+                rowTag={rowTag}
+                noGroupModal={noGroupModal}
+              />
             ))}
           </Col>
         ))}

@@ -58,14 +58,30 @@ const CompareCollapse = (props) => {
   );
 };
 
-const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCollapse, filter, setFilter, className }) => {
+const CubeListNavbar = ({
+  cards,
+  cubeView,
+  setCubeView,
+  openCollapse,
+  setOpenCollapse,
+  filter,
+  setFilter,
+  className,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
   const openCardModal = useContext(CardModalContext);
-  const { showCustomImages, toggleShowCustomImages, compressedView, toggleCompressedView, showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
+  const {
+    showCustomImages,
+    toggleShowCustomImages,
+    compressedView,
+    toggleCompressedView,
+    showMaybeboard,
+    toggleShowMaybeboard,
+  } = useContext(DisplayContext);
 
   const toggle = useCallback(() => setIsOpen((open) => !open));
 

@@ -22,7 +22,11 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   );
   return (
     <ListGroup className="list-outline">
-      <ListGroupItem tag="div" className={'list-group-heading' + (noGroupModal ? '' : ' clickable')} onClick={noGroupModal ? undefined : handleClick}>
+      <ListGroupItem
+        tag="div"
+        className={'list-group-heading' + (noGroupModal ? '' : ' clickable')}
+        onClick={noGroupModal ? undefined : handleClick}
+      >
         {heading}
       </ListGroupItem>
       {sorted.map(([label, group]) =>

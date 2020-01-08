@@ -225,10 +225,11 @@ const AutocompleteInput = forwardRef(
         setInputValue(newValue);
         setVisible(false);
         setPosition(-1);
-        onChange && onChange({
-          target,
-          currentTarget: target,
-        });
+        onChange &&
+          onChange({
+            target,
+            currentTarget: target,
+          });
       },
       [onChange, props.name],
     );

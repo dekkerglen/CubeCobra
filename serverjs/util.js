@@ -101,7 +101,7 @@ function newCard(card_details, tags) {
     type_line: card_details.type,
     addedTmsp: new Date(),
     finish: 'Non-foil',
-  }
+  };
 }
 
 function addCardToCube(cube, card_details, tags) {

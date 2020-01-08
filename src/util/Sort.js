@@ -571,7 +571,11 @@ export function cardGetLabels(card, sort) {
       return ['Phyrexian'];
     }
   } else if (sort == 'CNC') {
-    return typeLine(card).toLowerCase().includes('creature') ? 'Creature' : 'Non-Creature';
+    return typeLine(card)
+      .toLowerCase()
+      .includes('creature')
+      ? 'Creature'
+      : 'Non-Creature';
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {

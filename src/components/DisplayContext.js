@@ -30,7 +30,14 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     setShowMaybeboard(!showMaybeboard);
   }, [cubeID, showMaybeboard]);
 
-  const value = { showCustomImages, toggleShowCustomImages, compressedView, toggleCompressedView, showMaybeboard, toggleShowMaybeboard };
+  const value = {
+    showCustomImages,
+    toggleShowCustomImages,
+    compressedView,
+    toggleCompressedView,
+    showMaybeboard,
+    toggleShowMaybeboard,
+  };
   return <DisplayContext.Provider value={value} {...props} />;
 };
 
