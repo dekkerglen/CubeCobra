@@ -8,7 +8,8 @@ import { alphaCompare } from '../util/Util';
 import AutocardListItem from './AutocardListItem';
 import GroupModalContext from './GroupModalContext';
 
-const AutocardListGroup = ({ cards, heading, sort }) => {
+const AutocardListGroup = ({ cards, heading, sort, rowTag }) => {
+  const RowTag = rowTag;
   const sorted = sortDeep(cards, sort);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
   const handleClick = useCallback(
@@ -25,15 +26,13 @@ const AutocardListGroup = ({ cards, heading, sort }) => {
         {heading}
       </ListGroupItem>
       {sorted.map(([label, group]) =>
-        group
-          .sort(alphaCompare)
-          .map((card, index) => (
-            <AutocardListItem
-              key={typeof card.index === 'undefined' ? index : card.index}
-              card={card}
-              className={index === 0 ? 'cmc-group' : undefined}
-            />
-          )),
+        group.map((card, index) => (
+          <RowTag
+            key={typeof card.index === 'undefined' ? index : card.index}
+            card={card}
+            className={index === 0 ? 'cmc-group' : undefined}
+          />
+        )),
       )}
     </ListGroup>
   );
@@ -41,6 +40,7 @@ const AutocardListGroup = ({ cards, heading, sort }) => {
 
 AutocardListGroup.defaultProps = {
   sort: 'CMC-Full',
+  rowTag: AutocardListItem,
 };
 
 export default AutocardListGroup;

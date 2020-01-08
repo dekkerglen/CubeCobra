@@ -115,13 +115,16 @@
 	cursor: pointer;
 	font-size: 8.5pt;
 
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
-
 	color: black;
 	padding: 3px 4px;
 	text-decoration: none;
+}
+
+.card-list-item,
+.card-list-item .name {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 @media(max-width: 1199.98px) {

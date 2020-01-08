@@ -3162,7 +3162,7 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
 });
 
 function maybeCards(cube) {
-  const maybe = cube.maybe.filter((card) => card.cardID);
+  const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
@@ -3188,7 +3188,7 @@ router.post('/api/maybe/:id', ensureAuth, util.wrapAsyncApi(async function(req, 
       success: 'false',
       message: 'Cube not found.',
     });
-  } else if (cube.owner !== req.user._id) {
+  } else if (!req.user._id.equals(cube.owner)) {
     return res.status(403).send({
       success: 'false',
       message: 'Maybeboard can only be updated by cube owner.',
@@ -3201,7 +3201,7 @@ router.post('/api/maybe/:id', ensureAuth, util.wrapAsyncApi(async function(req, 
   const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
 
   const addCards = Array.isArray(req.body.add) ? req.body.add : [];
-  const addCardsNoDetails = addCards.map(({ details, ...card }) => card);
+  const addCardsNoDetails = addCards.map(({ details, ...card }) => ({ ...util.newCard(details), ...card }));
   const withAdded = [...withRemoved, ...addCardsNoDetails];
 
   cube.maybe = withAdded;

@@ -211,7 +211,7 @@ const AutocompleteInput = forwardRef(
       (event) => {
         setInputValue(event.target.value);
         setVisible(true);
-        onChange(event);
+        onChange && onChange(event);
       },
       [onChange],
     );
@@ -225,7 +225,7 @@ const AutocompleteInput = forwardRef(
         setInputValue(newValue);
         setVisible(false);
         setPosition(-1);
-        onChange({
+        onChange && onChange({
           target,
           currentTarget: target,
         });

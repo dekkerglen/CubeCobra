@@ -91,8 +91,8 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
-function addCardToCube(cube, card_details, tags) {
-  cube.cards.push({
+function newCard(card_details, tags) {
+  return {
     tags: Array.isArray(tags) ? tags : [],
     status: 'Not Owned',
     colors: card_details.color_identity,
@@ -100,9 +100,12 @@ function addCardToCube(cube, card_details, tags) {
     cardID: card_details._id,
     type_line: card_details.type,
     addedTmsp: new Date(),
-    imgUrl: undefined,
     finish: 'Non-foil',
-  });
+  }
+}
+
+function addCardToCube(cube, card_details, tags) {
+  cube.cards.push(newCard(card_details, tags));
 }
 
 function getCardImageURL(card) {
@@ -171,6 +174,7 @@ var methods = {
     return res;
   },
   binaryInsert,
+  newCard,
   addCardToCube,
   getCardImageURL,
   arraysEqual: function(a, b) {
