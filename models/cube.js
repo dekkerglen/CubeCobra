@@ -1,5 +1,18 @@
 const mongoose = require('mongoose');
 
+const Card = {
+  tags: [String],
+  finish: { type: String, default: 'Non-foil' },
+  status: String,
+  colors: [String],
+  cmc: Number,
+  cardID: String,
+  type_line: String,
+  addedTmsp: Date,
+  imgUrl: String,
+  details: {},
+};
+
 // Cube schema
 const cubeSchema = mongoose.Schema({
   name: {
@@ -50,20 +63,8 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
-  cards: [
-    {
-      tags: [String],
-      finish: { type: String, default: 'Non-foil' },
-      status: String,
-      colors: [String],
-      cmc: Number,
-      cardID: String,
-      type_line: String,
-      addedTmsp: Date,
-      imgUrl: String,
-      details: {},
-    },
-  ],
+  cards: [Card],
+  maybe: [Card],
   tag_colors: [
     {
       tag: String,

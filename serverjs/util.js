@@ -142,6 +142,20 @@ async function addNotification(user, from, url, text) {
   await user.save();
 }
 
+function wrapAsyncApi(route) {
+  return (...args) => {
+    try {
+      return route(...args);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        success: 'false',
+        message: 'Internal server error',
+      });
+    }
+  };
+}
+
 var methods = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -202,6 +216,7 @@ var methods = {
     return user && user.username == adminname;
   },
   addNotification,
+  wrapAsyncApi,
 };
 
 module.exports = methods;

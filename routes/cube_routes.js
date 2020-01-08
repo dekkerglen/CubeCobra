@@ -796,6 +796,7 @@ router.get('/list/:id', async function(req, res) {
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
+      maybe: maybeCards(cube),
     };
 
     res.render('cube/cube_list', {
@@ -3159,6 +3160,57 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
     }
   });
 });
+
+function maybeCards(cube) {
+  const maybe = cube.maybe.filter((card) => card.cardID);
+  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+}
+
+router.get('/api/maybe/:id', ensureAuth, util.wrapAsyncApi(async function(req, res) {
+  const cube = await Cube.findOne(build_id_query(req.params.id));
+  if (!cube) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Cube not found.',
+    });
+  }
+
+  return res.status(200).send({
+    success: 'true',
+    maybe: maybeCards(cube),
+  });
+}));
+
+router.post('/api/maybe/:id', ensureAuth, util.wrapAsyncApi(async function(req, res) {
+  const cube = await Cube.findOne(build_id_query(req.params.id));
+  if (!cube) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Cube not found.',
+    });
+  } else if (cube.owner !== req.user._id) {
+    return res.status(403).send({
+      success: 'false',
+      message: 'Maybeboard can only be updated by cube owner.',
+    });
+  }
+
+  const maybe = [...(cube.maybe || [])];
+
+  const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
+  const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
+
+  const addCards = Array.isArray(req.body.add) ? req.body.add : [];
+  const addCardsNoDetails = addCards.map(({ details, ...card }) => card);
+  const withAdded = [...withRemoved, ...addCardsNoDetails];
+
+  cube.maybe = withAdded;
+  await cube.save();
+
+  return res.status(200).send({
+    success: 'true',
+  });
+}));
 
 router.delete('/remove/:id', ensureAuth, function(req, res) {
   if (!req.user._id) {
