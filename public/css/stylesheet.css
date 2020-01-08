@@ -102,7 +102,7 @@
 	margin-bottom: 0px;
 }
 
-.list-group-item.list-group-heading:hover {
+.list-group-item.list-group-heading.clickable:hover {
 	background-color: #FCFCFC !Important;
 	color: black;
 	text-decoration: none;

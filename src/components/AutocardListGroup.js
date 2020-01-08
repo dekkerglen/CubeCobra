@@ -6,12 +6,15 @@ import { sortDeep } from '../util/Sort';
 import { alphaCompare } from '../util/Util';
 
 import AutocardListItem from './AutocardListItem';
+import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
   const sorted = sortDeep(cards, sort);
+  const { canEdit } = useContext(CubeContext);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
+  const canGroupModal = !noGroupModal && canEdit;
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
@@ -24,8 +27,8 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
     <ListGroup className="list-outline">
       <ListGroupItem
         tag="div"
-        className={'list-group-heading' + (noGroupModal ? '' : ' clickable')}
-        onClick={noGroupModal ? undefined : handleClick}
+        className={'list-group-heading' + (canGroupModal ? ' clickable' : '')}
+        onClick={canGroupModal ? handleClick : undefined}
       >
         {heading}
       </ListGroupItem>
