@@ -50,7 +50,9 @@ const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
               <div className="stack">
                 {column.map((card, index3) => (
                   <div className="stacked" key={index3}>
-                    <FoilCardImage card={card} tags={[]} autocard />
+                    <a href={card.cardID ? '/tool/card/' + card.cardID : null}>
+                      <FoilCardImage card={card} tags={[]} autocard />
+                    </a>
                   </div>
                 ))}
               </div>
@@ -145,11 +147,12 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
               {deck.map((card, cardIndex) => (
                 <AutocardItem
                   key={cardIndex}
-                  tag="div"
+                  tag="a"
                   card={{ details: card }}
                   className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+                  href={card._id ? '/tool/card/' + card._id : null}
                 >
-                  <a className="w-100">{card.name}</a>
+                  {card.name}
                 </AutocardItem>
               ))}
             </ListGroup>
