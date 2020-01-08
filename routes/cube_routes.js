@@ -2625,7 +2625,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
         user.username + ' rebuilt a deck from your cube: ' + cube.name,
       );
     }
-    if (baseUser._id != user.id) {
+    if (baseUser && baseUser._id != user.id) {
       await util.addNotification(
         baseUser,
         user,
