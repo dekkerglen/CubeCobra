@@ -3,7 +3,7 @@ const fixturesPath = 'fixtures';
 const cubefixture = require('../../fixtures/examplecube');
 
 import Filter from '../../src/util/Filter';
-import { expectOperator } from '../util.test';
+import { expectOperator } from '../helpers';
 
 const setCounts = (cards, propertyName) => {
   let greenCardCount = 0;
