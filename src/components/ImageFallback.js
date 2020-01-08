@@ -13,17 +13,7 @@ const ImageFallback = ({ src, fallbackSrc, innerRef, ...props }) => {
     setFallback(false);
   }, [src]);
 
-  return (
-    <>
-      {props.cardid ? (
-        <a href={'/tool/card/' + props.cardid}>
-          <img src={fallback ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />
-        </a>
-      ) : (
-        <img src={fallback ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />
-      )}
-    </>
-  );
+  return <img src={fallback ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />;
 };
 
 export default ImageFallback;

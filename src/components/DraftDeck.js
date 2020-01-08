@@ -50,7 +50,9 @@ const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
               <div className="stack">
                 {column.map((card, index3) => (
                   <div className="stacked" key={index3}>
-                    <FoilCardImage card={card} tags={[]} autocard />
+                    <a href={card.cardID ? '/tool/card/' + card.cardID : null}>
+                      <FoilCardImage card={card} tags={[]} autocard />
+                    </a>
                   </div>
                 ))}
               </div>
