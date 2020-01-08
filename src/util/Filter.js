@@ -245,8 +245,9 @@ const verifyTokens = (tokens) => {
       switch (token(i).category) {
         case 'color':
         case 'identity':
+          // can be a number (0-5) or color:
           let verifyColors = (element) => {
-            return element.search(/^[WUBRGC]$/) < 0;
+            return element.search(/^[WUBRGC012345]$/) < 0;
           };
           if (token(i).arg.every(verifyColors)) {
             return false;
@@ -467,55 +468,108 @@ function filterApply(card, filter, inCube) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
   if (filter.category == 'color' && card.details.colors !== undefined) {
-    switch (filter.operand) {
-      case ':':
-      case '=':
-        if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = !card.details.colors.length;
-        } else {
-          res = areArraysEqualSets(card.details.colors, filter.arg);
-        }
-        break;
-      case '<':
-        res =
-          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
-        break;
-      case '>':
-        res =
-          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
-        break;
-      case '<=':
-        res =
-          arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
-        break;
-      case '>=':
-        res =
-          arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
-        break;
+    let is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
+    if (!is_number) {
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          if (filter.arg.length == 1 && filter.arg[0] == 'C') {
+            res = !card.details.colors.length;
+          } else {
+            res = areArraysEqualSets(card.details.colors, filter.arg);
+          }
+          break;
+        case '<':
+          res =
+            arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
+          break;
+        case '>':
+          res =
+            arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
+          break;
+        case '<=':
+          res =
+            arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
+          break;
+        case '>=':
+          res =
+            arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
+          break;
+      }
+    } else {
+      // check for how many colors in identity
+      let num_colors = card.details.colors.length;
+      let filter_num = parseInt(filter.arg[0], 10);
+
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = num_colors == filter_num;
+          break;
+        case '<':
+          res = num_colors < filter_num;
+          break;
+        case '>':
+          res = num_colors > filter_num;
+          break;
+        case '<=':
+          res = num_colors <= filter_num;
+          break;
+        case '>=':
+          res = num_colors >= filter_num;
+          break;
+      }
     }
   }
   if (filter.category == 'identity' && color_identity !== undefined) {
-    switch (filter.operand) {
-      case ':':
-      case '=':
-        if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-          res = color_identity.length === 0;
-        } else {
-          res = areArraysEqualSets(color_identity, filter.arg);
-        }
-        break;
-      case '<':
-        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length < filter.arg.length;
-        break;
-      case '>':
-        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length > filter.arg.length;
-        break;
-      case '<=':
-        res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length <= filter.arg.length;
-        break;
-      case '>=':
-        res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length >= filter.arg.length;
-        break;
+    let is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
+    if (!is_number) {
+      // handle args that are colors: e.g ci:wu, ci>wu
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          if (filter.arg.length == 1 && filter.arg[0] == 'C') {
+            res = color_identity.length === 0;
+          } else {
+            res = areArraysEqualSets(color_identity, filter.arg);
+          }
+          break;
+        case '<':
+          res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length < filter.arg.length;
+          break;
+        case '>':
+          res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length > filter.arg.length;
+          break;
+        case '<=':
+          res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length <= filter.arg.length;
+          break;
+        case '>=':
+          res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length >= filter.arg.length;
+          break;
+      }
+    } else {
+      // check for how many colors in identity
+      let num_colors = color_identity.length;
+      let filter_num = parseInt(filter.arg[0], 10);
+
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = num_colors == filter_num;
+          break;
+        case '<':
+          res = num_colors < filter_num;
+          break;
+        case '>':
+          res = num_colors > filter_num;
+          break;
+        case '<=':
+          res = num_colors <= filter_num;
+          break;
+        case '>=':
+          res = num_colors >= filter_num;
+          break;
+      }
     }
   }
   if (filter.category == 'mana' && card.details.parsed_cost) {
