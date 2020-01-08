@@ -626,17 +626,15 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'tag') {
-    res = card.tags.some((element) => {
+    res = card.tags && card.tags.some((element) => {
       return element.toLowerCase() == filter.arg.toLowerCase();
     });
   }
   if (filter.category == 'finish') {
-    return card.finish.toLowerCase() === filter.arg.toLowerCase();
+    res = card.finish && card.finish.toLowerCase() === filter.arg.toLowerCase();
   }
   if (filter.category == 'status') {
-    if (card.status.toLowerCase() == filter.arg.toLowerCase()) {
-      res = true;
-    }
+    res = card.status && card.status.toLowerCase() == filter.arg.toLowerCase()
   }
 
   if (filter.category == 'price') {
@@ -647,8 +645,8 @@ function filterApply(card, filter, inCube) {
       price = card.details.price_foil;
     }
     if (price) {
-      price = parseInt(price, 10);
-      let arg = parseInt(filter.arg, 10);
+      price = parseFloat(price, 10);
+      let arg = parseFloat(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -674,8 +672,8 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'pricefoil') {
     var price = card.details.price_foil || null;
     if (price) {
-      price = parseInt(price, 10);
-      let arg = parseInt(filter.arg, 10);
+      price = parseFloat(price, 10);
+      let arg = parseFloat(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
