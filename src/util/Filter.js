@@ -626,15 +626,17 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'tag') {
-    res = card.tags && card.tags.some((element) => {
-      return element.toLowerCase() == filter.arg.toLowerCase();
-    });
+    res =
+      card.tags &&
+      card.tags.some((element) => {
+        return element.toLowerCase() == filter.arg.toLowerCase();
+      });
   }
   if (filter.category == 'finish') {
     res = card.finish && card.finish.toLowerCase() === filter.arg.toLowerCase();
   }
   if (filter.category == 'status') {
-    res = card.status && card.status.toLowerCase() == filter.arg.toLowerCase()
+    res = card.status && card.status.toLowerCase() == filter.arg.toLowerCase();
   }
 
   if (filter.category == 'price') {
