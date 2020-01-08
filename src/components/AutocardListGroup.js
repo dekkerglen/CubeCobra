@@ -8,7 +8,7 @@ import { alphaCompare } from '../util/Util';
 import AutocardListItem from './AutocardListItem';
 import GroupModalContext from './GroupModalContext';
 
-const AutocardListGroup = ({ cards, heading, sort, rowTag }) => {
+const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
   const sorted = sortDeep(cards, sort);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
@@ -22,7 +22,7 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag }) => {
   );
   return (
     <ListGroup className="list-outline">
-      <ListGroupItem tag="a" href="#" className="list-group-heading" onClick={handleClick}>
+      <ListGroupItem tag="div" className={'list-group-heading' + (noGroupModal ? '' : ' clickable')} onClick={noGroupModal ? undefined : handleClick}>
         {heading}
       </ListGroupItem>
       {sorted.map(([label, group]) =>

@@ -1,12 +1,13 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import { Button, Form, ListGroupItem, Spinner } from 'reactstrap';
+import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
 
 import AutocompleteInput from './AutocompleteInput';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
+import DisplayContext from './DisplayContext';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
 import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
@@ -82,6 +83,7 @@ const MaybeboardListItem = ({ card, className }) => {
 
 const MaybeboardView = ({ filter, ...props }) => {
   const { cubeID } = useContext(CubeContext);
+  const { toggleShowMaybeboard } = useContext(DisplayContext);
   const { maybeboard, addMaybeboardCard } = useContext(MaybeboardContext);
   const addInput = useRef();
   const [loading, setLoading] = useState(false);
@@ -134,23 +136,39 @@ const MaybeboardView = ({ filter, ...props }) => {
 
   return (
     <>
-      <h4>Maybeboard</h4>
-      <Form inline className="mt-2" onSubmit={handleAdd}>
-        <AutocompleteInput
-          treeUrl="/cube/api/cardnames"
-          treePath="cardnames"
-          type="text"
-          className="mr-2"
-          disabled={loading}
-          innerRef={addInput}
-          onSubmit={handleAdd}
-          placeholder="Card to Add"
-          autoComplete="off"
-          data-lpignore
-        />
-        <LoadingButton color="success" type="submit" loading={loading}>
-          Add
-        </LoadingButton>
+      <Row>
+        <Col className="mr-auto">
+          <h4>Maybeboard</h4>
+        </Col>
+        <Col xs="auto">
+          <Button color="primary" size="sm" onClick={toggleShowMaybeboard}>
+            Hide
+            <span className="d-none d-sm-inline">{' Maybeboard'}</span>
+          </Button>
+        </Col>
+      </Row>
+      <Form className="mt-2 w-100" onSubmit={handleAdd}>
+        <Row noGutters>
+          <Col xs="9" sm="auto" className="pr-2">
+            <AutocompleteInput
+              treeUrl="/cube/api/cardnames"
+              treePath="cardnames"
+              type="text"
+              className="w-100"
+              disabled={loading}
+              innerRef={addInput}
+              onSubmit={handleAdd}
+              placeholder="Card to Add"
+              autoComplete="off"
+              data-lpignore
+            />
+          </Col>
+          <Col xs="3" sm="auto">
+            <LoadingButton color="success" type="submit" className="w-100" loading={loading}>
+              Add
+            </LoadingButton>
+          </Col>
+        </Row>
       </Form>
       {maybeboard.length === 0 ?
         <h5 className="mt-3">
@@ -158,7 +176,7 @@ const MaybeboardView = ({ filter, ...props }) => {
           {(filter && filter.length > 0) ? ' matching filter.' : '.'}
         </h5>
         :
-        <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} {...props} />
+        <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
       }
       <hr />
     </>

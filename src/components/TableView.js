@@ -8,7 +8,7 @@ import AutocardListGroup from './AutocardListGroup';
 import DisplayContext from './DisplayContext';
 import SortContext from './SortContext';
 
-const TableView = ({ cards, rowTag, className, ...props }) => {
+const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
   const { primary, secondary } = useContext(SortContext);
   const { compressedView } = useContext(DisplayContext);
 
@@ -29,7 +29,7 @@ const TableView = ({ cards, rowTag, className, ...props }) => {
               <br />({countGroup(column)})
             </h6>
             {column.map(([label, row]) => (
-              <AutocardListGroup key={label} heading={`${label} (${countGroup(row)})`} cards={row} rowTag={rowTag} />
+              <AutocardListGroup key={label} heading={`${label} (${countGroup(row)})`} cards={row} rowTag={rowTag} noGroupModal={noGroupModal} />
             ))}
           </Col>
         ))}
