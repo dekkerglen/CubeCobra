@@ -142,7 +142,7 @@ async function addNotification(user, from, url, text) {
   await user.save();
 }
 
-var methods = {
+var exports = {
   shuffle: function(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -204,4 +204,4 @@ var methods = {
   addNotification,
 };
 
-module.exports = methods;
+module.exports = exports;

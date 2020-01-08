@@ -1725,19 +1725,43 @@ router.post('/startdraft/:id', function(req, res) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).render('misc/404', {});
-    } else {
-      let params = {
-        id: parseInt(req.body.id),
-        seats: parseInt(req.body.seats),
-        packs: parseInt(req.body.packs),
-        cards: parseInt(req.body.cards),
-      };
-      if (req.body.id == -1) {
-        //standard draft
-        startStandardDraft(req, res, params, cube);
-      } else {
-        startCustomDraft(req, res, params, cube);
-      }
+      return;
+    }
+
+    let params = {
+      id: parseInt(req.body.id), // < 0 is standard draft, otherwise custom draft
+      seats: parseInt(req.body.seats),
+      packs: parseInt(req.body.packs),
+      cards: parseInt(req.body.cards),
+    };
+
+    // setup draft cards
+    let draftcards = cube.cards.slice();
+    if (draftcards.length === 0) {
+      req.flash('danger', 'No cards in cube. You must add cards before drafting.');
+      res.redirect('/cube/playtest/' + req.params.id);
+    }
+    draftcards.forEach((card, index) => {
+      card.details = carddb.cardFromId(card.cardID);
+    });
+    // set up bots and format
+    let bots = draftutil.getDraftBots(params);
+    let format = draftutil.getDraftFormat(params, cube);
+
+    try {
+      let draft = draftutil.createDraft(format, draftcards, bots, params.seats);
+      draft.cube = cube._id;
+      draft.save(function(err) {
+        if (err) {
+          throw err;
+        } else {
+          res.redirect('/cube/draft/' + draft._id);
+        }
+      });
+    } catch (err) {
+      console.log(err, req);
+      req.flash('danger', err);
+      res.redirect('/cube/playtest/' + req.params.id);
     }
   });
 });

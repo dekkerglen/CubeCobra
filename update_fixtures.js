@@ -15,6 +15,7 @@ const success = 0;
 
 // rebuild the fixtures based on the previous subset of cards
 (async function() {
+  console.log('Attempting to read', cardsPath);
   const cardJSON = JSON.parse(fs.readFileSync(cardsPath));
   // make id based list
   let cardJSONById = {};
