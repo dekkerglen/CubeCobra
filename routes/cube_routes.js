@@ -791,7 +791,7 @@ router.get('/list/:id', async function(req, res) {
 
     const reactProps = {
       canEdit: req.user && req.user.id === cube.owner,
-      cubeID: cube._id.toString(),
+      cubeID: req.params.id,
       defaultTagColors: cube.tag_colors,
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
