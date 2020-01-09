@@ -136,6 +136,11 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
           <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle(deck.flat().flat())} />
         </Col>
       </Row>
+      <Row className="mt-3">
+        <Col>
+          <DeckStacksStatic cards={stackedDeck} title={"Sideboard"} />
+        </Col>
+      </Row>
       <h4 className="mt-3">Bot Decks</h4>
       <Row className="row-low-padding">
         {botDecks.map((deck, botIndex) => (
