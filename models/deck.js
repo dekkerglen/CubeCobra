@@ -59,8 +59,8 @@ let deckSchema = mongoose.Schema({
   },
   comments: {
     type: [Comment],
-    default: []
-  }
+    default: [],
+  },
 });
 
 let Deck = (module.exports = mongoose.model('Deck', deckSchema));

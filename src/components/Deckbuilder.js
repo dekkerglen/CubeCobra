@@ -13,15 +13,7 @@ import DynamicFlash from './DynamicFlash';
 import ErrorBoundary from './ErrorBoundary';
 import TextEntry from './TextEntry';
 
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Row,
-  Col,
-  CardTitle,
-  CardText
-} from 'reactstrap';
+import { Card, CardHeader, CardBody, Row, Col, CardTitle, CardText } from 'reactstrap';
 
 const canDrop = (source, target) => true;
 
@@ -124,24 +116,21 @@ const Deckbuilder = ({ initialDeck, basics }) => {
             <CardHeader>
               <CardTitle className="mb-0 d-flex flex-row align-items-end">
                 <h4 className="mb-0 mr-auto">About</h4>
-              </CardTitle>             
+              </CardTitle>
             </CardHeader>
-            <CardBody>              
-            <h6>Deck Name</h6>
-            <input
-              className="form-control"
-              name="name"
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-            ></input>
-            <br />
-            
-            <h6>Description</h6>
-            <TextEntry
-              content={description}
-              handleChange={e => setDescription(e.target.value)}
-            />
+            <CardBody>
+              <h6>Deck Name</h6>
+              <input
+                className="form-control"
+                name="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              ></input>
+              <br />
+
+              <h6>Description</h6>
+              <TextEntry content={description} handleChange={(e) => setDescription(e.target.value)} />
             </CardBody>
           </Card>
         </Col>

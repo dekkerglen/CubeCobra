@@ -71,8 +71,21 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit, description, name, comments, deckid, userid }) => {
-
+const DraftDeck = ({
+  oldFormat,
+  drafter,
+  cards,
+  deck,
+  sideboard,
+  botDecks,
+  bots,
+  canEdit,
+  description,
+  name,
+  comments,
+  deckid,
+  userid,
+}) => {
   const [commentList, setCommentList] = useState(comments);
   const [childExpanded, setChildCollapse] = useState(false);
 
@@ -90,21 +103,21 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
     const newList = commentList.slice();
     newList.push(comment);
     setCommentList(newList);
-  }
+  };
   const saveEdit = function(comments, position, comment) {
     if (position.length == 1) {
       comments[position[0]] = comment;
     } else if (position.length > 1) {
       saveEdit(comments[position[0]].comments, position.slice(1), comment);
     }
-  }
+  };
   const submitEdit = async function(comment, position) {
     //update current state
     saveEdit(this.props.post.comments, position, comment);
-  }
+  };
   const toggleChildCollapse = function() {
     setChildCollapse(!childExpanded);
-  }
+  };
 
   let stackedDeck;
   let stackedSideboard;
@@ -112,8 +125,8 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
     stackedDeck = sortDeck(cards);
     stackedSideboard = [];
   } else {
-    stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];    
-    stackedSideboard = [sideboard.slice(0, 16)]; 
+    stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];
+    stackedSideboard = [sideboard.slice(0, 16)];
   }
 
   // Cut off empty columns at the end.
@@ -167,7 +180,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
           </Collapse>
         </Navbar>
       </div>
-      <DynamicFlash />      
+      <DynamicFlash />
       <Row className="mt-3">
         <Col>
           <Card>
@@ -177,10 +190,10 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
                 <h6 className="mb-0 font-weight-normal d-none d-sm-block">
                   Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
                 </h6>
-              </CardTitle>             
+              </CardTitle>
             </CardHeader>
             <CardBody>
-              <CardText dangerouslySetInnerHTML={{ __html:description }} />
+              <CardText dangerouslySetInnerHTML={{ __html: description }} />
             </CardBody>
             <CardBody className="px-4 pt-2 pb-0 border-top">
               <CommentEntry id={deckid} position={[]} onPost={onPost} submitUrl={`/cube/api/postdeckcomment`}>
@@ -208,16 +221,16 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
       </Row>
       <Row className="mt-3">
         <Col>
-          <DeckStacksStatic cards={stackedDeck} title={"Deck"} subtitle={subtitle(deck.flat().flat())} />
+          <DeckStacksStatic cards={stackedDeck} title={'Deck'} subtitle={subtitle(deck.flat().flat())} />
         </Col>
       </Row>
-      {(stackedSideboard && stackedSideboard.length > 0) &&
+      {stackedSideboard && stackedSideboard.length > 0 && (
         <Row className="mt-3">
           <Col>
-            <DeckStacksStatic cards={stackedSideboard} title={"Sideboard"} />
+            <DeckStacksStatic cards={stackedSideboard} title={'Sideboard'} />
           </Col>
         </Row>
-      }
+      )}
       <h4 className="mt-3">Bot Decks</h4>
       <Row className="row-low-padding">
         {botDecks.map((deck, botIndex) => (
