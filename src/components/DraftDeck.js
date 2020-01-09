@@ -28,6 +28,8 @@ import DynamicFlash from './DynamicFlash';
 import FoilCardImage from './FoilCardImage';
 import { getCardColorClass } from './TagContext';
 import withAutocard from './WithAutocard';
+import CommentEntry from './CommentEntry';
+import CommentsSection from './CommentsSection';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -69,7 +71,11 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit, description, name }) => {
+const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit, description, name, comments, deckid, userid }) => {
+
+  const [commentList, setCommentList] = useState(comments);
+  const [childExpanded, setChildCollapse] = useState(false);
+
   const [isOpen, setIsOpen] = useState(false);
   const toggleNavbar = useCallback(
     (event) => {
@@ -79,13 +85,26 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
     [isOpen],
   );
 
-  const title = (
-    <Fragment>
-      
-    </Fragment>
-  );
-
-  console.log(description);
+  const onPost = function(comment) {
+    comment.index = commentList.length;
+    const newList = commentList.slice();
+    newList.push(comment);
+    setCommentList(newList);
+  }
+  const saveEdit = function(comments, position, comment) {
+    if (position.length == 1) {
+      comments[position[0]] = comment;
+    } else if (position.length > 1) {
+      saveEdit(comments[position[0]].comments, position.slice(1), comment);
+    }
+  }
+  const submitEdit = async function(comment, position) {
+    //update current state
+    saveEdit(this.props.post.comments, position, comment);
+  }
+  const toggleChildCollapse = function() {
+    setChildCollapse(!childExpanded);
+  }
 
   let stackedDeck;
   let stackedSideboard;
@@ -96,8 +115,6 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
     stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];    
     stackedSideboard = [sideboard.slice(0, 16)]; 
   }
-
-  console.log(stackedSideboard);
 
   // Cut off empty columns at the end.
   let lastFull;
@@ -165,6 +182,27 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
             <CardBody>
               <CardText dangerouslySetInnerHTML={{ __html:description }} />
             </CardBody>
+            <CardBody className="px-4 pt-2 pb-0 border-top">
+              <CommentEntry id={deckid} position={[]} onPost={onPost} submitUrl={`/cube/api/postdeckcomment`}>
+                <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
+              </CommentEntry>
+            </CardBody>
+            {comments.length > 0 && (
+              <CardBody className=" px-4 pt-2 pb-0 border-top">
+                <CommentsSection
+                  expanded={childExpanded}
+                  toggle={toggleChildCollapse}
+                  id={deckid}
+                  comments={commentList}
+                  position={[]}
+                  userid={userid}
+                  loggedIn={true}
+                  submitEdit={submitEdit}
+                  focused={false}
+                  submitUrl={`/cube/api/postdeckcomment`}
+                />
+              </CardBody>
+            )}
           </Card>
         </Col>
       </Row>

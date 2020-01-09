@@ -21,6 +21,9 @@ block scripts
       botDecks: !{JSON.stringify(bot_decks)},
       bots: !{JSON.stringify(bots)},
       canEdit: !{JSON.stringify(user && user._id == owner)},
+      comments: !{JSON.stringify(comments)},
+      deckid: !{JSON.stringify(deckid)},
+      userid: !{JSON.stringify(user._id)},
     };
   include ../react
   script(src='/js/cube_deck.bundle.js')

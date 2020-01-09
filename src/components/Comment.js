@@ -179,7 +179,7 @@ class Comment extends React.Component {
             </Collapse>
             {this.props.position.length < 20 && this.props.loggedIn && (
               <div>
-                <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}>
+                <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}  submitUrl={this.props.submitUrl}>
                   <span className="comment-button mb-2 text-muted clickable">Reply</span>
                 </CommentEntry>
               </div>
@@ -199,6 +199,7 @@ class Comment extends React.Component {
               loggedIn={this.props.loggedIn}
               submitEdit={this.props.submitEdit}
               focused={this.props.focused && this.props.focused.length > 0 ? this.props.focused : this.props.focused}
+              submitUrl={this.props.submitUrl}
             />
           </div>
         )}
