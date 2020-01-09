@@ -79,7 +79,7 @@ BasicsModal.propTypes = {
   handleAddBasics: PropTypes.func,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics }) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -122,6 +122,8 @@ const DeckbuilderNavbar = ({ deck, addBasics }) => {
               </NavLink>
               <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
                 <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
+                <Input type="hidden" name="name" value={JSON.stringify(name)} />
+                <Input type="hidden" name="description" value={JSON.stringify(description)} />
               </CSRFForm>
             </NavItem>
             <NavItem>
