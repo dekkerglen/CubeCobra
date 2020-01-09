@@ -1,3 +1,6 @@
+//run with: node --max-old-space-size=8192 populate_analytics.js
+// will oom without the added tag
+
 const mongoose = require('mongoose');
 const quickselect = require('quickselect');
 
@@ -77,9 +80,11 @@ async function processDeck(deck) {
         deck.playerdeck.forEach(function(col, index) {
             if(Array.isArray(col)) {
                 col.forEach(function(row, index2) {
-                    deckCards.push(row.details.name.toLowerCase().normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .trim());
+                    if(row && row.details) {
+                        deckCards.push(row.details.name.toLowerCase().normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .trim());
+                    }
                 });
             } else {
                 deckCards.push(col.details.name.toLowerCase().normalize('NFD')

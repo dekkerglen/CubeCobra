@@ -791,7 +791,7 @@ router.get('/list/:id', async function(req, res) {
 
     const reactProps = {
       canEdit: req.user && req.user.id === cube.owner,
-      cubeID: cube._id.toString(),
+      cubeID: req.params.id,
       defaultTagColors: cube.tag_colors,
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
@@ -2625,7 +2625,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
         user.username + ' rebuilt a deck from your cube: ' + cube.name,
       );
     }
-    if (baseUser._id != user.id) {
+    if (baseUser && baseUser._id != user.id) {
       await util.addNotification(
         baseUser,
         user,
