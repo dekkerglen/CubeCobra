@@ -8,7 +8,6 @@ import {
   CardTitle,
   Col,
   Collapse,
-  Input,
   ListGroup,
   ListGroupItem,
   Nav,
@@ -17,6 +16,7 @@ import {
   NavItem,
   NavLink,
   Row,
+  CardText,
 } from 'reactstrap';
 
 import { sortDeck } from '../util/Util';
@@ -69,7 +69,7 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit }) => {
+const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit, description, name }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleNavbar = useCallback(
     (event) => {
@@ -81,11 +81,11 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
 
   const title = (
     <Fragment>
-      Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
+      
     </Fragment>
   );
 
-  console.log(deck);
+  console.log(description);
 
   let stackedDeck;
   let stackedSideboard;
@@ -110,7 +110,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
   }
 
   let lastFullSB;
-  for (const row of stackedDeck) {
+  for (const row of stackedSideboard) {
     for (lastFullSB = row.length - 1; lastFullSB >= 0; lastFullSB--) {
       if (row[lastFullSB] && row[lastFullSB].length > 0) {
         break;
@@ -151,7 +151,7 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
       <DynamicFlash />
       <Row className="mt-3">
         <Col>
-          <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle(deck.flat().flat())} />
+          <DeckStacksStatic cards={stackedDeck} title={name} subtitle={subtitle(deck.flat().flat())} />
         </Col>
       </Row>
       {(stackedSideboard && stackedSideboard.length > 0) &&
@@ -161,6 +161,23 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
           </Col>
         </Row>
       }
+      <Row className="mt-3">
+        <Col>
+          <Card>
+            <CardHeader>
+              <CardTitle className="mb-0 d-flex flex-row align-items-end">
+                <h4 className="mb-0 mr-auto">About</h4>
+                <h6 className="mb-0 font-weight-normal d-none d-sm-block">
+                  Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
+                </h6>
+              </CardTitle>             
+            </CardHeader>
+            <CardBody>
+              <CardText dangerouslySetInnerHTML={{ __html:description }} />
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
       <h4 className="mt-3">Bot Decks</h4>
       <Row className="row-low-padding">
         {botDecks.map((deck, botIndex) => (

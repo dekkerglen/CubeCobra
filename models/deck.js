@@ -29,6 +29,10 @@ let deckSchema = mongoose.Schema({
     type: String,
     default: '',
   },
+  description: {
+    type: String,
+    default: 'No description available.',
+  },
   newformat: {
     type: Boolean,
     default: false,
