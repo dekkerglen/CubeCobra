@@ -1,11 +1,16 @@
 const express = require('express');
+const url = require('url');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const emailconfig = require('../../cubecobrasecrets/email');
+const patreonSecrets = require('../../cubecobrasecrets/patreon');
 const mailer = require('nodemailer');
 const fs = require('fs');
 const util = require('../serverjs/util.js');
+const patreon = require('patreon')
+const patreonAPI = patreon.patreon;
+const patreonOAuth = patreon.oauth;
 
 // Bring in models
 let User = require('../models/user');
@@ -14,6 +19,8 @@ let Cube = require('../models/cube');
 let Deck = require('../models/deck');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
+
+const oauthClient = patreonOAuth(patreonSecrets.client_id, patreonSecrets.client_secrets);
 
 // For consistency between different forms, validate username through this function.
 function checkUsernameValid(req) {
@@ -891,27 +898,49 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
 });
 
 //taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
-app.get('/patreonredirect', (req, res) => {
-  const { code } = req.query
-  let token
+router.get('/patreon', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
 
-  return oauthClient.getTokens(code, redirect)
-      .then(({ access_token }) => {
-          token = access_token; // eslint-disable-line camelcase
-          const apiClient = patreon(token);
-          return apiClient('/current_user');
-      })
-      .then(({ store, rawJson }) => {
-          const { id } = rawJson.data;
-          database[id] = { ...rawJson.data, token };
-          console.log(`Saved user ${store.find('user', id).full_name} to the database`);
-          return res.redirect(`/protected/${id}`);
-      })
-      .catch((err) => {
-          console.log(err);
-          console.log('Redirecting to login');
-          res.redirect('/');
-      })
+    const loginUrl = url.format({
+      protocol: 'https',
+      host: 'patreon.com',
+      pathname: '/oauth2/authorize',
+      query: {
+        response_type: 'code',
+        client_id: patreonSecrets.client_id,
+        redirect_uri: patreonSecrets.redirect_uri,
+      }
+    });
+    
+    return res.redirect(loginUrl);
+  } catch(err) {
+    console.error(err);
+    req.flash('danger', 'Server Error');
+    return res.redirect('/');
+  }
+});
+
+//taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
+router.get('/patreonredirect', (req, res) => {
+  const oauthGrantCode = url.parse(req.url, true).query.code;
+
+  console.log(oauthGrantCode);
+
+  patreonOAuthClient
+    .getTokens(oauthGrantCode, patreonSecrets.redirect_uri)
+    .then(function(tokensResponse) {
+        var patreonAPIClient = patreonAPI(tokensResponse.access_token)
+        return patreonAPIClient('/current_user')
+    })
+    .then(function(result) {
+        var store = result.rawJson;
+        console.log(store.findAll('user').map(user => user.serialize()));
+    })
+    .catch(function(err) {
+        console.error('error!', err)
+        response.end(err)
+    })
 })
 
 

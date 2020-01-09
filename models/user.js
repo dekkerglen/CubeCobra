@@ -75,6 +75,13 @@ const UserSchema = mongoose.Schema({
     type: String,
     default: 'Allan Pollack',
   },
+  patreonLevel: {
+    type:Number,
+    default: 0,
+  },
+  patreonEmail: {
+    type: String,
+  }
 });
 
 const User = (module.exports = mongoose.model('User', UserSchema));
