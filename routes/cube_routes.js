@@ -2832,6 +2832,7 @@ router.get('/deck/:id', async (req, res) => {
         bots: bot_names,
         name: deck.name,
         description: deck.description,
+        owner: deck.owner,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2876,6 +2877,7 @@ router.get('/deck/:id', async (req, res) => {
         bots: bot_names,
         name: deck.name,
         description: deck.description,
+        owner: deck.owner,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

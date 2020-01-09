@@ -20,7 +20,7 @@ block scripts
       sideboard: !{sideboard || []},
       botDecks: !{JSON.stringify(bot_decks)},
       bots: !{JSON.stringify(bots)},
-      canEdit: !{JSON.stringify(user && user.id === deck.owner)},
+      canEdit: !{JSON.stringify(user && user._id == owner)},
     };
   include ../react
   script(src='/js/cube_deck.bundle.js')
