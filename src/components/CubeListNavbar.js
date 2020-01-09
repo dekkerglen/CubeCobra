@@ -35,7 +35,6 @@ import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
-import LoadingButton from './LoadingButton';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
 import withModal from './WithModal';
@@ -62,9 +61,9 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <LoadingButton color="success" type="submit">
+          <Button color="success" type="submit">
             Upload
-          </LoadingButton>
+          </Button>
           <Button color="secondary" onclick={toggle}>
             Close
           </Button>
