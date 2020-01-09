@@ -50,7 +50,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
       <ModalBody>
         {COLORS.map(([long, short, basic]) => (
           <Form key={short} className="mb-1" inline>
-            <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={long} title={long} className="mr-1" />
+            <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={long} title={long} className="mr-1 mana-symbol" />
             <Input type="select" name={long} defaultValue={0} innerRef={refs[basic]}>
               {Array.from(new Array(MAX_BASICS).keys()).map((n) => (
                 <option key={n} value={n}>

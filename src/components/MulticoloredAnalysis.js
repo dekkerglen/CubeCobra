@@ -68,7 +68,7 @@ const MulticoloredAnalysis = ({ multicoloredCounts, ...props }) => (
               <tr key={name}>
                 <td>
                   {colors.map((color) => (
-                    <img key={color[0]} src={`/content/symbols/${color[1]}.png`} alt={color[0]} title={name} />
+                    <img key={color[0]} src={`/content/symbols/${color[1]}.png`} alt={color[0]} title={name} className="mana-symbol" />
                   ))}
                 </td>
                 <td>{multicoloredCounts[name]}</td>
