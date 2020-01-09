@@ -43,6 +43,7 @@
     "nodemailer": "^6.3.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
+    "patreon": "^0.4.1",
     "pug": "^2.0.3",
     "quickselect": "^2.0.0",
     "request": "^2.88.0",

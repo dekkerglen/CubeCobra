@@ -580,7 +580,6 @@ router.get('/view/:id', async (req, res) => {
       owner: user._id,
     });
 
-    console.log(user.about);
     return res.render('user/user_view', {
       user_limited: {
         username: user.username,
@@ -890,6 +889,31 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
     },
   );
 });
+
+//taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
+app.get('/patreonredirect', (req, res) => {
+  const { code } = req.query
+  let token
+
+  return oauthClient.getTokens(code, redirect)
+      .then(({ access_token }) => {
+          token = access_token; // eslint-disable-line camelcase
+          const apiClient = patreon(token);
+          return apiClient('/current_user');
+      })
+      .then(({ store, rawJson }) => {
+          const { id } = rawJson.data;
+          database[id] = { ...rawJson.data, token };
+          console.log(`Saved user ${store.find('user', id).full_name} to the database`);
+          return res.redirect(`/protected/${id}`);
+      })
+      .catch((err) => {
+          console.log(err);
+          console.log('Redirecting to login');
+          res.redirect('/');
+      })
+})
+
 
 function addMinutes(date, minutes) {
   return new Date(new Date(date).getTime() + minutes * 60000);
