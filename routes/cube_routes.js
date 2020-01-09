@@ -2473,7 +2473,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     var [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : 'Anonymous';
-    deck.name = owner + "'s draft of " + cube.name + ' on ' + deck.date.toLocaleString('en-US');
+    deck.name = "Draft of " + cube.name;
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
