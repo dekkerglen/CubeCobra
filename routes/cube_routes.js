@@ -2858,6 +2858,7 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
+      console.log(deck);
       return res.render('cube/cube_deck', {
         oldformat: false,
         deckid: deck._id,
@@ -2868,6 +2869,7 @@ router.get('/deck/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         drafter: drafter,
         deck: JSON.stringify(deck.playerdeck),
+        sideboard: JSON.stringify(deck.playersideboard),
         bot_decks: bot_decks,
         bots: bot_names,
         metadata: generateMeta(

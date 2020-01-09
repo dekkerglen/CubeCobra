@@ -15,6 +15,7 @@ block scripts
       drafter: !{JSON.stringify(drafter)},
       cards: !{cards ? JSON.stringify(cards) : '[]'},
       deck: !{deck || []},
+      sideboard: !{sideboard || []},
       botDecks: !{JSON.stringify(bot_decks)},
       bots: !{JSON.stringify(bots)},
       canEdit: !{JSON.stringify(user && user.id === deck.owner)},

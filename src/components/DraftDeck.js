@@ -45,7 +45,7 @@ const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
           {row.map((column, index2) => (
             <Col key={index2} className="mt-3 card-stack col-md-1-5 col-low-padding" xs={3}>
               <div className="w-100 text-center mb-1">
-                <b>{column.length}</b>
+                <b>{column.length > 0 ? column.length : ''}</b>
               </div>
               <div className="stack">
                 {column.map((card, index3) => (
@@ -69,7 +69,7 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit }) => {
+const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots, canEdit }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleNavbar = useCallback(
     (event) => {
@@ -85,11 +85,16 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
     </Fragment>
   );
 
+  console.log(deck);
+
   let stackedDeck;
+  let stackedSideboard;
   if (oldFormat) {
     stackedDeck = sortDeck(cards);
+    stackedSideboard = [];
   } else {
-    stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];
+    stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];    
+    stackedSideboard = [sideboard.slice(0, 8)]; 
   }
 
   // Cut off empty columns at the end.
@@ -101,6 +106,17 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
       }
     }
     const startCut = lastFull + 1;
+    row.splice(startCut, row.length - startCut);
+  }
+
+  let lastFullSB;
+  for (const row of stackedDeck) {
+    for (lastFullSB = row.length - 1; lastFullSB >= 0; lastFullSB--) {
+      if (row[lastFullSB] && row[lastFullSB].length > 0) {
+        break;
+      }
+    }
+    const startCut = lastFullSB + 1;
     row.splice(startCut, row.length - startCut);
   }
 
@@ -138,11 +154,13 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, botDecks, bots, canEdit })
           <DeckStacksStatic cards={stackedDeck} title={title} subtitle={subtitle(deck.flat().flat())} />
         </Col>
       </Row>
-      <Row className="mt-3">
-        <Col>
-          <DeckStacksStatic cards={stackedDeck} title={"Sideboard"} />
-        </Col>
-      </Row>
+      {(stackedSideboard && stackedSideboard.length > 0) &&
+        <Row className="mt-3">
+          <Col>
+            <DeckStacksStatic cards={stackedSideboard} title={"Sideboard"} />
+          </Col>
+        </Row>
+      }
       <h4 className="mt-3">Bot Decks</h4>
       <Row className="row-low-padding">
         {botDecks.map((deck, botIndex) => (
