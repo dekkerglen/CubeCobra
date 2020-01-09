@@ -2413,11 +2413,15 @@ router.post('/editdeck/:id', async (req, res) => {
     }
 
     var newdeck = JSON.parse(req.body.draftraw);
+    var name = JSON.parse(req.body.name);
+    var description = sanitize(JSON.parse(req.body.description));
 
     deck.cards = newdeck.cards;
     deck.playerdeck = newdeck.playerdeck;
     deck.playersideboard = newdeck.playersideboard;
     deck.cols = newdeck.cols;
+    deck.name = name;
+    deck.description = description;
 
     await deck.save();
 
@@ -2861,7 +2865,6 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
-      console.log(deck);
       return res.render('cube/cube_deck', {
         oldformat: false,
         deckid: deck._id,

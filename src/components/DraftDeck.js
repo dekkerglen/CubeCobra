@@ -94,8 +94,10 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
     stackedSideboard = [];
   } else {
     stackedDeck = [deck.slice(0, 8), deck.slice(8, 16)];    
-    stackedSideboard = [sideboard.slice(0, 8)]; 
+    stackedSideboard = [sideboard.slice(0, 16)]; 
   }
+
+  console.log(stackedSideboard);
 
   // Cut off empty columns at the end.
   let lastFull;
@@ -148,25 +150,13 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
           </Collapse>
         </Navbar>
       </div>
-      <DynamicFlash />
-      <Row className="mt-3">
-        <Col>
-          <DeckStacksStatic cards={stackedDeck} title={name} subtitle={subtitle(deck.flat().flat())} />
-        </Col>
-      </Row>
-      {(stackedSideboard && stackedSideboard.length > 0) &&
-        <Row className="mt-3">
-          <Col>
-            <DeckStacksStatic cards={stackedSideboard} title={"Sideboard"} />
-          </Col>
-        </Row>
-      }
+      <DynamicFlash />      
       <Row className="mt-3">
         <Col>
           <Card>
             <CardHeader>
               <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                <h4 className="mb-0 mr-auto">About</h4>
+                <h4 className="mb-0 mr-auto">{name}</h4>
                 <h6 className="mb-0 font-weight-normal d-none d-sm-block">
                   Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
                 </h6>
@@ -178,6 +168,18 @@ const DraftDeck = ({ oldFormat, drafter, cards, deck, sideboard, botDecks, bots,
           </Card>
         </Col>
       </Row>
+      <Row className="mt-3">
+        <Col>
+          <DeckStacksStatic cards={stackedDeck} title={"Deck"} subtitle={subtitle(deck.flat().flat())} />
+        </Col>
+      </Row>
+      {(stackedSideboard && stackedSideboard.length > 0) &&
+        <Row className="mt-3">
+          <Col>
+            <DeckStacksStatic cards={stackedSideboard} title={"Sideboard"} />
+          </Col>
+        </Row>
+      }
       <h4 className="mt-3">Bot Decks</h4>
       <Row className="row-low-padding">
         {botDecks.map((deck, botIndex) => (
