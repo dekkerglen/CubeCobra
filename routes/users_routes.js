@@ -934,11 +934,13 @@ router.get('/patreonredirect', (req, res) => {
         return patreonAPIClient('/current_user')
     })
     .then(function(result) {
-      console.log(result.rawJson);
-      console.log(result.rawJson.data.relationships.pledges);
+      var store = result.store
+            // store is a [JsonApiDataStore](https://github.com/beauby/jsonapi-datastore)
+            // You can also ask for result.rawJson if you'd like to work with unparsed data
+      console.log(store.findAll('user').map(user => user.serialize()));
 
-        req.flash('success', 'Patreon Succesfully Linked.');
-        return res.redirect('/');
+      req.flash('success', 'Patreon Succesfully Linked.');
+      return res.redirect('/');
     })
     .catch(function(err) {
         console.error(err);
