@@ -2,16 +2,6 @@ var sinon = require('sinon');
 
 const methods = require('../../serverjs/draftutil');
 
-let CardRating = require('../../models/cardrating');
-
-beforeEach(() => {
-  sinon.stub(CardRating, 'find');
-});
-
-afterEach(() => {
-  CardRating.find.restore();
-});
-
 test('it can get the correct number of draft bots', () => {
   const params = {
     seats: 5,
@@ -56,26 +46,4 @@ test('it returns -1 if a tag is not found in a list of cards', () => {
   const result = methods.indexOfTag(cards, tag);
 
   expect(result).toBe(-1);
-});
-
-test('getCardRatings returns a mapping of card names to values', () => {
-  var dummyModel = {
-    value: 1,
-    picks: 1,
-    name: 'Giant Growth',
-  };
-  var expected = {};
-  expected[dummyModel.name] = dummyModel.value;
-  CardRating.find.yields(null, [dummyModel]);
-  var callback = sinon.stub();
-  methods.getCardRatings([], CardRating, callback);
-  sinon.assert.calledWith(callback, expected);
-});
-
-test('getCardRatings returns an empty dict when there are no ratings present ', () => {
-  var expected = {};
-  CardRating.find.yields(null, []);
-  var callback = sinon.stub();
-  methods.getCardRatings([], CardRating, callback);
-  sinon.assert.calledWith(callback, expected);
 });

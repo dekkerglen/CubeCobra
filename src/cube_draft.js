@@ -1,10 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Draft from './util/Draft';
-
 import DraftView from './components/DraftView';
 
-Draft.init(initialDraft);
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<DraftView />, wrapper) : false;
+const element = <DraftView {...reactProps} />;
+if (wrapper) {
+  if (wrapper.children.length === 0) {
+    ReactDOM.render(element, wrapper);
+  } else {
+    ReactDOM.hydrate(element, wrapper);
+  }
+}

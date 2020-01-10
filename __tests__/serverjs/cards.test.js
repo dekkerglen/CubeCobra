@@ -105,6 +105,21 @@ test('cardFromId returns a well-formed card object', () => {
   });
 });
 
+test('cardFromId returns only selected fields', () => {
+  expect.assertions(1);
+  const _id = _RankleMasterofFixtures._id;
+  const expected = {
+    _id: '93c2c11d-dfc3-4ba9-8c0f-a98114090396',
+    name: 'Rankle, Master of Pranks',
+    colors: ['B'],
+  };
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    const result = carddb.cardFromId(_id, '_id name colors');
+    expect(result).toEqual(expected);
+  });
+});
+
 test('cardFromId returns a placeholder card object when given a nonexistent ID', () => {
   expect.assertions(1);
   const _id = 'not real';
