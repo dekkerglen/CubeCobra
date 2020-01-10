@@ -900,8 +900,6 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
 //taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
 router.get('/patreon', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-
     const loginUrl = url.format({
       protocol: 'https',
       host: 'patreon.com',
@@ -922,7 +920,7 @@ router.get('/patreon', ensureAuth, async (req, res) => {
 });
 
 //taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
-router.get('/patreonredirect', (req, res) => {
+router.get('/patreonredirect', ensureAuth, async (req, res) => {
   const oauthGrantCode = url.parse(req.url, true).query.code;
 
   oauthClient
@@ -935,7 +933,30 @@ router.get('/patreonredirect', (req, res) => {
     .then(function(result) {
       const data = result.store.findAll('pledge').map(pledge => pledge.serialize());
 
-      console.log(JSON.stringify(data, null, 1));
+      if(data.length <= 0) {
+        req.flash('danger', 'This patreon account does not have a pledge to Cube Cobra.');
+        return res.redirect('/');
+      }
+
+      const patronid = data[0].relationships.patron.id;
+      const pledge = data[0].data.attributes.amount_cents;
+
+      const users = await User.find({patreonId:patronid});
+
+      if(users && users.length > 0) {
+        req.flash('danger', 'This patreon account has already been linked to user ' + users[0].username);
+        return res.redirect('/');
+      }
+
+      const user = await User.findById(req.user._id);
+
+      user.patreonLevel = pledge;
+      user.patreonId = patronid;
+
+      console.log(user.patreonLevel);
+      console.log(user.patreonId);
+
+      await user.save();
 
       req.flash('success', 'Patreon Succesfully Linked.');
       return res.redirect('/');
