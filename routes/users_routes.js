@@ -936,12 +936,12 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
       console.log(JSON.stringify(pledgeData, null, 1));
       console.log(JSON.stringify(userData, null, 1));
 
-      if(data.length <= 0) {
+      if(pledgeData.length <= 0) {
         req.flash('danger', 'This patreon account does not have a pledge to Cube Cobra.');
         return res.redirect('/');
       }
 
-      const patronid = data[0].data.relationships.patron.id;
+      const patronid = userData[0].data.id;
       const pledge = pledgeData[0].data.attributes.amount_cents;
       
       console.log(user.patreonLevel);
