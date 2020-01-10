@@ -944,9 +944,6 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
       const patronid = userData[0].data.id;
       const pledge = pledgeData[0].data.attributes.amount_cents;
       
-      console.log(user.patreonLevel);
-      console.log(user.patreonId);
-
       const users = await User.find({patreonId:patronid});
 
       if(users && users.length > 0) {
@@ -959,6 +956,9 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
 
       user.patreonLevel = pledge;
       user.patreonId = patronid;
+
+      console.log(user.patreonLevel);
+      console.log(user.patreonId);
 
       await user.save();
 
