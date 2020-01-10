@@ -938,7 +938,7 @@ router.get('/patreonredirect', (req, res) => {
 
       const pledges = data.data.relationships.pledges; 
 
-      console.log(JSON.stringify(pledges));
+      console.log(pledges);
 
       req.flash('success', 'Patreon Succesfully Linked.');
       return res.redirect('/');
