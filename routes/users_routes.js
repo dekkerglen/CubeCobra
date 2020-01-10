@@ -939,7 +939,7 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
 
       console.log(JSON.stringify(data, null, 1));
 
-      const patronid = data[0].relationships.patron.id;
+      const patronid = data[0].data.relationships.patron.id;
       const pledge = data[0].data.attributes.amount_cents;
 
       const users = await User.find({patreonId:patronid});
