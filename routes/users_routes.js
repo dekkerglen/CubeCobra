@@ -937,7 +937,9 @@ router.get('/patreonredirect', (req, res) => {
       var store = result.store
             // store is a [JsonApiDataStore](https://github.com/beauby/jsonapi-datastore)
             // You can also ask for result.rawJson if you'd like to work with unparsed data
-      console.log(store.findAll('user').map(user => user.serialize()));
+      const data = store.findAll('user').map(user => user.serialize());
+
+      console.log(JSON.stringify(data));
 
       req.flash('success', 'Patreon Succesfully Linked.');
       return res.redirect('/');
