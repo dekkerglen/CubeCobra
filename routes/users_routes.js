@@ -897,6 +897,20 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
   );
 });
 
+router.post('/patreonhook', async (req, res) => {
+  try {
+    console.log(req.body);
+    console.log(req.headers);
+
+    res.status(200).send({
+      success: 'true',
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(500).send(err);
+  }
+});
+
 //taken from: https://github.com/Patreon/patreon-js/blob/master/examples/server.js
 router.get('/patreon', ensureAuth, async (req, res) => {
   try {
