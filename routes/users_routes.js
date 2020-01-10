@@ -937,6 +937,8 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
         return res.redirect('/');
       }
 
+      console.log(JSON.stringify(data, null, 1));
+
       const patronid = data[0].relationships.patron.id;
       const pledge = data[0].data.attributes.amount_cents;
 
