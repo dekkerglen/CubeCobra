@@ -935,10 +935,14 @@ router.get('/patreonredirect', (req, res) => {
     })
     .then(function(result) {
         console.log(result.rawJson);
+
+        req.flash('success', 'Patreon Succesfully Linked.');
+        return res.redirect('/');
     })
     .catch(function(err) {
-        console.error('error!', err)
-        res.end(err)
+        console.error(err);
+        req.flash('danger', 'Server Error');
+        return res.redirect('/');
     })
 })
 
