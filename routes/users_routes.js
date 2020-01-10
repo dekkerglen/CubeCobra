@@ -941,7 +941,8 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
         return res.redirect('/');
       }
 
-      const patronid = userData[0].data.id;
+      //first one is account of campaign owner
+      const patronid = userData[1].data.id;
       const pledge = pledgeData[0].data.attributes.amount_cents;
       
       const users = await User.find({patreonId:patronid});
