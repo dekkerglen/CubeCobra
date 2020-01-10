@@ -5,7 +5,11 @@ import CubePlaytestPage from './components/CubePlaytestPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const wrapper = document.getElementById('react-root');
-const element = <ErrorBoundary className="mt-3"><CubePlaytestPage {...reactProps} /></ErrorBoundary>;
+const element = (
+  <ErrorBoundary className="mt-3">
+    <CubePlaytestPage {...reactProps} />
+  </ErrorBoundary>
+);
 if (wrapper) {
   if (wrapper.children.length === 0) {
     ReactDOM.render(element, wrapper);

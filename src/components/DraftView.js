@@ -46,7 +46,11 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
-          <Col key={`${packNumber}:${pickNumber}:${index}`} xs={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
+          <Col
+            key={`${packNumber}:${pickNumber}:${index}`}
+            xs={3}
+            className="col-md-1-5 d-flex justify-content-center align-items-center"
+          >
             {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard
               location={Location.pack(index)}

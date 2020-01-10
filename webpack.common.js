@@ -62,7 +62,11 @@ const serverConfig = merge(config, {
     path: path.resolve(__dirname, 'dist', 'components'),
     libraryTarget: 'commonjs2',
   },
-  externals: [nodeExternals({ whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'] })],
+  externals: [
+    nodeExternals({
+      whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+    }),
+  ],
 });
 
 module.exports = { clientConfig, serverConfig };

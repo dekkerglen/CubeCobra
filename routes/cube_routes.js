@@ -840,9 +840,12 @@ router.get('/playtest/:id', async (req, res) => {
     }
 
     const userq = User.findById(cube.owner).exec();
-    const decksq = Deck.find({
-      cube: cube._id,
-    }, '_id name owner username date')
+    const decksq = Deck.find(
+      {
+        cube: cube._id,
+      },
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })
@@ -1737,25 +1740,29 @@ function startStandardDraft(req, res, params, cube) {
 }
 
 router.post('/startdraft/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), '_id name draft_formats card_count type cards.finish cards.cmc cards.cardID cards.type_line cards.colors', function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      let params = {
-        id: parseInt(req.body.id),
-        seats: parseInt(req.body.seats),
-        packs: parseInt(req.body.packs),
-        cards: parseInt(req.body.cards),
-      };
-      if (req.body.id == -1) {
-        //standard draft
-        startStandardDraft(req, res, params, cube);
+  Cube.findOne(
+    build_id_query(req.params.id),
+    '_id name draft_formats card_count type cards.finish cards.cmc cards.cardID cards.type_line cards.colors',
+    function(err, cube) {
+      if (!cube) {
+        req.flash('danger', 'Cube not found');
+        res.status(404).render('misc/404', {});
       } else {
-        startCustomDraft(req, res, params, cube);
+        let params = {
+          id: parseInt(req.body.id),
+          seats: parseInt(req.body.seats),
+          packs: parseInt(req.body.packs),
+          cards: parseInt(req.body.cards),
+        };
+        if (req.body.id == -1) {
+          //standard draft
+          startStandardDraft(req, res, params, cube);
+        } else {
+          startCustomDraft(req, res, params, cube);
+        }
       }
-    }
-  });
+    },
+  );
 });
 
 router.get('/draft/:id', async function(req, res) {
@@ -1778,7 +1785,7 @@ router.get('/draft/:id', async function(req, res) {
     }
 
     const ratingsQ = CardRating.find({
-      name: { $in: [...names] }
+      name: { $in: [...names] },
     });
     const cubeQ = Cube.findOne(build_id_query(draft.cube));
     const [cube, ratings] = await Promise.all([cubeQ, ratingsQ]);
@@ -1794,7 +1801,7 @@ router.get('/draft/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = Object.fromEntries(ratings.map(r => [r.name, r.value]));
+    draft.ratings = Object.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
       initialDraft: draft,
@@ -1819,7 +1826,7 @@ router.get('/draft/:id', async function(req, res) {
       ),
       loginCallback: '/cube/draft/' + req.params.id,
     });
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     req.flash('danger', 'Error rendering draft');
 
