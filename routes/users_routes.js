@@ -927,7 +927,7 @@ router.get('/patreonredirect', (req, res) => {
 
   console.log(oauthGrantCode);
 
-  patreonOAuthClient
+  oauthClient
     .getTokens(oauthGrantCode, patreonSecrets.redirect_uri)
     .then(function(tokensResponse) {
         var patreonAPIClient = patreonAPI(tokensResponse.access_token)
