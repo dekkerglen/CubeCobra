@@ -9,8 +9,6 @@ var cardTemplate =
 
 var format = [];
 
-var cube = JSON.parse(document.getElementById('cuberaw').value);
-
 $('#customDraftButton').click(function(e) {
   e.preventDefault();
   format = [['Mythic', 'Mythic', 'Mythic']];
@@ -116,11 +114,11 @@ $('#customDraftForm').submit(function(e) {
 
 $('.editFormatButton').click(function(e) {
   e.preventDefault();
-  format = JSON.parse(cube.draft_formats[e.target.getAttribute('data-id')].packs);
-  $('#customDraftTitle').val(cube.draft_formats[e.target.getAttribute('data-id')].title);
-  $('#editor').html(cube.draft_formats[e.target.getAttribute('data-id')].html);
-  $('#customDraftFormRadioFalse').prop('checked', !cube.draft_formats[e.target.getAttribute('data-id')].multiples);
-  $('#customDraftFormRadioTrue').prop('checked', cube.draft_formats[e.target.getAttribute('data-id')].multiples);
+  format = JSON.parse(reactProps.draftFormats[e.target.getAttribute('data-id')].packs);
+  $('#customDraftTitle').val(reactProps.draftFormats[e.target.getAttribute('data-id')].title);
+  $('#editor').html(reactProps.draftFormats[e.target.getAttribute('data-id')].html);
+  $('#customDraftFormRadioFalse').prop('checked', !reactProps.draftFormats[e.target.getAttribute('data-id')].multiples);
+  $('#customDraftFormRadioTrue').prop('checked', reactProps.draftFormats[e.target.getAttribute('data-id')].multiples);
   $('#customDraftHiddenId').val(e.target.getAttribute('data-id'));
   drawFormat();
   $('#customDraftModal').modal('show');

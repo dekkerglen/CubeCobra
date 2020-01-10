@@ -53,6 +53,8 @@ const serverConfig = merge(config, {
   target: 'node',
   entry: {
     CubeListPage: './components/CubeListPage.js',
+    CubePlaytestPage: './components/CubePlaytestPage.js',
+    DraftView: './components/DraftView.js',
   },
   output: {
     filename: '[name].js',
@@ -60,7 +62,7 @@ const serverConfig = merge(config, {
     path: path.resolve(__dirname, 'dist', 'components'),
     libraryTarget: 'commonjs2',
   },
-  externals: [nodeExternals({ whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend'] })],
+  externals: [nodeExternals({ whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'] })],
 });
 
 module.exports = { clientConfig, serverConfig };

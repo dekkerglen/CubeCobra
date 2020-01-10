@@ -43,9 +43,11 @@ let CardRating = require('../models/cardrating');
 const NODE_ENV = process.env.NODE_ENV;
 
 let CubeListPage = null;
+let CubePlaytestPage = null;
 let DraftView = null;
 if (NODE_ENV === 'production') {
   CubeListPage = require('../dist/components/CubeListPage').default;
+  CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
   DraftView = require('../dist/components/DraftView').default;
 }
 
@@ -808,6 +810,7 @@ router.get('/list/:id', async function(req, res) {
           : undefined,
       reactProps,
       cube,
+      cube_id: req.params.id,
       activeLink: 'list',
       title: `${abbreviate(cube.name)} - List`,
       metadata: generateMeta(
@@ -839,7 +842,7 @@ router.get('/playtest/:id', async (req, res) => {
     const userq = User.findById(cube.owner).exec();
     const decksq = Deck.find({
       cube: cube._id,
-    })
+    }, '_id name owner username date')
       .sort({
         date: -1,
       })
@@ -848,14 +851,24 @@ router.get('/playtest/:id', async (req, res) => {
 
     const [user, decks] = await Promise.all([userq, decksq]);
 
+    const reactProps = {
+      canEdit: user._id.equals(cube.owner),
+      decks,
+      cubeID: req.params.id,
+      draftFormats: cube.draft_formats,
+    };
+
     res.render('cube/cube_playtest', {
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+          : undefined,
+      reactProps,
       cube: cube,
       cube_id: req.params.id,
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Playtest`,
       owner: user ? user.username : 'Unknown',
-      decks: decks,
-      cube_raw: JSON.stringify(cube),
       metadata: generateMeta(
         `Cube Cobra Playtest: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
