@@ -934,7 +934,8 @@ router.get('/patreonredirect', (req, res) => {
         return patreonAPIClient('/current_user')
     })
     .then(function(result) {
-        console.log(result.rawJson);
+      console.log(result.rawJson);
+      console.log(result.rawJson.relationships.pledges);
 
         req.flash('success', 'Patreon Succesfully Linked.');
         return res.redirect('/');
