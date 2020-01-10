@@ -928,9 +928,8 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
     .then(function(tokensResponse) {
         var patreonAPIClient = patreonAPI(tokensResponse.access_token)
         return patreonAPIClient('/current_user')
-        //return patreonAPIClient('/campaigns/2921712/pledges?include=patron.null')
     })
-    .then(function(result) {
+    .then(async function(result) {
       const data = result.store.findAll('pledge').map(pledge => pledge.serialize());
 
       if(data.length <= 0) {
