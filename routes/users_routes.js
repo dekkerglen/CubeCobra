@@ -941,10 +941,14 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
 
       const patronid = data[0].data.relationships.patron.id;
       const pledge = data[0].data.attributes.amount_cents;
+      
+      console.log(user.patreonLevel);
+      console.log(user.patreonId);
 
       const users = await User.find({patreonId:patronid});
 
       if(users && users.length > 0) {
+        console.log(users);
         req.flash('danger', 'This patreon account has already been linked to user ' + users[0].username);
         return res.redirect('/');
       }
@@ -953,9 +957,6 @@ router.get('/patreonredirect', ensureAuth, async (req, res) => {
 
       user.patreonLevel = pledge;
       user.patreonId = patronid;
-
-      console.log(user.patreonLevel);
-      console.log(user.patreonId);
 
       await user.save();
 
