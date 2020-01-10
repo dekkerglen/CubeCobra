@@ -929,11 +929,11 @@ router.get('/patreonredirect', (req, res) => {
     .getTokens(oauthGrantCode, patreonSecrets.redirect_uri)
     .then(function(tokensResponse) {
         var patreonAPIClient = patreonAPI(tokensResponse.access_token)
-        return patreonAPIClient('/campaigns/2921712/pledges?include=patron.null')
+        return patreonAPIClient('/current_user')
+        //return patreonAPIClient('/campaigns/2921712/pledges?include=patron.null')
     })
     .then(function(result) {
-      const data = result.rawJson;
-
+      const data = result.store.findAll('pledge').map(pledge => pledge.serialize());
 
       console.log(JSON.stringify(data, null, 1));
 
