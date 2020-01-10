@@ -28,7 +28,13 @@ const TypeAnalysis = ({ typeByColor, ...props }) => (
                 {name === 'Total' ? (
                   'Total'
                 ) : (
-                  <img key={short} src={`/content/symbols/${short}.png`} alt={name} title={name} className="mana-symbol" />
+                  <img
+                    key={short}
+                    src={`/content/symbols/${short}.png`}
+                    alt={name}
+                    title={name}
+                    className="mana-symbol"
+                  />
                 )}
               </th>
             ))}
