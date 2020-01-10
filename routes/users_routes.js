@@ -934,12 +934,11 @@ router.get('/patreonredirect', (req, res) => {
         return patreonAPIClient('/current_user')
     })
     .then(function(result) {
-        var store = result.rawJson;
-        console.log(store.findAll('user').map(user => user.serialize()));
+        console.log(result.rawJson);
     })
     .catch(function(err) {
         console.error('error!', err)
-        response.end(err)
+        res.end(err)
     })
 })
 
