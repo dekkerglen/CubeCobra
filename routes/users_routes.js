@@ -925,8 +925,6 @@ router.get('/patreon', ensureAuth, async (req, res) => {
 router.get('/patreonredirect', (req, res) => {
   const oauthGrantCode = url.parse(req.url, true).query.code;
 
-  console.log(oauthGrantCode);
-
   oauthClient
     .getTokens(oauthGrantCode, patreonSecrets.redirect_uri)
     .then(function(tokensResponse) {
@@ -936,7 +934,7 @@ router.get('/patreonredirect', (req, res) => {
     .then(function(result) {
       const data = result.rawJson;
 
-      const pledges = data.data.relationships.pledges; 
+      const pledges = data.data.relationships; 
 
       console.log(pledges);
 
@@ -948,7 +946,7 @@ router.get('/patreonredirect', (req, res) => {
         req.flash('danger', 'Patreon could not be linked. Please contact support for assistance.');
         return res.redirect('/');
     })
-})
+});
 
 
 function addMinutes(date, minutes) {
