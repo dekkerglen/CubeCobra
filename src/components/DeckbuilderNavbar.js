@@ -50,7 +50,12 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
       <ModalBody>
         {COLORS.map(([long, short, basic]) => (
           <Form key={short} className="mb-1" inline>
-            <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={long} title={long} className="mr-1" />
+            <img
+              src={`/content/symbols/${short.toLowerCase()}.png`}
+              alt={long}
+              title={long}
+              className="mr-1 mana-symbol"
+            />
             <Input type="select" name={long} defaultValue={0} innerRef={refs[basic]}>
               {Array.from(new Array(MAX_BASICS).keys()).map((n) => (
                 <option key={n} value={n}>
@@ -79,7 +84,7 @@ BasicsModal.propTypes = {
   handleAddBasics: PropTypes.func,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics }) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -122,6 +127,8 @@ const DeckbuilderNavbar = ({ deck, addBasics }) => {
               </NavLink>
               <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
                 <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
+                <Input type="hidden" name="name" value={JSON.stringify(name)} />
+                <Input type="hidden" name="description" value={JSON.stringify(description)} />
               </CSRFForm>
             </NavItem>
             <NavItem>

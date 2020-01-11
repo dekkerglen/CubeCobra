@@ -11,6 +11,24 @@ import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
 
+export const getCard = async (name) => {
+  if (name && name.length > 0) {
+    const normalized = encodeName(name);
+    const response = await fetch(`/cube/api/getcard/${normalized}`);
+    if (!response.ok) {
+      setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
+      return null;
+    }
+
+    const json = await response.json();
+    if (json.success !== 'true' || !json.card) {
+      setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
+      return null;
+    }
+    return json.card;
+  }
+};
+
 const EditCollapse = ({ cubeID, ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
@@ -19,24 +37,6 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   const { changes, addChange, setChanges } = useContext(ChangelistContext);
   const { cube } = useContext(CubeContext);
-
-  const getCard = useCallback(async (name) => {
-    if (name && name.length > 0) {
-      const normalized = encodeName(name);
-      const response = await fetch(`/cube/api/getcard/${normalized}`);
-      if (!response.ok) {
-        setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
-        return null;
-      }
-
-      const json = await response.json();
-      if (json.success !== 'true' || !json.card) {
-        setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
-        return null;
-      }
-      return json.card;
-    }
-  }, []);
 
   const addInput = useRef();
   const removeInput = useRef();

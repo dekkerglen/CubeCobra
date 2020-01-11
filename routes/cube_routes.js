@@ -796,6 +796,7 @@ router.get('/list/:id', async function(req, res) {
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
+      maybe: maybeCards(cube),
     };
 
     res.render('cube/cube_list', {
@@ -1882,8 +1883,12 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
       for (let i = removesArray.length - 1; i >= 0; i--) {
         cube.cards.splice(removesArray[i], 1);
       }
-      for (let i = 0; i < adds.length; i++) {
-        util.addCardToCube(cube, adds[i]);
+      for (const add of adds) {
+        util.addCardToCube(cube, add);
+        const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
+        if (maybeIndex !== -1) {
+          cube.maybe.splice(maybeIndex, 1);
+        }
       }
 
       var blogpost = new Blog();
@@ -2166,6 +2171,78 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
   }
 });
 
+router.post('/api/postdeckcomment', ensureAuth, async (req, res) => {
+  const userq = User.findById(req.user._id);
+  const deckq = Deck.findById(req.body.id);
+
+  const [user, deck] = await Promise.all([userq, deckq]);
+
+  if (!user) {
+    return res.status(403).send({
+      success: 'false',
+      message: 'Unauthorized',
+    });
+  }
+
+  if (!deck) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Deck not found',
+    });
+  }
+
+  try {
+    //slice limits the recursive depth
+    var comment = insertComment(deck.comments, req.body.position.slice(0, 22), {
+      owner: user._id,
+      ownerName: user.username,
+      ownerImage: '',
+      content: sanitize(req.body.content),
+      //the -1000 is to prevent weird time display error
+      timePosted: Date.now() - 1000,
+      comments: [],
+    });
+
+    //give notification to owner
+    if (req.body.position.length == 0) {
+      //owner is blog deck owner
+      const owner = await User.findById(deck.owner);
+      await util.addNotification(
+        owner,
+        user,
+        '/cube/deck/' + deck._id,
+        user.username + ' added a comment to ' + deck.name,
+      );
+    } else {
+      //need to find owner from comment tree
+      const owner = await User.findById(getOwnerFromComment(deck.comments, req.body.position));
+      var positionText = '';
+      req.body.position.forEach(function(pos, index) {
+        positionText += pos + '-';
+      });
+      positionText += comment.index;
+      await util.addNotification(
+        owner,
+        user,
+        '/cube/deck/' + deck._id,
+        user.username + ' replied to your comment on ' + deck.name,
+      );
+    }
+
+    await deck.save();
+    res.status(200).send({
+      success: 'true',
+      comment: comment,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      success: 'false',
+      message: err,
+    });
+  }
+});
+
 router.post('/api/postcomment', ensureAuth, async (req, res) => {
   const userq = User.findById(req.user._id);
   const postq = Blog.findById(req.body.id);
@@ -2413,11 +2490,15 @@ router.post('/editdeck/:id', async (req, res) => {
     }
 
     var newdeck = JSON.parse(req.body.draftraw);
+    var name = JSON.parse(req.body.name);
+    var description = sanitize(JSON.parse(req.body.description));
 
     deck.cards = newdeck.cards;
     deck.playerdeck = newdeck.playerdeck;
     deck.playersideboard = newdeck.playersideboard;
     deck.cols = newdeck.cols;
+    deck.name = name;
+    deck.description = description;
 
     await deck.save();
 
@@ -2469,7 +2550,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     var [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : 'Anonymous';
-    deck.name = owner + "'s draft of " + cube.name + ' on ' + deck.date.toLocaleString('en-US');
+    deck.name = 'Draft of ' + cube.name;
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
@@ -2830,6 +2911,10 @@ router.get('/deck/:id', async (req, res) => {
         cards: player_deck,
         bot_decks: bot_decks,
         bots: bot_names,
+        name: deck.name,
+        description: deck.description,
+        owner: deck.owner,
+        comments: deck.comments,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2868,8 +2953,13 @@ router.get('/deck/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         drafter: drafter,
         deck: JSON.stringify(deck.playerdeck),
+        sideboard: JSON.stringify(deck.playersideboard),
         bot_decks: bot_decks,
         bots: bot_names,
+        name: deck.name,
+        description: deck.description,
+        owner: deck.owner,
+        comments: deck.comments,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -3159,6 +3249,65 @@ router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
     }
   });
 });
+
+function maybeCards(cube) {
+  const maybe = (cube.maybe || []).filter((card) => card.cardID);
+  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+}
+
+router.get(
+  '/api/maybe/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async function(req, res) {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found.',
+      });
+    }
+
+    return res.status(200).send({
+      success: 'true',
+      maybe: maybeCards(cube),
+    });
+  }),
+);
+
+router.post(
+  '/api/maybe/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async function(req, res) {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found.',
+      });
+    } else if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Maybeboard can only be updated by cube owner.',
+      });
+    }
+
+    const maybe = [...(cube.maybe || [])];
+
+    const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
+    const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
+
+    const addCards = Array.isArray(req.body.add) ? req.body.add : [];
+    const addCardsNoDetails = addCards.map(({ details, ...card }) => ({ ...util.newCard(details), ...card }));
+    const withAdded = [...withRemoved, ...addCardsNoDetails];
+
+    cube.maybe = withAdded;
+    await cube.save();
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
 
 router.delete('/remove/:id', ensureAuth, function(req, res) {
   if (!req.user._id) {

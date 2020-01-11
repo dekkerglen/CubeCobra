@@ -11,7 +11,7 @@ const VisualSpoiler = ({ cards, ...props }) => {
   const { primary, secondary, tertiary } = useContext(SortContext);
   const sorted = sortDeep(cards, primary, secondary, tertiary);
   return (
-    <Row noGutters className="mt-3 justify-content-center" {...props}>
+    <Row noGutters className="justify-content-center" {...props}>
       {sorted.map(([label1, group1]) =>
         group1.map(([label2, group2]) =>
           group2.map(([label3, group3]) =>

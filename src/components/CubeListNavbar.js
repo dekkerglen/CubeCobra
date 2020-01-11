@@ -193,7 +193,16 @@ const CompareCollapse = (props) => {
   );
 };
 
-const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCollapse, filter, setFilter }) => {
+const CubeListNavbar = ({
+  cards,
+  cubeView,
+  setCubeView,
+  openCollapse,
+  setOpenCollapse,
+  filter,
+  setFilter,
+  className,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
   const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
@@ -201,7 +210,14 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
   const openCardModal = useContext(CardModalContext);
-  const { showCustomImages, toggleShowCustomImages, compressedView, toggleCompressedView } = useContext(DisplayContext);
+  const {
+    showCustomImages,
+    toggleShowCustomImages,
+    compressedView,
+    toggleCompressedView,
+    showMaybeboard,
+    toggleShowMaybeboard,
+  } = useContext(DisplayContext);
 
   const toggle = useCallback(() => setIsOpen((open) => !open));
 
@@ -248,7 +264,7 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
   const handleToggleSelectEmptyModal = useCallback((event) => setSelectEmptyModalOpen(false), []);
 
   return (
-    <div className="usercontrols">
+    <div className={`usercontrols${className ? ` ${className}` : ''}`}>
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
@@ -314,6 +330,9 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
                 )}
                 <DropdownItem onClick={toggleCompressedView}>
                   {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
+                </DropdownItem>
+                <DropdownItem onClick={toggleShowMaybeboard}>
+                  {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>

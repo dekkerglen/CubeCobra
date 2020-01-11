@@ -15,9 +15,15 @@ block scripts
       drafter: !{JSON.stringify(drafter)},
       cards: !{cards ? JSON.stringify(cards) : '[]'},
       deck: !{deck || []},
+      description: !{JSON.stringify(description)},
+      name: !{JSON.stringify(name)},
+      sideboard: !{sideboard || []},
       botDecks: !{JSON.stringify(bot_decks)},
       bots: !{JSON.stringify(bots)},
-      canEdit: !{JSON.stringify(user && user.id === deck.owner)},
+      canEdit: !{JSON.stringify(user && user._id == owner)},
+      comments: !{JSON.stringify(comments)},
+      deckid: !{JSON.stringify(deckid)},
+      userid: !{JSON.stringify(user._id)},
     };
   include ../react
   script(src='/js/cube_deck.bundle.js')

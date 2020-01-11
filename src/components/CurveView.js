@@ -78,7 +78,7 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
   }
 
   return (
-    <Row className="mt-3" {...props}>
+    <Row {...props}>
       <Col>
         {getLabels(cards, primary)
           .filter((color) => groups[color])

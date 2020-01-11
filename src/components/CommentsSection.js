@@ -36,6 +36,7 @@ class CommentsSection extends React.Component {
                     userid={this.props.userid}
                     loggedIn={this.props.loggedIn}
                     submitEdit={this.props.submitEdit}
+                    submitUrl={this.props.submitUrl}
                   />
                 ))}
             ></PagedList>
