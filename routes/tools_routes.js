@@ -76,7 +76,7 @@ async function topCards(filter, res) {
     return nonPromo || possible[0];
   });
 
-  const ratings = await CardRating.find({
+  const ratingsQ = CardRating.find({
     name: {
       $in: names,
     },
@@ -84,10 +84,19 @@ async function topCards(filter, res) {
       $gte: MIN_PICKS,
     },
   });
+  const cardDataQ = Card.find({
+    cardName: {
+      $in: names.map(name => name.toLowerCase()),
+    },
+  }, 'cardName cubes');
+
+  const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 
   const ratingDict = new Map(ratings.map((r) => [r.name, r]));
+  const cardDataDict = new Map(cardData.map((c) => [c.cardName, c]));
   const fullData = versions.map((v) => {
     const rating = ratingDict.get(v.name);
+    const card = cardDataDict.get(v.name.toLowerCase());
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
     return [
@@ -97,6 +106,7 @@ async function topCards(filter, res) {
       rating ? adjust(rating) : null,
       rating ? rating.picks : null,
       rating && rating.elo ? rating.elo : null,
+      card ? card.cubes.length : null,
     ];
   });
   const nonNullData = fullData.filter((x) => x[3] !== null);
