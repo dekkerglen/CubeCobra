@@ -65,14 +65,19 @@ class TopCards extends Component {
           />
         </div>
         <SortableTable
-          sorts={{ Rating: (row) => row[3], Elo: (row) => -(row[5] || -1), 'Total Picks': (row) => -row[4], Cubes: (row) => -row[6] }}
+          sorts={{
+            Rating: (row) => row[3],
+            Elo: (row) => -(row[5] || -1),
+            'Total Picks': (row) => -row[4],
+            Cubes: (row) => -row[6],
+          }}
           defaultSort="Rating"
           headers={{
             Name: {},
             Rating: { style: { width: '10rem' }, tooltip: 'Average draft pick position' },
             Elo: { style: { width: '10rem' }, tooltip: 'Elo rating of card' },
             'Total Picks': { style: { width: '10rem' }, tooltip: 'Total picks across all cubes' },
-            'Cubes': { style: { width: '10rem' }, tooltip: 'Cubes containing this card' },
+            Cubes: { style: { width: '10rem' }, tooltip: 'Cubes containing this card' },
           }}
           data={this.state.data}
           rowF={rowF}

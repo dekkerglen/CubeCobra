@@ -84,11 +84,14 @@ async function topCards(filter, res) {
       $gte: MIN_PICKS,
     },
   });
-  const cardDataQ = Card.find({
-    cardName: {
-      $in: names.map(name => name.toLowerCase()),
+  const cardDataQ = Card.find(
+    {
+      cardName: {
+        $in: names.map((name) => name.toLowerCase()),
+      },
     },
-  }, 'cardName cubes');
+    'cardName cubes',
+  );
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 

@@ -7,7 +7,7 @@ import PagedTable from './PagedTable';
 const Header = ({ header, headerProps, active, sorts, setSort }) => {
   const [tooltipOpen, setTooltipOpen] = useState(false);
 
-  const toggleTooltip = () => setTooltipOpen(open => !open);
+  const toggleTooltip = () => setTooltipOpen((open) => !open);
 
   const { tooltip, ...rest } = headerProps;
   const sortable = !!sorts[header];
@@ -25,30 +25,23 @@ const Header = ({ header, headerProps, active, sorts, setSort }) => {
   );
   if (sortable) {
     return (
-        <th
-          onClick={() => setSort(header)}
-          scope="col"
-          {...rest}
-          style={{ cursor: 'pointer', ...rest.style }}
-        >
-          <span id={header.replace(' ', '')}>
-            {header}
-            {active ? ' ▼' : ''}
-          </span>
-          {tooltipElement}
-        </th>
-    );
-  } else {
-    return (
-      <th scope="col" {...rest}>
+      <th onClick={() => setSort(header)} scope="col" {...rest} style={{ cursor: 'pointer', ...rest.style }}>
         <span id={header.replace(' ', '')}>
           {header}
+          {active ? ' ▼' : ''}
         </span>
         {tooltipElement}
       </th>
     );
+  } else {
+    return (
+      <th scope="col" {...rest}>
+        <span id={header.replace(' ', '')}>{header}</span>
+        {tooltipElement}
+      </th>
+    );
   }
-}
+};
 
 const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) => {
   const [sort, setSort] = useState(defaultSort);
@@ -62,7 +55,14 @@ const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) =>
       <thead>
         <tr>
           {[...Object.entries(headers)].map(([header, props]) => (
-            <Header key={header} header={header} headerProps={props} active={sort === header} sorts={sorts} setSort={setSort} />
+            <Header
+              key={header}
+              header={header}
+              headerProps={props}
+              active={sort === header}
+              sorts={sorts}
+              setSort={setSort}
+            />
           ))}
         </tr>
       </thead>
