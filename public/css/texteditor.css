@@ -1,14 +1,9 @@
-
-
-#editor {
-  box-shadow: 0 0 2px #CCC;
-  min-height: 150px;
+.text-entry {
+  min-height: 10rem;
   overflow: auto;
   padding: 1em;
   resize: vertical;
-  outline: none;
 }
-
 
 .toolbar-item
 {

@@ -368,8 +368,9 @@ class CubeOverviewModal extends Component {
 
                 <h6>Description</h6>
                 <TextEntry
-                  content={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''}
-                  handleChange={this.handleDescriptionChange}
+                  name="blog"
+                  value={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''}
+                  onChange={this.handleDescriptionChange}
                 />
                 <br />
 

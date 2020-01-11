@@ -19,7 +19,7 @@ const clickToolbar = (event) => {
   } else document.execCommand(command, false, null);
 };
 
-const BlogpostEditor = ({ name, value, onChange }) => (
+const BlogpostEditor = ({ name, value, onChange, ...props }) => (
   <>
     <h6>Blog Post</h6>
     <FormGroup>

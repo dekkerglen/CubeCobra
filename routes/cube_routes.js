@@ -3336,9 +3336,14 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
         function(err) {
           if (err) {
             console.log(err, req);
-            res.sendStatus(500);
+            res.status(500).send({
+              success: 'false',
+              message: 'Error deleting format.',
+            })
           } else {
-            res.sendStatus(200);
+            res.status(200).send({
+              success: 'true',
+            })
           }
         },
       );

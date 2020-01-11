@@ -9,7 +9,11 @@ import {
   CardTitle,
   Col,
   FormGroup,
+  FormText,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
   Label,
   Nav,
   Navbar,
@@ -22,10 +26,6 @@ import {
   Row,
   UncontrolledAlert,
   UncontrolledCollapse,
-  FormText,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
@@ -34,6 +34,7 @@ import CSRFForm from './CSRFForm';
 import CubeContext, { CubeContextProvider } from './CubeContext';
 import DynamicFlash from './DynamicFlash';
 import DeckPreview from './DeckPreview';
+import TextEntry from './TextEntry';
 import withModal from './WithModal';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
@@ -77,24 +78,40 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
 
 const UploadDecklistModalLink = withModal(NavLink, UploadDecklistModal);
 
-const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
+const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
+  const [description, setDescription] = useState('');
+
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
 
-  const handleAddPack = useCallback(() => {
-    setFormat(format => [...format, ['']]);
-  }, []);
+  const handleChangeDescription = useCallback((event) => {
+    setDescription(event.target.value);
+  })
+
   const handleAddCard = useCallback(() => {
-    const index = event.target.getAttribute('data-index');
+    const index = parseInt(event.target.getAttribute('data-index'));
     setFormat(format => {
       const newFormat = [...format];
       newFormat[index] = [...newFormat[index], ''];
       return newFormat;
     });
   }, [])
+  const handleRemoveCard = useCallback(() => {
+    const packIndex = parseInt(event.target.getAttribute('data-pack'));
+    const index = parseInt(event.target.getAttribute('data-index'));
+    setFormat(format => {
+      const newFormat = [...format];
+      newFormat[packIndex] = [...newFormat[packIndex]];
+      newFormat[packIndex].splice(index, 1);
+      return newFormat;
+    });
+  }, []);
+  const handleAddPack = useCallback(() => {
+    setFormat(format => [...format, ['']]);
+  }, []);
   const handleDuplicatePack = useCallback(() => {
-    const index = event.target.getAttribute('data-index');
+    const index = parseInt(event.target.getAttribute('data-index'));
     setFormat(format => {
       const newFormat = [...format];
       newFormat.splice(index, 0, format[index]);
@@ -102,7 +119,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
     });
   }, []);
   const handleRemovePack = useCallback((event) => {
-    const removeIndex = event.target.getAttribute('data-index');
+    const removeIndex = parseInt(event.target.getAttribute('data-index'));
     setFormat(format => format.filter((_, index) => index !== removeIndex));
   }, []);
 
@@ -113,7 +130,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
         <ModalBody>
           <Row>
             <Col className="mt-2">
-              <Input type="text" maxlength="200" name="title" placeholder="Title" />
+              <Input type="text" maxLength="200" name="title" placeholder="Title" />
             </Col>
             <Col>
               <FormGroup tag="fieldset">
@@ -132,9 +149,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
               </FormGroup>
             </Col>
           </Row>
-          <Input type="hidden" name="html" />
-          <FormText className="mb-3">
-            Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a
+          <h6>Description</h6>
+          <TextEntry name="html" value={description} onChange={handleChangeDescription} />
+          <FormText className="mt-3 mb-1">
+            Card slot values can either be single tags (not case sensitive), or a comma separated list of tags to create a
             ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
           </FormText>
           {format.map((pack, index) =>
@@ -153,7 +171,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
                     </InputGroupAddon>
                     <Input type="text" defaultValue={card} />
                     <InputGroupAddon addonType="append">
-                      <Button color="secondary" outline>Remove</Button>
+                      <Button color="secondary" outline onClick={handleRemoveCard} data-pack={index} data-index={cardIndex}>Remove</Button>
                     </InputGroupAddon>
                   </InputGroup>
                 )}
@@ -169,8 +187,8 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
           </Button>
         </ModalBody>
         <ModalFooter>
-          <Input type="hidden" name="format" value={format} />
-          <Input type="hidden" name="id" />
+          <Input type="hidden" name="packs" value={JSON.stringify(format)} />
+          <Input type="hidden" name="id" value={formatIndex} />
           <Button color="success" type="submit">Save</Button>
           <Button color="secondary">
             Close
@@ -326,14 +344,14 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   })
 
   const handleEditFormat = useCallback((event) => {
-    const formatIndex = event.target.getAttribute('data-index');
+    const formatIndex = parseInt(event.target.getAttribute('data-index'));
     setEditFormat([...formats[formatIndex]]);
     setEditFormatIndex(formatIndex);
     setEditModalOpen(true);
   }, [formats]);
 
   const handleDeleteFormat = useCallback(async (event) => {
-    const formatIndex = event.target.getAttribute('data-index');
+    const formatIndex = parseInt(event.target.getAttribute('data-index'));
     try {
       const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
         method: 'DELETE',
@@ -347,6 +365,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         color: 'success',
         message: 'Format successfully deleted.',
       });
+      console.log('deleting', formatIndex);
       setFormats(formats.filter((format, index) => index !== formatIndex));
     } catch(err) {
       console.error(err);
@@ -370,8 +389,8 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         </Nav>
       </Navbar>
       <DynamicFlash />
-      {alerts.map((data) => (
-        <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
+      {alerts.map(({ color, message }, index) => (
+        <UncontrolledAlert key={index} color={color} className="mb-0 mt-3">{message}</UncontrolledAlert>
       ))}
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
