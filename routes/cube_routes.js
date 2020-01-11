@@ -789,8 +789,10 @@ router.get('/list/:id', async function(req, res) {
       }
     }
 
+    console.log('user', req.user ? req.user.id === cube.owner : false);
+
     const reactProps = {
-      canEdit: req.user && req.user.id === cube.owner,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       cubeID: req.params.id,
       defaultTagColors: cube.tag_colors,
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
