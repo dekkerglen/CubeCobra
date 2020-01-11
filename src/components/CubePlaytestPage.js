@@ -1,4 +1,4 @@
-import React, { Component, useContext, useCallback } from 'react';
+import React, { useContext, useCallback, useRef, useState } from 'react';
 
 import {
   Button,
@@ -56,7 +56,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
           </p>
           <Input
             type="textarea"
-            maxlength="20000"
+            maxLength="20000"
             rows="10"
             placeholder="Paste Decklist Here (max length 20000)"
             name="body"
@@ -80,6 +80,8 @@ const UploadDecklistModalLink = withModal(NavLink, UploadDecklistModal);
 const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
   const { cubeID } = useContext(CubeContext);
 
+  const formRef = useRef();
+
   const handleAddPack = useCallback(() => {
     setFormat(format => [...format, ['']]);
   }, []);
@@ -95,7 +97,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
     const index = event.target.getAttribute('data-index');
     setFormat(format => {
       const newFormat = [...format];
-      newFormat.splice(index, 0, format[index])];
+      newFormat.splice(index, 0, format[index]);
       return newFormat;
     });
   }, []);
@@ -105,20 +107,19 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
   }, []);
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle">
-      <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
-        <ModalHeader id="customDraftFormatTitle">Create Custom Draft Format</ModalHeader>
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
+      <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`} innerRef={formRef}>
+        <ModalHeader id="customDraftFormatTitle" toggle={toggle}>Create Custom Draft Format</ModalHeader>
         <ModalBody>
           <Row>
-            <Col>
-              <Label>Title:</Label>
-              <Input type="text" maxlength="200" name="title" />
+            <Col className="mt-2">
+              <Input type="text" maxlength="200" name="title" placeholder="Title" />
             </Col>
             <Col>
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="false" />{' '}
+                    <Input type="radio" name="multiples" value="false" defaultChecked={true} />{' '}
                     Don't allow more than one of each card in draft
                   </Label>
                 </FormGroup>
@@ -131,25 +132,26 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
               </FormGroup>
             </Col>
           </Row>
-          <Label>Description:</Label>
           <Input type="hidden" name="html" />
-          <FormText>
+          <FormText className="mb-3">
             Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a
             ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
           </FormText>
           {format.map((pack, index) =>
-            <Card>
+            <Card key={index} className="mb-3">
               <CardHeader>
-                <CardTitle>Pack {index} - {pack.length} Cards</CardTitle>
-                <Button close onClick={removePack} data-index={index} />
+                <CardTitle className="mb-0">
+                  Pack {index + 1} - {pack.length} Cards
+                  <Button close onClick={handleRemovePack} data-index={index} />
+                </CardTitle>
               </CardHeader>
               <CardBody>
                 {pack.map((card, cardIndex) =>
-                  <InputGroup>
+                  <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex}</InputGroupText>
                     </InputGroupAddon>
-                    <Input type="text" />
+                    <Input type="text" defaultValue={card} />
                     <InputGroupAddon addonType="append">
                       <Button color="secondary" outline>Remove</Button>
                     </InputGroupAddon>
@@ -157,12 +159,12 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
                 )}
               </CardBody>
               <CardFooter>
-                <Button color="success" onClick={handleAddCard} data-index={index}>Add Card Slot</Button>
+                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={index}>Add Card Slot</Button>
                 <Button color="success" onClick={handleDuplicatePack} data-index={index}>Duplicate Pack</Button>
               </CardFooter>
             </Card>
           )}
-          <Button color="success" onClick={handleAddPack} data-index={index}>
+          <Button color="success" onClick={handleAddPack}>
             Add Pack
           </Button>
         </ModalBody>
@@ -179,6 +181,8 @@ const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
   );
 };
 
+const CustomDraftFormatLink = withModal(NavLink, CustomDraftFormatModal);
+
 const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>
     <Label xs="4" md="6" lg="5" htmlFor={htmlFor}>
@@ -190,47 +194,46 @@ const LabelRow = ({ htmlFor, label, children, ...props }) => (
   </FormGroup>
 );
 
-const CustomDraftCard = ({ format, index, cubeID, canEdit, deleteFormat, ...props }) => (
-  <Card key={format} {...props}>
-    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
-      <CardHeader>
-        <CardTitleH5>Draft Custom Format: {format.title}</CardTitleH5>
-      </CardHeader>
-      <CardBody>
-        <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
-        <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
-          <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-            {rangeOptions(4, 11)}
-          </Input>
-        </LabelRow>
-      </CardBody>
-      <CardFooter>
-        <Input type="hidden" name="id" value={index} />
-        <Button type="submit" color="success" className="mr-2">
-          Start Draft
-        </Button>
-        {!canEdit ? (
-          ''
-        ) : (
-          <>
-            <Button color="success" className="mr-2 editFormatButton" data-id={index}>
+const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ...props }) => {
+  const { cubeID, canEdit } = useContext(CubeContext);
+  return (
+    <Card {...props}>
+      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+        <CardHeader>
+          <CardTitleH5>Draft Custom Format: {format.title}</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
+          <LabelRow htmlFor={`seats-${formatIndex}`} label="Total Seats" className="mb-0">
+            <Input type="select" name="seats" id={`seats-${formatIndex}`} defaultValue="8">
+              {rangeOptions(4, 11)}
+            </Input>
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Input type="hidden" name="id" value={formatIndex} />
+          <Button type="submit" color="success" className="mr-2">
+            Start Draft
+          </Button>
+          {canEdit && (<>
+            <Button color="success" className="mr-2" onClick={onEditFormat} data-index={formatIndex}>
               Edit
             </Button>
-            <Button color="danger" id={`deleteToggler-${index}`}>
+            <Button color="danger" id={`deleteToggler-${formatIndex}`}>
               Delete
             </Button>
-            <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
+            <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
               <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-              <Button color="danger" onClick={deleteFormat}>
+              <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex}>
                 Yes, delete this format
               </Button>
             </UncontrolledCollapse>
-          </>
-        )}
-      </CardFooter>
-    </CSRFForm>
-  </Card>
-);
+          </>)}
+        </CardFooter>
+      </CSRFForm>
+    </Card>
+  );
+};
 
 const StandardDraftCard = ({ cubeID }) => (
   <Card className="mt-3">
@@ -279,51 +282,55 @@ const DecksCard = ({ decks, cubeID, ...props }) => (
   </Card>
 );
 
-class SamplePackCard extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = { seed: '' };
-
-    this.changeSeed = this.changeSeed.bind(this);
-  }
-
-  changeSeed(e) {
-    this.setState({
-      seed: e.target.value,
-    });
-  }
-
-  render() {
-    const { cubeID, ...props } = this.props;
-    return (
-      <Card {...props}>
-        <CardHeader>
-          <CardTitleH5>View sample pack</CardTitleH5>
-        </CardHeader>
-        <CardBody>
-          <LabelRow htmlFor="seed" label="Seed" className="mb-0">
-            <Input type="text" name="seed" id="seed" value={this.state.seed} onChange={this.changeSeed} />
-          </LabelRow>
-        </CardBody>
-        <CardFooter>
-          <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
-            View Random
-          </Button>
-          <Button color="success" disabled={!this.state.seed} href={`/cube/samplepack/${cubeID}/${this.state.seed}`}>
-            View Seeded
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
+const SamplePackCard = (props) => {
+  const { cubeID } = useContext(CubeContext);
+  const [seed, setSeed] = useState('');
+  const handleChange = useCallback((event) => setSeed(event.target.value), []);
+  return (
+    <Card {...props}>
+      <CardHeader>
+        <CardTitleH5>View sample pack</CardTitleH5>
+      </CardHeader>
+      <CardBody>
+        <LabelRow htmlFor="seed" label="Seed" className="mb-0">
+          <Input type="text" name="seed" id="seed" value={seed} onChange={handleChange} />
+        </LabelRow>
+      </CardBody>
+      <CardFooter>
+        <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
+          View Random
+        </Button>
+        <Button color="success" disabled={!seed} href={`/cube/samplepack/${cubeID}/${seed}`}>
+          View Seeded
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 }
 
 const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const [alerts, setAlerts] = useState([]);
   const [formats, setFormats] = useState(draftFormats);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editFormatIndex, setEditFormatIndex] = useState(-1);
+  const [editFormat, setEditFormat] = useState([['Mythic', 'Mythic', 'Mythic']]);
 
   const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
+
+  const toggleEditModal = useCallback(() => setEditModalOpen(open => !open), []);
+
+  const handleCreateFormat = useCallback((event) => {
+    setEditFormat([['Mythic', 'Mythic', 'Mythic']]);
+    setEditFormatIndex(-1);
+    setEditModalOpen(true);
+  })
+
+  const handleEditFormat = useCallback((event) => {
+    const formatIndex = event.target.getAttribute('data-index');
+    setEditFormat([...formats[formatIndex]]);
+    setEditFormatIndex(formatIndex);
+    setEditModalOpen(true);
+  }, [formats]);
 
   const handleDeleteFormat = useCallback(async (event) => {
     const formatIndex = event.target.getAttribute('data-index');
@@ -340,6 +347,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         color: 'success',
         message: 'Format successfully deleted.',
       });
+      setFormats(formats.filter((format, index) => index !== formatIndex));
     } catch(err) {
       console.error(err);
       addAlert({
@@ -347,62 +355,46 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         message: 'Failed to delete format.',
       });
     }
-  }, [addAlert, cubeID]);
+  }, [addAlert, cubeID, formats]);
 
-  const handleChange = useCallback((event) => {
-    const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
-
-    this.setState({
-      [name]: value,
-    });
-  });
-
-  render() {
-    const { alerts, draftFormats } = this.state;
-
-    return (
-      <CubeContextProvider cubeID={cubeID} canEdit={canEdit}>
-        <Navbar light expand className="usercontrols">
-          <Nav navbar>
-            <NavItem>
-              <NavLink>Create Custom Draft</NavLink>
-            </NavItem>
-            <NavItem>
-              <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
-            </NavItem>
-          </Nav>
-        </Navbar>
-        <DynamicFlash />
-        {alerts.map((data) => (
-          <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
-        ))}
-        <Row className="justify-content-center">
-          <Col xs="12" md="6" xl="6">
-            {decks.length == 0 ? '' : <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
-            <SamplePackCard cubeID={cubeID} className="mt-3" />
-          </Col>
-          <Col xs="12" md="6" xl="6">
-            {!draftFormats
-              ? ''
-              : draftFormats.map((format, index) => (
-                  <CustomDraftCard
-                    key={format}
-                    format={format}
-                    index={index}
-                    cubeID={cubeID}
-                    canEdit={canEdit}
-                    deleteFormat={this.deleteFormat.bind(this, cubeID, index)}
-                    className="mt-3"
-                  />
-                ))}
-            <StandardDraftCard cubeID={cubeID} className="mt-3" />
-          </Col>
-        </Row>
-      </CubeContextProvider>
-    );
-  }
-}
+  return (
+    <CubeContextProvider cubeID={cubeID} canEdit={canEdit}>
+      <Navbar light expand className="usercontrols">
+        <Nav navbar>
+          <NavItem>
+            <NavLink onClick={handleCreateFormat} className="clickable">Create Custom Draft</NavLink>
+          </NavItem>
+          <NavItem>
+            <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
+          </NavItem>
+        </Nav>
+      </Navbar>
+      <DynamicFlash />
+      {alerts.map((data) => (
+        <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
+      ))}
+      <Row className="justify-content-center">
+        <Col xs="12" md="6" xl="6">
+          {decks.length == 0 ? '' : <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
+          <SamplePackCard className="mt-3" />
+        </Col>
+        <Col xs="12" md="6" xl="6">
+          {formats.map((format, index) => (
+            <CustomDraftCard
+              key={format}
+              format={format}
+              formatIndex={index}
+              onDeleteFormat={handleDeleteFormat}
+              onEditFormat={handleEditFormat}
+              className="mt-3"
+            />
+          ))}
+          <StandardDraftCard cubeID={cubeID} className="mt-3" />
+        </Col>
+      </Row>
+      <CustomDraftFormatModal isOpen={editModalOpen} toggle={toggleEditModal} formatIndex={editFormatIndex} format={editFormat} setFormat={setEditFormat} />
+    </CubeContextProvider>
+  );
+};
 
 export default CubePlaytestPage;
