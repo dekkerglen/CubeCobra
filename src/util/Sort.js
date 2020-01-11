@@ -393,11 +393,19 @@ const WEDGE_MAP = {
   URG: 'Temur',
 };
 
+function colorIdentity(card) {
+  return card.colors || card.details.color_identity;
+}
+
+function typeLine(card) {
+  return card.type_line || card.details.type;
+}
+
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(card.type_line, card.colors)];
+    return [GetColorCategory(typeLine(card), colorIdentity(card) || card.details.color_identity)];
   } else if (sort == 'Color Identity') {
-    return [GetColorIdentity(card.colors)];
+    return [GetColorIdentity(colorIdentity(card) || card.details.color_identity)];
   } else if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
@@ -405,12 +413,12 @@ export function cardGetLabels(card, sort) {
       return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
   } else if (sort == '4+ Color') {
-    if (card.colors.length < 4) {
+    if (colorIdentity(card).length < 4) {
       return [];
-    } else if (card.colors.length === 5) {
+    } else if (colorIdentity(card).length === 5) {
       return ['Five-Color'];
     } else {
-      return [...'WUBRG'].filter((c) => !card.colors.includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+      return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
   } else if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
@@ -433,7 +441,7 @@ export function cardGetLabels(card, sort) {
     // Round to half-integer.
     return [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
   } else if (sort == 'Supertype' || sort == 'Type') {
-    const split = card.type_line.split(/[-–—]/);
+    const split = typeLine(card).split(/[-–—]/);
     let types = null;
     if (split.length > 1) {
       types = split[0]
@@ -442,7 +450,7 @@ export function cardGetLabels(card, sort) {
         .map((x) => x.trim())
         .filter((x) => x);
     } else {
-      types = card.type_line
+      types = typeLine(card)
         .trim()
         .split(' ')
         .map((x) => x.trim())
@@ -469,27 +477,27 @@ export function cardGetLabels(card, sort) {
     }
     return [day];
   } else if (sort == 'Guilds') {
-    if (card.colors.length != 2) {
+    if (colorIdentity(card).length != 2) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter((c) => card.colors.includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
       return [GUILD_MAP[ordered]];
     }
   } else if (sort == 'Shards / Wedges') {
-    if (card.colors.length != 3) {
+    if (colorIdentity(card).length != 3) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter((c) => card.colors.includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
       return [WEDGE_MAP[ordered]];
     }
   } else if (sort == 'Color Count') {
-    return [card.colors.length];
+    return [colorIdentity(card).length];
   } else if (sort == 'Set') {
     return [card.details.set.toUpperCase()];
   } else if (sort == 'Rarity') {
     return [card.details.rarity[0].toUpperCase() + card.details.rarity.slice(1)];
   } else if (sort == 'Subtype') {
-    const split = card.type_line.split(/[-–—]/);
+    const split = typeLine(card).split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
       return subtypes.map((subtype) => subtype.trim()).filter((x) => x);
@@ -497,8 +505,8 @@ export function cardGetLabels(card, sort) {
       return [];
     }
   } else if (sort == 'Types-Multicolor') {
-    if (card.colors.length <= 1) {
-      var split = card.type_line.split('—');
+    if (colorIdentity(card).length <= 1) {
+      var split = typeLine(card).split('—');
       var types = split[0].trim().split(' ');
       var type = types[types.length - 1];
       //check last type
@@ -563,7 +571,11 @@ export function cardGetLabels(card, sort) {
       return ['Phyrexian'];
     }
   } else if (sort == 'CNC') {
-    return card.type_line.toLowerCase().includes('creature') ? 'Creature' : 'Non-Creature';
+    return typeLine(card)
+      .toLowerCase()
+      .includes('creature')
+      ? 'Creature'
+      : 'Non-Creature';
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {
