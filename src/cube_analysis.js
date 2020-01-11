@@ -55,7 +55,6 @@ class CubeAnalysis extends Component {
     this.updateData = this.updateData.bind(this);
     this.setFilter = this.setFilter.bind(this);
     this.addScript = this.addScript.bind(this);
-    this.setOpenCollapse = this.setOpenCollapse.bind(this);
     this.updateAsfanCustomWithMultiples = this.updateAsfanCustomWithMultiples.bind(this);
     this.updateAsfanCustomSingleton = this.updateAsfanCustomSingleton.bind(this);
     this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
@@ -220,12 +219,6 @@ class CubeAnalysis extends Component {
     this.setState({ formatId }, this.updateAsfan);
   }
 
-  setOpenCollapse(collapseFunction) {
-    this.setState(({ openCollapse }) => ({
-      openCollapse: collapseFunction(openCollapse),
-    }));
-  }
-
   toggleFormatDropdownOpen() {
     this.setState((prevState, props) => {
       return { formatDropdownOpen: !prevState.formatDropdownOpen };
@@ -289,7 +282,7 @@ class CubeAnalysis extends Component {
     }
 
     return (
-      <AddAnalyticModal id="addAnalyticModal" addScript={this.addScript} setOpenCollapse={this.setOpenCollapse}>
+      <AddAnalyticModal id="addAnalyticModal" addScript={this.addScript}>
         <DynamicFlash />
         <FilterCollapse filter={filter} setFilter={this.setFilter} numCards={filteredCards.length} isOpen={true} />
         {dropdownElement}
