@@ -166,6 +166,7 @@ router.get('/topcards', async (req, res) => {
     res.render('tool/topcards', {
       numResults: names.length,
       data,
+      title: 'Top Cards',
     });
   } catch (err) {
     console.error(err);
