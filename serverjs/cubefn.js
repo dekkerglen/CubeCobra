@@ -94,7 +94,7 @@ function cardsAreEquivalent(card, details) {
   if (card.cmc != details.cmc) {
     return false;
   }
-  if (card.type_line != details.type_line) {
+  if (card.type_line && details.type_line && card.type_line != details.type_line) {
     return false;
   }
   if (!util.arraysEqual(card.tags, details.tags)) {
@@ -103,7 +103,7 @@ function cardsAreEquivalent(card, details) {
   if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
-  if (card.finish != details.finish) {
+  if (card.finish && details.finish && card.finish != details.finish) {
     return false;
   }
 
