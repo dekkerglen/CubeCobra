@@ -41,6 +41,9 @@ let categoryMap = new Map([
   ['is', 'is'],
 ]);
 
+const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
+const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
+
 function findEndingQuotePosition(filterText, num) {
   if (!num) {
     num = 1;
@@ -61,9 +64,8 @@ function tokenizeInput(filterText, tokens) {
     return true;
   }
 
-  const operators = '>=|<=|<|>|:|!=|=';
   //split string based on list of operators
-  let operators_re = new RegExp('(?:' + operators + ')');
+  let operators_re = operatorsRegex;
 
   if (filterText.indexOf('(') == 0) {
     if (findEndingQuotePosition(filterText, 0)) {
@@ -117,7 +119,7 @@ function tokenizeInput(filterText, tokens) {
     token.operand = 'none';
   }
 
-  let quoteOp_re = new RegExp('(?:' + operators + ')"');
+  let quoteOp_re = new RegExp('(?:' + operators.join('|') + ')"');
   let parens = false;
 
   //find category
@@ -794,4 +796,13 @@ function filterApply(card, filter, inCube) {
   }
 }
 
-export default { tokenizeInput, verifyTokens, parseTokens, filterCard, filterCards, filterCardsDetails };
+export default {
+  operators,
+  operatorsRegex,
+  tokenizeInput,
+  verifyTokens,
+  parseTokens,
+  filterCard,
+  filterCards,
+  filterCardsDetails,
+};

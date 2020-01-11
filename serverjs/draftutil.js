@@ -3,7 +3,7 @@ const Draft = require('../models/draft');
 const Filter = require('../dist/util/Filter');
 
 function matchingCards(cards, filter) {
-  if (filter === null || filter.length === 0 || filter[0] === null) {
+  if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
   return cards.filter((card) =>
@@ -16,51 +16,44 @@ function matchingCards(cards, filter) {
 }
 
 function makeFilter(filterText) {
-  if (!filterText || filterText === '' || filterText === '*') {
+  console.log('filterText', filterText, filterText === '');
+  if (!filterText || filterText === '' || filterText == '*') {
     return [null];
   }
 
   let tokens = [];
   let valid = false;
-
   valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
 
-  if (!valid) {
-    // backwards compatibilty: * = any card or treat as tag
-    if (filterText == '*') {
-      return []; // any card
-    }
+  // backwards compatibilty: treat as tag
+  if (!valid || !Filter.operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
       tagfilterText = '"' + filterText + '"';
     }
     tagfilterText = 'tag:' + tagfilterText; // TODO: use Filter.tag instead of 'tag'
+    tokens = [];
     valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
   }
 
-  if (valid) {
-    return [Filter.parseTokens(tokens)];
+  if (!valid) {
+    throw new Error('Invalid card filter: ' + filterText);
   }
-
-  // TODO: throw error
-  console.log('Invalid card filter: ' + filterText);
-  return [];
+  return [Filter.parseTokens(tokens)];
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
    a data structure: 
 
       [pack][card in pack][token,token...]
-
 */
 function parseDraftFormat(packsJSON, splitter = ',') {
   let format = JSON.parse(packsJSON);
-  for (j = 0; j < format.length; j++) {
-    for (k = 0; k < format[j].length; k++) {
+  for (let j = 0; j < format.length; j++) {
+    for (let k = 0; k < format[j].length; k++) {
       format[j][k] = format[j][k].split(splitter);
-
-      for (m = 0; m < format[j][k].length; m++) {
+      for (let m = 0; m < format[j][k].length; m++) {
         format[j][k][m] = makeFilter(format[j][k][m].trim());
       }
     }
@@ -72,27 +65,23 @@ function createPacks(draft, format, seats, nextCardfn) {
   let messages = [];
   draft.picks = [];
   draft.packs = [];
-  draft.pickNumber = 1;
-  draft.packNumber = 1;
-  for (i = 0; i < seats; i++) {
+  for (let seat = 0; seat < seats; seat++) {
     draft.picks.push([]);
     draft.packs.push([]);
-    for (j = 0; j < format.length; j++) {
-      draft.packs[i].push([]);
+    for (let packNum = 0; packNum < format.length; packNum++) {
+      draft.packs[seat].push([]);
       let pack = [];
-      for (k = 0; k < format[j].length; k++) {
-        let result = nextCardfn(format[j][k]);
-        if (result.message && result.message !== '') {
-          messages.push(result.message);
+      for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
+        let result = nextCardfn(format[packNum][cardNum]);
+        if (result.messages && result.messages.length > 0) {
+          messages = messages.concat(result.messages);
         }
         if (result.card) {
           pack.push(result.card);
-        } else {
-          return { ok: false, messages: messages };
         }
       }
       // shuffle the cards in the pack
-      draft.packs[i][j] = util.shuffle(pack);
+      draft.packs[seat][packNum] = util.shuffle(pack);
     }
   }
   return { ok: true, messages: messages };
@@ -108,17 +97,14 @@ function standardDraft(cards) {
 
 function customDraft(cards, duplicates = false) {
   return function(cardFilter) {
-    if (typeof cardFilter === 'string') {
-      return { card: null, message: 'Unable to create draft. ' + cardFilter };
-    }
-    if (cards.length == 0) {
-      return { card: null, message: 'Unable to create draft. Not enough cards.' };
+    if (cards.length === 0) {
+      throw new Error('Unable to create draft. Not enough cards.');
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
     let validCards = cards;
     let index = null;
-    let message = '';
+    let messages = [];
     if (cardFilter.length > 0) {
       do {
         index = Math.floor(Math.random() * cardFilter.length);
@@ -126,19 +112,20 @@ function customDraft(cards, duplicates = false) {
         if (validCards.length == 0) {
           // try another options and remove this filter as it is now empty
           cardFilter.splice(index, 1);
+          messages.push('Warning: no cards matching filter: ' + cardFilter[index]);
         }
       } while (validCards.length == 0 && cardFilter.length > 1);
 
       // try to fill with any available card
       if (validCards.length == 0) {
         // TODO: warn user that they ran out of matching cards
-        message = 'Warning not enough cards matching any filter';
+        messages.push('Warning: not enough cards matching any filter.');
         validCards = cards;
       }
     }
 
     if (validCards.length == 0) {
-      return { card: null, message: 'Unable to create draft, not enough cards matching filter.' };
+      throw new Error('Unable to create draft, not enough cards matching filter.');
     }
 
     index = Math.floor(Math.random() * validCards.length);
@@ -151,7 +138,7 @@ function customDraft(cards, duplicates = false) {
       cards.splice(index, 1);
     }
 
-    return { card: card, message: message };
+    return { card: card, messages: messages };
   };
 }
 
@@ -209,7 +196,7 @@ var publicMethods = {
       for (let pack = 0; pack < params.packs; pack++) {
         format[pack] = [];
         for (let card = 0; card < params.cards; card++) {
-          format[pack].push('');
+          format[pack].push('*'); // any card
         }
       }
     }
@@ -221,12 +208,21 @@ var publicMethods = {
     let draft = new Draft();
     let nextCardfn = null;
 
-    if (format.custom == true) {
+    if (cards.length === 0) {
+      throw new Error('Unable to create draft: no cards.');
+    }
+    if (bots.length === 0) {
+      throw new Error('Unable to create draft: no bots.');
+    }
+    if (seats < 2) {
+      throw new Error('Unable to create draft: invalid seats: ' + seats);
+    }
+
+    if (format.custom === true) {
       nextCardfn = customDraft(cards, format.multiples);
     } else {
       nextCardfn = standardDraft(cards);
     }
-    format.drop = 2;
 
     let result = createPacks(draft, format, seats, nextCardfn);
 
@@ -239,7 +235,10 @@ var publicMethods = {
       throw new Error('Could not create draft:\n' + result.messages.join('\n'));
     }
 
+    // initial draft state
     draft.initial_state = draft.packs.slice();
+    draft.pickNumber = 1;
+    draft.packNumber = 1;
     draft.bots = bots;
 
     return draft;
