@@ -5,21 +5,21 @@ import Filter from '../util/Filter';
 import Hash from '../util/Hash';
 import Query from '../util/Query';
 
-import CardModalForm from '../components/CardModalForm';
-import { ChangelistContextProvider } from '../components/ChangelistContext';
-import CubeContext, { CubeContextProvider } from '../components/CubeContext';
-import CubeListNavbar from '../components/CubeListNavbar';
-import CurveView from '../components/CurveView';
-import DisplayContext, { DisplayContextProvider } from '../components/DisplayContext';
-import DynamicFlash from '../components/DynamicFlash';
-import ErrorBoundary from '../components/ErrorBoundary';
-import GroupModal from '../components/GroupModal';
-import ListView from '../components/ListView';
-import Maybeboard from '../components/Maybeboard';
-import { SortContextProvider } from '../components/SortContext';
-import TableView from '../components/TableView';
-import { TagContextProvider } from '../components/TagContext';
-import VisualSpoiler from '../components/VisualSpoiler';
+import CardModalForm from './CardModalForm';
+import { ChangelistContextProvider } from './ChangelistContext';
+import CubeContext, { CubeContextProvider } from './CubeContext';
+import CubeListNavbar from './CubeListNavbar';
+import CurveView from './CurveView';
+import DisplayContext, { DisplayContextProvider } from './DisplayContext';
+import DynamicFlash from './DynamicFlash';
+import ErrorBoundary from './ErrorBoundary';
+import GroupModal from './GroupModal';
+import ListView from './ListView';
+import Maybeboard from './Maybeboard';
+import { SortContextProvider } from './SortContext';
+import TableView from './TableView';
+import { TagContextProvider } from './TagContext';
+import VisualSpoiler from './VisualSpoiler';
 
 const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   const { cube, cubeID, canEdit } = useContext(CubeContext);
