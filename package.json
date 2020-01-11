@@ -16,6 +16,7 @@
   },
   "author": "Gwen Dekker",
   "license": "ISC",
+  "sideEffects":  "false",
   "browserslist": "> 0.5%, Firefox ESR, not dead, not IE > 0, not IE_Mob > 0, not safari < 7, not kaios > 0",
   "dependencies": {
     "bad-words": "^3.0.3",
