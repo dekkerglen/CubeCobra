@@ -4,7 +4,7 @@ import Query from '../util/Query';
 
 const ChangelistContext = React.createContext([]);
 
-export const ChangelistContextProvider = ({ cubeID, ...props }) => {
+export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, ...props }) => {
   const storageKey = `changelist-${cubeID}`;
 
   const [changes, setChanges] = useState(() => {
@@ -56,6 +56,7 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
           id: newId,
         },
       ]);
+      setOpenCollapse('edit');
     },
     [changes],
   );
@@ -73,6 +74,7 @@ export const ChangelistContextProvider = ({ cubeID, ...props }) => {
         newId += 1;
       }
       setChanges(newChanges);
+      setOpenCollapse('edit');
     },
     [changes],
   );

@@ -32,7 +32,7 @@ class DynamicFlash extends Component {
           [],
           Object.keys(this.state.messages).map((type) =>
             this.state.messages[type].map((message, index) => (
-              <UncontrolledAlert className="mb-0 mt-3" key={type + index} color={type}>
+              <UncontrolledAlert key={type + index} color={type}>
                 {message}
               </UncontrolledAlert>
             )),

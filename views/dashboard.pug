@@ -2,14 +2,11 @@ extends layout
 
 block content
   include flash
-  br
 
-  #react-root
-  input#blogData(type='hidden', value=posts)
-  input#cubeData(type='hidden', value=cubes)
-  input#decksData(type='hidden', value=decks)
-  input#userid(type='hidden', value=user._id)
+  #react-root !{reactHTML}
 
 block scripts
   include react
+  script(type='text/javascript').
+    var reactProps = !{JSON.stringify(reactProps)};
   script(src='/js/dashboard.bundle.js')

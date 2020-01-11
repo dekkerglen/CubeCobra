@@ -5,12 +5,20 @@ import {
   Collapse,
   Col,
   Container,
+  CustomInput,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
   Form,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Nav,
   NavItem,
   NavLink,
@@ -21,6 +29,7 @@ import {
 } from 'reactstrap';
 
 import CardModalContext from './CardModalContext';
+import CSRFForm from './CSRFForm';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
@@ -28,6 +37,132 @@ import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
+import withModal from './WithModal';
+
+const PasteBulkModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="pasteBulkModalTitle">
+      <ModalHeader id="pasteBulkModalTitle" toggle={toggle}>
+        Bulk Upload - Paste Text
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`}>
+        <ModalBody>
+          <p>
+            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x
+            island"
+          </p>
+          <Input
+            type="textarea"
+            maxLength="20000"
+            rows="10"
+            placeholder="Paste Cube Here (max length 20000)"
+            name="body"
+          />
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onclick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
+
+const UploadBulkModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
+      <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
+        Bulk Upload - Upload File
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
+        <ModalBody>
+          <p>
+            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
+            our .csv export.
+          </p>
+          <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
+          <Label for="customFile" className="sr-only">
+            Choose file
+          </Label>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
+
+const CubetutorImportModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="cubetutorImportModalTitle">
+      <ModalHeader id="cubetutorImportModalTitle" toggle={toggle}>
+        Bulk Upload - Import from Cubetutor
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/importcubetutor/${cubeID}`}>
+        <ModalBody>
+          <p>
+            Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags
+            will not be imported. Cubetutor does not recognize alternate versions of cards with the same name, in the
+            same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked
+            to ensure the desired version has been added.
+          </p>
+          <InputGroup>
+            <InputGroupAddon addonType="prepend">
+              <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
+            </InputGroupAddon>
+            {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
+            <Input type="text" name="cubeid" placeholder="e.g. 123456" />
+          </InputGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Import
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const CubetutorImportModalItem = withModal(DropdownItem, CubetutorImportModal);
+
+const SelectEmptyModal = ({ isOpen, toggle }) => (
+  <Modal isOpen={isOpen} toggle={toggle} labelledBy="selectEmptyTitle">
+    <ModalHeader id="selectEmptyTitle" toggle={toggle}>
+      Cannot Edit Selected
+    </ModalHeader>
+    <ModalBody>
+      <p className="mb-0">
+        No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
+      </p>
+    </ModalBody>
+    <ModalFooter>
+      <Button color="secondary" onClick={toggle}>
+        Close
+      </Button>
+    </ModalFooter>
+  </Modal>
+);
 
 const CompareCollapse = (props) => {
   const { cubeID } = useContext(CubeContext);
@@ -58,14 +193,31 @@ const CompareCollapse = (props) => {
   );
 };
 
-const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCollapse, filter, setFilter }) => {
+const CubeListNavbar = ({
+  cards,
+  cubeView,
+  setCubeView,
+  openCollapse,
+  setOpenCollapse,
+  filter,
+  setFilter,
+  className,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
+  const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
   const openCardModal = useContext(CardModalContext);
-  const { showCustomImages, toggleShowCustomImages, compressedView, toggleCompressedView } = useContext(DisplayContext);
+  const {
+    showCustomImages,
+    toggleShowCustomImages,
+    compressedView,
+    toggleCompressedView,
+    showMaybeboard,
+    toggleShowMaybeboard,
+  } = useContext(DisplayContext);
 
   const toggle = useCallback(() => setIsOpen((open) => !open));
 
@@ -83,7 +235,9 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
       event.preventDefault();
       const cards = groupModalCards;
       if (cubeView === 'list') {
-        if (cards.length === 1) {
+        if (cards.length === 0) {
+          setSelectEmptyModalOpen(true);
+        } else if (cards.length === 1) {
           openCardModal(cards[0].index);
         } else if (cards.length > 1) {
           openGroupModal();
@@ -105,11 +259,12 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
     [setOpenCollapse],
   );
 
-  const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true));
-  const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false));
+  const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true), []);
+  const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false), []);
+  const handleToggleSelectEmptyModal = useCallback((event) => setSelectEmptyModalOpen(false), []);
 
   return (
-    <div className="usercontrols">
+    <div className={`usercontrols${className ? ` ${className}` : ''}`}>
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
@@ -176,6 +331,9 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
                 <DropdownItem onClick={toggleCompressedView}>
                   {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
                 </DropdownItem>
+                <DropdownItem onClick={toggleShowMaybeboard}>
+                  {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
+                </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
             <UncontrolledDropdown nav inNavbar>
@@ -183,20 +341,12 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
                 {canEdit ? 'Import/Export' : 'Export'}
               </DropdownToggle>
               <DropdownMenu right>
-                {!canEdit ? (
-                  ''
-                ) : (
+                {canEdit && (
                   <>
                     <DropdownItem disabled>Import</DropdownItem>
-                    <DropdownItem data-toggle="modal" data-target="#pasteBulkModal">
-                      Paste Text
-                    </DropdownItem>
-                    <DropdownItem data-toggle="modal" data-target="#uploadBulkModal">
-                      Upload File
-                    </DropdownItem>
-                    <DropdownItem data-toggle="modal" data-target="#importModal">
-                      Import from CubeTutor
-                    </DropdownItem>
+                    <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
+                    <UploadBulkModalItem>Upload File</UploadBulkModalItem>
+                    <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
                     <DropdownItem divider />
                     <DropdownItem disabled>Export</DropdownItem>
                   </>
@@ -220,6 +370,7 @@ const CubeListNavbar = ({ cards, cubeView, setCubeView, openCollapse, setOpenCol
       />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
       <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
+      <SelectEmptyModal isOpen={selectEmptyModalOpen} toggle={handleToggleSelectEmptyModal} />
     </div>
   );
 };

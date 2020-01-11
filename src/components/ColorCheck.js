@@ -56,7 +56,7 @@ export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
       onClick={handleClick}
       aria-label={color}
     >
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
+      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className="mana-symbol" />
     </Button>
   );
 };
