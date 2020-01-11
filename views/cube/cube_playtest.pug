@@ -2,75 +2,10 @@ extends cube_layout
 
 block cube_toolbar
   input#cuberaw(type='hidden', name='cuberaw', value=cube_raw)
-  //edit controls
-  if user && user.id == cube.owner
-    .usercontrols
-      nav.navbar.navbar-expand.navbar-light
-        .collapse.navbar-collapse
-          ul.navbar-nav
-            li.nav-item
-              a#customDraftButton.nav-link(href='#' data-toggle='modal', data-target='#customDraftModal') Create Custom Draft
-            li.nav-item
-              a#customDraftButton.nav-link(href='#' data-toggle='modal', data-target='#uploadDecklistModal') Upload Decklist
 
 block cube_content
   include ../dynamic_flash
   #react-root
-  if user
-    if user.id == cube.owner
-      // Paste bulk Modal
-      #uploadDecklistModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='uploadDecklistModal', aria-hidden='true')
-        .modal-dialog.modal-dialog-scrollable(role='document')
-          .modal-content
-            form(method='POST', action='/cube/uploaddecklist/'+cube_id)
-              input(type='hidden', name='_csrf', value=csrfToken)
-              .modal-header
-                h5#pasteBulkModalTitle.modal-title Upload Decklist
-                button.close(type='button', data-dismiss='modal', aria-label='Close')
-                  span(aria-hidden='true') ×
-              .modal-body
-                p Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x island"
-                textarea.form-control(maxlength='20000',rows='10', style='height:100%;', placeholder="Paste Decklist Here (max length 20000)", name='body')
-              .modal-footer
-                #bulkspinner.collapse.spinner-border.text-success(role='status')
-                  span.sr-only Loading...
-                button.btn.btn-success(type='submit', data-toggle='collapse', href='#bulkspinner') Upload
-                button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-      // edit overview modal
-      #customDraftModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-        .modal-dialog.modal-lg(role='document')
-          .modal-content
-            form#customDraftForm(method='POST', action='/cube/format/add/'+cube_id)
-              input(type='hidden', name='_csrf', value=csrfToken)
-              .modal-header
-                h5 Create Custom Draft Format
-                button.close(type='button', data-dismiss='modal', aria-label='Close')
-                  span(aria-hidden='true') ×
-              .modal-body
-                .row
-                  .col
-                    label Title:
-                    input#customDraftTitle.form-control(maxlength='200' name='title', type='text')
-                  .col
-                    br
-                    .form-check
-                      input#customDraftFormRadioFalse.form-check-input(type='radio', name='multiples', value='false', checked='')
-                      label.form-check-label(for='customDraftFormRadioFalse') Don't allow more than one of each card  in draft
-                    .form-check
-                      input#customDraftFormRadioTrue.form-check-input(type='radio', name='multiples', value='true')
-                      label.form-check-label(for='customDraftFormRadioTrue') Allow multiples (e.g. set draft)
-                label Description:
-                input#customDraftHiddenHTML(type='hidden', name='html')
-                include ../texteditor
-                br
-                p Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
-                .format-area#customDraftBody
-                a.btn.btn-success#AddPackButton(href='#') Add Pack
-              .modal-footer
-                input#customDraftHidden(type='hidden', name='format')
-                input#customDraftHiddenId(type='hidden', name='id')
-                input.btn.btn-success(type='submit',value='Save')
-                button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
 block scripts
   include ../react

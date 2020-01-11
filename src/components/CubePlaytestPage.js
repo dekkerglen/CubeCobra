@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useContext, useCallback } from 'react';
 
 import {
   Button,
@@ -11,21 +11,173 @@ import {
   FormGroup,
   Input,
   Label,
+  Nav,
+  Navbar,
+  NavLink,
+  NavItem,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Row,
   UncontrolledAlert,
   UncontrolledCollapse,
+  FormText,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
 
 import CSRFForm from './CSRFForm';
+import CubeContext, { CubeContextProvider } from './CubeContext';
 import DynamicFlash from './DynamicFlash';
 import DeckPreview from './DeckPreview';
+import withModal from './WithModal';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
 const CardTitleH5 = ({ ...props }) => <CardTitle tag="h5" className="mb-0" {...props} />;
+
+const UploadDecklistModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadDecklistModalTitle">
+      <CSRFForm method="POST" action={`/cube/uploaddecklist/${cubeID}`}>
+        <ModalHeader toggle={toggle} id="uploadDecklistModalTitle">
+          Upload Decklist
+        </ModalHeader>
+        <ModalBody>
+          <p>
+            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x
+            island"
+          </p>
+          <Input
+            type="textarea"
+            maxlength="20000"
+            rows="10"
+            placeholder="Paste Decklist Here (max length 20000)"
+            name="body"
+          ></Input>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const UploadDecklistModalLink = withModal(NavLink, UploadDecklistModal);
+
+const CustomDraftFormatModal = ({ isOpen, toggle, format, setFormat }) => {
+  const { cubeID } = useContext(CubeContext);
+
+  const handleAddPack = useCallback(() => {
+    setFormat(format => [...format, ['']]);
+  }, []);
+  const handleAddCard = useCallback(() => {
+    const index = event.target.getAttribute('data-index');
+    setFormat(format => {
+      const newFormat = [...format];
+      newFormat[index] = [...newFormat[index], ''];
+      return newFormat;
+    });
+  }, [])
+  const handleDuplicatePack = useCallback(() => {
+    const index = event.target.getAttribute('data-index');
+    setFormat(format => {
+      const newFormat = [...format];
+      newFormat.splice(index, 0, format[index])];
+      return newFormat;
+    });
+  }, []);
+  const handleRemovePack = useCallback((event) => {
+    const removeIndex = event.target.getAttribute('data-index');
+    setFormat(format => format.filter((_, index) => index !== removeIndex));
+  }, []);
+
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle">
+      <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
+        <ModalHeader id="customDraftFormatTitle">Create Custom Draft Format</ModalHeader>
+        <ModalBody>
+          <Row>
+            <Col>
+              <Label>Title:</Label>
+              <Input type="text" maxlength="200" name="title" />
+            </Col>
+            <Col>
+              <FormGroup tag="fieldset">
+                <FormGroup check>
+                  <Label check>
+                    <Input type="radio" name="multiples" value="false" />{' '}
+                    Don't allow more than one of each card in draft
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="radio" name="multiples" value="true" />{' '}
+                    Allow multiples (e.g. set draft)
+                  </Label>
+                </FormGroup>
+              </FormGroup>
+            </Col>
+          </Row>
+          <Label>Description:</Label>
+          <Input type="hidden" name="html" />
+          <FormText>
+            Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a
+            ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
+          </FormText>
+          {format.map((pack, index) =>
+            <Card>
+              <CardHeader>
+                <CardTitle>Pack {index} - {pack.length} Cards</CardTitle>
+                <Button close onClick={removePack} data-index={index} />
+              </CardHeader>
+              <CardBody>
+                {pack.map((card, cardIndex) =>
+                  <InputGroup>
+                    <InputGroupAddon addonType="prepend">
+                      <InputGroupText>{cardIndex}</InputGroupText>
+                    </InputGroupAddon>
+                    <Input type="text" />
+                    <InputGroupAddon addonType="append">
+                      <Button color="secondary" outline>Remove</Button>
+                    </InputGroupAddon>
+                  </InputGroup>
+                )}
+              </CardBody>
+              <CardFooter>
+                <Button color="success" onClick={handleAddCard} data-index={index}>Add Card Slot</Button>
+                <Button color="success" onClick={handleDuplicatePack} data-index={index}>Duplicate Pack</Button>
+              </CardFooter>
+            </Card>
+          )}
+          <Button color="success" onClick={handleAddPack} data-index={index}>
+            Add Pack
+          </Button>
+        </ModalBody>
+        <ModalFooter>
+          <Input type="hidden" name="format" value={format} />
+          <Input type="hidden" name="id" />
+          <Button color="success" type="submit">Save</Button>
+          <Button color="secondary">
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
 
 const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>
@@ -167,62 +319,37 @@ class SamplePackCard extends Component {
   }
 }
 
-class CubePlaytestPage extends Component {
-  constructor(props) {
-    super(props);
+const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
+  const [alerts, setAlerts] = useState([]);
+  const [formats, setFormats] = useState(draftFormats);
 
-    this.state = {
-      alerts: [],
-      draftFormats: this.props.draftFormats,
-      editModal: false,
-    };
+  const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
 
-    this.addFormat = this.addFormat.bind(this);
-    this.deleteFormat = this.deleteFormat.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
+  const handleDeleteFormat = useCallback(async (event) => {
+    const formatIndex = event.target.getAttribute('data-index');
+    try {
+      const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw Error();
 
-  toggle() {
-    this.setState(({ modal, ...state }) => ({
-      ...state,
-      modal: !modal,
-    }));
-  }
+      const json = await response.json();
+      if (json.success !== 'true') throw Error();
 
-  addAlert(data) {
-    this.setState(({ alerts }) => ({
-      alerts: [].concat(alerts, data),
-    }));
-  }
-
-  addFormat(format) {
-    this.setState(({ draftFormats }) => ({
-      draftFormats: [].concat(draftFormats, format),
-    }));
-  }
-
-  deleteFormat(cube, formatID) {
-    console.log(formatID);
-    csrfFetch(`/cube/format/remove/${cube};${formatID}`, {
-      method: 'DELETE',
-    }).then(
-      (response) => {
-        this.addAlert({
-          color: 'success',
-          children: 'Format successfully deleted.',
-        });
-        this.setState(({ draftFormats }) => ({
-          draftFormats: [].concat(draftFormats.slice(0, formatID), draftFormats.slice(formatID + 1)),
-        }));
-      },
-      this.addAlert.bind(this, {
+      addAlert({
+        color: 'success',
+        message: 'Format successfully deleted.',
+      });
+    } catch(err) {
+      console.error(err);
+      addAlert({
         color: 'danger',
-        children: 'Failed to delete format.',
-      }),
-    );
-  }
+        message: 'Failed to delete format.',
+      });
+    }
+  }, [addAlert, cubeID]);
 
-  handleChange(event) {
+  const handleChange = useCallback((event) => {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
@@ -230,14 +357,23 @@ class CubePlaytestPage extends Component {
     this.setState({
       [name]: value,
     });
-  }
+  });
 
   render() {
-    const { canEdit, decks, cubeID } = this.props;
     const { alerts, draftFormats } = this.state;
 
     return (
-      <>
+      <CubeContextProvider cubeID={cubeID} canEdit={canEdit}>
+        <Navbar light expand className="usercontrols">
+          <Nav navbar>
+            <NavItem>
+              <NavLink>Create Custom Draft</NavLink>
+            </NavItem>
+            <NavItem>
+              <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
+            </NavItem>
+          </Nav>
+        </Navbar>
         <DynamicFlash />
         {alerts.map((data) => (
           <UncontrolledAlert key={data} className="mb-0 mt-3" {...data} />
@@ -264,7 +400,7 @@ class CubePlaytestPage extends Component {
             <StandardDraftCard cubeID={cubeID} className="mt-3" />
           </Col>
         </Row>
-      </>
+      </CubeContextProvider>
     );
   }
 }
