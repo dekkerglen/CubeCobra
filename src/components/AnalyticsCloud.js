@@ -1,7 +1,7 @@
 import { TagCloud } from 'react-tagcloud';
 import { Col, Row } from 'reactstrap';
 
-const AnalyticsCloud = ({ data, title, ...props }) => {
+const AnalyticsCloud = ({ data, title }) => {
   const colorOptions = { luminosity: 'dark' };
   return (
     <>

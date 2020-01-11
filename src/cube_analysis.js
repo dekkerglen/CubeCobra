@@ -9,6 +9,7 @@ import Hash from './util/Hash';
 import AddAnalyticModal from './components/AddAnalyticModal';
 import AddAnalyticModalContext from './components/AddAnalyticModalContext';
 import AnalyticsBarChart from './components/AnalyticsBarChart';
+import AnalyticsCardGrid from './components/AnalyticsCardGrid';
 import AnalyticsCloud from './components/AnalyticsCloud';
 import AnalyticsTable from './components/AnalyticsTable';
 import DynamicFlash from './components/DynamicFlash';
@@ -20,7 +21,7 @@ class CubeAnalysis extends Component {
     super(props);
 
     this.state = {
-      nav: Hash.get('nav', 'colorCount'),
+      nav: Hash.get('nav', 'curve'),
       data: { type: 'none' },
       workers: {},
       analytics: {
@@ -30,14 +31,16 @@ class CubeAnalysis extends Component {
         typeBreakdownAsfan: { url: '/js/analytics/typeBreakdownAsfan.js', title: 'Type Breakdown Asfans' },
         curve: { url: '/js/analytics/colorCurve.js', title: 'Curve' },
         tagCloud: { url: '/js/analytics/tagCloud.js', title: 'Tag Cloud' },
+        tokenGrid: { url: '/js/analytics/tokenGrid.js', title: 'Tokens' },
       },
       analytics_order: [
-        'colorCount',
-        'cumulativeColorCount',
-        'typeBreakdown',
-        'typeBreakdownAsfan',
         'curve',
+        'typeBreakdown',
+        'colorCount',
+        'tokenGrid',
         'tagCloud',
+        'cumulativeColorCount',
+        'typeBreakdownAsfan',
       ],
       filter: [],
       openCollapse: null,
@@ -242,15 +245,15 @@ class CubeAnalysis extends Component {
       </NavLink>
     );
     let visualization = (data) => {
-      let result = <p>Loading Data</p>;
       if (data) {
-        if (data.type == 'table') result = <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
+        if (data.type == 'table') return <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
         else if (data.type == 'bar')
-          result = <AnalyticsBarChart data={this.state.data} title={analytics[active].title} />;
-        else if (data.type == 'cloud')
-          result = <AnalyticsCloud data={this.state.data} title={analytics[active].title} />;
+          return <AnalyticsBarChart data={this.state.data} title={analytics[active].title} />;
+        else if (data.type == 'cloud') return <AnalyticsCloud data={this.state.data} title={analytics[active].title} />;
+        else if (data.type == 'cardGrid')
+          return <AnalyticsCardGrid data={this.state.data} title={analytics[active].title} cube={cube} />;
       }
-      return result;
+      return <p>Loading Data</p>;
     };
     var dropdownElement;
     if (cube.draft_formats) {

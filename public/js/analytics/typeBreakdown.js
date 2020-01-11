@@ -209,7 +209,6 @@ onmessage = (e) => {
       const count = TypeByColor[type][color];
       const percentage = Math.round((100.0 * count) / total);
       TypeByColor[type][color] = `${count} %25${percentage}%25`;
-      console.log(TypeByColor[type][color]);
     }
   }
   postMessage({

@@ -935,6 +935,23 @@ router.get('/analysis/:id', function(req, res) {
           if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
             pids.push(card.details.tcgplayer_id);
           }
+          if (card.details.tokens) {
+            card.details.tokens.forEach((element) => {
+              token_details = carddb.cardFromId(element.tokenId);
+              element['token'] = {
+                tags: [],
+                status: 'Not Owned',
+                colors: token_details.color_identity,
+                cmc: token_details.cmc,
+                cardID: token_details._id,
+                type_line: token_details.type,
+                addedTmsp: new Date(),
+                imgUrl: undefined,
+                finish: 'Non-foil',
+                details: { ...token_details },
+              };
+            });
+          }
         });
         GetPrices(pids, function(price_dict) {
           cube.cards.forEach(function(card, index) {
@@ -950,7 +967,6 @@ router.get('/analysis/:id', function(req, res) {
           if (err) {
             res.render('cube/cube_analysis', {
               cube: cube,
-              cards: cube.cards,
               cube_id: req.params.id,
               owner: user.username,
               activeLink: 'analysis',
