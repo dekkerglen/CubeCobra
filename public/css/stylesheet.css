@@ -622,6 +622,10 @@ body.busy-cursor {
 	background-color: #e9ecef !important;
 }
 
+img.mana-symbol {
+	height: 1.8rem;
+}
+
 .col-low-padding {
   padding: 0 2px;
 }
