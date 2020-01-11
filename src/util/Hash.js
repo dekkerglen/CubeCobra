@@ -1,3 +1,5 @@
+import URLSearchParams from 'core-js-pure/features/url-search-params';
+
 function hash() {
   return typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
 }

@@ -1,6 +1,9 @@
+import URLSearchParams from 'core-js-pure/features/url-search-params';
+
 function query() {
   return typeof window !== 'undefined' ? window.location.search.slice(1) : '';
 }
+
 function changeQuery(params) {
   if (typeof window === 'undefined') {
     return;

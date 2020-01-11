@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import URLSearchParams from 'core-js-pure/features/url-search-params';
 
 import FilterCollapse from './components/FilterCollapse';
 import SortableTable from './components/SortableTable';

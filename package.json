@@ -16,7 +16,7 @@
   },
   "author": "Gwen Dekker",
   "license": "ISC",
-  "browserslist": "> 1.0%, not dead, last 2 versions, not ie < 11",
+  "browserslist": "> 0.5%, Firefox ESR, not dead, not IE > 0, not IE_Mob > 0, not safari < 7, not kaios > 0",
   "dependencies": {
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
@@ -61,6 +61,7 @@
     "babel-loader": "^8.0.6",
     "chart.js": "^2.9.2",
     "core-js": "^3.6.3",
+    "core-js-pure": "^3.6.3",
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.5.0",
