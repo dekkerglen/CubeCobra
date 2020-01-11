@@ -3339,11 +3339,11 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
             res.status(500).send({
               success: 'false',
               message: 'Error deleting format.',
-            })
+            });
           } else {
             res.status(200).send({
               success: 'true',
-            })
+            });
           }
         },
       );

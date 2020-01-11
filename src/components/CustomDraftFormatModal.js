@@ -35,20 +35,20 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
 
   const handleChangeDescription = useCallback((event) => {
     setDescription(event.target.value);
-  })
+  });
 
   const handleAddCard = useCallback(() => {
     const index = parseInt(event.target.getAttribute('data-index'));
-    setFormat(format => {
+    setFormat((format) => {
       const newFormat = [...format];
       newFormat[index] = [...newFormat[index], ''];
       return newFormat;
     });
-  }, [])
+  }, []);
   const handleRemoveCard = useCallback(() => {
     const packIndex = parseInt(event.target.getAttribute('data-pack'));
     const index = parseInt(event.target.getAttribute('data-index'));
-    setFormat(format => {
+    setFormat((format) => {
       const newFormat = [...format];
       newFormat[packIndex] = [...newFormat[packIndex]];
       newFormat[packIndex].splice(index, 1);
@@ -56,11 +56,11 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     });
   }, []);
   const handleAddPack = useCallback(() => {
-    setFormat(format => [...format, ['']]);
+    setFormat((format) => [...format, ['']]);
   }, []);
   const handleDuplicatePack = useCallback(() => {
     const index = parseInt(event.target.getAttribute('data-index'));
-    setFormat(format => {
+    setFormat((format) => {
       const newFormat = [...format];
       newFormat.splice(index, 0, format[index]);
       return newFormat;
@@ -68,13 +68,15 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   }, []);
   const handleRemovePack = useCallback((event) => {
     const removeIndex = parseInt(event.target.getAttribute('data-index'));
-    setFormat(format => format.filter((_, index) => index !== removeIndex));
+    setFormat((format) => format.filter((_, index) => index !== removeIndex));
   }, []);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`} innerRef={formRef}>
-        <ModalHeader id="customDraftFormatTitle" toggle={toggle}>Create Custom Draft Format</ModalHeader>
+        <ModalHeader id="customDraftFormatTitle" toggle={toggle}>
+          Create Custom Draft Format
+        </ModalHeader>
         <ModalBody>
           <Row>
             <Col className="mt-2">
@@ -84,14 +86,13 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="false" defaultChecked={true} />{' '}
-                    Don't allow more than one of each card in draft
+                    <Input type="radio" name="multiples" value="false" defaultChecked={true} /> Don't allow more than
+                    one of each card in draft
                   </Label>
                 </FormGroup>
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="true" />{' '}
-                    Allow multiples (e.g. set draft)
+                    <Input type="radio" name="multiples" value="true" /> Allow multiples (e.g. set draft)
                   </Label>
                 </FormGroup>
               </FormGroup>
@@ -100,10 +101,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           <h6>Description</h6>
           <TextEntry name="html" value={description} onChange={handleChangeDescription} />
           <FormText className="mt-3 mb-1">
-            Card slot values can either be single tags (not case sensitive), or a comma separated list of tags to create a
-            ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
+            Card slot values can either be single tags (not case sensitive), or a comma separated list of tags to create
+            a ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
           </FormText>
-          {format.map((pack, index) =>
+          {format.map((pack, index) => (
             <Card key={index} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
@@ -112,24 +113,36 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                {pack.map((card, cardIndex) =>
+                {pack.map((card, cardIndex) => (
                   <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex}</InputGroupText>
                     </InputGroupAddon>
                     <Input type="text" defaultValue={card} />
                     <InputGroupAddon addonType="append">
-                      <Button color="secondary" outline onClick={handleRemoveCard} data-pack={index} data-index={cardIndex}>Remove</Button>
+                      <Button
+                        color="secondary"
+                        outline
+                        onClick={handleRemoveCard}
+                        data-pack={index}
+                        data-index={cardIndex}
+                      >
+                        Remove
+                      </Button>
                     </InputGroupAddon>
                   </InputGroup>
-                )}
+                ))}
               </CardBody>
               <CardFooter>
-                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={index}>Add Card Slot</Button>
-                <Button color="success" onClick={handleDuplicatePack} data-index={index}>Duplicate Pack</Button>
+                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={index}>
+                  Add Card Slot
+                </Button>
+                <Button color="success" onClick={handleDuplicatePack} data-index={index}>
+                  Duplicate Pack
+                </Button>
               </CardFooter>
             </Card>
-          )}
+          ))}
           <Button color="success" onClick={handleAddPack}>
             Add Pack
           </Button>
@@ -137,10 +150,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         <ModalFooter>
           <Input type="hidden" name="packs" value={JSON.stringify(format)} />
           <Input type="hidden" name="id" value={formatIndex} />
-          <Button color="success" type="submit">Save</Button>
-          <Button color="secondary">
-            Close
+          <Button color="success" type="submit">
+            Save
           </Button>
+          <Button color="secondary">Close</Button>
         </ModalFooter>
       </CSRFForm>
     </Modal>

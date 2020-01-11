@@ -106,20 +106,22 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
           <Button type="submit" color="success" className="mr-2">
             Start Draft
           </Button>
-          {canEdit && (<>
-            <Button color="success" className="mr-2" onClick={onEditFormat} data-index={formatIndex}>
-              Edit
-            </Button>
-            <Button color="danger" id={`deleteToggler-${formatIndex}`}>
-              Delete
-            </Button>
-            <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
-              <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-              <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex}>
-                Yes, delete this format
+          {canEdit && (
+            <>
+              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={formatIndex}>
+                Edit
               </Button>
-            </UncontrolledCollapse>
-          </>)}
+              <Button color="danger" id={`deleteToggler-${formatIndex}`}>
+                Delete
+              </Button>
+              <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
+                <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
+                <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex}>
+                  Yes, delete this format
+                </Button>
+              </UncontrolledCollapse>
+            </>
+          )}
         </CardFooter>
       </CSRFForm>
     </Card>
@@ -197,7 +199,7 @@ const SamplePackCard = (props) => {
       </CardFooter>
     </Card>
   );
-}
+};
 
 const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const [alerts, setAlerts] = useState([]);
@@ -208,53 +210,61 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
 
   const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
 
-  const toggleEditModal = useCallback(() => setEditModalOpen(open => !open), []);
+  const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
 
   const handleCreateFormat = useCallback((event) => {
     setEditFormat([['Mythic', 'Mythic', 'Mythic']]);
     setEditFormatIndex(-1);
     setEditModalOpen(true);
-  })
+  });
 
-  const handleEditFormat = useCallback((event) => {
-    const formatIndex = parseInt(event.target.getAttribute('data-index'));
-    setEditFormat([...formats[formatIndex]]);
-    setEditFormatIndex(formatIndex);
-    setEditModalOpen(true);
-  }, [formats]);
+  const handleEditFormat = useCallback(
+    (event) => {
+      const formatIndex = parseInt(event.target.getAttribute('data-index'));
+      setEditFormat([...formats[formatIndex]]);
+      setEditFormatIndex(formatIndex);
+      setEditModalOpen(true);
+    },
+    [formats],
+  );
 
-  const handleDeleteFormat = useCallback(async (event) => {
-    const formatIndex = parseInt(event.target.getAttribute('data-index'));
-    try {
-      const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw Error();
+  const handleDeleteFormat = useCallback(
+    async (event) => {
+      const formatIndex = parseInt(event.target.getAttribute('data-index'));
+      try {
+        const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw Error();
 
-      const json = await response.json();
-      if (json.success !== 'true') throw Error();
+        const json = await response.json();
+        if (json.success !== 'true') throw Error();
 
-      addAlert({
-        color: 'success',
-        message: 'Format successfully deleted.',
-      });
-      console.log('deleting', formatIndex);
-      setFormats(formats.filter((format, index) => index !== formatIndex));
-    } catch(err) {
-      console.error(err);
-      addAlert({
-        color: 'danger',
-        message: 'Failed to delete format.',
-      });
-    }
-  }, [addAlert, cubeID, formats]);
+        addAlert({
+          color: 'success',
+          message: 'Format successfully deleted.',
+        });
+        console.log('deleting', formatIndex);
+        setFormats(formats.filter((format, index) => index !== formatIndex));
+      } catch (err) {
+        console.error(err);
+        addAlert({
+          color: 'danger',
+          message: 'Failed to delete format.',
+        });
+      }
+    },
+    [addAlert, cubeID, formats],
+  );
 
   return (
     <CubeContextProvider cubeID={cubeID} canEdit={canEdit}>
       <Navbar light expand className="usercontrols">
         <Nav navbar>
           <NavItem>
-            <NavLink onClick={handleCreateFormat} className="clickable">Create Custom Draft</NavLink>
+            <NavLink onClick={handleCreateFormat} className="clickable">
+              Create Custom Draft
+            </NavLink>
           </NavItem>
           <NavItem>
             <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
@@ -263,7 +273,9 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
       </Navbar>
       <DynamicFlash />
       {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert key={index} color={color} className="mb-0 mt-3">{message}</UncontrolledAlert>
+        <UncontrolledAlert key={index} color={color} className="mb-0 mt-3">
+          {message}
+        </UncontrolledAlert>
       ))}
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
@@ -284,7 +296,13 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
           <StandardDraftCard cubeID={cubeID} className="mt-3" />
         </Col>
       </Row>
-      <CustomDraftFormatModal isOpen={editModalOpen} toggle={toggleEditModal} formatIndex={editFormatIndex} format={editFormat} setFormat={setEditFormat} />
+      <CustomDraftFormatModal
+        isOpen={editModalOpen}
+        toggle={toggleEditModal}
+        formatIndex={editFormatIndex}
+        format={editFormat}
+        setFormat={setEditFormat}
+      />
     </CubeContextProvider>
   );
 };
