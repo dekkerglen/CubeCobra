@@ -54,6 +54,7 @@ const serverConfig = merge(config, {
   entry: {
     CubeListPage: './components/CubeListPage.js',
     CubePlaytestPage: './components/CubePlaytestPage.js',
+    DashboardPage: './components/DashboardPage.js',
     DraftView: './components/DraftView.js',
   },
   output: {

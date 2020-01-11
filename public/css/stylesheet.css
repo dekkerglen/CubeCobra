@@ -102,7 +102,7 @@
 	margin-bottom: 0px;
 }
 
-.list-group-item.list-group-heading:hover {
+.list-group-item.list-group-heading.clickable:hover {
 	background-color: #FCFCFC !Important;
 	color: black;
 	text-decoration: none;
@@ -115,13 +115,16 @@
 	cursor: pointer;
 	font-size: 8.5pt;
 
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
-
 	color: black;
 	padding: 3px 4px;
 	text-decoration: none;
+}
+
+.card-list-item,
+.card-list-item .name {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 @media(max-width: 1199.98px) {
@@ -617,6 +620,10 @@ body.busy-cursor {
 .color-check-button.active, .color-check-button:hover {
 	border-color: #ced4da !important;
 	background-color: #e9ecef !important;
+}
+
+img.mana-symbol {
+	height: 1.8rem;
 }
 
 .col-low-padding {
