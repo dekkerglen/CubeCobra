@@ -244,7 +244,6 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
           color: 'success',
           message: 'Format successfully deleted.',
         });
-        console.log('deleting', formatIndex);
         setFormats(formats.filter((format, index) => index !== formatIndex));
       } catch (err) {
         console.error(err);
