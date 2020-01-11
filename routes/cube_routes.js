@@ -3340,7 +3340,7 @@ router.post('/remove/:id', ensureAuth, function(req, res) {
         if (err) {
           console.error(err);
           req.flash('danger', 'Error removing cube');
-          res.redirect('/cube/overview/' + req.params.id)
+          res.redirect('/cube/overview/' + req.params.id);
         } else {
           req.flash('success', 'Cube Removed');
           res.redirect('/dashboard');

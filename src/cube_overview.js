@@ -108,7 +108,12 @@ class CubeOverview extends Component {
               <div className="collapse navbar-collapse">
                 <ul className="navbar-nav flex-wrap">
                   <li className="nav-item">
-                    <CubeOverviewModal cube={cube} cubeID={cubeID} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
+                    <CubeOverviewModal
+                      cube={cube}
+                      cubeID={cubeID}
+                      onError={this.error}
+                      onCubeUpdate={this.onCubeUpdate}
+                    />
                   </li>
                   <li className="nav-item">
                     <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
@@ -222,22 +227,42 @@ class CubeOverview extends Component {
           </Col>
         </Row>
         {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userID} loggedIn={loggedIn} />}
-        <div className="modal fade" id="deleteCubeModal" tabIndex="-1" role="dialog" aria-labelledby="deleteCubeModalLabel" aria-hidden="true">
+        <div
+          className="modal fade"
+          id="deleteCubeModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="deleteCubeModalLabel"
+          aria-hidden="true"
+        >
           <div className="modal-dialog" role="document">
             <CSRFForm method="POST" action={`/cube/remove/${cubeID}`}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title" id="deleteCubeModalLabel">Confirm Delete</h5>
-                  <button className="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                  <h5 className="modal-title" id="deleteCubeModalLabel">
+                    Confirm Delete
+                  </h5>
+                  <button className="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                  </button>
                 </div>
                 <div className="modal-body">
                   <p>Are you sure you wish to delete this cube? This action cannot be undone.</p>
                   <p>Please type 'Delete' in order to confirm</p>
-                  <input className="form-control" type="text" value={deleteConfirm} onChange={this.handleChangeDeleteConfirm} />
+                  <input
+                    className="form-control"
+                    type="text"
+                    value={deleteConfirm}
+                    onChange={this.handleChangeDeleteConfirm}
+                  />
                 </div>
                 <div className="modal-footer">
-                  <button className="btn btn-danger" type="submit" disabled={deleteConfirm !== 'Delete'}>Delete</button>
-                  <button className="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                  <button className="btn btn-danger" type="submit" disabled={deleteConfirm !== 'Delete'}>
+                    Delete
+                  </button>
+                  <button className="btn btn-secondary" type="button" data-dismiss="modal">
+                    Cancel
+                  </button>
                 </div>
               </div>
             </CSRFForm>
