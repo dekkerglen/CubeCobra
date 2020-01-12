@@ -18,6 +18,7 @@ import BlogPost from './components/BlogPost';
 import CSRFForm from './components/CSRFForm';
 import CubeOverviewModal from './components/CubeOverviewModal';
 import DynamicFlash from './components/DynamicFlash';
+import ErrorBoundary from './components/ErrorBoundary';
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -27,11 +28,13 @@ class CubeOverview extends Component {
     this.unfollow = this.unfollow.bind(this);
     this.error = this.error.bind(this);
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
+    this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
 
     this.state = {
       followed: this.props.followed,
       alerts: [],
       cube: props.cube,
+      deleteConfirm: '',
     };
   }
 
@@ -88,9 +91,15 @@ class CubeOverview extends Component {
     });
   }
 
+  handleChangeDeleteConfirm(event) {
+    this.setState({
+      deleteConfirm: event.target.value,
+    });
+  }
+
   render() {
-    const { post, price, owner, admin, canEdit } = this.props;
-    const cube = this.state.cube;
+    const { post, price, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
+    const { cube, deleteConfirm } = this.state;
     return (
       <>
         {canEdit && (
@@ -99,7 +108,12 @@ class CubeOverview extends Component {
               <div className="collapse navbar-collapse">
                 <ul className="navbar-nav flex-wrap">
                   <li className="nav-item">
-                    <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
+                    <CubeOverviewModal
+                      cube={cube}
+                      cubeID={cubeID}
+                      onError={this.error}
+                      onCubeUpdate={this.onCubeUpdate}
+                    />
                   </li>
                   <li className="nav-item">
                     <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
@@ -192,10 +206,10 @@ class CubeOverview extends Component {
                 <h5 className="card-title">Description</h5>
               </CardHeader>
               <CardBody>
-                {cube.descriptionhtml ? (
+                {cube.descriptionhtml && cube.descriptionhtml !== 'undefined' ? (
                   <CardText dangerouslySetInnerHTML={{ __html: cube.descriptionhtml }} />
                 ) : (
-                  <CardText>{cube.description}</CardText>
+                  <CardText>{cube.description || ''}</CardText>
                 )}
               </CardBody>
               {cube.tags.length > 0 && (
@@ -212,31 +226,57 @@ class CubeOverview extends Component {
             </Card>
           </Col>
         </Row>
-        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={loggedIn} />}
+        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userID} loggedIn={loggedIn} />}
+        <div
+          className="modal fade"
+          id="deleteCubeModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="deleteCubeModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog" role="document">
+            <CSRFForm method="POST" action={`/cube/remove/${cubeID}`}>
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="deleteCubeModalLabel">
+                    Confirm Delete
+                  </h5>
+                  <button className="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <p>Are you sure you wish to delete this cube? This action cannot be undone.</p>
+                  <p>Please type 'Delete' in order to confirm</p>
+                  <input
+                    className="form-control"
+                    type="text"
+                    value={deleteConfirm}
+                    onChange={this.handleChangeDeleteConfirm}
+                  />
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-danger" type="submit" disabled={deleteConfirm !== 'Delete'}>
+                    Delete
+                  </button>
+                  <button className="btn btn-secondary" type="button" data-dismiss="modal">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </CSRFForm>
+          </div>
+        </div>
       </>
     );
   }
 }
 
-const loggedIn = document.getElementById('userid') != null;
-const userid = loggedIn ? document.getElementById('userid').value : '';
-const canEdit = document.getElementById('canEdit').value === 'true';
-const blog = JSON.parse(document.getElementById('blogData').value);
-const cube = JSON.parse(document.getElementById('cubeData').value);
-const price = document.getElementById('priceData').value;
-const owner = document.getElementById('ownerData').value;
-const admin = JSON.parse(document.getElementById('adminData').value) == true;
-const followed = JSON.parse(document.getElementById('followedData').value) == true;
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeOverview
-    post={blog || null}
-    cube={cube}
-    price={price}
-    owner={owner}
-    admin={admin}
-    followed={followed}
-    canEdit={canEdit}
-  />
+  <ErrorBoundary>
+    <CubeOverview {...reactProps} />
+  </ErrorBoundary>
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;

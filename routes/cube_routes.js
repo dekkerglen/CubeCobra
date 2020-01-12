@@ -423,11 +423,13 @@ router.get('/overview/:id', async (req, res) => {
       currentUser = await User.findById(req.user._id);
       admin = util.isAdmin(currentUser);
     }
-    const cube = await Cube.findOne(build_id_query(cube_id));
-    if (!cube) {
+    const cubeResult = await Cube.findOne(build_id_query(cube_id));
+    if (!cubeResult) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
+
+    const cube = cubeResult.toObject();
 
     var pids = [];
     cube.cards.forEach(function(card, index) {
@@ -469,15 +471,30 @@ router.get('/overview/:id', async (req, res) => {
       cube.raw_desc = cube.descriptionhtml;
       cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb, cube);
     }
-    return res.render('cube/cube_overview', {
-      cube: cube,
-      is_following: JSON.stringify(currentUser ? currentUser.followed_cubes.includes(cube._id) : null),
-      cube_id: cube_id,
-      title: `${abbreviate(cube.name)} - Overview`,
-      activeLink: 'overview',
-      num_cards: cube.cards.length,
+
+    // Performance
+    delete cube.cards;
+
+    const reactProps = {
+      cube,
+      cubeID: cube_id,
+      userID: user ? user._id : null,
+      loggedIn: !!user,
+      canEdit: user && user._id == cube.owner,
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
+      followed: currentUser ? currentUser.followed_cubes.includes(cube._id) : false,
+      editorvalue: cube.raw_desc,
+      price: sum.toFixed(2),
+      admin,
+    };
+
+    return res.render('cube/cube_overview', {
+      reactProps,
+      cube,
+      cube_id,
+      title: `${abbreviate(cube.name)} - Overview`,
+      activeLink: 'overview',
       metadata: generateMeta(
         `Cube Cobra Overview: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -485,9 +502,6 @@ router.get('/overview/:id', async (req, res) => {
         `https://cubecobra.com/cube/overview/${req.params.id}`,
       ),
       loginCallback: '/cube/overview/' + req.params.id,
-      editorvalue: cube.raw_desc,
-      price: sum.toFixed(2),
-      admin: JSON.stringify(admin),
     });
   } catch (err) {
     req.flash('danger', 'Server Error');
@@ -3159,13 +3173,13 @@ router.post(
   }),
 );
 
-router.delete('/remove/:id', ensureAuth, function(req, res) {
+router.post('/remove/:id', ensureAuth, function(req, res) {
   if (!req.user._id) {
     req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/' + req.params.id);
+    res.redirect('/cube/overview/' + req.params.id);
   }
 
-  let query = build_id_query(req.params.id);
+  const query = build_id_query(req.params.id);
 
   Cube.findOne(query, function(err, cube) {
     if (err || !cube || cube.owner != req.user._id) {
@@ -3174,10 +3188,13 @@ router.delete('/remove/:id', ensureAuth, function(req, res) {
     } else {
       Cube.deleteOne(query, function(err) {
         if (err) {
-          console.log(err, req);
+          console.error(err);
+          req.flash('danger', 'Error removing cube');
+          res.redirect('/cube/overview/' + req.params.id);
+        } else {
+          req.flash('success', 'Cube Removed');
+          res.redirect('/dashboard');
         }
-        req.flash('success', 'Cube Removed');
-        res.send('Success');
       });
     }
   });

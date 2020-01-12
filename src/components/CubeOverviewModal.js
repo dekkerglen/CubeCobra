@@ -17,7 +17,6 @@ import {
 } from 'reactstrap';
 
 import { csrfFetch } from '../util/CSRF';
-import { fromEntries } from '../util/Util';
 import TagInput from './TagInput';
 import { TagContextProvider } from './TagContext';
 import TextEntry from './TextEntry';
@@ -221,7 +220,7 @@ class CubeOverviewModal extends Component {
   }
 
   render() {
-    const { cube, tags, isOpen } = this.state;
+    const { cube, cubeID, tags, isOpen } = this.state;
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>
@@ -229,7 +228,7 @@ class CubeOverviewModal extends Component {
         </a>
 
         <TagContextProvider
-          cubeID={cube._id}
+          cubeID={cubeID}
           defaultTagColors={cube.tag_colors}
           defaultShowTagColors={false}
           defaultTags={[]}
@@ -237,7 +236,7 @@ class CubeOverviewModal extends Component {
           <Modal size="lg" isOpen={isOpen} toggle={this.close}>
             <ModalHeader toggle={this.close}>Edit Overview</ModalHeader>
 
-            <form id="postBlogForm" method="POST" action="/cube/editoverview/cedh" autoComplete="off">
+            <form method="POST" action={`/cube/editoverview/${cubeID}`} autoComplete="off">
               <ModalBody>
                 <h6>Cube Name</h6>
                 <input
