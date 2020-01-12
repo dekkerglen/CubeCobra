@@ -1,29 +1,27 @@
-function GetColorCat(type, colors) {
-  if (type.toLowerCase().includes('land')) {
-    return 'l';
-  } else if (colors.length == 0) {
-    return 'c';
+function GetColorCat(colors) {
+  if (colors.length == 0) {
+    return 'Colorless';
   } else if (colors.length > 1) {
-    return 'm';
+    return 'Multi';
   } else if (colors.length == 1) {
     switch (colors[0]) {
       case 'W':
-        return 'w';
+        return 'White';
         break;
       case 'U':
-        return 'u';
+        return 'Blue';
         break;
       case 'B':
-        return 'b';
+        return 'Black';
         break;
       case 'R':
-        return 'r';
+        return 'Red';
         break;
       case 'G':
-        return 'g';
+        return 'Green';
         break;
       case 'C':
-        return 'c';
+        return 'Colorless';
         break;
     }
   }
@@ -36,95 +34,103 @@ onmessage = (e) => {
   var TypeByColor = {
     Creatures: {
       key: 'Creatures',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Enchantments: {
       key: 'Enchantments',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Lands: {
       key: 'Lands',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Planeswalkers: {
       key: 'Planeswalkers',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Instants: {
       key: 'Instants',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Sorceries: {
       key: 'Sorceries',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Artifacts: {
       key: 'Artifacts',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
     Total: {
       key: 'Total',
-      White: 0,
-      Blue: 0,
-      Black: 0,
-      Red: 0,
-      Green: 0,
-      Colorless: 0,
-      Multi: 0,
-      Total: 0,
+      White: { asfan: 0, count: 0 },
+      Blue: { asfan: 0, count: 0 },
+      Black: { asfan: 0, count: 0 },
+      Red: { asfan: 0, count: 0 },
+      Green: { asfan: 0, count: 0 },
+      Colorless: { asfan: 0, count: 0 },
+      Multi: { asfan: 0, count: 0 },
+      Total: { asfan: 0, count: 0 },
     },
   };
   cards.forEach(function(card, index) {
-    var type = {};
+    var asfan = card.asfan || 15 / cards.length;
+    var colorCategory = GetColorCat(card.colors);
+
+    TypeByColor['Total'][colorCategory].count += 1;
+    TypeByColor['Total'][colorCategory].asfan += asfan;
+    TypeByColor['Total']['Total'].count += 1;
+    TypeByColor['Total']['Total'].asfan += asfan;
+
+    var type = null;
     if (card.details.type.toLowerCase().includes('creature')) {
       type = TypeByColor['Creatures'];
     } else if (card.details.type.toLowerCase().includes('enchantment')) {
@@ -139,76 +145,38 @@ onmessage = (e) => {
       type = TypeByColor['Sorceries'];
     } else if (card.details.type.toLowerCase().includes('artifact')) {
       type = TypeByColor['Artifacts'];
+    } else {
+      return;
     }
 
-    var colorCategory = GetColorCat(card.details.type, card.colors);
-
-    // special case for land
-    if (colorCategory == 'l') {
-      if (card.colors.length == 0) {
-        colorCategory = 'c';
-      } else if (card.colors.length > 1) {
-        colorCategory = 'm';
-      } else {
-        colorCategory = card.colors[0].toLowerCase();
-      }
-    }
-
-    switch (colorCategory) {
-      case 'w':
-        type['White'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['White'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'u':
-        type['Blue'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Blue'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'b':
-        type['Black'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Black'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'r':
-        type['Red'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Red'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'g':
-        type['Green'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Green'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'm':
-        type['Multi'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Multi'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      case 'c':
-        type['Colorless'] += 1;
-        type['Total'] += 1;
-        TypeByColor['Total']['Colorless'] += 1;
-        TypeByColor['Total']['Total'] += 1;
-        break;
-      default:
-    }
+    type[colorCategory].count += 1;
+    type[colorCategory].asfan += asfan;
+    type['Total'].count += 1;
+    type['Total'].asfan += asfan;
   });
 
-  for (let color of Object.keys(TypeByColor['Total'])) {
+  for (let color in TypeByColor['Total']) {
     if (color == 'key') continue;
-    const total = TypeByColor['Total'][color];
-    if (color == 'key' || total == 0) continue;
+    const totalCount = TypeByColor['Total'][color].count;
+    const totalAsfan = TypeByColor['Total'][color].asfan;
     for (let type in TypeByColor) {
-      const count = TypeByColor[type][color];
-      const percentage = Math.round((100.0 * count) / total);
-      TypeByColor[type][color] = `${count} %25${percentage}%25`;
+      const count = TypeByColor[type][color].count;
+      const asfan = TypeByColor[type][color].asfan;
+      const countText = `${count} / ${asfan.toFixed(2)} AsFan`;
+      if ((type === 'Total' && totalCount == 0) || totalAsfan == 0) {
+        TypeByColor[type][color] = countText;
+      } else {
+        var percentageText;
+        var percentageCount = 0;
+        if (totalCount > 0) {
+          percentageCount = Math.round((100.0 * count) / totalCount);
+        }
+        var perecentageAsfan = 0;
+        if (totalAsfan > 0) {
+          percentageAsfan = Math.round((100.0 * asfan) / totalAsfan);
+        }
+        TypeByColor[type][color] = `${countText} %%${percentageCount}% / ${percentageAsfan}% AsFan%%`;
+      }
     }
   }
   postMessage({

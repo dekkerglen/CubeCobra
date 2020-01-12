@@ -19,7 +19,7 @@ import {
 
 import AddAnalyticModalContext from './AddAnalyticModalContext';
 
-const AddAnalyticModal = ({ addScript, children, ...props}) => {
+const AddAnalyticModal = ({ addScript, children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formValues, setFormValues] = useState({
     name: 'New Analytic',
@@ -40,7 +40,7 @@ const AddAnalyticModal = ({ addScript, children, ...props}) => {
       "      {key: 'firstdata', firstcolumn: '{w}'}\n" +
       '    ]\n' +
       '  });\n' +
-      '}'
+      '}',
   });
 
   const handleChange = useCallback((event) => {
@@ -50,13 +50,13 @@ const AddAnalyticModal = ({ addScript, children, ...props}) => {
 
     setFormValues((formValues) => ({
       ...formValues,
-      [name]: value
+      [name]: value,
     }));
   });
 
   const submitAnalytic = useCallback(() => {
     addScript(state.name, state.key, state.code);
-    setIsOpen(false);  
+    setIsOpen(false);
   });
 
   const openAddAnalyticModal = useCallback(() => setIsOpen(true));
@@ -66,12 +66,7 @@ const AddAnalyticModal = ({ addScript, children, ...props}) => {
   return (
     <AddAnalyticModalContext.Provider value={openAddAnalyticModal}>
       {children}
-      <Modal
-        size="lg"
-        toggle={closeAddAnalyticModal}
-        isOpen={isOpen}
-        {...props}
-      >
+      <Modal size="lg" toggle={closeAddAnalyticModal} isOpen={isOpen} {...props}>
         <ModalHeader id="addAnalyticModalHeader" toggle={closeAddAnalyticModal}>
           Add Analytics Script
         </ModalHeader>
@@ -108,6 +103,6 @@ const AddAnalyticModal = ({ addScript, children, ...props}) => {
       </Modal>
     </AddAnalyticModalContext.Provider>
   );
-}
+};
 
 export default AddAnalyticModal;
