@@ -1246,7 +1246,9 @@ function bulkuploadCSV(req, res, cards, cube) {
       addedTmsp: new Date(),
       collector_number: split[5],
       status: split[6],
-      tags: split[7] && split[7].length > 0 ? split[7].split(',') : [],
+      finish: split[7],
+      imgUrl: split[8],
+      tags: split[9] && split[9].length > 0 ? split[9].split(',') : [],
     };
 
     let potentialIds = carddb.allIds(card);
@@ -1312,7 +1314,7 @@ function bulkuploadCSV(req, res, cards, cube) {
 function bulkUpload(req, res, list, cube) {
   cards = list.match(/[^\r\n]+/g);
   if (cards) {
-    if (cards[0].trim() == 'Name,CMC,Type,Color,Set,Collector Number,Status,Tags') {
+    if (cards[0].trim() == 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags') {
       cards.splice(0, 1);
       bulkuploadCSV(req, res, cards, cube);
     } else {
@@ -1450,7 +1452,7 @@ router.get('/download/csv/:id', function(req, res) {
       res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
-      res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Tags\r\n');
+      res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags\r\n');
       cube.cards.forEach(function(card, index) {
         if (!card.type_line) {
           card.type_line = carddb.cardFromId(card.cardID).type;
@@ -1468,7 +1470,9 @@ router.get('/download/csv/:id', function(req, res) {
         res.write(card.colors.join('') + ',');
         res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
         res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
-        res.write(card.status + ',"');
+        res.write(card.status + ',');
+        res.write(card.finish + ',');
+        res.write('"' + card.imgUrl + '","');
         card.tags.forEach(function(tag, t_index) {
           if (t_index != 0) {
             res.write(', ');
