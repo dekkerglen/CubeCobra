@@ -33,7 +33,7 @@ onmessage = (e) => {
 
   var TypeByColor = {
     Creatures: {
-      key: 'Creatures',
+      label: 'Creatures',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -44,7 +44,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Enchantments: {
-      key: 'Enchantments',
+      label: 'Enchantments',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -55,7 +55,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Lands: {
-      key: 'Lands',
+      label: 'Lands',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -66,7 +66,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Planeswalkers: {
-      key: 'Planeswalkers',
+      label: 'Planeswalkers',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -77,7 +77,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Instants: {
-      key: 'Instants',
+      label: 'Instants',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -88,7 +88,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Sorceries: {
-      key: 'Sorceries',
+      label: 'Sorceries',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -99,7 +99,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Artifacts: {
-      key: 'Artifacts',
+      label: 'Artifacts',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -110,7 +110,7 @@ onmessage = (e) => {
       Total: { asfan: 0, count: 0 },
     },
     Total: {
-      key: 'Total',
+      label: 'Total',
       White: { asfan: 0, count: 0 },
       Blue: { asfan: 0, count: 0 },
       Black: { asfan: 0, count: 0 },
@@ -156,7 +156,7 @@ onmessage = (e) => {
   });
 
   for (let color in TypeByColor['Total']) {
-    if (color == 'key') continue;
+    if (color == 'label') continue;
     const totalCount = TypeByColor['Total'][color].count;
     const totalAsfan = TypeByColor['Total'][color].asfan;
     for (let type in TypeByColor) {
@@ -182,7 +182,7 @@ onmessage = (e) => {
   postMessage({
     type: 'table',
     columns: [
-      { header: '', key: 'key' },
+      { header: '', key: 'label', rowHeader: true },
       { header: '{w}', key: 'White' },
       { header: '{u}', key: 'Blue' },
       { header: '{b}', key: 'Black' },

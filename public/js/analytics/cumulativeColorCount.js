@@ -84,7 +84,6 @@ onmessage = (e) => {
     });
   });
   datapoints = Array.from(colorCombinations, (combination, idx) => ({
-    key: combination.length == 0 ? 'C' : combination.join(''),
     label: combination.length == 0 ? '{c}' : combination.map((c) => '{' + c.toLowerCase() + '}').join(''),
     asfan: ColorAsfans[idx].toFixed(2),
     count: ColorCounts[idx],
@@ -93,7 +92,7 @@ onmessage = (e) => {
   postMessage({
     type: 'table',
     columns: [
-      { header: 'Color Combination', key: 'label' },
+      { header: 'Color Combination', key: 'label', rowHeader: true },
       { header: 'AsFan of Contained In', key: 'asfan' },
       { header: 'Count of Contained In', key: 'count' },
     ],

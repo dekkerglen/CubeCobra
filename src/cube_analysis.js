@@ -13,6 +13,7 @@ import AnalyticsTable from './components/AnalyticsTable';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import FilterCollapse from './components/FilterCollapse';
+import MagicMarkdown from './components/MagicMarkdown';
 
 class CubeAnalysis extends Component {
   constructor(props) {
@@ -202,28 +203,25 @@ class CubeAnalysis extends Component {
 
   render() {
     const { cube } = this.props;
-    const { analytics, analytics_order, filter, formatDropdownOpen, formatId } = this.state;
-    const active = this.state.nav;
+    const { analytics, analytics_order, data, filter, formatDropdownOpen, formatId, nav } = this.state;
     const cards = cube.cards;
     const filteredCards =
       (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
-    let navItem = (nav, text) => (
-      <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#" key={nav}>
+    let navItem = (active, text) => (
+      <NavLink active={active === nav} onClick={this.select.bind(this, active)} href="#" key={active}>
         {text}
       </NavLink>
     );
-    let visualization = (data) => {
-      if (data) {
-        if (data.type == 'table') return <AnalyticsTable data={this.state.data} title={analytics[active].title} />;
-        else if (data.type == 'bar')
-          return <AnalyticsBarChart data={this.state.data} title={analytics[active].title} />;
-        else if (data.type == 'cloud') return <AnalyticsCloud data={this.state.data} title={analytics[active].title} />;
-        else if (data.type == 'cardGrid')
-          return <AnalyticsCardGrid data={this.state.data} title={analytics[active].title} cube={cube} />;
-      }
-      return <p>Loading Data</p>;
-    };
-    var dropdownElement;
+    let visualization = <p>Loading Data</p>;
+    if (data) {
+      // Formats for data are documented in their respective components
+      if (data.type == 'table') visualization = <AnalyticsTable data={data} />;
+      else if (data.type == 'chart') visualization = <AnalyticsBarChart data={data} />;
+      else if (data.type == 'cloud') visualization = <AnalyticsCloud data={data} />;
+      else if (data.type == 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
+    }
+
+    let dropdownElement = <h5>Default Draft Format</h5>;
     if (cube.draft_formats) {
       dropdownElement = (
         <Row>
@@ -252,10 +250,7 @@ class CubeAnalysis extends Component {
           </Col>
         </Row>
       );
-    } else {
-      dropdownElement = <h5>Default Draft Format</h5>;
     }
-
     return (
       <>
         <DynamicFlash />
@@ -268,7 +263,15 @@ class CubeAnalysis extends Component {
             </Nav>
           </Col>
           <Col xs="12" lg="10">
-            <ErrorBoundary>{visualization(this.state.data)}</ErrorBoundary>
+            <Row>
+              <Col>
+                <h4 className="d-lg-block d-none">{analytics[nav].title}</h4>
+                <p>
+                  <MagicMarkdown markdown={data.description} cube={cube} />
+                </p>
+              </Col>
+            </Row>
+            <ErrorBoundary>{visualization}</ErrorBoundary>
           </Col>
         </Row>
       </>

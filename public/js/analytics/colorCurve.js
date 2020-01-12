@@ -43,9 +43,8 @@ onmessage = (e) => {
     total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   };
 
-  var category;
-  var asfan;
   cards.forEach(function(card, index) {
+    var category;
     switch (GetColorCat(card.details.type, card.colors)) {
       case 'w':
         category = curve.white;
@@ -69,7 +68,8 @@ onmessage = (e) => {
         category = curve.multi;
         break;
     }
-    asfan = card.asfan || 15 / cards.length;
+    // const asfan = card.asfan || 15 / cards.length;
+    const asfan = 1;
     if (category) {
       if (card.cmc >= 9) {
         category[9] += asfan;
@@ -80,7 +80,7 @@ onmessage = (e) => {
       }
     }
   });
-  const data = {
+  const datasets = {
     labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9+'],
     datasets: [
       ['White', curve.white, '#D8CEAB'],
@@ -99,10 +99,42 @@ onmessage = (e) => {
       borderColor: color[2],
     })),
   };
+  const options = {
+    responsive: true,
+    tooltips: {
+      mode: 'index',
+      intersect: false,
+    },
+    hover: {
+      mode: 'nearest',
+      intersect: true,
+    },
+    scales: {
+      xAxes: [
+        {
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'CMC',
+          },
+        },
+      ],
+      yAxes: [
+        {
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'Count',
+          },
+        },
+      ],
+    },
+  };
   postMessage({
-    type: 'bar',
-    datasets: data,
-    xAxisLabel: 'CMC',
-    yAxisLabel: 'Asfan',
+    type: 'chart',
+    chartType: 'bar',
+    datasets: datasets,
+    options: options,
+    description: 'Click the labels to filter the datasets. Lands are omitted for the curve chart.',
   });
 };

@@ -9,13 +9,20 @@ import withAutocard from './WithAutocard';
 
 const AutocardLink = withAutocard('a');
 
+// Data should be:
+// {
+//   type: 'cardGrid',
+//   description: str,
+//   massBuyLabel: str,
+//   cards: [
+//     {
+//       card: Card,
+//       cardDescription: str,
+//     }
+//    ],
+// }
 const AnalyticsCardGrid = ({ data, title, cube }) => (
   <>
-    <Row>
-      <Col>
-        <h4 className="d-lg-block d-none">{title}</h4>
-      </Col>
-    </Row>
     <Row className="mb-3">
       <Col>
         <MassBuyButton color="success" cards={data['cards'].map(({ card }) => card)}>
