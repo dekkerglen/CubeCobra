@@ -809,7 +809,7 @@ router.get('/list/:id', async function(req, res) {
     }
 
     const reactProps = {
-      canEdit: req.user && req.user.id === cube.owner,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       cubeID: req.params.id,
       defaultTagColors: cube.tag_colors,
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -1652,7 +1652,7 @@ router.get('/draft/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = Object.fromEntries(ratings.map((r) => [r.name, r.value]));
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
       initialDraft: draft,

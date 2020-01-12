@@ -26,6 +26,7 @@ const config = {
         parallel: true,
       }),
     ],
+    usedExports: true,
   },
 };
 
