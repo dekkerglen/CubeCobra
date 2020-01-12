@@ -51,8 +51,10 @@ const clientConfig = merge(config, {
 const serverConfig = merge(config, {
   target: 'node',
   entry: {
-    CubeListPage: './src/components/CubeListPage.js',
-    DashboardPage: './src/components/DashboardPage.js',
+    CubeListPage: './components/CubeListPage.js',
+    CubePlaytestPage: './components/CubePlaytestPage.js',
+    DashboardPage: './components/DashboardPage.js',
+    DraftView: './components/DraftView.js',
   },
   output: {
     filename: '[name].js',

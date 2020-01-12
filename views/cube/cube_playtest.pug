@@ -15,10 +15,6 @@ block cube_toolbar
 
 block cube_content
   include ../dynamic_flash
-  input#deckInput(type='hidden', value=decks)
-  input#cubeID(type='hidden', value=cube_id)
-  input#canEdit(type='hidden', value=user && user.id == cube.owner)
-  input#draftFormats(type='hidden', value=cube.draft_formats)
   #react-root
   if user
     if user.id == cube.owner
@@ -67,7 +63,7 @@ block cube_content
                 input#customDraftHiddenHTML(type='hidden', name='html')
                 include ../texteditor
                 br
-                p Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
+                p Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g. 3:1 rare to mythic could be #[code rarity:rare, rarity:rare, rarity:rare, rarity:mythic]). Tags can be specified #[code tag:yourtagname] or simply #[code yourtagname]. #[code *] can be used to match any card.
                 .format-area#customDraftBody
                 a.btn.btn-success#AddPackButton(href='#') Add Pack
               .modal-footer
@@ -78,5 +74,8 @@ block cube_content
 
 block scripts
   include ../react
+  script(type='text/javascript').
+    var reactProps = !{JSON.stringify(reactProps)};
   script(src='/js/cube_playtest.bundle.js')
-  script(src='/js/packcraft.js')
+  script(src='/js/packcraft.js', async)
+  script(src='/js/texteditor.js', async)

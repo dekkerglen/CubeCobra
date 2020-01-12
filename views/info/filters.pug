@@ -45,6 +45,7 @@ block content
           p Operators supported: #[code :], #[code =], #[code <], #[code >], #[code <=], #[code >=].
           p In addition to #[code w], #[code u], #[code b], #[code r], #[code g] and #[code c], you can use color words like #[code white], #[code blue], #[code green], etc.
           p You can also use all shard, wedge, or guild names, like #[code azorius], #[code bant], #[code dimir], etc.
+          p You can also compare by number of colors by using numbers instead of color names.
           p Color Identity searches will respect any color identity overrides you have set.
           p 
             b Examples:
@@ -61,6 +62,9 @@ block content
             tr
               td(scope="col") #[code ci>wu] 
               td(scope="col") 3+ color cards that contain #[code uw]
+            tr
+              td(scope="col") #[code ci>1] 
+              td(scope="col") Cards with more than 1 color in their identity
       .card
         #card-type-syntax.card-header(data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree")
           button(class="btn btn-link" type="button" )

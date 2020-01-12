@@ -5,11 +5,11 @@ block cube_toolbar
 
 block cube_content
   include ../dynamic_flash
-  #react-root
+  #react-root !{reactHTML}
 
 block scripts
   include ../react
   script(src='/js/autocard.js')
   script(type='text/javascript').
-    var initialDraft = !{draft_raw};
+    var reactProps = !{JSON.stringify(reactProps)};
   script(src='/js/cube_draft.bundle.js')

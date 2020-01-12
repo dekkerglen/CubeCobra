@@ -9,50 +9,10 @@ block cube_toolbar
   
 block cube_content
   #react-root
-  
-  input#blogData(type='hidden', value=(post?post:'false'))
-  input#cubeData(type='hidden', value=cube)
-  input#priceData(type='hidden', value=price)
-  input#ownerData(type='hidden', value=owner)
-  input#adminData(type='hidden', value=admin)
-  input#followedData(type='hidden', value=is_following)
-  if user
-    input#userid(type='hidden', value=user._id)
-  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-
-  if user
-    if user.id == cube.owner
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
-        .modal-dialog(role='document')
-          .modal-content
-            .modal-header
-              h5.modal-title Confirm Delete
-              button.close(type='button', data-dismiss='modal', aria-label='Close')
-                span(aria-hidden='true') ×
-            .modal-body
-              P Are you sure you wish to delete this post? This action cannot be undone.
-            .modal-footer
-              input.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id='', id="delete")
-              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
-
-      #deleteCubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteCubeModalLabel', aria-hidden='true')
-        .modal-dialog(role='document')
-          .modal-content
-            .modal-header
-              h5.modal-title Confirm Delete
-              button.close(type='button', data-dismiss='modal', aria-label='Close')
-                span(aria-hidden='true') ×
-            .modal-body
-              P Are you sure you wish to delete this cube? This action cannot be undone.
-              P Please type 'Delete' in order to confirm
-                  input.form-control(id="confirmation", type="text")
-            .modal-footer
-              input.btn.btn-danger.delete-cube(type='submit',value='Delete', data-id=cube_id, disabled="", id="delete")
-              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
 
 block scripts
   include ../react
-  script(src='/js/csrf.js')
-  script(src='/js/blog.js')
-  script(src='/js/deleteconfirm.js')
+  script(type='text/javascript').
+    var reactProps = !{JSON.stringify(reactProps)};
+
   script(src='/js/cube_overview.bundle.js')
