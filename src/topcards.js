@@ -36,7 +36,7 @@ class TopCards extends Component {
   }
 
   render() {
-    const rowF = ([name, img, img_flip, rating, picks, elo]) =>
+    const rowF = ([name, img, img_flip, rating, picks, elo, cubes]) =>
       rating === null ? (
         []
       ) : (
@@ -46,7 +46,8 @@ class TopCards extends Component {
           </AutocardTd>
           <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
           <td>{elo === null ? '' : elo.toFixed(0)}</td>
-          <td>{picks}</td>
+          <td>{picks === null ? '' : picks}</td>
+          <td>{cubes === null ? '' : cubes}</td>
         </tr>
       );
 
@@ -64,16 +65,23 @@ class TopCards extends Component {
           />
         </div>
         <SortableTable
-          sorts={{ Rating: (row) => row[3], Elo: (row) => -(row[5] || -1), 'Total Picks': (row) => -row[4] }}
+          sorts={{
+            Rating: (row) => row[3],
+            Elo: (row) => -(row[5] || -1),
+            'Total Picks': (row) => -row[4],
+            Cubes: (row) => -row[6],
+          }}
           defaultSort="Rating"
           headers={{
             Name: {},
-            Rating: { style: { width: '10rem' } },
-            Elo: { style: { width: '10rem' } },
-            'Total Picks': { style: { width: '10rem' } },
+            Rating: { style: { width: '10rem' }, tooltip: 'Average draft pick position' },
+            Elo: { style: { width: '10rem' }, tooltip: 'Elo rating of card' },
+            'Total Picks': { style: { width: '10rem' }, tooltip: 'Total picks across all cubes' },
+            Cubes: { style: { width: '10rem' }, tooltip: 'Cubes containing this card' },
           }}
           data={this.state.data}
           rowF={rowF}
+          className="mt-3"
         />
       </>
     );
