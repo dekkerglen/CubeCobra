@@ -6,8 +6,6 @@ import { Col, Container, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, N
 import Filter from './util/Filter';
 import Hash from './util/Hash';
 
-import AddAnalyticModal from './components/AddAnalyticModal';
-import AddAnalyticModalContext from './components/AddAnalyticModalContext';
 import AnalyticsBarChart from './components/AnalyticsBarChart';
 import AnalyticsCardGrid from './components/AnalyticsCardGrid';
 import AnalyticsCloud from './components/AnalyticsCloud';
@@ -34,7 +32,6 @@ class CubeAnalysis extends Component {
       },
       analytics_order: ['curve', 'typeBreakdown', 'colorCount', 'tokenGrid', 'tagCloud', 'cumulativeColorCount'],
       filter: [],
-      openCollapse: null,
       cardsWithAsfan: null,
       filteredWithAsfan: null,
       formatId: Hash.get('formatId', -1),
@@ -45,7 +42,6 @@ class CubeAnalysis extends Component {
     this.updateFilter = this.updateFilter.bind(this);
     this.updateData = this.updateData.bind(this);
     this.setFilter = this.setFilter.bind(this);
-    this.addScript = this.addScript.bind(this);
     this.updateAsfanCustomWithMultiples = this.updateAsfanCustomWithMultiples.bind(this);
     this.updateAsfanCustomSingleton = this.updateAsfanCustomSingleton.bind(this);
     this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
@@ -54,18 +50,6 @@ class CubeAnalysis extends Component {
 
   componentDidMount() {
     this.updateAsfan();
-  }
-
-  addScript(scriptName, scriptKey, scriptCode) {
-    const { analytics, analytics_order } = this.state;
-    if (analytics[scriptKey]) {
-      scriptName = scriptName + '-1';
-      scriptKey = scriptKey + '-1';
-    }
-    const scriptBlob = new Blob([scriptCode], { type: 'application/json' });
-    analytics[scriptKey] = { url: URL.createObjectURL(scriptBlob), title: scriptName };
-    analytics_order.push(scriptKey);
-    this.select(scriptKey);
   }
 
   select(nav) {
@@ -273,7 +257,7 @@ class CubeAnalysis extends Component {
     }
 
     return (
-      <AddAnalyticModal id="addAnalyticModal" addScript={this.addScript}>
+      <>
         <DynamicFlash />
         <FilterCollapse filter={filter} setFilter={this.setFilter} numCards={filteredCards.length} isOpen={true} />
         {dropdownElement}
@@ -281,20 +265,13 @@ class CubeAnalysis extends Component {
           <Col xs="12" lg="2">
             <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
               {analytics_order.map((key) => navItem(key, analytics[key].title))}
-              <AddAnalyticModalContext.Consumer>
-                {(openAddAnalyticModal) => (
-                  <NavLink active={false} onClick={openAddAnalyticModal}>
-                    Add Custom Analytics Script
-                  </NavLink>
-                )}
-              </AddAnalyticModalContext.Consumer>
             </Nav>
           </Col>
           <Col xs="12" lg="10">
             <ErrorBoundary>{visualization(this.state.data)}</ErrorBoundary>
           </Col>
         </Row>
-      </AddAnalyticModal>
+      </>
     );
   }
 }
