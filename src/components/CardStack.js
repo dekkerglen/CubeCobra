@@ -25,7 +25,7 @@ const CardStack = ({ location, children, ...props }) => {
           ''
         ) : (
           <div className="w-100 text-center mb-1">
-            <b>{children.length}</b>
+            <b>{children.length > 0 ? children.length : ''}</b>
           </div>
         )}
         <div className="stack">{children}</div>

@@ -357,7 +357,7 @@ class ListViewRaw extends Component {
     );
 
     return (
-      <form className="form-inline mt-3">
+      <form className="form-inline">
         <PagedTable rows={rows} size="sm">
           <thead>
             <tr>

@@ -1,10 +1,20 @@
 const express = require('express');
 const router = express.Router();
 
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
+
 const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
+
+const NODE_ENV = process.env.NODE_ENV;
+
+let DashboardPage = null;
+if (NODE_ENV === 'production') {
+  DashboardPage = require('../dist/components/DashboardPage').default;
+}
 
 const { csrfProtection } = require('./middleware');
 
@@ -115,17 +125,24 @@ router.get('/random', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
+    if (!req.user) {
+      return res.redirect('/landing');
+    }
+
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.redirect('/landing');
     }
 
-    const cubesq = Cube.find({
-      owner: user._id,
-    }).sort({
+    const cubesq = Cube.find(
+      {
+        owner: user._id,
+      },
+      '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride',
+    ).sort({
       date_updated: -1,
     });
-    const blogsq = Blog.find({
+    const postsq = Blog.find({
       $or: [
         {
           cube: {
@@ -148,23 +165,30 @@ router.get('/dashboard', async (req, res) => {
       .limit(50);
 
     //We can do these queries in parallel
-    const [cubes, blogs] = await Promise.all([cubesq, blogsq]);
+    const [cubes, posts] = await Promise.all([cubesq, postsq]);
     const cubeIds = cubes.map((cube) => cube._id);
 
-    const decks = await Deck.find({
-      cube: {
-        $in: cubeIds,
+    const decks = await Deck.find(
+      {
+        cube: {
+          $in: cubeIds,
+        },
       },
-    })
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })
       .limit(13);
 
+    const reactProps = { posts, cubes, decks, userId: user._id };
+
     return res.render('dashboard', {
-      posts: blogs,
-      cubes: cubes,
-      decks: decks,
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
+          : undefined,
+      reactProps,
       loginCallback: '/',
     });
   } catch (err) {

@@ -111,7 +111,7 @@ class BlogPost extends React.Component {
         </div>
         {this.props.loggedIn && (
           <CardBody className="px-4 pt-2 pb-0 border-top">
-            <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
+            <CommentEntry id={post._id} position={[]} onPost={this.onPost} submitUrl={`/cube/api/postcomment`}>
               <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
             </CommentEntry>
           </CardBody>
@@ -128,6 +128,7 @@ class BlogPost extends React.Component {
               loggedIn={this.props.loggedIn}
               submitEdit={this.submitEdit}
               focused={this.props.focused}
+              submitUrl={`/cube/api/postcomment`}
             />
           </CardBody>
         )}

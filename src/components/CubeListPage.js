@@ -5,22 +5,23 @@ import Filter from '../util/Filter';
 import Hash from '../util/Hash';
 import Query from '../util/Query';
 
-import CardModalForm from '../components/CardModalForm';
-import { ChangelistContextProvider } from '../components/ChangelistContext';
-import CubeContext, { CubeContextProvider } from '../components/CubeContext';
-import CubeListNavbar from '../components/CubeListNavbar';
-import CurveView from '../components/CurveView';
-import { DisplayContextProvider } from '../components/DisplayContext';
-import DynamicFlash from '../components/DynamicFlash';
-import ErrorBoundary from '../components/ErrorBoundary';
-import GroupModal from '../components/GroupModal';
-import ListView from '../components/ListView';
-import { SortContextProvider } from '../components/SortContext';
-import TableView from '../components/TableView';
-import { TagContextProvider } from '../components/TagContext';
-import VisualSpoiler from '../components/VisualSpoiler';
+import CardModalForm from './CardModalForm';
+import { ChangelistContextProvider } from './ChangelistContext';
+import CubeContext, { CubeContextProvider } from './CubeContext';
+import CubeListNavbar from './CubeListNavbar';
+import CurveView from './CurveView';
+import DisplayContext, { DisplayContextProvider } from './DisplayContext';
+import DynamicFlash from './DynamicFlash';
+import ErrorBoundary from './ErrorBoundary';
+import GroupModal from './GroupModal';
+import ListView from './ListView';
+import Maybeboard from './Maybeboard';
+import { SortContextProvider } from './SortContext';
+import TableView from './TableView';
+import { TagContextProvider } from './TagContext';
+import VisualSpoiler from './VisualSpoiler';
 
-const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   const { cube, cubeID, canEdit } = useContext(CubeContext);
 
   let initialOpenCollapse = null;
@@ -55,16 +56,16 @@ const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts 
 
   return (
     <SortContextProvider defaultSorts={defaultSorts}>
-      <DisplayContextProvider>
+      <DisplayContextProvider cubeID={cubeID}>
         <TagContextProvider
           cubeID={cubeID}
           defaultTagColors={defaultTagColors}
           defaultShowTagColors={defaultShowTagColors}
           defaultTags={defaultTags}
         >
-          <ChangelistContextProvider cubeID={cubeID}>
-            <CardModalForm canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
-              <GroupModal cubeID={cubeID} canEdit={canEdit} setOpenCollapse={setOpenCollapse}>
+          <ChangelistContextProvider cubeID={cubeID} setOpenCollapse={setOpenCollapse}>
+            <CardModalForm canEdit={canEdit}>
+              <GroupModal cubeID={cubeID} canEdit={canEdit}>
                 <CubeListNavbar
                   cubeView={cubeView}
                   setCubeView={setCubeView}
@@ -73,10 +74,16 @@ const CubeListPageRaw = ({ defaultTagColors, defaultShowTagColors, defaultSorts 
                   filter={filter}
                   setFilter={setFilter}
                   cards={filteredCards}
+                  className="mb-3"
                 />
                 <DynamicFlash />
-                <ErrorBoundary className="mt-3">
-                  {filteredCards.length === 0 ? <h5 className="mt-4">No cards match filter.</h5> : ''}
+                <ErrorBoundary>
+                  <DisplayContext.Consumer>
+                    {({ showMaybeboard }) => showMaybeboard && <Maybeboard filter={filter} initialCards={maybe} />}
+                  </DisplayContext.Consumer>
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  {filteredCards.length === 0 ? <h5 className="mt-1 mb-3">No cards match filter.</h5> : ''}
                   {
                     {
                       table: <TableView cards={filteredCards} />,

@@ -44,7 +44,7 @@ const DEFAULT_FORM_VALUES = {
   tags: [],
 };
 
-const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) => {
+const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [cardIndices, setCardIndices] = useState([]);
@@ -178,10 +178,9 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
           remove: cube[index],
         })),
       );
-      setOpenCollapse(() => 'edit');
       close();
     },
-    [addChanges, cardIndices, cube, setOpenCollapse, close],
+    [addChanges, cardIndices, cube, close],
   );
 
   const cards = cardIndices.map((index) => cube[index]);

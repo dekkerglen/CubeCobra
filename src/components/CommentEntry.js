@@ -26,7 +26,7 @@ class CommentEntry extends React.Component {
         inputValue: '',
       });
 
-      const response = await csrfFetch(`/cube/api/postcomment`, {
+      const response = await csrfFetch(this.props.submitUrl, {
         method: 'POST',
         body: JSON.stringify({
           id: this.props.id,

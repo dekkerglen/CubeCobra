@@ -19,7 +19,7 @@ $('.delete-cube').on('click', function(e) {
     if (!response.ok) {
       console.log(response);
     } else {
-      window.location.href = '';
+      window.location.href = '/';
     }
   });
 });
