@@ -90,7 +90,15 @@ const cubeSchema = mongoose.Schema({
   default_sorts: [String],
   card_count: Number,
   type: String,
-  draft_formats: {},
+  draft_formats: {
+    type: [{
+      title: String,
+      multiples: Boolean,
+      html: String,
+      packs: String,
+    }],
+    default: [],
+  },
   users_following: {
     type: [String],
     default: [],

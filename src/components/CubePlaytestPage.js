@@ -201,19 +201,22 @@ const SamplePackCard = (props) => {
   );
 };
 
+const DEFAULT_FORMAT = {
+  packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
+}
 const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const [alerts, setAlerts] = useState([]);
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
-  const [editFormat, setEditFormat] = useState([['Mythic', 'Mythic', 'Mythic']]);
+  const [editFormat, setEditFormat] = useState({});
 
   const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
 
   const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
 
   const handleCreateFormat = useCallback((event) => {
-    setEditFormat([['Mythic', 'Mythic', 'Mythic']]);
+    setEditFormat(DEFAULT_FORMAT);
     setEditFormatIndex(-1);
     setEditModalOpen(true);
   });
@@ -221,7 +224,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const handleEditFormat = useCallback(
     (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'));
-      setEditFormat([...formats[formatIndex]]);
+      setEditFormat(formats[formatIndex]);
       setEditFormatIndex(formatIndex);
       setEditModalOpen(true);
     },
@@ -270,9 +273,9 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
           </NavItem>
         </Nav>
       </Navbar>
-      <DynamicFlash />
+      <DynamicFlash className="mt-3 mb-0" />
       {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert key={index} color={color} className="mb-0 mt-3">
+        <UncontrolledAlert key={index} color={color} className="mt-3 mb-0">
           {message}
         </UncontrolledAlert>
       ))}
@@ -284,7 +287,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         <Col xs="12" md="6" xl="6">
           {formats.map((format, index) => (
             <CustomDraftCard
-              key={format}
+              key={index}
               format={format}
               formatIndex={index}
               onDeleteFormat={handleDeleteFormat}

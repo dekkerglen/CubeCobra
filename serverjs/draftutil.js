@@ -16,7 +16,6 @@ function matchingCards(cards, filter) {
 }
 
 function makeFilter(filterText) {
-  console.log('filterText', filterText, filterText === '');
   if (!filterText || filterText === '' || filterText == '*') {
     return [null];
   }

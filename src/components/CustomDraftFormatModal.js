@@ -27,21 +27,23 @@ import CubeContext from './CubeContext';
 import TextEntry from './TextEntry';
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
-  const [description, setDescription] = useState('');
-
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
 
   const handleChangeDescription = useCallback((event) => {
-    setDescription(event.target.value);
+    setFormat(format => ({
+      ...format,
+      html: event.target.value,
+    }));
   });
 
   const handleAddCard = useCallback(() => {
     const index = parseInt(event.target.getAttribute('data-index'));
     setFormat((format) => {
-      const newFormat = [...format];
-      newFormat[index] = [...newFormat[index], ''];
+      const newFormat = { ...format };
+      newFormat.packs = [...(newFormat.packs || [['']])];
+      newFormat.packs[index] = [...newFormat.packs[index], ''];
       return newFormat;
     });
   }, []);
@@ -49,27 +51,49 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     const packIndex = parseInt(event.target.getAttribute('data-pack'));
     const index = parseInt(event.target.getAttribute('data-index'));
     setFormat((format) => {
-      const newFormat = [...format];
-      newFormat[packIndex] = [...newFormat[packIndex]];
-      newFormat[packIndex].splice(index, 1);
+      const newFormat = { ...format };
+      newFormat.packs = [...(newFormat.packs || [['']])];
+      newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
+      newFormat.packs[packIndex].splice(index, 1);
+      return newFormat;
+    });
+  }, []);
+  const handleChangeCard = useCallback(() => {
+    const packIndex = parseInt(event.target.getAttribute('data-pack'));
+    const index = parseInt(event.target.getAttribute('data-index'));
+    setFormat((format) => {
+      const newFormat = { ...format };
+      newFormat.packs = [...(newFormat.packs || [['']])];
+      newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
+      newFormat.packs[packIndex][index] = event.target.value;
       return newFormat;
     });
   }, []);
   const handleAddPack = useCallback(() => {
-    setFormat((format) => [...format, ['']]);
+    setFormat(({ packs, ...format }) => ({
+      ...format,
+      packs: [...(packs || [['']]), ['']],
+    }));
   }, []);
   const handleDuplicatePack = useCallback(() => {
     const index = parseInt(event.target.getAttribute('data-index'));
     setFormat((format) => {
-      const newFormat = [...format];
-      newFormat.splice(index, 0, format[index]);
+      const newFormat = { ...format };
+      newFormat.packs = [...(newFormat.packs || [['']])];
+      newFormat.packs.splice(index, 0, newFormat.packs[index]);
       return newFormat;
     });
   }, []);
   const handleRemovePack = useCallback((event) => {
     const removeIndex = parseInt(event.target.getAttribute('data-index'));
-    setFormat((format) => format.filter((_, index) => index !== removeIndex));
+    setFormat(({ packs, ...format }) => ({
+      ...format,
+      packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
+    }));
   }, []);
+
+  const packs = format.packs || [['']];
+  const description = format.html || '';
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
@@ -80,7 +104,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         <ModalBody>
           <Row>
             <Col className="mt-2">
-              <Input type="text" maxLength="200" name="title" placeholder="Title" />
+              <Input type="text" maxLength="200" name="title" placeholder="Title" defaultValue={format.title} />
             </Col>
             <Col>
               <FormGroup tag="fieldset">
@@ -101,10 +125,12 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           <h6>Description</h6>
           <TextEntry name="html" value={description} onChange={handleChangeDescription} />
           <FormText className="mt-3 mb-1">
-            Card slot values can either be single tags (not case sensitive), or a comma separated list of tags to create
-            a ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
+            Card values can either be single tags or filter parameters or a comma separated list to create a ratio
+            (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>).
+            Tags can be specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>.{' '}
+            <code>*</code> can be used to match any card.
           </FormText>
-          {format.map((pack, index) => (
+          {packs.map((pack, index) => (
             <Card key={index} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
@@ -118,7 +144,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex}</InputGroupText>
                     </InputGroupAddon>
-                    <Input type="text" defaultValue={card} />
+                    <Input type="text" value={card} onChange={handleChangeCard} data-pack={index} data-index={cardIndex} />
                     <InputGroupAddon addonType="append">
                       <Button
                         color="secondary"
@@ -148,12 +174,12 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           </Button>
         </ModalBody>
         <ModalFooter>
-          <Input type="hidden" name="packs" value={JSON.stringify(format)} />
+          <Input type="hidden" name="format" value={JSON.stringify(packs)} />
           <Input type="hidden" name="id" value={formatIndex} />
           <Button color="success" type="submit">
             Save
           </Button>
-          <Button color="secondary">Close</Button>
+          <Button color="secondary" onClick={toggle}>Close</Button>
         </ModalFooter>
       </CSRFForm>
     </Modal>

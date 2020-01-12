@@ -167,6 +167,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.body.html = sanitize(req.body.html);
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
+    let message = '';
 
     if (req.body.id == -1) {
       if (!cube.draft_formats) {
@@ -178,6 +179,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
         html: req.body.html,
         packs: req.body.format,
       });
+      message = 'Custom format successfully added.';
     } else {
       cube.draft_formats[req.body.id] = {
         title: req.body.title,
@@ -185,6 +187,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
         html: req.body.html,
         packs: req.body.format,
       };
+      message = 'Custom format successfully edited.';
     }
     await Cube.updateOne(
       {
@@ -193,7 +196,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       cube,
     );
 
-    req.flash('success', 'Custom format successfully added.');
+    req.flash('success', message);
     res.redirect('/cube/playtest/' + req.params.id);
   } catch (err) {
     console.error(err);
@@ -873,7 +876,10 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: user._id.equals(cube.owner),
       decks,
       cubeID: req.params.id,
-      draftFormats: cube.draft_formats,
+      draftFormats: cube.draft_formats.map(({ packs, ...format }) => ({
+        ...format,
+        packs: JSON.parse(packs),
+      })),
     };
 
     res.render('cube/cube_playtest', {
