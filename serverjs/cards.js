@@ -63,7 +63,7 @@ function cardFromId(id, fields) {
     fields = fields.split(' ');
   }
 
-  return Object.fromEntries(fields.map((field) => [field, details[field]]));
+  return util.fromEntries(fields.map((field) => [field, details[field]]));
 }
 
 function getCardDetails(card) {

@@ -1652,7 +1652,7 @@ router.get('/draft/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = Object.fromEntries(ratings.map((r) => [r.name, r.value]));
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
       initialDraft: draft,
