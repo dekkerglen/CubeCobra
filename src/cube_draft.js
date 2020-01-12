@@ -1,10 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Draft from './util/Draft';
-
 import DraftView from './components/DraftView';
+import ErrorBoundary from './components/ErrorBoundary';
 
-Draft.init(initialDraft);
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(<DraftView />, wrapper) : false;
+const element = (
+  <ErrorBoundary className="mt-3">
+    <DraftView {...reactProps} />
+  </ErrorBoundary>
+);
+if (wrapper) {
+  if (wrapper.children.length === 0) {
+    ReactDOM.render(element, wrapper);
+  } else {
+    ReactDOM.hydrate(element, wrapper);
+  }
+}

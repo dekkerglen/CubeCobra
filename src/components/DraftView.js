@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
@@ -46,7 +46,11 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
-          <Col key={index} xs={3} className="col-md-1-5 d-flex justify-content-center align-items-center">
+          <Col
+            key={`${packNumber}:${pickNumber}:${index}`}
+            xs={3}
+            className="col-md-1-5 d-flex justify-content-center align-items-center"
+          >
             {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard
               location={Location.pack(index)}
@@ -77,7 +81,9 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const DraftView = () => {
+const DraftView = ({ initialDraft }) => {
+  useMemo(() => Draft.init(initialDraft), [initialDraft]);
+
   const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);

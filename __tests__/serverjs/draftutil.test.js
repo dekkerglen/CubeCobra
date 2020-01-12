@@ -31,38 +31,6 @@ describe('getDraftBots', () => {
   });
 });
 
-describe('getCardratings', () => {
-  beforeEach(() => {
-    sinon.stub(CardRating, 'find');
-  });
-
-  afterEach(() => {
-    CardRating.find.restore();
-  });
-
-  it('returns a mapping of card names to values', () => {
-    var dummyModel = {
-      value: 1,
-      picks: 1,
-      name: 'Giant Growth',
-    };
-    var expected = {};
-    expected[dummyModel.name] = dummyModel.value;
-    CardRating.find.yields(null, [dummyModel]);
-    var callback = sinon.stub();
-    methods.getCardRatings([], CardRating, callback);
-    sinon.assert.calledWith(callback, expected);
-  });
-
-  it('returns an empty dict when there are no ratings present ', () => {
-    var expected = {};
-    CardRating.find.yields(null, []);
-    var callback = sinon.stub();
-    methods.getCardRatings([], CardRating, callback);
-    sinon.assert.calledWith(callback, expected);
-  });
-});
-
 describe('getDraftFormat', () => {
   let exampleCube;
 
