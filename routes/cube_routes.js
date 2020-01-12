@@ -13,7 +13,7 @@ var {
   get_cube_id,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
-const draftutil = require('../serverjs/draftutil.js');
+const draftutil = require('../dist/util/draftutil.js');
 const cardutil = require('../dist/util/Card.js');
 const carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
@@ -1639,7 +1639,8 @@ router.post('/startdraft/:id', async (req, res) => {
     });
     let bots = draftutil.getDraftBots(params);
     let format = draftutil.getDraftFormat(params, cube);
-    let draft = draftutil.createDraft(format, draftcards, bots, params.seats);
+    let draft = new Draft();
+    draftutil.populateDraft(draft, format, draftcards, bots, params.seats);
     draft.cube = cube._id;
     await draft.save();
     return res.redirect('/cube/draft/' + draft._id);

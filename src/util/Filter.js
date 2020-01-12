@@ -42,7 +42,7 @@ let categoryMap = new Map([
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
-const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
+export const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
 
 function findEndingQuotePosition(filterText, num) {
   if (!num) {
@@ -58,7 +58,7 @@ function findEndingQuotePosition(filterText, num) {
   return false;
 }
 
-function tokenizeInput(filterText, tokens) {
+export function tokenizeInput(filterText, tokens) {
   filterText = filterText.trim().toLowerCase();
   if (!filterText) {
     return true;
@@ -221,7 +221,7 @@ function simplifyArg(arg, category) {
   return res;
 }
 
-const verifyTokens = (tokens) => {
+export const verifyTokens = (tokens) => {
   let temp = tokens;
   let inBounds = (num) => {
     return num > -1 && num < temp.length;
@@ -357,7 +357,7 @@ const findClose = (tokens, pos) => {
   return false;
 };
 
-const parseTokens = (tokens) => {
+export const parseTokens = (tokens) => {
   let peek = () => tokens[0];
   let consume = peek;
 
@@ -406,7 +406,7 @@ function filterCard(card, filters, inCube) {
   }
 }
 
-function filterCards(cards, filter, inCube) {
+export function filterCards(cards, filter, inCube) {
   return cards.filter((card) => filterCard(card, filter, inCube));
 }
 
