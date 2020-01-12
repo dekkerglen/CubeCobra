@@ -11,7 +11,7 @@ var format = [];
 
 $('#customDraftButton').click(function(e) {
   e.preventDefault();
-  format = [['Mythic', 'Mythic', 'Mythic']];
+  format = [['rarity:Mythic', 'tag:New', 'identity>1']];
   $('#customDraftTitle').val('New Custom Format');
   $('#editor').html('');
   $('#customDraftHiddenId').val(-1);

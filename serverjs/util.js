@@ -159,7 +159,7 @@ function wrapAsyncApi(route) {
   };
 }
 
-var methods = {
+var exports = {
   shuffle: function(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -223,4 +223,4 @@ var methods = {
   wrapAsyncApi,
 };
 
-module.exports = methods;
+module.exports = exports;

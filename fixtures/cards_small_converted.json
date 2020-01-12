@@ -23,6 +23,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -68,6 +69,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -116,6 +118,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -157,6 +160,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -198,6 +202,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -239,6 +244,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -286,6 +292,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -324,6 +331,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -362,6 +370,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -400,6 +409,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -438,6 +448,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -476,6 +487,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -518,6 +530,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -556,6 +569,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -595,6 +609,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -640,6 +655,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -699,6 +715,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -745,6 +762,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -791,6 +809,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -835,6 +854,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -885,6 +905,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -928,6 +949,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -972,6 +994,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1015,6 +1038,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1059,6 +1083,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1100,6 +1125,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1144,6 +1170,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1157,9 +1184,9 @@
     "full_art": false,
     "language": "en",
     "tcgplayer_id": 198710,
-    "image_small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1575309195",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1575309195",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1575309195",
+    "image_small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
+    "image_normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
+    "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
     "colorcategory": "g"
   },
   {
@@ -1185,6 +1212,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1227,6 +1255,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1279,6 +1308,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1331,6 +1361,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1376,6 +1407,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1417,6 +1449,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1460,6 +1493,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1504,6 +1538,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1547,6 +1582,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1590,6 +1626,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1631,6 +1668,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1673,6 +1711,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1715,6 +1754,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1757,6 +1797,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1798,6 +1839,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1842,6 +1884,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1886,6 +1929,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1936,6 +1980,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -1978,6 +2023,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2021,6 +2067,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2065,6 +2112,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2108,6 +2156,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2156,6 +2205,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2198,6 +2248,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2239,6 +2290,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2282,6 +2334,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2327,6 +2380,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2368,6 +2422,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2411,6 +2466,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2460,6 +2516,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2504,6 +2561,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2547,6 +2605,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2597,6 +2656,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2638,6 +2698,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2690,6 +2751,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2733,6 +2795,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2777,6 +2840,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2834,6 +2898,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -2880,6 +2945,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -2925,6 +2991,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -2976,6 +3043,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3022,6 +3090,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3074,6 +3143,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3125,6 +3195,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3171,6 +3242,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3216,6 +3288,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3261,6 +3334,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3306,6 +3380,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3352,6 +3427,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3397,6 +3473,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3444,6 +3521,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3490,6 +3568,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3538,6 +3617,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3583,6 +3663,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3629,6 +3710,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3673,6 +3755,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3719,6 +3802,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3765,6 +3849,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3812,6 +3897,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3858,6 +3944,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -3904,6 +3991,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3949,6 +4037,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -3997,6 +4086,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -4049,6 +4139,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -4094,6 +4185,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -4139,6 +4231,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -4187,6 +4280,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -4232,6 +4326,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -4248,9 +4343,9 @@
     "language": "en",
     "tcgplayer_id": 198356,
     "loyalty": "4",
-    "image_small": "https://img.scryfall.com/cards/small/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1574073631",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1574073631",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1574073631",
+    "image_small": "https://img.scryfall.com/cards/small/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
+    "image_normal": "https://img.scryfall.com/cards/normal/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
+    "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
     "colorcategory": "m",
     "tokens": [
       {
@@ -4283,6 +4378,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -4331,6 +4427,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
@@ -4367,6 +4464,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": false
     },
     "parsed_cost": [
@@ -4403,6 +4501,7 @@
       "Legacy": true,
       "Modern": true,
       "Standard": true,
+      "Pioneer": true,
       "Pauper": true
     },
     "parsed_cost": [
