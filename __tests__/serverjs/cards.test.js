@@ -79,6 +79,7 @@ const _RankleMasterofFixtures = {
     Modern: true,
     Standard: true,
     Pauper: false,
+    Pioneer: true,
   },
   parsed_cost: ['b', 'b', '2'],
   colors: ['B'],

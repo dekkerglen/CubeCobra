@@ -67,7 +67,7 @@ block cube_content
                 input#customDraftHiddenHTML(type='hidden', name='html')
                 include ../texteditor
                 br
-                p Card values can either be single tags (not case sensitive), or a comma separated list of tags to create a ratio (e.g. 3:1 rare to mythic could be "rare, rare, rare, mythic"). '*' can be used to match any card.
+                p Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g. 3:1 rare to mythic could be #[code rarity:rare, rarity:rare, rarity:rare, rarity:mythic]). Tags can be specified #[code tag:yourtagname] or simply #[code yourtagname]. #[code *] can be used to match any card.
                 .format-area#customDraftBody
                 a.btn.btn-success#AddPackButton(href='#') Add Pack
               .modal-footer
