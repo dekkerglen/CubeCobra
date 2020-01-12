@@ -25,7 +25,7 @@ class TextEntry extends React.Component {
   }
 
   render() {
-    const { content, handleChange } = this.props;
+    const { name, value, onChange } = this.props;
     return (
       <Card>
         <CardHeader className="p-0">
@@ -54,9 +54,8 @@ class TextEntry extends React.Component {
             </Row>
           </Toolbar>
         </CardHeader>
-        <ContentEditable id="editor" value={content} onChange={handleChange} />
-        <Input type="hidden" name="blog" value={content} />
-        <Input type="hidden" id="changelistFormBody" name="body" />
+        <ContentEditable className="text-entry" value={value} onChange={onChange} />
+        <Input type="hidden" name={name} value={value} />
       </Card>
     );
   }

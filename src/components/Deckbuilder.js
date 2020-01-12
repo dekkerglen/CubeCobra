@@ -130,7 +130,7 @@ const Deckbuilder = ({ initialDeck, basics }) => {
               <br />
 
               <h6>Description</h6>
-              <TextEntry content={description} handleChange={(e) => setDescription(e.target.value)} />
+              <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
             </CardBody>
           </Card>
         </Col>

@@ -39,9 +39,13 @@ export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) 
 };
 
 CubeContextProvider.propTypes = {
-  initialCube: PropTypes.arrayOf(PropTypes.object).isRequired,
+  initialCube: PropTypes.arrayOf(PropTypes.object),
   canEdit: PropTypes.bool.isRequired,
   cubeID: PropTypes.string.isRequired,
+};
+
+CubeContextProvider.defaultProps = {
+  initialCube: [],
 };
 
 export default CubeContext;

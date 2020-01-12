@@ -1580,7 +1580,7 @@ router.get('/download/plaintext/:id', function(req, res) {
 
 router.post('/startdraft/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id), '_id name draft_formats card_count type cards');
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1652,7 +1652,7 @@ router.get('/draft/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = Object.fromEntries(ratings.map((r) => [r.name, r.value]));
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
       initialDraft: draft,
@@ -3253,9 +3253,14 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
         function(err) {
           if (err) {
             console.log(err, req);
-            res.sendStatus(500);
+            res.status(500).send({
+              success: 'false',
+              message: 'Error deleting format.',
+            });
           } else {
-            res.sendStatus(200);
+            res.status(200).send({
+              success: 'true',
+            });
           }
         },
       );
