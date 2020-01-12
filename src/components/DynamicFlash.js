@@ -20,10 +20,10 @@ const DynamicFlash = (props) => {
           <UncontrolledAlert key={type + index} color={type} {...props}>
             {message}
           </UncontrolledAlert>
-        ))
+        )),
       )}
     </>
   );
-}
+};
 
 export default DynamicFlash;

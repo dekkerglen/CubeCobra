@@ -91,12 +91,14 @@ const cubeSchema = mongoose.Schema({
   card_count: Number,
   type: String,
   draft_formats: {
-    type: [{
-      title: String,
-      multiples: Boolean,
-      html: String,
-      packs: String,
-    }],
+    type: [
+      {
+        title: String,
+        multiples: Boolean,
+        html: String,
+        packs: String,
+      },
+    ],
     default: [],
   },
   users_following: {

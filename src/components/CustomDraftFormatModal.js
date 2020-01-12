@@ -32,7 +32,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const formRef = useRef();
 
   const handleChangeDescription = useCallback((event) => {
-    setFormat(format => ({
+    setFormat((format) => ({
       ...format,
       html: event.target.value,
     }));
@@ -125,10 +125,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           <h6>Description</h6>
           <TextEntry name="html" value={description} onChange={handleChangeDescription} />
           <FormText className="mt-3 mb-1">
-            Card values can either be single tags or filter parameters or a comma separated list to create a ratio
-            (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>).
-            Tags can be specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>.{' '}
-            <code>*</code> can be used to match any card.
+            Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.
+            3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags can be
+            specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be used to
+            match any card.
           </FormText>
           {packs.map((pack, index) => (
             <Card key={index} className="mb-3">
@@ -144,7 +144,13 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex}</InputGroupText>
                     </InputGroupAddon>
-                    <Input type="text" value={card} onChange={handleChangeCard} data-pack={index} data-index={cardIndex} />
+                    <Input
+                      type="text"
+                      value={card}
+                      onChange={handleChangeCard}
+                      data-pack={index}
+                      data-index={cardIndex}
+                    />
                     <InputGroupAddon addonType="append">
                       <Button
                         color="secondary"
@@ -179,7 +185,9 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           <Button color="success" type="submit">
             Save
           </Button>
-          <Button color="secondary" onClick={toggle}>Close</Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
         </ModalFooter>
       </CSRFForm>
     </Modal>
