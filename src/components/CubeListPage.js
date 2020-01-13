@@ -18,7 +18,7 @@ import ListView from './ListView';
 import Maybeboard from './Maybeboard';
 import { SortContextProvider } from './SortContext';
 import TableView from './TableView';
-import { TagContextProvider } from './TagContext';
+import { tagColors, TagContextProvider } from './TagContext';
 import VisualSpoiler from './VisualSpoiler';
 
 const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
@@ -64,7 +64,7 @@ const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaul
           defaultTags={defaultTags}
         >
           <ChangelistContextProvider cubeID={cubeID} setOpenCollapse={setOpenCollapse}>
-            <CardModalForm canEdit={canEdit}>
+            <CardModalForm>
               <GroupModal cubeID={cubeID} canEdit={canEdit}>
                 <CubeListNavbar
                   cubeView={cubeView}
@@ -114,7 +114,7 @@ CubeListPage.propTypes = {
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,
-      color: PropTypes.string.isRequired,
+      color: PropTypes.oneOf(tagColors.map(([t, c]) => c)),
     }),
   ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,

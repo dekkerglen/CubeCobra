@@ -38,7 +38,7 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) => (
       <div className={tagClass}>{tag}</div>
     </Col>
     <Col className="d-flex flex-column justify-content-center">
-      <Input type="select" size="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
+      <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
         {tagColorClasses.map(([name, value]) => (
           <option key={value || 'none'} value={value || 'none'}>
             {name}
