@@ -172,15 +172,21 @@ describe('createDraft', () => {
     }).toThrow(/invalid seats/);
   });
 
-  it('sets the intitial state of the draft', () => {
-    let exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-    let promise = carddb.initializeCardDb(fixturesPath, true).then(() => {
-      exampleCube.cards.forEach(function(card, index) {
-        card.details = carddb.cardFromId(card.cardID);
+  describe('', () => {
+    let exampleCube;
+    beforeAll(() => {
+      exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+      exampleCube.draft_formats = [];
+      exampleCube.draft_formats[0] = {}; // mock
+      return carddb.initializeCardDb(fixturesPath, true).then(() => {
+        exampleCube.cards.forEach(function(card, index) {
+          card.details = carddb.cardFromId(card.cardID);
+        });
       });
     });
-    return promise.then(() => {
-      cards = exampleCube.cards;
+
+    it('sets the intitial state of the draft', () => {
+      cards = exampleCube.cards.slice();
       bots = ['mockbot'];
       format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
       let draft = methods.createDraft(format, cards, bots, 8);
@@ -194,6 +200,47 @@ describe('createDraft', () => {
       let initial_stateJSON = JSON.stringify(draft.initial_state);
       let packsJSON = JSON.stringify(draft.packs);
       expect(initial_stateJSON).toEqual(packsJSON);
+    });
+
+    it('fails if it runs out of cards in a standard draft', () => {
+      cards = exampleCube.cards.slice();
+      bots = ['mockbot'];
+      seats = 8;
+      // cube only contains 65 cards, so 8 * 1 * 15 = 120, should run out if multiples = false
+      format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
+      expect(() => {
+        methods.createDraft(format, cards, bots, seats);
+      }).toThrow(/not enough cards/);
+    });
+
+    it('fails if it runs out of cards in a custom draft', () => {
+      cards = exampleCube.cards.slice();
+      bots = ['mockbot'];
+      seats = 8;
+      // cube only contains 65 cards, so 8 * 2 * 5 = 80, should run out if multiples = false
+      exampleCube.draft_formats[0].packs = '[["*","*","*","*","*"],["*","*","*","*","*"]]';
+      format = methods.getDraftFormat({ id: 0 }, exampleCube);
+      expect(() => {
+        methods.createDraft(format, cards, bots, seats);
+      }).toThrow(/not enough cards/);
+    });
+
+    it.only('fails if it runs out of filtered cards in a custom draft', () => {
+      cards = exampleCube.cards.slice();
+      bots = ['mockbot'];
+      seats = 6;
+      // cube only contains 65 cards, so 6 * 5 = 30 > 13 blue cards, should run out if multiples = false
+      exampleCube.draft_formats[0].packs = '[["c>=u","c>=u","c:u","c:u","c:u"],["*"]]';
+      format = methods.getDraftFormat({ id: 0 }, exampleCube);
+      format.multiples = true;
+      expect(() => {
+        methods.createDraft(format, cards, bots, seats);
+      }).not.toThrow(/not enough cards/);
+      // note: because multiples true, cards not "used up" for next check
+      format.multiples = false;
+      expect(() => {
+        methods.createDraft(format, cards, bots, seats);
+      }).toThrow(/not enough cards/);
     });
   });
 });
