@@ -40,6 +40,7 @@ function updateCardbase(filepath) {
     fs.mkdirSync('private');
   }
   return module.exports.downloadDefaultCards().then(function() {
+    console.log('Updating cardbase, this might take a little while...');
     var contents = fs.readFileSync(filepath);
     var cards = JSON.parse(contents);
     saveAllCards(cards);
