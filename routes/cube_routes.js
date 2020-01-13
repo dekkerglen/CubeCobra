@@ -1238,35 +1238,47 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
 });
 
 router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), async function(err, cube) {
-    if (err) {
-      console.log(err, req);
-    } else {
-      if (cube.owner != req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/list/' + req.params.id);
-      } else {
-        await bulkUpload(req, res, req.body.body, cube);
-      }
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    } else if (cube.owner != req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/list/' + req.params.id);
     }
-  });
+
+    await bulkUpload(req, res, req.body.body, cube);
+  } catch (err) {
+    console.log(err);
+    req.flash('danger', 'Error making bulk upload');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  }
 });
 
 router.post('/bulkuploadfile/:id', ensureAuth, async function(req, res) {
   if (!req.files) {
     req.flash('danger', 'Please attach a file');
-    res.redirect('/cube/list/' + req.params.id);
-  } else {
-    items = req.files.document.data.toString('utf8'); // the uploaded file object
+    return res.redirect('/cube/list/' + req.params.id);
+  }
 
-    Cube.findOne(build_id_query(req.params.id), async function(err, cube) {
-      if (cube.owner != req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/list/' + req.params.id);
-      } else {
-        await bulkUpload(req, res, items, cube);
-      }
-    });
+  const items = req.files.document.data.toString('utf8'); // the uploaded file object
+
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    } else if (cube.owner != req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/list/' + req.params.id);
+    }
+
+    await bulkUpload(req, res, items, cube);
+  } catch (err) {
+    console.log(err);
+    req.flash('danger', 'Error making bulk upload');
+    return res.redirect(`/cube/list/${req.params.id}`);
   }
 });
 
