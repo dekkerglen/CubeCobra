@@ -2,16 +2,21 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import {
-  Row,
-  Col,
+  Button,
   Card,
   CardHeader,
   CardBody,
   CardFooter,
   CardText,
-  Button,
+  Col,
+  Nav,
   Navbar,
+  NavbarToggler,
+  NavItem,
+  NavLink,
+  Row,
   UncontrolledAlert,
+  UncontrolledCollapse,
 } from 'reactstrap';
 
 import BlogPost from './components/BlogPost';
@@ -104,33 +109,39 @@ class CubeOverview extends Component {
       <>
         {canEdit && (
           <div className="usercontrols">
-            <Navbar expand="md" className="navbar-light">
-              <div className="collapse navbar-collapse">
-                <ul className="navbar-nav flex-wrap">
-                  <li className="nav-item">
-                    <CubeOverviewModal
-                      cube={cube}
-                      cubeID={cubeID}
-                      onError={this.error}
-                      onCubeUpdate={this.onCubeUpdate}
-                    />
-                  </li>
-                  <li className="nav-item">
-                    <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
+            <Navbar expand="md" light>
+              <Nav navbar>
+                <NavItem>
+                  <CubeOverviewModal
+                    cube={cube}
+                    cubeID={cubeID}
+                    onError={this.error}
+                    onCubeUpdate={this.onCubeUpdate}
+                  />
+                </NavItem>
+              </Nav>
+              <NavbarToggler
+                className="ml-auto"
+                id="cubeOverviewNavbarToggler"
+                aria-controls="cubeOverviewNavbarCollapse"
+              />
+              <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
+                <Nav navbar>
+                  <NavItem>
+                    <NavLink href="#" data-toggle="modal" data-target="#deleteCubeModal">
                       Delete Cube
-                    </a>
-                  </li>
-                </ul>
-              </div>
+                    </NavLink>
+                  </NavItem>
+                </Nav>
+              </UncontrolledCollapse>
             </Navbar>
           </div>
         )}
         <DynamicFlash />
-        {this.state.alerts.map(({ color, message }) => (
-          <div key={message}>
-            <br />
-            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
-          </div>
+        {this.state.alerts.map(({ color, message }, index) => (
+          <UncontrolledAlert color={color} key={index} className="mt-3 mb-0">
+            {message}
+          </UncontrolledAlert>
         ))}
         <Row>
           <Col md="4">
