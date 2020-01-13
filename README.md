@@ -16,7 +16,7 @@ NodeJS: https://nodejs.org/en/download/
 
 MongoDB: https://docs.mongodb.com/manual/installation/
 
-You will need start a MongoDB background process, and create a database titled `nodecube`. Refer to the official documentation for directions on how to set this up for your OS. Running `use nodecube` in the mongo CLI is sufficient.
+You will need start a MongoDB background process. Refer to the official documentation for directions on how to set this up for your OS.
 
 Atom (optional): https://atom.io/
 
@@ -30,7 +30,7 @@ cd CubeCobra/..
 ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
 ```
 
-The resulting directory structure should look like this:
+It's important that the resulting directory structure looks like this:
 
 ```sh
 .
@@ -45,8 +45,9 @@ Then, run the following commands in the root of the cloned repository:
 ```sh
 npm install
 npm install nodemon -g
-node force_update.js        # Download Scryfall assets.
-node seed.js                # Seed the mongo database.
+npm install rollup -g
+npm run setup               # This will bundle modules and download Scryfall assets.
+node seed.js                # This will create and seed the mongo database specified in cubecobrasecrets.
 
 # Linux/OSX users
 npm start                   # Start nodemon for backend server and webpack for frontend assets.
