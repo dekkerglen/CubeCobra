@@ -90,6 +90,9 @@ function standardDraft(cards) {
   cards = util.shuffle(cards);
 
   return function(cardFormat) {
+    if (cards.length == 0) {
+      throw new Error('Unable to create draft: not enough cards in cube.');
+    }
     return { card: cards.pop(), message: '' };
   };
 }
@@ -97,7 +100,7 @@ function standardDraft(cards) {
 function customDraft(cards, duplicates = false) {
   return function(cardFilter) {
     if (cards.length === 0) {
-      throw new Error('Unable to create draft. Not enough cards.');
+      throw new Error('Unable to create draft: not enough cards.');
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
@@ -109,22 +112,16 @@ function customDraft(cards, duplicates = false) {
         index = Math.floor(Math.random() * cardFilter.length);
         validCards = matchingCards(cards, cardFilter[index]);
         if (validCards.length == 0) {
+          // TODO: display warnings for players
+          messages.push('Warning: no cards matching filter: ' + cardFilter[index]);
           // try another options and remove this filter as it is now empty
           cardFilter.splice(index, 1);
-          messages.push('Warning: no cards matching filter: ' + cardFilter[index]);
         }
-      } while (validCards.length == 0 && cardFilter.length > 1);
-
-      // try to fill with any available card
-      if (validCards.length == 0) {
-        // TODO: warn user that they ran out of matching cards
-        messages.push('Warning: not enough cards matching any filter.');
-        validCards = cards;
-      }
+      } while (validCards.length == 0 && cardFilter.length > 0);
     }
 
     if (validCards.length == 0) {
-      throw new Error('Unable to create draft, not enough cards matching filter.');
+      throw new Error('Unable to create draft: not enough cards matching filter.');
     }
 
     index = Math.floor(Math.random() * validCards.length);
