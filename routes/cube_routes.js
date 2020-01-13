@@ -42,10 +42,12 @@ let CardRating = require('../models/cardrating');
 
 const NODE_ENV = process.env.NODE_ENV;
 
+let BulkUploadPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 let DraftView = null;
 if (NODE_ENV === 'production') {
+  BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
   DraftView = require('../dist/components/DraftView').default;
@@ -1102,16 +1104,21 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
     blogpost.cubename = cube.name;
 
     if (missing.length > 0) {
+      const reactProps = {
+        cubeID: req.params.id,
+        missing,
+        added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+        blogpost: blogpost.toObject(),
+      };
       res.render('cube/bulk_upload', {
-        missing: missing,
+        reactHTML:
+          NODE_ENV === 'production'
+            ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+            : undefined,
+        reactProps,
+        cube: cube,
         cube_id: req.params.id,
         title: `${abbreviate(cube.name)} - Bulk Upload`,
-        added: JSON.stringify(added),
-        cube: cube,
-        user: {
-          id: req.user._id,
-          username: req.user.username,
-        },
       });
     } else {
       try {
@@ -1230,8 +1237,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/bulkupload/:id', ensureAuth, function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
+  Cube.findOne(build_id_query(req.params.id), async function(err, cube) {
     if (err) {
       console.log(err, req);
     } else {
@@ -1239,31 +1246,31 @@ router.post('/bulkupload/:id', ensureAuth, function(req, res) {
         req.flash('danger', 'Not Authorized');
         res.redirect('/cube/list/' + req.params.id);
       } else {
-        bulkUpload(req, res, req.body.body, cube);
+        await bulkUpload(req, res, req.body.body, cube);
       }
     }
   });
 });
 
-router.post('/bulkuploadfile/:id', ensureAuth, function(req, res) {
+router.post('/bulkuploadfile/:id', ensureAuth, async function(req, res) {
   if (!req.files) {
     req.flash('danger', 'Please attach a file');
     res.redirect('/cube/list/' + req.params.id);
   } else {
     items = req.files.document.data.toString('utf8'); // the uploaded file object
 
-    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+    Cube.findOne(build_id_query(req.params.id), async function(err, cube) {
       if (cube.owner != req.user._id) {
         req.flash('danger', 'Not Authorized');
         res.redirect('/cube/list/' + req.params.id);
       } else {
-        bulkUpload(req, res, items, cube);
+        await bulkUpload(req, res, items, cube);
       }
     });
   }
 });
 
-function bulkuploadCSV(req, res, cards, cube) {
+async function bulkuploadCSV(req, res, cards, cube) {
   let added = [];
   let missing = '';
   let changelog = '';
@@ -1311,16 +1318,21 @@ function bulkuploadCSV(req, res, cards, cube) {
 
   //
   if (missing.length > 0) {
+    const reactProps = {
+      cubeID: req.params.id,
+      missing,
+      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+      blogpost: blogpost.toObject(),
+    };
     res.render('cube/bulk_upload', {
-      missing: missing,
-      cube_id: get_cube_id(cube),
-      title: `${abbreviate(cube.name)} - Bulk Upload`,
-      added: JSON.stringify(added),
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
+      reactProps,
       cube: cube,
-      user: {
-        id: req.user._id,
-        username: req.user.username,
-      },
+      cube_id: req.params.id,
+      title: `${abbreviate(cube.name)} - Bulk Upload`,
     });
   } else {
     blogpost.save(function(err) {
@@ -1344,7 +1356,7 @@ function bulkuploadCSV(req, res, cards, cube) {
   }
 }
 
-function bulkUpload(req, res, list, cube) {
+async function bulkUpload(req, res, list, cube) {
   cards = list.match(/[^\r\n]+/g);
   if (cards) {
     if (cards[0].trim() == 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags') {
@@ -1418,18 +1430,22 @@ function bulkUpload(req, res, list, cube) {
         blogpost.username = cube.owner_name;
         blogpost.cubename = cube.name;
 
-        //
         if (missing.length > 0) {
+          const reactProps = {
+            cubeID: req.params.id,
+            missing,
+            added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+            blogpost: blogpost.toObject(),
+          };
           res.render('cube/bulk_upload', {
-            missing: missing,
-            cube_id: get_cube_id(cube),
-            title: `${abbreviate(cube.name)} - Bulk Upload`,
-            added: JSON.stringify(added),
+            reactHTML:
+              NODE_ENV === 'production'
+                ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+                : undefined,
+            reactProps,
             cube: cube,
-            user: {
-              id: req.user._id,
-              username: req.user.username,
-            },
+            cube_id: req.params.id,
+            title: `${abbreviate(cube.name)} - Bulk Upload`,
           });
         } else {
           blogpost.save(function(err) {

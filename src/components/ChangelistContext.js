@@ -4,11 +4,13 @@ import Query from '../util/Query';
 
 const ChangelistContext = React.createContext([]);
 
-export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, ...props }) => {
+export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChanges, noSave, ...props }) => {
   const storageKey = `changelist-${cubeID}`;
 
   const [changes, setChanges] = useState(() => {
-    if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
+    if (initialChanges) {
+      return initialChanges;
+    } else if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
       if (Query.get('updated', false) === 'true') {
         Query.del('updated');
         return [];
@@ -40,7 +42,7 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, ...props })
   });
 
   useEffect(() => {
-    if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
+    if (!noSave && typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
       localStorage.setItem(storageKey, JSON.stringify(changes));
     }
   }, [changes]);
