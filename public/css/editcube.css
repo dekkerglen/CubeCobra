@@ -13,7 +13,7 @@
 
 .changelist-container {
 	max-height: 19rem;
-	overflow: scroll;
+	overflow: auto;
 }
 
 .changelist {

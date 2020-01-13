@@ -649,13 +649,15 @@ function sortGroupsOrdered(cards, sort) {
 
 export function sortDeep(cards, ...sorts) {
   if (sorts.length === 0) {
-    return cards.sort(alphaCompare);
+    return [...cards].sort(alphaCompare);
   } else {
     const [first, ...rest] = sorts;
     const result = sortGroupsOrdered(cards, first);
-    if (rest.length > 0) {
-      for (const labelGroup of result) {
+    for (const labelGroup of result) {
+      if (rest.length > 0) {
         labelGroup[1] = sortDeep(labelGroup[1], rest);
+      } else {
+        labelGroup[1].sort(alphaCompare);
       }
     }
     return result;
