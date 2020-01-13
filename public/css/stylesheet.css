@@ -453,10 +453,21 @@ body.busy-cursor {
 	width: 100%;
 	height: auto;
 }
+
+.deck-preview {
+	padding: 1rem 1.25rem;
+	border-top: 1px solid #dee2e6;
+}
+
+.deck-preview:first-child {
+	border-top: none;
+}
+
 .deck-preview:hover {
 	background: #EFEFEF;
 	cursor: pointer;
 }
+
 .no-underline-hover:hover{
 	text-decoration: none;
 }

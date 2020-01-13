@@ -1,32 +1,39 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import PropTypes from 'prop-types';
 
 import AgeText from './AgeText';
 
-class DeckPreview extends React.Component {
-  constructor(props) {
-    super(props);
+const DeckPreview = ({ deck }) => {
+  const maxLength = 35;
+
+  let name = deck.name;
+  if (name.length > maxLength) {
+    name = name.slice(0, maxLength - 3) + '...';
   }
 
-  render() {
-    const maxLength = 35;
+  const handleClick = useCallback(() => {
+    window.location.href = `/cube/deck/${deck._id}`;
+  }, [deck._id]);
 
-    const deck = this.props.deck;
-    if (deck.name.length > maxLength) {
-      deck.name = deck.name.slice(0, maxLength - 3) + '...';
-    }
-    return (
-      <a className="no-underline-hover" href={'/cube/deck/' + deck._id}>
-        <div className="border-top pb-2 pt-3 px-2 deck-preview">
-          <h6 className="card-subtitle mb-2 text-muted">
-            <a href={'/cube/deck/' + deck._id}>{deck.name}</a>
-            {' by '}
-            {deck.owner ? <a href={'/user/view/' + deck.owner}>{deck.username}</a> : <a>Anonymous</a>} {' - '}
-            <AgeText date={deck.date} />
-          </h6>
-        </div>
-      </a>
-    );
-  }
-}
+  return (
+    <div className="deck-preview" onClick={handleClick}>
+      <h6 className="mb-0 text-muted">
+        <a href={'/cube/deck/' + deck._id}>{name}</a>
+        {' by '}
+        {deck.owner ? <a href={'/user/view/' + deck.owner}>{deck.username}</a> : <a>Anonymous</a>} {' - '}
+        <AgeText date={deck.date} />
+      </h6>
+    </div>
+  );
+};
+
+DeckPreview.propTypes = {
+  deck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    owner: PropTypes.string,
+    username: PropTypes.string,
+  }).isRequired,
+};
 
 export default DeckPreview;
