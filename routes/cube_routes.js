@@ -167,6 +167,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.body.html = sanitize(req.body.html);
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
+    let message = '';
 
     if (req.body.id == -1) {
       if (!cube.draft_formats) {
@@ -178,6 +179,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
         html: req.body.html,
         packs: req.body.format,
       });
+      message = 'Custom format successfully added.';
     } else {
       cube.draft_formats[req.body.id] = {
         title: req.body.title,
@@ -185,6 +187,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
         html: req.body.html,
         packs: req.body.format,
       };
+      message = 'Custom format successfully edited.';
     }
     await Cube.updateOne(
       {
@@ -193,7 +196,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       cube,
     );
 
-    req.flash('success', 'Custom format successfully added.');
+    req.flash('success', message);
     res.redirect('/cube/playtest/' + req.params.id);
   } catch (err) {
     console.error(err);
@@ -873,7 +876,10 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: user._id.equals(cube.owner),
       decks,
       cubeID: req.params.id,
-      draftFormats: cube.draft_formats,
+      draftFormats: cube.draft_formats.map(({ packs, ...format }) => ({
+        ...format,
+        packs: JSON.parse(packs),
+      })),
     };
 
     res.render('cube/cube_playtest', {
@@ -1580,7 +1586,7 @@ router.get('/download/plaintext/:id', function(req, res) {
 
 router.post('/startdraft/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id), '_id name draft_formats card_count type cards');
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -3253,9 +3259,14 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
         function(err) {
           if (err) {
             console.log(err, req);
-            res.sendStatus(500);
+            res.status(500).send({
+              success: 'false',
+              message: 'Error deleting format.',
+            });
           } else {
-            res.sendStatus(200);
+            res.status(200).send({
+              success: 'true',
+            });
           }
         },
       );

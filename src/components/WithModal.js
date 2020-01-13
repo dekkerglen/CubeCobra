@@ -1,8 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { Modal, ModalHeader } from 'reactstrap';
-
-const withModal = (Tag, ModalTag) => ({ labelledBy, title, text, children, ...props }) => {
+const withModal = (Tag, ModalTag) => ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = useCallback(
     (event) => {
