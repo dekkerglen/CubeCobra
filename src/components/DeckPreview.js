@@ -11,7 +11,9 @@ const DeckPreview = ({ deck }) => {
     name = name.slice(0, maxLength - 3) + '...';
   }
 
-  const handleClick = useCallback(() => { window.location.href = `/cube/deck/${deck._id}`; }, [deck._id]);
+  const handleClick = useCallback(() => {
+    window.location.href = `/cube/deck/${deck._id}`;
+  }, [deck._id]);
 
   return (
     <div className="deck-preview" onClick={handleClick}>
@@ -23,7 +25,7 @@ const DeckPreview = ({ deck }) => {
       </h6>
     </div>
   );
-}
+};
 
 DeckPreview.propTypes = {
   deck: PropTypes.shape({
@@ -32,6 +34,6 @@ DeckPreview.propTypes = {
     owner: PropTypes.string,
     username: PropTypes.string,
   }).isRequired,
-}
+};
 
 export default DeckPreview;
