@@ -44,10 +44,10 @@ const NODE_ENV = process.env.NODE_ENV;
 
 let BulkUploadPage, CubeDraftPage, CubeListPage, CubePlaytestPage;
 if (NODE_ENV === 'production') {
-  BulkUploadPage = require('../dist/components/BulkUploadPage').default;
-  CubeDraftPage = require('../dist/components/CubeDraftPage').default;
-  CubeListPage = require('../dist/components/CubeListPage').default;
-  CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
+  BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/pages/CubeDraftPage').default;
+  CubeListPage = require('../dist/pages/CubeListPage').default;
+  CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');

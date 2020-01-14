@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import CubeListPage from './components/CubeListPage';
+import CubeListPage from 'pages/CubeListPage';
 
 const wrapper = document.getElementById('react-root');
 const element = <CubeListPage {...reactProps} />;

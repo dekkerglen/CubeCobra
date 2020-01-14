@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import CubeDraftPage from 'components/CubeDraftPage';
+import CubeDraftPage from 'pages/CubeDraftPage';
 
 const wrapper = document.getElementById('react-root');
 const element = (

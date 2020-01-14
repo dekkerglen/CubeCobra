@@ -10,11 +10,11 @@ import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
 import { DisplayContextProvider } from 'components/DisplayContext';
 import DndProvider from 'components/DndProvider';
-import { subtitle } from 'components/CubeDraftPage';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
+import { subtitle } from 'pages/CubeDraftPage';
 
 const canDrop = (source, target) => true;
 
