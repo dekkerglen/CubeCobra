@@ -20,8 +20,8 @@ const config = {
   devtool: 'source-map',
   resolve: {
     modules: [
-      'node_modules',
       'src',
+      'node_modules',
     ],
   },
 };
@@ -58,10 +58,10 @@ const clientConfig = merge(config, {
 const serverConfig = merge(config, {
   target: 'node',
   entry: {
+    CubeDraftPage: './src/components/CubeDraftPage.js',
     CubeListPage: './src/components/CubeListPage.js',
     CubePlaytestPage: './src/components/CubePlaytestPage.js',
     DashboardPage: './src/components/DashboardPage.js',
-    DraftView: './src/components/DraftView.js',
   },
   output: {
     filename: '[name].js',

@@ -1,14 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import DraftView from './components/DraftView';
-import ErrorBoundary from './components/ErrorBoundary';
+import CubeDraftPage from 'components/CubeDraftPage';
 
 const wrapper = document.getElementById('react-root');
 const element = (
-  <ErrorBoundary className="mt-3">
-    <DraftView {...reactProps} />
-  </ErrorBoundary>
+  <CubeDraftPage {...reactProps} />
 );
 if (wrapper) {
   if (wrapper.children.length === 0) {

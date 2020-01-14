@@ -42,12 +42,12 @@ let CardRating = require('../models/cardrating');
 
 const NODE_ENV = process.env.NODE_ENV;
 
-let BulkUploadPage, CubeListPage, CubePlaytestPage, DraftView;
+let BulkUploadPage, CubeDraftPage, CubeListPage, CubePlaytestPage;
 if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/components/CubeDraftPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
-  DraftView = require('../dist/components/DraftView').default;
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');
@@ -1687,6 +1687,8 @@ router.get('/draft/:id', async function(req, res) {
     draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
+      cube,
+      cubeID: get_cube_id(cube),
       initialDraft: draft,
     };
 
@@ -1696,10 +1698,6 @@ router.get('/draft/:id', async function(req, res) {
           ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
           : undefined,
       reactProps,
-      cube,
-      cube_id: get_cube_id(cube),
-      owner: user ? user.username : 'Unknown',
-      activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Draft`,
       metadata: generateMeta(
         `Cube Cobra Draft: ${cube.name}`,

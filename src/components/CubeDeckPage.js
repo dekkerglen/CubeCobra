@@ -23,7 +23,7 @@ import { sortDeck } from 'util/Util';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
-import { subtitle } from 'components/DraftView';
+import { subtitle } from 'components/CubeDraftPage';
 import DynamicFlash from 'components/DynamicFlash';
 import FoilCardImage from 'components/FoilCardImage';
 import { getCardColorClass } from 'components/TagContext';
