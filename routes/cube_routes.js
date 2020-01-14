@@ -2738,7 +2738,7 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), 'owner name type card_count overrideCategory categoryOverride categoryPrefixes');
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -2799,22 +2799,27 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
-      return res.render('cube/cube_deck', {
-        oldformat: true,
-        deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
+
+      var reactProps = {
+        cube,
+        cubeID: get_cube_id(cube),
+        oldFormat: true,
+        drafter,
         cards: player_deck,
-        bot_decks: bot_decks,
-        bots: bot_names,
-        name: deck.name,
         description: deck.description,
-        owner: deck.owner,
+        name: deck.name,
+        sideboard: deck.sideboard,
+        botDecks: bot_decks,
+        bots: bot_names,
+        canEdit: req.user ? req.user._id === owner.id : false,
         comments: deck.comments,
+        deckid: deck._id,
+        userid: req.user ? req.user._id : null,
+      };
+
+      return res.render('cube/cube_deck', {
+        reactProps,
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2843,23 +2848,27 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
-      return res.render('cube/cube_deck', {
-        oldformat: false,
-        deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
-        deck: JSON.stringify(deck.playerdeck),
-        sideboard: JSON.stringify(deck.playersideboard),
-        bot_decks: bot_decks,
-        bots: bot_names,
-        name: deck.name,
+
+      var reactProps = {
+        cube,
+        cubeID: get_cube_id(cube),
+        oldFormat: false,
+        drafter,
+        deck: deck.playerdeck,
+        sideboard: deck.playersideboard,
         description: deck.description,
-        owner: deck.owner,
+        name: deck.name,
+        botDecks: bot_decks,
+        bots: bot_names,
+        canEdit: req.user ? req.user._id === owner.id : false,
         comments: deck.comments,
+        deckid: deck._id,
+        userid: req.user ? req.user._id : null,
+      };
+
+      return res.render('cube/cube_deck', {
+        reactProps,
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2870,8 +2879,9 @@ router.get('/deck/:id', async (req, res) => {
       });
     }
   } catch (err) {
-    req.flash('danger', err);
-    res.redirect('/404');
+    console.error(err);
+    req.flash('danger', 'Error loading deck');
+    res.redirect('/');
   }
 });
 
