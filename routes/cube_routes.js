@@ -2697,18 +2697,22 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     });
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    return res.render('cube/cube_deckbuilder', {
+    const reactProps = {
       cube: cube,
-      cube_id: get_cube_id(cube),
-      owner: deckOwner ? deckOwner.username : 'Unknown',
-      ownerid: deckOwner ? deckOwner._id : '',
+      cubeID: get_cube_id(cube),
+      initialDeck: deck,
+      basics: getBasics(carddb),
+    };
+
+    return res.render('cube/cube_deckbuilder', {
+      reactProps,
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Deckbuilder`,
       metadata: generateMeta(
@@ -2718,9 +2722,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
         `https://cubecobra.com/cube/draft/${req.params.id}`,
       ),
       loginCallback: '/cube/draft/' + req.params.id,
-      deck_raw: JSON.stringify(deck),
-      basics_raw: JSON.stringify(getBasics(carddb)),
-      deckid: deck._id,
     });
   } catch (err) {
     console.log(err);
@@ -2738,7 +2739,7 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube), 'owner name type card_count overrideCategory categoryOverride categoryPrefixes');
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -2811,7 +2812,7 @@ router.get('/deck/:id', async (req, res) => {
         sideboard: deck.sideboard,
         botDecks: bot_decks,
         bots: bot_names,
-        canEdit: req.user ? req.user._id === owner.id : false,
+        canEdit: req.user ? req.user._id.equals(owner.id) : false,
         comments: deck.comments,
         deckid: deck._id,
         userid: req.user ? req.user._id : null,
@@ -2860,7 +2861,7 @@ router.get('/deck/:id', async (req, res) => {
         name: deck.name,
         botDecks: bot_decks,
         bots: bot_names,
-        canEdit: req.user ? req.user._id === owner.id : false,
+        canEdit: req.user ? req.user._id.equals(owner.id) : false,
         comments: deck.comments,
         deckid: deck._id,
         userid: req.user ? req.user._id : null,

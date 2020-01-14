@@ -161,29 +161,27 @@ const CubeDeckPage = ({
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
       <DisplayContextProvider>
-        <div className="usercontrols">
-          <Navbar expand="md" light>
-            <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
-            <Collapse isOpen={isOpen} navbar>
-              <Nav navbar>
-                {canEdit && (
-                  <NavItem>
-                    <NavLink href={`/cube/deckbuilder/${deckID}`}>Edit</NavLink>
-                  </NavItem>
-                )}
+        <Navbar expand="md" light className="usercontrols mb-3">
+          <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+          <Collapse isOpen={isOpen} navbar>
+            <Nav navbar>
+              {canEdit && (
                 <NavItem>
-                  <NavLink href={`/cube/redraft/${deckID}`}>Redraft</NavLink>
+                  <NavLink href={`/cube/deckbuilder/${deckID}`}>Edit</NavLink>
                 </NavItem>
-                <NavItem className="mr-auto">
-                  <NavLink href={`/cube/rebuild/${deckID}`}>Clone and Rebuild</NavLink>
-                </NavItem>
-                <CustomImageToggler />
-              </Nav>
-            </Collapse>
-          </Navbar>
-        </div>
+              )}
+              <NavItem>
+                <NavLink href={`/cube/redraft/${deckID}`}>Redraft</NavLink>
+              </NavItem>
+              <NavItem className="mr-auto">
+                <NavLink href={`/cube/rebuild/${deckID}`}>Clone and Rebuild</NavLink>
+              </NavItem>
+              <CustomImageToggler />
+            </Nav>
+          </Collapse>
+        </Navbar>
         <DynamicFlash />
-        <Row className="mt-3">
+        <Row>
           <Col>
             <Card>
               <CardHeader>
