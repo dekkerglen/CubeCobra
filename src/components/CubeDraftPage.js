@@ -175,7 +175,7 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   );
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID}>
+    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
       <DisplayContextProvider>
         <Navbar expand="xs" light className="usercontrols">
           <Collapse navbar>
