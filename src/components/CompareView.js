@@ -75,8 +75,8 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
   }
 
   both = both.slice(0);
-  only_a = onlyA.slice(0);
-  only_b = onlyB.slice(0);
+  const only_a = onlyA.slice(0);
+  const only_b = onlyB.slice(0);
 
   return (
     <>

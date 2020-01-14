@@ -49,7 +49,7 @@ class CubeCompare extends Component {
   }
 
   render() {
-    const { cards, cubeID, defaultTagColors, defaultShowTagColors, defaultSorts, ...props } = this.props;
+    const { cards, cubeID, cube, cubeBID, cubeB, defaultTagColors, defaultShowTagColors, defaultSorts, ...props } = this.props;
     const { openCollapse, filter } = this.state;
     const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
     const defaultTags = [...defaultTagSet].map((tag) => ({
@@ -62,11 +62,15 @@ class CubeCompare extends Component {
         <DisplayContextProvider>
           <TagContextProvider
             cubeID={cubeID}
-            defaultTagColors={defaultTagColors}
+            defaultTagColors={deduplicateTags(defaultTagColors)}
             defaultShowTagColors={defaultShowTagColors}
             defaultTags={defaultTags}
           >
             <CubeCompareNavbar
+              cubeA={cube}
+              cubeAID={cubeID}
+              cubeB={cubeB}
+              cubeBID={cubeBID}
               cards={filteredCards}
               openCollapse={openCollapse}
               setOpenCollapse={this.setOpenCollapse}
@@ -86,23 +90,8 @@ class CubeCompare extends Component {
   }
 }
 
-const cube = JSON.parse(document.getElementById('cuberaw').value);
-const cubeID = document.getElementById('cubeID').value;
-const cards = cube.map((card, index) => Object.assign(card, { index }));
-const defaultTagColors = deduplicateTags(JSON.parse(document.getElementById('cubeTagColors').value));
-const defaultShowTagColors = document.getElementById('showTagColors').value === 'true';
-const defaultSorts = [document.getElementById('sort1').value, document.getElementById('sort2').value];
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeCompare
-    cards={cards}
-    both={in_both}
-    onlyA={only_a}
-    onlyB={only_b}
-    cubeID={cubeID}
-    defaultTagColors={defaultTagColors}
-    defaultShowTagColors={defaultShowTagColors}
-    defaultSorts={defaultSorts}
-  />
+  <CubeCompare {...reactProps} />
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;

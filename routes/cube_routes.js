@@ -744,16 +744,23 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 
               let all_cards = in_both.concat(only_a).concat(only_b);
 
-              params = {
+              const reactProps = {
                 cube: cubeA,
-                cubeB: cubeB,
-                cube_id: id_a,
-                cube_b_id: id_b,
+                cubeID: id_a,
+                cubeB,
+                cubeBID: id_b,
+                onlyA: a_names,
+                onlyB: b_names,
+                both: in_both.map((card) => card.details.name),
+                cards: [...all_cards].map((card, index) => Object.assign(card, { index })),
+                defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
+                defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+                defaultSorts: cubeA.default_sorts,
+              }
+
+              params = {
+                reactProps,
                 title: `Comparing ${cubeA.name} to ${cubeB.name}`,
-                in_both: JSON.stringify(in_both.map((card) => card.details.name)),
-                only_a: JSON.stringify(a_names),
-                only_b: JSON.stringify(b_names),
-                cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
                 metadata: generateMeta(
                   'Cube Cobra Compare Cubes',
                   `Comparing "${cubeA.name}" To "${cubeB.name}"`,
@@ -762,9 +769,6 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
                 ),
                 loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
               };
-
-              if (ownerA) params.owner = ownerA.username;
-              else params.author = 'unknown';
 
               res.render('cube/cube_compare', params);
             });
@@ -1695,7 +1699,7 @@ router.get('/draft/:id', async function(req, res) {
     res.render('cube/cube_draft', {
       reactHTML:
         NODE_ENV === 'production'
-          ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
+          ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
           : undefined,
       reactProps,
       title: `${abbreviate(cube.name)} - Draft`,
