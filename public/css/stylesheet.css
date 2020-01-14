@@ -644,3 +644,7 @@ img.mana-symbol {
 .row-low-padding {
   margin: 0 -2px;
 }
+
+.font-weight-boldish {
+	font-weight: 600;
+}

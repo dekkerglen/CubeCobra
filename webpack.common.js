@@ -18,6 +18,12 @@ const config = {
     ],
   },
   devtool: 'source-map',
+  resolve: {
+    modules: [
+      'node_modules',
+      'src',
+    ],
+  },
 };
 
 const clientConfig = merge(config, {

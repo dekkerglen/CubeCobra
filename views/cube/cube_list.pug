@@ -1,20 +1,14 @@
-extends cube_layout
+extends ../layout
 
-block cube_toolbar
+block content
   link(rel='stylesheet' href='/css/tags.css')
   link(rel='stylesheet' href='/css/editcube.css')
   link(rel='stylesheet' href='/css/texteditor.css')
 
-  if cube.default_sorts
-    input#sort1(type='hidden', value=cube.default_sorts[0])
-    input#sort2(type='hidden', value=cube.default_sorts[1])
-
   include ../dynamic_flash
 
-block cube_content
   #react-root !{reactHTML}
 
-block scripts
   include ../react
 
   script(src='/js/autocard.js', async)

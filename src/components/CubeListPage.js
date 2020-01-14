@@ -7,7 +7,7 @@ import Query from '../util/Query';
 
 import CardModalForm from './CardModalForm';
 import { ChangelistContextProvider } from './ChangelistContext';
-import CubeContext, { CubeContextProvider } from './CubeContext';
+import CubeContext from './CubeContext';
 import CubeListNavbar from './CubeListNavbar';
 import CurveView from './CurveView';
 import DisplayContext, { DisplayContextProvider } from './DisplayContext';
@@ -20,6 +20,7 @@ import { SortContextProvider } from './SortContext';
 import TableView from './TableView';
 import { tagColors, TagContextProvider } from './TagContext';
 import VisualSpoiler from './VisualSpoiler';
+import CubeLayout from '../layouts/CubeLayout';
 
 const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
   const { cube, cubeID, canEdit } = useContext(CubeContext);
@@ -102,14 +103,16 @@ const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaul
   );
 };
 
-const CubeListPage = ({ cards, cubeID, canEdit, ...props }) => (
-  <CubeContextProvider initialCube={cards} cubeID={cubeID} canEdit={canEdit}>
+const CubeListPage = ({ cube, cubeID, canEdit, activeLink, ...props }) => (
+  <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
     <CubeListPageRaw {...props} />
-  </CubeContextProvider>
+  </CubeLayout>
 );
 
 CubeListPage.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({

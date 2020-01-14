@@ -42,10 +42,7 @@ let CardRating = require('../models/cardrating');
 
 const NODE_ENV = process.env.NODE_ENV;
 
-let BulkUploadPage = null;
-let CubeListPage = null;
-let CubePlaytestPage = null;
-let DraftView = null;
+let BulkUploadPage, CubeListPage, CubePlaytestPage, DraftView;
 if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
@@ -780,14 +777,15 @@ router.get('/compare/:id_a/to/:id_b', function(req, res) {
 
 router.get('/list/:id', async function(req, res) {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).setOptions({ lean: true });
+    const fields = 'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
+    const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
     const pids = new Set();
-    const cards = [...cube.cards];
+    const cards = cube.cards;
     cards.forEach(function(card, index) {
       card.details = {
         ...carddb.cardFromId(card.cardID),
@@ -814,12 +812,12 @@ router.get('/list/:id', async function(req, res) {
     }
 
     const reactProps = {
-      canEdit: req.user ? req.user.id === cube.owner : false,
+      cube,
       cubeID: req.params.id,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       defaultTagColors: cube.tag_colors,
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
-      cards,
       maybe: maybeCards(cube),
     };
 

@@ -1,8 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
 import CubeListPage from './components/CubeListPage';
-import ErrorBoundary from './components/ErrorBoundary';
 
 const wrapper = document.getElementById('react-root');
 const element = <CubeListPage {...reactProps} />;
