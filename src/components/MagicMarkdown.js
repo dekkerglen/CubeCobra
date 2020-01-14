@@ -12,7 +12,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
     return '';
   }
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/({[wubrgcmWUBRGCM\d\-]+}|\[\[!?\d+\]\]|%%(?:[^%]|%[^%]|[^%]%)+%%|\n\n)/gm);
+  const split = markdownStr.split(/({[wubrgcmWUBRGCM\d\-]+}|\[\[!?\d+\]\]|%%\d+%%|\n\n)/gm);
   return split.map((section, position) => {
     if (section.startsWith('{')) {
       const symbol = section.substring(1, section.length - 1);
@@ -39,7 +39,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
       const percentage = section.substring(2, section.length - 2);
       return (
         <span key={'section-' + position} className="percent">
-          {percentage}
+          {percentage}%
         </span>
       );
     } else if (section.startsWith('\n')) {

@@ -88,7 +88,7 @@ onmessage = (e) => {
     type: 'table',
     columns: [
       { header: 'Color Combination', key: 'label', rowHeader: true },
-      { header: 'AsFan of Exact Match', key: 'asfan' },
+      { header: 'Expected Count of Exact Matches in Pool', key: 'asfan' },
       { header: 'Count of Exact Match', key: 'count' },
     ],
     data: datapoints,

@@ -93,7 +93,7 @@ onmessage = (e) => {
     type: 'table',
     columns: [
       { header: 'Color Combination', key: 'label', rowHeader: true },
-      { header: 'AsFan of Contained In', key: 'asfan' },
+      { header: 'Expected Count in Poll Contained In', key: 'asfan' },
       { header: 'Count of Contained In', key: 'count' },
     ],
     data: datapoints,

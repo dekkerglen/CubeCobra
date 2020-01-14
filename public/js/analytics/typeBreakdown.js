@@ -146,37 +146,37 @@ onmessage = (e) => {
     } else if (card.details.type.toLowerCase().includes('artifact')) {
       type = TypeByColor['Artifacts'];
     } else {
+      console.warn(`Unrecognized type: ${card.details.type} from ${card.details.name}`);
       return;
     }
-
     type[colorCategory].count += 1;
     type[colorCategory].asfan += asfan;
     type['Total'].count += 1;
     type['Total'].asfan += asfan;
   });
 
-  for (let color in TypeByColor['Total']) {
-    if (color == 'label') continue;
-    const totalCount = TypeByColor['Total'][color].count;
-    const totalAsfan = TypeByColor['Total'][color].asfan;
-    for (let type in TypeByColor) {
+  for (let type in TypeByColor) {
+    const typed = TypeByColor[type];
+    for (let color in typed) {
+      if (color == 'label') continue;
+      const totalCount = TypeByColor['Total'][color].count;
+      const totalAsfan = TypeByColor['Total'][color].asfan;
       const count = TypeByColor[type][color].count;
       const asfan = TypeByColor[type][color].asfan;
-      const countText = `${count} / ${asfan.toFixed(2)} AsFan`;
-      if ((type === 'Total' && totalCount == 0) || totalAsfan == 0) {
-        TypeByColor[type][color] = countText;
-      } else {
-        var percentageText;
-        var percentageCount = 0;
-        if (totalCount > 0) {
-          percentageCount = Math.round((100.0 * count) / totalCount);
-        }
-        var perecentageAsfan = 0;
-        if (totalAsfan > 0) {
-          percentageAsfan = Math.round((100.0 * asfan) / totalAsfan);
-        }
-        TypeByColor[type][color] = `${countText} %%${percentageCount}% / ${percentageAsfan}% AsFan%%`;
+      const asfanText = asfan.toFixed(2);
+      let countPercentageStr = '';
+      if (totalCount > 0 && type != 'Total') {
+        const countPercentage = Math.round((100.0 * count) / totalCount);
+        countPercentageStr = ` %%${countPercentage}%%`;
       }
+      let asfanPercentageStr = '';
+      if (totalAsfan > 0 && type != 'Total') {
+        const asfanPercentage = Math.round((100.0 * asfan) / totalAsfan);
+        asfanPercentageStr = ` %%${asfanPercentage}%%`;
+      }
+      TypeByColor[type][
+        color
+      ] = `${count}${countPercentageStr} Count / ${asfanText}${asfanPercentageStr} Expected in Pool`;
     }
   }
   postMessage({
