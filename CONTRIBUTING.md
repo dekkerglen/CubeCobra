@@ -166,16 +166,8 @@ a GitHub issue, comment, or pull request.
 
 ### Code Style
 
-Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Please refer to the following guidelines with respect to each language.
+Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and JSX. Before creating your pull request, you can fix any style errors by running `npm run-script beautify`.
 
-#### Javascript
-
-For Javascript please make sure your code is formatted using the prettier standard. This can be done by running `npm run-script beautify`.
-
-#### Jade/PUG CSS and HTML
-
-For Jade/PUG, you can use the following atom package: https://atom.io/packages/jade-beautify
-For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
 
 ### Development Server
 
