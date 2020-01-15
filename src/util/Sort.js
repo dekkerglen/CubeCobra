@@ -570,6 +570,7 @@ export function cardGetLabels(card, sort) {
     } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       return ['Phyrexian'];
     }
+    return [];
   } else if (sort == 'CNC') {
     return typeLine(card)
       .toLowerCase()
@@ -590,7 +591,7 @@ export function cardGetLabels(card, sort) {
       } else if (price >= price_buckets[price_buckets.length - 1]) {
         return [price_bucket_label(price_buckets.length)];
       } else {
-        for (i = 1; i < price_buckets.length; i++) {
+        for (let i = 1; i < price_buckets.length; i++) {
           if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
             return [price_bucket_label(i)];
           }
@@ -607,7 +608,7 @@ export function cardGetLabels(card, sort) {
       } else if (card.details.price_foil >= price_buckets[price_buckets.length - 1]) {
         return [price_bucket_label(price_buckets.length)];
       } else {
-        for (i = 1; i < price_buckets.length; i++) {
+        for (let i = 1; i < price_buckets.length; i++) {
           if (card.details.price_foil >= price_buckets[i - 1] && card.details.price_foil < price_buckets[i]) {
             return [price_bucket_label(i)];
           }
