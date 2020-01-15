@@ -46,7 +46,6 @@
     "passport-local": "^1.0.0",
     "pug": "^2.0.3",
     "quickselect": "^2.0.0",
-    "react-tagcloud": "^2.0.0",
     "request": "^2.88.0",
     "rss": "^1.2.2",
     "sanitize-html": "^1.20.1",
