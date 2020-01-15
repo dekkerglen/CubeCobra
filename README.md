@@ -10,7 +10,7 @@ If you are interested in contributing towards Cube Cobra, please read the [Contr
 
 ### Install Prerequisites
 
-You will need to install NodeJS, MongoDB, and an IDE of your preference (I recommend Atom). You can find the necessary resources here:
+You will need to install NodeJS, MongoDB, and an IDE of your preference (I recommend VSCode). You can find the necessary resources here:
 
 NodeJS: https://nodejs.org/en/download/
 
