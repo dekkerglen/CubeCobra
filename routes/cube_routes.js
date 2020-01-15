@@ -852,7 +852,7 @@ router.get('/list/:id', async function(req, res) {
 
 router.get('/playtest/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
