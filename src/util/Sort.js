@@ -574,8 +574,8 @@ export function cardGetLabels(card, sort) {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')
-      ? 'Creature'
-      : 'Non-Creature';
+      ? ['Creature']
+      : ['Non-Creature'];
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {
