@@ -18,7 +18,7 @@ MongoDB: https://docs.mongodb.com/manual/installation/
 
 You will need start a MongoDB background process. Refer to the official documentation for directions on how to set this up for your OS.
 
-Atom (optional): https://atom.io/
+VSCode (not required): https://code.visualstudio.com/
 
 ### Clone Project
 
