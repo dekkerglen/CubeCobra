@@ -75,3 +75,19 @@ Nodemon will restart the application anytime there is a change to a source file.
 To run the test suite, run `npm run test`.
 
 If you make changes to `updatecards.js` or other code that will require remaking the fixture files in `fixtures/` you can use the helper: `node update_fixtures.js` after getting the lastest card info using `node force_update.js`. This will retain the same cards in the fixtures but with updated card details and fixture files.
+
+### Updating Card Definitions
+
+The card definitions are cached locally for quick access. This definition is pulled from scryfall every 24 hours normally, but you can force an update with the command:
+```
+node force_update.js
+```
+
+### Adding Analytics
+
+To build the analytics database objects, you need to run the script `populate_analytics.js`. You will likely need to add the `max-old-space-size` flag like so:
+```
+node --max-old-space-size=8192 populate_analytics.js
+```
+
+This will populate the data used for card pages. You will need to do a couple playtest drafts to seed some data for the analytics for this to work correctly. 
