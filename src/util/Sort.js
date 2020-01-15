@@ -570,6 +570,7 @@ export function cardGetLabels(card, sort) {
     } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       return ['Phyrexian'];
     }
+    return [];
   } else if (sort == 'CNC') {
     return typeLine(card)
       .toLowerCase()
