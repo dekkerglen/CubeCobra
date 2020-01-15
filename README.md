@@ -24,7 +24,7 @@ Atom (optional): https://atom.io/
 
 Clone the project into a folder of your choice. 
 
-You can either copy the `cubecobrasecrets.example` folder outside the root folder such that the resulting directory structure looks like this:
+You can either copy and rename the `cubecobrasecrets.example` folder outside the root folder such that the resulting directory structure looks like this:
 ```sh
 .
 ├── CubeCobra               # Cloned repository
