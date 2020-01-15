@@ -1979,6 +1979,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
     }
 
     if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias != cube.urlAlias) {
+      updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
       let urlAliasMaxLength = 100;
 
       if (!updatedCube.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {

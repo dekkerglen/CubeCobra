@@ -26,13 +26,16 @@ class CubeOverviewModal extends Component {
   constructor(props) {
     super(props);
 
+    props.cube.descriptionhtml= props.cube.descriptionhtml && props.cube.descriptionhtml !== 'undefined' ? props.cube.descriptionhtml : props.cube.description;
+
     this.state = {
       isOpen: false,
       tags: props.cube.tags.map((tag) => ({ id: tag, text: tag })),
       cube: JSON.parse(JSON.stringify(props.cube)),
-      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description,
+      description: props.cube.descriptionhtml,
       image_dict: {},
     };
+
 
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
@@ -221,6 +224,7 @@ class CubeOverviewModal extends Component {
 
   render() {
     const { cube, cubeID, tags, isOpen } = this.state;
+    console.log(cube);
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>
@@ -368,7 +372,7 @@ class CubeOverviewModal extends Component {
                 <h6>Description</h6>
                 <TextEntry
                   name="blog"
-                  value={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''}
+                  value={this.state.cube.descriptionhtml}
                   onChange={this.handleDescriptionChange}
                 />
                 <br />
