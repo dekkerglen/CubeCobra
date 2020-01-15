@@ -143,10 +143,10 @@ html(lang='en')
 						.modal-body
 							.form-group
 								label.col-form-label Username or Email Address:
-								input#username.form-control(name='username', type='text')
+								input#username.form-control(name='username', type='text', autocomplete='username')
 							.form-group
 								label.col-form-label Password:
-								input#password.form-control(name='password', type='password')
+								input#password.form-control(name='password', type='password', autocomplete='current-password')
 							a(href='/user/lostpassword') Forgot password?
 							if loginCallback
 								input(type='hidden', name='loginCallback', value=loginCallback)     

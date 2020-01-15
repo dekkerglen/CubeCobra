@@ -3,12 +3,10 @@ extends cube_layout
 block cube_content
   include ../dynamic_flash
   #react-root
-  input#curveData(type='hidden', value=curve)
-  input#typeData(type='hidden', value=TypeByColor)
-  input#multicolorData(type='hidden', value=MulticoloredCounts)
-  input#generatedTokensData(type='hidden',value=GeneratedTokensCounts)
+  input#cube(type='hidden', name='cube', value=cube)
 
 block scripts
+  script(src='/js/autocard.js', async)
   include ../react
   script(src='/js/autocard.js', async)
   script(src='/js/cube_analysis.bundle.js')
