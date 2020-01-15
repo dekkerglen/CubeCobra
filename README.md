@@ -53,8 +53,8 @@ node seed.js                # This will create and seed the mongo database speci
 npm start                   # Start nodemon for backend server and webpack for frontend assets.
 
 # Windows users will need to use 2 terminal instances.
-npm nodemon
-npm run-script webpack-dev-server
+npm run nodemon
+npm run webpack-dev-server
 ```
 
 Alternatively, if you are on Windows, you can use bash to mimic the Linux/OSX steps:
