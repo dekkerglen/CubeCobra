@@ -878,6 +878,9 @@ router.get('/playtest/:id', async (req, res) => {
 
     const [user, decks] = await Promise.all([userq, decksq]);
 
+    // sort titles alphabetically
+    cube.draft_formats.sort((a, b) => a.title.localeCompare(b.title));
+
     const reactProps = {
       canEdit: user._id.equals(cube.owner),
       decks,
