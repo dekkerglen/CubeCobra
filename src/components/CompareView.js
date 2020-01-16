@@ -28,8 +28,8 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
           <Row key={cmc} noGutters className="cmc-group">
             {[[bothCmc, 'both'], [onlyACmc, 'a'], [onlyBCmc, 'b']].map(([cards, key]) => (
               <Col xs="4" key={key}>
-                {(cards[cmc] || []).map((card) => (
-                  <AutocardListItem key={card.cardID} card={card} />
+                {(cards[cmc] || []).map((card, index) => (
+                  <AutocardListItem key={index} card={card} />
                 ))}
               </Col>
             ))}
@@ -74,9 +74,9 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
 
-  both = both.slice(0);
-  only_a = onlyA.slice(0);
-  only_b = onlyB.slice(0);
+  const bothCopy = both.slice(0);
+  const onlyACopy = onlyA.slice(0);
+  const onlyBCopy = onlyB.slice(0);
 
   return (
     <>
@@ -123,15 +123,15 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                       onlyBGroup = [];
 
                     for (let card of group) {
-                      if (both.includes(card.details.name)) {
+                      if (bothCopy.includes(card.details.name)) {
                         bothGroup.push(card);
-                        both.splice(both.indexOf(card.details.name), 1);
-                      } else if (only_a.includes(card.details.name)) {
+                        bothCopy.splice(bothCopy.indexOf(card.details.name), 1);
+                      } else if (onlyACopy.includes(card.details.name)) {
                         onlyAGroup.push(card);
-                        only_a.splice(only_a.indexOf(card.details.name), 1);
-                      } else if (only_b.includes(card.details.name)) {
+                        onlyACopy.splice(onlyACopy.indexOf(card.details.name), 1);
+                      } else if (onlyBCopy.includes(card.details.name)) {
                         onlyBGroup.push(card);
-                        only_b.splice(only_b.indexOf(card.details.name), 1);
+                        onlyBCopy.splice(onlyBCopy.indexOf(card.details.name), 1);
                       }
                     }
 

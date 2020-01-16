@@ -167,14 +167,16 @@ const SelectEmptyModal = ({ isOpen, toggle }) => (
 const CompareCollapse = (props) => {
   const { cubeID } = useContext(CubeContext);
   const [compareID, setCompareID] = useState('');
-  const handleChange = useCallback((event) => setCompareID(event.target.value));
+  const handleChange = useCallback((event) => setCompareID(event.target.value), []);
+
+  const targetUrl = `/cube/compare/${cubeID}/to/${compareID}`;
 
   return (
     <Collapse {...props}>
       <Container>
         <Row>
           <Col>
-            <Form inline>
+            <Form method="GET" action={targetUrl} inline>
               <Input
                 type="text"
                 className="mb-2 mr-2"
@@ -182,7 +184,7 @@ const CompareCollapse = (props) => {
                 value={compareID}
                 onChange={handleChange}
               />
-              <Button type="submit" color="success" className="mb-2" href={`/cube/compare/${cubeID}/to/${compareID}`}>
+              <Button color="success" className="mb-2" href={targetUrl}>
                 Compare Cubes
               </Button>
             </Form>

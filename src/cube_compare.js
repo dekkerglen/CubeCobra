@@ -87,6 +87,9 @@ class CubeCompare extends Component {
 }
 
 const cube = JSON.parse(document.getElementById('cuberaw').value);
+const both = JSON.parse(document.getElementById('in_both').value);
+const onlyA = JSON.parse(document.getElementById('only_a').value);
+const onlyB = JSON.parse(document.getElementById('only_b').value);
 const cubeID = document.getElementById('cubeID').value;
 const cards = cube.map((card, index) => Object.assign(card, { index }));
 const defaultTagColors = deduplicateTags(JSON.parse(document.getElementById('cubeTagColors').value));
@@ -96,9 +99,9 @@ const wrapper = document.getElementById('react-root');
 const element = (
   <CubeCompare
     cards={cards}
-    both={in_both}
-    onlyA={only_a}
-    onlyB={only_b}
+    both={both}
+    onlyA={onlyA}
+    onlyB={onlyB}
     cubeID={cubeID}
     defaultTagColors={defaultTagColors}
     defaultShowTagColors={defaultShowTagColors}
