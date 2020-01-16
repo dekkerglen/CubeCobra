@@ -59,13 +59,13 @@ function standardDraft(cards, probabilistic = false) {
     throw new Error('Unable to create draft: not enough cards.');
   }
   return function(cardFilters) {
-    // ignore cardFilter, just take any card in cube
+    // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
     // remove a random card
     cards = arrayShuffle(cards);
-    return { card: cards.pop(), message: '' };
+    return { card: cards.pop(), messages: '' };
   };
 }
 
@@ -77,7 +77,7 @@ function standDraftAsfan(cards) {
   const poolWeight = 1 / poolCount;
   return (cardFilters) => {
     cards.forEach((card) => (card.asfan += poolWeight));
-    return { card: true, message: '' };
+    return { card: true, messages: '' };
   };
 }
 
@@ -214,12 +214,13 @@ function createPacks(draft, format, seats, nextCardFn) {
       let pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
         let result = nextCardFn(format[packNum][cardNum]);
-        ok = ok && result.ok;
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
         if (result.card) {
           pack.push(result.card);
+        } else {
+          ok = false;
         }
       }
       if (!format.custom) {
@@ -257,7 +258,6 @@ export function populateDraft(draft, format, cards, bots, seats) {
   let result = createPacks(draft, format, seats, nextCardFn);
 
   if (result.messages.length > 0) {
-    // TODO: display messages to user
     draft.messages = result.messages.join('\n');
   }
 
