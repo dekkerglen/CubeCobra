@@ -8,6 +8,7 @@ import AutocompleteInput from './AutocompleteInput';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
+import Filter from '../util/Filter';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
 import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
