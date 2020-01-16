@@ -44,7 +44,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   const handleChange = useCallback((event) => {
     return {
-      postContent: setPostContent,
+      blog: setPostContent,
       add: setAddValue,
       remove: setRemoveValue,
     }[event.target.name](event.target.value);
@@ -180,7 +180,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               </div>
             </Col>
             <Col>
-              <BlogpostEditor value={postContent} onChange={handleChange} />
+              <BlogpostEditor name="blog" value={postContent} onChange={handleChange} />
             </Col>
           </Row>
           <Row className="mb-2">

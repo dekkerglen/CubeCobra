@@ -55,7 +55,7 @@ const BlogpostEditor = ({ name, value, onChange, ...props }) => (
             </Row>
           </Toolbar>
         </CardHeader>
-        <ContentEditable className="blogpost-editor" value={value} onChange={onChange} />
+        <ContentEditable className="blogpost-editor" name={name} value={value} onChange={onChange} />
         <Input type="hidden" name={name} value={value} />
       </Card>
       <FormText>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</FormText>
