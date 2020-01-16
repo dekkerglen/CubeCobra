@@ -33,7 +33,6 @@ class CubeOverviewModal extends Component {
       image_dict: {},
     };
 
-
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
     this.addTag = this.addTag.bind(this);
@@ -368,7 +367,11 @@ class CubeOverviewModal extends Component {
                 <h6>Description</h6>
                 <TextEntry
                   name="blog"
-                  value={cube.descriptionhtml && cube.descriptionhtml !== 'undefined' ? cube.descriptionhtml :cube.description}
+                  value={
+                    cube.descriptionhtml && cube.descriptionhtml !== 'undefined'
+                      ? cube.descriptionhtml
+                      : cube.description
+                  }
                   onChange={this.handleDescriptionChange}
                 />
                 <br />
