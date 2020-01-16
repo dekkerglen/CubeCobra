@@ -9,7 +9,7 @@ block cube_toolbar
           .collapse.navbar-collapse
             ul.navbar-nav
               li.nav-item
-                a.nav-link.newBlogButton(href='#' data-toggle='modal', data-target='#customDraftModal') Create new blog post
+                a.nav-link.newBlogButton(href='#') Create new blog post
 
 block cube_content
   include ../flash
@@ -58,7 +58,13 @@ block cube_content
               button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
 
 block scripts
+  script(src='/js/texteditor.js', async)
+  script(src='/js/blog.js', async)
+
   include ../react
-  script(src='/js/blog.js')
   script(src='/js/cube_blog.bundle.js')
-  script(src='/js/texteditor.js')
+
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    autocard_init('autocard');
+    autocard_init('dynamic-autocard');

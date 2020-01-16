@@ -1,4 +1,4 @@
-.text-entry {
+.text-entry, #editor {
   min-height: 10rem;
   overflow: auto;
   padding: 1em;
