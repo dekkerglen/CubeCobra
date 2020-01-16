@@ -796,6 +796,37 @@ function filterApply(card, filter, inCube) {
   }
 }
 
+export function filterToString(filters) {
+  if (Array.isArray(filters) && Array.isArray(filters[0])) {
+    return filterToString(filters[0]);
+  }
+  let s = [];
+  let f, arg, operand;
+  for (let i = 0; i < filters.length; i++) {
+    f = filters[i];
+    if (f.type == 'token') {
+      arg = f.arg;
+      if (Array.isArray(arg)) {
+        arg = arg.join('');
+      }
+      operand = f.operand;
+      if (f.not) {
+        operand = '!' + operand;
+      }
+      s.push(f.category + operand + arg);
+    }
+  }
+
+  let sep = ' and ';
+  if (filters.type) {
+    if (filters.type == 'or') {
+      sep = ' or ';
+    }
+  }
+
+  return s.join(sep);
+}
+
 export default {
   operators,
   operatorsRegex,
@@ -805,4 +836,5 @@ export default {
   filterCard,
   filterCards,
   filterCardsDetails,
+  filterToString,
 };

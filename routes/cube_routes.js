@@ -191,6 +191,19 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       };
       message = 'Custom format successfully edited.';
     }
+    // check pack formats are sane
+    let draftcards = cube.cards.slice();
+    if (draftcards.length == 0) {
+      throw new Error('Could not create draft: no cards');
+    }
+    // ensure that cards have details
+    draftcards.forEach((card, index) => {
+      card.details = carddb.cardFromId(card.cardID);
+    });
+    // test format for errors
+    let format = draftutil.parseDraftFormat(req.body.format);
+    draftutil.checkFormat(format, draftcards);
+
     await Cube.updateOne(
       {
         _id: cube._id,
@@ -199,14 +212,11 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     );
 
     req.flash('success', message);
-    res.redirect('/cube/playtest/' + req.params.id);
   } catch (err) {
     console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    req.flash('danger', err.message);
   }
+  res.redirect('/cube/playtest/' + req.params.id);
 });
 
 router.post('/blog/post/:id', ensureAuth, function(req, res) {
@@ -1645,8 +1655,8 @@ router.post('/startdraft/:id', async (req, res) => {
     await draft.save();
     return res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
-    console.log(err, req);
-    req.flash('danger', err);
+    console.error(err);
+    req.flash('danger', err.message);
     return res.redirect('/cube/playtest/' + req.params.id);
   }
 });
