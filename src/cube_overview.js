@@ -108,44 +108,42 @@ class CubeOverview extends Component {
     return (
       <>
         {canEdit && (
-          <div className="usercontrols">
-            <Navbar expand="md" light>
+          <Navbar expand="md" light className="usercontrols mb-3">
+            <Nav navbar>
+              <NavItem>
+                <CubeOverviewModal
+                  cube={cube}
+                  cubeID={cubeID}
+                  onError={this.error}
+                  onCubeUpdate={this.onCubeUpdate}
+                />
+              </NavItem>
+            </Nav>
+            <NavbarToggler
+              className="ml-auto"
+              id="cubeOverviewNavbarToggler"
+              aria-controls="cubeOverviewNavbarCollapse"
+            />
+            <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
               <Nav navbar>
                 <NavItem>
-                  <CubeOverviewModal
-                    cube={cube}
-                    cubeID={cubeID}
-                    onError={this.error}
-                    onCubeUpdate={this.onCubeUpdate}
-                  />
+                  <NavLink href="#" data-toggle="modal" data-target="#deleteCubeModal">
+                    Delete Cube
+                  </NavLink>
                 </NavItem>
               </Nav>
-              <NavbarToggler
-                className="ml-auto"
-                id="cubeOverviewNavbarToggler"
-                aria-controls="cubeOverviewNavbarCollapse"
-              />
-              <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
-                <Nav navbar>
-                  <NavItem>
-                    <NavLink href="#" data-toggle="modal" data-target="#deleteCubeModal">
-                      Delete Cube
-                    </NavLink>
-                  </NavItem>
-                </Nav>
-              </UncontrolledCollapse>
-            </Navbar>
-          </div>
+            </UncontrolledCollapse>
+          </Navbar>
         )}
         <DynamicFlash />
         {this.state.alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert color={color} key={index} className="mt-3 mb-0">
+          <UncontrolledAlert color={color} key={index}>
             {message}
           </UncontrolledAlert>
         ))}
         <Row>
-          <Col md="4">
-            <Card className="mt-3">
+          <Col md="4" className="mb-3">
+            <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
                 <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
@@ -212,7 +210,7 @@ class CubeOverview extends Component {
             </Card>
           </Col>
           <Col>
-            <Card className="mt-3">
+            <Card>
               <CardHeader>
                 <h5 className="card-title">Description</h5>
               </CardHeader>
