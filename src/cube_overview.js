@@ -111,12 +111,7 @@ class CubeOverview extends Component {
           <Navbar expand="md" light className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>
-                <CubeOverviewModal
-                  cube={cube}
-                  cubeID={cubeID}
-                  onError={this.error}
-                  onCubeUpdate={this.onCubeUpdate}
-                />
+                <CubeOverviewModal cube={cube} cubeID={cubeID} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
               </NavItem>
             </Nav>
             <NavbarToggler
