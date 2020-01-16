@@ -204,13 +204,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     let format = draftutil.parseDraftFormat(req.body.format);
     draftutil.checkFormat(format, draftcards);
 
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      cube,
-    );
-
+    await cube.save();
     req.flash('success', message);
   } catch (err) {
     console.error(err);
