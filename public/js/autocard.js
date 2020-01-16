@@ -202,6 +202,3 @@ function autocard_hide_card() {
   $(document.getElementById('autocard_popup2')).hide();
   $(document.getElementById('autocard_popup_info')).hide();
 }
-
-autocard_init('autocard');
-autocard_init('dynamic-autocard');

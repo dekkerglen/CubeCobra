@@ -410,7 +410,7 @@ export function filterCards(cards, filter, inCube) {
   return cards.filter((card) => filterCard(card, filter, inCube));
 }
 
-function filterCardsDetails(cardsDetails, filter) {
+export function filterCardsDetails(cardsDetails, filter) {
   const cards = cardsDetails.map((details) => ({ details }));
   const filtered = filterCards(cards, filter, /* inCube */ false);
   return filtered.map((card) => card.details);
