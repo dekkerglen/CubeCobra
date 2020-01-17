@@ -820,7 +820,7 @@ router.get('/list/:id', async function(req, res) {
     const reactProps = {
       canEdit: req.user ? req.user.id === cube.owner : false,
       cubeID: req.params.id,
-      defaultTagColors: cube.tag_colors,
+      defaultTagColors: cube.tag_colors ? cube.tag_colors : [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
