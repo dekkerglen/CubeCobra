@@ -93,7 +93,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     event.stopPropagation();
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
-    setCardIndices((cards) => cards.filter((c) => c.index !== parseInt(index)));
+    setCardIndices((cards) => cards.filter((c) => c !== parseInt(index)));
   });
 
   const setTags = useCallback((tagF) => {
