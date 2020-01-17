@@ -882,10 +882,12 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: user._id.equals(cube.owner),
       decks,
       cubeID: req.params.id,
-      draftFormats: cube.draft_formats.map(({ packs, ...format }) => ({
-        ...format,
-        packs: JSON.parse(packs),
-      })),
+      draftFormats: cube.draft_formats
+        ? cube.draft_formats.map(({ packs, ...format }) => ({
+            ...format,
+            packs: JSON.parse(packs),
+          }))
+        : [],
     };
 
     res.render('cube/cube_playtest', {
