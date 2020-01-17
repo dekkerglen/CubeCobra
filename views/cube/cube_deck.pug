@@ -23,7 +23,7 @@ block scripts
       canEdit: !{JSON.stringify(user && user._id == owner)},
       comments: !{JSON.stringify(comments)},
       deckid: !{JSON.stringify(deckid)},
-      userid: !{JSON.stringify(user._id)},
+      userid: !{JSON.stringify(user ? user._id : null)},
     };
   include ../react
   script(src='/js/cube_deck.bundle.js')
