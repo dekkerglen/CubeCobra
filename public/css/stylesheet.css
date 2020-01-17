@@ -627,6 +627,7 @@ body.busy-cursor {
 
 .color-check-button {
 	border-color: #ced4da !important;
+	padding: 0 0.5rem;
 }
 
 .color-check-button.active, .color-check-button:hover {

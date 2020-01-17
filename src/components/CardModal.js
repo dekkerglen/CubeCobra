@@ -3,13 +3,10 @@ import React from 'react';
 import {
   Button,
   Col,
-  Form,
-  FormGroup,
   Input,
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -22,10 +19,10 @@ import { getLabels } from '../util/Sort';
 
 import ButtonLink from './ButtonLink';
 import { ColorChecksAddon } from './ColorCheck';
-import ImageFallback from './ImageFallback';
 import LoadingButton from './LoadingButton';
 import FoilCardImage from './FoilCardImage';
 import TagInput from './TagInput';
+import TextBadge from './TextBadge';
 
 const CardModal = ({
   card,
@@ -51,24 +48,10 @@ const CardModal = ({
         <Row>
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
-            <div className="price-area">
-              {!card.details.price ? (
-                ''
-              ) : (
-                <div className="card-price">
-                  TCGPlayer Market:
-                  {card.details.price.toFixed(2)}
-                </div>
-              )}
-              {!card.details.price_foil ? (
-                ''
-              ) : (
-                <div className="card-price">
-                  Foil TCGPlayer Market:
-                  {card.details.price_foil.toFixed(2)}
-                </div>
-              )}
-            </div>
+            <Row noGutters className="mb-2">
+              {card.details.price && <TextBadge name="Price" className="mt-2 mr-2">${card.details.price.toFixed(2)}</TextBadge>}
+              {card.details.price_foil && <TextBadge name="Foil" className="mt-2">${card.details.price_foil.toFixed(2)}</TextBadge>}
+            </Row>
           </Col>
           <Col xs="12" sm="8">
             <h5>Card Attributes</h5>
