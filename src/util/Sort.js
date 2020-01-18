@@ -416,7 +416,7 @@ export function cardGetLabels(card, sort) {
     if (colorIdentity(card).length < 4) {
       return [];
     } else if (colorIdentity(card).length === 5) {
-      return ['Five-Color'];
+      return ['Five Color'];
     } else {
       return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
