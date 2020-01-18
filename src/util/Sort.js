@@ -575,8 +575,8 @@ export function cardGetLabels(card, sort) {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')
-      ? 'Creature'
-      : 'Non-Creature';
+      ? ['Creature']
+      : ['Non-Creature'];
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {
@@ -656,7 +656,7 @@ export function sortDeep(cards, ...sorts) {
     const result = sortGroupsOrdered(cards, first);
     for (const labelGroup of result) {
       if (rest.length > 0) {
-        labelGroup[1] = sortDeep(labelGroup[1], rest);
+        labelGroup[1] = sortDeep(labelGroup[1], ...rest);
       } else {
         labelGroup[1].sort(alphaCompare);
       }

@@ -23,6 +23,7 @@ class ContentEditable extends Component {
     if (this.props.onChange) {
       this.props.onChange({
         target: {
+          name: this.props.name,
           value: event.target.innerHTML,
         },
       });

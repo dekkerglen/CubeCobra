@@ -1,16 +1,11 @@
-import { filterCards, operatorsRegex, parseTokens, tokenizeInput, verifyTokens } from './Filter';
+import { filterCards, operatorsRegex, parseTokens, tokenizeInput, verifyTokens, filterToString } from './Filter';
 import { arrayShuffle } from './Util';
 
-function matchingCards(cards, filter, restrictAsfan = false) {
+function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
-  const filtered = filterCards(cards, filter, true);
-  if (restrictAsfan) {
-    return filtered.filter((card) => card.asfan < 1);
-  } else {
-    return filtered;
-  }
+  return filterCards(cards, filter, true);
 }
 
 function makeFilter(filterText) {
@@ -45,7 +40,7 @@ function makeFilter(filterText) {
 
       [pack][card in pack][token,token...]
 */
-function parseDraftFormat(packsJSON, splitter = ',') {
+export function parseDraftFormat(packsJSON, splitter = ',') {
   let format = JSON.parse(packsJSON);
   for (let j = 0; j < format.length; j++) {
     for (let k = 0; k < format[j].length; k++) {
@@ -58,89 +53,110 @@ function parseDraftFormat(packsJSON, splitter = ',') {
   return format;
 }
 
+// standard draft has no duplicates
 function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  if (probabilistic) {
-    const poolCount = cards.length;
-    const poolWeight = 1 / poolCount;
-    return (cardFormat) => {
-      cards.forEach((card) => (card.asfan += poolWeight));
-      return { card: true, message: '' };
-    };
-  } else {
+  return function(cardFilters) {
+    // ignore cardFilters, just take any card in cube
+    if (cards.length === 0) {
+      throw new Error('Unable to create draft: not enough cards.');
+    }
+    // remove a random card
     cards = arrayShuffle(cards);
-    return function(cardFormat) {
-      return { card: cards.pop(), message: '' };
-    };
-  }
+    return { card: cards.pop(), messages: '' };
+  };
 }
 
-function customDraft(cards, duplicates = false, probabilistic = false) {
-  return function(cardFilter) {
+function standDraftAsfan(cards) {
+  if (cards.length === 0) {
+    throw new Error('Unable to create draft asfan: not enough cards.');
+  }
+  const poolCount = cards.length;
+  const poolWeight = 1 / poolCount;
+  return (cardFilters) => {
+    cards.forEach((card) => (card.asfan += poolWeight));
+    return { card: true, messages: '' };
+  };
+}
+
+function customDraft(cards, duplicates = false) {
+  return function(cardFilters) {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
-    let validCardGroups = [];
-    let index = -1;
+    let validCards = cards;
+    let index = null;
     let messages = [];
-    if (cardFilter.length > 0) {
+    if (cardFilters.length > 0) {
       do {
-        if (probabilistic) {
-          index++;
-        } else {
-          index = Math.floor(Math.random() * cardFilter.length);
-        }
-        const validCards = matchingCards(cards, cardFilter[index], probabilistic && !duplicates);
+        index = Math.floor(Math.random() * cardFilters.length);
+        let filter = cardFilters[index];
+        validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push('Warning: no cards matching filter: ' + cardFilter[index]);
+          messages.push('Warning: no cards matching filter: ' + filterToString(filter));
           // try another options and remove this filter as it is now empty
-          cardFilter.splice(index, 1);
-        } else {
-          validCardGroups.push(validCards);
+          cardFilters.splice(index, 1);
         }
-      } while (
-        (probabilistic || validCardGroups.length == 0) &&
-        cardFilter.length > 1 &&
-        (!probabilistic || index + 1 < cardFilter.length)
-      );
+      } while (validCards.length == 0 && cardFilters.length > 0);
+    }
+
+    if (validCards.length == 0) {
+      throw new Error('Unable to create draft: not enough cards matching filter.\n' + messages.join('\n'));
+    }
+
+    index = Math.floor(Math.random() * validCards.length);
+
+    // slice out the first card with the index, or error out
+    let card = validCards[index];
+    if (!duplicates) {
+      // remove from cards
+      index = cards.indexOf(card);
+      cards.splice(index, 1);
+    }
+
+    return { card: card, messages: messages };
+  };
+}
+
+function customDraftAsfan(cards, duplicates = false) {
+  return function(cardFilters) {
+    if (cards.length === 0) {
+      throw new Error('Unable to create draft asfan: not enough cards.');
+    }
+
+    // each filter is an array of parsed filter tokens, we choose one randomly
+    let validCardGroups = [];
+    for (let i = 0; i < cardFilters.length; i++) {
+      let validCards = matchingCards(cards, cardFilter[i]);
+      if (!duplicates) {
+        validCards = validCards.filter((card) => card.asfan < 1);
+      }
+      if (validCards.length > 0) {
+        validCardGroups.push(validCards);
+      }
     }
 
     if (validCardGroups.length == 0) {
-      throw new Error('Unable to create draft: not enough cards matching filter.');
+      throw new Error('Unable to create draft asfan: not enough cards matching filter.');
     }
 
-    if (probabilistic) {
-      validCardGroups.forEach((validCards) => {
-        if (duplicates) {
-          const poolCount = validCards.length;
-          const poolWeight = 1 / poolCount / validCardGroups.length;
-          validCards.forEach((card) => (card.asfan += poolWeight));
-        } else {
-          const poolCount = validCards.reduce((sum, card) => sum + (1 - card.asfan), 0);
-          const poolWeight = 1 / poolCount / validCardGroups.length;
-          validCards.forEach((card) => (card.asfan += (1 - card.asfan) * poolWeight));
-        }
-      });
-      return { card: true, messages: messages };
-    } else {
-      const validCards = validCardGroups[0];
-      index = Math.floor(Math.random() * validCards.length);
-
-      // slice out the first card with the index, or error out
-      let card = validCards[index];
-      if (!duplicates) {
-        // remove from cards
-        index = cards.indexOf(card);
-        cards.splice(index, 1);
+    validCardGroups.forEach((validCards) => {
+      if (duplicates) {
+        const poolCount = validCards.length;
+        const poolWeight = 1 / poolCount / validCardGroups.length;
+        validCards.forEach((card) => (card.asfan += poolWeight));
+      } else {
+        const poolCount = validCards.reduce((sum, card) => sum + (1 - card.asfan), 0);
+        const poolWeight = 1 / poolCount / validCardGroups.length;
+        validCards.forEach((card) => (card.asfan += (1 - card.asfan) * poolWeight));
       }
-
-      return { card: card, messages: messages };
-    }
+    });
+    return { card: true, messages: messages };
   };
 }
 
@@ -186,6 +202,7 @@ export function getDraftFormat(params, cube) {
 }
 
 function createPacks(draft, format, seats, nextCardFn) {
+  let ok = true;
   let messages = [];
   draft.picks = [];
   draft.packs = [];
@@ -202,6 +219,8 @@ function createPacks(draft, format, seats, nextCardFn) {
         }
         if (result.card) {
           pack.push(result.card);
+        } else {
+          ok = false;
         }
       }
       if (!format.custom) {
@@ -213,7 +232,7 @@ function createPacks(draft, format, seats, nextCardFn) {
       }
     }
   }
-  return { ok: true, messages: messages };
+  return { ok: ok, messages: messages };
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
@@ -239,7 +258,6 @@ export function populateDraft(draft, format, cards, bots, seats) {
   let result = createPacks(draft, format, seats, nextCardFn);
 
   if (result.messages.length > 0) {
-    // TODO: display messages to user
     draft.messages = result.messages.join('\n');
   }
 
@@ -262,17 +280,38 @@ export function calculateAsfans(format, cards) {
   cards.forEach((card) => (card.asfan = 0));
 
   if (format.custom === true) {
-    nextCardFn = customDraft(cards, format.multiples, true);
+    nextCardFn = customDraftAsfan(cards, format.multiples);
   } else {
-    nextCardFn = standardDraft(cards, null, true);
+    nextCardFn = standardDraftAsfan(cards);
   }
 
   return createPacks({}, format, 1, nextCardFn);
 }
 
+export function checkFormat(format, cards) {
+  // check that all filters are sane and match at least one card
+  const checkFn = (cardFilters) => {
+    let messages = [];
+    for (let i = 0; i < cardFilters.length; i++) {
+      let filter = cardFilters[i];
+      let validCards = matchingCards(cards, filter);
+      if (validCards.length == 0) {
+        messages.push('Warning: no cards matching filter: ' + filterToString(filter));
+      }
+    }
+    if (messages.length > 0) {
+      throw new Error(messages.join('\n'));
+    }
+    return { ok: messages.length == 0, messages: messages };
+  };
+  return createPacks({}, format, 1, checkFn);
+}
+
 export default {
   calculateAsfans,
-  populateDraft,
+  checkFormat,
   getDraftBots,
   getDraftFormat,
+  parseDraftFormat,
+  populateDraft,
 };

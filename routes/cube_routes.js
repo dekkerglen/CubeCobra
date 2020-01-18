@@ -190,22 +190,26 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       };
       message = 'Custom format successfully edited.';
     }
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      cube,
-    );
+    // check pack formats are sane
+    let draftcards = cube.cards.slice();
+    if (draftcards.length == 0) {
+      throw new Error('Could not create draft: no cards');
+    }
+    // ensure that cards have details
+    draftcards.forEach((card, index) => {
+      card.details = carddb.cardFromId(card.cardID);
+    });
+    // test format for errors
+    let format = draftutil.parseDraftFormat(req.body.format);
+    draftutil.checkFormat(format, draftcards);
 
+    await cube.save();
     req.flash('success', message);
-    res.redirect('/cube/playtest/' + req.params.id);
   } catch (err) {
     console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    req.flash('danger', err.message);
   }
+  res.redirect('/cube/playtest/' + req.params.id);
 });
 
 router.post('/blog/post/:id', ensureAuth, function(req, res) {
@@ -815,7 +819,7 @@ router.get('/list/:id', async function(req, res) {
     const reactProps = {
       canEdit: req.user ? req.user.id === cube.owner : false,
       cubeID: req.params.id,
-      defaultTagColors: cube.tag_colors,
+      defaultTagColors: cube.tag_colors ? cube.tag_colors : [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
@@ -877,10 +881,12 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: user._id.equals(cube.owner),
       decks,
       cubeID: req.params.id,
-      draftFormats: cube.draft_formats.map(({ packs, ...format }) => ({
-        ...format,
-        packs: JSON.parse(packs),
-      })),
+      draftFormats: cube.draft_formats
+        ? cube.draft_formats.map(({ packs, ...format }) => ({
+            ...format,
+            packs: JSON.parse(packs),
+          }))
+        : [],
     };
 
     res.render('cube/cube_playtest', {
@@ -1678,8 +1684,8 @@ router.post('/startdraft/:id', async (req, res) => {
     await draft.save();
     return res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
-    console.log(err, req);
-    req.flash('danger', err);
+    console.error(err);
+    req.flash('danger', err.message);
     return res.redirect('/cube/playtest/' + req.params.id);
   }
 });
@@ -2012,6 +2018,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
     }
 
     if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias != cube.urlAlias) {
+      updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
       let urlAliasMaxLength = 100;
 
       if (!updatedCube.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {

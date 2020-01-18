@@ -30,7 +30,6 @@ class CubeOverviewModal extends Component {
       isOpen: false,
       tags: props.cube.tags.map((tag) => ({ id: tag, text: tag })),
       cube: JSON.parse(JSON.stringify(props.cube)),
-      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description,
       image_dict: {},
     };
 
@@ -368,7 +367,11 @@ class CubeOverviewModal extends Component {
                 <h6>Description</h6>
                 <TextEntry
                   name="blog"
-                  value={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''}
+                  value={
+                    cube.descriptionhtml && cube.descriptionhtml !== 'undefined'
+                      ? cube.descriptionhtml
+                      : cube.description
+                  }
                   onChange={this.handleDescriptionChange}
                 />
                 <br />
