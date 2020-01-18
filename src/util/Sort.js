@@ -403,9 +403,9 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(typeLine(card), colorIdentity(card) || card.details.color_identity)];
+    return [GetColorCategory(typeLine(card), colorIdentity(card))];
   } else if (sort == 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card) || card.details.color_identity)];
+    return [GetColorIdentity(colorIdentity(card))];
   } else if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
@@ -531,6 +531,8 @@ export function cardGetLabels(card, sort) {
       } else {
         return [type];
       }
+    } else if (colorIdentity(card).length === 5) {
+      return ['5 Color']
     } else {
       return [
         ...cardGetLabels(card, 'Guilds'),
