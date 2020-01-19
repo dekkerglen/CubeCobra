@@ -80,7 +80,6 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     if (name === 'deleteTags') {
       extra.addTags = false;
     }
-
     setFormValues((formValues) => ({
       ...formValues,
       [name]: value,
@@ -96,10 +95,22 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     setCardIndices((cards) => cards.filter((c) => c !== parseInt(index)));
   });
 
+  const setTagInput = useCallback((value) =>
+    setFormValues((formValues) => ({
+      ...formValues,
+      tagInput: value,
+    })),
+  );
+
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
-  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
+  const addTag = useCallback((tag) => {
+    console.log(tag);
+    setTags((tags) => [...tags, tag]);
+    setTagInput('');
+  });
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }));
   const deleteTag = useCallback((tagIndex) => {
     setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
   });
@@ -290,7 +301,15 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                     </Label>
                   </FormGroup>
                 </FormGroup>
-                <TagInput tags={formValues.tags} {...{ addTag, deleteTag, reorderTag }} />
+                <TagInput
+                  tags={formValues.tags}
+                  inputValue={formValues.tagInput}
+                  handleInputChange={setTagInput}
+                  handleInputBlur={addTagText}
+                  addTag={addTag}
+                  deleteTag={deleteTag}
+                  reorderTag={reorderTag}
+                />
               </Form>
             </Col>
           </Row>
