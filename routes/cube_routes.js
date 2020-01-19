@@ -46,7 +46,8 @@ let BulkUploadPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 let DraftView = null;
-if (false) { // NODE_ENV === 'production') {
+if (false) {
+  // NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
@@ -828,10 +829,9 @@ router.get('/list/:id', async function(req, res) {
     };
 
     res.render('cube/cube_list', {
-      reactHTML:
-        CubeListPage
-          ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
-          : undefined,
+      reactHTML: CubeListPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        : undefined,
       reactProps,
       cube,
       cube_id: req.params.id,
@@ -891,10 +891,9 @@ router.get('/playtest/:id', async (req, res) => {
     };
 
     res.render('cube/cube_playtest', {
-      reactHTML:
-        CubePlaytestPage
-          ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
-          : undefined,
+      reactHTML: CubePlaytestPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+        : undefined,
       reactProps,
       cube: cube,
       cube_id: req.params.id,
@@ -1462,10 +1461,9 @@ async function bulkUpload(req, res, list, cube) {
             blogpost: blogpost.toObject(),
           };
           res.render('cube/bulk_upload', {
-            reactHTML:
-              BulkUploadPage
-                ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-                : undefined,
+            reactHTML: BulkUploadPage
+              ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+              : undefined,
             reactProps,
             cube: cube,
             cube_id: req.params.id,
@@ -1700,10 +1698,9 @@ router.get('/draft/:id', async function(req, res) {
     };
 
     res.render('cube/cube_draft', {
-      reactHTML:
-        DraftView
-          ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
-          : undefined,
+      reactHTML: DraftView
+        ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
+        : undefined,
       reactProps,
       cube,
       cube_id: get_cube_id(cube),
