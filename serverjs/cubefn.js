@@ -252,7 +252,7 @@ var methods = {
     }
     return src;
   },
-  generatePack: async(cubeId, carddb, seed) => {
+  generatePack: async (cubeId, carddb, seed) => {
     const cube = await Cube.findOne(build_id_query(cubeId));
     if (!seed) {
       seed = Date.now().toString();

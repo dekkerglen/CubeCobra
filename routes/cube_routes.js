@@ -923,14 +923,14 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     });
   } catch (err) {
     util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
-  }      
+  }
 });
 
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
-    
+
     var srcArray = pack.pack.map((card, index) => {
       return {
         src: card.image_normal,
@@ -1172,7 +1172,7 @@ router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
       return res.redirect('/cube/list/' + req.params.id);
     }
 
-    await bulkUpload(req, res, req.body.body, cube);  
+    await bulkUpload(req, res, req.body.body, cube);
   } catch (err) {
     util.handleRouteError(res, err, `/cube/list/${req.params.id}`);
   }
@@ -1198,7 +1198,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
     await bulkUpload(req, res, items, cube);
   } catch (err) {
-    util.handleRouteError(res, err,`/cube/list/${req.params.id}`);
+    util.handleRouteError(res, err, `/cube/list/${req.params.id}`);
   }
 });
 
@@ -1413,7 +1413,7 @@ async function bulkUpload(req, res, list, cube) {
 }
 
 router.get('/download/cubecobra/:id', async (req, res) => {
-  try{
+  try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
 
     res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
@@ -1424,117 +1424,113 @@ router.get('/download/cubecobra/:id', async (req, res) => {
     });
     res.end();
   } catch (err) {
-    util.handleRouteError(res, err,'/404');
-  }      
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
-router.get('/download/csv/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      res.write(CSV_HEADER + '\r\n');
-      let writeCard = function(card, maybe) {
-        if (!card.type_line) {
-          card.type_line = carddb.cardFromId(card.cardID).type;
+router.get('/download/csv/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write(CSV_HEADER + '\r\n');
+    let writeCard = function(card, maybe) {
+      if (!card.type_line) {
+        card.type_line = carddb.cardFromId(card.cardID).type;
+      }
+      var name = carddb.cardFromId(card.cardID).name;
+      while (name.includes('"')) {
+        name = name.replace('"', '-quote-');
+      }
+      while (name.includes('-quote-')) {
+        name = name.replace('-quote-', '""');
+      }
+      res.write('"' + name + '"' + ',');
+      res.write(card.cmc + ',');
+      res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
+      res.write(card.colors.join('') + ',');
+      res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
+      res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
+      res.write(card.status + ',');
+      res.write(card.finish + ',');
+      res.write(maybe + ',');
+      res.write('"' + card.imgUrl + '","');
+      card.tags.forEach(function(tag, t_index) {
+        if (t_index != 0) {
+          res.write(', ');
         }
-        var name = carddb.cardFromId(card.cardID).name;
-        while (name.includes('"')) {
-          name = name.replace('"', '-quote-');
-        }
-        while (name.includes('-quote-')) {
-          name = name.replace('-quote-', '""');
-        }
-        res.write('"' + name + '"' + ',');
-        res.write(card.cmc + ',');
-        res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
-        res.write(card.colors.join('') + ',');
-        res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
-        res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
-        res.write(card.status + ',');
-        res.write(card.finish + ',');
-        res.write(maybe + ',');
-        res.write('"' + card.imgUrl + '","');
-        card.tags.forEach(function(tag, t_index) {
-          if (t_index != 0) {
-            res.write(', ');
-          }
-          res.write(tag);
-        });
-        res.write('"\r\n');
-      };
-      cube.cards.forEach(function(card, index) {
-        return writeCard(card, false);
+        res.write(tag);
       });
-      cube.maybe.forEach(function(card, index) {
-        return writeCard(card, true);
-      });
-      res.end();
-    }
-  });
+      res.write('"\r\n');
+    };
+    cube.cards.forEach(function(card, index) {
+      return writeCard(card, false);
+    });
+    cube.maybe.forEach(function(card, index) {
+      return writeCard(card, true);
+    });
+    res.end();
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
-router.get('/download/forge/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      res.write('[metadata]\r\n');
-      res.write('Name=' + cube.name + '\r\n');
-      res.write('[Main]\r\n');
-      cube.cards.forEach(function(card, index) {
-        var name = carddb.cardFromId(card.cardID).name;
-        var set = carddb.cardFromId(card.cardID).set;
-        res.write('1 ' + name + '|' + set.toUpperCase() + '\r\n');
-      });
-      res.end();
-    }
-  });
+router.get('/download/forge/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write('[metadata]\r\n');
+    res.write('Name=' + cube.name + '\r\n');
+    res.write('[Main]\r\n');
+    cube.cards.forEach(function(card, index) {
+      var name = carddb.cardFromId(card.cardID).name;
+      var set = carddb.cardFromId(card.cardID).set;
+      res.write('1 ' + name + '|' + set.toUpperCase() + '\r\n');
+    });
+    res.end();
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
-router.get('/download/xmage/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        var name = carddb.cardFromId(card.cardID).name;
-        var set = carddb.cardFromId(card.cardID).set;
-        var collectorNumber = carddb.cardFromId(card.cardID).collector_number;
-        res.write('1 [' + set.toUpperCase() + ':' + collectorNumber + '] ' + name + '\r\n');
-      });
-      res.end();
-    }
-  });
+router.get('/download/xmage/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    cube.cards.forEach(function(card, index) {
+      var name = carddb.cardFromId(card.cardID).name;
+      var set = carddb.cardFromId(card.cardID).set;
+      var collectorNumber = carddb.cardFromId(card.cardID).collector_number;
+      res.write('1 [' + set.toUpperCase() + ':' + collectorNumber + '] ' + name + '\r\n');
+    });
+    res.end();
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
-router.get('/download/plaintext/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        res.write(carddb.cardFromId(card.cardID).name + '\r\n');
-      });
-      res.end();
-    }
-  });
+router.get('/download/plaintext/:id', async (req, res) => {
+  try{
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    
+    res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    cube.cards.forEach(function(card, index) {
+      res.write(carddb.cardFromId(card.cardID).name + '\r\n');
+    });
+    res.end();
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
 router.post('/startdraft/:id', async (req, res) => {
