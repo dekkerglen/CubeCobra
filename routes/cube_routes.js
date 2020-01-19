@@ -643,112 +643,95 @@ router.get('/rss/:id', async (req, res) => {
   }
 });
 
-router.get('/compare/:id_a/to/:id_b', function(req, res) {
-  const id_a = req.params.id_a;
-  const id_b = req.params.id_b;
-  const user_id = req.user ? req.user._id : '';
-  Cube.findOne(build_id_query(id_a), function(err, cubeA) {
-    Cube.findOne(build_id_query(id_b), function(err, cubeB) {
-      if (!cubeA) {
-        req.flash('danger', 'Base cube not found');
-        res.status(404).render('misc/404', {});
-      } else if (!cubeB) {
-        req.flash('danger', 'Comparison cube was not found');
-        res.redirect('/cube/list/' + id_a);
-      } else {
-        let pids = [];
-        cubeA.cards.forEach(function(card, index) {
-          card.details = {
-            ...carddb.cardFromId(card.cardID),
-          };
-          if (!card.type_line) {
-            card.type_line = card.details.type;
-          }
-          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-            pids.push(card.details.tcgplayer_id);
-          }
-        });
-        cubeB.cards.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
-          if (!card.type_line) {
-            card.type_line = card.details.type;
-          }
-          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-            pids.push(card.details.tcgplayer_id);
-          }
-        });
-        GetPrices(pids).then(function(price_dict) {
-          cubeA.cards.forEach(function(card, index) {
-            if (card.details.tcgplayer_id) {
-              if (price_dict[card.details.tcgplayer_id]) {
-                card.details.price = price_dict[card.details.tcgplayer_id];
-              }
-              if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-              }
+router.get('/compare/:id_a/to/:id_b', async (req, res) => {
+  try {
+    const id_a = req.params.id_a;
+    const id_b = req.params.id_b;
+
+    const cubeAq = Cube.findOne(build_id_query(id_a));
+    const cubeBq = Cube.findOne(build_id_query(id_b));
+
+    const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
+
+    const pids = [];
+
+    [cubeA, cubeB].forEach((cube) => {
+      cube.cards.forEach(function(card, index) {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
+          pids.push(card.details.tcgplayer_id);
+        }
+      });
+    });
+
+    GetPrices(pids).then(function(price_dict) {
+      [cubeA, cubeB].forEach((cube) => {
+        cube.cards.forEach(function(card, index) {
+          if (card.details.tcgplayer_id) {
+            if (price_dict[card.details.tcgplayer_id]) {
+              card.details.price = price_dict[card.details.tcgplayer_id];
             }
-          });
-          cubeB.cards.forEach(function(card, index) {
-            if (card.details.tcgplayer_id) {
-              if (price_dict[card.details.tcgplayer_id]) {
-                card.details.price = price_dict[card.details.tcgplayer_id];
-              }
-              if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-              }
+            if (price_dict[card.details.tcgplayer_id + '_foil']) {
+              card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
             }
-          });
-          User.findById(cubeA.owner, function(err, ownerA) {
-            User.findById(cubeB.owner, function(err, ownerB) {
-              let in_both = [];
-              let only_a = cubeA.cards.slice(0);
-              let only_b = cubeB.cards.slice(0);
-              let a_names = only_a.map((card) => card.details.name);
-              let b_names = only_b.map((card) => card.details.name);
-
-              cubeA.cards.forEach(function(card, index) {
-                if (b_names.includes(card.details.name)) {
-                  in_both.push(card);
-
-                  only_a.splice(a_names.indexOf(card.details.name), 1);
-                  only_b.splice(b_names.indexOf(card.details.name), 1);
-
-                  a_names.splice(a_names.indexOf(card.details.name), 1);
-                  b_names.splice(b_names.indexOf(card.details.name), 1);
-                }
-              });
-
-              let all_cards = in_both.concat(only_a).concat(only_b);
-
-              params = {
-                cube: cubeA,
-                cubeB: cubeB,
-                cube_id: id_a,
-                cube_b_id: id_b,
-                title: `Comparing ${cubeA.name} to ${cubeB.name}`,
-                in_both: JSON.stringify(in_both.map((card) => card.details.name)),
-                only_a: JSON.stringify(a_names),
-                only_b: JSON.stringify(b_names),
-                cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
-                metadata: generateMeta(
-                  'Cube Cobra Compare Cubes',
-                  `Comparing "${cubeA.name}" To "${cubeB.name}"`,
-                  cubeA.image_uri,
-                  `https://cubecobra.com/cube/compare/${id_a}/to/${id_b}`,
-                ),
-                loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
-              };
-
-              if (ownerA) params.owner = ownerA.username;
-              else params.author = 'unknown';
-
-              res.render('cube/cube_compare', params);
-            });
-          });
+          }
         });
+      });
+    });
+
+    const ownerA = await User.findById(cubeA.owner);
+
+    let in_both = [];
+    let only_a = cubeA.cards.slice(0);
+    let only_b = cubeB.cards.slice(0);
+    let a_names = only_a.map((card) => card.details.name);
+    let b_names = only_b.map((card) => card.details.name);
+
+    cubeA.cards.forEach(function(card, index) {
+      if (b_names.includes(card.details.name)) {
+        in_both.push(card);
+
+        only_a.splice(a_names.indexOf(card.details.name), 1);
+        only_b.splice(b_names.indexOf(card.details.name), 1);
+
+        a_names.splice(a_names.indexOf(card.details.name), 1);
+        b_names.splice(b_names.indexOf(card.details.name), 1);
       }
     });
-  });
+
+    const all_cards = in_both.concat(only_a).concat(only_b);
+
+    params = {
+      cube: cubeA,
+      cubeB: cubeB,
+      cube_id: id_a,
+      cube_b_id: id_b,
+      title: `Comparing ${cubeA.name} to ${cubeB.name}`,
+      in_both: JSON.stringify(in_both.map((card) => card.details.name)),
+      only_a: JSON.stringify(a_names),
+      only_b: JSON.stringify(b_names),
+      cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
+      metadata: generateMeta(
+        'Cube Cobra Compare Cubes',
+        `Comparing "${cubeA.name}" To "${cubeB.name}"`,
+        cubeA.image_uri,
+        `https://cubecobra.com/cube/compare/${id_a}/to/${id_b}`,
+      ),
+      loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
+    };
+
+    if (ownerA) params.owner = ownerA.username;
+    else params.author = 'unknown';
+
+    res.render('cube/cube_compare', params);
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/list/' + req.params.id_a);
+  }
 });
 
 router.get('/list/:id', async function(req, res) {
