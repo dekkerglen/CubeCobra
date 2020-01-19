@@ -159,6 +159,12 @@ function wrapAsyncApi(route) {
   };
 }
 
+function handleRouteError(res, err, reroute) {
+  console.error(err);
+  req.flash('danger', err.message);
+  res.redirect(reroute);
+}
+
 var exports = {
   shuffle: function(array, seed) {
     if (!seed) {
@@ -221,6 +227,7 @@ var exports = {
   },
   addNotification,
   wrapAsyncApi,
+  handleRouteError,
 };
 
 module.exports = exports;

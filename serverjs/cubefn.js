@@ -275,11 +275,10 @@ var methods = {
   get_cube_id,
   intToLegality,
   legalityToInt,
-  cardHtml,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
-  abbreviate
+  abbreviate,
 };
 
 module.exports = methods;

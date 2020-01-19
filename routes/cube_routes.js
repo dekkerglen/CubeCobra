@@ -11,7 +11,6 @@ var {
   generate_short_id,
   build_id_query,
   get_cube_id,
-  cardHtml,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -61,7 +60,6 @@ if (false) {
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');
-
 
 router.use(csrfProtection);
 
@@ -113,16 +111,12 @@ router.post('/add', ensureAuth, async (req, res) => {
     req.flash('success', 'Cube Added');
     return res.redirect('/cube/overview/' + cube.shortID);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/user/view/' + user._id);
   }
 });
 
-// GEt view cube Route
-router.get('/view/:id', function(req, res) {
+// Get view cube Route
+router.get('/view/:id', (req, res) => {
   res.redirect('/cube/overview/' + req.params.id);
 });
 
@@ -168,76 +162,70 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     await cube.save();
     req.flash('success', message);
+    res.redirect('/cube/playtest/' + req.params.id);
   } catch (err) {
-    console.error(err);
-    req.flash('danger', err.message);
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
   }
-  res.redirect('/cube/playtest/' + req.params.id);
 });
 
-router.post('/blog/post/:id', ensureAuth, function(req, res) {
-  req.body.html = sanitize(req.body.html);
-  if (req.body.title.length < 5 || req.body.title.length > 100) {
-    req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
-    res.redirect('/cube/blog/' + req.params.id);
-  } else if (req.body.html.length <= 10) {
-    req.flash('danger', 'Blog body length must be greater than 10 characters.');
-    res.redirect('/cube/blog/' + req.params.id);
-  } else {
-    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-      if (err || !cube) {
-        req.flash('danger', 'Cube not found');
-        res.status(404).render('misc/404', {});
-      } else {
-        cube.date_updated = Date.now();
-        cube.updated_string = cube.date_updated.toLocaleString('en-US');
-        cube = setCubeType(cube, carddb);
-        cube.save(function(err) {
-          User.findById(cube.owner, function(err, user) {
-            if (req.body.id && req.body.id.length > 0) {
-              Blog.findById(req.body.id, function(err, blog) {
-                if (err || !blog) {
-                  req.flash('success', 'Unable to update this blog post.');
-                  res.redirect('/cube/blog/' + req.params.id);
-                } else {
-                  blog.html = req.body.html;
-                  blog.title = req.body.title;
+router.post('/blog/post/:id', ensureAuth, async (req, res) => {
+  try {
+    req.body.html = sanitize(req.body.html);
+    if (req.body.title.length < 5 || req.body.title.length > 100) {
+      req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
+      return res.redirect('/cube/blog/' + req.params.id);
+    }
 
-                  blog.save(function(err) {
-                    if (err) {
-                      console.log(err, req);
-                    } else {
-                      req.flash('success', 'Blog update successful');
-                      res.redirect('/cube/blog/' + req.params.id);
-                    }
-                  });
-                }
-              });
-            } else {
-              var blogpost = new Blog();
-              blogpost.html = req.body.html;
-              blogpost.title = req.body.title;
-              blogpost.owner = user._id;
-              blogpost.date = Date.now();
-              blogpost.cube = cube._id;
-              blogpost.dev = 'false';
-              blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-              blogpost.username = user.username;
-              blogpost.cubename = cube.name;
+    let cube = await Cube.findOne(build_id_query(req.params.id));
 
-              blogpost.save(function(err) {
-                if (err) {
-                  console.log(err, req);
-                } else {
-                  req.flash('success', 'Blog post successful');
-                  res.redirect('/cube/blog/' + req.params.id);
-                }
-              });
-            }
-          });
-        });
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    await cube.save();
+    const user = await User.findById(req.user._id);
+
+    if (req.body.id && req.body.id.length > 0) {
+      //update an existing blog post
+      const blog = await Blog.findById(req.body.id);
+
+      if (blog.owner != user._id) {
+        req.flash('danger', 'Unable to update this blog post: Unauthorized.');
+        return res.redirect('/cube/blog/' + req.params.id);
       }
-    });
+
+      blog.html = req.body.html;
+      blog.title = req.body.title;
+
+      await blog.save();
+
+      req.flash('success', 'Blog update successful');
+      return res.redirect('/cube/blog/' + req.params.id);
+    } else {
+      //post new blog
+      if (cube.owner != user._id) {
+        req.flash('danger', 'Unable to post this blog post: Unauthorized.');
+        return res.redirect('/cube/blog/' + req.params.id);
+      }
+
+      var blogpost = new Blog();
+      blogpost.html = req.body.html;
+      blogpost.title = req.body.title;
+      blogpost.owner = user._id;
+      blogpost.date = Date.now();
+      blogpost.cube = cube._id;
+      blogpost.dev = 'false';
+      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+      blogpost.username = user.username;
+      blogpost.cubename = cube.name;
+
+      await blogpost.save();
+
+      req.flash('success', 'Blog post successful');
+      return res.redirect('/cube/blog/' + req.params.id);
+    }
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/blog/' + req.params.id);
   }
 });
 
