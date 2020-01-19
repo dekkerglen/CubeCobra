@@ -895,69 +895,63 @@ router.get('/analysis/:id', async (req, res) => {
   }
 });
 
-router.get('/samplepack/:id', function(req, res) {
+router.get('/samplepack/:id', (req, res) => {
   res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
 });
 
-router.get('/samplepack/:id/:seed', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
-      if (err) {
-        req.flash('danger', 'Pack could not be created');
-        res.status(404).render('misc/404', {});
-      } else {
-        res.render('cube/cube_samplepack', {
-          cube,
-          title: `${abbreviate(cube.name)} - Sample Pack`,
-          pack: pack.pack,
-          seed: pack.seed,
-          cube_id: req.params.id,
-          activeLink: 'playtest',
-          metadata: generateMeta(
-            'Cube Cobra Sample Pack',
-            `A sample pack from ${cube.name}`,
-            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
-            CARD_WIDTH * 5,
-            CARD_HEIGHT * 3,
-          ),
-          loginCallback: '/cube/samplepack/' + req.params.id,
-        });
-      }
+router.get('/samplepack/:id/:seed', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+    res.render('cube/cube_samplepack', {
+      cube,
+      title: `${abbreviate(cube.name)} - Sample Pack`,
+      pack: pack.pack,
+      seed: pack.seed,
+      cube_id: req.params.id,
+      activeLink: 'playtest',
+      metadata: generateMeta(
+        'Cube Cobra Sample Pack',
+        `A sample pack from ${cube.name}`,
+        `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+        `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+        CARD_WIDTH * 5,
+        CARD_HEIGHT * 3,
+      ),
+      loginCallback: '/cube/samplepack/' + req.params.id,
     });
-  });
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
+  }      
 });
 
-router.get('/samplepackimage/:id/:seed', function(req, res) {
+router.get('/samplepackimage/:id/:seed', async (req, res) => {
   req.params.seed = req.params.seed.replace('.png', '');
-  generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
-    if (err) {
-      req.flash('danger', 'Pack could not be created');
-      res.status(404).render('misc/404', {});
-    } else {
-      var srcArray = pack.pack.map((card, index) => {
-        return {
-          src: card.image_normal,
-          x: CARD_WIDTH * (index % 5),
-          y: CARD_HEIGHT * Math.floor(index / 5),
-        };
+  const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+  if (err) {
+    req.flash('danger', 'Pack could not be created');
+    res.status(404).render('misc/404', {});
+  } else {
+    var srcArray = pack.pack.map((card, index) => {
+      return {
+        src: card.image_normal,
+        x: CARD_WIDTH * (index % 5),
+        y: CARD_HEIGHT * Math.floor(index / 5),
+      };
+    });
+    mergeImages(srcArray, {
+      width: CARD_WIDTH * 5,
+      height: CARD_HEIGHT * 3,
+      Canvas,
+    }).then(function(image) {
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
       });
-      mergeImages(srcArray, {
-        width: CARD_WIDTH * 5,
-        height: CARD_HEIGHT * 3,
-        Canvas,
-      }).then(function(image) {
-        res.writeHead(200, {
-          'Content-Type': 'image/png',
-        });
-        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-      });
-    }
-  });
+      res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+    });
+  }
 });
 
 router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
@@ -3365,36 +3359,35 @@ router.post('/api/draftpick/:id', function(req, res) {
   });
 });
 
-router.get('/api/p1p1/:id', function(req, res) {
-  generatePack(req.params.id, carddb, false, function(err, result) {
-    if (err) {
-      res.status(500).send({
-        success: false,
-      });
-    } else {
-      const pack = {
-        seed: result.seed,
-        pack: result.pack.map((card) => card.name),
-      };
-      res.status(200).send(pack);
-    }
-  });
+router.get('/api/p1p1/:id', async (req, res) => {
+  const result = await generatePack(req.params.id, carddb, false);
+  if (err) {
+    res.status(500).send({
+      success: false,
+    });
+  } else {
+    const pack = {
+      seed: result.seed,
+      pack: result.pack.map((card) => card.name),
+    };
+    res.status(200).send(pack);
+  }
 });
 
-router.get('/api/p1p1/:id/:seed', function(req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, result) {
-    if (err) {
-      res.status(500).send({
-        success: false,
-      });
-    } else {
-      const pack = {
-        seed: req.params.seed,
-        pack: result.pack.map((card) => card.name),
-      };
-      res.status(200).send(pack);
-    }
-  });
+router.get('/api/p1p1/:id/:seed', async (req, res) => {
+  const result = await generatePack(req.params.id, carddb, req.params.seed);
+
+  if (err) {
+    res.status(500).send({
+      success: false,
+    });
+  } else {
+    const pack = {
+      seed: req.params.seed,
+      pack: result.pack.map((card) => card.name),
+    };
+    res.status(200).send(pack);
+  }
 });
 
 module.exports = router;

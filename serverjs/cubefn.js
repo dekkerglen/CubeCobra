@@ -252,23 +252,21 @@ var methods = {
     }
     return src;
   },
-  generatePack: function(cubeId, carddb, seed, callback) {
-    Cube.findOne(build_id_query(cubeId), function(err, cube) {
-      if (!cube) {
-        callback(true);
-      }
-      if (!seed) {
-        seed = Date.now().toString();
-      }
-      const pack = util
-        .shuffle(cube.cards, seed)
-        .slice(0, 15)
-        .map((card) => carddb.getCardDetails(card));
-      callback(false, {
-        seed,
-        pack,
-      });
-    });
+  generatePack: async(cubeId, carddb, seed) => {
+    const cube = await Cube.findOne(build_id_query(cubeId));
+    if (!seed) {
+      seed = Date.now().toString();
+    }
+
+    const pack = util
+      .shuffle(cube.cards, seed)
+      .slice(0, 15)
+      .map((card) => carddb.getCardDetails(card));
+
+    return {
+      seed,
+      pack,
+    };
   },
   generate_short_id,
   build_id_query,
