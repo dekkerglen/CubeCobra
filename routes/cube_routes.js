@@ -513,7 +513,7 @@ router.get('/blog/:id', function(req, res) {
 router.get('/blog/:id/:page', async (req, res) => {
   try {
     var cube_id = req.params.id;
-    cube = await Cube.findOne(build_id_query(cube_id));
+    const cube = await Cube.findOne(build_id_query(cube_id));
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -588,61 +588,59 @@ router.get('/blog/:id/:page', async (req, res) => {
       loginCallback: '/cube/blog/' + req.params.id,
     });
   } catch (err) {
-    return res.status(500).send(err);
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
-router.get('/rss/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cube_id = split[0];
-  Cube.findOne(build_id_query(cube_id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/404/');
-    } else {
-      User.findById(cube.owner, function(err, user) {
-        Blog.find({
-          cube: cube._id,
-        })
-          .sort('-date')
-          .exec(function(err, blogs) {
-            if (!user) {
-              user = {
-                username: 'unknown',
-              };
-            }
+router.get('/rss/:id', async (req, res) => {
+  try {
+    var split = req.params.id.split(';');
+    var cube_id = split[0];
+    const cube = await Cube.findOne(build_id_query(cube_id));
+    const user = await User.findById(cube.owner);
+    const blogs = await log
+      .find({
+        cube: cube._id,
+      })
+      .sort('-date')
+      .exec();
 
-            const feed = new RSS({
-              title: cube.name,
-              feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
-              site_url: 'https://cubecobra.com',
-            });
-
-            blogs.forEach((blog) => {
-              let content = blog.html ? blog.html : blog.content;
-
-              if (blog.changelist) {
-                const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
-                if (content) {
-                  content = content + changeSetElement;
-                } else {
-                  content = changeSetElement;
-                }
-              }
-
-              feed.item({
-                title: blog.title,
-                description: content,
-                guid: blog.id,
-                date: blog.date,
-              });
-            });
-            res.set('Content-Type', 'text/xml');
-            res.status(200).send(feed.xml());
-          });
-      });
+    if (!user) {
+      user = {
+        username: 'unknown',
+      };
     }
-  });
+
+    const feed = new RSS({
+      title: cube.name,
+      feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
+      site_url: 'https://cubecobra.com',
+    });
+
+    blogs.forEach((blog) => {
+      let content = blog.html ? blog.html : blog.content;
+
+      if (blog.changelist) {
+        const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+        if (content) {
+          content = content + changeSetElement;
+        } else {
+          content = changeSetElement;
+        }
+      }
+
+      feed.item({
+        title: blog.title,
+        description: content,
+        guid: blog.id,
+        date: blog.date,
+      });
+    });
+    res.set('Content-Type', 'text/xml');
+    res.status(200).send(feed.xml());
+  } catch (err) {
+    util.handleRouteError(res, err, '/404/');
+  }
 });
 
 router.get('/compare/:id_a/to/:id_b', function(req, res) {
