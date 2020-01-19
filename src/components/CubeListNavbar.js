@@ -108,6 +108,38 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
 
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 
+const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
+      <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
+        Bulk Upload - Upload File
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} encType="multipart/form-data">
+        <ModalBody>
+          <p>
+            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
+            our .csv export.
+          </p>
+          <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
+          <Label for="customFile" className="sr-only">
+            Choose file
+          </Label>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
+
 const CubetutorImportModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
   return (
@@ -349,6 +381,7 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Import</DropdownItem>
                     <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
                     <UploadBulkModalItem>Upload File</UploadBulkModalItem>
+                    <UploadBulkReplaceModalItem>Upload Replacement File</UploadBulkReplaceModalItem>
                     <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
                     <DropdownItem divider />
                     <DropdownItem disabled>Export</DropdownItem>
