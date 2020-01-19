@@ -954,7 +954,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   }
 });
 
-router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
+router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (cube.owner != req.user._id) {
@@ -1062,9 +1062,7 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
       }
     }
   } catch (err) {
-    console.error(err);
-    req.flash('danger', 'Error: Unable to import this cube.');
-    res.redirect('/cube/list/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/list/' + req.params.id);
   }
 });
 
