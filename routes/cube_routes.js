@@ -1566,9 +1566,7 @@ router.post('/startdraft/:id', async (req, res) => {
     await draft.save();
     return res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
-    console.error(err);
-    req.flash('danger', err.message);
-    return res.redirect('/cube/playtest/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
   }
 });
 
@@ -1632,12 +1630,8 @@ router.get('/draft/:id', async function(req, res) {
       ),
       loginCallback: '/cube/draft/' + req.params.id,
     });
-  } catch (e) {
-    console.error(e);
-    req.flash('danger', 'Error rendering draft');
-
-    // FIXME: We should really have a 500 page for this.
-    return res.status(404).render('misc/404');
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
   }
 });
 
