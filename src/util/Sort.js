@@ -532,7 +532,7 @@ export function cardGetLabels(card, sort) {
         return [type];
       }
     } else if (colorIdentity(card).length === 5) {
-      return ['Five Color']
+      return ['Five Color'];
     } else {
       return [
         ...cardGetLabels(card, 'Guilds'),
