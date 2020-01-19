@@ -202,7 +202,7 @@ router.get('/card/:id', async (req, res) => {
       });
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', err.message);
     res.redirect('/404');
   }
