@@ -78,6 +78,7 @@ export function getSorts() {
     'Color Count',
     'Color Identity',
     'Color',
+    'Creature/Non-Creature',
     'Date Added',
     'Finish',
     'Guilds',
@@ -323,7 +324,7 @@ export function getLabels(cube, sort) {
     });
   } else if (sort == 'Manacost Type') {
     return ['Gold', 'Hybrid', 'Phyrexian'];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
   } else if (sort == 'Price' || sort == 'Price Foil') {
     const labels = [];
@@ -573,7 +574,7 @@ export function cardGetLabels(card, sort) {
       return ['Phyrexian'];
     }
     return [];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')

@@ -36,7 +36,7 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
       </h5>
     </CardHeader>
     <CardBody>
-      {getLabels(null, 'CNC')
+      {getLabels(null, Creature / Non - Creature)
         .filter((cardType) => groups[cardType])
         .map((cardType) => (
           <TypeRow key={cardType} cardType={cardType} groups={groups[cardType]} count={typeCounts[cardType]} />
@@ -52,7 +52,7 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
   let typeCounts = {};
 
   for (let color of Object.keys(groups)) {
-    groups[color] = sortIntoGroups(groups[color], 'CNC');
+    groups[color] = sortIntoGroups(groups[color], Creature / Non - Creature);
     colorCounts[color] = 0;
     typeCounts[color] = {};
     for (let cardType of Object.keys(groups[color])) {
