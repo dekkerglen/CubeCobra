@@ -30,6 +30,7 @@ const ReactDOMServer = require('react-dom/server');
 const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
+const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags';
 
 const router = express.Router();
 // Bring in models
@@ -1300,6 +1301,7 @@ async function bulkuploadCSV(req, res, cards, cube) {
   for (let card_raw of cards) {
     let split = util.CSVtoArray(card_raw);
     let name = split[0];
+    let maybeboard = split[8];
     let card = {
       name: name,
       cmc: split[1],
@@ -1310,9 +1312,10 @@ async function bulkuploadCSV(req, res, cards, cube) {
       collector_number: split[5],
       status: split[6],
       finish: split[7],
-      imgUrl: split[8],
-      tags: split[9] && split[9].length > 0 ? split[9].split(',') : [],
+      imgUrl: split[9],
+      tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
     };
+    console.warn(card);
 
     let potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
@@ -1321,7 +1324,11 @@ async function bulkuploadCSV(req, res, cards, cube) {
       let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
       let first = potentialIds[0];
       card.cardID = matchingSet || nonPromo || first;
-      cube.cards.push(card);
+      if (maybeboard == 'true') {
+        cube.maybe.push(card);
+      } else {
+        cube.cards.push(card);
+      }
       changelog += addCardHtml(carddb.cardFromId(card.cardID));
     } else {
       missing += card.name + '\n';
@@ -1382,7 +1389,7 @@ async function bulkuploadCSV(req, res, cards, cube) {
 async function bulkUpload(req, res, list, cube) {
   cards = list.match(/[^\r\n]+/g);
   if (cards) {
-    if (cards[0].trim() == 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags') {
+    if (cards[0].trim() == CSV_HEADER) {
       cards.splice(0, 1);
       bulkuploadCSV(req, res, cards, cube);
     } else {
@@ -1523,8 +1530,8 @@ router.get('/download/csv/:id', function(req, res) {
       res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
       res.setHeader('Content-type', 'text/plain');
       res.charset = 'UTF-8';
-      res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags\r\n');
-      cube.cards.forEach(function(card, index) {
+      res.write(CSV_HEADER + '\r\n');
+      let writeCard = function(card, maybe) {
         if (!card.type_line) {
           card.type_line = carddb.cardFromId(card.cardID).type;
         }
@@ -1543,6 +1550,7 @@ router.get('/download/csv/:id', function(req, res) {
         res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
         res.write(card.status + ',');
         res.write(card.finish + ',');
+        res.write(maybe + ',');
         res.write('"' + card.imgUrl + '","');
         card.tags.forEach(function(tag, t_index) {
           if (t_index != 0) {
@@ -1551,6 +1559,12 @@ router.get('/download/csv/:id', function(req, res) {
           res.write(tag);
         });
         res.write('"\r\n');
+      };
+      cube.cards.forEach(function(card, index) {
+        return writeCard(card, false);
+      });
+      cube.maybe.forEach(function(card, index) {
+        return writeCard(card, true);
       });
       res.end();
     }
