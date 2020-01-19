@@ -160,9 +160,7 @@ router.get('/clone/:id', async (req, res) => {
     req.flash('success', 'Cube Cloned');
     return res.redirect('/cube/overview/' + cube.shortID);
   } catch (err) {
-    console.error(err);
-    req.flash('danger', err);
-    return res.redirect('/cube/list/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/list/' + req.params.id);
   }
 });
 
@@ -354,11 +352,6 @@ router.post(
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/overview/' + req.params.id);
-    }
-
     const user = await User.findById(req.user._id);
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
@@ -377,43 +370,31 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Cube updated successfully.');
     return res.redirect('/cube/overview/' + req.params.id);
   } catch (err) {
-    req.flash('danger', 'Server Error');
-    return res.redirect('/cube/overview/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
-router.post('/unfeature/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/overview/' + req.params.id);
-  } else {
-    User.findById(req.user._id, function(err, user) {
-      if (!util.isAdmin(user)) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/overview/' + req.params.id);
-      } else {
-        Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-          if (err) {
-            req.flash('danger', 'Server Error');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else if (!cube) {
-            req.flash('danger', 'Cube not found');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else {
-            cube.isFeatured = false;
-            cube.save(function(err) {
-              if (err) {
-                req.flash('danger', 'Server Error');
-                res.redirect('/cube/overview/' + req.params.id);
-              } else {
-                req.flash('success', 'Cube updated successfully.');
-                res.redirect('/cube/overview/' + req.params.id);
-              }
-            });
-          }
-        });
-      }
-    });
+router.post('/unfeature/:id', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!util.isAdmin(user)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect('/cube/overview/' + req.params.id);
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/overview/' + req.params.id);
+    }
+
+    cube.isFeatured = false;
+    await cube.save();
+
+    req.flash('success', 'Cube updated successfully.');
+    return res.redirect('/cube/overview/' + req.params.id);
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
