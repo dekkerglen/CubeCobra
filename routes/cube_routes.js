@@ -11,6 +11,11 @@ var {
   generate_short_id,
   build_id_query,
   get_cube_id,
+  cardHtml,
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
+  abbreviate,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
@@ -57,51 +62,6 @@ if (false) {
 
 const { ensureAuth, csrfProtection } = require('./middleware');
 
-function cardHtml(card) {
-  if (card.image_flip) {
-    return (
-      '<a class="dynamic-autocard" card="' +
-      card.image_normal +
-      '" card_flip="' +
-      card.image_flip +
-      '">' +
-      card.name +
-      '</a>'
-    );
-  } else {
-    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
-  }
-}
-
-function addCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
-}
-
-function removeCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
-}
-
-function replaceCardHtml(oldCard, newCard) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' +
-    cardHtml(oldCard) +
-    ' &gt; ' +
-    cardHtml(newCard) +
-    '<br/>'
-  );
-}
-
-function abbreviate(name) {
-  return name.length < 20 ? name : name.slice(0, 20) + '…';
-}
 
 router.use(csrfProtection);
 

@@ -110,6 +110,51 @@ function cardsAreEquivalent(card, details) {
   return true;
 }
 
+function cardHtml(card) {
+  if (card.image_flip) {
+    return (
+      '<a class="dynamic-autocard" card="' +
+      card.image_normal +
+      '" card_flip="' +
+      card.image_flip +
+      '">' +
+      card.name +
+      '</a>'
+    );
+  } else {
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
+  }
+}
+
+function addCardHtml(card) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' +
+    cardHtml(card) +
+    '<br/>'
+  );
+}
+
+function removeCardHtml(card) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' +
+    cardHtml(card) +
+    '<br/>'
+  );
+}
+
+function replaceCardHtml(oldCard, newCard) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' +
+    cardHtml(oldCard) +
+    ' &gt; ' +
+    cardHtml(newCard) +
+    '<br/>'
+  );
+}
+
+function abbreviate(name) {
+  return name.length < 20 ? name : name.slice(0, 20) + '…';
+}
 var methods = {
   getBasics: function(carddb) {
     var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -230,6 +275,11 @@ var methods = {
   get_cube_id,
   intToLegality,
   legalityToInt,
+  cardHtml,
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
+  abbreviate
 };
 
 module.exports = methods;
