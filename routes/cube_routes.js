@@ -233,47 +233,42 @@ router.post(
   '/follow/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    try {
-      if (!req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.status(404).send({
-          success: 'false',
-        });
-      }
-
-      const user = await User.findById(req.user._id);
-      const cube = await Cube.findOne(build_id_query(req.params.id));
-      if (!cube) {
-        req.flash('danger', 'Cube not found');
-        res.status(404).send({
-          success: 'false',
-        });
-      }
-
-      if (!cube.users_following.includes(user._id)) {
-        cube.users_following.push(user._id);
-      }
-      if (!user.followed_cubes.includes(cube._id)) {
-        user.followed_cubes.push(cube._id);
-      }
-
-      await user.save();
-      await cube.save();
-
-      res.status(200).send({
-        success: 'true',
-      });
-    } catch (err) {
-      res.status(500).send({
+    if (!req.user._id) {
+      req.flash('danger', 'Not Authorized');
+      res.status(404).send({
         success: 'false',
       });
-      console.error(err);
     }
+
+    const user = await User.findById(req.user._id);
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      res.status(404).send({
+        success: 'false',
+      });
+    }
+
+    if (!cube.users_following.includes(user._id)) {
+      cube.users_following.push(user._id);
+    }
+    if (!user.followed_cubes.includes(cube._id)) {
+      user.followed_cubes.push(cube._id);
+    }
+
+    await user.save();
+    await cube.save();
+
+    res.status(200).send({
+      success: 'true',
+    });
   }),
 );
 
-router.post('/unfollow/:id', ensureAuth, async (req, res) => {
-  try {
+router.post(
+  '/unfollow/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
     if (!req.user._id) {
       req.flash('danger', 'Not Authorized');
       res.status(404).send({
@@ -303,13 +298,8 @@ router.post('/unfollow/:id', ensureAuth, async (req, res) => {
     res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    res.status(500).send({
-      success: 'false',
-    });
-    console.error(err);
-  }
-});
+  }),
+);
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
