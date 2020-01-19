@@ -42,6 +42,7 @@ const DEFAULT_FORM_VALUES = {
   addTags: true,
   deleteTags: false,
   tags: [],
+  tagInput: ''
 };
 
 const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
@@ -106,7 +107,6 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
   const addTag = useCallback((tag) => {
-    console.log(tag);
     setTags((tags) => [...tags, tag]);
     setTagInput('');
   });
