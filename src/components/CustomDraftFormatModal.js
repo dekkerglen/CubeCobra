@@ -112,13 +112,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="false" defaultChecked={true} /> Don't allow more than
-                    one of each card in draft
+                    <Input type="radio" name="multiples" value="false" defaultChecked={!format.multiples} /> Don't allow
+                    more than one of each card in draft
                   </Label>
                 </FormGroup>
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="true" /> Allow multiples (e.g. set draft)
+                    <Input type="radio" name="multiples" value="true" defaultChecked={format.multiples} /> Allow
+                    multiples (e.g. set draft)
                   </Label>
                 </FormGroup>
               </FormGroup>
