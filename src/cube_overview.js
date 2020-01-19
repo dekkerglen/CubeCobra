@@ -105,6 +105,7 @@ class CubeOverview extends Component {
   render() {
     const { post, price, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
     const { cube, deleteConfirm } = this.state;
+
     return (
       <>
         {canEdit && (

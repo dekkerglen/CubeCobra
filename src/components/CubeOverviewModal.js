@@ -198,7 +198,7 @@ class CubeOverviewModal extends Component {
     event.preventDefault();
 
     var cube = this.state.cube;
-    cube.tags = this.state.tags;
+    cube.tags = this.state.tags.map((tag) => tag.text);
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
