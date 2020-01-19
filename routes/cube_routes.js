@@ -654,7 +654,6 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
     const pids = [];
-
     [cubeA, cubeB].forEach((cube) => {
       cube.cards.forEach(function(card, index) {
         card.details = {
@@ -796,11 +795,7 @@ router.get('/list/:id', async function(req, res) {
       loginCallback: '/cube/list/' + req.params.id,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
@@ -862,68 +857,42 @@ router.get('/playtest/:id', async (req, res) => {
       loginCallback: '/cube/playtest/' + req.params.id,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
-router.get('/analysis/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      User.findById(cube.owner, function(err, user) {
-        if (!user) {
-          user = {
-            username: 'unknown',
-          };
-        }
-        if (err) {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
-          });
-        } else {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
-          });
-        }
-      });
+router.get('/analysis/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const user = await User.findById(cube.owner);
+
+    if (!user) {
+      user = {
+        username: 'unknown',
+      };
     }
-  });
+
+    res.render('cube/cube_analysis', {
+      cube: cube,
+      cube_id: req.params.id,
+      owner: user.username,
+      activeLink: 'analysis',
+      title: `${abbreviate(cube.name)} - Analysis`,
+      TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+      MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+      curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+      GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
+      metadata: generateMeta(
+        `Cube Cobra Analysis: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/analysis/${req.params.id}`,
+      ),
+      loginCallback: '/cube/analysis/' + req.params.id,
+    });
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
+  }
 });
 
 router.get('/samplepack/:id', function(req, res) {
