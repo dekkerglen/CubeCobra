@@ -927,13 +927,10 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 });
 
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
-  req.params.seed = req.params.seed.replace('.png', '');
-  const pack = await generatePack(req.params.id, carddb, req.params.seed);
-
-  if (err) {
-    req.flash('danger', 'Pack could not be created');
-    res.status(404).render('misc/404', {});
-  } else {
+  try {
+    req.params.seed = req.params.seed.replace('.png', '');
+    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    
     var srcArray = pack.pack.map((card, index) => {
       return {
         src: card.image_normal,
@@ -941,6 +938,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         y: CARD_HEIGHT * Math.floor(index / 5),
       };
     });
+
     mergeImages(srcArray, {
       width: CARD_WIDTH * 5,
       height: CARD_HEIGHT * 3,
@@ -951,6 +949,8 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       });
       res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
     });
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
   }
 });
 
