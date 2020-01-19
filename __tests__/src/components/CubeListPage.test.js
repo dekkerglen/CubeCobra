@@ -13,6 +13,19 @@ const element = () => (
     mocks={[
       { matcher: '/cube/api/cardnames', response: { success: 'true' } },
       { matcher: '/cube/api/cubecardnames/1', response: { success: 'true' } },
+      { matcher: '/cube/api/getversions', response: {
+        success: 'true',
+        dict: Object.fromEntries(exampleCardsFull.map(card => [
+          card.cardID,
+          [{
+            id: card.cardID,
+            version: card.details.full_name
+              .toUpperCase()
+              .substring(card.details.full_name.indexOf('[') + 1, card.details.full_name.indexOf(']')),
+            img: card.details.image_normal,
+          }],
+        ]))}
+      },
     ]}
   >
     <CubeListPage cards={exampleCardsFull} cubeID="1" canEdit={true} maybe={exampleCardsFull} defaultTagColors={[]} defaultShowTagColors={true} defaultSorts={['Color Category', 'Types-Multicolor']} />;
@@ -20,11 +33,24 @@ const element = () => (
 );
 
 test('CubeListPage has major functionality', async () => {
-  const { findByPlaceholderText, findByText, getAllByText, getByDisplayValue, getByPlaceholderText, getByText } = render(element());
+  const { findByAltText, findByPlaceholderText, findByDisplayValue, findByText, getAllByText, getByAltText, getByDisplayValue, getByPlaceholderText, getByText } = render(element());
 
   expect(getByText(exampleCardsFull[0].details.name));
 
-  // TODO: These tests should be in their own files.
+  // The tests in this file should be integration tests for the whole CubeListPage thing.
+  // Test View
+  const viewSelect = await findByDisplayValue('Table View');
+  for (const view of ['table', 'list', 'curve']) {
+    fireEvent.change(viewSelect, { target: { value: view } });
+    expect(await findByText(exampleCardsFull[0].details.name));
+  }
+
+  fireEvent.change(viewSelect, { target: { value: 'spoiler' } });
+  expect(await findByAltText(exampleCardsFull[0].details.name));
+
+  fireEvent.change(viewSelect, { target: { value: 'table' } });
+  await findByText(exampleCardsFull[0].details.name);
+
   // Test Edit Collapse
   fireEvent.click(getByText('Add/Remove'));
   await findByPlaceholderText('Card to Remove');
@@ -34,7 +60,7 @@ test('CubeListPage has major functionality', async () => {
 
   expect(getByPlaceholderText('Card to Remove')).toBeInTheDocument();
 
-  // Test Sort Collapse
+  // Test Sort Collapse: can we change the sort?
   fireEvent.click(getByText('Sort'));
   await findByText('Primary Sort');
   fireEvent.change(getByDisplayValue('Color Category'), { target: { value: 'Color Identity' } });
