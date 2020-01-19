@@ -89,7 +89,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
             our .csv export.
           </p>
           <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
-          <Label for="customFile" className="sr-only">
+          <Label for="uploadBulkFile" className="sr-only">
             Choose file
           </Label>
         </ModalBody>
@@ -111,18 +111,15 @@ const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
   return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
-      <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
-        Bulk Upload - Upload File
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadReplacementModalTitle">
+      <ModalHeader id="uploadReplacementModalTitle" toggle={toggle}>
+        Bulk Upload - Replace with CSV File Upload
       </ModalHeader>
       <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} encType="multipart/form-data">
         <ModalBody>
-          <p>
-            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
-            our .csv export.
-          </p>
-          <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
-          <Label for="customFile" className="sr-only">
+          <p>Acceptable files are .csv files with the exact format as our .csv export.</p>
+          <CustomInput type="file" id="uploadReplacementFile" type="file" name="document" />
+          <Label for="uploadReplacementFile" className="sr-only">
             Choose file
           </Label>
         </ModalBody>
@@ -381,7 +378,7 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Import</DropdownItem>
                     <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
                     <UploadBulkModalItem>Upload File</UploadBulkModalItem>
-                    <UploadBulkReplaceModalItem>Upload Replacement File</UploadBulkReplaceModalItem>
+                    <UploadBulkReplaceModalItem>Replace with CSV File Upload</UploadBulkReplaceModalItem>
                     <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
                     <DropdownItem divider />
                     <DropdownItem disabled>Export</DropdownItem>

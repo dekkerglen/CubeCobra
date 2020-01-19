@@ -1216,15 +1216,41 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
       req.flash('danger', 'Not Authorized');
       return res.redirect('/cube/list/' + req.params.id);
     }
-    await bulkReplaceCSV(req, res, items, cube);
+    cards = items.match(/[^\r\n]+/g);
+    if (cards) {
+      if (cards[0].trim() == CSV_HEADER) {
+        cards.splice(0, 1);
+        try {
+          const { newCards, newMaybe, missing } = await CSVtoCards(cards, carddb);
+          const { only_a, only_b, in_both, all_cards } = await compareCubes(
+            req,
+            res,
+            cube,
+            {
+              cards: newCards,
+              maybe: newMaybe,
+            },
+            carddb,
+          );
+          let changelog = '';
+          only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
+          only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
+          cube.cards = newCards;
+          cube.maybe = newMaybe;
+          generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
   } catch (err) {
     console.log(err);
-    req.flash('danger', 'Error making bulk upload');
+    req.flash('danger', 'Error making bulk replacement');
     return res.redirect(`/cube/list/${req.params.id}`);
   }
 });
 
-async function bulkuploadCardsCSV(cards) {
+async function CSVtoCards(cards) {
   let missing = '';
   let newCards = [];
   let newMaybe = [];
@@ -1318,7 +1344,7 @@ async function generateBlogpost(req, res, cube, changelog, added, missing) {
 
 async function bulkuploadCSV(req, res, cards, cube) {
   let changelog = '';
-  let { newCards, newMaybe, missing } = await bulkuploadCardsCSV(cards);
+  let { newCards, newMaybe, missing } = await CSVtoCards(cards);
   newCards.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
   cube.cards.push(...newCards);
   cube.maybe.push(...newMaybe);
@@ -1389,30 +1415,6 @@ async function compareCubes(req, res, cubeA, cubeB) {
       b_names,
       all_cards,
     };
-  }
-}
-
-async function bulkReplaceCSV(req, res, list, cube) {
-  cards = list.match(/[^\r\n]+/g);
-  if (cards) {
-    if (cards[0].trim() == CSV_HEADER) {
-      cards.splice(0, 1);
-      try {
-        const { newCards, newMaybe, missing } = await bulkuploadCardsCSV(cards);
-        const { only_a, only_b, in_both, all_cards } = await compareCubes(req, res, cube, {
-          cards: newCards,
-          maybe: newMaybe,
-        });
-        let changelog = '';
-        only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
-        only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
-        cube.cards = newCards;
-        cube.maybe = newMaybe;
-        generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing);
-      } catch (e) {
-        console.error(e);
-      }
-    }
   }
 }
 
