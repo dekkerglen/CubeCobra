@@ -669,18 +669,17 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
       });
     });
 
-    GetPrices(pids).then(function(price_dict) {
-      [cubeA, cubeB].forEach((cube) => {
-        cube.cards.forEach(function(card, index) {
-          if (card.details.tcgplayer_id) {
-            if (price_dict[card.details.tcgplayer_id]) {
-              card.details.price = price_dict[card.details.tcgplayer_id];
-            }
-            if (price_dict[card.details.tcgplayer_id + '_foil']) {
-              card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-            }
+    const price_dict = await GetPrices(pids);
+    [cubeA, cubeB].forEach((cube) => {
+      cube.cards.forEach(function(card, index) {
+        if (card.details.tcgplayer_id) {
+          if (price_dict[card.details.tcgplayer_id]) {
+            card.details.price = price_dict[card.details.tcgplayer_id];
           }
-        });
+          if (price_dict[card.details.tcgplayer_id + '_foil']) {
+            card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
+          }
+        }
       });
     });
 
@@ -2881,34 +2880,33 @@ router.get('/api/getimage/:name', function(req, res) {
   }
 });
 
-router.get('/api/getcardfromid/:id', function(req, res) {
+router.get('/api/getcardfromid/:id', async (req, res) => {
   var card = carddb.cardFromId(req.params.id);
   //need to get the price of the card with the new version in here
   var tcg = [];
   if (card.tcgplayer_id) {
     tcg.push(card.tcgplayer_id);
   }
-  GetPrices(tcg).then(function(price_dict) {
-    if (card.error) {
-      res.status(200).send({
-        success: 'false',
-      });
-    } else {
-      if (price_dict[card.tcgplayer_id]) {
-        card.price = price_dict[card.tcgplayer_id];
-      }
-      if (price_dict[card.tcgplayer_id + '_foil']) {
-        card.price_foil = price_dict[card.tcgplayer_id + '_foil'];
-      }
-      res.status(200).send({
-        success: 'true',
-        card: card,
-      });
+  const price_dict = await GetPrices(pids);
+  if (card.error) {
+    res.status(200).send({
+      success: 'false',
+    });
+  } else {
+    if (price_dict[card.tcgplayer_id]) {
+      card.price = price_dict[card.tcgplayer_id];
     }
-  });
+    if (price_dict[card.tcgplayer_id + '_foil']) {
+      card.price_foil = price_dict[card.tcgplayer_id + '_foil'];
+    }
+    res.status(200).send({
+      success: 'true',
+      card: card,
+    });
+  }
 });
 
-router.get('/api/getversions/:id', function(req, res) {
+router.get('/api/getversions/:id', async (req, res) => {
   cards = [];
   tcg = [];
   carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
@@ -2918,23 +2916,22 @@ router.get('/api/getversions/:id', function(req, res) {
       tcg.push(card.tcgplayer_id);
     }
   });
-  GetPrices(tcg).then(function(price_dict) {
-    cards.forEach(function(card, index) {
-      if (card.tcgplayer_id) {
-        const card_price_data = price_dict[card.tcgplayer_id];
-        if (card_price_data) {
-          card.price = card_price_data;
-        }
-        const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
-        if (card_foil_price_data) {
-          card.price_foil = card_foil_price_data;
-        }
+  const price_dict = await GetPrices(pids);
+  cards.forEach(function(card, index) {
+    if (card.tcgplayer_id) {
+      const card_price_data = price_dict[card.tcgplayer_id];
+      if (card_price_data) {
+        card.price = card_price_data;
       }
-    });
-    res.status(200).send({
-      success: 'true',
-      cards: cards,
-    });
+      const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
+      if (card_foil_price_data) {
+        card.price_foil = card_foil_price_data;
+      }
+    }
+  });
+  res.status(200).send({
+    success: 'true',
+    cards: cards,
   });
 });
 
