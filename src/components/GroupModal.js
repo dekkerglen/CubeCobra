@@ -42,7 +42,7 @@ const DEFAULT_FORM_VALUES = {
   addTags: true,
   deleteTags: false,
   tags: [],
-  tagInput: ''
+  tagInput: '',
 };
 
 const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
