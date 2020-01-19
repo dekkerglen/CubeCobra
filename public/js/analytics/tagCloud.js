@@ -12,8 +12,6 @@ onmessage = (e) => {
       }
     }),
   );
-  const words = Object.keys(tags).map((key) => {
-    return { value: key, count: tags[key] };
-  });
+  const words = Object.keys(tags).map((key) => ({ value: key, count: tags[key] }));
   postMessage({ type: 'cloud', words: words });
 };

@@ -27,12 +27,21 @@ class CubeAnalysis extends Component {
       analytics: {
         curve: { url: '/js/analytics/colorCurve.js', title: 'Curve' },
         typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
+        typeBreakdownCounts: { url: '/js/analytics/typeBreakdownCount.js', title: 'Type Breakdown Counts' },
         colorCount: { url: '/js/analytics/colorCount.js', title: 'Color Counts' },
         tokenGrid: { url: '/js/analytics/tokenGrid.js', title: 'Tokens' },
         tagCloud: { url: '/js/analytics/tagCloud.js', title: 'Tag Cloud' },
         cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
       },
-      analytics_order: ['curve', 'typeBreakdown', 'colorCount', 'tokenGrid', 'tagCloud', 'cumulativeColorCount'],
+      analytics_order: [
+        'curve',
+        'typeBreakdown',
+        'typeBreakdownCounts',
+        'colorCount',
+        'tokenGrid',
+        'tagCloud',
+        'cumulativeColorCount',
+      ],
       filter: [],
       cardsWithAsfan: null,
       filteredWithAsfan: null,
@@ -61,7 +70,7 @@ class CubeAnalysis extends Component {
     const { formatId } = this.state;
     const { cube } = this.props;
     const cardsWithAsfan = cube.cards.map((card) => Object.assign({}, card));
-    const format = getDraftFormat({ id: formatId }, cube);
+    const format = getDraftFormat({ id: formatId, packs: 3, cards: 15 }, cube);
     calculateAsfans(format, cardsWithAsfan);
     this.setState({ cardsWithAsfan }, this.updateFilter);
   }

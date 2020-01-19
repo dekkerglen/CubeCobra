@@ -159,21 +159,19 @@ onmessage = (e) => {
     const typed = TypeByColor[type];
     for (let color in typed) {
       if (color == 'label') continue;
-      const totalAsfan = TypeByColor['Total'][color].asfan;
-      const asfan = TypeByColor[type][color].asfan;
-      const asfanText = asfan.toFixed(2);
-      let asfanPercentageStr = '';
-      if (totalAsfan > 0 && type != 'Total') {
-        const asfanPercentage = Math.round((100.0 * asfan) / totalAsfan);
-        asfanPercentageStr = ` %%${asfanPercentage}%%`;
+      const totalCount = TypeByColor['Total'][color].count;
+      const count = TypeByColor[type][color].count;
+      let countPercentageStr = '';
+      if (totalCount > 0 && type != 'Total') {
+        const countPercentage = Math.round((100.0 * count) / totalCount);
+        countPercentageStr = ` %%${countPercentage}%%`;
       }
-      TypeByColor[type][color] = `${asfanText}${asfanPercentageStr}`;
+      TypeByColor[type][color] = `${count}${countPercentageStr}`;
     }
   }
   postMessage({
     type: 'table',
-    description:
-      'The expected count to find in the packs a single player will open, percentages are relative to the bottom row of totals.',
+    description: 'The number of matching cards in the cube, percentages are relative to the bottom row of totals.',
     columns: [
       { header: '', key: 'label', rowHeader: true },
       { header: '{w}', key: 'White' },

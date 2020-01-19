@@ -16,7 +16,7 @@ import { Col, Row } from 'reactstrap';
 //   ],
 // }
 // See https://www.npmjs.com/package/react-tagcloud for more information.
-const AnalyticsCloud = ({ data, title }) => {
+const AnalyticsCloud = ({ data }) => {
   const colorOptions = { luminosity: 'dark' };
   return (
     <Row>
