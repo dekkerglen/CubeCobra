@@ -12,7 +12,7 @@
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js && rollup -c",
     "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
-    "test": "jest --silent --detectOpenHandles",
+    "test": "jest --silent --detectOpenHandles --coverage",
     "setup": "rollup -c & node force_update.js"
   },
   "author": "Gwen Dekker",
