@@ -1,7 +1,7 @@
-import React from 'react'
+import React from 'react';
 import { FetchMock } from '@react-mock/fetch';
-import { render, fireEvent, waitForElement, wait } from '@testing-library/react'
-import '@testing-library/jest-dom/extend-expect'
+import { render, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
 
 import exampleCardsFull from '../../../fixtures/examplecardsdetails';
 import CubeListPage from 'components/CubeListPage';
@@ -13,27 +13,52 @@ const element = () => (
     mocks={[
       { matcher: '/cube/api/cardnames', response: { success: 'true' } },
       { matcher: '/cube/api/cubecardnames/1', response: { success: 'true' } },
-      { matcher: '/cube/api/getversions', response: {
-        success: 'true',
-        dict: Object.fromEntries(exampleCardsFull.map(card => [
-          card.cardID,
-          [{
-            id: card.cardID,
-            version: card.details.full_name
-              .toUpperCase()
-              .substring(card.details.full_name.indexOf('[') + 1, card.details.full_name.indexOf(']')),
-            img: card.details.image_normal,
-          }],
-        ]))}
+      {
+        matcher: '/cube/api/getversions',
+        response: {
+          success: 'true',
+          dict: Object.fromEntries(
+            exampleCardsFull.map((card) => [
+              card.cardID,
+              [
+                {
+                  id: card.cardID,
+                  version: card.details.full_name
+                    .toUpperCase()
+                    .substring(card.details.full_name.indexOf('[') + 1, card.details.full_name.indexOf(']')),
+                  img: card.details.image_normal,
+                },
+              ],
+            ]),
+          ),
+        },
       },
     ]}
   >
-    <CubeListPage cards={exampleCardsFull} cubeID="1" canEdit={true} maybe={exampleCardsFull} defaultTagColors={[]} defaultShowTagColors={true} defaultSorts={['Color Category', 'Types-Multicolor']} />;
+    <CubeListPage
+      cards={exampleCardsFull}
+      cubeID="1"
+      canEdit={true}
+      maybe={exampleCardsFull}
+      defaultTagColors={[]}
+      defaultShowTagColors={true}
+      defaultSorts={['Color Category', 'Types-Multicolor']}
+    />
+    ;
   </FetchMock>
 );
 
 test('CubeListPage has major functionality', async () => {
-  const { findByAltText, findByPlaceholderText, findByDisplayValue, findByText, getAllByText, getByAltText, getByDisplayValue, getByPlaceholderText, getByText } = render(element());
+  const {
+    findByAltText,
+    findByPlaceholderText,
+    findByDisplayValue,
+    findByText,
+    getAllByText,
+    getByDisplayValue,
+    getByPlaceholderText,
+    getByText,
+  } = render(element());
 
   expect(getByText(exampleCardsFull[0].details.name));
 
