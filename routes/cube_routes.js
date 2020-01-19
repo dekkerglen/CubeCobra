@@ -1066,7 +1066,7 @@ router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
+router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
@@ -1156,9 +1156,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
-    console.error(err);
-    req.flash('danger', err.message);
-    res.redirect('/404');
+    util.handleRouteError(res, err, '/404');
   }
 });
 
@@ -1168,16 +1166,15 @@ router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
-    } else if (cube.owner != req.user._id) {
+    }
+    if (cube.owner != req.user._id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect('/cube/list/' + req.params.id);
     }
 
-    await bulkUpload(req, res, req.body.body, cube);
+    await bulkUpload(req, res, req.body.body, cube);  
   } catch (err) {
-    console.error(err);
-    req.flash('danger', 'Error making bulk upload');
-    return res.redirect(`/cube/list/${req.params.id}`);
+    util.handleRouteError(res, err, `/cube/list/${req.params.id}`);
   }
 });
 
