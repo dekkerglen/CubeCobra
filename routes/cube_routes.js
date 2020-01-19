@@ -489,27 +489,22 @@ router.get('/overview/:id', async (req, res) => {
       loginCallback: '/cube/overview/' + req.params.id,
     });
   } catch (err) {
-    req.flash('danger', 'Server Error');
-    return res.redirect('/cube/overview/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/overview/' + req.params.id);
   }
 });
 
-router.get('/blogsrc/:id', function(req, res) {
-  Blog.findById(req.params.id, function(err, blog) {
-    if (err || !blog) {
-      res.status(400).send({
-        success: 'false',
-      });
-    } else {
-      res.status(200).send({
-        success: 'true',
-        src: blog.html,
-        title: blog.title,
-        body: blog.body,
-      });
-    }
-  });
-});
+router.get(
+  '/blogsrc/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const blog = await Blog.findById(req.params.id);
+    res.status(200).send({
+      success: 'true',
+      src: blog.html,
+      title: blog.title,
+      body: blog.body,
+    });
+  }),
+);
 
 router.get('/blog/:id', function(req, res) {
   res.redirect('/cube/blog/' + req.params.id + '/0');
