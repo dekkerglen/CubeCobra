@@ -1178,15 +1178,15 @@ router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
   }
 });
 
-router.post('/bulkuploadfile/:id', ensureAuth, async function(req, res) {
-  if (!req.files) {
-    req.flash('danger', 'Please attach a file');
-    return res.redirect('/cube/list/' + req.params.id);
-  }
-
-  const items = req.files.document.data.toString('utf8'); // the uploaded file object
-
+router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
   try {
+    if (!req.files) {
+      req.flash('danger', 'Please attach a file');
+      return res.redirect('/cube/list/' + req.params.id);
+    }
+
+    const items = req.files.document.data.toString('utf8'); // the uploaded file object
+
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1198,9 +1198,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async function(req, res) {
 
     await bulkUpload(req, res, items, cube);
   } catch (err) {
-    console.error(err);
-    req.flash('danger', 'Error making bulk upload');
-    return res.redirect(`/cube/list/${req.params.id}`);
+    util.handleRouteError(res, err,`/cube/list/${req.params.id}`);
   }
 });
 
@@ -1414,21 +1412,20 @@ async function bulkUpload(req, res, list, cube) {
   }
 }
 
-router.get('/download/cubecobra/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        res.write(carddb.cardFromId(card.cardID).full_name + '\r\n');
-      });
-      res.end();
-    }
-  });
+router.get('/download/cubecobra/:id', async (req, res) => {
+  try{
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    cube.cards.forEach(function(card, index) {
+      res.write(carddb.cardFromId(card.cardID).full_name + '\r\n');
+    });
+    res.end();
+  } catch (err) {
+    util.handleRouteError(res, err,'/404');
+  }      
 });
 
 router.get('/download/csv/:id', function(req, res) {
