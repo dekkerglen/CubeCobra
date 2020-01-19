@@ -24,12 +24,13 @@ export const subtitle = (cards) => {
     (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
   ).length;
   const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numNonCreatures = numNonlands - numCreatures;
   return (
     `${numCards} card${numCards === 1 ? '' : 's'}: ` +
     `${numLands} land${numLands === 1 ? '' : 's'}, ` +
     `${numNonlands} nonland: ` +
-    `${numCreatures} creatures, ` +
-    `${numNonlands - numCreatures} noncreatures`
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}`
   );
 };
 
