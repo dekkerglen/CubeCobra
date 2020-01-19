@@ -115,7 +115,58 @@ router.post('/add', ensureAuth, async (req, res) => {
   }
 });
 
-// Get view cube Route
+// Add Submit POST Route
+router.get('/clone/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      req.flash('danger', 'Please log on to clone this cube.');
+      return res.redirect('/cube/list/' + req.params.id);
+    }
+
+    const cubes = await Cube.find({
+      owner: user._id,
+    });
+
+    if (cubes.length >= 24) {
+      req.flash(
+        'danger',
+        'Cannot clone this cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
+      );
+      return res.redirect('/cube/list/' + req.params.id);
+    }
+
+    const source = await Cube.findOne(build_id_query(req.params.id));
+
+    let short_id = await generate_short_id();
+    let cube = new Cube();
+    cube.shortID = short_id;
+    cube.name = 'Clone of ' + source.name;
+    cube.owner = req.user._id;
+    cube.cards = source.cards;
+    cube.decks = [];
+    cube.articles = [];
+    cube.image_uri = source.image_uri;
+    cube.image_name = source.image_name;
+    cube.image_artist = source.image_artist;
+    cube.description = source.description;
+    cube.owner_name = user.username;
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+    await cube.save();
+
+    req.flash('success', 'Cube Cloned');
+    return res.redirect('/cube/overview/' + cube.shortID);
+  } catch (err) {
+    console.error(err);
+    req.flash('danger', err);
+    return res.redirect('/cube/list/' + req.params.id);
+  }
+});
+
+// GEt view cube Route
 router.get('/view/:id', (req, res) => {
   res.redirect('/cube/overview/' + req.params.id);
 });
@@ -1188,7 +1239,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', err.message);
     res.redirect('/404');
   }
@@ -1207,7 +1258,7 @@ router.post('/bulkupload/:id', ensureAuth, async function(req, res) {
 
     await bulkUpload(req, res, req.body.body, cube);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', 'Error making bulk upload');
     return res.redirect(`/cube/list/${req.params.id}`);
   }
@@ -1233,7 +1284,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async function(req, res) {
 
     await bulkUpload(req, res, items, cube);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', 'Error making bulk upload');
     return res.redirect(`/cube/list/${req.params.id}`);
   }
@@ -1705,7 +1756,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           //add id
           var details = carddb.cardFromId(edit.substring(1));
           if (!details) {
-            console.log('Card not found: ' + edit, req);
+            console.error('Card not found: ' + edit, req);
           } else {
             adds.push(details);
             changelog += addCardHtml(details);
@@ -1724,7 +1775,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
           const [indexOutStr, idIn] = edit.substring(1).split('>');
           const detailsIn = carddb.cardFromId(idIn);
           if (!detailsIn) {
-            console.log('Card not found: ' + edit, req);
+            console.error('Card not found: ' + edit, req);
           } else {
             adds.push(detailsIn);
           }
@@ -1772,7 +1823,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
 
       blogpost.save(function(err) {
         if (err) {
-          console.log(err, req);
+          console.error(err, req);
         } else {
           cube = setCubeType(cube, carddb);
           Cube.updateOne(
@@ -1782,7 +1833,7 @@ router.post('/edit/:id', ensureAuth, function(req, res) {
             cube,
             function(err) {
               if (err) {
-                console.log(err, req);
+                console.error(err, req);
               } else {
                 req.flash('success', 'Cube Updated');
                 res.redirect(`/cube/list/${req.params.id}?updated=true`);
@@ -1898,7 +1949,7 @@ router.post('/api/editcomment', ensureAuth, async (req, res) => {
       success: 'true',
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -2029,7 +2080,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
     return res.status(200).send({ success: 'true' });
   } catch (err) {
     res.statusMessage = err;
-    console.log(err);
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -2101,7 +2152,7 @@ router.post('/api/postdeckcomment', ensureAuth, async (req, res) => {
       comment: comment,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -2173,7 +2224,7 @@ router.post('/api/postcomment', ensureAuth, async (req, res) => {
       comment: comment,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -2214,7 +2265,7 @@ router.post('/api/saveshowtagcolors', function(req, res) {
     req.user.hide_tag_colors = !req.body.show_tag_colors;
 
     req.user.save(function(err) {
-      if (err) console.log(err);
+      if (err) console.error(err);
       res.status(200).send({
         success: 'true',
       });
@@ -2238,7 +2289,7 @@ router.post('/api/savetagcolors/:id', function(req, res) {
     cube.tag_colors = req.body;
 
     cube.save(function(err) {
-      if (err) console.log(err);
+      if (err) console.error(err);
       res.status(200).send({
         success: 'true',
       });
@@ -2585,7 +2636,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     req.flash('danger', 'This deck is not able to be cloned and rebuilt.');
     res.redirect('/cube/deck/' + req.params.id);
@@ -2625,7 +2676,7 @@ router.get('/redraft/:id', async (req, res) => {
     await draft.save();
     res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     req.flash('danger', 'This deck is not able to be redrafted.');
     res.redirect('/cube/deck/' + req.params.id);
@@ -2689,7 +2740,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       deckid: deck._id,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', err.message);
     res.redirect('/404');
   }
@@ -2751,7 +2802,7 @@ router.get('/deck/:id', async (req, res) => {
         var bot_deck = [];
         deck.cards[i].forEach(function(card, index) {
           if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
-            console.log(
+            console.error(
               req.params.id + ': Could not find seat ' + (bot_decks.length + 1) + ', pick ' + (bot_deck.length + 1),
             );
           } else {
@@ -2795,7 +2846,7 @@ router.get('/deck/:id', async (req, res) => {
         var bot_deck = [];
         deck.cards[i].forEach(function(cardid, index) {
           if (carddb.cardFromId(cardid).error) {
-            console.log(
+            console.error(
               req.params.id + ': Could not find seat ' + (bot_decks.length + 1) + ', pick ' + (bot_deck.length + 1),
             );
           } else {
@@ -3219,7 +3270,7 @@ router.delete('/blog/remove/:id', ensureAuth, function(req, res) {
     } else {
       Blog.deleteOne(query, function(err) {
         if (err) {
-          console.log(err, req);
+          console.error(err, req);
         }
         req.flash('success', 'Post Removed');
         res.send('Success');
@@ -3250,7 +3301,7 @@ router.delete('/format/remove/:id', ensureAuth, function(req, res) {
         cube,
         function(err) {
           if (err) {
-            console.log(err, req);
+            console.error(err, req);
             res.status(500).send({
               success: 'false',
               message: 'Error deleting format.',
@@ -3326,8 +3377,6 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
           }
         }
 
-        // console.log(`[${rating.name}] over [${other.name}]:`);
-        // console.log('Initial:', rating.elo, other.elo);
         const diff = other.elo - rating.elo;
         // Expected performance for pick.
         const expectedA = 1 / (1 + Math.pow(10, diff / 400));
@@ -3336,7 +3385,6 @@ router.post('/api/draftpickcard/:id', async function(req, res) {
         const adjustmentB = 2 * (0 - expectedB);
         rating.elo += adjustmentA;
         other.elo += adjustmentB;
-        // console.log('Updated:', rating.elo, other.elo);
       }
 
       try {

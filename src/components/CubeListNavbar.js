@@ -353,6 +353,7 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Export</DropdownItem>
                   </>
                 )}
+                <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
                 <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
