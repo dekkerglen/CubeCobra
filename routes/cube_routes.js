@@ -46,7 +46,7 @@ let BulkUploadPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 let DraftView = null;
-if (NODE_ENV === 'production') {
+if (false) { // NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
@@ -829,7 +829,7 @@ router.get('/list/:id', async function(req, res) {
 
     res.render('cube/cube_list', {
       reactHTML:
-        NODE_ENV === 'production'
+        CubeListPage
           ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
           : undefined,
       reactProps,
@@ -892,7 +892,7 @@ router.get('/playtest/:id', async (req, res) => {
 
     res.render('cube/cube_playtest', {
       reactHTML:
-        NODE_ENV === 'production'
+        CubePlaytestPage
           ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
           : undefined,
       reactProps,
@@ -1463,7 +1463,7 @@ async function bulkUpload(req, res, list, cube) {
           };
           res.render('cube/bulk_upload', {
             reactHTML:
-              NODE_ENV === 'production'
+              BulkUploadPage
                 ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
                 : undefined,
             reactProps,
@@ -1701,7 +1701,7 @@ router.get('/draft/:id', async function(req, res) {
 
     res.render('cube/cube_draft', {
       reactHTML:
-        NODE_ENV === 'production'
+        DraftView
           ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
           : undefined,
       reactProps,
