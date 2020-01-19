@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import Filter from './util/Filter';
-import Hash from './util/Hash';
+import Query from './util/Query';
 
 import CardModalForm from './components/CardModalForm';
 import CompareView from './components/CompareView';
@@ -30,7 +30,7 @@ class CubeCompare extends Component {
     super(props);
 
     this.state = {
-      openCollapse: Hash.get('f', false) ? 'filter' : null,
+      openCollapse: Query.get('f', false) ? 'filter' : null,
       filter: [],
     };
 

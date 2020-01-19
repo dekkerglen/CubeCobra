@@ -20,7 +20,6 @@ import {
 } from 'reactstrap';
 
 import Filter from '../util/Filter';
-import Hash from '../util/Hash';
 import Query from '../util/Query';
 import { fromEntries, COLORS } from '../util/Util';
 
@@ -253,7 +252,7 @@ class FilterCollapse extends Component {
 
     this.state = {
       advancedOpen: false,
-      filterInput: this.store().get('f', ''),
+      filterInput: this.props.defaultFilterText || '',
       ...fromEntries(allFields.map((n) => [n, ''])),
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
@@ -271,10 +270,6 @@ class FilterCollapse extends Component {
 
   componentDidMount() {
     this.updateFilters();
-  }
-
-  store() {
-    return this.props.useQuery ? Query : Hash;
   }
 
   toggleAdvanced() {
@@ -320,7 +315,7 @@ class FilterCollapse extends Component {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
-      this.store().del('f');
+      Query.del('f');
       return;
     }
     const tokens = [];
@@ -331,7 +326,7 @@ class FilterCollapse extends Component {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
       this.props.setFilter(filters, filterInput);
-      this.store().set('f', filterInput);
+      Query.set('f', filterInput);
     }
   }
 
@@ -360,7 +355,7 @@ class FilterCollapse extends Component {
   handleReset(event) {
     this.setState({ filterInput: '' });
     this.props.setFilter([], '');
-    this.store().del('f');
+    Query.del('f');
   }
 
   render() {

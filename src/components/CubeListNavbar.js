@@ -201,6 +201,7 @@ const CubeListNavbar = ({
   setCubeView,
   openCollapse,
   setOpenCollapse,
+  defaultFilterText,
   filter,
   setFilter,
   className,
@@ -365,6 +366,7 @@ const CubeListNavbar = ({
       {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse
+        defaultFilterText={defaultFilterText}
         filter={filter}
         setFilter={setFilter}
         numCards={cards.length}

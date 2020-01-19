@@ -63,7 +63,6 @@ class TopCards extends Component {
             setFilter={this.setFilter}
             numCards={this.state.numResults}
             numShown={this.state.data.length}
-            useQuery
           />
         </div>
         <SortableTable
