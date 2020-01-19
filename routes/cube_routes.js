@@ -1518,9 +1518,9 @@ router.get('/download/xmage/:id', async (req, res) => {
 });
 
 router.get('/download/plaintext/:id', async (req, res) => {
-  try{
+  try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
-    
+
     res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
@@ -1636,115 +1636,100 @@ router.get('/draft/:id', async function(req, res) {
 });
 
 // Edit Submit POST Route
-router.post('/edit/:id', ensureAuth, function(req, res) {
-  req.body.blog = sanitize(req.body.blog);
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+router.post('/edit/:id', ensureAuth, async (req, res) => {
+  try {
+    req.body.blog = sanitize(req.body.blog);
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    if (err) {
-      req.flash('danger', 'Server Error');
-      res.redirect('/cube/list/' + req.params.id);
-    } else if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/cube/list/' + req.params.id);
-    } else {
-      var edits = req.body.body.split(';');
-      var removes = new Set();
-      var adds = [];
-      var changelog = '';
-      for (let edit of edits) {
-        if (edit.charAt(0) == '+') {
-          //add id
-          var details = carddb.cardFromId(edit.substring(1));
-          if (!details) {
-            console.error('Card not found: ' + edit, req);
-          } else {
-            adds.push(details);
-            changelog += addCardHtml(details);
-          }
-        } else if (edit.charAt(0) == '-') {
-          //remove id
-          const indexOut = parseInt(edit.substring(1));
-          if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-            req.flash('danger', 'Bad request format.');
-            return res.redirect('/cube/list/' + req.params.id);
-          }
-          removes.add(indexOut);
-          const card = cube.cards[indexOut];
-          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
-        } else if (edit.charAt(0) == '/') {
-          const [indexOutStr, idIn] = edit.substring(1).split('>');
-          const detailsIn = carddb.cardFromId(idIn);
-          if (!detailsIn) {
-            console.error('Card not found: ' + edit, req);
-          } else {
-            adds.push(detailsIn);
-          }
 
-          const indexOut = parseInt(indexOutStr);
-          if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-            req.flash('danger', 'Bad request format.');
-            return res.redirect('/cube/list/' + req.params.id);
-          }
-          removes.add(indexOut);
-          const cardOut = cube.cards[indexOut];
-          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+    const edits = req.body.body.split(';');
+    const removes = new Set();
+    const adds = [];
+    let changelog = '';
+
+    for (let edit of edits) {
+      if (edit.charAt(0) == '+') {
+        //add id
+        var details = carddb.cardFromId(edit.substring(1));
+        if (!details) {
+          console.error('Card not found: ' + edit, req);
         } else {
+          adds.push(details);
+          changelog += addCardHtml(details);
+        }
+      } else if (edit.charAt(0) == '-') {
+        //remove id
+        const indexOut = parseInt(edit.substring(1));
+        if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect('/cube/list/' + req.params.id);
         }
-      }
-      //need to do numerical sort..
-      const removesArray = [...removes];
-      removesArray.sort((a, b) => a - b);
-      for (let i = removesArray.length - 1; i >= 0; i--) {
-        cube.cards.splice(removesArray[i], 1);
-      }
-      for (const add of adds) {
-        util.addCardToCube(cube, add);
-        const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
-        if (maybeIndex !== -1) {
-          cube.maybe.splice(maybeIndex, 1);
-        }
-      }
-
-      var blogpost = new Blog();
-      blogpost.title = req.body.title;
-      if (req.body.blog.length > 0) {
-        blogpost.html = req.body.blog;
-      }
-      blogpost.changelist = changelog;
-      blogpost.owner = cube.owner;
-      blogpost.date = Date.now();
-      blogpost.cube = cube._id;
-      blogpost.dev = 'false';
-      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-      blogpost.username = cube.owner_name;
-      blogpost.cubename = cube.name;
-
-      blogpost.save(function(err) {
-        if (err) {
-          console.error(err, req);
+        removes.add(indexOut);
+        const card = cube.cards[indexOut];
+        changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+      } else if (edit.charAt(0) == '/') {
+        const [indexOutStr, idIn] = edit.substring(1).split('>');
+        const detailsIn = carddb.cardFromId(idIn);
+        if (!detailsIn) {
+          console.error('Card not found: ' + edit, req);
         } else {
-          cube = setCubeType(cube, carddb);
-          Cube.updateOne(
-            {
-              _id: cube._id,
-            },
-            cube,
-            function(err) {
-              if (err) {
-                console.error(err, req);
-              } else {
-                req.flash('success', 'Cube Updated');
-                res.redirect(`/cube/list/${req.params.id}?updated=true`);
-              }
-            },
-          );
+          adds.push(detailsIn);
         }
-      });
+
+        const indexOut = parseInt(indexOutStr);
+        if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect('/cube/list/' + req.params.id);
+        }
+        removes.add(indexOut);
+        const cardOut = cube.cards[indexOut];
+        changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+      } else {
+        req.flash('danger', 'Bad request format.');
+        return res.redirect('/cube/list/' + req.params.id);
+      }
     }
-  });
+
+    //need to do numerical sort..
+    const removesArray = [...removes];
+    removesArray.sort((a, b) => a - b);
+    for (let i = removesArray.length - 1; i >= 0; i--) {
+      cube.cards.splice(removesArray[i], 1);
+    }
+    for (const add of adds) {
+      util.addCardToCube(cube, add);
+      const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
+      if (maybeIndex !== -1) {
+        cube.maybe.splice(maybeIndex, 1);
+      }
+    }
+
+    var blogpost = new Blog();
+    blogpost.title = req.body.title;
+    if (req.body.blog.length > 0) {
+      blogpost.html = req.body.blog;
+    }
+    blogpost.changelist = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    cube = setCubeType(cube, carddb);
+
+    await blogpost.save();
+    await cube.save();
+
+    req.flash('success', 'Cube Updated');
+    res.redirect(`/cube/list/${req.params.id}?updated=true`);
+  } catch (err) {
+    util.handleRouteError(res, err, '/cube/list/' + req.params.id);
+  }
 });
 
 //API routes
@@ -2861,7 +2846,7 @@ router.get('/api/getversions/:id', async (req, res) => {
       tcg.push(card.tcgplayer_id);
     }
   });
-  const price_dict = await GetPrices(pids);
+  const price_dict = await GetPrices(tcg);
   cards.forEach(function(card, index) {
     if (card.tcgplayer_id) {
       const card_price_data = price_dict[card.tcgplayer_id];
