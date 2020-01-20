@@ -110,7 +110,13 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
       <DisplayContextProvider>
-        <DeckbuilderNavbar deck={currentDeck} addBasics={addBasics} name={name} description={description} className="mb-3" />
+        <DeckbuilderNavbar
+          deck={currentDeck}
+          addBasics={addBasics}
+          name={name}
+          description={description}
+          className="mb-3"
+        />
         <DynamicFlash />
         <Row>
           <Col>

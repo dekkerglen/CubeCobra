@@ -693,7 +693,7 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     let a_names = only_a.map((card) => card.details.name);
     let b_names = only_b.map((card) => card.details.name);
 
-    cubeA.cards.forEach(function (card, index) {
+    cubeA.cards.forEach(function(card, index) {
       if (b_names.includes(card.details.name)) {
         in_both.push(card);
 
@@ -719,7 +719,7 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
       defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cubeA.default_sorts,
-    }
+    };
 
     params = {
       reactProps,
@@ -734,14 +734,15 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     };
 
     res.render('cube/cube_compare', params);
-  } catch(err) {
+  } catch (err) {
     util.handleRouteError(res, req, err, '/404/');
   }
 });
 
 router.get('/list/:id', async function(req, res) {
   try {
-    const fields = 'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
+    const fields =
+      'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
     const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');

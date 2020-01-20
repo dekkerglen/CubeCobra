@@ -24,7 +24,17 @@ const deduplicateTags = (tagColors) => {
   return result;
 };
 
-const CubeComparePage = ({ cards, cubeID, cube, cubeBID, cubeB, defaultTagColors, defaultShowTagColors, defaultSorts, ...props }) => {
+const CubeComparePage = ({
+  cards,
+  cubeID,
+  cube,
+  cubeBID,
+  cubeB,
+  defaultTagColors,
+  defaultShowTagColors,
+  defaultSorts,
+  ...props
+}) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState([]);
 
@@ -64,6 +74,6 @@ const CubeComparePage = ({ cards, cubeID, cube, cubeBID, cubeB, defaultTagColors
       </DisplayContextProvider>
     </SortContextProvider>
   );
-}
+};
 
 export default CubeComparePage;

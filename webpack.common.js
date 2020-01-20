@@ -19,10 +19,7 @@ const config = {
   },
   devtool: 'source-map',
   resolve: {
-    modules: [
-      'src',
-      'node_modules',
-    ],
+    modules: ['src', 'node_modules'],
   },
 };
 

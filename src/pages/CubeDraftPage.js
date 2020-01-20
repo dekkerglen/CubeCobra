@@ -189,7 +189,12 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
           </Collapse>
         </Navbar>
         <DynamicFlash />
-        <CSRFForm className="d-none" innerRef={submitDeckForm} method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
+        <CSRFForm
+          className="d-none"
+          innerRef={submitDeckForm}
+          method="POST"
+          action={`/cube/submitdeck/${Draft.cube()}`}
+        >
           <Input type="hidden" name="body" value={Draft.id()} />
         </CSRFForm>
         <DndProvider>
