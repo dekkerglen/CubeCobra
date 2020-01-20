@@ -56,8 +56,7 @@ let BulkUploadPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 let DraftView = null;
-if (false) {
-  // NODE_ENV === 'production') {
+if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
@@ -775,7 +774,9 @@ router.get('/list/:id', async function(req, res) {
     const reactProps = {
       canEdit: req.user ? req.user.id === cube.owner : false,
       cubeID: req.params.id,
-      defaultTagColors: cube.tag_colors ? cube.tag_colors : [],
+      defaultView: req.query.view || 'table',
+      defaultFilterText: req.query.f || '',
+      defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
