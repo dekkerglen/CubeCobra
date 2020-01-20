@@ -6,7 +6,7 @@ import { getCsrfToken } from '../util/CSRF';
 
 const CSRFForm = forwardRef(({ children, ...props }, ref) => (
   <Form ref={ref} {...props}>
-    <Input type="hidden" name="_csrf" value={getCsrfToken()} />
+    <Input type="hidden" name="_csrf" value={getCsrfToken() || ''} />
     {children}
   </Form>
 ));
