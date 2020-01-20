@@ -212,9 +212,8 @@ test('generatePack generates a valid pack of cards', () => {
   Cube.findOne.yields(null, exampleCube);
   var callback = sinon.stub();
   var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    cubefn.generatePack('', carddb, seed, callback);
-    var argument = callback.getCall(0).args[1];
+  return promise.then(async function() {
+    var argument = await cubefn.generatePack('', carddb, seed);
     argument.pack.forEach(function(card, index) {
       expect(card).toEqual(cubefixture.examplePack.pack[index]);
     });
