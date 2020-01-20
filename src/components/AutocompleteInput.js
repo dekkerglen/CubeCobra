@@ -165,7 +165,7 @@ deepmerge.all = function deepmergeAll(array, optionsArgument) {
 };
 
 // Map URL => Promise returning tree
-const treeCache = {};
+export const treeCache = {};
 
 const fetchTree = async (treeUrl, treePath) => {
   const response = await fetch(treeUrl);

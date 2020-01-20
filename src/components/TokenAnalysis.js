@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Fragment } from 'react';
 import { Row, Col, Card, CardBody } from 'reactstrap';
 
 import Affiliate from '../util/Affiliate';
@@ -47,13 +47,13 @@ const TokenAnalysis = ({ tokens }) => (
             </a>
             <CardBody>
               <p className="card-text">
-                {dedupeCards(sortCards(tokenCards)).map((card) => (
-                  <>
-                    <AutocardLink key={card.name} href={'/tool/card/' + card._id} card={{ details: card }}>
+                {dedupeCards(sortCards(tokenCards)).map((card, index) => (
+                  <Fragment key={index}>
+                    <AutocardLink href={'/tool/card/' + card._id} card={{ details: card }}>
                       {card.name}
                     </AutocardLink>
                     <br />
-                  </>
+                  </Fragment>
                 ))}
               </p>
             </CardBody>

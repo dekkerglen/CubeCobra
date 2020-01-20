@@ -192,7 +192,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });
@@ -258,7 +258,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });

@@ -26,11 +26,7 @@ class BlogContextMenu extends React.Component {
     })
       .then((response) => response.json())
       .then(function(json) {
-        if (json.src) {
-          $('#editor').html(json.src);
-        } else {
-          $('#editor').html(json.body);
-        }
+        $('#editor').html(json.src || json.body || '');
 
         $('#postBlogTitleInput').val(json.title);
         $('#postBlogHiddenId').val(post._id);

@@ -42,7 +42,7 @@ let categoryMap = new Map([
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
-const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
+export const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
 
 function findEndingQuotePosition(filterText, num) {
   if (!num) {
@@ -58,7 +58,7 @@ function findEndingQuotePosition(filterText, num) {
   return false;
 }
 
-function tokenizeInput(filterText, tokens) {
+export function tokenizeInput(filterText, tokens) {
   filterText = filterText.trim().toLowerCase();
   if (!filterText) {
     return true;
@@ -221,7 +221,7 @@ function simplifyArg(arg, category) {
   return res;
 }
 
-const verifyTokens = (tokens) => {
+export const verifyTokens = (tokens) => {
   let temp = tokens;
   let inBounds = (num) => {
     return num > -1 && num < temp.length;
@@ -357,7 +357,7 @@ const findClose = (tokens, pos) => {
   return false;
 };
 
-const parseTokens = (tokens) => {
+export const parseTokens = (tokens) => {
   let peek = () => tokens[0];
   let consume = peek;
 
@@ -406,11 +406,11 @@ function filterCard(card, filters, inCube) {
   }
 }
 
-function filterCards(cards, filter, inCube) {
+export function filterCards(cards, filter, inCube) {
   return cards.filter((card) => filterCard(card, filter, inCube));
 }
 
-function filterCardsDetails(cardsDetails, filter) {
+export function filterCardsDetails(cardsDetails, filter) {
   const cards = cardsDetails.map((details) => ({ details }));
   const filtered = filterCards(cards, filter, /* inCube */ false);
   return filtered.map((card) => card.details);
@@ -796,6 +796,37 @@ function filterApply(card, filter, inCube) {
   }
 }
 
+export function filterToString(filters) {
+  if (Array.isArray(filters) && Array.isArray(filters[0])) {
+    return filterToString(filters[0]);
+  }
+  let s = [];
+  let f, arg, operand;
+  for (let i = 0; i < filters.length; i++) {
+    f = filters[i];
+    if (f.type == 'token') {
+      arg = f.arg;
+      if (Array.isArray(arg)) {
+        arg = arg.join('');
+      }
+      operand = f.operand;
+      if (f.not) {
+        operand = '!' + operand;
+      }
+      s.push(f.category + operand + arg);
+    }
+  }
+
+  let sep = ' and ';
+  if (filters.type) {
+    if (filters.type == 'or') {
+      sep = ' or ';
+    }
+  }
+
+  return s.join(sep);
+}
+
 export default {
   operators,
   operatorsRegex,
@@ -805,4 +836,5 @@ export default {
   filterCard,
   filterCards,
   filterCardsDetails,
+  filterToString,
 };

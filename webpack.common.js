@@ -58,6 +58,7 @@ const clientConfig = merge(config, {
 const serverConfig = merge(config, {
   target: 'node',
   entry: {
+    BulkUploadPage: './src/pages/BulkUploadPage.js',
     CubeDraftPage: './src/pages/CubeDraftPage.js',
     CubeListPage: './src/pages/CubeListPage.js',
     CubePlaytestPage: './src/pages/CubePlaytestPage.js',

@@ -47,16 +47,7 @@ function checkStatus(response) {
     return Promise.reject(new Error(response.statusText));
   }
 }
-
-function GetPrices(card_ids, callback) {
-  return GetPricesPromise(card_ids)
-    .catch((err) => {
-      throw err;
-    })
-    .then(callback);
-}
-
-async function GetPricesPromise(card_ids) {
+async function GetPrices(card_ids) {
   var price_dict = {};
 
   if (!tcgconfig.Public_Key || !tcgconfig.Private_Key) {

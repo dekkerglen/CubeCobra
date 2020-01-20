@@ -22,18 +22,19 @@ class TopCards extends Component {
     this.setFilter = this.setFilter.bind(this);
   }
 
-  setFilter(filter, filterInput) {
+  async setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
-    fetch('/tool/api/topcards?' + params.toString())
-      .then((response) => response.json())
-      .then((json) => {
-        this.setState({
-          data: json.data,
-          numResults: json.numResults,
-        });
-      })
-      .catch((err) => console.error(err));
+    const response = await fetch('/tool/api/topcards?' + params.toString());
+    if (!response.ok) {
+      return;
+    }
+
+    const json = await response.json();
+    this.setState({
+      data: json.data,
+      numResults: json.numResults,
+    });
   }
 
   render() {

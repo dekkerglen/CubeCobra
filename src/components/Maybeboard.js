@@ -8,6 +8,7 @@ import AutocompleteInput from './AutocompleteInput';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
+import Filter from '../util/Filter';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
 import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
@@ -34,6 +35,7 @@ const MaybeboardListItem = ({ card, className }) => {
   const handleRemove = useCallback(
     async (event) => {
       event.preventDefault();
+      event.stopPropagation();
       const index = parseInt(event.currentTarget.getAttribute('data-index'));
       if (isNaN(index)) {
         console.error('Bad index');

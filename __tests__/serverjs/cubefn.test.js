@@ -204,20 +204,3 @@ test('addAutocard correctly replaces autocard format strings', () => {
     expect(result).toBe(expected);
   });
 });
-
-test('generatePack generates a valid pack of cards', () => {
-  expect.assertions(16);
-  const seed = 1569704729;
-  var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-  Cube.findOne.yields(null, exampleCube);
-  var callback = sinon.stub();
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    cubefn.generatePack('', carddb, seed, callback);
-    var argument = callback.getCall(0).args[1];
-    argument.pack.forEach(function(card, index) {
-      expect(card).toEqual(cubefixture.examplePack.pack[index]);
-    });
-    expect(argument.seed).toBe(seed);
-  });
-});

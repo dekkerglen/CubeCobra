@@ -182,7 +182,7 @@ router.post('/lostpassword', function(req, res) {
 
         passwordReset.save(function(err) {
           if (err) {
-            console.log(err);
+            console.error(err);
           } else {
             // Use Smtp Protocol to send Email
             var smtpTransport = mailer.createTransport({
@@ -215,7 +215,7 @@ router.post('/lostpassword', function(req, res) {
 
             smtpTransport.sendMail(mail, function(err, response) {
               if (err) {
-                console.log(err);
+                console.error(err);
               }
 
               smtpTransport.close();
@@ -390,13 +390,13 @@ router.post('/register', function(req, res) {
                 bcrypt.genSalt(10, function(err, salt) {
                   bcrypt.hash(newUser.password, salt, function(err, hash) {
                     if (err) {
-                      console.log(err);
+                      console.error(err);
                     } else {
                       newUser.password = hash;
                       newUser.confirmed = 'false';
                       newUser.save(function(err) {
                         if (err) {
-                          console.log(err);
+                          console.error(err);
                           return;
                         } else {
                           // Use Smtp Protocol to send Email
@@ -429,7 +429,7 @@ router.post('/register', function(req, res) {
 
                           smtpTransport.sendMail(mail, function(error, response) {
                             if (error) {
-                              console.log(error);
+                              console.error(error);
                             }
 
                             smtpTransport.close();
@@ -580,7 +580,6 @@ router.get('/view/:id', async (req, res) => {
       owner: user._id,
     });
 
-    console.log(user.about);
     return res.render('user/user_view', {
       user_limited: {
         username: user.username,
@@ -594,7 +593,7 @@ router.get('/view/:id', async (req, res) => {
       following: req.user ? user.users_following.includes(req.user._id) : false,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });
@@ -615,7 +614,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
       notifications: user.old_notifications,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });
@@ -675,7 +674,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       pages: pages ? pages : null,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });
@@ -768,12 +767,12 @@ router.post('/resetpassword', ensureAuth, function(req, res, next) {
               bcrypt.genSalt(10, function(err, salt) {
                 bcrypt.hash(req.body.password2, salt, function(err, hash) {
                   if (err) {
-                    console.log(err);
+                    console.error(err);
                   } else {
                     user.password = hash;
                     user.save(function(err) {
                       if (err) {
-                        console.log(err);
+                        console.error(err);
                         return;
                       } else {
                         req.flash('success', 'Password updated succesfully');
@@ -846,7 +845,7 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
 
           User.updateOne(query, user, function(err) {
             if (err) {
-              console.log(err);
+              console.error(err);
             } else {
               req.flash('success', 'Your profile has been updated.');
               res.redirect('/user/account');
@@ -878,7 +877,7 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
 
             User.updateOne(query, user, function(err) {
               if (err) {
-                console.log(err);
+                console.error(err);
               } else {
                 req.flash('success', 'Your profile has been updated.');
                 res.redirect('/user/account');

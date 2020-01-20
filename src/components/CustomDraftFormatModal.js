@@ -38,8 +38,8 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     }));
   });
 
-  const handleAddCard = useCallback(() => {
-    const index = parseInt(event.target.getAttribute('data-index'));
+  const handleAddCard = useCallback((event) => {
+    const index = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat((format) => {
       const newFormat = { ...format };
       newFormat.packs = [...(newFormat.packs || [['']])];
@@ -47,10 +47,12 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return newFormat;
     });
   }, []);
-  const handleRemoveCard = useCallback(() => {
-    const packIndex = parseInt(event.target.getAttribute('data-pack'));
-    const index = parseInt(event.target.getAttribute('data-index'));
+  const handleRemoveCard = useCallback((event) => {
+    const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'));
+    const index = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat((format) => {
+      // don't remove the last card from a pack
+      if (format.packs[packIndex].length <= 1) return format;
       const newFormat = { ...format };
       newFormat.packs = [...(newFormat.packs || [['']])];
       newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
@@ -75,8 +77,8 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       packs: [...(packs || [['']]), ['']],
     }));
   }, []);
-  const handleDuplicatePack = useCallback(() => {
-    const index = parseInt(event.target.getAttribute('data-index'));
+  const handleDuplicatePack = useCallback((event) => {
+    const index = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat((format) => {
       const newFormat = { ...format };
       newFormat.packs = [...(newFormat.packs || [['']])];
@@ -85,7 +87,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     });
   }, []);
   const handleRemovePack = useCallback((event) => {
-    const removeIndex = parseInt(event.target.getAttribute('data-index'));
+    const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat(({ packs, ...format }) => ({
       ...format,
       packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
@@ -110,13 +112,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="false" defaultChecked={true} /> Don't allow more than
-                    one of each card in draft
+                    <Input type="radio" name="multiples" value="false" defaultChecked={!format.multiples} /> Don't allow
+                    more than one of each card in draft
                   </Label>
                 </FormGroup>
                 <FormGroup check>
                   <Label check>
-                    <Input type="radio" name="multiples" value="true" /> Allow multiples (e.g. set draft)
+                    <Input type="radio" name="multiples" value="true" defaultChecked={format.multiples} /> Allow
+                    multiples (e.g. set draft)
                   </Label>
                 </FormGroup>
               </FormGroup>
@@ -142,7 +145,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                 {pack.map((card, cardIndex) => (
                   <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
-                      <InputGroupText>{cardIndex}</InputGroupText>
+                      <InputGroupText>{cardIndex + 1}</InputGroupText>
                     </InputGroupAddon>
                     <Input
                       type="text"

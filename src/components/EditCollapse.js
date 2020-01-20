@@ -11,18 +11,28 @@ import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
 
-export const getCard = async (name) => {
+export const getCard = async (name, setAlerts) => {
   if (name && name.length > 0) {
     const normalized = encodeName(name);
     const response = await fetch(`/cube/api/getcard/${normalized}`);
     if (!response.ok) {
-      setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't get card: ${response.status}.` }]);
+      const message = `Couldn't get card: ${response.status}.`;
+      if (setAlerts) {
+        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+      } else {
+        console.error(message);
+      }
       return null;
     }
 
     const json = await response.json();
     if (json.success !== 'true' || !json.card) {
-      setAlerts((alerts) => [...alerts, { color: 'danger', message: `Couldn't find card [${name}].` }]);
+      const message = `Couldn't find card [${name}].`;
+      if (setAlerts) {
+        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+      } else {
+        console.error(message);
+      }
       return null;
     }
     return json.card;
@@ -44,7 +54,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   const handleChange = useCallback((event) => {
     return {
-      postContent: setPostContent,
+      blog: setPostContent,
       add: setAddValue,
       remove: setRemoveValue,
     }[event.target.name](event.target.value);
@@ -54,7 +64,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
     async (event, newValue) => {
       event.preventDefault();
       try {
-        const card = await getCard(newValue || addValue);
+        const card = await getCard(newValue || addValue, setAlerts);
         if (!card) {
           return;
         }
@@ -79,7 +89,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
             card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
             !changes.some(
               (change) =>
-                change.remove.index === card.index ||
+                (change.remove && change.remove.index === card.index) ||
                 (Array.isArray(change.replace) && change.replace[0].index === card.index),
             ),
         );
@@ -91,7 +101,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
           return;
         }
         if (replace) {
-          const cardIn = await getCard(addValue);
+          const cardIn = await getCard(addValue, setAlerts);
           if (!cardIn) {
             return;
           }
@@ -121,8 +131,8 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   return (
     <Collapse className="px-3" {...props}>
-      {alerts.map(({ color, message }) => (
-        <UncontrolledAlert color={color} className="mt-2">
+      {alerts.map(({ color, message }, index) => (
+        <UncontrolledAlert key={index} color={color} className="mt-2">
           {message}
         </UncontrolledAlert>
       ))}
@@ -180,7 +190,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               </div>
             </Col>
             <Col>
-              <BlogpostEditor value={postContent} onChange={handleChange} />
+              <BlogpostEditor name="blog" value={postContent} onChange={handleChange} />
             </Col>
           </Row>
           <Row className="mb-2">

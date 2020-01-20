@@ -78,6 +78,7 @@ export function getSorts() {
     'Color Count',
     'Color Identity',
     'Color',
+    'Creature/Non-Creature',
     'Date Added',
     'Finish',
     'Guilds',
@@ -323,7 +324,7 @@ export function getLabels(cube, sort) {
     });
   } else if (sort == 'Manacost Type') {
     return ['Gold', 'Hybrid', 'Phyrexian'];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
   } else if (sort == 'Price' || sort == 'Price Foil') {
     const labels = [];
@@ -403,9 +404,9 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(typeLine(card), colorIdentity(card) || card.details.color_identity)];
+    return [GetColorCategory(typeLine(card), colorIdentity(card))];
   } else if (sort == 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card) || card.details.color_identity)];
+    return [GetColorIdentity(colorIdentity(card))];
   } else if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
@@ -416,7 +417,7 @@ export function cardGetLabels(card, sort) {
     if (colorIdentity(card).length < 4) {
       return [];
     } else if (colorIdentity(card).length === 5) {
-      return ['Five-Color'];
+      return ['Five Color'];
     } else {
       return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
@@ -531,6 +532,8 @@ export function cardGetLabels(card, sort) {
       } else {
         return [type];
       }
+    } else if (colorIdentity(card).length === 5) {
+      return ['Five Color'];
     } else {
       return [
         ...cardGetLabels(card, 'Guilds'),
@@ -570,12 +573,13 @@ export function cardGetLabels(card, sort) {
     } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       return ['Phyrexian'];
     }
-  } else if (sort == 'CNC') {
+    return [];
+  } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')
-      ? 'Creature'
-      : 'Non-Creature';
+      ? ['Creature']
+      : ['Non-Creature'];
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {
@@ -590,7 +594,7 @@ export function cardGetLabels(card, sort) {
       } else if (price >= price_buckets[price_buckets.length - 1]) {
         return [price_bucket_label(price_buckets.length)];
       } else {
-        for (i = 1; i < price_buckets.length; i++) {
+        for (let i = 1; i < price_buckets.length; i++) {
           if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
             return [price_bucket_label(i)];
           }
@@ -607,7 +611,7 @@ export function cardGetLabels(card, sort) {
       } else if (card.details.price_foil >= price_buckets[price_buckets.length - 1]) {
         return [price_bucket_label(price_buckets.length)];
       } else {
-        for (i = 1; i < price_buckets.length; i++) {
+        for (let i = 1; i < price_buckets.length; i++) {
           if (card.details.price_foil >= price_buckets[i - 1] && card.details.price_foil < price_buckets[i]) {
             return [price_bucket_label(i)];
           }
@@ -655,7 +659,7 @@ export function sortDeep(cards, ...sorts) {
     const result = sortGroupsOrdered(cards, first);
     for (const labelGroup of result) {
       if (rest.length > 0) {
-        labelGroup[1] = sortDeep(labelGroup[1], rest);
+        labelGroup[1] = sortDeep(labelGroup[1], ...rest);
       } else {
         labelGroup[1].sort(alphaCompare);
       }
