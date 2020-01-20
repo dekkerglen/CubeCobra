@@ -15,6 +15,10 @@ var {
   removeCardHtml,
   replaceCardHtml,
   abbreviate,
+  insertComment,
+  getOwnerFromComment,
+  saveEdit,
+  build_tag_colors,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
@@ -1570,7 +1574,7 @@ router.post('/startdraft/:id', async (req, res) => {
   }
 });
 
-router.get('/draft/:id', async function(req, res) {
+router.get('/draft/:id', async (req, res) => {
   try {
     const draft = await Draft.findById(req.params.id);
     if (!draft) {
@@ -1733,7 +1737,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 });
 
 //API routes
-router.get('/api/cardnames', function(req, res) {
+router.get('/api/cardnames', (req, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
@@ -1741,40 +1745,12 @@ router.get('/api/cardnames', function(req, res) {
 });
 
 // Get the full card images including image_normal and image_flip
-router.get('/api/cardimages', function(req, res) {
+router.get('/api/cardimages', (req, res) => {
   res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
   });
 });
-
-function insertComment(comments, position, comment) {
-  if (position.length <= 0) {
-    comment.index = comments.length;
-    comments.push(comment);
-    return comment;
-  } else {
-    return insertComment(comments[position[0]].comments, position.slice(1), comment);
-  }
-}
-
-function getOwnerFromComment(comments, position) {
-  if (position.length <= 0) {
-    return '';
-  } else if (position.length == 1) {
-    return comments[position[0]].owner;
-  } else {
-    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
-  }
-}
-
-function saveEdit(comments, position, comment) {
-  if (position.length == 1) {
-    comments[position[0]] = comment;
-  } else if (position.length > 1) {
-    saveEdit(comments[position[0]].comments, position.slice(1), comment);
-  }
-}
 
 router.get('/blogpost/:id', async (req, res) => {
   try {
@@ -1787,7 +1763,7 @@ router.get('/blogpost/:id', async (req, res) => {
       loginCallback: '/blogpost/' + req.params.id,
     });
   } catch (err) {
-    res.redirect('/404');
+    util.handleRouteError(res, err, '/404');
   }
 });
 
@@ -1805,46 +1781,44 @@ router.get('/viewcomment/:id/:position', async (req, res) => {
       position: position.split('-'),
     });
   } catch (err) {
-    res.redirect('/404');
+    util.handleRouteError(res, err, '/404');
   }
 });
 
-router.post('/api/editcomment', ensureAuth, async (req, res) => {
-  user = await User.findById(req.user._id);
-  post = await Blog.findById(req.body.id);
+router.post(
+  '/api/editcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    user = await User.findById(req.user._id);
+    post = await Blog.findById(req.body.id);
 
-  if (!user) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
 
-  if (!post) {
-    return res.status(404).send({
-      success: 'false',
-      message: 'Post not found',
-    });
-  }
+    if (!post) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Post not found',
+      });
+    }
 
-  try {
     req.body.comment.content = sanitize(req.body.comment.content);
     saveEdit(post.comments, req.body.position.slice(0, 22), req.body.comment);
     await post.save();
     res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.post('/api/editoverview', ensureAuth, async (req, res) => {
-  try {
+router.post(
+  '/api/editoverview',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
 
     cube = await Cube.findById(updatedCube._id);
@@ -1964,37 +1938,32 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
 
     await cube.save();
     return res.status(200).send({ success: 'true' });
-  } catch (err) {
-    res.statusMessage = err;
-    console.error(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.post('/api/postdeckcomment', ensureAuth, async (req, res) => {
-  const userq = User.findById(req.user._id);
-  const deckq = Deck.findById(req.body.id);
+router.post(
+  '/api/postdeckcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const userq = User.findById(req.user._id);
+    const deckq = Deck.findById(req.body.id);
 
-  const [user, deck] = await Promise.all([userq, deckq]);
+    const [user, deck] = await Promise.all([userq, deckq]);
 
-  if (!user) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
 
-  if (!deck) {
-    return res.status(404).send({
-      success: 'false',
-      message: 'Deck not found',
-    });
-  }
+    if (!deck) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Deck not found',
+      });
+    }
 
-  try {
     //slice limits the recursive depth
     var comment = insertComment(deck.comments, req.body.position.slice(0, 22), {
       owner: user._id,
@@ -2037,36 +2006,32 @@ router.post('/api/postdeckcomment', ensureAuth, async (req, res) => {
       success: 'true',
       comment: comment,
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.post('/api/postcomment', ensureAuth, async (req, res) => {
-  const userq = User.findById(req.user._id);
-  const postq = Blog.findById(req.body.id);
+router.post(
+  '/api/postcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const userq = User.findById(req.user._id);
+    const postq = Blog.findById(req.body.id);
 
-  const [user, post] = await Promise.all([userq, postq]);
+    const [user, post] = await Promise.all([userq, postq]);
 
-  if (!user) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
 
-  if (!post) {
-    return res.status(404).send({
-      success: 'false',
-      message: 'Post not found',
-    });
-  }
+    if (!post) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Post not found',
+      });
+    }
 
-  try {
     //slice limits the recursive depth
     var comment = insertComment(post.comments, req.body.position.slice(0, 22), {
       owner: user._id,
@@ -2109,175 +2074,140 @@ router.post('/api/postcomment', ensureAuth, async (req, res) => {
       success: 'true',
       comment: comment,
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.get('/api/imagedict', function(req, res) {
+router.get('/api/imagedict', (req, res) => {
   res.status(200).send({
     success: 'true',
     dict: carddb.imagedict,
   });
 });
 
-router.get('/api/fullnames', function(req, res) {
+router.get('/api/fullnames', (req, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.full_names,
   });
 });
 
-router.get('/api/cubecardnames/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+router.get(
+  '/api/cubecardnames/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = Cube.findOne(build_id_query(req.params.id));
+
     var cardnames = [];
     cube.cards.forEach(function(item, index) {
       util.binaryInsert(carddb.cardFromId(item.cardID).name, cardnames);
     });
+
     var result = util.turnToTree(cardnames);
     res.status(200).send({
       success: 'true',
       cardnames: result,
     });
-  });
-});
+  }),
+);
 
-router.post('/api/saveshowtagcolors', function(req, res) {
-  if (req.user) {
-    req.user.hide_tag_colors = !req.body.show_tag_colors;
+router.post(
+  '/api/saveshowtagcolors',
+  util.wrapAsyncApi(async (req, res) => {
+    if (req.user) {
+      req.user.hide_tag_colors = !req.body.show_tag_colors;
+      await req.user.save();
 
-    req.user.save(function(err) {
       if (err) console.error(err);
       res.status(200).send({
         success: 'true',
       });
-    });
-  } else {
-    res.status(200).send({
-      success: 'true',
-    });
-  }
-});
-
-router.post('/api/savetagcolors/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      res.status(404).send({
-        success: 'false',
+    } else {
+      res.status(200).send({
+        success: 'true',
       });
-      return;
     }
+  }),
+);
+
+router.post(
+  '/api/savetagcolors/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
     cube.tag_colors = req.body;
 
-    cube.save(function(err) {
-      if (err) console.error(err);
-      res.status(200).send({
-        success: 'true',
-      });
+    await cube.save();
+    res.status(200).send({
+      success: 'true',
     });
-  });
-});
+  }),
+);
 
-function build_tag_colors(cube) {
-  let tag_colors = cube.tag_colors;
-  let tags = tag_colors.map((item) => item.tag);
-  let not_found = tag_colors.map((item) => item.tag);
+router.get(
+  '/api/cubetagcolors/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
-  cube.cards.forEach(function(card, index) {
-    card.tags.forEach(function(tag, index) {
-      tag = tag.trim();
-      if (!tags.includes(tag)) {
-        tag_colors.push({
-          tag,
-          color: null,
-        });
-        tags.push(tag);
-      }
-      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
-    });
-  });
-
-  let tmp = [];
-  tag_colors.forEach(function(item, index) {
-    if (!not_found.includes(item.tag)) tmp.push(item);
-  });
-  tag_colors = tmp;
-
-  return tag_colors;
-}
-
-router.get('/api/cubetagcolors/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
     let tag_colors = build_tag_colors(cube);
     let tags = tag_colors.map((item) => item.tag);
 
-    Cube.findOne(build_id_query(req.query.b_id), function(err, cubeB) {
-      if (cubeB) {
-        let b_tag_colors = build_tag_colors(cubeB);
-        for (let b_tag of b_tag_colors) {
-          if (!tags.includes(b_tag.tag)) {
-            tag_colors.push(b_tag);
-          }
+    //this is for the case of cube compare
+    const cubeB = await Cube.findOne(build_id_query(req.query.b_id));
+
+    if (cubeB) {
+      let b_tag_colors = build_tag_colors(cubeB);
+      for (let b_tag of b_tag_colors) {
+        if (!tags.includes(b_tag.tag)) {
+          tag_colors.push(b_tag);
         }
       }
+    }
 
-      let show_tag_colors = req.user ? !req.user.hide_tag_colors : true;
+    let show_tag_colors = req.user ? !req.user.hide_tag_colors : true;
 
-      res.status(200).send({
-        success: 'true',
-        tag_colors,
-        show_tag_colors,
-      });
+    res.status(200).send({
+      success: 'true',
+      tag_colors,
+      show_tag_colors,
     });
-  });
-});
+  }),
+);
 
-router.get('/api/getcardfromcube/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cube = split[0];
-  let cardname = split[1];
-  cardname = cardutil.decodeName(cardname);
-  cardname = cardutil.normalizeName(cardname);
+router.get(
+  '/api/getcardfromcube/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    var split = req.params.id.split(';');
+    var cubeid = split[0];
+    let cardname = split[1];
+    cardname = cardutil.decodeName(cardname);
+    cardname = cardutil.normalizeName(cardname);
 
-  Cube.findOne(build_id_query(cube), function(err, cube) {
-    var found = false;
+    const cube = await Cube.findOne(build_id_query(cubeid));
+
     cube.cards.forEach(function(card, index) {
-      if (!found && carddb.cardFromId(card.cardID).name_lower == cardname) {
+      if (carddb.cardFromId(card.cardID).name_lower == cardname) {
         card.details = carddb.cardFromId(card.cardID);
-        res.status(200).send({
+        return res.status(200).send({
           success: 'true',
           card: card.details,
         });
-        found = true;
       }
     });
-    if (!found) {
-      res.status(200).send({
-        success: 'true',
-      });
-    }
-  });
-});
+    res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
 
-router.get('/api/cubelist/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.error(err);
-      res.sendStatus(500);
-    } else if (!cube) {
-      res.sendStatus(404);
-    } else {
-      const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
-      res.contentType('text/plain');
-      res.status(200).send(names.join('\n'));
-    }
-  });
-});
+router.get(
+  '/api/cubelist/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
+    res.contentType('text/plain');
+    res.status(200).send(names.join('\n'));
+  }),
+);
 
 router.post('/editdeck/:id', async (req, res) => {
   try {
@@ -3059,7 +2989,7 @@ function maybeCards(cube) {
 router.get(
   '/api/maybe/:id',
   ensureAuth,
-  util.wrapAsyncApi(async function(req, res) {
+  util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       return res.status(404).send({
@@ -3078,7 +3008,7 @@ router.get(
 router.post(
   '/api/maybe/:id',
   ensureAuth,
-  util.wrapAsyncApi(async function(req, res) {
+  util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       return res.status(404).send({

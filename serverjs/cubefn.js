@@ -155,6 +155,61 @@ function replaceCardHtml(oldCard, newCard) {
 function abbreviate(name) {
   return name.length < 20 ? name : name.slice(0, 20) + '…';
 }
+
+function insertComment(comments, position, comment) {
+  if (position.length <= 0) {
+    comment.index = comments.length;
+    comments.push(comment);
+    return comment;
+  } else {
+    return insertComment(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
+
+function getOwnerFromComment(comments, position) {
+  if (position.length <= 0) {
+    return '';
+  } else if (position.length == 1) {
+    return comments[position[0]].owner;
+  } else {
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
+  }
+}
+
+function saveEdit(comments, position, comment) {
+  if (position.length == 1) {
+    comments[position[0]] = comment;
+  } else if (position.length > 1) {
+    saveEdit(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
+function build_tag_colors(cube) {
+  let tag_colors = cube.tag_colors;
+  let tags = tag_colors.map((item) => item.tag);
+  let not_found = tag_colors.map((item) => item.tag);
+
+  cube.cards.forEach(function(card, index) {
+    card.tags.forEach(function(tag, index) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tag_colors.push({
+          tag,
+          color: null,
+        });
+        tags.push(tag);
+      }
+      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
+    });
+  });
+
+  let tmp = [];
+  tag_colors.forEach(function(item, index) {
+    if (!not_found.includes(item.tag)) tmp.push(item);
+  });
+  tag_colors = tmp;
+
+  return tag_colors;
+}
 var methods = {
   getBasics: function(carddb) {
     var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -277,6 +332,10 @@ var methods = {
   removeCardHtml,
   replaceCardHtml,
   abbreviate,
+  insertComment,
+  getOwnerFromComment,
+  saveEdit,
+  build_tag_colors,
 };
 
 module.exports = methods;
