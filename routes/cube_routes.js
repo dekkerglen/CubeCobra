@@ -2679,56 +2679,56 @@ router.get('/deck/:id', async (req, res) => {
       });
     }
   } catch (err) {
-    req.flash('danger', err);
-    res.redirect('/404');
+    util.handleRouteError(res, err, '/404');
   }
 });
 
-router.get('/api/getcard/:name', function(req, res) {
+router.get('/api/getcard/:name', (req, res) => {
   let potentialIds = carddb.getIdsFromName(cardutil.decodeName(req.params.name));
   if (potentialIds && potentialIds.length > 0) {
     let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
     let selected = nonPromo || potentialIds[0];
     let card = carddb.cardFromId(selected);
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
       card: card,
     });
-  } else {
-    res.status(200).send({
-      success: 'false',
-    });
   }
+  res.status(200).send({
+    success: 'false',
+  });
 });
 
-router.get('/api/getimage/:name', function(req, res) {
-  var reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-  var img = carddb.imagedict[reasonable.name];
-  if (!img) {
-    res.status(200).send({
-      success: 'false',
-    });
-  } else {
+router.get('/api/getimage/:name', 
+  util.wrapAsyncApi(async (req, res) => {
+    var reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
+    var img = carddb.imagedict[reasonable.name];
+    if (!img) {
+      return res.status(200).send({
+        success: 'false',
+      });
+    }
     res.status(200).send({
       success: 'true',
       img: img,
     });
-  }
-});
+  })
+);
 
-router.get('/api/getcardfromid/:id', async (req, res) => {
-  var card = carddb.cardFromId(req.params.id);
-  //need to get the price of the card with the new version in here
-  var tcg = [];
-  if (card.tcgplayer_id) {
-    tcg.push(card.tcgplayer_id);
-  }
-  const price_dict = await GetPrices(pids);
-  if (card.error) {
-    res.status(200).send({
-      success: 'false',
-    });
-  } else {
+router.get('/api/getcardfromid/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    var card = carddb.cardFromId(req.params.id);
+    //need to get the price of the card with the new version in here
+    var tcg = [];
+    if (card.tcgplayer_id) {
+      tcg.push(card.tcgplayer_id);
+    }
+    const price_dict = await GetPrices(pids);
+    if (card.error) {
+      return res.status(200).send({
+        success: 'false',
+      });
+    }
     if (price_dict[card.tcgplayer_id]) {
       card.price = price_dict[card.tcgplayer_id];
     }
@@ -2739,65 +2739,69 @@ router.get('/api/getcardfromid/:id', async (req, res) => {
       success: 'true',
       card: card,
     });
-  }
-});
+  })
+);
 
-router.get('/api/getversions/:id', async (req, res) => {
-  cards = [];
-  tcg = [];
-  carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
-    const card = carddb.cardFromId(id);
-    cards.push(card);
-    if (card.tcgplayer_id) {
-      tcg.push(card.tcgplayer_id);
-    }
-  });
-  const price_dict = await GetPrices(tcg);
-  cards.forEach(function(card, index) {
-    if (card.tcgplayer_id) {
-      const card_price_data = price_dict[card.tcgplayer_id];
-      if (card_price_data) {
-        card.price = card_price_data;
-      }
-      const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
-      if (card_foil_price_data) {
-        card.price_foil = card_foil_price_data;
-      }
-    }
-  });
-  res.status(200).send({
-    success: 'true',
-    cards: cards,
-  });
-});
-
-router.post('/api/getversions', function(req, res) {
-  cards = {};
-
-  req.body.forEach(function(cardid, index) {
-    cards[cardid] = [];
-    carddb.nameToId[
-      carddb
-        .cardFromId(cardid)
-        .name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-    ].forEach(function(id, index) {
+router.get('/api/getversions/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    let cards = [];
+    let tcg = [];
+    carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
       const card = carddb.cardFromId(id);
-      cards[cardid].push({
-        id: id,
-        version: card.full_name
-          .toUpperCase()
-          .substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
-        img: card.image_normal,
+      cards.push(card);
+      if (card.tcgplayer_id) {
+        tcg.push(card.tcgplayer_id);
+      }
+    });
+    const price_dict = await GetPrices(tcg);
+    cards.forEach(function(card, index) {
+      if (card.tcgplayer_id) {
+        const card_price_data = price_dict[card.tcgplayer_id];
+        if (card_price_data) {
+          card.price = card_price_data;
+        }
+        const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
+        if (card_foil_price_data) {
+          card.price_foil = card_foil_price_data;
+        }
+      }
+    });
+    res.status(200).send({
+      success: 'true',
+      cards: cards,
+    });
+  })
+);
+
+router.post('/api/getversions', 
+  util.wrapAsyncApi(async (req, res) => {
+    let cards = {};
+
+    req.body.forEach(function(cardid, index) {
+      cards[cardid] = [];
+      carddb.nameToId[
+        carddb
+          .cardFromId(cardid)
+          .name.toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+      ].forEach(function(id, index) {
+        const card = carddb.cardFromId(id);
+        cards[cardid].push({
+          id: id,
+          version: card.full_name
+            .toUpperCase()
+            .substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
+          img: card.image_normal,
+        });
       });
     });
-  });
-  res.status(200).send({
-    success: 'true',
-    dict: cards,
-  });
-});
+    res.status(200).send({
+      success: 'true',
+      dict: cards,
+    });
+  })
+);
 
 router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
   const { src, updated } = req.body;
