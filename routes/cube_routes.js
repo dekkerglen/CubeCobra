@@ -2988,8 +2988,11 @@ router.post(
     cube.maybe = withAdded;
     await cube.save();
 
+    const added = cube.maybe.slice(cube.maybe.length - addCardsNoDetails.length);
+
     return res.status(200).send({
       success: 'true',
+      added: util.fromEntries(added.map(({ _id, cardID }) => [cardID, _id])),
     });
   }),
 );
