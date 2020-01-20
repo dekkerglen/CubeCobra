@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
+const serialize = require('serialize-javascript');
 var {
   addAutocard,
   generatePack,
@@ -480,7 +481,7 @@ router.get('/overview/:id', async (req, res) => {
     };
 
     return res.render('cube/cube_overview', {
-      reactProps,
+      reactProps: serialize(reactProps),
       cube,
       cube_id,
       title: `${abbreviate(cube.name)} - Overview`,
@@ -722,7 +723,7 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     };
 
     params = {
-      reactProps,
+      reactProps: serialize(reactProps),
       title: `Comparing ${cubeA.name} to ${cubeB.name}`,
       metadata: generateMeta(
         'Cube Cobra Compare Cubes',
@@ -790,7 +791,7 @@ router.get('/list/:id', async function(req, res) {
       reactHTML: CubeListPage
         ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube,
       cube_id: req.params.id,
       activeLink: 'list',
@@ -851,7 +852,7 @@ router.get('/playtest/:id', async (req, res) => {
       reactHTML: CubePlaytestPage
         ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube: cube,
       cube_id: req.params.id,
       activeLink: 'playtest',
@@ -1051,7 +1052,7 @@ router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
           NODE_ENV === 'production'
             ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
             : undefined,
-        reactProps,
+        reactProps: serialize(reactProps),
         cube: cube,
         cube_id: req.params.id,
         title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1276,7 +1277,7 @@ async function bulkuploadCSV(req, res, cards, cube) {
         NODE_ENV === 'production'
           ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
           : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube: cube,
       cube_id: req.params.id,
       title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1388,7 +1389,7 @@ async function bulkUpload(req, res, list, cube) {
             reactHTML: BulkUploadPage
               ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
               : undefined,
-            reactProps,
+            reactProps: serialize(reactProps),
             cube: cube,
             cube_id: req.params.id,
             title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1627,7 +1628,7 @@ router.get('/draft/:id', async (req, res) => {
       reactHTML: DraftView
         ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
         : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
       metadata: generateMeta(
         `Cube Cobra Draft: ${cube.name}`,
@@ -2526,7 +2527,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
     };
 
     return res.render('cube/cube_deckbuilder', {
-      reactProps,
+      reactProps: serialize(reactProps),
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Deckbuilder`,
       metadata: generateMeta(
@@ -2631,7 +2632,7 @@ router.get('/deck/:id', async (req, res) => {
       };
 
       return res.render('cube/cube_deck', {
-        reactProps,
+        reactProps: serialize(reactProps),
         title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
@@ -2680,7 +2681,7 @@ router.get('/deck/:id', async (req, res) => {
       };
 
       return res.render('cube/cube_deck', {
-        reactProps,
+        reactProps: serialize(reactProps),
         title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
