@@ -7,6 +7,6 @@ const ClientOnly = ({ children }) => {
   }, []);
 
   return isClient && <>{children}</>;
-}
+};
 
 export default ClientOnly;

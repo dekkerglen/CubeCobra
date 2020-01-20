@@ -22,7 +22,14 @@ import TableView from './TableView';
 import { tagColors, TagContextProvider } from './TagContext';
 import VisualSpoiler from './VisualSpoiler';
 
-const CubeListPageRaw = ({ maybe, defaultFilterText, defaultView, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+const CubeListPageRaw = ({
+  maybe,
+  defaultFilterText,
+  defaultView,
+  defaultTagColors,
+  defaultShowTagColors,
+  defaultSorts,
+}) => {
   const { cube, cubeID, canEdit } = useContext(CubeContext);
 
   const [cubeView, setCubeView] = useState(defaultView);
