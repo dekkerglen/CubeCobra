@@ -2756,16 +2756,19 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    let cards = [];
-    let tcg = [];
+    const cards = [];
+    const tcg = [];
+    const names = [];
     carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
       const card = carddb.cardFromId(id);
       cards.push(card);
       if (card.tcgplayer_id) {
         tcg.push(card.tcgplayer_id);
       }
+      names.push(card.name);
     });
     const price_dict = await GetPrices(tcg);
+    const elo_dict = await getElo(names,true);
     cards.forEach(function(card, index) {
       if (card.tcgplayer_id) {
         const card_price_data = price_dict[card.tcgplayer_id];
@@ -2776,6 +2779,9 @@ router.get(
         if (card_foil_price_data) {
           card.price_foil = card_foil_price_data;
         }
+      }
+      if(elo_dict[card.name]) {
+        card.elo = elo_dict[card.name];
       }
     });
     res.status(200).send({
