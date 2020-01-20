@@ -56,8 +56,7 @@ let BulkUploadPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 let DraftView = null;
-if (false) {
-  // NODE_ENV === 'production') {
+if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
