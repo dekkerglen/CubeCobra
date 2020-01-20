@@ -645,3 +645,7 @@ img.mana-symbol {
 .row-low-padding {
   margin: 0 -2px;
 }
+
+.list-view-table td {
+	vertical-align: middle;
+}

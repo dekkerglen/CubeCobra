@@ -370,7 +370,7 @@ const ListView = ({ cards }) => {
 
   return (
     <Form inline>
-      <PagedTable rows={rowsFlat} size="sm">
+      <PagedTable rows={rowsFlat} size="sm" className="list-view-table">
         <thead>
           <tr>
             <th className="align-middle">
