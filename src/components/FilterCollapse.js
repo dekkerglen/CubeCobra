@@ -359,7 +359,7 @@ class FilterCollapse extends Component {
   }
 
   render() {
-    const { filter, setFilter, numCards, numShown, useQuery, ...props } = this.props;
+    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
