@@ -2209,15 +2209,11 @@ router.get(
   }),
 );
 
-router.post('/editdeck/:id', async (req, res) => {
+router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
 
-    if (!deck) {
-      req.flash('danger', 'Deck not found');
-      return res.status(404).render('misc/404', {});
-    }
-    if ((deck.owner && !req.user) || (deck.owner && deck.owner != req.user._id)) {
+    if (deck.owner && deck.owner != req.user._id) {
       req.flash('danger', 'Unauthorized');
       return res.status(404).render('misc/404', {});
     }
@@ -2238,11 +2234,7 @@ router.post('/editdeck/:id', async (req, res) => {
     req.flash('success', 'Deck saved succesfully');
     res.redirect('/cube/deck/' + deck._id);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/404');
   }
 });
 
@@ -2306,11 +2298,7 @@ router.post('/submitdeck/:id', async (req, res) => {
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
   }
 });
 
@@ -2373,16 +2361,12 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         `Cube Cobra Decks: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
         cube.image_uri,
-        `https://cubecobra.com/user/decks/${req.params.id}`,
+        `https://cubecobra.com/user/decks/${req.params.cubeid}`,
       ),
       loginCallback: '/user/decks/' + cubeid,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.cubeid);
   }
 });
 
@@ -2452,10 +2436,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
 
     return res.redirect('/cube/deckbuilder/' + deck._id);
   } catch (err) {
-    console.error(err);
-
-    req.flash('danger', 'This deck is not able to be cloned and rebuilt.');
-    res.redirect('/cube/deck/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
   }
 });
 
@@ -2492,10 +2473,7 @@ router.get('/redraft/:id', async (req, res) => {
     await draft.save();
     res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
-    console.error(err);
-
-    req.flash('danger', 'This deck is not able to be redrafted.');
-    res.redirect('/cube/deck/' + req.params.id);
+    util.handleRouteError(res, err, '/cube/playtest/' + req.params.id);
   }
 });
 
@@ -2556,9 +2534,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       deckid: deck._id,
     });
   } catch (err) {
-    console.error(err);
-    req.flash('danger', err.message);
-    res.redirect('/404');
+    util.handleRouteError(res, err, '/404');
   }
 });
 
