@@ -2,11 +2,12 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import Filter from 'util/Filter';
-import Hash from 'util/Hash';
+import LocalStorage from 'util/LocalStorage';
 import Query from 'util/Query';
 
 import CardModalForm from 'components/CardModalForm';
 import { ChangelistContextProvider } from 'components/ChangelistContext';
+import ClientOnly from 'components/ClientOnly';
 import CubeContext from 'components/CubeContext';
 import CubeListNavbar from 'components/CubeListNavbar';
 import CurveView from 'components/CurveView';
@@ -22,26 +23,34 @@ import { tagColors, TagContextProvider } from 'components/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
 
-const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaultSorts }) => {
+const CubeListPageRaw = ({
+  maybe,
+  defaultFilterText,
+  defaultView,
+  defaultTagColors,
+  defaultShowTagColors,
+  defaultSorts,
+}) => {
   const { cube, cubeID, canEdit } = useContext(CubeContext);
 
-  let initialOpenCollapse = null;
-  const savedChanges = cubeID && typeof localStorage !== 'undefined' && localStorage.getItem(`changelist-${cubeID}`);
-  if (savedChanges && savedChanges.length > 2 && Query.get('updated', false) !== 'true') {
-    initialOpenCollapse = 'edit';
-  } else if (Hash.get('f', false)) {
-    initialOpenCollapse = 'filter';
-  }
-
-  const [cubeView, setCubeView] = useState(Hash.get('view', 'table'));
-  const [openCollapse, setOpenCollapse] = useState(initialOpenCollapse);
+  const [cubeView, setCubeView] = useState(defaultView);
+  const [openCollapse, setOpenCollapse] = useState(null);
   const [filter, setFilter] = useState([]);
 
   useEffect(() => {
+    const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);
+    if (savedChanges && savedChanges.length > 2 && Query.get('updated', false) !== 'true') {
+      setOpenCollapse('edit');
+    } else if (defaultFilterText && defaultFilterText.length > 0) {
+      setOpenCollapse('filter');
+    }
+  }, []);
+
+  useEffect(() => {
     if (cubeView === 'table') {
-      Hash.del('view');
+      Query.del('view');
     } else {
-      Hash.set('view', cubeView);
+      Query.set('view', cubeView);
     }
   }, [cubeView]);
 
@@ -72,6 +81,7 @@ const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaul
                   setCubeView={setCubeView}
                   openCollapse={openCollapse}
                   setOpenCollapse={setOpenCollapse}
+                  defaultFilterText={defaultFilterText}
                   filter={filter}
                   setFilter={setFilter}
                   cards={filteredCards}
@@ -79,9 +89,11 @@ const CubeListPageRaw = ({ maybe, defaultTagColors, defaultShowTagColors, defaul
                 />
                 <DynamicFlash />
                 <ErrorBoundary>
-                  <DisplayContext.Consumer>
-                    {({ showMaybeboard }) => showMaybeboard && <Maybeboard filter={filter} initialCards={maybe} />}
-                  </DisplayContext.Consumer>
+                  <ClientOnly>
+                    <DisplayContext.Consumer>
+                      {({ showMaybeboard }) => showMaybeboard && <Maybeboard filter={filter} initialCards={maybe} />}
+                    </DisplayContext.Consumer>
+                  </ClientOnly>
                 </ErrorBoundary>
                 <ErrorBoundary>
                   {filteredCards.length === 0 ? <h5 className="mt-1 mb-3">No cards match filter.</h5> : ''}

@@ -40,6 +40,8 @@ const element = () => (
       cubeID="1"
       canEdit
       maybe={exampleCardsFull}
+      defaultView="table"
+      defaultFilterText=""
       defaultTagColors={[]}
       defaultShowTagColors={true}
       defaultSorts={['Color Category', 'Types-Multicolor']}
