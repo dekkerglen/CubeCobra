@@ -490,7 +490,7 @@ body.busy-cursor {
 .cube-preview-card {
 	width: 100%;
 }
-.cube-preview-card:hover {
+.cube-preview-card.hover {
 	background: #EFEFEF;
 	cursor: pointer;
     border: 1px solid #000000;
