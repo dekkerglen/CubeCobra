@@ -19,6 +19,7 @@ var {
   getOwnerFromComment,
   saveEdit,
   build_tag_colors,
+  maybeCards,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
@@ -2094,7 +2095,7 @@ router.get('/api/fullnames', (req, res) => {
 router.get(
   '/api/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
     var cardnames = [];
     cube.cards.forEach(function(item, index) {
@@ -2699,7 +2700,8 @@ router.get('/api/getcard/:name', (req, res) => {
   });
 });
 
-router.get('/api/getimage/:name', 
+router.get(
+  '/api/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
     var reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
     var img = carddb.imagedict[reasonable.name];
@@ -2712,10 +2714,11 @@ router.get('/api/getimage/:name',
       success: 'true',
       img: img,
     });
-  })
+  }),
 );
 
-router.get('/api/getcardfromid/:id',
+router.get(
+  '/api/getcardfromid/:id',
   util.wrapAsyncApi(async (req, res) => {
     var card = carddb.cardFromId(req.params.id);
     //need to get the price of the card with the new version in here
@@ -2723,7 +2726,7 @@ router.get('/api/getcardfromid/:id',
     if (card.tcgplayer_id) {
       tcg.push(card.tcgplayer_id);
     }
-    const price_dict = await GetPrices(pids);
+    const price_dict = await GetPrices(tcg);
     if (card.error) {
       return res.status(200).send({
         success: 'false',
@@ -2739,10 +2742,11 @@ router.get('/api/getcardfromid/:id',
       success: 'true',
       card: card,
     });
-  })
+  }),
 );
 
-router.get('/api/getversions/:id',
+router.get(
+  '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
     let cards = [];
     let tcg = [];
@@ -2770,10 +2774,11 @@ router.get('/api/getversions/:id',
       success: 'true',
       cards: cards,
     });
-  })
+  }),
 );
 
-router.post('/api/getversions', 
+router.post(
+  '/api/getversions',
   util.wrapAsyncApi(async (req, res) => {
     let cards = {};
 
@@ -2800,184 +2805,155 @@ router.post('/api/getversions',
       success: 'true',
       dict: cards,
     });
-  })
+  }),
 );
 
-router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
-  const { src, updated } = req.body;
-  if (
-    !src ||
-    (src && typeof src.index !== 'number') ||
-    (updated.cardID && typeof updated.cardID !== 'string') ||
-    (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
-    (updated.status && typeof updated.status !== 'string') ||
-    (updated.type_line && typeof updated.type_line !== 'string') ||
-    (updated.colors && !Array.isArray(updated.colors)) ||
-    (updated.tags && !Array.isArray(updated.tags)) ||
-    (updated.finish && typeof updated.finish !== 'string')
-  ) {
-    res.status(400).send({
-      success: 'false',
-      message: 'Failed input validation',
-    });
-    return;
-  }
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.error(err);
-      res.status(500).send({
+router.post('/api/updatecard/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const { src, updated } = req.body;
+    if (
+      !src ||
+      (src && typeof src.index !== 'number') ||
+      (updated.cardID && typeof updated.cardID !== 'string') ||
+      (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
+      (updated.status && typeof updated.status !== 'string') ||
+      (updated.type_line && typeof updated.type_line !== 'string') ||
+      (updated.colors && !Array.isArray(updated.colors)) ||
+      (updated.tags && !Array.isArray(updated.tags)) ||
+      (updated.finish && typeof updated.finish !== 'string')
+    ) {
+      return res.status(400).send({
         success: 'false',
-        message: 'Internal server error',
+        message: 'Failed input validation',
       });
-    } else if (!cube) {
-      res.status(400).send({
-        success: 'false',
-        message: 'No such cube',
-      });
-    } else if (cube.owner !== String(req.user.id)) {
-      res.status(401).send({
+    }
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+    
+    if (cube.owner !== String(req.user.id)) {
+      return res.status(401).send({
         success: 'false',
         message: 'Insufficient permissions',
       });
-    } else if (src.index >= cube.cards.length) {
-      res.status(400).send({
+    } 
+    if (src.index >= cube.cards.length) {
+      return res.status(400).send({
         success: 'false',
         message: 'No such card',
       });
-    } else {
-      const card = cube.cards[src.index];
-      if (!card.type_line) {
-        card.type_line = carddb.cardFromId(card.cardID).type;
-      }
-      if (!cardsAreEquivalent(src, card)) {
-        res.status(400).send({
-          success: 'false',
-          message: 'Cards not equivalent',
-        });
-      } else {
-        Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
-          if (!updated.hasOwnProperty(key)) {
-            updated[key] = card[key];
-          }
-        });
-        Object.keys(updated).forEach(function(key) {
-          if (updated[key] === null) {
-            delete updated[key];
-          }
-        });
-        cube.cards[src.index] = updated;
-
-        cube = setCubeType(cube, carddb);
-
-        cube.save(function(err) {
-          if (err) {
-            console.error(err);
-            res.status(500).send({
-              success: 'false',
-              message: 'Error saving cube',
-            });
-          } else {
-            res.status(200).send({
-              success: 'true',
-            });
-          }
-        });
-      }
     }
-  });
-});
 
-router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
-  const { selected, updated } = req.body;
-  if (
-    (updated.cmc && typeof updated.cmc !== 'number') ||
-    (updated.status && typeof updated.status !== 'string') ||
-    (updated.type_line && typeof updated.type_line !== 'string') ||
-    (updated.colors && !Array.isArray(updated.colors)) ||
-    (updated.tags && !Array.isArray(updated.tags))
-  ) {
-    res.status(400).send({
-      success: 'false',
-      message: 'Failed input validation',
-    });
-    return;
-  }
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === String(req.user._id)) {
-      const allUpdates = {
-        $set: {},
-      };
-      for (const index of selected) {
-        if (typeof index !== 'number' || !cube.cards[index]) {
-          continue;
-        }
-        if (updated.status) {
-          allUpdates.$set[`cards.${index}.status`] = updated.status;
-        }
-        if (updated.cmc) {
-          allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
-        }
-        if (updated.type_line) {
-          allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
-        }
-        if (updated.colors) {
-          allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
-        }
-        if (updated.colorC) {
-          allUpdates.$set[`cards.${index}.colors`] = [];
-        }
-        if (updated.finish) {
-          allUpdates.$set[`cards.${index}.finish`] = updated.finish;
-        }
-        if (updated.tags) {
-          if (updated.addTags) {
-            if (!allUpdates.$addToSet) {
-              allUpdates.$addToSet = {};
-            }
-            allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
-          }
-          if (updated.deleteTags) {
-            if (!allUpdates.$pullAll) {
-              allUpdates.$pullAll = {};
-            }
-            allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
-          }
-        }
-      }
-      cube.updateOne(allUpdates, function(err) {
-        if (err) {
-          console.error(err);
-          res.status(500).send({
-            success: 'false',
-            message: 'Error saving cube',
-          });
-        } else {
-          res.status(200).send({
-            success: 'true',
-          });
-        }
+    const card = cube.cards[src.index];
+    if (!card.type_line) {
+      card.type_line = carddb.cardFromId(card.cardID).type;
+    }
+
+    if (!cardsAreEquivalent(src, card)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cards not equivalent',
       });
     }
-  });
-});
 
-function maybeCards(cube) {
-  const maybe = (cube.maybe || []).filter((card) => card.cardID);
-  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
-}
+    Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
+      if (!updated.hasOwnProperty(key)) {
+        updated[key] = card[key];
+      }
+    });
+    Object.keys(updated).forEach(function(key) {
+      if (updated[key] === null) {
+        delete updated[key];
+      }
+    });
+    cube.cards[src.index] = updated;
+
+    cube = setCubeType(cube, carddb);
+
+    await cube.save();
+    res.status(200).send({
+      success: 'true',
+    });
+  })
+);
+
+router.post('/api/updatecards/:id', 
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const { selected, updated } = req.body;
+    if (
+      (updated.cmc && typeof updated.cmc !== 'number') ||
+      (updated.status && typeof updated.status !== 'string') ||
+      (updated.type_line && typeof updated.type_line !== 'string') ||
+      (updated.colors && !Array.isArray(updated.colors)) ||
+      (updated.tags && !Array.isArray(updated.tags))
+    ) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Failed input validation',
+      });
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (cube.owner != req.user._id) {      
+      return res.status(404).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    const allUpdates = {
+      $set: {},
+    };
+    for (const index of selected) {
+      if (typeof index !== 'number' || !cube.cards[index]) {
+        continue;
+      }
+      if (updated.status) {
+        allUpdates.$set[`cards.${index}.status`] = updated.status;
+      }
+      if (updated.cmc) {
+        allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
+      }
+      if (updated.type_line) {
+        allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
+      }
+      if (updated.colors) {
+        allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
+      }
+      if (updated.colorC) {
+        allUpdates.$set[`cards.${index}.colors`] = [];
+      }
+      if (updated.finish) {
+        allUpdates.$set[`cards.${index}.finish`] = updated.finish;
+      }
+      if (updated.tags) {
+        if (updated.addTags) {
+          if (!allUpdates.$addToSet) {
+            allUpdates.$addToSet = {};
+          }
+          allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
+        }
+        if (updated.deleteTags) {
+          if (!allUpdates.$pullAll) {
+            allUpdates.$pullAll = {};
+          }
+          allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
+        }
+      }
+    }
+
+    await cube.updateOne(allUpdates);
+    res.status(200).send({
+      success: 'true',
+    });
+  })
+);
 
 router.get(
   '/api/maybe/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
-    if (!cube) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found.',
-      });
-    }
-
     return res.status(200).send({
       success: 'true',
       maybe: maybeCards(cube),
@@ -2990,12 +2966,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
-    if (!cube) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found.',
-      });
-    } else if (!req.user._id.equals(cube.owner)) {
+    if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
         message: 'Maybeboard can only be updated by cube owner.',
@@ -3020,57 +2991,42 @@ router.post(
   }),
 );
 
-router.post('/remove/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/overview/' + req.params.id);
-  }
+router.post('/remove/:id', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
-  const query = build_id_query(req.params.id);
-
-  Cube.findOne(query, function(err, cube) {
-    if (err || !cube || cube.owner != req.user._id) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Cube.deleteOne(query, function(err) {
-        if (err) {
-          console.error(err);
-          req.flash('danger', 'Error removing cube');
-          res.redirect('/cube/overview/' + req.params.id);
-        } else {
-          req.flash('success', 'Cube Removed');
-          res.redirect('/dashboard');
-        }
-      });
+    if (req.user._id != cube.owner) {
+      req.flash('danger', 'Not Authorized');
+      res.redirect('/cube/overview/' + req.params.id);
     }
-  });
+    await Cube.deleteOne(build_id_query(req.params.id));
+
+    req.flash('success', 'Cube Removed');
+    res.redirect('/dashboard');
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
-router.delete('/blog/remove/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/' + req.params.id);
-  }
+router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
+  try{
+    let query = {
+      _id: req.params.id,
+    };
 
-  let query = {
-    _id: req.params.id,
-  };
+    const blog = await Blog.findById(req.params.id);
 
-  Blog.findById(req.params.id, function(err, blog) {
-    if (err || blog.owner != req.user._id) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Blog.deleteOne(query, function(err) {
-        if (err) {
-          console.error(err, req);
-        }
-        req.flash('success', 'Post Removed');
-        res.send('Success');
-      });
+    if (blog.owner != req.user._id) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
     }
-  });
+    await Blog.deleteOne(query);
+    
+    req.flash('success', 'Post Removed');
+    res.send('Success');
+  } catch (err) {
+    util.handleRouteError(res, err, '/404');
+  }
 });
 
 router.delete('/format/remove/:id', ensureAuth, function(req, res) {

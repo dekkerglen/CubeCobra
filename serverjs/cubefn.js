@@ -210,6 +210,12 @@ function build_tag_colors(cube) {
 
   return tag_colors;
 }
+
+function maybeCards(cube) {
+  const maybe = (cube.maybe || []).filter((card) => card.cardID);
+  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+}
+
 var methods = {
   getBasics: function(carddb) {
     var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -336,6 +342,7 @@ var methods = {
   getOwnerFromComment,
   saveEdit,
   build_tag_colors,
+  maybeCards,
 };
 
 module.exports = methods;
