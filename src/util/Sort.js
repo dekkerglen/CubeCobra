@@ -80,6 +80,7 @@ export function getSorts() {
     'Color',
     'Creature/Non-Creature',
     'Date Added',
+    'Elo',
     'Finish',
     'Guilds',
     'Legality',
@@ -335,6 +336,30 @@ export function getLabels(cube, sort) {
     return labels;
   } else if (sort == 'Unsorted') {
     return ['All'];
+  } else if (sort == 'Elo') {    var items = [];
+    cube.forEach(function(card, index) {
+      if (card.details.elo) {
+        if (!items.includes(card.details.elo)) {
+          items.push(card.details.elo);
+        }
+      }
+    });
+    return items.sort(function(x, y) {
+      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
+        if (x > y) {
+          return 1;
+        } else if (y > x) {
+          return -1;
+        }
+        return 1;
+      }
+      if (parseInt(x) > parseInt(y)) {
+        return 1;
+      } else if (parseInt(y) > parseInt(x)) {
+        return -1;
+      }
+      return 1;
+    });
   }
 }
 
@@ -622,6 +647,8 @@ export function cardGetLabels(card, sort) {
     }
   } else if (sort == 'Unsorted') {
     return ['All'];
+  } else if (sort == 'Elo') {
+    return [card.details.elo];
   }
 }
 

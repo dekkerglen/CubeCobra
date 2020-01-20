@@ -20,6 +20,7 @@ var {
   saveEdit,
   build_tag_colors,
   maybeCards,
+  getElo,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
@@ -746,6 +747,7 @@ router.get('/list/:id', async function(req, res) {
 
     const pids = new Set();
     const cards = [...cube.cards];
+    const cardNames = [];
     cards.forEach(function(card, index) {
       card.details = {
         ...carddb.cardFromId(card.cardID),
@@ -757,9 +759,11 @@ router.get('/list/:id', async function(req, res) {
       if (card.details.tcgplayer_id) {
         pids.add(card.details.tcgplayer_id);
       }
+      cardNames.push(card.name);
     });
 
     const price_dict = await GetPrices([...pids]);
+    const elo_dict = await getElo(cardNames);
     for (const card of cards) {
       if (card.details.tcgplayer_id) {
         if (price_dict[card.details.tcgplayer_id]) {
@@ -769,7 +773,11 @@ router.get('/list/:id', async function(req, res) {
           card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
         }
       }
+      if(elo_dict[card.details.name]){
+        card.details.elo = elo_dict[card.details.name];
+      }
     }
+    console.log(elo_dict);
 
     const reactProps = {
       canEdit: req.user ? req.user.id === cube.owner : false,
