@@ -759,11 +759,11 @@ router.get('/list/:id', async function(req, res) {
       if (card.details.tcgplayer_id) {
         pids.add(card.details.tcgplayer_id);
       }
-      cardNames.push(card.name);
+      cardNames.push(card.details.name);
     });
 
     const price_dict = await GetPrices([...pids]);
-    const elo_dict = await getElo(cardNames);
+    const elo_dict = await getElo(cardNames, true);
     for (const card of cards) {
       if (card.details.tcgplayer_id) {
         if (price_dict[card.details.tcgplayer_id]) {
@@ -777,7 +777,6 @@ router.get('/list/:id', async function(req, res) {
         card.details.elo = elo_dict[card.details.name];
       }
     }
-    console.log(elo_dict);
 
     const reactProps = {
       canEdit: req.user ? req.user.id === cube.owner : false,
