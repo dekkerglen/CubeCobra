@@ -779,7 +779,7 @@ router.get('/list/:id', async function(req, res) {
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
       cards,
-      maybe: maybeCards(cube),
+      maybe: maybeCards(cube, carddb),
     };
 
     res.render('cube/cube_list', {
@@ -2958,7 +2958,7 @@ router.get(
     const cube = await Cube.findOne(build_id_query(req.params.id));
     return res.status(200).send({
       success: 'true',
-      maybe: maybeCards(cube),
+      maybe: maybeCards(cube, carddb),
     });
   }),
 );

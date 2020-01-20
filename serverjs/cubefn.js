@@ -211,7 +211,7 @@ function build_tag_colors(cube) {
   return tag_colors;
 }
 
-function maybeCards(cube) {
+function maybeCards(cube, carddb) {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
