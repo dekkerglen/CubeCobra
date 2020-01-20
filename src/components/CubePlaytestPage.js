@@ -23,15 +23,14 @@ import {
   UncontrolledAlert,
   UncontrolledCollapse,
 } from 'reactstrap';
-
 import { csrfFetch } from '../util/CSRF';
-
 import CSRFForm from './CSRFForm';
 import CubeContext, { CubeContextProvider } from './CubeContext';
 import CustomDraftFormatModal from './CustomDraftFormatModal';
 import DynamicFlash from './DynamicFlash';
 import DeckPreview from './DeckPreview';
 import withModal from './WithModal';
+import CustomFormat from '../types/CustomFormat';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -204,6 +203,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
+
 const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const [alerts, setAlerts] = useState([]);
   const [formats, setFormats] = useState(draftFormats);
@@ -212,8 +212,35 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   const [editFormat, setEditFormat] = useState({});
 
   const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
-
   const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
+
+  /**
+   * Converts a format stored in state into a CustomFormat object. If the stateFormat is
+   * completely empty (like on initial render) just return it.
+   *
+   * @param {Object} stateFormat
+   *
+   * @returns {CustomFormat|Object|TypeError} Returns a TypeError if there was a problem creating a CustomFormat object.
+   */
+  function getCustomFormat(stateFormat) {
+    // If the stateFormat is completely empty (like on initial render) just return it.
+    if (Object.entries(stateFormat).length === 0 && stateFormat.constructor === Object) {
+      return stateFormat;
+    }
+
+    try {
+      return new CustomFormat(
+        stateFormat._id,
+        stateFormat.title,
+        stateFormat.multiples,
+        stateFormat.html,
+        stateFormat.packs,
+      );
+    } catch (e) {
+      console.error(e);
+      return e;
+    }
+  }
 
   const handleCreateFormat = useCallback((event) => {
     setEditFormat(DEFAULT_FORMAT);
@@ -302,7 +329,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         isOpen={editModalOpen}
         toggle={toggleEditModal}
         formatIndex={editFormatIndex}
-        format={editFormat}
+        format={getCustomFormat(editFormat)}
         setFormat={setEditFormat}
       />
     </CubeContextProvider>

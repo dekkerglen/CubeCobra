@@ -1,5 +1,5 @@
-import React, { useContext, useCallback, useRef, useState } from 'react';
-
+import React, { useContext, useCallback, useRef } from 'react';
+import PropTypes from 'prop-types';
 import {
   Button,
   Card,
@@ -21,14 +21,32 @@ import {
   ModalHeader,
   Row,
 } from 'reactstrap';
-
 import CSRFForm from './CSRFForm';
 import CubeContext from './CubeContext';
 import TextEntry from './TextEntry';
+import CustomFormat from '../types/CustomFormat';
 
+/**
+ * Modal to create/edit a custom draft format.
+ *
+ * @param {boolean} isOpen
+ * @param {function} toggle Callback function to toggle isOpen.
+ * @param {number} formatIndex The index of this particular format in the list of custom draft formats. -1 if creating a new custom draft format.
+ * @param {CustomFormat|TypeError} format If there was an error creating the CustomFormat object, format will be type TypeError
+ * @param {function} setFormat Callback function to save changes to/creation of the draft format.
+ */
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
-  const { cubeID } = useContext(CubeContext);
+  // If we didn't get all the props necessary to render a full custom draft format, display an error message.
+  if (format instanceof TypeError) {
+    return (
+      <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
+        <ModalHeader>Sorry, an error occured.</ModalHeader>
+        <ModalBody>There was a problem rendering this custom draft format.</ModalBody>
+      </Modal>
+    );
+  }
 
+  const { cubeID } = useContext(CubeContext);
   const formRef = useRef();
 
   const handleChangeDescription = useCallback((event) => {
@@ -47,6 +65,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return newFormat;
     });
   }, []);
+
   const handleRemoveCard = useCallback((event) => {
     const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'));
     const index = parseInt(event.currentTarget.getAttribute('data-index'));
@@ -60,6 +79,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return newFormat;
     });
   }, []);
+
   const handleChangeCard = useCallback(() => {
     const packIndex = parseInt(event.target.getAttribute('data-pack'));
     const index = parseInt(event.target.getAttribute('data-index'));
@@ -71,12 +91,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return newFormat;
     });
   }, []);
+
   const handleAddPack = useCallback(() => {
     setFormat(({ packs, ...format }) => ({
       ...format,
       packs: [...(packs || [['']]), ['']],
     }));
   }, []);
+
   const handleDuplicatePack = useCallback((event) => {
     const index = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat((format) => {
@@ -86,6 +108,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return newFormat;
     });
   }, []);
+
   const handleRemovePack = useCallback((event) => {
     const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat(({ packs, ...format }) => ({
@@ -94,7 +117,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     }));
   }, []);
 
-  const packs = format.packs || [['']];
+  const packs = format.packTemplates || [['']];
   const description = format.html || '';
 
   return (
@@ -195,6 +218,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       </CSRFForm>
     </Modal>
   );
+};
+
+CustomDraftFormatModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  formatIndex: PropTypes.number.isRequired,
+  format: PropTypes.oneOfType([PropTypes.instanceOf(CustomFormat), PropTypes.object, PropTypes.instanceOf(TypeError)]),
+  setFormat: PropTypes.func.isRequired,
 };
 
 export default CustomDraftFormatModal;
