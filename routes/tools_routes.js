@@ -192,14 +192,13 @@ router.get('/card/:id', async (req, res) => {
     );
 
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    GetPrices(pids, async function(prices) {
-      res.render('tool/cardpage', {
-        card: card,
-        data: data,
-        prices: prices,
-        cubes: cubes,
-        related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
-      });
+    prices = await GetPrices(pids);
+    res.render('tool/cardpage', {
+      card: card,
+      data: data,
+      prices: prices,
+      cubes: cubes,
+      related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
     });
   } catch (err) {
     console.error(err);
