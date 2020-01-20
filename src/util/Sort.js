@@ -78,6 +78,7 @@ export function getSorts() {
     'Color Count',
     'Color Identity',
     'Color',
+    'Creature/Non-Creature',
     'Date Added',
     'Finish',
     'Guilds',
@@ -323,7 +324,7 @@ export function getLabels(cube, sort) {
     });
   } else if (sort == 'Manacost Type') {
     return ['Gold', 'Hybrid', 'Phyrexian'];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
   } else if (sort == 'Price' || sort == 'Price Foil') {
     const labels = [];
@@ -403,9 +404,9 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(typeLine(card), colorIdentity(card) || card.details.color_identity)];
+    return [GetColorCategory(typeLine(card), colorIdentity(card))];
   } else if (sort == 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card) || card.details.color_identity)];
+    return [GetColorIdentity(colorIdentity(card))];
   } else if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
@@ -416,7 +417,7 @@ export function cardGetLabels(card, sort) {
     if (colorIdentity(card).length < 4) {
       return [];
     } else if (colorIdentity(card).length === 5) {
-      return ['Five-Color'];
+      return ['Five Color'];
     } else {
       return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
@@ -531,6 +532,8 @@ export function cardGetLabels(card, sort) {
       } else {
         return [type];
       }
+    } else if (colorIdentity(card).length === 5) {
+      return ['Five Color'];
     } else {
       return [
         ...cardGetLabels(card, 'Guilds'),
@@ -571,7 +574,7 @@ export function cardGetLabels(card, sort) {
       return ['Phyrexian'];
     }
     return [];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')

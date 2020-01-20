@@ -7,19 +7,22 @@
   "scripts": {
     "beautify": "npm run prettier",
     "prettier": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' webpack.'*'.js",
+    "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
+    "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
     "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js'",
     "nodemon": "nodemon --ignore src --ignore public",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js && rollup -c",
     "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
-    "test": "jest --silent --detectOpenHandles",
-    "setup": "rollup -c & node force_update.js"
+    "test": "jest --silent --detectOpenHandles  --coverage",
+    "setup": "rollup -c && node force_update.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
   "sideEffects": "false",
   "browserslist": "> 0.5%, Firefox ESR, not dead, not IE > 0, not IE_Mob > 0, not safari < 7, not kaios > 0",
   "dependencies": {
+    "@react-mock/fetch": "^0.3.0",
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -59,6 +62,8 @@
     "@babel/core": "^7.7.2",
     "@babel/preset-env": "^7.7.1",
     "@babel/preset-react": "^7.7.0",
+    "@testing-library/jest-dom": "^5.0.0",
+    "@testing-library/react": "^9.4.0",
     "babel-jest": "^24.9.0",
     "babel-loader": "^8.0.6",
     "chart.js": "^2.9.2",

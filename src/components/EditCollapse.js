@@ -89,7 +89,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
             card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
             !changes.some(
               (change) =>
-                change.remove.index === card.index ||
+                (change.remove && change.remove.index === card.index) ||
                 (Array.isArray(change.replace) && change.replace[0].index === card.index),
             ),
         );
