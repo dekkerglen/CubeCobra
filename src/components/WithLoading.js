@@ -6,15 +6,19 @@ import { fromEntries } from '../util/Util';
 const withLoading = (Tag, handlers) => ({ spinnerSize, ...props }) => {
   const [loading, setLoading] = useState(false);
 
-  const wrappedHandlers = useMemo(() =>
-    fromEntries(handlers.map((name) => [name,
-      async (event) => {
-        setLoading(true);
-        await props[name](event);
-        setLoading(false);
-      },
-    ])),
-    handlers.map(name => props[name]),
+  const wrappedHandlers = useMemo(
+    () =>
+      fromEntries(
+        handlers.map((name) => [
+          name,
+          async (event) => {
+            setLoading(true);
+            await props[name](event);
+            setLoading(false);
+          },
+        ]),
+      ),
+    handlers.map((name) => props[name]),
   );
 
   return (

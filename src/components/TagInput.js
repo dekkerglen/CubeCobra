@@ -19,7 +19,7 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
         maxLength={24}
         autofocus={false}
         classNames={{
-          tags: 'flex-grow-1'
+          tags: 'flex-grow-1',
         }}
         {...props}
       />
