@@ -18,6 +18,9 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
         placeholder="Tag (hit tab)..."
         maxLength={24}
         autofocus={false}
+        classNames={{
+          tags: 'flex-grow-1'
+        }}
         {...props}
       />
     )}

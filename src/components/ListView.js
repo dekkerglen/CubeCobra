@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState, useEffect } from 'react';
 
-import { Input } from 'reactstrap';
+import { Form, Input } from 'reactstrap';
 
 import { cardsAreEquivalent } from '../util/Card';
 import { csrfFetch } from '../util/CSRF';
@@ -13,6 +13,7 @@ import SortContext from './SortContext';
 import TagContext from './TagContext';
 import TagInput from './TagInput';
 import withAutocard from './WithAutocard';
+import withLoading from './WithLoading';
 
 const colorCombos = [
   'C',
@@ -50,6 +51,10 @@ const colorCombos = [
 ];
 
 const AutocardTd = withAutocard('td');
+
+const LoadingInput = withLoading(Input, ['onBlur']);
+const LoadingInputChange = withLoading(Input, ['onChange']);
+const LoadingTagInput = withLoading(TagInput, ['handleInputBlur']);
 
 const ListViewRow = ({ card, versions, checked, onCheck }) => {
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
@@ -101,38 +106,38 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
   );
 
   const addTag = useCallback(
-    (tag) => {
+    async (tag) => {
       const newTags = [...tags, tag];
       setTags(newTags);
-      syncCard({ tags: newTags.map((tag) => tag.text) });
+      await syncCard({ tags: newTags.map((tag) => tag.text) });
     },
     [syncCard, tags],
   );
 
   const deleteTag = useCallback(
-    (tagIndex) => {
+    async (tagIndex) => {
       const newTags = tags.filter((tag, index) => index !== tagIndex);
       setTags(newTags);
-      syncCard({ tags: newTags.map((tag) => tag.text) });
+      await syncCard({ tags: newTags.map((tag) => tag.text) });
     },
     [syncCard, tags],
   );
 
   const reorderTag = useCallback(
-    (tag, currIndex, newIndex) => {
+    async (tag, currIndex, newIndex) => {
       const newTags = [...tags];
       newTags.splice(currIndex, 1);
       newTags.splice(newIndex, 0, tag);
       setTags(newTags);
-      syncCard({ tags: newTags.map((tag) => tag.text) });
+      await syncCard({ tags: newTags.map((tag) => tag.text) });
     },
     [syncCard, tags],
   );
 
   const tagBlur = useCallback(
-    (tag) => {
+    async (tag) => {
       if (tag.trim()) {
-        addTag({
+        await addTag({
           id: tag.trim(),
           text: tag.trim(),
         });
@@ -200,6 +205,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
 
   const inputProps = (field) => ({
     bsSize: 'sm',
+    spinnerSize: 'sm',
     name: field,
     onChange: handleChange,
     onBlur: handleBlur,
@@ -223,7 +229,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
         {card.details.name}
       </AutocardTd>
       <td>
-        <Input
+        <LoadingInputChange
           {...inputProps('cardID')}
           type="select"
           style={{ maxWidth: '6rem' }}
@@ -235,37 +241,37 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
               {version.version}
             </option>
           ))}
-        </Input>
+        </LoadingInputChange>
       </td>
       <td>
-        <Input {...inputProps('type_line')} type="text" />
+        <LoadingInput {...inputProps('type_line')} type="text" />
       </td>
       <td>
-        <Input {...inputProps('status')} type="select">
+        <LoadingInputChange {...inputProps('status')} type="select">
           {getLabels(null, 'Status').map((status) => (
             <option key={status}>{status}</option>
           ))}
-        </Input>
+        </LoadingInputChange>
       </td>
       <td>
-        <Input {...inputProps('finish')} type="select">
+        <LoadingInputChange {...inputProps('finish')} type="select">
           {getLabels(null, 'Finish').map((finish) => (
             <option key={finish}>{finish}</option>
           ))}
-        </Input>
+        </LoadingInputChange>
       </td>
       <td>
-        <Input {...inputProps('cmc')} type="text" style={{ maxWidth: '3rem' }} />
+        <LoadingInput {...inputProps('cmc')} type="text" style={{ maxWidth: '3rem' }} />
       </td>
       <td>
-        <Input {...inputProps('colors')} type="select">
+        <LoadingInputChange {...inputProps('colors')} type="select">
           {colorCombos.map((combo) => (
             <option key={combo}>{combo}</option>
           ))}
-        </Input>
+        </LoadingInputChange>
       </td>
       <td style={{ minWidth: '15rem' }}>
-        <TagInput
+        <LoadingTagInput
           tags={tags}
           value={values.tagInput}
           name="tagInput"
@@ -363,7 +369,7 @@ const ListView = ({ cards }) => {
   const rowsFlat = [].concat.apply([], [].concat.apply([], rows));
 
   return (
-    <form className="form-inline">
+    <Form inline>
       <PagedTable rows={rowsFlat} size="sm">
         <thead>
           <tr>
@@ -381,7 +387,7 @@ const ListView = ({ cards }) => {
           </tr>
         </thead>
       </PagedTable>
-    </form>
+    </Form>
   );
 };
 
