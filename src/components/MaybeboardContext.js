@@ -23,15 +23,17 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
 };
 
 MaybeboardContextProvider.propTypes = {
-  initialCards: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    cardID: PropTypes.string.isRequired,
-    details: PropTypes.shape({
+  initialCards: PropTypes.arrayOf(
+    PropTypes.shape({
       _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      image_normal: PropTypes.string.isRequired,
+      cardID: PropTypes.string.isRequired,
+      details: PropTypes.shape({
+        _id: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
     }),
-  })).isRequired,
+  ).isRequired,
 };
 
 export default MaybeboardContext;

@@ -100,7 +100,7 @@ MaybeboardListItem.propTypes = {
       name: PropTypes.string.isRequired,
       image_normal: PropTypes.string.isRequired,
     }).isRequired,
-  })
+  }),
 };
 
 const Maybeboard = ({ filter, ...props }) => {
@@ -211,6 +211,6 @@ const Maybeboard = ({ filter, ...props }) => {
 
 Maybeboard.propTypes = {
   filter: PropTypes.arrayOf(PropTypes.array).isRequired,
-}
+};
 
 export default Maybeboard;
