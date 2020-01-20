@@ -4,7 +4,7 @@ import { Card } from 'reactstrap';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 
-const getCubeId = (cube) => cube.urlAlias || cube.shortID || cube._id;
+const getCubeId = (cube) => cube.urlAlias || cube.shortId || cube._id;
 
 const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);
