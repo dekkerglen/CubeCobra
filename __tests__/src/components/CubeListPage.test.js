@@ -4,7 +4,7 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
 import exampleCardsFull from '../../../fixtures/examplecardsdetails';
-import CubeListPage from 'components/CubeListPage';
+import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
 
@@ -36,9 +36,9 @@ const element = () => (
     ]}
   >
     <CubeListPage
-      cards={exampleCardsFull}
+      cube={{ cards: exampleCardsFull }}
       cubeID="1"
-      canEdit={true}
+      canEdit
       maybe={exampleCardsFull}
       defaultTagColors={[]}
       defaultShowTagColors={true}

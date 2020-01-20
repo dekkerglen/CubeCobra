@@ -114,6 +114,7 @@ CubeListPage.propTypes = {
     cards: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,
