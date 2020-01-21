@@ -20,10 +20,24 @@ Comment.add({
   },
 });
 
+//data for each seat, human or bot
+const Seat = {
+  bot: [], //null bot value means human player
+  userid: String,  
+  username:String,
+  pickorder: [],
+  name: String,
+  description: {
+    type: String,
+    default: 'No description available.',
+  },
+  cols: Number,
+  deck: [[]],
+  sideboard: [[]],
+};
+
 // Cube schema
 let deckSchema = mongoose.Schema({
-  cards: [[]],
-  owner: String,
   cube: {
     type: String,
     index: true,
@@ -32,34 +46,41 @@ let deckSchema = mongoose.Schema({
     type: Date,
     index: true,
   },
-  name: String,
-  bots: [[]],
-  playerdeck: [[]],
-  playersideboard: [[]],
-  cols: Number,
-  username: {
-    type: String,
-    default: 'User',
-  },
-  cubename: {
-    type: String,
-    default: 'Cube',
+  comments: {
+    type: [Comment],
+    default: [],
   },
   draft: {
     type: String,
     default: '',
   },
+  cubename: {
+    type: String,
+    default: 'Cube',
+  },
+
+  //new format, will convert to
+  seats: [Seat],
+
+  //deprecated
+  owner: String,
+  name: String,  
   description: {
     type: String,
     default: 'No description available.',
   },
+  username: {
+    type: String,
+    default: 'User',
+  },
+  cols: Number,
+  playerdeck: [[]],
+  playersideboard: [[]],
+  bots: [[]],
+  cards: [[]],
   newformat: {
     type: Boolean,
     default: false,
-  },
-  comments: {
-    type: [Comment],
-    default: [],
   },
 });
 
