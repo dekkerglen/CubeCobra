@@ -21,6 +21,7 @@ var {
   saveEdit,
   build_tag_colors,
   maybeCards,
+  getElo,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/util/draftutil.js');
@@ -755,6 +756,7 @@ router.get('/list/:id', async function(req, res) {
     }
 
     const pids = new Set();
+    const cardNames = [];
     const cards = cube.cards;
     cards.forEach(function(card, index) {
       card.details = {
@@ -767,9 +769,11 @@ router.get('/list/:id', async function(req, res) {
       if (card.details.tcgplayer_id) {
         pids.add(card.details.tcgplayer_id);
       }
+      cardNames.push(card.details.name);
     });
 
     const price_dict = await GetPrices([...pids]);
+    const elo_dict = await getElo(cardNames, true);
     for (const card of cards) {
       if (card.details.tcgplayer_id) {
         if (price_dict[card.details.tcgplayer_id]) {
@@ -778,6 +782,9 @@ router.get('/list/:id', async function(req, res) {
         if (price_dict[card.details.tcgplayer_id + '_foil']) {
           card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
         }
+      }
+      if (elo_dict[card.details.name]) {
+        card.details.elo = elo_dict[card.details.name];
       }
     }
 
@@ -1622,7 +1629,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
 
     const reactProps = {
       cube,
@@ -2767,16 +2774,19 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    let cards = [];
-    let tcg = [];
+    const cards = [];
+    const tcg = [];
+    const names = [];
     carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
       const card = carddb.cardFromId(id);
       cards.push(card);
       if (card.tcgplayer_id) {
         tcg.push(card.tcgplayer_id);
       }
+      names.push(card.name);
     });
     const price_dict = await GetPrices(tcg);
+    const elo_dict = await getElo(names, true);
     cards.forEach(function(card, index) {
       if (card.tcgplayer_id) {
         const card_price_data = price_dict[card.tcgplayer_id];
@@ -2787,6 +2797,9 @@ router.get(
         if (card_foil_price_data) {
           card.price_foil = card_foil_price_data;
         }
+      }
+      if (elo_dict[card.name]) {
+        card.elo = elo_dict[card.name];
       }
     });
     res.status(200).send({

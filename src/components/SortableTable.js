@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Tooltip } from 'reactstrap';
 
@@ -46,10 +46,16 @@ const Header = ({ header, headerProps, active, sorts, setSort }) => {
 const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) => {
   const [sort, setSort] = useState(defaultSort);
   const sortKeyF = sorts[sort];
+  let sortedData = data;
   if (sortKeyF) {
-    data.sort((x, y) => sortKeyF(x) - sortKeyF(y));
+    sortedData = useMemo(() => {
+      const result = [...data];
+      result.sort((x, y) => sortKeyF(x) - sortKeyF(y));
+      return result;
+    }, [data, sortKeyF]);
   }
-  const rows = data.map(rowF).flat();
+
+  const rows = sortedData.map(rowF);
   return (
     <PagedTable rows={rows} {...props}>
       <thead>

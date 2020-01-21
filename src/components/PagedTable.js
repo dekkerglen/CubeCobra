@@ -35,7 +35,7 @@ class PagedTable extends Component {
         {validPages.length === 1 ? (
           ''
         ) : (
-          <Pagination aria-label="Table page" className="mt-3">
+          <Pagination aria-label="Table page">
             {validPages.map((page) => (
               <PaginationItem key={page} active={page === this.state.page}>
                 <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
