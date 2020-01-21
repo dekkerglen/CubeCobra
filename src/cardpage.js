@@ -69,6 +69,7 @@ class CardPage extends Component {
                     Foil TCGPlayer Market: {prices[card.tcgplayer_id + '_foil'].toFixed(2)}
                   </div>
                 )}
+                {!card.elo ? '' : <div className="card-price">Elo: {card.elo}</div>}
               </div>
             </Col>
             <Col className="breakdown" xs="12" sm="8">
