@@ -16,7 +16,7 @@ import {
   Button,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 import TagInput from './TagInput';
 import { TagContextProvider } from './TagContext';
 import TextEntry from './TextEntry';
@@ -198,7 +198,7 @@ class CubeOverviewModal extends Component {
     event.preventDefault();
 
     var cube = this.state.cube;
-    cube.tags = this.state.tags;
+    cube.tags = this.state.tags.map((tag) => tag.text);
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),

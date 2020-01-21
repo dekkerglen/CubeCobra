@@ -2,9 +2,10 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
-const Filter = require('../dist/util/Filter');
+const Filter = require('../dist/utils/Filter');
+var { getElo } = require('../serverjs/cubefn.js');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');
@@ -192,17 +193,17 @@ router.get('/card/:id', async (req, res) => {
     );
 
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    GetPrices(pids, async function(prices) {
-      res.render('tool/cardpage', {
-        card: card,
-        data: data,
-        prices: prices,
-        cubes: cubes,
-        related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
-      });
+    prices = await GetPrices(pids);
+    card.elo = (await getElo([card.name], true))[card.name];
+    res.render('tool/cardpage', {
+      card: card,
+      data: data,
+      prices: prices,
+      cubes: cubes,
+      related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash('danger', err.message);
     res.redirect('/404');
   }

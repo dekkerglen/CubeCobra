@@ -14,8 +14,8 @@ import {
   Row,
 } from 'reactstrap';
 
-import Affiliate from '../util/Affiliate';
-import { getLabels } from '../util/Sort';
+import Affiliate from '../utils/Affiliate';
+import { getLabels } from '../utils/Sort';
 
 import ButtonLink from './ButtonLink';
 import { ColorChecksAddon } from './ColorCheck';
@@ -50,7 +50,8 @@ const CardModal = ({
             <FoilCardImage card={card} finish={values.finish} />
             <Row noGutters className="mb-2">
               {card.details.price && <TextBadge name="Price" className="mt-2 mr-2">${card.details.price.toFixed(2)}</TextBadge>}
-              {card.details.price_foil && <TextBadge name="Foil" className="mt-2">${card.details.price_foil.toFixed(2)}</TextBadge>}
+              {card.details.price_foil && <TextBadge name="Foil" className="mt-2 mr-2">${card.details.price_foil.toFixed(2)}</TextBadge>}
+              {card.details.elo && <TextBadge name="Elo" className="mt-2">{card.details.elo}</TextBadge>}
             </Row>
           </Col>
           <Col xs="12" sm="8">

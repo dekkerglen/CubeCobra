@@ -1,14 +1,15 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 import AutocompleteInput from './AutocompleteInput';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
-import Filter from '../util/Filter';
+import Filter from '../utils/Filter';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
 import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
@@ -90,7 +91,19 @@ const MaybeboardListItem = ({ card, className }) => {
   );
 };
 
-const MaybeboardView = ({ filter, ...props }) => {
+MaybeboardListItem.propTypes = {
+  card: PropTypes.shape({
+    index: PropTypes.number.isRequired,
+    cardID: PropTypes.string.isRequired,
+    details: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      image_normal: PropTypes.string.isRequired,
+    }).isRequired,
+  }),
+};
+
+const Maybeboard = ({ filter, ...props }) => {
   const { canEdit, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
   const { maybeboard, addMaybeboardCard } = useContext(MaybeboardContext);
@@ -121,7 +134,7 @@ const MaybeboardView = ({ filter, ...props }) => {
         if (response.ok) {
           const json = await response.json();
           if (json.success === 'true') {
-            addMaybeboardCard({ cardID: card._id, details: card });
+            addMaybeboardCard({ _id: json.added[card._id], cardID: card._id, details: card });
           } else {
             console.error(json.message);
           }
@@ -196,10 +209,8 @@ const MaybeboardView = ({ filter, ...props }) => {
   );
 };
 
-const Maybeboard = ({ initialCards, setOpenCollapse, ...props }) => (
-  <MaybeboardContextProvider initialCards={initialCards} setOpenCollapse={setOpenCollapse}>
-    <MaybeboardView {...props} />
-  </MaybeboardContextProvider>
-);
+Maybeboard.propTypes = {
+  filter: PropTypes.arrayOf(PropTypes.array).isRequired,
+};
 
 export default Maybeboard;

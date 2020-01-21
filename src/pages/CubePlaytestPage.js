@@ -24,14 +24,14 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
-import CSRFForm from './CSRFForm';
-import CubeContext, { CubeContextProvider } from './CubeContext';
-import CustomDraftFormatModal from './CustomDraftFormatModal';
-import DynamicFlash from './DynamicFlash';
-import DeckPreview from './DeckPreview';
-import withModal from './WithModal';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext, { CubeContextProvider } from 'components/CubeContext';
+import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
+import DynamicFlash from 'components/DynamicFlash';
+import DeckPreview from 'components/DeckPreview';
+import withModal from 'components/WithModal';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -91,7 +91,7 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
     <Card {...props}>
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
-          <CardTitleH5>Draft Custom Format: {format.title}</CardTitleH5>
+          <CardTitleH5>{format.title} (custom draft)</CardTitleH5>
         </CardHeader>
         <CardBody>
           <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
@@ -132,7 +132,7 @@ const StandardDraftCard = ({ cubeID }) => (
   <Card className="mt-3">
     <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
       <CardHeader>
-        <CardTitleH5>Start a new draft</CardTitleH5>
+        <CardTitleH5>Standard draft</CardTitleH5>
       </CardHeader>
       <CardBody>
         <LabelRow htmlFor="packs" label="Number of Packs">

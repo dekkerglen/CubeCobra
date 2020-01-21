@@ -1,3 +1,4 @@
+const serialize = require('serialize-javascript');
 const express = require('express');
 const router = express.Router();
 
@@ -188,11 +189,11 @@ router.get('/dashboard', async (req, res) => {
         NODE_ENV === 'production'
           ? await ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
           : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       loginCallback: '/',
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });
@@ -258,7 +259,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).send(err);
   }
 });

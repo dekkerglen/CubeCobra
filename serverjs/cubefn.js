@@ -1,5 +1,6 @@
 const sanitizeHtml = require('sanitize-html');
 const Cube = require('../models/cube');
+const CardRating = require('../models/cardrating');
 const util = require('./util');
 
 function get_cube_id(cube) {
@@ -110,6 +111,123 @@ function cardsAreEquivalent(card, details) {
   return true;
 }
 
+function cardHtml(card) {
+  if (card.image_flip) {
+    return (
+      '<a class="dynamic-autocard" card="' +
+      card.image_normal +
+      '" card_flip="' +
+      card.image_flip +
+      '">' +
+      card.name +
+      '</a>'
+    );
+  } else {
+    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
+  }
+}
+
+function addCardHtml(card) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' +
+    cardHtml(card) +
+    '<br/>'
+  );
+}
+
+function removeCardHtml(card) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' +
+    cardHtml(card) +
+    '<br/>'
+  );
+}
+
+function replaceCardHtml(oldCard, newCard) {
+  return (
+    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' +
+    cardHtml(oldCard) +
+    ' &gt; ' +
+    cardHtml(newCard) +
+    '<br/>'
+  );
+}
+
+function abbreviate(name) {
+  return name.length < 20 ? name : name.slice(0, 20) + '…';
+}
+
+function insertComment(comments, position, comment) {
+  if (position.length <= 0) {
+    comment.index = comments.length;
+    comments.push(comment);
+    return comment;
+  } else {
+    return insertComment(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
+
+function getOwnerFromComment(comments, position) {
+  if (position.length <= 0) {
+    return '';
+  } else if (position.length == 1) {
+    return comments[position[0]].owner;
+  } else {
+    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
+  }
+}
+
+function saveEdit(comments, position, comment) {
+  if (position.length == 1) {
+    comments[position[0]] = comment;
+  } else if (position.length > 1) {
+    saveEdit(comments[position[0]].comments, position.slice(1), comment);
+  }
+}
+function build_tag_colors(cube) {
+  let tag_colors = cube.tag_colors;
+  let tags = tag_colors.map((item) => item.tag);
+  let not_found = tag_colors.map((item) => item.tag);
+
+  cube.cards.forEach(function(card, index) {
+    card.tags.forEach(function(tag, index) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tag_colors.push({
+          tag,
+          color: null,
+        });
+        tags.push(tag);
+      }
+      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
+    });
+  });
+
+  let tmp = [];
+  tag_colors.forEach(function(item, index) {
+    if (!not_found.includes(item.tag)) tmp.push(item);
+  });
+  tag_colors = tmp;
+
+  return tag_colors;
+}
+
+function maybeCards(cube, carddb) {
+  const maybe = (cube.maybe || []).filter((card) => card.cardID);
+  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+}
+
+async function getElo(cardnames, round) {
+  const ratings = await CardRating.find({ name: { $in: cardnames } });
+  const result = {};
+
+  ratings.forEach(function(item, index) {
+    result[item.name] = round ? Math.round(item.elo) : item.elo;
+  });
+
+  return result;
+}
+
 var methods = {
   getBasics: function(carddb) {
     var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -207,29 +325,37 @@ var methods = {
     }
     return src;
   },
-  generatePack: function(cubeId, carddb, seed, callback) {
-    Cube.findOne(build_id_query(cubeId), function(err, cube) {
-      if (!cube) {
-        callback(true);
-      }
-      if (!seed) {
-        seed = Date.now().toString();
-      }
-      const pack = util
-        .shuffle(cube.cards, seed)
-        .slice(0, 15)
-        .map((card) => carddb.getCardDetails(card));
-      callback(false, {
-        seed,
-        pack,
-      });
-    });
+  generatePack: async (cubeId, carddb, seed) => {
+    const cube = await Cube.findOne(build_id_query(cubeId));
+    if (!seed) {
+      seed = Date.now().toString();
+    }
+
+    const pack = util
+      .shuffle(cube.cards, seed)
+      .slice(0, 15)
+      .map((card) => carddb.getCardDetails(card));
+
+    return {
+      seed,
+      pack,
+    };
   },
   generate_short_id,
   build_id_query,
   get_cube_id,
   intToLegality,
   legalityToInt,
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
+  abbreviate,
+  insertComment,
+  getOwnerFromComment,
+  saveEdit,
+  build_tag_colors,
+  maybeCards,
+  getElo,
 };
 
 module.exports = methods;

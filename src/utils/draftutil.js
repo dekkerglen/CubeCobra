@@ -58,18 +58,18 @@ function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
+  cards = arrayShuffle(cards);
   return function(cardFilters) {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
     // remove a random card
-    cards = arrayShuffle(cards);
-    return { card: cards.pop(), messages: '' };
+    return { card: cards.pop(), messages: [] };
   };
 }
 
-function standDraftAsfan(cards) {
+function standardDraftAsfan(cards) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft asfan: not enough cards.');
   }
@@ -77,7 +77,7 @@ function standDraftAsfan(cards) {
   const poolWeight = 1 / poolCount;
   return (cardFilters) => {
     cards.forEach((card) => (card.asfan += poolWeight));
-    return { card: true, messages: '' };
+    return { card: true, messages: [] };
   };
 }
 
@@ -132,7 +132,7 @@ function customDraftAsfan(cards, duplicates = false) {
     // each filter is an array of parsed filter tokens, we choose one randomly
     let validCardGroups = [];
     for (let i = 0; i < cardFilters.length; i++) {
-      let validCards = matchingCards(cards, cardFilter[i]);
+      let validCards = matchingCards(cards, cardFilters[i]);
       if (!duplicates) {
         validCards = validCards.filter((card) => card.asfan < 1);
       }
@@ -156,7 +156,7 @@ function customDraftAsfan(cards, duplicates = false) {
         validCards.forEach((card) => (card.asfan += (1 - card.asfan) * poolWeight));
       }
     });
-    return { card: true, messages: messages };
+    return { card: true, messages: [] };
   };
 }
 

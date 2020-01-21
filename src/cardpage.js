@@ -21,8 +21,8 @@ import ButtonLink from './components/ButtonLink';
 import CountTableRow from './components/CountTableRow';
 import CubePreview from './components/CubePreview';
 
-import Affiliate from './util/Affiliate';
-import { encodeName } from './util/Card';
+import Affiliate from './utils/Affiliate';
+import { encodeName } from './utils/Card';
 
 class CardPage extends Component {
   constructor(props) {
@@ -69,6 +69,7 @@ class CardPage extends Component {
                     Foil TCGPlayer Market: {prices[card.tcgplayer_id + '_foil'].toFixed(2)}
                   </div>
                 )}
+                {!card.elo ? '' : <div className="card-price">Elo: {card.elo}</div>}
               </div>
             </Col>
             <Col className="breakdown" xs="12" sm="8">

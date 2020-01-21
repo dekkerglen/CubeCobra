@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import Query from '../util/Query';
+import Query from '../utils/Query';
 
 const ChangelistContext = React.createContext([]);
 

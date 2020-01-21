@@ -2,7 +2,7 @@ import React, { Fragment, useEffect } from 'react';
 
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
-import { getLabels, sortIntoGroups } from '../util/Sort';
+import { getLabels, sortIntoGroups } from '../utils/Sort';
 
 import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';
@@ -36,7 +36,7 @@ const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
       </h5>
     </CardHeader>
     <CardBody>
-      {getLabels(null, 'CNC')
+      {getLabels(null, 'Creature/Non-Creature')
         .filter((cardType) => groups[cardType])
         .map((cardType) => (
           <TypeRow key={cardType} cardType={cardType} groups={groups[cardType]} count={typeCounts[cardType]} />
@@ -52,7 +52,7 @@ const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...prop
   let typeCounts = {};
 
   for (let color of Object.keys(groups)) {
-    groups[color] = sortIntoGroups(groups[color], 'CNC');
+    groups[color] = sortIntoGroups(groups[color], 'Creature/Non-Creature');
     colorCounts[color] = 0;
     typeCounts[color] = {};
     for (let cardType of Object.keys(groups[color])) {

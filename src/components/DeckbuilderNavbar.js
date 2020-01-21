@@ -84,7 +84,7 @@ BasicsModal.propTypes = {
   handleAddBasics: PropTypes.func,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -116,32 +116,30 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
   );
 
   return (
-    <div className="usercontrols">
-      <Navbar expand="md" light>
-        <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
-        <Collapse isOpen={isOpen} navbar>
-          <Nav navbar>
-            <NavItem>
-              <NavLink href="#" onClick={saveDeck}>
-                Save Deck
-              </NavLink>
-              <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
-                <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
-                <Input type="hidden" name="name" value={JSON.stringify(name)} />
-                <Input type="hidden" name="description" value={JSON.stringify(description)} />
-              </CSRFForm>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#" onClick={toggleBasicsModal}>
-                Add Basic Lands
-              </NavLink>
-              <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
-            </NavItem>
-            <CustomImageToggler />
-          </Nav>
-        </Collapse>
-      </Navbar>
-    </div>
+    <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
+      <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+      <Collapse isOpen={isOpen} navbar>
+        <Nav navbar>
+          <NavItem>
+            <NavLink href="#" onClick={saveDeck}>
+              Save Deck
+            </NavLink>
+            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
+              <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
+              <Input type="hidden" name="name" value={JSON.stringify(name)} />
+              <Input type="hidden" name="description" value={JSON.stringify(description)} />
+            </CSRFForm>
+          </NavItem>
+          <NavItem>
+            <NavLink href="#" onClick={toggleBasicsModal}>
+              Add Basic Lands
+            </NavLink>
+            <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
+          </NavItem>
+          <CustomImageToggler />
+        </Nav>
+      </Collapse>
+    </Navbar>
   );
 };
 
