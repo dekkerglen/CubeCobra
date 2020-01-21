@@ -72,7 +72,15 @@ class BlogPost extends React.Component {
           <h5 className="card-title">
             {post.title}
             <div className="float-sm-right">
-              {this.props.canEdit && <BlogContextMenu className="float-sm-right" post={post} value="..." onDelete={onDelete} onEdit={onEdit} />}
+              {this.props.canEdit && (
+                <BlogContextMenu
+                  className="float-sm-right"
+                  post={post}
+                  value="..."
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                />
+              )}
             </div>
           </h5>
           <h6 className="card-subtitle mb-2 text-muted">
