@@ -623,6 +623,10 @@ img.mana-symbol {
   margin: 0 -2px;
 }
 
+.list-view-table td {
+	vertical-align: middle;
+}
+
 .font-weight-boldish {
 	font-weight: 600;
 }
