@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
-import Query from 'util/Query';
+import Query from 'utils/Query';
 
 import CurveAnalysis from 'components/CurveAnalysis';
 import DynamicFlash from 'components/DynamicFlash';

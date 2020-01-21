@@ -2,11 +2,11 @@ const carddb = require('../../serverjs/cards');
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../fixtures/examplecube');
 const sinon = require('sinon');
-const methods = require('../../dist/util/draftutil');
+const methods = require('../../dist/utils/draftutil');
 let CardRating = require('../../models/cardrating');
 let Draft = require('../../models/draft');
 
-import Filter from '../../src/util/Filter';
+import Filter from '../../src/utils/Filter';
 import { expectOperator } from '../helpers';
 
 describe('getDraftBots', () => {

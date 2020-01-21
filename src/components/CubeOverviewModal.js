@@ -16,7 +16,7 @@ import {
   Button,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 import TagInput from './TagInput';
 import { TagContextProvider } from './TagContext';
 import TextEntry from './TextEntry';

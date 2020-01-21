@@ -24,7 +24,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { csrfFetch } from 'util/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'components/CubeContext';
