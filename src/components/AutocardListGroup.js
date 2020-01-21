@@ -35,7 +35,7 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
       {sorted.map(([label, group]) =>
         group.map((card, index) => (
           <RowTag
-            key={typeof card.index === 'undefined' ? index : card.index}
+            key={card._id || (typeof card.index === 'undefined' ? index : card.index)}
             card={card}
             className={index === 0 ? 'cmc-group' : undefined}
           />

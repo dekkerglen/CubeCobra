@@ -17,6 +17,7 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import GroupModal from 'components/GroupModal';
 import ListView from 'components/ListView';
 import Maybeboard from 'components/Maybeboard';
+import { MaybeboardContextProvider } from 'components/MaybeboardContext';
 import { SortContextProvider } from 'components/SortContext';
 import TableView from 'components/TableView';
 import { tagColors, TagContextProvider } from 'components/TagContext';
@@ -91,7 +92,11 @@ const CubeListPageRaw = ({
                 <ErrorBoundary>
                   <ClientOnly>
                     <DisplayContext.Consumer>
-                      {({ showMaybeboard }) => showMaybeboard && <Maybeboard filter={filter} initialCards={maybe} />}
+                      {({ showMaybeboard }) => (
+                        <MaybeboardContextProvider initialCards={maybe}>
+                          {showMaybeboard && <Maybeboard filter={filter} />}
+                        </MaybeboardContextProvider>
+                      )}
                     </DisplayContext.Consumer>
                   </ClientOnly>
                 </ErrorBoundary>
