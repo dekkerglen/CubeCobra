@@ -3,6 +3,7 @@ import React from 'react';
 import {
   Button,
   Col,
+  CustomInput,
   Input,
   InputGroup,
   InputGroupAddon,
@@ -61,12 +62,13 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Version (Set and #)</InputGroupText>
                 </InputGroupAddon>
-                <Input
+                <CustomInput
                   type="select"
                   id="cardModalVersionSelect"
                   name="version"
                   value={values.version}
                   onChange={onChange}
+                  className="square-left"
                 >
                   {versions.map((version) => {
                     const name = version.full_name
@@ -78,27 +80,27 @@ const CardModal = ({
                       </option>
                     );
                   })}
-                </Input>
+                </CustomInput>
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Status</InputGroupText>
                 </InputGroupAddon>
-                <Input type="select" name="status" value={values.status} onChange={onChange}>
+                <CustomInput type="select" name="status" value={values.status} onChange={onChange} className="square-left">
                   {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
                   ))}
-                </Input>
+                </CustomInput>
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Finish</InputGroupText>
                 </InputGroupAddon>
-                <Input type="select" name="finish" value={values.finish} onChange={onChange}>
+                <CustomInput type="select" name="finish" value={values.finish} onChange={onChange} className="square-left">
                   {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
                   ))}
-                </Input>
+                </CustomInput>
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
@@ -114,14 +116,12 @@ const CardModal = ({
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Card Image URL</InputGroupText>
+                  <InputGroupText>Image URL</InputGroupText>
                 </InputGroupAddon>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Color Identity Override</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText className="square-right">Color</InputGroupText>
                 <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
               </InputGroup>
 

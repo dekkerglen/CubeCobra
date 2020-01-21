@@ -616,6 +616,11 @@ img.mana-symbol {
 	height: 1.8rem;
 }
 
+.square-right {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
 .col-low-padding {
   padding: 0 2px;
 }
