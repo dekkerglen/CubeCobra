@@ -57,7 +57,7 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
 
 const DeleteBlogModal = ({ isOpen, toggle, post }) => {
   const handleDelete = useCallback(async (event) => {
-    const postID = event.target.getAttribtue('data-post');
+    const postID = event.target.getAttribute('data-post');
     if (postID) {
       try {
         const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
