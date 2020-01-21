@@ -2,19 +2,19 @@ import React, { useCallback, useContext, useState, useEffect } from 'react';
 
 import { Form, Input } from 'reactstrap';
 
-import { cardsAreEquivalent } from '../util/Card';
-import { csrfFetch } from '../util/CSRF';
-import { getLabels, sortDeep } from '../util/Sort';
+import { cardsAreEquivalent } from 'util/Card';
+import { csrfFetch } from 'util/CSRF';
+import { getLabels, sortDeep } from 'util/Sort';
 
-import CubeContext from './CubeContext';
-import GroupModalContext from './GroupModalContext';
-import PagedTable from './PagedTable';
-import SortContext from './SortContext';
-import TagContext from './TagContext';
-import TagInput from './TagInput';
-import withAutocard from './WithAutocard';
-import withLoading from './WithLoading';
-import useAlerts from '../hooks/UseAlerts';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
+import PagedTable from 'components/PagedTable';
+import SortContext from 'components/SortContext';
+import TagContext from 'components/TagContext';
+import TagInput from 'components/TagInput';
+import withAutocard from 'components/WithAutocard';
+import withLoading from 'components/WithLoading';
+import useAlerts from 'hooks/UseAlerts';
 
 const colorCombos = [
   'C',
