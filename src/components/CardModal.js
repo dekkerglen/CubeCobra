@@ -56,7 +56,7 @@ const CardModal = ({
                 ''
               ) : (
                 <div className="card-price">
-                  TCGPlayer Market:
+                  {'TCGPlayer Market: '}
                   {card.details.price.toFixed(2)}
                 </div>
               )}
@@ -64,8 +64,16 @@ const CardModal = ({
                 ''
               ) : (
                 <div className="card-price">
-                  Foil TCGPlayer Market:
+                  {'Foil TCGPlayer Market: '}
                   {card.details.price_foil.toFixed(2)}
+                </div>
+              )}
+              {!card.details.elo ? (
+                ''
+              ) : (
+                <div className="card-price">
+                  {'Elo: '}
+                  {card.details.elo}
                 </div>
               )}
             </div>

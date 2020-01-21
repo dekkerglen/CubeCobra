@@ -5,6 +5,7 @@ const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
 const Filter = require('../dist/utils/Filter');
+var { getElo } = require('../serverjs/cubefn.js');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');
@@ -193,6 +194,7 @@ router.get('/card/:id', async (req, res) => {
 
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
     prices = await GetPrices(pids);
+    card.elo = (await getElo([card.name], true))[card.name];
     res.render('tool/cardpage', {
       card: card,
       data: data,
