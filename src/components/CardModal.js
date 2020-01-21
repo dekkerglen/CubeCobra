@@ -15,15 +15,15 @@ import {
   Row,
 } from 'reactstrap';
 
-import Affiliate from '../utils/Affiliate';
-import { getLabels } from '../utils/Sort';
+import Affiliate from 'utils/Affiliate';
+import { getLabels } from 'utils/Sort';
 
-import ButtonLink from './ButtonLink';
-import { ColorChecksAddon } from './ColorCheck';
-import LoadingButton from './LoadingButton';
-import FoilCardImage from './FoilCardImage';
-import TagInput from './TagInput';
-import TextBadge from './TextBadge';
+import ButtonLink from 'components/ButtonLink';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import LoadingButton from 'components/LoadingButton';
+import FoilCardImage from 'components/FoilCardImage';
+import TagInput from 'components/TagInput';
+import TextBadge from 'components/TextBadge';
 
 const CardModal = ({
   card,
