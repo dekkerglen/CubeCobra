@@ -217,14 +217,14 @@ function maybeCards(cube, carddb) {
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
-async function getElo(cardnames, round) {  
+async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
   const result = {};
 
   ratings.forEach(function(item, index) {
     result[item.name] = round ? Math.round(item.elo) : item.elo;
   });
-  
+
   return result;
 }
 

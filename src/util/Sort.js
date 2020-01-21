@@ -336,7 +336,8 @@ export function getLabels(cube, sort) {
     return labels;
   } else if (sort == 'Unsorted') {
     return ['All'];
-  } else if (sort == 'Elo') {    var items = [];
+  } else if (sort == 'Elo') {
+    var items = [];
     cube.forEach(function(card, index) {
       if (card.details.elo) {
         if (!items.includes(card.details.elo)) {

@@ -39,6 +39,7 @@ let categoryMap = new Map([
   ['art', 'artist'],
   ['artist', 'artist'],
   ['is', 'is'],
+  ['elo', 'elo'],
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
@@ -777,6 +778,30 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'artist') {
     res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
+  }
+  if (filter.category == 'elo') {
+    if (card.details.elo) {
+      let elo = parseInt(card.details.elo, 10);
+      let arg = parseInt(filter.arg, 10);
+      switch (filter.operand) {
+        case ':':
+        case '=':
+          res = arg == elo;
+          break;
+        case '<':
+          res = elo < arg;
+          break;
+        case '>':
+          res = elo > arg;
+          break;
+        case '<=':
+          res = elo <= arg;
+          break;
+        case '>=':
+          res = elo >= arg;
+          break;
+      }
+    }
   }
   if (filter.category == 'is') {
     switch (filter.arg) {

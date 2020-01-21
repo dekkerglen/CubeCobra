@@ -47,21 +47,26 @@ const fetchLands = [
 function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
   const colors = card.colors || card.details.color_identity;
-  const subset = arrayIsSubset(colors, botColors);
+  const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
   const overlap = botColors.some((c) => colors.includes(c));
   const typeLine = card.type_line || card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = fetchLands.includes(card.details.name);
 
-  // Prioritize on-color or overlapping fetches.
-  // Then overlapping lands, then overlapping spells.
-  if (subset || (isFetch && overlap)) {
-    rating -= 0.3;
-  } else if (isLand && overlap) {
-    rating -= 0.2;
+  if (isLand) {
+    if (subset) {
+      rating *= 1.4;
+    } else if (overlap) {
+      rating *= 1.2;
+    } else {
+      rating *= 1.1;
+    }
+  } else if (subset) {
+    rating *= 1.3;
   } else if (overlap) {
-    rating -= 0.15;
+    rating *= 1.1;
   }
+
   return rating;
 }
 
@@ -70,6 +75,7 @@ function botPicks() {
   for (let botIndex = 1; botIndex < draft.packs.length; botIndex++) {
     const pack = draft.packs[botIndex][0];
     const botColors = draft.bots[botIndex - 1];
+    console.log(pack.map((card) => card.details.name + ' - ' + botRating(botColors, card)));
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
@@ -81,12 +87,13 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[x]) - botRating(botColors, pack[y]);
+      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
     });
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
     pick = pack.splice(pickOrder[0], 1);
+    console.log(pick[0].details.name + ' - ' + botColors);
     draft.picks[botIndex].push(pick[0].cardID);
   }
 }

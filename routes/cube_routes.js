@@ -773,7 +773,7 @@ router.get('/list/:id', async function(req, res) {
           card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
         }
       }
-      if(elo_dict[card.details.name]){
+      if (elo_dict[card.details.name]) {
         card.details.elo = elo_dict[card.details.name];
       }
     }
@@ -1619,7 +1619,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
 
     const reactProps = {
       initialDraft: draft,
@@ -2768,7 +2768,7 @@ router.get(
       names.push(card.name);
     });
     const price_dict = await GetPrices(tcg);
-    const elo_dict = await getElo(names,true);
+    const elo_dict = await getElo(names, true);
     cards.forEach(function(card, index) {
       if (card.tcgplayer_id) {
         const card_price_data = price_dict[card.tcgplayer_id];
@@ -2780,7 +2780,7 @@ router.get(
           card.price_foil = card_foil_price_data;
         }
       }
-      if(elo_dict[card.name]) {
+      if (elo_dict[card.name]) {
         card.elo = elo_dict[card.name];
       }
     });
