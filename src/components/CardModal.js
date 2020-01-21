@@ -18,7 +18,6 @@ import {
 import Affiliate from 'utils/Affiliate';
 import { getLabels } from 'utils/Sort';
 
-import ButtonLink from 'components/ButtonLink';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
 import FoilCardImage from 'components/FoilCardImage';
@@ -150,28 +149,24 @@ const CardModal = ({
         </Row>
       </ModalBody>
       <ModalFooter>
-        {disabled ? (
-          '' // FIXME: This button is still uncontrolled.
-        ) : (
+        {!disabled && (
           <Button color="danger" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
           </Button>
         )}
-        <ButtonLink color="secondary" href={card.details.scryfall_uri}>
+        <Button color="secondary" href={card.details.scryfall_uri}>
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
-        </ButtonLink>
-        <ButtonLink color="secondary" href={'/tool/card/' + card.cardID}>
+        </Button>
+        <Button color="secondary" href={'/tool/card/' + card.cardID}>
           <span className="d-none d-sm-inline">View card analytics</span>
           <span className="d-sm-none">Analytics</span>
-        </ButtonLink>
-        <ButtonLink color="secondary" href={Affiliate.getTCGLink(card)}>
+        </Button>
+        <Button color="secondary" href={Affiliate.getTCGLink(card)}>
           Buy
-        </ButtonLink>
-        {disabled ? (
-          ''
-        ) : (
+        </Button>
+        {!disabled && (
           <LoadingButton color="success" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
