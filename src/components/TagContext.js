@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 const TagContext = React.createContext({
   addSuggestion: () => {

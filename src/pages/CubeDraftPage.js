@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from 'util/Draft';
-import Location from 'util/DraftLocation';
-import { cmcColumn } from 'util/Util';
+import Draft from 'utils/Draft';
+import Location from 'utils/DraftLocation';
+import { cmcColumn } from 'utils/Util';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';

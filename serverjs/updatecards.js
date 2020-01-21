@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
 const carddb = require('./cards.js');

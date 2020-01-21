@@ -2,7 +2,7 @@ import React, { Fragment, useEffect } from 'react';
 
 import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
 
-import { getLabels, sortIntoGroups } from '../util/Sort';
+import { getLabels, sortIntoGroups } from '../utils/Sort';
 
 import AutocardListGroup from './AutocardListGroup';
 import SortContext from './SortContext';

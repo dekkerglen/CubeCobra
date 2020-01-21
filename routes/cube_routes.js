@@ -24,8 +24,8 @@ var {
   getElo,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
-const draftutil = require('../dist/util/draftutil.js');
-const cardutil = require('../dist/util/Card.js');
+const draftutil = require('../dist/utils/draftutil.js');
+const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');

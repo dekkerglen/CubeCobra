@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
-import Hash from './util/Hash';
+import Hash from './utils/Hash';
 
 import CurveAnalysis from './components/CurveAnalysis';
 import DynamicFlash from './components/DynamicFlash';

@@ -15,7 +15,7 @@ import {
   Row,
 } from 'reactstrap';
 
-import { arrayMove } from '../util/Util';
+import { arrayMove } from '../utils/Util';
 
 import LoadingButton from './LoadingButton';
 import TagContext, { getTagColorClass, tagColors as tagColorClasses } from './TagContext';

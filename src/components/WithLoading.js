@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { Spinner } from 'reactstrap';
-import { fromEntries } from '../util/Util';
+import { fromEntries } from '../utils/Util';
 
 const withLoading = (Tag, handlers) => ({ spinnerSize, ...props }) => {
   const [loading, setLoading] = useState(false);

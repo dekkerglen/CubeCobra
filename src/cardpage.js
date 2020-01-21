@@ -21,8 +21,8 @@ import ButtonLink from './components/ButtonLink';
 import CountTableRow from './components/CountTableRow';
 import CubePreview from './components/CubePreview';
 
-import Affiliate from './util/Affiliate';
-import { encodeName } from './util/Card';
+import Affiliate from './utils/Affiliate';
+import { encodeName } from './utils/Card';
 
 class CardPage extends Component {
   constructor(props) {

@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 
 import { Form, Input } from 'reactstrap';
 
-import { getCsrfToken } from '../util/CSRF';
+import { getCsrfToken } from '../utils/CSRF';
 
 const CSRFForm = forwardRef(({ children, ...props }, ref) => (
   <Form ref={ref} {...props}>

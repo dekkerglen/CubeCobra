@@ -2,9 +2,9 @@ import React, { useCallback, useContext, useState, useEffect } from 'react';
 
 import { Form, Input } from 'reactstrap';
 
-import { cardsAreEquivalent } from 'util/Card';
-import { csrfFetch } from 'util/CSRF';
-import { getLabels, sortDeep } from 'util/Sort';
+import { cardsAreEquivalent } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import { getLabels, sortDeep } from 'utils/Sort';
 
 import CubeContext from 'components/CubeContext';
 import GroupModalContext from 'components/GroupModalContext';

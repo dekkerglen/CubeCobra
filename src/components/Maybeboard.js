@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 import AutocompleteInput from './AutocompleteInput';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
-import Filter from '../util/Filter';
+import Filter from '../utils/Filter';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
 import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
