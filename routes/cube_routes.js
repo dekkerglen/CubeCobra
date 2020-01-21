@@ -465,6 +465,9 @@ router.get('/overview/:id', async (req, res) => {
 
     // Performance
     delete cube.cards;
+    delete cube.decks;
+    delete cube.draft_formats;
+    delete cube.maybe;
 
     const reactProps = {
       cube,
@@ -846,13 +849,18 @@ router.get('/playtest/:id', async (req, res) => {
 
     const [user, decks] = await Promise.all([userq, decksq]);
 
+    delete cube.cards;
+    delete cube.decks;
+    delete cube.maybe;
+
     // sort titles alphabetically
     cube.draft_formats.sort((a, b) => a.title.localeCompare(b.title));
 
     const reactProps = {
+      cube,
+      cubeID: req.params.id,
       canEdit: user._id.equals(cube.owner),
       decks,
-      cubeID: req.params.id,
       draftFormats: cube.draft_formats
         ? cube.draft_formats.map(({ packs, ...format }) => ({
             ...format,
@@ -866,11 +874,7 @@ router.get('/playtest/:id', async (req, res) => {
         ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
-      cube: cube,
-      cube_id: req.params.id,
-      activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Playtest`,
-      owner: user ? user.username : 'Unknown',
       metadata: generateMeta(
         `Cube Cobra Playtest: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

@@ -17,6 +17,10 @@ const CubeNavItem = ({ link, activeLink, children }) => {
 };
 
 const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
+  const categories = cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '';
+  const subtitle = cube.overrideCategory
+    ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
+    : `${cube.card_count} Card ${cube.type} Cube`
   return (
     <CubeContextProvider initialCube={cube.cards} cubeID={cubeID} canEdit={canEdit}>
       <link rel="stylesheet" href="/css/autocomplete.css" />
@@ -26,7 +30,7 @@ const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
           {cube.type && (
             <span className="d-none d-sm-inline">
               {' '}
-              ({cube.card_count} Card {cube.type} Cube)
+              ({subtitle})
             </span>
           )}
         </div>
