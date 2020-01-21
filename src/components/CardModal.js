@@ -80,7 +80,6 @@ const CardModal = ({
                   name="version"
                   value={values.version}
                   onChange={onChange}
-                  className="square-left"
                 >
                   {versions.map((version) => {
                     const name = version.full_name
@@ -98,13 +97,7 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Status</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput
-                  type="select"
-                  name="status"
-                  value={values.status}
-                  onChange={onChange}
-                  className="square-left"
-                >
+                <CustomInput type="select" name="status" value={values.status} onChange={onChange}>
                   {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
                   ))}
@@ -114,13 +107,7 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Finish</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput
-                  type="select"
-                  name="finish"
-                  value={values.finish}
-                  onChange={onChange}
-                  className="square-left"
-                >
+                <CustomInput type="select" name="finish" value={values.finish} onChange={onChange}>
                   {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
                   ))}
