@@ -14,6 +14,7 @@ import TagContext from './TagContext';
 import TagInput from './TagInput';
 import withAutocard from './WithAutocard';
 import withLoading from './WithLoading';
+import useAlerts from '../hooks/UseAlerts';
 
 const colorCombos = [
   'C',
@@ -56,7 +57,7 @@ const LoadingInput = withLoading(Input, ['onBlur']);
 const LoadingInputChange = withLoading(Input, ['onChange']);
 const LoadingTagInput = withLoading(TagInput, ['handleInputBlur']);
 
-const ListViewRow = ({ card, versions, checked, onCheck }) => {
+const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
   const [values, setValues] = useState({
     ...card,
@@ -78,28 +79,37 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
         return;
       }
 
-      const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          src: card,
-          updated,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const json = await response.json();
-
-      if (json.success === 'true') {
-        const oldCardID = card.cardID;
-        card = { ...card, ...updated };
-        updateCubeCard(card.index, card);
-        if (updated.cardID !== oldCardID) {
-          // changed version
-          const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
-          const getJson = await getResponse.json();
-          updateCubeCard(card.index, { ...card, details: getJson.card });
+      try {
+        const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            src: card,
+            updated,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          addAlert('danger', `Failed to update ${card.details.name} (status ${response.statusCode})`);
+          return;
         }
+
+        const json = await response.json();
+        if (json.success === 'true') {
+          const oldCardID = card.cardID;
+          card = { ...card, ...updated };
+          updateCubeCard(card.index, card);
+          if (updated.cardID !== oldCardID) {
+            // changed version
+            const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+            const getJson = await getResponse.json();
+            updateCubeCard(card.index, { ...card, details: getJson.card });
+          }
+        }
+      } catch(err) {
+        addAlert('danger', 'Failed to send update request.')
+        throw err;
       }
     },
     [cubeID, card],
@@ -109,7 +119,11 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
     async (tag) => {
       const newTags = [...tags, tag];
       setTags(newTags);
-      await syncCard({ tags: newTags.map((tag) => tag.text) });
+      try {
+        await syncCard({ tags: newTags.map((tag) => tag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
     },
     [syncCard, tags],
   );
@@ -118,7 +132,11 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
     async (tagIndex) => {
       const newTags = tags.filter((tag, index) => index !== tagIndex);
       setTags(newTags);
-      await syncCard({ tags: newTags.map((tag) => tag.text) });
+      try {
+        await syncCard({ tags: newTags.map((tag) => tag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
     },
     [syncCard, tags],
   );
@@ -129,7 +147,11 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
       newTags.splice(currIndex, 1);
       newTags.splice(newIndex, 0, tag);
       setTags(newTags);
-      await syncCard({ tags: newTags.map((tag) => tag.text) });
+      try {
+        await syncCard({ tags: newTags.map((tag) => tag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
     },
     [syncCard, tags],
   );
@@ -293,6 +315,8 @@ const ListView = ({ cards }) => {
   const { setGroupModalCards } = useContext(GroupModalContext);
   const { primary, secondary } = useContext(SortContext);
 
+  const { addAlert, alerts, Alerts } = useAlerts();
+
   useEffect(() => {
     const wrapper = async () => {
       const knownIds = new Set(Object.keys(versionDict));
@@ -361,6 +385,7 @@ const ListView = ({ cards }) => {
           versions={versionDict[card.cardID] || []}
           checked={checked.includes(card.index)}
           onCheck={handleCheck}
+          addAlert={addAlert}
         />
       )),
     ),
@@ -369,25 +394,28 @@ const ListView = ({ cards }) => {
   const rowsFlat = [].concat.apply([], [].concat.apply([], rows));
 
   return (
-    <Form inline>
-      <PagedTable rows={rowsFlat} size="sm" className="list-view-table">
-        <thead>
-          <tr>
-            <th className="align-middle">
-              <Input type="checkbox" className="d-block mx-auto" onChange={handleCheckAll} />
-            </th>
-            <th>Name</th>
-            <th>Version</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Finish</th>
-            <th>CMC</th>
-            <th>Color</th>
-            <th>Tags</th>
-          </tr>
-        </thead>
-      </PagedTable>
-    </Form>
+    <>
+      <Alerts alerts={alerts} />
+      <Form inline>
+        <PagedTable rows={rowsFlat} size="sm" className="list-view-table">
+          <thead>
+            <tr>
+              <th className="align-middle">
+                <Input type="checkbox" className="d-block mx-auto" onChange={handleCheckAll} />
+              </th>
+              <th>Name</th>
+              <th>Version</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Finish</th>
+              <th>CMC</th>
+              <th>Color</th>
+              <th>Tags</th>
+            </tr>
+          </thead>
+        </PagedTable>
+      </Form>
+    </>
   );
 };
 

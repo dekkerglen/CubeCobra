@@ -20,6 +20,8 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
         autofocus={false}
         classNames={{
           tags: 'flex-grow-1',
+          tag: 'ReactTags__tag my-0',
+          tagInput: 'ReactTags__tagInput m-0',
         }}
         {...props}
       />
