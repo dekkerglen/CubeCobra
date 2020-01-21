@@ -76,7 +76,6 @@ function botPicks() {
   for (let botIndex = 1; botIndex < draft.packs.length; botIndex++) {
     const pack = draft.packs[botIndex][0];
     const botColors = draft.bots[botIndex - 1];
-    console.log(pack.map((card) => card.details.name + ' - ' + botRating(botColors, card)));
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
@@ -94,7 +93,6 @@ function botPicks() {
 
     const pickOrder = ratedPicks.concat(unratedPicks);
     pick = pack.splice(pickOrder[0], 1);
-    console.log(pick[0].details.name + ' - ' + botColors);
     draft.picks[botIndex].push(pick[0].cardID);
   }
 }

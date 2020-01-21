@@ -346,17 +346,9 @@ export function getLabels(cube, sort) {
       }
     });
     return items.sort(function(x, y) {
-      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
-        if (x > y) {
-          return 1;
-        } else if (y > x) {
-          return -1;
-        }
+      if (x > y) {
         return 1;
-      }
-      if (parseInt(x) > parseInt(y)) {
-        return 1;
-      } else if (parseInt(y) > parseInt(x)) {
+      } else if (y > x) {
         return -1;
       }
       return 1;
