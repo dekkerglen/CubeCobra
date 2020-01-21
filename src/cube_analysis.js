@@ -3,35 +3,42 @@ import ReactDOM from 'react-dom';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
-import Hash from './util/Hash';
+import Query from 'util/Query';
 
-import CurveAnalysis from './components/CurveAnalysis';
-import DynamicFlash from './components/DynamicFlash';
-import ErrorBoundary from './components/ErrorBoundary';
-import MulticoloredAnalysis from './components/MulticoloredAnalysis';
-import TypeAnalysis from './components/TypeAnalysis';
-import TokenAnalysis from './components/TokenAnalysis';
+import CurveAnalysis from 'components/CurveAnalysis';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import MulticoloredAnalysis from 'components/MulticoloredAnalysis';
+import TypeAnalysis from 'components/TypeAnalysis';
+import TokenAnalysis from 'components/TokenAnalysis';
+import CubeLayout from 'layouts/CubeLayout';
 
 class CubeAnalysis extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      nav: Hash.get('nav', 'curve'),
+      nav: this.props.defaultNav || 'curve',
     };
+  }
+
+  componentDidMount() {
+    this.setState({
+      nav: Query.get('nav', this.state.nav),
+    })
   }
 
   select(nav) {
     if (nav === 'curve') {
-      Hash.del('nav');
+      Query.del('nav');
     } else {
-      Hash.set('nav', nav);
+      Query.set('nav', nav);
     }
     this.setState({ nav });
   }
 
   render() {
-    const { curve, typeByColor, multicoloredCounts, tokens } = this.props;
+    const { cube, cubeID, curve, typeByColor, multicoloredCounts, tokens } = this.props;
     const active = this.state.nav;
     let navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#">
@@ -39,7 +46,7 @@ class CubeAnalysis extends Component {
       </NavLink>
     );
     return (
-      <>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false}>
         <DynamicFlash />
         <Row className="mt-3">
           <Col xs="12" lg="2">
@@ -63,18 +70,13 @@ class CubeAnalysis extends Component {
             </ErrorBoundary>
           </Col>
         </Row>
-      </>
+      </CubeLayout>
     );
   }
 }
 
-const curve = JSON.parse(document.getElementById('curveData').value);
-const typeByColor = JSON.parse(document.getElementById('typeData').value);
-const multicoloredCounts = JSON.parse(document.getElementById('multicolorData').value);
-const tokens = JSON.parse(document.getElementById('generatedTokensData').value);
-
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeAnalysis curve={curve} typeByColor={typeByColor} multicoloredCounts={multicoloredCounts} tokens={tokens} />
+  <CubeAnalysis {...reactProps} />
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;

@@ -899,16 +899,19 @@ router.get('/analysis/:id', async (req, res) => {
       };
     }
 
-    res.render('cube/cube_analysis', {
-      cube: cube,
-      cube_id: req.params.id,
-      owner: user.username,
-      activeLink: 'analysis',
-      title: `${abbreviate(cube.name)} - Analysis`,
-      TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-      MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+    const reactProps = {
+      cube,
+      cubeID: req.params.id,
+      defaultNav: req.query.nav,
       curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-      GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
+      typeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+      multicoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+      tokens: analytics.GetTokens(cube.cards, carddb),
+    };
+
+    res.render('cube/cube_analysis', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Analysis`,
       metadata: generateMeta(
         `Cube Cobra Analysis: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
