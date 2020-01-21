@@ -63,6 +63,7 @@ const allFields = [
   'finish',
   'price',
   'priceFoil',
+  'elo',
   'power',
   'toughness',
   'loyalty',
@@ -70,7 +71,7 @@ const allFields = [
   'artist',
   'is',
 ];
-const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = ['cmc', 'price', 'priceFoil', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
 const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
@@ -196,6 +197,13 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Foil Price"
           placeholder={'Any decimal number, e.g. "14.00"'}
           value={values.priceFoil}
+          onChange={onChange}
+        />
+        <NumericField
+          name="elo"
+          humanName="Elo"
+          placeholder={'Any integer number, e.g. "1200"'}
+          value={values.elo}
           onChange={onChange}
         />
         <NumericField
