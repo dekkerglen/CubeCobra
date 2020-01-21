@@ -25,7 +25,7 @@ class CubeAnalysis extends Component {
   componentDidMount() {
     this.setState({
       nav: Query.get('nav', this.state.nav),
-    })
+    });
   }
 
   select(nav) {
@@ -76,7 +76,5 @@ class CubeAnalysis extends Component {
 }
 
 const wrapper = document.getElementById('react-root');
-const element = (
-  <CubeAnalysis {...reactProps} />
-);
+const element = <CubeAnalysis {...reactProps} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;
