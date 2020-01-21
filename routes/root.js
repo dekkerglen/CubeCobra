@@ -1,3 +1,4 @@
+const serialize = require('serialize-javascript');
 const express = require('express');
 const router = express.Router();
 
@@ -188,7 +189,7 @@ router.get('/dashboard', async (req, res) => {
         NODE_ENV === 'production'
           ? await ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
           : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       loginCallback: '/',
     });
   } catch (err) {
