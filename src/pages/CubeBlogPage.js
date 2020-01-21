@@ -32,14 +32,14 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
-        <ModalHeader toggle={toggle}>
-          <h5 id="blogEditTitle">Edit Blog Post</h5>
+        <ModalHeader toggle={toggle} id="blogEditTitle">
+          Edit Blog Post
         </ModalHeader>
         <ModalBody>
           <Label>Title:</Label>
-          <Input maxlength="200" name="title" type="text" defaultValue={post ? post.title : ''} />
+          <Input maxLength="200" name="title" type="text" defaultValue={post ? post.title : ''} />
           <Label>Body:</Label>
-          <Input type="hidden" name="id" value={post ? post._id : -1} />
+          {post && <Input type="hidden" name="id" value={post._id} />}
           <TextEntry name="html" value={html} onChange={handleChangeHtml} />
         </ModalBody>
         <ModalFooter>
@@ -113,6 +113,8 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn })
     [posts],
   );
 
+  const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
+
   const handleDelete = useCallback(
     (id) => {
       const postIndex = posts.findIndex((post) => post._id === id);
@@ -130,7 +132,7 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn })
         <Collapse navbar>
           <Nav navbar>
             <NavItem>
-              <NavLink href="#">Create new blog post</NavLink>
+              <NavLink href="#" onClick={handleNew}>Create new blog post</NavLink>
             </NavItem>
           </Nav>
         </Collapse>
