@@ -30,7 +30,7 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
   const { cubeID } = useContext(CubeContext);
   const handleChangeHtml = useCallback((event) => setHtml(event.target.value), []);
   return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle">
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
         <ModalHeader toggle={toggle} id="blogEditTitle">
           Edit Blog Post
