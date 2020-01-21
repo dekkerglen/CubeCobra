@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from 'util/Filter';
-import LocalStorage from 'util/LocalStorage';
-import Query from 'util/Query';
+import Filter from 'utils/Filter';
+import LocalStorage from 'utils/LocalStorage';
+import Query from 'utils/Query';
 
 import CardModalForm from 'components/CardModalForm';
 import { ChangelistContextProvider } from 'components/ChangelistContext';

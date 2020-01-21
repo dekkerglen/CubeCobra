@@ -20,9 +20,9 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import { tcgMassEntryUrl } from '../util/Affiliate';
-import { csrfFetch } from '../util/CSRF';
-import { fromEntries } from '../util/Util';
+import { tcgMassEntryUrl } from '../utils/Affiliate';
+import { csrfFetch } from '../utils/CSRF';
+import { fromEntries } from '../utils/Util';
 
 import AutocardListItem from './AutocardListItem';
 import ChangelistContext from './ChangelistContext';

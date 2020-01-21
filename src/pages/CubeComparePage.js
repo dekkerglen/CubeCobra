@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-import Filter from 'util/Filter';
-import Query from 'util/Query';
+import Filter from 'utils/Filter';
+import Query from 'utils/Query';
 
 import CardModalForm from 'components/CardModalForm';
 import CompareView from 'components/CompareView';

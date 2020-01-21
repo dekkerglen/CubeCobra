@@ -24,14 +24,15 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { csrfFetch } from 'util/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext, { CubeContextProvider } from 'components/CubeContext';
+import CubeContext from 'components/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
 import withModal from 'components/WithModal';
+import CubeLayout from 'layouts/CubeLayout';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -204,7 +205,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
-const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
+const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
   const [alerts, setAlerts] = useState([]);
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -260,7 +261,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
   );
 
   return (
-    <CubeContextProvider cubeID={cubeID} canEdit={canEdit}>
+    <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
       <Navbar light expand className="usercontrols">
         <Nav navbar>
           <NavItem>
@@ -305,7 +306,7 @@ const CubePlaytestPage = ({ cubeID, canEdit, decks, draftFormats }) => {
         format={editFormat}
         setFormat={setEditFormat}
       />
-    </CubeContextProvider>
+    </CubeLayout>
   );
 };
 

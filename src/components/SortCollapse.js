@@ -2,8 +2,8 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
-import { getSorts } from '../util/Sort';
+import { csrfFetch } from '../utils/CSRF';
+import { getSorts } from '../utils/Sort';
 
 import CubeContext from './CubeContext';
 import SortContext from './SortContext';

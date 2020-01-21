@@ -19,9 +19,9 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import Filter from '../util/Filter';
-import Query from '../util/Query';
-import { fromEntries, COLORS } from '../util/Util';
+import Filter from '../utils/Filter';
+import Query from '../utils/Query';
+import { fromEntries, COLORS } from '../utils/Util';
 
 import { ColorChecksAddon } from './ColorCheck';
 

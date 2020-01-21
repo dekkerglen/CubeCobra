@@ -1,67 +1,16 @@
-extends cube_layout
+extends ../layout
 
-block cube_toolbar
-  //edit controls
-  if user
-    if user.id == cube.owner
-      .usercontrols
-        nav.navbar.navbar-expand.navbar-light
-          .collapse.navbar-collapse
-            ul.navbar-nav
-              li.nav-item
-                a.nav-link.newBlogButton(href='#') Create new blog post
+block content
+  link(rel='stylesheet' href='/css/texteditor.css')
 
-block cube_content
-  include ../flash
+  include ../dynamic_flash
 
   #react-root
-  input#blogData(type='hidden', value=posts)
-  input#blogPages(type='hidden', value=pages)
-  if user
-    input#userid(type='hidden', value=user._id)
-  input#canEdit(type='hidden', name='canEdit', value=user && user.id == cube.owner ? 'true' : 'false')
-
-  if user
-    if user.id == cube.owner
-      // edit overview modal
-      #editBlogModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-        .modal-dialog.modal-lg(role='document')
-          .modal-content
-            form#postBlogForm(method='POST', action='/cube/blog/post/'+cube_id)
-              input(type='hidden', name='_csrf', value=csrfToken)
-              .modal-header
-                h5#blogEditTitle Edit Blog Post
-                button.close(type='button', data-dismiss='modal', aria-label='Close')
-                  span(aria-hidden='true') ×
-              .modal-body
-                  label Title:
-                  input#postBlogTitleInput.form-control(maxlength='200' name='title', type='text')
-                  label Body:
-                  input#postBlogHiddenId(type='hidden', name='id')
-                  input.postBlogHiddenHTML(type='hidden', name='html')
-                  include ../texteditor
-              .modal-footer
-                input.btn.btn-success(type='submit',value='Save')
-                button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
-        .modal-dialog(role='document')
-          .modal-content
-            .modal-header
-              h5.modal-title Confirm Delete
-              button.close(type='button', data-dismiss='modal', aria-label='Close')
-                span(aria-hidden='true') ×
-            .modal-body
-              P Are you sure you wish to delete this post? This action cannot be undone.
-            .modal-footer
-              input.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id='', id="delete")
-              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
 
 block scripts
-  script(src='/js/texteditor.js', async)
-  script(src='/js/blog.js', async)
-
   include ../react
+  script(type='text/javascript').
+    var reactProps = !{reactProps};
   script(src='/js/cube_blog.bundle.js')
 
   script(src='/js/autocard.js')

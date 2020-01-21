@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row } from 'reactstrap';
 
-import Location from '../util/DraftLocation';
+import Location from '../utils/DraftLocation';
 
 import CardStack from './CardStack';
 import DraggableCard from './DraggableCard';

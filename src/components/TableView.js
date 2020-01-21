@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
-import { countGroup, sortDeep } from '../util/Sort';
+import { countGroup, sortDeep } from '../utils/Sort';
 
 import AutocardListGroup from './AutocardListGroup';
 import DisplayContext from './DisplayContext';

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import { csrfFetch } from '../util/CSRF';
-import { arrayMove } from '../util/Util';
+import { csrfFetch } from '../utils/CSRF';
+import { arrayMove } from '../utils/Util';
 
 import CardModal from './CardModal';
 import CardModalContext from './CardModalContext';

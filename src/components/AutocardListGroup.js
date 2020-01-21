@@ -2,8 +2,8 @@ import React, { useCallback, useContext } from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import { sortDeep } from '../util/Sort';
-import { alphaCompare } from '../util/Util';
+import { sortDeep } from '../utils/Sort';
+import { alphaCompare } from '../utils/Util';
 
 import AutocardListItem from './AutocardListItem';
 import CubeContext from './CubeContext';

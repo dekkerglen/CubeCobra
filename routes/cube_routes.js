@@ -24,8 +24,8 @@ var {
   getElo,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
-const draftutil = require('../dist/util/draftutil.js');
-const cardutil = require('../dist/util/Card.js');
+const draftutil = require('../dist/utils/draftutil.js');
+const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
@@ -465,6 +465,9 @@ router.get('/overview/:id', async (req, res) => {
 
     // Performance
     delete cube.cards;
+    delete cube.decks;
+    delete cube.draft_formats;
+    delete cube.maybe;
 
     const reactProps = {
       cube,
@@ -519,17 +522,18 @@ router.get('/blog/:id', function(req, res) {
 router.get('/blog/:id/:page', async (req, res) => {
   try {
     var cube_id = req.params.id;
-    const cube = await Cube.findOne(build_id_query(cube_id));
+    const cube = await Cube.findOne(build_id_query(cube_id), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    user = await User.findById(cube.owner);
-    blogs = await Blog.find({
+    userQ = User.findById(cube.owner);
+    blogsQ = Blog.find({
       cube: cube._id,
     });
+    const [user, blogs] = await Promise.all([userQ, blogsQ]);
 
     if (!user) {
       user = {
@@ -577,14 +581,18 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    return res.render('cube/cube_blog', {
-      cube: cube,
-      cube_id: cube_id,
-      owner: user.username,
-      activeLink: 'blog',
-      title: `${abbreviate(cube.name)} - Blog`,
+    const reactProps = {
+      cube,
+      cubeID: cube_id,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       posts: blogs.length > 0 ? blog_page : blogs,
       pages: blogs.length > 0 ? pages : null,
+      userid: user._id,
+    };
+
+    return res.render('cube/cube_blog', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Blog`,
       metadata: generateMeta(
         `Cube Cobra Blog: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -841,13 +849,18 @@ router.get('/playtest/:id', async (req, res) => {
 
     const [user, decks] = await Promise.all([userq, decksq]);
 
+    delete cube.cards;
+    delete cube.decks;
+    delete cube.maybe;
+
     // sort titles alphabetically
     cube.draft_formats.sort((a, b) => a.title.localeCompare(b.title));
 
     const reactProps = {
+      cube,
+      cubeID: req.params.id,
       canEdit: user._id.equals(cube.owner),
       decks,
-      cubeID: req.params.id,
       draftFormats: cube.draft_formats
         ? cube.draft_formats.map(({ packs, ...format }) => ({
             ...format,
@@ -861,11 +874,7 @@ router.get('/playtest/:id', async (req, res) => {
         ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
-      cube: cube,
-      cube_id: req.params.id,
-      activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Playtest`,
-      owner: user ? user.username : 'Unknown',
       metadata: generateMeta(
         `Cube Cobra Playtest: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -890,16 +899,19 @@ router.get('/analysis/:id', async (req, res) => {
       };
     }
 
-    res.render('cube/cube_analysis', {
-      cube: cube,
-      cube_id: req.params.id,
-      owner: user.username,
-      activeLink: 'analysis',
-      title: `${abbreviate(cube.name)} - Analysis`,
-      TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-      MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+    const reactProps = {
+      cube,
+      cubeID: req.params.id,
+      defaultNav: req.query.nav,
       curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-      GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
+      typeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+      multicoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+      tokens: analytics.GetTokens(cube.cards, carddb),
+    };
+
+    res.render('cube/cube_analysis', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Analysis`,
       metadata: generateMeta(
         `Cube Cobra Analysis: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

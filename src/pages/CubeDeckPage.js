@@ -19,7 +19,7 @@ import {
   CardText,
 } from 'reactstrap';
 
-import { sortDeck } from 'util/Util';
+import { sortDeck } from 'utils/Util';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
