@@ -1,19 +1,15 @@
-extends cube_layout
+extends ../layout
 
-block cube_toolbar
+block content
   link(rel='stylesheet' href='/css/texteditor.css')
   link(rel='stylesheet' href='/css/draft.css')
 
-block cube_content
   include ../dynamic_flash
   #react-root
 
 block scripts
   script(src='/js/autocard.js')
   script(type='text/javascript').
-    var reactProps = {
-      initialDeck: !{deck_raw},
-      basics: !{basics_raw},
-    };
+    var reactProps = !{reactProps};
   include ../react
   script(src='/js/cube_deckbuilder.bundle.js')

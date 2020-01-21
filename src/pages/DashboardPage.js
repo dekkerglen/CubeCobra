@@ -1,9 +1,9 @@
 import React from 'react';
 
-import BlogPost from './BlogPost';
-import PagedList from './PagedList';
-import CubePreview from './CubePreview';
-import DeckPreview from './DeckPreview';
+import BlogPost from 'components/BlogPost';
+import PagedList from 'components/PagedList';
+import CubePreview from 'components/CubePreview';
+import DeckPreview from 'components/DeckPreview';
 
 import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
+const serialize = require('serialize-javascript');
 var {
   addAutocard,
   generatePack,
@@ -479,7 +480,7 @@ router.get('/overview/:id', async (req, res) => {
     };
 
     return res.render('cube/cube_overview', {
-      reactProps,
+      reactProps: serialize(reactProps),
       cube,
       cube_id,
       title: `${abbreviate(cube.name)} - Overview`,
@@ -657,7 +658,7 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
-    const pids = [];
+    const pids = new Set();
     [cubeA, cubeB].forEach((cube) => {
       cube.cards.forEach(function(card, index) {
         card.details = {
@@ -666,13 +667,13 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
-        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-          pids.push(card.details.tcgplayer_id);
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
         }
       });
     });
 
-    const price_dict = await GetPrices(pids);
+    const price_dict = await GetPrices([...pids]);
     [cubeA, cubeB].forEach((cube) => {
       cube.cards.forEach(function(card, index) {
         if (card.details.tcgplayer_id) {
@@ -685,8 +686,6 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
         }
       });
     });
-
-    const ownerA = await User.findById(cubeA.owner);
 
     let in_both = [];
     let only_a = cubeA.cards.slice(0);
@@ -706,18 +705,25 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
       }
     });
 
-    const all_cards = in_both.concat(only_a).concat(only_b);
+    let all_cards = in_both.concat(only_a).concat(only_b);
+
+    const reactProps = {
+      cube: cubeA,
+      cubeID: id_a,
+      cubeB,
+      cubeBID: id_b,
+      onlyA: a_names,
+      onlyB: b_names,
+      both: in_both.map((card) => card.details.name),
+      cards: [...all_cards].map((card, index) => Object.assign(card, { index })),
+      defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
+      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      defaultSorts: cubeA.default_sorts,
+    };
 
     params = {
-      cube: cubeA,
-      cubeB: cubeB,
-      cube_id: id_a,
-      cube_b_id: id_b,
+      reactProps: serialize(reactProps),
       title: `Comparing ${cubeA.name} to ${cubeB.name}`,
-      in_both: JSON.stringify(in_both.map((card) => card.details.name)),
-      only_a: JSON.stringify(a_names),
-      only_b: JSON.stringify(b_names),
-      cube_raw: JSON.stringify(all_cards.map((card, index) => Object.assign(card, { index }))),
       metadata: generateMeta(
         'Cube Cobra Compare Cubes',
         `Comparing "${cubeA.name}" To "${cubeB.name}"`,
@@ -727,25 +733,24 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
       loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
     };
 
-    if (ownerA) params.owner = ownerA.username;
-    else params.author = 'unknown';
-
     res.render('cube/cube_compare', params);
   } catch (err) {
-    util.handleRouteError(res, req, err, '/cube/list/' + req.params.id_a);
+    util.handleRouteError(res, req, err, '/404/');
   }
 });
 
 router.get('/list/:id', async function(req, res) {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).setOptions({ lean: true });
+    const fields =
+      'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
+    const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
     const pids = new Set();
-    const cards = [...cube.cards];
+    const cards = cube.cards;
     cards.forEach(function(card, index) {
       card.details = {
         ...carddb.cardFromId(card.cardID),
@@ -772,14 +777,14 @@ router.get('/list/:id', async function(req, res) {
     }
 
     const reactProps = {
-      canEdit: req.user ? req.user.id === cube.owner : false,
+      cube,
       cubeID: req.params.id,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       defaultView: req.query.view || 'table',
       defaultFilterText: req.query.f || '',
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
-      cards,
       maybe: maybeCards(cube, carddb),
     };
 
@@ -787,7 +792,7 @@ router.get('/list/:id', async function(req, res) {
       reactHTML: CubeListPage
         ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube,
       cube_id: req.params.id,
       activeLink: 'list',
@@ -848,7 +853,7 @@ router.get('/playtest/:id', async (req, res) => {
       reactHTML: CubePlaytestPage
         ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube: cube,
       cube_id: req.params.id,
       activeLink: 'playtest',
@@ -1048,7 +1053,7 @@ router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
           NODE_ENV === 'production'
             ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
             : undefined,
-        reactProps,
+        reactProps: serialize(reactProps),
         cube: cube,
         cube_id: req.params.id,
         title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1273,7 +1278,7 @@ async function bulkuploadCSV(req, res, cards, cube) {
         NODE_ENV === 'production'
           ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
           : undefined,
-      reactProps,
+      reactProps: serialize(reactProps),
       cube: cube,
       cube_id: req.params.id,
       title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1385,7 +1390,7 @@ async function bulkUpload(req, res, list, cube) {
             reactHTML: BulkUploadPage
               ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
               : undefined,
-            reactProps,
+            reactProps: serialize(reactProps),
             cube: cube,
             cube_id: req.params.id,
             title: `${abbreviate(cube.name)} - Bulk Upload`,
@@ -1615,6 +1620,8 @@ router.get('/draft/:id', async (req, res) => {
     draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.value]));
 
     const reactProps = {
+      cube,
+      cubeID: get_cube_id(cube),
       initialDraft: draft,
     };
 
@@ -1622,11 +1629,7 @@ router.get('/draft/:id', async (req, res) => {
       reactHTML: DraftView
         ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
         : undefined,
-      reactProps,
-      cube,
-      cube_id: get_cube_id(cube),
-      owner: user ? user.username : 'Unknown',
-      activeLink: 'playtest',
+      reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
       metadata: generateMeta(
         `Cube Cobra Draft: ${cube.name}`,
@@ -2510,18 +2513,22 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     });
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    return res.render('cube/cube_deckbuilder', {
+    const reactProps = {
       cube: cube,
-      cube_id: get_cube_id(cube),
-      owner: deckOwner ? deckOwner.username : 'Unknown',
-      ownerid: deckOwner ? deckOwner._id : '',
+      cubeID: get_cube_id(cube),
+      initialDeck: deck,
+      basics: getBasics(carddb),
+    };
+
+    return res.render('cube/cube_deckbuilder', {
+      reactProps: serialize(reactProps),
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Deckbuilder`,
       metadata: generateMeta(
@@ -2531,9 +2538,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
         `https://cubecobra.com/cube/draft/${req.params.id}`,
       ),
       loginCallback: '/cube/draft/' + req.params.id,
-      deck_raw: JSON.stringify(deck),
-      basics_raw: JSON.stringify(getBasics(carddb)),
-      deckid: deck._id,
     });
   } catch (err) {
     util.handleRouteError(res, req, err, '/404');
@@ -2549,7 +2553,7 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -2610,22 +2614,27 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
-      return res.render('cube/cube_deck', {
-        oldformat: true,
-        deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
+
+      var reactProps = {
+        cube,
+        cubeID: get_cube_id(cube),
+        oldFormat: true,
+        drafter,
         cards: player_deck,
-        bot_decks: bot_decks,
-        bots: bot_names,
-        name: deck.name,
         description: deck.description,
-        owner: deck.owner,
+        name: deck.name,
+        sideboard: deck.sideboard,
+        botDecks: bot_decks,
+        bots: bot_names,
+        canEdit: req.user ? req.user._id.equals(owner.id) : false,
         comments: deck.comments,
+        deckid: deck._id,
+        userid: req.user ? req.user._id : null,
+      };
+
+      return res.render('cube/cube_deck', {
+        reactProps: serialize(reactProps),
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2654,23 +2663,27 @@ router.get('/deck/:id', async (req, res) => {
       for (i = 0; i < deck.bots.length; i++) {
         bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
       }
-      return res.render('cube/cube_deck', {
-        oldformat: false,
-        deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
-        deck: JSON.stringify(deck.playerdeck),
-        sideboard: JSON.stringify(deck.playersideboard),
-        bot_decks: bot_decks,
-        bots: bot_names,
-        name: deck.name,
+
+      var reactProps = {
+        cube,
+        cubeID: get_cube_id(cube),
+        oldFormat: false,
+        drafter,
+        deck: deck.playerdeck,
+        sideboard: deck.playersideboard,
         description: deck.description,
-        owner: deck.owner,
+        name: deck.name,
+        botDecks: bot_decks,
+        bots: bot_names,
+        canEdit: req.user ? req.user._id.equals(owner.id) : false,
         comments: deck.comments,
+        deckid: deck._id,
+        userid: req.user ? req.user._id : null,
+      };
+
+      return res.render('cube/cube_deck', {
+        reactProps: serialize(reactProps),
+        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
@@ -2988,8 +3001,11 @@ router.post(
     cube.maybe = withAdded;
     await cube.save();
 
+    const added = cube.maybe.slice(cube.maybe.length - addCardsNoDetails.length);
+
     return res.status(200).send({
       success: 'true',
+      added: util.fromEntries(added.map(({ _id, cardID }) => [cardID, _id])),
     });
   }),
 );

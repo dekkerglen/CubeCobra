@@ -2,12 +2,12 @@ import React, { Fragment, useCallback, useContext, useRef, useState } from 'reac
 
 import { Button, Col, Form, Input, Label, Row } from 'reactstrap';
 
-import AutocompleteInput from './AutocompleteInput';
-import CSRFForm from './CSRFForm';
-import Changelist from './Changelist';
-import ChangelistContext, { ChangelistContextProvider } from './ChangelistContext';
-import { getCard } from './EditCollapse';
-import LoadingButton from './LoadingButton';
+import AutocompleteInput from 'components/AutocompleteInput';
+import CSRFForm from 'components/CSRFForm';
+import Changelist from 'components/Changelist';
+import ChangelistContext, { ChangelistContextProvider } from 'components/ChangelistContext';
+import { getCard } from 'components/EditCollapse';
+import LoadingButton from 'components/LoadingButton';
 
 const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
   const [addValue, setAddValue] = useState('');
