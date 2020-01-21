@@ -1,27 +1,28 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from '../util/Filter';
-import LocalStorage from '../util/LocalStorage';
-import Query from '../util/Query';
+import Filter from 'util/Filter';
+import LocalStorage from 'util/LocalStorage';
+import Query from 'util/Query';
 
-import CardModalForm from './CardModalForm';
-import { ChangelistContextProvider } from './ChangelistContext';
-import ClientOnly from './ClientOnly';
-import CubeContext, { CubeContextProvider } from './CubeContext';
-import CubeListNavbar from './CubeListNavbar';
-import CurveView from './CurveView';
-import DisplayContext, { DisplayContextProvider } from './DisplayContext';
-import DynamicFlash from './DynamicFlash';
-import ErrorBoundary from './ErrorBoundary';
-import GroupModal from './GroupModal';
-import ListView from './ListView';
-import Maybeboard from './Maybeboard';
-import { MaybeboardContextProvider } from './MaybeboardContext';
-import { SortContextProvider } from './SortContext';
-import TableView from './TableView';
-import { tagColors, TagContextProvider } from './TagContext';
-import VisualSpoiler from './VisualSpoiler';
+import CardModalForm from 'components/CardModalForm';
+import { ChangelistContextProvider } from 'components/ChangelistContext';
+import ClientOnly from 'components/ClientOnly';
+import CubeContext from 'components/CubeContext';
+import CubeListNavbar from 'components/CubeListNavbar';
+import CurveView from 'components/CurveView';
+import DisplayContext, { DisplayContextProvider } from 'components/DisplayContext';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import GroupModal from 'components/GroupModal';
+import ListView from 'components/ListView';
+import Maybeboard from 'components/Maybeboard';
+import { MaybeboardContextProvider } from 'components/MaybeboardContext';
+import { SortContextProvider } from 'components/SortContext';
+import TableView from 'components/TableView';
+import { tagColors, TagContextProvider } from 'components/TagContext';
+import VisualSpoiler from 'components/VisualSpoiler';
+import CubeLayout from 'layouts/CubeLayout';
 
 const CubeListPageRaw = ({
   maybe,
@@ -119,15 +120,18 @@ const CubeListPageRaw = ({
   );
 };
 
-const CubeListPage = ({ cards, cubeID, canEdit, ...props }) => (
-  <CubeContextProvider initialCube={cards} cubeID={cubeID} canEdit={canEdit}>
+const CubeListPage = ({ cube, cubeID, canEdit, activeLink, ...props }) => (
+  <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
     <CubeListPageRaw {...props} />
-  </CubeContextProvider>
+  </CubeLayout>
 );
 
 CubeListPage.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
   cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,

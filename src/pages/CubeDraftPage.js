@@ -3,18 +3,19 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from '../util/Draft';
-import Location from '../util/DraftLocation';
-import { cmcColumn } from '../util/Util';
+import Draft from 'util/Draft';
+import Location from 'util/DraftLocation';
+import { cmcColumn } from 'util/Util';
 
-import CSRFForm from './CSRFForm';
-import CustomImageToggler from './CustomImageToggler';
-import DeckStacks from './DeckStacks';
-import { DisplayContextProvider } from './DisplayContext';
-import DndProvider from './DndProvider';
-import DraggableCard from './DraggableCard';
-import DynamicFlash from './DynamicFlash';
-import ErrorBoundary from './ErrorBoundary';
+import CSRFForm from 'components/CSRFForm';
+import CustomImageToggler from 'components/CustomImageToggler';
+import DeckStacks from 'components/DeckStacks';
+import { DisplayContextProvider } from 'components/DisplayContext';
+import DndProvider from 'components/DndProvider';
+import DraggableCard from 'components/DraggableCard';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import CubeLayout from 'layouts/CubeLayout';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -85,7 +86,7 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const DraftView = ({ initialDraft }) => {
+const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   useMemo(() => Draft.init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);
@@ -178,47 +179,52 @@ const DraftView = ({ initialDraft }) => {
   );
 
   return (
-    <DisplayContextProvider>
-      <div className="usercontrols">
-        <Navbar expand="xs" light>
+    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
+      <DisplayContextProvider>
+        <Navbar expand="xs" light className="usercontrols">
           <Collapse navbar>
             <Nav navbar>
               <CustomImageToggler />
             </Nav>
           </Collapse>
         </Navbar>
-      </div>
-      <DynamicFlash />
-      <CSRFForm className="d-none" innerRef={submitDeckForm} method="POST" action={`/cube/submitdeck/${Draft.cube()}`}>
-        <Input type="hidden" name="body" value={Draft.id()} />
-      </CSRFForm>
-      <DndProvider>
-        <ErrorBoundary>
-          <Pack
-            pack={pack}
-            packNumber={packNumber}
-            pickNumber={pickNumber}
-            picking={picking}
-            onMoveCard={handleMoveCard}
-            onClickCard={handleClickCard}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary className="mt-3">
-          <DeckStacks
-            cards={picks}
-            title="Picks"
-            subtitle={subtitle(picks.flat().flat())}
-            locationType={Location.PICKS}
-            canDrop={canDrop}
-            onMoveCard={handleMoveCard}
-            className="mt-3"
-          />
-        </ErrorBoundary>
-      </DndProvider>
-    </DisplayContextProvider>
+        <DynamicFlash />
+        <CSRFForm
+          className="d-none"
+          innerRef={submitDeckForm}
+          method="POST"
+          action={`/cube/submitdeck/${Draft.cube()}`}
+        >
+          <Input type="hidden" name="body" value={Draft.id()} />
+        </CSRFForm>
+        <DndProvider>
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              packNumber={packNumber}
+              pickNumber={pickNumber}
+              picking={picking}
+              onMoveCard={handleMoveCard}
+              onClickCard={handleClickCard}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary className="mt-3">
+            <DeckStacks
+              cards={picks}
+              title="Picks"
+              subtitle={subtitle(picks.flat().flat())}
+              locationType={Location.PICKS}
+              canDrop={canDrop}
+              onMoveCard={handleMoveCard}
+              className="mt-3"
+            />
+          </ErrorBoundary>
+        </DndProvider>
+      </DisplayContextProvider>
+    </CubeLayout>
   );
 };
 
-DraftView.propTypes = {};
+CubeDraftPage.propTypes = {};
 
-export default DraftView;
+export default CubeDraftPage;

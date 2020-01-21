@@ -24,14 +24,14 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from 'util/CSRF';
 
-import CSRFForm from './CSRFForm';
-import CubeContext, { CubeContextProvider } from './CubeContext';
-import CustomDraftFormatModal from './CustomDraftFormatModal';
-import DynamicFlash from './DynamicFlash';
-import DeckPreview from './DeckPreview';
-import withModal from './WithModal';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext, { CubeContextProvider } from 'components/CubeContext';
+import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
+import DynamicFlash from 'components/DynamicFlash';
+import DeckPreview from 'components/DeckPreview';
+import withModal from 'components/WithModal';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);

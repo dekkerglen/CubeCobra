@@ -107,4 +107,8 @@ const cubeSchema = mongoose.Schema({
   },
 });
 
-const Cube = (module.exports = mongoose.model('Cube', cubeSchema));
+const Cube = mongoose.model('Cube', cubeSchema);
+
+Cube.LAYOUT_FIELDS = 'owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+
+module.exports = Cube;
