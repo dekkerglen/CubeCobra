@@ -15,7 +15,7 @@ import {
   NavLink,
 } from 'reactstrap';
 
-import { csrfFetch } from 'util/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
