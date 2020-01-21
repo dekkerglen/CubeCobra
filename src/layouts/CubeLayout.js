@@ -17,7 +17,7 @@ const CubeNavItem = ({ link, activeLink, children }) => {
 };
 
 const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
-  const categories = cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '';
+  const categories = cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '';
   const subtitle = cube.overrideCategory
     ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
     : `${cube.card_count} Card ${cube.type} Cube`;
