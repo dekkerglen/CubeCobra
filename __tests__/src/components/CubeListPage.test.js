@@ -4,9 +4,15 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
 import exampleCardsFull from '../../../fixtures/examplecardsdetails';
+import exampleCube from '../../../fixtures/examplecube';
 import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
+
+const cube = {
+  ...exampleCube,
+  cards: exampleCardsFull,
+};
 
 const element = () => (
   <FetchMock
@@ -36,7 +42,7 @@ const element = () => (
     ]}
   >
     <CubeListPage
-      cube={{ cards: exampleCardsFull }}
+      cube={cube}
       cubeID="1"
       canEdit
       maybe={exampleCardsFull}
