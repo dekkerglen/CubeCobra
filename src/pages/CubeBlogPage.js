@@ -132,7 +132,9 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn })
         <Collapse navbar>
           <Nav navbar>
             <NavItem>
-              <NavLink href="#" onClick={handleNew}>Create new blog post</NavLink>
+              <NavLink href="#" onClick={handleNew}>
+                Create new blog post
+              </NavLink>
             </NavItem>
           </Nav>
         </Collapse>
