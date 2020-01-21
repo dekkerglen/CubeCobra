@@ -107,8 +107,8 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
             updateCubeCard(card.index, { ...card, details: getJson.card });
           }
         }
-      } catch(err) {
-        addAlert('danger', 'Failed to send update request.')
+      } catch (err) {
+        addAlert('danger', 'Failed to send update request.');
         throw err;
       }
     },
