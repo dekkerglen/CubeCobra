@@ -17,8 +17,8 @@ import {
   Row,
 } from 'reactstrap';
 
-import Affiliate from '../util/Affiliate';
-import { getLabels } from '../util/Sort';
+import Affiliate from '../utils/Affiliate';
+import { getLabels } from '../utils/Sort';
 
 import ButtonLink from './ButtonLink';
 import { ColorChecksAddon } from './ColorCheck';

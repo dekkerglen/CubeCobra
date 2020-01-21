@@ -2,9 +2,9 @@ const express = require('express');
 const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
-const Filter = require('../dist/util/Filter');
+const Filter = require('../dist/utils/Filter');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');

@@ -1,7 +1,7 @@
 export default {
-  input: ['src/util/Filter.js', 'src/util/Card.js', 'src/util/draftutil.js', 'src/util/Util.js'],
+  input: ['src/utils/Filter.js', 'src/utils/Card.js', 'src/utils/draftutil.js', 'src/utils/Util.js'],
   output: {
-    dir: 'dist/util',
+    dir: 'dist/utils',
     format: 'cjs',
   },
   watch: {

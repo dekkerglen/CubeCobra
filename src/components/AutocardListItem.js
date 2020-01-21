@@ -7,7 +7,7 @@ import DisplayContext from './DisplayContext';
 import TagContext from './TagContext';
 import withAutocard from './WithAutocard';
 
-import Affiliate from '../util/Affiliate';
+import Affiliate from '../utils/Affiliate';
 
 const AutocardDiv = withAutocard('li');
 

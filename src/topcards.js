@@ -5,7 +5,7 @@ import URLSearchParams from 'core-js-pure/features/url-search-params';
 import FilterCollapse from './components/FilterCollapse';
 import SortableTable from './components/SortableTable';
 import withAutocard from './components/WithAutocard';
-import { encodeName } from './util/Card';
+import { encodeName } from './utils/Card';
 
 const AutocardA = withAutocard('a');
 

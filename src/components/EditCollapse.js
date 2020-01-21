@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { Button, Col, Collapse, Form, Row, UncontrolledAlert } from 'reactstrap';
 
-import { encodeName } from '../util/Card';
+import { encodeName } from '../utils/Card';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';

@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 
 import { Input } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
-import { getLabels, sortDeep } from '../util/Sort';
-import { arraysEqual, fromEntries } from '../util/Util';
+import { csrfFetch } from '../utils/CSRF';
+import { getLabels, sortDeep } from '../utils/Sort';
+import { arraysEqual, fromEntries } from '../utils/Util';
 
 import CubeContext from './CubeContext';
 import GroupModalContext from './GroupModalContext';
