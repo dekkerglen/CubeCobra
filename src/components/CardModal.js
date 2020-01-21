@@ -50,9 +50,21 @@ const CardModal = ({
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
             <Row noGutters className="mb-2">
-              {card.details.price && <TextBadge name="Price" className="mt-2 mr-2">${card.details.price.toFixed(2)}</TextBadge>}
-              {card.details.price_foil && <TextBadge name="Foil" className="mt-2 mr-2">${card.details.price_foil.toFixed(2)}</TextBadge>}
-              {card.details.elo && <TextBadge name="Elo" className="mt-2">{card.details.elo}</TextBadge>}
+              {card.details.price && (
+                <TextBadge name="Price" className="mt-2 mr-2">
+                  ${card.details.price.toFixed(2)}
+                </TextBadge>
+              )}
+              {card.details.price_foil && (
+                <TextBadge name="Foil" className="mt-2 mr-2">
+                  ${card.details.price_foil.toFixed(2)}
+                </TextBadge>
+              )}
+              {card.details.elo && (
+                <TextBadge name="Elo" className="mt-2">
+                  {card.details.elo}
+                </TextBadge>
+              )}
             </Row>
           </Col>
           <Col xs="12" sm="8">
@@ -86,7 +98,13 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Status</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput type="select" name="status" value={values.status} onChange={onChange} className="square-left">
+                <CustomInput
+                  type="select"
+                  name="status"
+                  value={values.status}
+                  onChange={onChange}
+                  className="square-left"
+                >
                   {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
                   ))}
@@ -96,7 +114,13 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Finish</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput type="select" name="finish" value={values.finish} onChange={onChange} className="square-left">
+                <CustomInput
+                  type="select"
+                  name="finish"
+                  value={values.finish}
+                  onChange={onChange}
+                  className="square-left"
+                >
                   {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
                   ))}
