@@ -518,17 +518,18 @@ router.get('/blog/:id', function(req, res) {
 router.get('/blog/:id/:page', async (req, res) => {
   try {
     var cube_id = req.params.id;
-    const cube = await Cube.findOne(build_id_query(cube_id));
+    const cube = await Cube.findOne(build_id_query(cube_id), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    user = await User.findById(cube.owner);
-    blogs = await Blog.find({
+    userQ = User.findById(cube.owner);
+    blogsQ = Blog.find({
       cube: cube._id,
     });
+    const [user, blogs] = await Promise.all([userQ, blogsQ]);
 
     if (!user) {
       user = {
@@ -576,14 +577,18 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    return res.render('cube/cube_blog', {
-      cube: cube,
-      cube_id: cube_id,
-      owner: user.username,
-      activeLink: 'blog',
-      title: `${abbreviate(cube.name)} - Blog`,
+    const reactProps = {
+      cube,
+      cubeID: cube_id,
+      canEdit: req.user ? req.user.id === cube.owner : false,
       posts: blogs.length > 0 ? blog_page : blogs,
       pages: blogs.length > 0 ? pages : null,
+      userid: user._id,
+    };
+
+    return res.render('cube/cube_blog', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Blog`,
       metadata: generateMeta(
         `Cube Cobra Blog: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
