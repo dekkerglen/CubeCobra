@@ -32,6 +32,8 @@ import GroupModalContext from 'components/GroupModalContext';
 import LoadingButton from 'components/LoadingButton';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 
 const DEFAULT_FORM_VALUES = {
   status: '',
@@ -334,11 +336,17 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
               </Form>
             </Col>
           </Row>
-          <Row>
-            <Col xs="4">
-              <div className="card-price">Total Price: ${totalPrice.toFixed(2)}</div>
-              <div className="card-price">Total Foil Price: ${totalPriceFoil.toFixed(2)}</div>
-            </Col>
+          <Row noGutters>
+            {totalPrice && (
+              <TextBadge name="Price" className="mt-2 mr-2">
+                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
+              </TextBadge>
+            )}
+            {totalPriceFoil && (
+              <TextBadge name="Foil" className="mt-2 mr-2">
+                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
+              </TextBadge>
+            )}
           </Row>
         </ModalBody>
         <ModalFooter>
