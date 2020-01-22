@@ -20,18 +20,19 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import { tcgMassEntryUrl } from '../utils/Affiliate';
-import { csrfFetch } from '../utils/CSRF';
-import { fromEntries } from '../utils/Util';
+import { csrfFetch } from 'utils/CSRF';
+import { fromEntries } from 'utils/Util';
 
-import AutocardListItem from './AutocardListItem';
-import ChangelistContext from './ChangelistContext';
-import { ColorChecksAddon } from './ColorCheck';
-import CubeContext from './CubeContext';
-import GroupModalContext from './GroupModalContext';
-import LoadingButton from './LoadingButton';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
+import AutocardListItem from 'components/AutocardListItem';
+import ChangelistContext from 'components/ChangelistContext';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
+import LoadingButton from 'components/LoadingButton';
+import MassBuyButton from 'components/MassBuyButton';
+import TagInput from 'components/TagInput';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 
 const DEFAULT_FORM_VALUES = {
   status: '',
@@ -318,11 +319,17 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
               </Form>
             </Col>
           </Row>
-          <Row>
-            <Col xs="4">
-              <div className="card-price">Total Price: ${totalPrice.toFixed(2)}</div>
-              <div className="card-price">Total Foil Price: ${totalPriceFoil.toFixed(2)}</div>
-            </Col>
+          <Row noGutters className="mb-2">
+            {totalPrice && (
+              <TextBadge name="Price" className="mt-2 mr-2">
+                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
+              </TextBadge>
+            )}
+            {totalPriceFoil && (
+              <TextBadge name="Foil" className="mt-2 mr-2">
+                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
+              </TextBadge>
+            )}
           </Row>
         </ModalBody>
         <ModalFooter>
