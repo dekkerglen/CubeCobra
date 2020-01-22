@@ -12,9 +12,7 @@ const OurTooltip = ({ text, children, ...props }) => {
 
   return (
     <>
-      <div id={target}>
-        {children}
-      </div>
+      <div id={target}>{children}</div>
       <Tooltip
         placement="top"
         boundariesElement="window"

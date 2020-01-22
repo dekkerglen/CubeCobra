@@ -199,8 +199,8 @@ class CubeOverview extends Component {
                   </CSRFForm>
                 )}
               </CardBody>
-              {loggedIn && (
-                this.state.followed ? (
+              {loggedIn &&
+                (this.state.followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
                   </Button>
@@ -208,8 +208,7 @@ class CubeOverview extends Component {
                   <Button color="success" className="rounded-0" onClick={this.follow}>
                     Follow
                   </Button>
-                )
-              )}
+                ))}
             </Card>
           </Col>
           <Col>
