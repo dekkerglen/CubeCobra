@@ -4,6 +4,7 @@ import {
   Button,
   Row,
   Col,
+  CustomInput,
   Form,
   FormGroup,
   FormText,
@@ -246,11 +247,17 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Status</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
+                  <CustomInput
+                    type="select"
+                    id="groupStatus"
+                    name="status"
+                    value={formValues.status}
+                    onChange={handleChange}
+                  >
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <Label for="groupStatus">
@@ -260,11 +267,17 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Finish</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
+                  <CustomInput
+                    type="select"
+                    id="groupFinish"
+                    name="finish"
+                    value={formValues.finish}
+                    onChange={handleChange}
+                  >
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>
@@ -274,7 +287,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   </InputGroupAddon>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
-                <InputGroup className="mb-3">
+                <InputGroup className="mb-2">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Type</InputGroupText>
                   </InputGroupAddon>
@@ -282,10 +295,14 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 </InputGroup>
 
                 <InputGroup>
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Color Identity</InputGroupText>
-                  </InputGroupAddon>
-                  <ColorChecksAddon colorless prefix="color" values={formValues} onChange={handleChange} />
+                  <InputGroupText className="square-right">Color Identity</InputGroupText>
+                  <ColorChecksAddon
+                    addonType="append"
+                    colorless
+                    prefix="color"
+                    values={formValues}
+                    onChange={handleChange}
+                  />
                 </InputGroup>
                 <FormText>
                   Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
