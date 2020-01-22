@@ -340,8 +340,9 @@ export function getLabels(cube, sort) {
     var items = [];
     cube.forEach(function(card, index) {
       if (card.details.elo) {
-        if (!items.includes(card.details.elo)) {
-          items.push(card.details.elo);
+        const bucket = getEloBucket(card.details.elo);
+        if (!items.includes(bucket)) {
+          items.push(bucket);
         }
       }
     });
@@ -354,6 +355,11 @@ export function getLabels(cube, sort) {
       return 1;
     });
   }
+}
+
+function getEloBucket(elo) {
+  const bucket_floor = Math.round(elo / 50) * 50;
+  return bucket_floor + '-' + (bucket_floor + 49);
 }
 
 var price_buckets = [0.25, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
@@ -641,7 +647,11 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
-    return [card.details.elo];
+    if (card.details.elo) {
+      return [getEloBucket(card.details.elo)];
+    } else {
+      return [];
+    }
   }
 }
 
