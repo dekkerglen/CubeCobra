@@ -94,7 +94,7 @@ function binaryInsert(value, array, startVal, endVal) {
 function newCard(card_details, tags) {
   return {
     tags: Array.isArray(tags) ? tags : [],
-    status: 'Not Owned',
+    status: 'Owned',
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: card_details._id,

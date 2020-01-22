@@ -406,43 +406,58 @@ router.post('/unfeature/:id', ensureAuth, async (req, res) => {
 
 router.get('/overview/:id', async (req, res) => {
   try {
-    var split = req.params.id.split(';');
-    var cube_id = split[0];
-    var currentUser;
-    admin = false;
+    const cubeID = req.params.id;
+
+    let currentUserQ = Promise.resolve(null);
     if (req.user) {
-      currentUser = await User.findById(req.user._id);
-      admin = util.isAdmin(currentUser);
+      currentUserQ = User.findById(req.user._id);
     }
-    const cubeResult = await Cube.findOne(build_id_query(cube_id));
-    if (!cubeResult) {
+
+    const cubeQ = await Cube.findOne(build_id_query(cubeID)).lean();
+
+    const [cube, currentUser] = await Promise.all([cubeQ, currentUserQ]);
+    const admin = util.isAdmin(currentUser);
+    if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = cubeResult.toObject();
-
-    var pids = [];
-    cube.cards.forEach(function(card, index) {
+    const pids = new Set();
+    for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
-      if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-        pids.push(card.details.tcgplayer_id);
+      const allVersions = carddb.getIdsFromName(card.details.name);
+      card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
+      for (const details of card.allDetails) {
+        if (details.tcgplayer_id) {
+          pids.add(details.tcgplayer_id);
+        }
       }
-    });
+    }
 
-    const price_dict = await GetPrices(pids);
-    var sum = 0;
-    cube.cards.forEach(function(card, index) {
-      if (price_dict[card.details.tcgplayer_id]) {
-        sum += price_dict[card.details.tcgplayer_id];
-      } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
-        sum += price_dict[card.details.tcgplayer_id + '_foil'];
-      }
-    });
-    const user = await User.findById(cube.owner);
-    const blogs = await Blog.find({
+    const userQ = User.findById(cube.owner);
+    const blogsQ = Blog.find({
       cube: cube._id,
     }).sort('date');
+    const priceDictQ = GetPrices([...pids]);
+    const [user, blogs, priceDict] = await Promise.all([userQ, blogsQ, priceDictQ]);
+
+    let totalPriceOwned = 0;
+    let totalPricePurchase = 0;
+    for (const card of cube.cards) {
+      if (card.status !== 'Not Owned') {
+        let priceOwned = 0;
+        if (card.finish === 'Foil') {
+          priceOwned = priceDict[card.details.tcgplayer_id + '_foil'] || 0;
+        } else {
+          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[card.details.tcgplayer_id + '_foil'] || 0;
+        }
+        totalPriceOwned += priceOwned;
+      }
+
+      const allPrices = card.allDetails.map(({ tcgplayer_id }) => [priceDict[tcgplayer_id], priceDict[tcgplayer_id + '_foil']]);
+      const allPricesFlat = [].concat.apply([], allPrices).filter((p) => p && p > 0.001);
+      totalPricePurchase += Math.min(allPricesFlat) || 0;
+    }
 
     if (blogs) {
       blogs.forEach(function(item, index) {
@@ -471,7 +486,7 @@ router.get('/overview/:id', async (req, res) => {
 
     const reactProps = {
       cube,
-      cubeID: cube_id,
+      cubeID,
       userID: user ? user._id : null,
       loggedIn: !!user,
       canEdit: user && user._id == cube.owner,
@@ -479,16 +494,14 @@ router.get('/overview/:id', async (req, res) => {
       post: blogs ? blogs[0] : null,
       followed: currentUser ? currentUser.followed_cubes.includes(cube._id) : false,
       editorvalue: cube.raw_desc,
-      price: sum.toFixed(2),
+      priceOwned: cube.privatePrices || totalPriceOwned,
+      pricePurchase: cube.privatePrices || totalPricePurchase,
       admin,
     };
 
     return res.render('cube/cube_overview', {
       reactProps: serialize(reactProps),
-      cube,
-      cube_id,
       title: `${abbreviate(cube.name)} - Overview`,
-      activeLink: 'overview',
       metadata: generateMeta(
         `Cube Cobra Overview: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
