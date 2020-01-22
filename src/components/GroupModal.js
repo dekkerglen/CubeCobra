@@ -319,7 +319,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
               </Form>
             </Col>
           </Row>
-          <Row noGutters className="mb-2">
+          <Row noGutters>
             {totalPrice && (
               <TextBadge name="Price" className="mt-2 mr-2">
                 <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
