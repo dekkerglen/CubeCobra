@@ -24,6 +24,8 @@ import CSRFForm from 'components/CSRFForm';
 import CubeOverviewModal from 'components/CubeOverviewModal';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 import CubeLayout from 'layouts/CubeLayout';
 
 class CubeOverview extends Component {
@@ -104,7 +106,7 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, price, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
+    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
     const { cube, deleteConfirm } = this.state;
 
     return (
@@ -145,44 +147,50 @@ class CubeOverview extends Component {
                 <h3>{cube.name}</h3>
                 <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
               </CardHeader>
-              <img className="card-img-top w-100" src={cube.image_uri} />
-              <em className="text-right p-1">
-                Art by:
-                {cube.image_artist}
-              </em>
-              <CardBody>
+              <div className="position-relative">
+                <img className="card-img-top w-100" src={cube.image_uri} />
+                <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+              </div>
+              <CardBody className="pt-2 px-3 pb-3">
                 {cube.type && (
-                  <>
-                    <a>
-                      {cube.overrideCategory
-                        ? cube.card_count +
-                          ' Card ' +
-                          (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                          cube.categoryOverride +
-                          ' Cube'
-                        : cube.card_count + ' Card ' + cube.type + ' Cube'}
-                    </a>
-                    <br />
-                  </>
+                  <p className="mb-1">
+                    {cube.overrideCategory
+                      ? cube.card_count +
+                        ' Card ' +
+                        (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
+                        cube.categoryOverride +
+                        ' Cube'
+                      : cube.card_count + ' Card ' + cube.type + ' Cube'}
+                  </p>
                 )}
-                {!cube.privatePrices && (
-                  <>
-                    <a>Approx: ${price}</a>
-                    <br />
-                  </>
-                )}
-                <a href={`/cube/rss/${cube._id}`}>RSS</a>
-                <em>
-                  <h6>
+                <h6 className="mb-2">
+                  <i>
                     Designed by
                     <a href={`/user/view/${owner}`}> {owner}</a>
-                  </h6>
-                </em>
+                  </i>
+                  {' • '}
+                  <a href={`/cube/rss/${cube._id}`}>RSS</a>
+                </h6>
+                {!cube.privatePrices && (
+                  <Row noGutters className="mb-1">
+                    <TextBadge name="Owned" className="mr-2">
+                      <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                        ${Math.round(priceOwned).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                    <TextBadge name="Buy">
+                      <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                        ${Math.round(pricePurchase).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                  </Row>
+                )}
                 {admin && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
                     action={`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}${cube._id}`}
+                    className="mt-2"
                   >
                     <Button color="success" type="submit">
                       {' '}
@@ -191,8 +199,8 @@ class CubeOverview extends Component {
                   </CSRFForm>
                 )}
               </CardBody>
-              {loggedIn ? (
-                this.state.followed ? (
+              {loggedIn &&
+                (this.state.followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
                   </Button>
@@ -200,10 +208,7 @@ class CubeOverview extends Component {
                   <Button color="success" className="rounded-0" onClick={this.follow}>
                     Follow
                   </Button>
-                )
-              ) : (
-                []
-              )}
+                ))}
             </Card>
           </Col>
           <Col>
