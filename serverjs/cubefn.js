@@ -4,8 +4,6 @@ const Blog = require('../models/blog');
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 
-const { GetPrices } = require('../serverjs/prices.js');
-
 const util = require('./util');
 
 function get_cube_id(cube) {
@@ -345,7 +343,7 @@ async function generateBlogpost(req, res, cube, changelog, added, missing, cardd
   }
 }
 
-async function compareCubes(req, res, cubeA, cubeB, carddb) {
+async function compareCubes(req, res, cubeA, cubeB, carddb, prices) {
   if (!cubeA) {
     req.flash('danger', 'Base cube not found');
     res.status(404).render('misc/404', {});
@@ -368,7 +366,7 @@ async function compareCubes(req, res, cubeA, cubeB, carddb) {
       });
     });
 
-    const price_dict = await GetPrices([...pids]);
+    const price_dict = await prices.GetPrices([...pids]);
     [cubeA, cubeB].forEach((cube) => {
       cube.cards.forEach(function(card, index) {
         if (card.details.tcgplayer_id) {

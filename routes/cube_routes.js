@@ -32,7 +32,8 @@ const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
-const { GetPrices } = require('../serverjs/prices.js');
+const prices = require('../serverjs/prices.js');
+const { GetPrices } = prices;
 const mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
 const { Canvas, Image } = require('canvas');
@@ -685,7 +686,7 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     const cubeBq = Cube.findOne(build_id_query(id_b));
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
-    const { a_names, b_names, in_both, all_cards } = await compareCubes(req, res, cubeA, cubeB, carddb);
+    const { a_names, b_names, in_both, all_cards } = await compareCubes(req, res, cubeA, cubeB, carddb, prices);
     const reactProps = {
       cube: cubeA,
       cubeID: id_a,
@@ -1234,6 +1235,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
               maybe: newMaybe,
             },
             carddb,
+            prices,
           );
           let changelog = '';
           only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
