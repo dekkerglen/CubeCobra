@@ -160,7 +160,7 @@ class CubeAnalysis extends Component {
                 </DropdownItem>
                 {cube.draft_formats
                   ? cube.draft_formats.map((format, formatIndex) => (
-                      <DropdownItem key={format} onClick={() => this.setFormat(formatIndex)}>
+                      <DropdownItem key={`format-${formatIndex}`} onClick={() => this.setFormat(formatIndex)}>
                         {format.title}
                       </DropdownItem>
                     ))
