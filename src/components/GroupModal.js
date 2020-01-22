@@ -245,7 +245,13 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Status</InputGroupText>
                   </InputGroupAddon>
-                  <CustomInput type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
+                  <CustomInput
+                    type="select"
+                    id="groupStatus"
+                    name="status"
+                    value={formValues.status}
+                    onChange={handleChange}
+                  >
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
@@ -259,7 +265,13 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Finish</InputGroupText>
                   </InputGroupAddon>
-                  <CustomInput type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
+                  <CustomInput
+                    type="select"
+                    id="groupFinish"
+                    name="finish"
+                    value={formValues.finish}
+                    onChange={handleChange}
+                  >
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
@@ -282,7 +294,13 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
 
                 <InputGroup>
                   <InputGroupText className="square-right">Color Identity</InputGroupText>
-                  <ColorChecksAddon addonType="append" colorless prefix="color" values={formValues} onChange={handleChange} />
+                  <ColorChecksAddon
+                    addonType="append"
+                    colorless
+                    prefix="color"
+                    values={formValues}
+                    onChange={handleChange}
+                  />
                 </InputGroup>
                 <FormText>
                   Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
