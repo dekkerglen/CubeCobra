@@ -117,7 +117,10 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
       </ModalHeader>
       <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} encType="multipart/form-data">
         <ModalBody>
-          <p>Acceptable files are .csv files with the exact format as our .csv export.</p>
+          <p>
+            Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
+            .csv export.
+          </p>
           <CustomInput type="file" id="uploadReplacementFile" type="file" name="document" />
           <Label for="uploadReplacementFile" className="sr-only">
             Choose file
