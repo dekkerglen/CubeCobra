@@ -425,7 +425,7 @@ router.get('/overview/:id', async (req, res) => {
     const pids = new Set();
     for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
-      const allVersions = carddb.getIdsFromName(card.details.name);
+      const allVersions = carddb.getIdsFromName(card.details.name) || [];
       card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
       for (const details of card.allDetails) {
         if (details.tcgplayer_id) {
