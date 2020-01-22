@@ -194,7 +194,7 @@
 		padding: 2px 4px;
 	}
 	.compressed .card-list-item {
-		padding: 2px 0;
+		padding: 0 2px;
 		text-overflow: clip;
 	}
 }
