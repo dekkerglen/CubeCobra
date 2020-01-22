@@ -1,19 +1,18 @@
-extends cube_layout
+extends ../layout
 
-block cube_toolbar               
+block content               
   link(rel='stylesheet' href='/css/texteditor.css')
   link(rel='stylesheet' href='/css/tags.css')
   link(rel='stylesheet' href='/css/editcube.css')
 
   include ../dynamic_flash
   
-block cube_content
   #react-root
 
 block scripts
   include ../react
   script(type='text/javascript').
-    var reactProps = !{JSON.stringify(reactProps)};
+    var reactProps = !{reactProps};
 
   script(src='/js/cube_overview.bundle.js')
 

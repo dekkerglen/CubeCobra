@@ -201,6 +201,7 @@ const CubeListNavbar = ({
   setCubeView,
   openCollapse,
   setOpenCollapse,
+  defaultFilterText,
   filter,
   setFilter,
   className,
@@ -353,6 +354,7 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Export</DropdownItem>
                   </>
                 )}
+                <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
                 <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
@@ -365,6 +367,7 @@ const CubeListNavbar = ({
       {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse
+        defaultFilterText={defaultFilterText}
         filter={filter}
         setFilter={setFilter}
         numCards={cards.length}

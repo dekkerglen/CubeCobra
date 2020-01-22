@@ -16,43 +16,6 @@ class BlogContextMenu extends React.Component {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen,
     });
-    updateBlog();
-  }
-
-  clickEdit(post) {
-    csrfFetch('/cube/blogsrc/' + post._id, {
-      method: 'GET',
-      headers: {},
-    })
-      .then((response) => response.json())
-      .then(function(json) {
-        $('#editor').html(json.src || json.body || '');
-
-        $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(post._id);
-        $('#blogEditTitle').text('Edit Blog Post');
-        $('#editBlogModal').modal('show');
-        autocard_init('autocard');
-      });
-  }
-
-  clickDelete(post) {
-    $('#deleteModal').modal('show');
-
-    $('.delete-blog')
-      .off()
-      .on('click', function(e) {
-        csrfFetch('/cube/blog/remove/' + post._id, {
-          method: 'DELETE',
-          headers: {},
-        }).then((response) => {
-          if (!response.ok) {
-            console.log(response);
-          } else {
-            window.location.href = '';
-          }
-        });
-      });
   }
 
   render() {
@@ -62,10 +25,10 @@ class BlogContextMenu extends React.Component {
           {this.props.value}
         </DropdownToggle>
         <DropdownMenu right>
-          <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
+          <DropdownItem onClick={() => this.props.onEdit(this.props.post._id)}>Edit</DropdownItem>
           <DropdownItem
             onClick={() => {
-              this.clickDelete(this.props.post);
+              this.props.onDelete(this.props.post._id);
             }}
           >
             Delete

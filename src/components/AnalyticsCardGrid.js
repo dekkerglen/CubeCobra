@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { Row, Col, Card, CardBody } from 'reactstrap';
 
-import Affiliate from '../util/Affiliate';
+import Affiliate from '../utils/Affiliate';
 
 import MagicMarkdown from './MagicMarkdown';
 import MassBuyButton from './MassBuyButton';

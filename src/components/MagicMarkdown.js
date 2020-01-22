@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 
-import Affiliate from '../util/Affiliate';
+import Affiliate from '../utils/Affiliate';
 
 import MassBuyButton from './MassBuyButton';
 import withAutocard from './WithAutocard';

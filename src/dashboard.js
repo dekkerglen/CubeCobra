@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import DashboardPage from './components/DashboardPage';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from 'components/ErrorBoundary';
+import DashboardPage from 'pages/DashboardPage';
 
 const wrapper = document.getElementById('react-root');
 const element = (

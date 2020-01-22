@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { Button, Col, Collapse, Form, Row, UncontrolledAlert } from 'reactstrap';
 
-import { encodeName } from '../util/Card';
+import { encodeName } from '../utils/Card';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
@@ -89,7 +89,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
             card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
             !changes.some(
               (change) =>
-                change.remove.index === card.index ||
+                (change.remove && change.remove.index === card.index) ||
                 (Array.isArray(change.replace) && change.replace[0].index === card.index),
             ),
         );

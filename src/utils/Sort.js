@@ -78,7 +78,9 @@ export function getSorts() {
     'Color Count',
     'Color Identity',
     'Color',
+    'Creature/Non-Creature',
     'Date Added',
+    'Elo',
     'Finish',
     'Guilds',
     'Legality',
@@ -323,7 +325,7 @@ export function getLabels(cube, sort) {
     });
   } else if (sort == 'Manacost Type') {
     return ['Gold', 'Hybrid', 'Phyrexian'];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
   } else if (sort == 'Price' || sort == 'Price Foil') {
     const labels = [];
@@ -334,7 +336,30 @@ export function getLabels(cube, sort) {
     return labels;
   } else if (sort == 'Unsorted') {
     return ['All'];
+  } else if (sort == 'Elo') {
+    var items = [];
+    cube.forEach(function(card, index) {
+      if (card.details.elo) {
+        const bucket = getEloBucket(card.details.elo);
+        if (!items.includes(bucket)) {
+          items.push(bucket);
+        }
+      }
+    });
+    return items.sort(function(x, y) {
+      if (x > y) {
+        return 1;
+      } else if (y > x) {
+        return -1;
+      }
+      return 1;
+    });
   }
+}
+
+function getEloBucket(elo) {
+  const bucket_floor = Math.round(elo / 50) * 50;
+  return bucket_floor + '-' + (bucket_floor + 49);
 }
 
 var price_buckets = [0.25, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
@@ -403,9 +428,9 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(typeLine(card), colorIdentity(card) || card.details.color_identity)];
+    return [GetColorCategory(typeLine(card), colorIdentity(card))];
   } else if (sort == 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card) || card.details.color_identity)];
+    return [GetColorIdentity(colorIdentity(card))];
   } else if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
@@ -416,7 +441,7 @@ export function cardGetLabels(card, sort) {
     if (colorIdentity(card).length < 4) {
       return [];
     } else if (colorIdentity(card).length === 5) {
-      return ['Five-Color'];
+      return ['Five Color'];
     } else {
       return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
@@ -531,6 +556,8 @@ export function cardGetLabels(card, sort) {
       } else {
         return [type];
       }
+    } else if (colorIdentity(card).length === 5) {
+      return ['Five Color'];
     } else {
       return [
         ...cardGetLabels(card, 'Guilds'),
@@ -571,7 +598,7 @@ export function cardGetLabels(card, sort) {
       return ['Phyrexian'];
     }
     return [];
-  } else if (sort == 'CNC') {
+  } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card)
       .toLowerCase()
       .includes('creature')
@@ -619,6 +646,12 @@ export function cardGetLabels(card, sort) {
     }
   } else if (sort == 'Unsorted') {
     return ['All'];
+  } else if (sort == 'Elo') {
+    if (card.details.elo) {
+      return [getEloBucket(card.details.elo)];
+    } else {
+      return [];
+    }
   }
 }
 

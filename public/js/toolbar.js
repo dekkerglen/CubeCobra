@@ -8,6 +8,7 @@ $('#clearNotifications').on('click', function(e) {
     } else {
       $('#notificationsBadge').remove();
       $('#noNotifcations').removeClass('d-none');
+      $('.user-notification').remove();
     }
   });
 });

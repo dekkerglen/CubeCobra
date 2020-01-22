@@ -489,37 +489,14 @@ body.busy-cursor {
 }
 .cube-preview-card {
 	width: 100%;
-	padding-top: 110%; /* 1:1 Aspect Ratio */
-	position: relative; /* If you want text inside of it */
 }
-.cube-preview-card:hover {
+.cube-preview-card.hover {
 	background: #EFEFEF;
 	cursor: pointer;
     border: 1px solid #000000;
 }
-.cube-image-preview {
-	height: 100%;
-	object-fit: cover;
-}
-.cube-preview-text {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
 .cube-preview-element {
 	height: 73%;
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-}
-.cube-preview-body {
-	position: absolute;
-	top: 73%;
-	left: 0;
-	bottom: 0;
-	right: 0;
 }
 .cube-preview-artist {
 	font-size: small;
@@ -599,7 +576,7 @@ body.busy-cursor {
 	}
 }
 
-.cube-category {
+.text-ellipsis {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -627,6 +604,7 @@ body.busy-cursor {
 
 .color-check-button {
 	border-color: #ced4da !important;
+	padding: 0 0.5rem;
 }
 
 .color-check-button.active, .color-check-button:hover {
@@ -638,10 +616,23 @@ img.mana-symbol {
 	height: 1.8rem;
 }
 
+.square-right {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
 .col-low-padding {
   padding: 0 2px;
 }
 
 .row-low-padding {
   margin: 0 -2px;
+}
+
+.list-view-table td {
+	vertical-align: middle;
+}
+
+.font-weight-boldish {
+	font-weight: 600;
 }

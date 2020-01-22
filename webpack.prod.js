@@ -7,7 +7,7 @@ const common = require('./webpack.common.js');
 
 const config = {
   mode: 'production',
-  devtool: false,
+  devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production'),
@@ -24,6 +24,7 @@ const config = {
     minimizer: [
       new TerserPlugin({
         parallel: true,
+        sourceMap: true,
       }),
     ],
     usedExports: true,

@@ -19,11 +19,12 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import BlogPost from './components/BlogPost';
-import CSRFForm from './components/CSRFForm';
-import CubeOverviewModal from './components/CubeOverviewModal';
-import DynamicFlash from './components/DynamicFlash';
-import ErrorBoundary from './components/ErrorBoundary';
+import BlogPost from 'components/BlogPost';
+import CSRFForm from 'components/CSRFForm';
+import CubeOverviewModal from 'components/CubeOverviewModal';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import CubeLayout from 'layouts/CubeLayout';
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -105,8 +106,9 @@ class CubeOverview extends Component {
   render() {
     const { post, price, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
     const { cube, deleteConfirm } = this.state;
+
     return (
-      <>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="overview">
         {canEdit && (
           <Navbar expand="md" light className="usercontrols mb-3">
             <Nav navbar>
@@ -272,7 +274,7 @@ class CubeOverview extends Component {
             </CSRFForm>
           </div>
         </div>
-      </>
+      </CubeLayout>
     );
   }
 }

@@ -2,7 +2,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Button, FormGroup, Input, InputGroupAddon, Label } from 'reactstrap';
 
-import { COLORS } from '../util/Util';
+import { COLORS } from '../utils/Util';
 
 export const ColorChecks = ({ prefix, values, onChange }) =>
   COLORS.map(([color, short]) => (

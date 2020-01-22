@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import { getLabels, sortIntoGroups } from '../util/Sort';
+import { getLabels, sortIntoGroups } from '../utils/Sort';
 
 import AutocardListItem from './AutocardListItem';
 import SortContext from './SortContext';

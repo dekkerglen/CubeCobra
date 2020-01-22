@@ -58,13 +58,13 @@ function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
+  cards = arrayShuffle(cards);
   return function(cardFilters) {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
     // remove a random card
-    cards = arrayShuffle(cards);
     return { card: cards.pop(), messages: [] };
   };
 }

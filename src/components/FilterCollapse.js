@@ -19,10 +19,9 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import Filter from '../util/Filter';
-import Hash from '../util/Hash';
-import Query from '../util/Query';
-import { fromEntries, COLORS } from '../util/Util';
+import Filter from '../utils/Filter';
+import Query from '../utils/Query';
+import { fromEntries, COLORS } from '../utils/Util';
 
 import { ColorChecksAddon } from './ColorCheck';
 
@@ -64,6 +63,7 @@ const allFields = [
   'finish',
   'price',
   'priceFoil',
+  'elo',
   'power',
   'toughness',
   'loyalty',
@@ -71,7 +71,7 @@ const allFields = [
   'artist',
   'is',
 ];
-const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = ['cmc', 'price', 'priceFoil', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
 const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
@@ -200,6 +200,13 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           onChange={onChange}
         />
         <NumericField
+          name="elo"
+          humanName="Elo"
+          placeholder={'Any integer number, e.g. "1200"'}
+          value={values.elo}
+          onChange={onChange}
+        />
+        <NumericField
           name="power"
           humanName="Power"
           placeholder={'Any value, e.g. "2"'}
@@ -253,7 +260,7 @@ class FilterCollapse extends Component {
 
     this.state = {
       advancedOpen: false,
-      filterInput: this.store().get('f', ''),
+      filterInput: this.props.defaultFilterText || '',
       ...fromEntries(allFields.map((n) => [n, ''])),
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
@@ -271,10 +278,6 @@ class FilterCollapse extends Component {
 
   componentDidMount() {
     this.updateFilters();
-  }
-
-  store() {
-    return this.props.useQuery ? Query : Hash;
   }
 
   toggleAdvanced() {
@@ -320,7 +323,7 @@ class FilterCollapse extends Component {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
-      this.store().del('f');
+      Query.del('f');
       return;
     }
     const tokens = [];
@@ -331,7 +334,7 @@ class FilterCollapse extends Component {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
       this.props.setFilter(filters, filterInput);
-      this.store().set('f', filterInput);
+      Query.set('f', filterInput);
     }
   }
 
@@ -360,11 +363,11 @@ class FilterCollapse extends Component {
   handleReset(event) {
     this.setState({ filterInput: '' });
     this.props.setFilter([], '');
-    this.store().del('f');
+    Query.del('f');
   }
 
   render() {
-    const { filter, setFilter, numCards, numShown, useQuery, ...props } = this.props;
+    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
     const { filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);

@@ -3,14 +3,16 @@ import ReactDOM from 'react-dom';
 
 import { Col, Container, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, Nav, NavLink, Row } from 'reactstrap';
 
-import { getDraftFormat, calculateAsfans } from './util/draftutil';
-import Filter from './util/Filter';
-import Hash from './util/Hash';
+import Query from './utils/Query';
+
+import { getDraftFormat, calculateAsfans } from './utils/draftutil';
+import Filter from './utils/Filter';
 
 import AnalyticsCardGrid from './components/AnalyticsCardGrid';
 import AnalyticsChart from './components/AnalyticsChart';
 import AnalyticsCloud from './components/AnalyticsCloud';
 import AnalyticsTable from './components/AnalyticsTable';
+import CubeLayout from 'layouts/CubeLayout';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import FilterCollapse from './components/FilterCollapse';
@@ -21,7 +23,6 @@ class CubeAnalysis extends Component {
     super(props);
 
     this.state = {
-      nav: Hash.get('nav', 'curve'),
       data: { type: 'none' },
       workers: {},
       analytics: {
@@ -45,8 +46,9 @@ class CubeAnalysis extends Component {
       filter: [],
       cardsWithAsfan: null,
       filteredWithAsfan: null,
-      formatId: Hash.get('formatId', -1),
+      formatId: this.props.defaultFormatId || -1,
       formatDropdownOpen: false,
+      nav: this.props.defaultNav || 'curve',
     };
 
     this.updateAsfan = this.updateAsfan.bind(this);
@@ -61,8 +63,18 @@ class CubeAnalysis extends Component {
     this.updateAsfan();
   }
 
+  componentDidMount() {
+    this.setState({
+      nav: Query.get('nav', this.state.nav),
+    });
+  }
+
   select(nav) {
-    Hash.set('nav', nav);
+    if (nav === 'curve') {
+      Query.del('nav');
+    } else {
+      Query.set('nav', nav);
+    }
     this.setState({ nav }, this.updateData);
   }
 
@@ -111,7 +123,11 @@ class CubeAnalysis extends Component {
   }
 
   setFormat(formatId) {
-    Hash.set('formatId', formatId);
+    if (formatId == -1) {
+      Query.del('formatId');
+    } else {
+      Query.set('formatId', formatId);
+    }
     this.setState({ formatId }, this.updateAsfan);
   }
 
@@ -122,7 +138,7 @@ class CubeAnalysis extends Component {
   }
 
   render() {
-    const { cube } = this.props;
+    const { cube, cubeID } = this.props;
     const { analytics, analytics_order, data, filter, formatDropdownOpen, formatId, nav } = this.state;
     const cards = cube.cards;
     const filteredCards =
@@ -172,7 +188,7 @@ class CubeAnalysis extends Component {
       );
     }
     return (
-      <Fragment>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false}>
         <DynamicFlash />
         <FilterCollapse filter={filter} setFilter={this.setFilter} numCards={filteredCards.length} isOpen={true} />
         {dropdownElement}
@@ -194,13 +210,11 @@ class CubeAnalysis extends Component {
             <ErrorBoundary>{visualization}</ErrorBoundary>
           </Col>
         </Row>
-      </Fragment>
+      </CubeLayout>
     );
   }
 }
 
-const cube = JSON.parse(document.getElementById('cube').value);
-cube.cards.forEach((card, index) => (card.index = index));
 const wrapper = document.getElementById('react-root');
-const element = <CubeAnalysis cube={cube} />;
+const element = <CubeAnalysis {...reactProps} />;
 wrapper ? ReactDOM.render(element, wrapper) : false;

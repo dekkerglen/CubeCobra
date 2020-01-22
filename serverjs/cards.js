@@ -1,6 +1,6 @@
 const fs = require('fs');
 const util = require('./util.js');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 
 var data = {
   cardtree: {},
