@@ -242,7 +242,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
           type="checkbox"
           bsSize="sm"
           data-index={index}
-          value={checked}
+          checked={checked}
           onChange={onCheck}
           className="d-block mx-auto"
         />
