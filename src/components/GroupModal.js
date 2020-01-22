@@ -4,6 +4,7 @@ import {
   Button,
   Row,
   Col,
+  CustomInput,
   Form,
   FormGroup,
   FormText,
@@ -20,18 +21,17 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import { tcgMassEntryUrl } from '../utils/Affiliate';
-import { csrfFetch } from '../utils/CSRF';
-import { fromEntries } from '../utils/Util';
+import { csrfFetch } from 'utils/CSRF';
+import { fromEntries } from 'utils/Util';
 
-import AutocardListItem from './AutocardListItem';
-import ChangelistContext from './ChangelistContext';
-import { ColorChecksAddon } from './ColorCheck';
-import CubeContext from './CubeContext';
-import GroupModalContext from './GroupModalContext';
-import LoadingButton from './LoadingButton';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
+import AutocardListItem from 'components/AutocardListItem';
+import ChangelistContext from 'components/ChangelistContext';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
+import LoadingButton from 'components/LoadingButton';
+import MassBuyButton from 'components/MassBuyButton';
+import TagInput from 'components/TagInput';
 
 const DEFAULT_FORM_VALUES = {
   status: '',
@@ -245,11 +245,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Status</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
+                  <CustomInput type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <Label for="groupStatus">
@@ -259,11 +259,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Finish</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
+                  <CustomInput type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>
@@ -273,7 +273,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   </InputGroupAddon>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
-                <InputGroup className="mb-3">
+                <InputGroup className="mb-2">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Type</InputGroupText>
                   </InputGroupAddon>
@@ -281,10 +281,8 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 </InputGroup>
 
                 <InputGroup>
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Color Identity</InputGroupText>
-                  </InputGroupAddon>
-                  <ColorChecksAddon colorless prefix="color" values={formValues} onChange={handleChange} />
+                  <InputGroupText className="square-right">Color Identity</InputGroupText>
+                  <ColorChecksAddon addonType="append" colorless prefix="color" values={formValues} onChange={handleChange} />
                 </InputGroup>
                 <FormText>
                   Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
