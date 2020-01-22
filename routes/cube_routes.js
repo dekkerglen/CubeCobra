@@ -1250,10 +1250,9 @@ async function bulkuploadCSV(req, res, cards, cube) {
       collector_number: split[5],
       status: split[6],
       finish: split[7],
-      imgUrl: split[9],
+      imgUrl: split[9] && split[9] != 'undefined' ? split[9] : null,
       tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
     };
-    console.warn(card);
 
     let potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
@@ -1477,6 +1476,12 @@ router.get('/download/csv/:id', async (req, res) => {
       while (name.includes('-quote-')) {
         name = name.replace('-quote-', '""');
       }
+      var imgUrl = card.imgUrl;
+      if (imgUrl) {
+        imgUrl = '"' + imgUrl + '"';
+      } else {
+        imgUrl = '';
+      }
       res.write('"' + name + '"' + ',');
       res.write(card.cmc + ',');
       res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
@@ -1486,7 +1491,7 @@ router.get('/download/csv/:id', async (req, res) => {
       res.write(card.status + ',');
       res.write(card.finish + ',');
       res.write(maybe + ',');
-      res.write('"' + card.imgUrl + '","');
+      res.write(imgUrl + ',"');
       card.tags.forEach(function(tag, t_index) {
         if (t_index != 0) {
           res.write(', ');
