@@ -6,16 +6,18 @@ import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 import { csrfFetch } from '../utils/CSRF';
 
 import AutocompleteInput from './AutocompleteInput';
+import CardModalContext from './CardModalContext';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
 import Filter from '../utils/Filter';
 import { getCard } from './EditCollapse';
 import LoadingButton from './LoadingButton';
-import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
+import MaybeboardContext from './MaybeboardContext';
 import TableView from './TableView';
 import { getCardColorClass } from './TagContext';
 import withAutocard from './WithAutocard';
+import CardModalForm from './CardModalForm';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -23,7 +25,12 @@ const MaybeboardListItem = ({ card, className }) => {
   const { canEdit, cubeID } = useContext(CubeContext);
   const { removeMaybeboardCard } = useContext(MaybeboardContext);
   const { addChange } = useContext(ChangelistContext);
+  const openCardModal = useContext(CardModalContext);
   const [loading, setLoading] = useState(false);
+
+  const handleEdit = useCallback((event) => {
+    openCardModal(card.index, true);
+  }, [card]);
 
   const handleAdd = useCallback(
     (event) => {
@@ -72,7 +79,7 @@ const MaybeboardListItem = ({ card, className }) => {
       className={`d-flex card-list-item ${getCardColorClass(card)} ${className || ''}`}
       card={card}
       data-index={card.index}
-      onClick={undefined}
+      onClick={handleEdit}
     >
       <div className="name">{card.details.name}</div>
       {canEdit &&
@@ -169,7 +176,7 @@ const Maybeboard = ({ filter, ...props }) => {
   }, [filter, maybeboardIndex]);
 
   return (
-    <>
+    <CardModalForm>
       <Row>
         <Col className="mr-auto">
           <h4>Maybeboard</h4>
@@ -215,7 +222,7 @@ const Maybeboard = ({ filter, ...props }) => {
         <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
       )}
       <hr />
-    </>
+    </CardModalForm>
   );
 };
 

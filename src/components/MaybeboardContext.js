@@ -5,6 +5,7 @@ const MaybeboardContext = React.createContext({
   maybeboard: [],
   addCard: () => {},
   removeCard: () => {},
+  updateCard: () => {},
 });
 
 export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
@@ -16,8 +17,18 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
   const removeMaybeboardCard = useCallback((removeIndex) => {
     setMaybeboard((maybeboard) => maybeboard.filter((card, index) => index !== removeIndex));
   }, []);
+  const updateMaybeboardCard = useCallback((updatedCard) => {
+    setMaybeboard((maybeboard) => {
+      const newMaybeboard = [...maybeboard];
+      const index = newMaybeboard.findIndex(card => card._id === updatedCard._id);
+      if (index > 0) {
+        newMaybeboard[index] = updatedCard;
+      }
+      return newMaybeboard;
+    })
+  })
 
-  const value = { maybeboard, addMaybeboardCard, removeMaybeboardCard };
+  const value = { maybeboard, addMaybeboardCard, removeMaybeboardCard, updateMaybeboardCard };
 
   return <MaybeboardContext.Provider value={value} {...props} />;
 };

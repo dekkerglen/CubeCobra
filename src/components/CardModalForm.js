@@ -1,45 +1,50 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import { csrfFetch } from '../utils/CSRF';
-import { arrayMove } from '../utils/Util';
+import { cardsAreEquivalent } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import { arrayMove } from 'utils/Util';
 
-import CardModal from './CardModal';
-import CardModalContext from './CardModalContext';
-import ChangelistContext from './ChangelistContext';
-import CubeContext from './CubeContext';
+import CardModal from 'components/CardModal';
+import CardModalContext from 'components/CardModalContext';
+import ChangelistContext from 'components/ChangelistContext';
+import CubeContext from 'components/CubeContext';
+import MaybeboardContext from 'components/MaybeboardContext';
 
 const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cardIndex, setCardIndex] = useState(null);
+  const [maybe, setMaybe] = useState(false);
   const [versions, setVersions] = useState([]);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
+  const { maybeboard, updateMaybeboardCard } = useContext(MaybeboardContext);
   const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
-  const card = cube[cardIndex] || { colors: [], details: {}, tags: [] };
+  const card = (maybe ? maybeboard[cardIndex] : cube[cardIndex]) || { colors: [], details: {}, tags: [] };
 
   const setTagInput = useCallback((value) =>
     setFormValues((formValues) => ({
       ...formValues,
       tagInput: value,
     })),
+    [],
   );
 
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
-  });
+  }, []);
   const addTag = useCallback((tag) => {
     setTags((tags) => [...tags, tag]);
     setTagInput('');
-  });
-  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }));
+  }, []);
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }), [addTag]);
   const deleteTag = useCallback((tagIndex) => {
     setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
-  });
+  }, []);
   const reorderTag = useCallback((tag, currIndex, newIndex) => {
     setTags((tags) => arrayMove(tags, currIndex, newIndex));
-  });
+  }, []);
 
   const handleChange = useCallback((event) => {
     const target = event.target;
@@ -50,7 +55,7 @@ const CardModalForm = ({ children, ...props }) => {
       ...formValues,
       [name]: value,
     }));
-  });
+  }, []);
 
   const saveChanges = useCallback(async () => {
     const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
@@ -65,45 +70,60 @@ const CardModalForm = ({ children, ...props }) => {
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    if (
-      updated.cardID === card.cardID &&
-      updated.type_line === card.type_line &&
-      updated.status === card.status &&
-      updated.cmc === card.cmc &&
-      updated.imgUrl === card.imgUrl &&
-      updated.colors.join('') === card.colors.join('') &&
-      updated.tags.join(',') === card.tags.join(',') &&
-      updated.finish === card.finish
-    ) {
+    if (cardsAreEquivalent(updated, card) && updated.imgUrl === card.imgUrl) {
       // no need to sync
+      closeCardModal();
       return;
     }
 
     try {
-      const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
-        method: 'POST',
-        body: JSON.stringify({ src: card, updated }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const json = await response.json();
-      if (json.success === 'true') {
-        const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
-        const cardJson = await cardResponse.json();
+      if (!maybe) {
+        const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ src: card, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await response.json();
+        if (json.success === 'true') {
+          const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+          const cardJson = await cardResponse.json();
 
-        const newCard = {
-          ...card,
-          ...updated,
-          details: cardJson.card,
-        };
-        updateCubeCard(cardIndex, newCard);
-        setIsOpen(false);
+          const newCard = {
+            ...card,
+            ...updated,
+            details: cardJson.card,
+          };
+          updateCubeCard(cardIndex, newCard);
+          setIsOpen(false);
+        }
+      } else {
+        const response = await csrfFetch(`/cube/api/maybe/update/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ id: card._id, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })        
+        const json = await response.json();
+
+        if (json.success === 'true') {
+          const newCard = {
+            ...card,
+            ...updated,
+          };
+          if (json.details) {
+            newCard.details = json.details;
+          }
+          updateMaybeboardCard(newCard);
+          setIsOpen(false);
+        }
       }
     } catch (e) {
       console.error(e);
     }
-  }, [card, formValues, updateCubeCard]);
+  }, [card, formValues, updateCubeCard, updateMaybeboardCard]);
 
   const queueRemoveCard = useCallback(() => {
     addChange({
@@ -113,9 +133,10 @@ const CardModalForm = ({ children, ...props }) => {
   }, [card, addChange]);
 
   const openCardModal = useCallback(
-    (newCardIndex) => {
-      const card = cube[newCardIndex];
+    (newCardIndex, newMaybe) => {
+      const card = newMaybe ? maybeboard[newCardIndex] : cube[newCardIndex];
       setCardIndex(newCardIndex);
+      setMaybe(!!newMaybe);
       setVersions([card.details]);
       setFormValues({
         version: card.cardID,
@@ -133,17 +154,13 @@ const CardModalForm = ({ children, ...props }) => {
         colorG: card.colors.includes('G'),
       });
       setIsOpen(true);
-      const currentCard = card;
       fetch(`/cube/api/getversions/${card.cardID}`)
         .then((response) => response.json())
         .then((json) => {
-          // Otherwise the modal has changed in between.
-          if (currentCard.details.name == cube[newCardIndex].details.name) {
-            setVersions(json.cards);
-          }
+          setVersions(json.cards);
         });
     },
-    [cube],
+    [cube, maybeboard],
   );
 
   const closeCardModal = useCallback(() => setIsOpen(false));

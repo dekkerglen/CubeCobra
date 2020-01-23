@@ -3056,6 +3056,53 @@ router.post(
   }),
 );
 
+router.post(
+  '/api/maybe/update/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Maybeboard can only be updated by cube owner.',
+      });
+    }
+
+    const card = cube.maybe.find((card) => card._id.equals(req.body.id));
+    if (!card) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'No card found to update.',
+      });
+    }
+
+    const updated = req.body.updated;
+    if (!updated) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Bad request.',
+      })
+    }
+    const newVersion = updated.cardID && updated.cardID !== card.cardID;
+    for (field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {
+      if (updated.hasOwnProperty(field)) {
+        card[field] = updated[field];
+      }
+    }
+    await cube.save();
+
+    if (newVersion) {
+      return res.status(200).send({
+        success: 'true',
+        details: carddb.cardFromId(card.cardID),
+      });
+    } else {
+      return res.status(200).send({
+        success: 'true',
+      });
+    }
+  }),
+);
 router.post('/remove/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
