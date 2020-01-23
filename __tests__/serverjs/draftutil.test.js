@@ -148,7 +148,7 @@ describe('populateDraft', () => {
     cards = [];
     bots = ['fakebot'];
     expect(() => {
-      methods.populateDraft(draft, format, cards, bots, seats);
+      methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
     }).toThrow(/no cards/);
   });
 
@@ -156,7 +156,7 @@ describe('populateDraft', () => {
     cards = ['mockcard'];
     bots = [];
     expect(() => {
-      methods.populateDraft(draft, format, cards, bots, seats);
+      methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
     }).toThrow(/no bots/);
   });
 
@@ -164,13 +164,13 @@ describe('populateDraft', () => {
     cards = ['mockcards'];
     bots = ['mockbot'];
     expect(() => {
-      methods.populateDraft(draft, format, cards, bots, 1);
+      methods.populateDraft(draft, format, cards, bots, 1, {username:'user', _id:0});
     }).toThrow(/invalid seats/);
     expect(() => {
-      methods.populateDraft(draft, format, cards, bots, null);
+      methods.populateDraft(draft, format, cards, bots, null, {username:'user', _id:0});
     }).toThrow(/invalid seats/);
     expect(() => {
-      methods.populateDraft(draft, format, cards, bots, -1);
+      methods.populateDraft(draft, format, cards, bots, -1, {username:'user', _id:0});
     }).toThrow(/invalid seats/);
   });
 
@@ -191,7 +191,7 @@ describe('populateDraft', () => {
       cards = exampleCube.cards.slice();
       bots = ['mockbot'];
       format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
-      methods.populateDraft(draft, format, cards, bots, 8);
+      methods.populateDraft(draft, format, cards, bots, 8, {username:'user', _id:0});
       expect(draft.pickNumber).toEqual(1);
       expect(draft.packNumber).toEqual(1);
       expect(draft).toHaveProperty('packs');
@@ -211,7 +211,7 @@ describe('populateDraft', () => {
       // cube only contains 65 cards, so 8 * 1 * 15 = 120, should run out if multiples = false
       format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
       expect(() => {
-        methods.populateDraft(draft, format, cards, bots, seats);
+        methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
       }).toThrow(/not enough cards/);
     });
 
@@ -223,7 +223,7 @@ describe('populateDraft', () => {
       exampleCube.draft_formats[0].packs = '[["*","*","*","*","*"],["*","*","*","*","*"]]';
       format = methods.getDraftFormat({ id: 0 }, exampleCube);
       expect(() => {
-        methods.populateDraft(draft, format, cards, bots, seats);
+        methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
       }).toThrow(/not enough cards/);
     });
 
@@ -236,12 +236,12 @@ describe('populateDraft', () => {
       format = methods.getDraftFormat({ id: 0 }, exampleCube);
       format.multiples = true;
       expect(() => {
-        methods.populateDraft(draft, format, cards, bots, seats);
+        methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
       }).not.toThrow(/not enough cards/);
       // note: because multiples true, cards not "used up" for next check
       format.multiples = false;
       expect(() => {
-        methods.populateDraft(draft, format, cards, bots, seats);
+        methods.populateDraft(draft, format, cards, bots, seats, {username:'user', _id:0});
       }).toThrow(/not enough cards/);
     });
   });

@@ -1588,11 +1588,30 @@ router.post('/startdraft/:id', async (req, res) => {
     draftcards.forEach((card, index) => {
       card.details = carddb.cardFromId(card.cardID);
     });
+
     let bots = draftutil.getDraftBots(params);
     let format = draftutil.getDraftFormat(params, cube);
     let draft = new Draft();
-    draftutil.populateDraft(draft, format, draftcards, bots, params.seats);
+    draftutil.populateDraft(draft, format, draftcards, bots, params.seats, req.user ? req.user : {username:'Anonymous'});
     draft.cube = cube._id;
+
+    //add ratings
+    const names = new Set();
+    //add in details to all cards
+    for (const seat of draft.packs) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
+          names.add(card.details.name);
+        }
+      }
+    }
+    const ratings = await CardRating.find({
+      name: { $in: [...names] },
+    });
+
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
+
     await draft.save();
     return res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
@@ -1619,11 +1638,7 @@ router.get('/draft/:id', async (req, res) => {
       }
     }
 
-    const ratingsQ = CardRating.find({
-      name: { $in: [...names] },
-    });
-    const cubeQ = Cube.findOne(build_id_query(draft.cube));
-    const [cube, ratings] = await Promise.all([cubeQ, ratingsQ]);
+    const cube = await Cube.findOne(build_id_query(draft.cube));
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1636,8 +1651,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
-
+    console.log(draft);
     const reactProps = {
       cube,
       cubeID: get_cube_id(cube),

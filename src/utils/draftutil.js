@@ -1,11 +1,16 @@
-import { filterCards, operatorsRegex, parseTokens, tokenizeInput, verifyTokens, filterToString } from './Filter';
-import { arrayShuffle } from './Util';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var Util = require('./Util.js');
+require('./Card.js');
+var Filter = require('./Filter.js');
 
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
-  return filterCards(cards, filter, true);
+  return Filter.filterCards(cards, filter, true);
 }
 
 function makeFilter(filterText) {
@@ -15,10 +20,10 @@ function makeFilter(filterText) {
 
   let tokens = [];
   let valid = false;
-  valid = tokenizeInput(filterText, tokens) && verifyTokens(tokens);
+  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
 
   // backwards compatibilty: treat as tag
-  if (!valid || !operatorsRegex.test(filterText)) {
+  if (!valid || !Filter.operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
@@ -26,13 +31,13 @@ function makeFilter(filterText) {
     }
     tagfilterText = 'tag:' + tagfilterText; // TODO: use tag instead of 'tag'
     tokens = [];
-    valid = tokenizeInput(tagfilterText, tokens) && verifyTokens(tokens);
+    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
   }
 
   if (!valid) {
     throw new Error('Invalid card filter: ' + filterText);
   }
-  return [parseTokens(tokens)];
+  return [Filter.parseTokens(tokens)];
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
@@ -40,7 +45,7 @@ function makeFilter(filterText) {
 
       [pack][card in pack][token,token...]
 */
-export function parseDraftFormat(packsJSON, splitter = ',') {
+function parseDraftFormat(packsJSON, splitter = ',') {
   let format = JSON.parse(packsJSON);
   for (let j = 0; j < format.length; j++) {
     for (let k = 0; k < format[j].length; k++) {
@@ -58,7 +63,7 @@ function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = arrayShuffle(cards);
+  cards = Util.arrayShuffle(cards);
   return function(cardFilters) {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
@@ -98,7 +103,7 @@ function customDraft(cards, duplicates = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push('Warning: no cards matching filter: ' + filterToString(filter));
+          messages.push('Warning: no cards matching filter: ' + Filter.filterToString(filter));
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -160,7 +165,7 @@ function customDraftAsfan(cards, duplicates = false) {
   };
 }
 
-export function getDraftBots(params) {
+function getDraftBots(params) {
   var botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
   var draftbots = [];
   var colors = [];
@@ -171,7 +176,7 @@ export function getDraftBots(params) {
     colors.push('R');
     colors.push('G');
   }
-  colors = arrayShuffle(colors);
+  colors = Util.arrayShuffle(colors);
   for (let i = 0; i < params.seats - 1; i++) {
     var colorcombo = [colors.pop(), colors.pop()];
     draftbots.push(colorcombo);
@@ -180,7 +185,7 @@ export function getDraftBots(params) {
   return draftbots;
 }
 
-export function getDraftFormat(params, cube) {
+function getDraftFormat(params, cube) {
   let format;
   if (params.id >= 0) {
     format = parseDraftFormat(cube.draft_formats[params.id].packs);
@@ -204,13 +209,13 @@ export function getDraftFormat(params, cube) {
 function createPacks(draft, format, seats, nextCardFn) {
   let ok = true;
   let messages = [];
-  draft.picks = [];
-  draft.packs = [];
+  draft.initial_state = [];
+
   for (let seat = 0; seat < seats; seat++) {
-    draft.picks.push([]);
-    draft.packs.push([]);
+    draft.initial_state.push([]);
+
     for (let packNum = 0; packNum < format.length; packNum++) {
-      draft.packs[seat].push([]);
+      draft.initial_state[seat].push([]);
       let pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
         let result = nextCardFn(format[packNum][cardNum]);
@@ -223,20 +228,27 @@ function createPacks(draft, format, seats, nextCardFn) {
           ok = false;
         }
       }
-      if (!format.custom) {
-        // Shuffle the cards in the pack.
-        draft.packs[seat][packNum] = arrayShuffle(pack);
-      } else {
-        // Knowing what slots cards come from can be important.
-        draft.packs[seat][packNum] = pack;
-      }
+      draft.initial_state[seat][packNum] = pack;
     }
   }
   return { ok: ok, messages: messages };
 }
+/*
+  //new format, will convert to
+  seats: [Seat],
+  unopenedPacks: [[]],
 
+  const Seat = {
+    bot: [], //null bot value means human player
+    name: String,
+    userid: String,
+    drafted: [[]], //organized draft picks
+    pickorder: [],
+    packbacklog: [[]],
+  };
+  */
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(draft, format, cards, bots, seats) {
+function populateDraft(draft, format, cards, bots, seats, user) {
   let nextCardFn = null;
 
   if (cards.length === 0) {
@@ -255,7 +267,7 @@ export function populateDraft(draft, format, cards, bots, seats) {
     nextCardFn = standardDraft(cards);
   }
 
-  let result = createPacks(draft, format, seats, nextCardFn);
+  const result = createPacks(draft, format, seats, nextCardFn);
 
   if (result.messages.length > 0) {
     draft.messages = result.messages.join('\n');
@@ -265,16 +277,31 @@ export function populateDraft(draft, format, cards, bots, seats) {
     throw new Error('Could not create draft:\n' + result.messages.join('\n'));
   }
 
-  // initial draft state
-  draft.initial_state = draft.packs.slice();
-  draft.pickNumber = 1;
-  draft.packNumber = 1;
-  draft.bots = bots;
+  draft.seats = [];
+  draft.unopenedPacks = [];
+  for(let i = 0; i < draft.initial_state.length; i++) {
+    const seat = {
+      bot: i == 0 ? null : bots[i-1],
+      name: i == 0 ? user.username : 'Bot ' + (i) + ': ' + bots[i-1][0] + ', ' + bots[i-1][1],
+      userid: i == 0 ? user._id : null,
+      drafted: [], //organized draft picks
+      pickorder: [],
+      packbacklog: [],
+    }
+
+    for(let j = 0; j < 16; j++) {
+      seat.drafted.push([]);
+    }
+
+    draft.unopenedPacks.push(draft.initial_state[i].slice());
+    seat.packbacklog.push(draft.unopenedPacks[i].pop());
+    draft.seats.push(seat);
+  }
 
   return draft;
 }
 
-export function calculateAsfans(format, cards) {
+function calculateAsfans(format, cards) {
   let nextCardFn = null;
 
   cards.forEach((card) => (card.asfan = 0));
@@ -288,7 +315,7 @@ export function calculateAsfans(format, cards) {
   return createPacks({}, format, 1, nextCardFn);
 }
 
-export function checkFormat(format, cards) {
+function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
     let messages = [];
@@ -296,7 +323,7 @@ export function checkFormat(format, cards) {
       let filter = cardFilters[i];
       let validCards = matchingCards(cards, filter);
       if (validCards.length == 0) {
-        messages.push('Warning: no cards matching filter: ' + filterToString(filter));
+        messages.push('Warning: no cards matching filter: ' + Filter.filterToString(filter));
       }
     }
     if (messages.length > 0) {
@@ -307,7 +334,7 @@ export function checkFormat(format, cards) {
   return createPacks({}, format, 1, checkFn);
 }
 
-export default {
+var draftutil = {
   calculateAsfans,
   checkFormat,
   getDraftBots,
@@ -315,3 +342,11 @@ export default {
   parseDraftFormat,
   populateDraft,
 };
+
+exports.calculateAsfans = calculateAsfans;
+exports.checkFormat = checkFormat;
+exports.default = draftutil;
+exports.getDraftBots = getDraftBots;
+exports.getDraftFormat = getDraftFormat;
+exports.parseDraftFormat = parseDraftFormat;
+exports.populateDraft = populateDraft;

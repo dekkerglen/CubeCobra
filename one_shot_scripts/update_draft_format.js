@@ -40,19 +40,27 @@ async function update(deck) {
     }
 
     bot.pickorder.forEach(function(cardid, index) {
-      //insert basic card object into correct cmc column
-      const card = {
-        cardId: cardid,
-        details: carddb.cardFromId(cardid),
+      if(cardid) {
+        //inconsistent formats... find the card id
+        if(cardid[0] && cardid[0].cardID){
+          cardid = cardid[0].cardID;
+        } else if(cardid.cardID) {
+          cardid = cardid.cardID;
+        }
+        //insert basic card object into correct cmc column
+        const card = {
+          cardId: cardid,
+          details: carddb.cardFromId(cardid),
+        }
+        const col = Math.min(7, card.details.cmc) + (card.details.type.toLowerCase().includes('creature') ? 0 : 8);
+        bot.drafted[col].push(card);
       }
-      const col = Math.min(7, card.details.cmc) + (card.details.type.toLowerCase().includes('creature') ? 0 : 8);
-      bot.drafted[col].push(card);
     });
 
     deck.seats.push(bot);
   deck.unopenedPacks.push(deck.packs[i] ? deck.packs[i].slice(1) : []);
   }
-  return deck.save();
+  return deck.save(0);
 }
 
 (async () => {
@@ -79,6 +87,7 @@ async function update(deck) {
     }
     mongoose.disconnect();
     console.log('done');
+    process.exit();
   });
 })();
 
