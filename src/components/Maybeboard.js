@@ -24,7 +24,7 @@ const AutocardItem = withAutocard(ListGroupItem);
 const MaybeboardListItem = ({ card, className }) => {
   const { canEdit, cubeID } = useContext(CubeContext);
   const { removeMaybeboardCard } = useContext(MaybeboardContext);
-  const { addChange } = useContext(ChangelistContext);
+  const { removeInputRef, setAddValue, openEditCollapse } = useContext(ChangelistContext);
   const openCardModal = useContext(CardModalContext);
   const [loading, setLoading] = useState(false);
 
@@ -35,9 +35,12 @@ const MaybeboardListItem = ({ card, className }) => {
   const handleAdd = useCallback(
     (event) => {
       event.preventDefault();
-      addChange({ add: { details: card.details } });
+      event.stopPropagation();
+      setAddValue(card.details.name);
+      openEditCollapse();
+      removeInputRef.current && removeInputRef.current.focus();
     },
-    [card, addChange],
+    [card, setAddValue, openEditCollapse, removeInputRef],
   );
 
   const handleRemove = useCallback(

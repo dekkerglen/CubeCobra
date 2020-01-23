@@ -6,6 +6,11 @@ const ChangelistContext = React.createContext({});
 
 export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChanges, noSave, ...props }) => {
   const [changes, setChanges] = useState(initialChanges || []);
+  const [addValue, setAddValue] = useState('');
+  const [removeValue, setRemoveValue] = useState('');
+
+  const addInputRef = useRef();
+  const removeInputRef = useRef();
 
   useEffect(() => {
     if (Query.get('updated', false) === 'true') {
@@ -83,7 +88,10 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
   const removeChange = useCallback((changeId) => {
     setChanges((changes) => changes.filter((change) => change.id !== changeId));
   }, []);
-  const value = { changes, setChanges, addChange, addChanges, removeChange };
+
+  const openEditCollapse = useCallback(() => setOpenCollapse('edit'), [setOpenCollapse]);
+
+  const value = { changes, addValue, setAddValue, removeValue, setRemoveValue, addInputRef, removeInputRef, setChanges, addChange, addChanges, removeChange, openEditCollapse };
 
   return <ChangelistContext.Provider value={value} {...props} />;
 };
