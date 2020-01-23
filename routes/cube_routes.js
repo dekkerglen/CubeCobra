@@ -3096,11 +3096,11 @@ router.post(
         success: 'true',
         details: carddb.cardFromId(card.cardID),
       });
-    } else {
-      return res.status(200).send({
-        success: 'true',
-      });
     }
+
+    return res.status(200).send({
+      success: 'true',
+    });
   }),
 );
 router.post('/remove/:id', ensureAuth, async (req, res) => {
