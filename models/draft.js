@@ -4,9 +4,10 @@ let mongoose = require('mongoose');
 const Seat = {
   bot: [], //null bot value means human player
   name: String,
-  userId: String,
+  userid: String,
   drafted: [[]], //organized draft picks
-  pickOrder: [],
+  pickorder: [],
+  packbacklog: [[]],
 };
 
 // Cube schema
@@ -14,9 +15,10 @@ let draftSchema = mongoose.Schema({
   cube: String,
   ratings: {},
   initial_state: [[[]]],
-  
+
   //new format, will convert to
   seats: [Seat],
+  unopenedPacks: [[]],
 
   //deprecated
   picks: [[]],

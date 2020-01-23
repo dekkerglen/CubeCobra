@@ -21,7 +21,7 @@ Comment.add({
 });
 
 //data for each seat, human or bot
-const Seat = {
+const SeatDeck = {
   bot: [], //null bot value means human player
   userid: String,  
   username:String,
@@ -60,7 +60,7 @@ let deckSchema = mongoose.Schema({
   },
 
   //new format, will convert to
-  seats: [Seat],
+  seats: [SeatDeck],
 
   //deprecated
   owner: String,
