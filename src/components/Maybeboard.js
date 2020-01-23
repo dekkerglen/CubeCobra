@@ -25,7 +25,7 @@ const MaybeboardListItem = ({ card, className }) => {
   const { addChange } = useContext(ChangelistContext);
   const [loading, setLoading] = useState(false);
 
-  const handleClickCard = useCallback(
+  const handleAdd = useCallback(
     (event) => {
       event.preventDefault();
       addChange({ add: { details: card.details } });
@@ -72,20 +72,30 @@ const MaybeboardListItem = ({ card, className }) => {
       className={`d-flex card-list-item ${getCardColorClass(card)} ${className || ''}`}
       card={card}
       data-index={card.index}
-      onClick={canEdit ? handleClickCard : undefined}
+      onClick={undefined}
     >
       <div className="name">{card.details.name}</div>
       {canEdit &&
         (loading ? (
           <Spinner size="sm" className="ml-auto" />
         ) : (
-          <Button
-            size="sm"
-            close
-            className="ml-auto float-none"
-            data-index={card.index}
-            onClick={canEdit ? handleRemove : undefined}
-          />
+          <>
+            <div
+              className="icon-button ml-auto"
+              data-index={card.index}
+              onClick={handleAdd}
+              aria-label="Add"
+            >
+              <span aria-hidden="true">+</span>
+            </div>
+            <Button
+              size="sm"
+              close
+              className="float-none"
+              data-index={card.index}
+              onClick={handleRemove}
+            />
+          </>
         ))}
     </AutocardItem>
   );
