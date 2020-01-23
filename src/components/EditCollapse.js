@@ -43,7 +43,17 @@ const EditCollapse = ({ cubeID, ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
 
-  const { changes, addValue, setAddValue, removeValue, setRemoveValue, addInputRef, removeInputRef, addChange, setChanges } = useContext(ChangelistContext);
+  const {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    addChange,
+    setChanges,
+  } = useContext(ChangelistContext);
   const { cube } = useContext(CubeContext);
 
   const changelistForm = useRef();

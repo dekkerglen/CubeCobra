@@ -3081,7 +3081,7 @@ router.post(
       return res.status(400).send({
         success: 'false',
         message: 'Bad request.',
-      })
+      });
     }
     const newVersion = updated.cardID && updated.cardID !== card.cardID;
     for (field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {

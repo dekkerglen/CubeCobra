@@ -28,9 +28,12 @@ const MaybeboardListItem = ({ card, className }) => {
   const openCardModal = useContext(CardModalContext);
   const [loading, setLoading] = useState(false);
 
-  const handleEdit = useCallback((event) => {
-    openCardModal(card.index, true);
-  }, [card]);
+  const handleEdit = useCallback(
+    (event) => {
+      openCardModal(card.index, true);
+    },
+    [card],
+  );
 
   const handleAdd = useCallback(
     (event) => {
@@ -90,21 +93,10 @@ const MaybeboardListItem = ({ card, className }) => {
           <Spinner size="sm" className="ml-auto" />
         ) : (
           <>
-            <div
-              className="icon-button ml-auto"
-              data-index={card.index}
-              onClick={handleAdd}
-              aria-label="Add"
-            >
+            <div className="icon-button ml-auto" data-index={card.index} onClick={handleAdd} aria-label="Add">
               <span aria-hidden="true">+</span>
             </div>
-            <Button
-              size="sm"
-              close
-              className="float-none"
-              data-index={card.index}
-              onClick={handleRemove}
-            />
+            <Button size="sm" close className="float-none" data-index={card.index} onClick={handleRemove} />
           </>
         ))}
     </AutocardItem>

@@ -91,7 +91,20 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
 
   const openEditCollapse = useCallback(() => setOpenCollapse('edit'), [setOpenCollapse]);
 
-  const value = { changes, addValue, setAddValue, removeValue, setRemoveValue, addInputRef, removeInputRef, setChanges, addChange, addChanges, removeChange, openEditCollapse };
+  const value = {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    setChanges,
+    addChange,
+    addChanges,
+    removeChange,
+    openEditCollapse,
+  };
 
   return <ChangelistContext.Provider value={value} {...props} />;
 };

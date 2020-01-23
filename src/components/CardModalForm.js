@@ -23,11 +23,12 @@ const CardModalForm = ({ children, ...props }) => {
 
   const card = (maybe ? maybeboard[cardIndex] : cube[cardIndex]) || { colors: [], details: {}, tags: [] };
 
-  const setTagInput = useCallback((value) =>
-    setFormValues((formValues) => ({
-      ...formValues,
-      tagInput: value,
-    })),
+  const setTagInput = useCallback(
+    (value) =>
+      setFormValues((formValues) => ({
+        ...formValues,
+        tagInput: value,
+      })),
     [],
   );
 
@@ -105,7 +106,7 @@ const CardModalForm = ({ children, ...props }) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        })        
+        });
         const json = await response.json();
 
         if (json.success === 'true') {

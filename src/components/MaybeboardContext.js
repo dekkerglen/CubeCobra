@@ -20,13 +20,13 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
   const updateMaybeboardCard = useCallback((updatedCard) => {
     setMaybeboard((maybeboard) => {
       const newMaybeboard = [...maybeboard];
-      const index = newMaybeboard.findIndex(card => card._id === updatedCard._id);
+      const index = newMaybeboard.findIndex((card) => card._id === updatedCard._id);
       if (index > 0) {
         newMaybeboard[index] = updatedCard;
       }
       return newMaybeboard;
-    })
-  })
+    });
+  });
 
   const value = { maybeboard, addMaybeboardCard, removeMaybeboardCard, updateMaybeboardCard };
 
