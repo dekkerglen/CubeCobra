@@ -3,21 +3,21 @@ import PropTypes from 'prop-types';
 
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
-import { csrfFetch } from '../utils/CSRF';
+import { csrfFetch } from 'utils/CSRF';
+import Filter from 'utils/Filter';
 
-import AutocompleteInput from './AutocompleteInput';
-import CardModalContext from './CardModalContext';
-import ChangelistContext from './ChangelistContext';
-import CubeContext from './CubeContext';
-import DisplayContext from './DisplayContext';
-import Filter from '../utils/Filter';
-import { getCard } from './EditCollapse';
-import LoadingButton from './LoadingButton';
-import MaybeboardContext from './MaybeboardContext';
-import TableView from './TableView';
-import { getCardColorClass } from './TagContext';
-import withAutocard from './WithAutocard';
-import CardModalForm from './CardModalForm';
+import AutocompleteInput from 'components/AutocompleteInput';
+import CardModalContext from 'components/CardModalContext';
+import CardModalForm from 'components/CardModalForm';
+import ChangelistContext from 'components/ChangelistContext';
+import CubeContext from 'components/CubeContext';
+import DisplayContext from 'components/DisplayContext';
+import { getCard } from 'components/EditCollapse';
+import LoadingButton from 'components/LoadingButton';
+import MaybeboardContext from 'components/MaybeboardContext';
+import TableView from 'components/TableView';
+import { getCardColorClass } from 'components/TagContext';
+import withAutocard from 'components/WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
