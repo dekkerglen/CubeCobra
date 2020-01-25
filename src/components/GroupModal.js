@@ -254,7 +254,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                     value={formValues.status}
                     onChange={handleChange}
                   >
-                    {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
+                    {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
                   </CustomInput>

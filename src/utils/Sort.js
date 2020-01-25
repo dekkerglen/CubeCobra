@@ -164,7 +164,7 @@ export function getLabels(cube, sort) {
     });
     return days.sort();
   } else if (sort == 'Status') {
-    return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned'];
+    return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
   } else if (sort == 'Finish') {
     return ['Non-foil', 'Foil'];
   } else if (sort == 'Guilds') {

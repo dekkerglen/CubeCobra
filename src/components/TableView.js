@@ -20,9 +20,12 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
         {sorted.map(([columnLabel, column]) => (
           <Col
             key={columnLabel}
-            md="auto"
+            md={compressedView ? undefined : 'auto'}
             className="table-col"
-            style={{ width: `${100 / Math.min(sorted.length, 8)}%` }}
+            style={{
+              width: `${100 / Math.min(sorted.length, 8)}%`,
+              flexBasis: compressedView ? `${100 / Math.min(sorted.length, 8)}%` : undefined,
+            }}
           >
             <h6 className="text-center card-list-heading">
               {columnLabel}
