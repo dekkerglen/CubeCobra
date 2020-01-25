@@ -248,7 +248,6 @@ describe('CSVtoCards', () => {
       }
     });
     const expectSame = (card, expected) => {
-      console.warn(card);
       expect(card.cardID).toBe(expectedId);
       expect(card.name).toBe(expected.name);
       expect(card.cmc).toBe(expected.cmc);
@@ -261,7 +260,6 @@ describe('CSVtoCards', () => {
       expect(card.tags).equalsArray(expected.tags);
     }
     expect(newCards.length).toBe(1);
-    console.warn(newCards[0]);
     expectSame(newCards[0], expectedCard);
     expect(newMaybe.length).toBe(1);
     expectSame(newMaybe[0], expectedMaybe);
