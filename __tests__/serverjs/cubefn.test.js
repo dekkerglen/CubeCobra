@@ -1,9 +1,15 @@
 var sinon = require('sinon');
+
 const cubefn = require('../../serverjs/cubefn');
 const carddb = require('../../serverjs/cards');
+
+const cardsfixture = require('../../fixtures/examplecards');
 const cubefixture = require('../../fixtures/examplecube');
 const landsfixture = require('../../fixtures/examplelands');
+
 let Cube = require('../../models/cube');
+
+import { arraysEqual } from '../../src/utils/Util';
 
 const fixturesPath = 'fixtures';
 
@@ -202,5 +208,89 @@ test('addAutocard correctly replaces autocard format strings', () => {
       '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
     const result = cubefn.addAutocard(exampleHtml, carddb);
     expect(result).toBe(expected);
+  });
+});
+
+describe('CSVtoCards', () => {
+  it('can find a card', async () => {
+    const expectedId = 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6';
+    const expectedCard = {
+      name: 'Embercleave',
+      cmc: '3',
+      type_line: 'Creature - Test',
+      colors: ['U'],
+      set: 'ELD',
+      collector_number: '359',
+      status: 'Owned',
+      finish: 'Is Foil',
+      imgUrl: 'http://example.com/',
+      tags: ['tag1', 'tag2']
+    };
+    const expectedMaybe = {
+      name: 'Embercleave',
+      cmc: '2',
+      type_line: 'Creature - Type',
+      colors: ['R', 'W'],
+      set: 'ELD',
+      collector_number: '120',
+      status: 'Not Owned',
+      finish: 'Is Not Foil',
+      imgUrl: null,
+      tags: ['tag3', 'tag4']
+    };
+    const cards = [`"${expectedCard.name}",${expectedCard.cmc},${expectedCard.type_line.replace('—', '-')},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${expectedCard.finish},false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
+    `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace('—', '-')},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${expectedMaybe.status},${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`];
+    await carddb.initializeCardDb(fixturesPath, true);
+    const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards, carddb);
+    expect.extend({
+      equalsArray(received, expected) {
+        return { message: () => `expected ${received} to equal array ${expected}`, pass: arraysEqual(received, expected) };
+      }
+    });
+    const expectSame = (card, expected) => {
+      console.warn(card);
+      expect(card.cardID).toBe(expectedId);
+      expect(card.name).toBe(expected.name);
+      expect(card.cmc).toBe(expected.cmc);
+      expect(card.colors).equalsArray(expected.colors);
+      expect(card.set).toBe(expected.set);
+      expect(card.collector_number).toBe(expected.collector_number);
+      expect(card.status).toBe(expected.status);
+      expect(card.finish).toBe(expected.finish);
+      expect(card.imgUrl).toBe(expected.imgUrl);
+      expect(card.tags).equalsArray(expected.tags);
+    }
+    expect(newCards.length).toBe(1);
+    console.warn(newCards[0]);
+    expectSame(newCards[0], expectedCard);
+    expect(newMaybe.length).toBe(1);
+    expectSame(newMaybe[0], expectedMaybe);
+    expect(missing).toBe('');
+  });
+});
+
+describe('compareCubes', () => {
+  it('can calculate the diff between two cubes', async () => {
+    await carddb.initializeCardDb(fixturesPath, true);
+    var queryMockPromise = new Promise((resolve, reject) => {
+      process.nextTick(() => {
+        resolve({});
+      });
+    });
+    var queryMock = jest.fn();
+    queryMock.mockReturnValue(queryMockPromise);
+    const prices = { GetPrices: queryMock };
+    const cubeA = { cards: [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]] };
+    const cubeB = { cards: [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]] };
+    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(null, null, cubeA, cubeB, carddb, prices);
+    expect(in_both.length).toBe(1)
+    expect(in_both[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
+    expect(only_a.length).toBe(1)
+    expect(only_a[0].cardID).toBe(cubefixture.exampleCube.cards[0].cardID);
+    expect(only_b.length).toBe(1)
+    expect(only_b[0].cardID).toBe(cubefixture.exampleCube.cards[2].cardID);
+    expect(a_names.length).toBe(1);
+    expect(b_names.length).toBe(1);
+    expect(all_cards.length).toBe(3);
   });
 });

@@ -10,10 +10,10 @@
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
     "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js'",
-    "nodemon": "nodemon --ignore src --ignore public",
+    "nodemon": "nodemon --ignore src --ignore public --ignore __tests__",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js && rollup -c",
-    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
+    "start": "nodemon --ignore src --ignore public --ignore __tests__ & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
     "setup": "rollup -c && node force_update.js"
   },

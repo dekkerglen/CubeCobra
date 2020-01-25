@@ -1225,7 +1225,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
       if (cards[0].trim() == CSV_HEADER) {
         cards.splice(0, 1);
         try {
-          const { newCards, newMaybe, missing } = await CSVtoCards(cards, carddb);
+          const { newCards, newMaybe, missing } = CSVtoCards(cards, carddb);
           const { only_a, only_b, in_both, all_cards } = await compareCubes(
             req,
             res,
@@ -1242,10 +1242,13 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
           only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
           cube.cards = newCards;
           cube.maybe = newMaybe;
-          generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing, carddb);
+          await generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing, carddb);
         } catch (e) {
           console.error(e);
         }
+      } else {
+        req.flash('danger', 'Error adding cards. Invalid format.');
+        res.redirect('/cube/list/' + req.params.id);
       }
     }
   } catch (err) {
@@ -1261,7 +1264,7 @@ async function bulkUpload(req, res, list, cube) {
     if (cards[0].trim() == CSV_HEADER) {
       cards.splice(0, 1);
       let changelog = '';
-      let { newCards, newMaybe, missing } = await CSVtoCards(cards, carddb);
+      let { newCards, newMaybe, missing } = CSVtoCards(cards, carddb);
       newCards.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
@@ -1323,53 +1326,7 @@ async function bulkUpload(req, res, list, cube) {
           }
         }
 
-        var blogpost = new Blog();
-        blogpost.title = 'Cube Bulk Import - Automatic Post';
-        blogpost.html = changelog;
-        blogpost.owner = cube.owner;
-        blogpost.date = Date.now();
-        blogpost.cube = cube._id;
-        blogpost.dev = 'false';
-        blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-        blogpost.username = cube.owner_name;
-        blogpost.cubename = cube.name;
-
-        if (missing.length > 0) {
-          const reactProps = {
-            cubeID: req.params.id,
-            missing,
-            added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-            blogpost: blogpost.toObject(),
-          };
-          res.render('cube/bulk_upload', {
-            reactHTML: BulkUploadPage
-              ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-              : undefined,
-            reactProps: serialize(reactProps),
-            cube: cube,
-            cube_id: req.params.id,
-            title: `${abbreviate(cube.name)} - Bulk Upload`,
-          });
-        } else {
-          blogpost.save(function(err) {
-            cube = setCubeType(cube, carddb);
-            Cube.updateOne(
-              {
-                _id: cube._id,
-              },
-              cube,
-              function(err) {
-                if (err) {
-                  req.flash('danger', 'Error adding cards. Please try again.');
-                  res.redirect('/cube/list/' + req.params.id);
-                } else {
-                  req.flash('success', 'All cards successfully added.');
-                  res.redirect('/cube/list/' + req.params.id);
-                }
-              },
-            );
-          });
-        }
+        await generateBlogpost(req, res, cube, changelog, added, missing, carddb);
       }
     }
   } else {

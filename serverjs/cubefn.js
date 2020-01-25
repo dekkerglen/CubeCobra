@@ -251,7 +251,7 @@ function setCubeType(cube, carddb) {
   return cube;
 }
 
-async function CSVtoCards(cards, carddb) {
+function CSVtoCards(cards, carddb) {
   let missing = '';
   let newCards = [];
   let newMaybe = [];
@@ -276,10 +276,14 @@ async function CSVtoCards(cards, carddb) {
     let potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
+      let matchingSetAndNumber = potentialIds.find((id) => {
+        const dbCard = carddb.cardFromId(id);
+        return card.set.toUpperCase() == dbCard.set.toUpperCase() && card.collector_number.toUpperCase() == dbCard.collector_number.toUpperCase();
+      });
       let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
       let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
       let first = potentialIds[0];
-      card.cardID = matchingSet || nonPromo || first;
+      card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
       if (maybeboard == 'true') {
         newMaybe.push(card);
       } else {
