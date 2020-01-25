@@ -278,7 +278,10 @@ function CSVtoCards(cards, carddb) {
       // First, try to find the correct set.
       let matchingSetAndNumber = potentialIds.find((id) => {
         const dbCard = carddb.cardFromId(id);
-        return card.set.toUpperCase() == dbCard.set.toUpperCase() && card.collector_number.toUpperCase() == dbCard.collector_number.toUpperCase();
+        return (
+          card.set.toUpperCase() == dbCard.set.toUpperCase() &&
+          card.collector_number.toUpperCase() == dbCard.collector_number.toUpperCase()
+        );
       });
       let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
       let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);

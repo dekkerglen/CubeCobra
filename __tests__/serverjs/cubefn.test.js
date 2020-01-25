@@ -224,7 +224,7 @@ describe('CSVtoCards', () => {
       status: 'Owned',
       finish: 'Is Foil',
       imgUrl: 'http://example.com/',
-      tags: ['tag1', 'tag2']
+      tags: ['tag1', 'tag2'],
     };
     const expectedMaybe = {
       name: 'Embercleave',
@@ -236,16 +236,31 @@ describe('CSVtoCards', () => {
       status: 'Not Owned',
       finish: 'Is Not Foil',
       imgUrl: null,
-      tags: ['tag3', 'tag4']
+      tags: ['tag3', 'tag4'],
     };
-    const cards = [`"${expectedCard.name}",${expectedCard.cmc},${expectedCard.type_line.replace('—', '-')},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${expectedCard.finish},false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
-    `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace('—', '-')},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${expectedMaybe.status},${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`];
+    const cards = [
+      `"${expectedCard.name}",${expectedCard.cmc},${expectedCard.type_line.replace(
+        '—',
+        '-',
+      )},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${
+        expectedCard.finish
+      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
+      `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace(
+        '—',
+        '-',
+      )},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${
+        expectedMaybe.status
+      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`,
+    ];
     await carddb.initializeCardDb(fixturesPath, true);
     const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards, carddb);
     expect.extend({
       equalsArray(received, expected) {
-        return { message: () => `expected ${received} to equal array ${expected}`, pass: arraysEqual(received, expected) };
-      }
+        return {
+          message: () => `expected ${received} to equal array ${expected}`,
+          pass: arraysEqual(received, expected),
+        };
+      },
     });
     const expectSame = (card, expected) => {
       expect(card.cardID).toBe(expectedId);
@@ -258,7 +273,7 @@ describe('CSVtoCards', () => {
       expect(card.finish).toBe(expected.finish);
       expect(card.imgUrl).toBe(expected.imgUrl);
       expect(card.tags).equalsArray(expected.tags);
-    }
+    };
     expect(newCards.length).toBe(1);
     expectSame(newCards[0], expectedCard);
     expect(newMaybe.length).toBe(1);
@@ -280,12 +295,19 @@ describe('compareCubes', () => {
     const prices = { GetPrices: queryMock };
     const cubeA = { cards: [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]] };
     const cubeB = { cards: [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]] };
-    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(null, null, cubeA, cubeB, carddb, prices);
-    expect(in_both.length).toBe(1)
+    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(
+      null,
+      null,
+      cubeA,
+      cubeB,
+      carddb,
+      prices,
+    );
+    expect(in_both.length).toBe(1);
     expect(in_both[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
-    expect(only_a.length).toBe(1)
+    expect(only_a.length).toBe(1);
     expect(only_a[0].cardID).toBe(cubefixture.exampleCube.cards[0].cardID);
-    expect(only_b.length).toBe(1)
+    expect(only_b.length).toBe(1);
     expect(only_b[0].cardID).toBe(cubefixture.exampleCube.cards[2].cardID);
     expect(a_names.length).toBe(1);
     expect(b_names.length).toBe(1);
