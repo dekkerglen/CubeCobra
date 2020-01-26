@@ -1224,28 +1224,24 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
     if (cards) {
       if (cards[0].trim() == CSV_HEADER) {
         cards.splice(0, 1);
-        try {
-          const { newCards, newMaybe, missing } = CSVtoCards(cards, carddb);
-          const { only_a, only_b, in_both, all_cards } = await compareCubes(
-            req,
-            res,
-            cube,
-            {
-              cards: newCards,
-              maybe: newMaybe,
-            },
-            carddb,
-            prices,
-          );
-          let changelog = '';
-          only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
-          only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
-          cube.cards = newCards;
-          cube.maybe = newMaybe;
-          await generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing, carddb);
-        } catch (e) {
-          console.error(e);
-        }
+        const { newCards, newMaybe, missing } = CSVtoCards(cards, carddb);
+        const { only_a, only_b, in_both, all_cards } = await compareCubes(
+          req,
+          res,
+          cube,
+          {
+            cards: newCards,
+            maybe: newMaybe,
+          },
+          carddb,
+          prices,
+        );
+        let changelog = '';
+        only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
+        only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
+        cube.cards = newCards;
+        cube.maybe = newMaybe;
+        await generateBlogpost(req, res, cube, changelog, only_b.concat(newMaybe), missing, carddb);
       } else {
         req.flash('danger', 'Error adding cards. Invalid format.');
         res.redirect('/cube/list/' + req.params.id);
