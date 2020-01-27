@@ -24,6 +24,7 @@ var {
   getElo,
   CSVtoCards,
   generateBlogpost,
+  populateCardDetails,
   compareCubes,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
@@ -211,10 +212,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     if (draftcards.length == 0) {
       throw new Error('Could not create draft: no cards');
     }
-    // ensure that cards have details
-    draftcards.forEach((card, index) => {
-      card.details = carddb.cardFromId(card.cardID);
-    });
+    populateCardDetails([draftcards], carddb);
     // test format for errors
     let format = draftutil.parseDraftFormat(req.body.format);
     draftutil.checkFormat(format, draftcards);
@@ -426,24 +424,16 @@ router.get('/overview/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const pids = new Set();
-    for (const card of cube.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-      const allVersions = carddb.getIdsFromName(card.details.name) || [];
-      card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
-      for (const details of card.allDetails) {
-        if (details.tcgplayer_id) {
-          pids.add(details.tcgplayer_id);
-        }
-      }
-    }
-
+    const cardDetailsQ = populateCardDetails([cube.cards], carddb, prices, null, undefined, true);
     const userQ = User.findById(cube.owner);
     const blogsQ = Blog.find({
       cube: cube._id,
     }).sort('date');
-    const priceDictQ = GetPrices([...pids]);
-    const [user, blogs, priceDict] = await Promise.all([userQ, blogsQ, priceDictQ]);
+    const [user, blogs, cardDetails] = await Promise.all([userQ, blogsQ, cardDetailsQ]);
+    cube.cards.forEach((card) => {
+      const allVersions = carddb.getIdsFromName(card.details.name) || [];
+      card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
+    });
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -451,16 +441,16 @@ router.get('/overview/:id', async (req, res) => {
       if (card.status !== 'Not Owned') {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
-          priceOwned = priceDict[card.details.tcgplayer_id + '_foil'] || 0;
+          priceOwned = card.details.price_foil || 0;
         } else {
-          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[card.details.tcgplayer_id + '_foil'] || 0;
+          priceOwned = card.details.price || card.details.price_foil || 0;
         }
         totalPriceOwned += priceOwned;
       }
 
-      const allPrices = card.allDetails.map(({ tcgplayer_id }) => [
-        priceDict[tcgplayer_id],
-        priceDict[tcgplayer_id + '_foil'],
+      const allPrices = card.allDetails.map((details) => [
+        details.price,
+        details.price_foil,
       ]);
       const allPricesFlat = [].concat.apply([], allPrices).filter((p) => p && p > 0.001);
       totalPricePurchase += Math.min(allPricesFlat) || 0;
@@ -686,7 +676,8 @@ router.get('/compare/:id_a/to/:id_b', async (req, res) => {
     const cubeBq = Cube.findOne(build_id_query(id_b));
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
-    const { a_names, b_names, in_both, all_cards } = await compareCubes(req, res, cubeA, cubeB, carddb, prices);
+    await populateCardDetails([cubeA.cards, cubeB.cards], carddb, prices);
+    const { a_names, b_names, in_both, all_cards } = await compareCubes(cubeA.cards, cubeB.cards);
     const reactProps = {
       cube: cubeA,
       cubeID: id_a,
@@ -729,39 +720,7 @@ router.get('/list/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    const pids = new Set();
-    const cardNames = [];
-    const cards = cube.cards;
-    cards.forEach(function(card, index) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
-      card.index = index;
-      if (!card.type_line) {
-        card.type_line = card.details.type;
-      }
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      cardNames.push(card.details.name);
-    });
-
-    const price_dict = await GetPrices([...pids]);
-    const elo_dict = await getElo(cardNames, true);
-    for (const card of cards) {
-      if (card.details.tcgplayer_id) {
-        if (price_dict[card.details.tcgplayer_id]) {
-          card.details.price = price_dict[card.details.tcgplayer_id];
-        }
-        if (price_dict[card.details.tcgplayer_id + '_foil']) {
-          card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-        }
-      }
-      if (elo_dict[card.details.name]) {
-        card.details.elo = elo_dict[card.details.name];
-      }
-    }
-
+    populateCardDetails([cube.cards], carddb, prices, { round: true });
     const reactProps = {
       cube,
       cubeID: req.params.id,
@@ -1225,17 +1184,8 @@ router.post('/bulkreplacefile/:id', ensureAuth, async function(req, res) {
       if (cards[0].trim() == CSV_HEADER) {
         cards.splice(0, 1);
         const { newCards, newMaybe, missing } = CSVtoCards(cards, carddb);
-        const { only_a, only_b, in_both, all_cards } = await compareCubes(
-          req,
-          res,
-          cube,
-          {
-            cards: newCards,
-            maybe: newMaybe,
-          },
-          carddb,
-          prices,
-        );
+        await populateCardDetails([cube.cards, newCards, newMaybe], carddb, prices);
+        const { only_a, only_b, in_both, all_cards } = await compareCubes(cube.cards, newCards);
         let changelog = '';
         only_a.forEach((card) => (changelog += removeCardHtml(carddb.cardFromId(card.cardID))));
         only_b.forEach((card) => (changelog += addCardHtml(carddb.cardFromId(card.cardID))));
@@ -1479,10 +1429,7 @@ router.post('/startdraft/:id', async (req, res) => {
     if (draftcards.length == 0) {
       throw new Error('Could not create draft: no cards');
     }
-    // ensure that cards have details
-    draftcards.forEach((card, index) => {
-      card.details = carddb.cardFromId(card.cardID);
-    });
+    await populateCardDetails([draftcards], carddb);
     let bots = draftutil.getDraftBots(params);
     let format = draftutil.getDraftFormat(params, cube);
     let draft = new Draft();

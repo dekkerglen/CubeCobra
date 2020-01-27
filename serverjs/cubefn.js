@@ -350,33 +350,49 @@ async function generateBlogpost(req, res, cube, changelog, added, missing, cardd
   }
 }
 
-async function compareCubes(req, res, cubeA, cubeB, carddb, prices) {
-  if (!cubeA) {
-    req.flash('danger', 'Base cube not found');
-    res.status(404).render('misc/404', {});
-  } else if (!cubeB) {
-    req.flash('danger', 'Comparison cube was not found');
-    res.redirect('/cube/list/' + cubeA._id);
-  } else {
-    const pids = new Set();
-    [cubeA, cubeB].forEach((cube) => {
-      cube.cards.forEach(function(card, index) {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
-      });
+// prices should be the prices module with the GetPrices function.
+// elo should be in the form { round: bool }.
+// requested details is a string to pass to carddb.cardFromId.
+async function populateCardDetails(card_lists, carddb, prices = null, elo = null, requested_details = undefined, allDetails = false) {
+  const pids = new Set();
+  const cardNames = new Set();
+  const all_card_lists = [...card_lists];
+  card_lists.forEach((cards) => {
+    cards.forEach(function(card, index) {
+      card.details = {
+        ...carddb.cardFromId(card.cardID, requested_details),
+      };
+      if (allDetails) {
+        const allVersions = carddb.getIdsFromName(card.details.name) || [];
+        card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
+        card.allDetails.forEach((details) => {
+          if (details.tcgplayer_id) {
+            pids.add(details.tcgplayer_id);
+          }
+        });
+        all_card_lists.push(card.allDetails.map((details) => ({ details })));
+      }
+        
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (prices && card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      if (elo) {
+        cardNames.add(card.details.name);
+      }
     });
-
-    const price_dict = await prices.GetPrices([...pids]);
-    [cubeA, cubeB].forEach((cube) => {
-      cube.cards.forEach(function(card, index) {
-        if (card.details.tcgplayer_id) {
+  });
+  if (prices || elo) {
+    const queries = [
+      prices && prices.GetPrices([...pids]),
+      elo && getElo([...cardNames], elo.round),
+    ];
+    const [price_dict, elo_dict] = await Promise.all(queries);
+    all_card_lists.forEach((cards) => {
+      cards.forEach(function(card, index) {
+        if (prices && card.details.tcgplayer_id) {
           if (price_dict[card.details.tcgplayer_id]) {
             card.details.price = price_dict[card.details.tcgplayer_id];
           }
@@ -384,37 +400,44 @@ async function compareCubes(req, res, cubeA, cubeB, carddb, prices) {
             card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
           }
         }
+        if (elo && elo_dict[card.details.name]) {
+          card.details.elo = elo_dict[card.details.name];
+        }
       });
     });
-
-    let in_both = [];
-    let only_a = cubeA.cards.slice(0);
-    let only_b = cubeB.cards.slice(0);
-    let a_names = only_a.map((card) => card.details.name);
-    let b_names = only_b.map((card) => card.details.name);
-
-    cubeA.cards.forEach(function(card, index) {
-      if (b_names.includes(card.details.name)) {
-        in_both.push(card);
-
-        only_a.splice(a_names.indexOf(card.details.name), 1);
-        only_b.splice(b_names.indexOf(card.details.name), 1);
-
-        a_names.splice(a_names.indexOf(card.details.name), 1);
-        b_names.splice(b_names.indexOf(card.details.name), 1);
-      }
-    });
-
-    let all_cards = in_both.concat(only_a).concat(only_b);
-    return {
-      in_both,
-      only_a,
-      only_b,
-      a_names,
-      b_names,
-      all_cards,
-    };
   }
+  return card_lists;
+}
+
+
+async function compareCubes(cardsA, cardsB) {
+  let in_both = [];
+  let only_a = cardsA.slice(0);
+  let only_b = cardsB.slice(0);
+  let a_names = only_a.map((card) => card.details.name);
+  let b_names = only_b.map((card) => card.details.name);
+
+  cubeA.cards.forEach(function(card, index) {
+    if (b_names.includes(card.details.name)) {
+      in_both.push(card);
+
+      only_a.splice(a_names.indexOf(card.details.name), 1);
+      only_b.splice(b_names.indexOf(card.details.name), 1);
+
+      a_names.splice(a_names.indexOf(card.details.name), 1);
+      b_names.splice(b_names.indexOf(card.details.name), 1);
+    }
+  });
+
+  let all_cards = in_both.concat(only_a).concat(only_b);
+  return {
+    in_both,
+    only_a,
+    only_b,
+    a_names,
+    b_names,
+    all_cards,
+  };
 }
 
 var methods = {
@@ -529,6 +552,7 @@ var methods = {
   setCubeType,
   CSVtoCards,
   generateBlogpost,
+  populateCardDetails,
   compareCubes,
 };
 
