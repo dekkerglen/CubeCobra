@@ -458,8 +458,10 @@ router.get('/overview/:id', async (req, res) => {
         priceDict[tcgplayer_id],
         priceDict[tcgplayer_id + '_foil'],
       ]);
-      const allPricesFlat = [].concat.apply([], allPrices).filter((p) => p && p > 0.001);
-      totalPricePurchase += Math.min(allPricesFlat) || 0;
+      const allPricesFlat = [].concat(...allPrices).filter((p) => p && p > 0.001);
+      if (allPricesFlat.length > 0) {
+        totalPricePurchase += Math.min(...allPricesFlat) || 0;
+      }
     }
 
     if (blogs) {
