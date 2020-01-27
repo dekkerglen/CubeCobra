@@ -353,7 +353,14 @@ async function generateBlogpost(req, res, cube, changelog, added, missing, cardd
 // prices should be the prices module with the GetPrices function.
 // elo should be in the form { round: bool }.
 // requested details is a string to pass to carddb.cardFromId.
-async function populateCardDetails(card_lists, carddb, prices = null, elo = null, requested_details = undefined, allDetails = false) {
+async function populateCardDetails(
+  card_lists,
+  carddb,
+  prices = null,
+  elo = null,
+  requested_details = undefined,
+  allDetails = false,
+) {
   const pids = new Set();
   const cardNames = new Set();
   const all_card_lists = [...card_lists];
@@ -372,7 +379,7 @@ async function populateCardDetails(card_lists, carddb, prices = null, elo = null
         });
         all_card_lists.push(card.allDetails.map((details) => ({ details })));
       }
-        
+
       if (!card.type_line) {
         card.type_line = card.details.type;
       }
@@ -385,10 +392,7 @@ async function populateCardDetails(card_lists, carddb, prices = null, elo = null
     });
   });
   if (prices || elo) {
-    const queries = [
-      prices && prices.GetPrices([...pids]),
-      elo && getElo([...cardNames], elo.round),
-    ];
+    const queries = [prices && prices.GetPrices([...pids]), elo && getElo([...cardNames], elo.round)];
     const [price_dict, elo_dict] = await Promise.all(queries);
     all_card_lists.forEach((cards) => {
       cards.forEach(function(card, index) {
@@ -409,7 +413,6 @@ async function populateCardDetails(card_lists, carddb, prices = null, elo = null
   return card_lists;
 }
 
-
 async function compareCubes(cardsA, cardsB) {
   let in_both = [];
   let only_a = cardsA.slice(0);
@@ -417,7 +420,7 @@ async function compareCubes(cardsA, cardsB) {
   let a_names = only_a.map((card) => card.details.name);
   let b_names = only_b.map((card) => card.details.name);
 
-  cubeA.cards.forEach(function(card, index) {
+  cardsA.forEach(function(card, index) {
     if (b_names.includes(card.details.name)) {
       in_both.push(card);
 

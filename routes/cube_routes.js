@@ -448,10 +448,7 @@ router.get('/overview/:id', async (req, res) => {
         totalPriceOwned += priceOwned;
       }
 
-      const allPrices = card.allDetails.map((details) => [
-        details.price,
-        details.price_foil,
-      ]);
+      const allPrices = card.allDetails.map((details) => [details.price, details.price_foil]);
       const allPricesFlat = [].concat.apply([], allPrices).filter((p) => p && p > 0.001);
       totalPricePurchase += Math.min(allPricesFlat) || 0;
     }

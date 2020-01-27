@@ -293,16 +293,10 @@ describe('compareCubes', () => {
     var queryMock = jest.fn();
     queryMock.mockReturnValue(queryMockPromise);
     const prices = { GetPrices: queryMock };
-    const cubeA = { cards: [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]] };
-    const cubeB = { cards: [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]] };
-    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(
-      null,
-      null,
-      cubeA,
-      cubeB,
-      carddb,
-      prices,
-    );
+    const cardsA = [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]];
+    const cardsB = [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]];
+    await cubefn.populateCardDetails([cardsA, cardsB], carddb);
+    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(cardsA, cardsB);
     expect(in_both.length).toBe(1);
     expect(in_both[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
     expect(only_a.length).toBe(1);
