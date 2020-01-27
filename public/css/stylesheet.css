@@ -641,3 +641,20 @@ img.mana-symbol {
 .font-weight-boldish {
 	font-weight: 600;
 }
+
+.icon-button {
+	font-weight: 700;
+	line-height: 1;
+	font-size: 1rem;	
+	text-shadow: 0 1px 0 #fff;
+	opacity: 0.5;
+}
+
+.icon-button:hover {
+	opacity: 1.0;
+}
+
+.icon-button span {
+	vertical-align: top;
+	line-height: 0.9;	
+}

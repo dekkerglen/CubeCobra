@@ -4,7 +4,7 @@ import DisplayContext from './DisplayContext';
 
 /* HOC to add autocard to another element */
 
-const handleMouseOver = (event) => {
+const handleMouseEnter = (event) => {
   const target = event.currentTarget;
   const front = target.getAttribute('data-front');
   const back = target.getAttribute('data-back');
@@ -17,7 +17,7 @@ const handleMouseOver = (event) => {
   }
 };
 
-const handleMouseOut = (event) => /* global */ autocard_hide_card();
+const handleMouseLeave = (event) => /* global */ autocard_hide_card();
 
 const withAutocard = (Tag) =>
   forwardRef(({ card, front, back, tags, inModal, ...props }, ref) => {
@@ -29,8 +29,8 @@ const withAutocard = (Tag) =>
     return (
       <Tag
         ref={ref}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         data-front={front}
         data-back={back}
         data-tags={JSON.stringify(tags)}

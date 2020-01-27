@@ -42,14 +42,20 @@ export const getCard = async (name, setAlerts) => {
 const EditCollapse = ({ cubeID, ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
-  const [addValue, setAddValue] = useState('');
-  const [removeValue, setRemoveValue] = useState('');
 
-  const { changes, addChange, setChanges } = useContext(ChangelistContext);
+  const {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    addChange,
+    setChanges,
+  } = useContext(ChangelistContext);
   const { cube } = useContext(CubeContext);
 
-  const addInput = useRef();
-  const removeInput = useRef();
   const changelistForm = useRef();
 
   const handleChange = useCallback((event) => {
@@ -71,12 +77,12 @@ const EditCollapse = ({ cubeID, ...props }) => {
         addChange({ add: { details: card } });
         setAddValue('');
         setRemoveValue('');
-        addInput.current && addInput.current.focus();
+        addInputRef.current && addInputRef.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput],
+    [addChange, addValue, addInputRef],
   );
 
   const handleRemoveReplace = useCallback(
@@ -111,14 +117,14 @@ const EditCollapse = ({ cubeID, ...props }) => {
         }
         setAddValue('');
         setRemoveValue('');
-        /* If replace, put focus back in addInput; otherwise leave it here. */
-        const focus = replace ? addInput : removeInput;
+        /* If replace, put focus back in addInputRef; otherwise leave it here. */
+        const focus = replace ? addInputRef : removeInputRef;
         focus.current && focus.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addInput, addValue, removeInput, removeValue, cube, changes],
+    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, changes],
   );
 
   const handleDiscardAll = useCallback((event) => {
@@ -144,7 +150,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               treePath="cardnames"
               type="text"
               className="mr-2"
-              innerRef={addInput}
+              innerRef={addInputRef}
               name="add"
               value={addValue}
               onChange={handleChange}
@@ -165,7 +171,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
               treePath="cardnames"
               type="text"
               className="mr-2"
-              innerRef={removeInput}
+              innerRef={removeInputRef}
               name="remove"
               value={removeValue}
               onChange={handleChange}
