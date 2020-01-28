@@ -12,20 +12,32 @@ test('GetColorCat returns the expected results', () => {
   expect(analytics.GetColorCat('land', [])).toBe('l');
   expect(analytics.GetColorCat('creature', [])).toBe('c');
   expect(analytics.GetColorCat('creature', ['G', 'R'])).toBe('m');
+  expect(analytics.GetColorCat('creature', ['W'])).toBe('w');
+  expect(analytics.GetColorCat('creature', ['U'])).toBe('u');
+  expect(analytics.GetColorCat('creature', ['B'])).toBe('b');
+  expect(analytics.GetColorCat('creature', ['R'])).toBe('r');
   expect(analytics.GetColorCat('creature', ['G'])).toBe('g');
+  expect(analytics.GetColorCat('creature', ['C'])).toBe('c');
+  expect(analytics.GetColorCat('creature', ['P'])).toBe(null);
 });
 
 test('GetColorIdentity returns the expected results', () => {
   expect(analytics.GetColorIdentity([])).toBe('Colorless');
   expect(analytics.GetColorIdentity(['G', 'R'])).toBe('Multicolored');
+  expect(analytics.GetColorIdentity(['W'])).toBe('White');
+  expect(analytics.GetColorIdentity(['U'])).toBe('Blue');
+  expect(analytics.GetColorIdentity(['B'])).toBe('Black');
+  expect(analytics.GetColorIdentity(['R'])).toBe('Red');
   expect(analytics.GetColorIdentity(['G'])).toBe('Green');
+  expect(analytics.GetColorIdentity(['C'])).toBe('Colorless');
+  expect(analytics.GetColorIdentity(['P'])).toBe(null);
 });
 
 test('GetTypeByColorIdentity returns valid counts', () => {
   expect.assertions(1);
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    var expected = {
+  const promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(() => {
+    const expected = {
       Artifacts: {
         Black: 0,
         Blue: 2,
@@ -107,14 +119,14 @@ test('GetTypeByColorIdentity returns valid counts', () => {
         White: 13,
       },
     };
-    var result = analytics.GetTypeByColorIdentity(cubefixture.exampleCube.cards, carddb);
+    const result = analytics.GetTypeByColorIdentity(cubefixture.exampleCube.cards, carddb);
     expect(result).toEqual(expected);
   });
 });
 
 test('GetColorIdentityCounts returns valid counts', () => {
   expect.assertions(1);
-  var expected = {
+  const expected = {
     Abzan: 0,
     Azorius: 1,
     Bant: 0,
@@ -148,16 +160,16 @@ test('GetColorIdentityCounts returns valid counts', () => {
     Temur: 0,
     White: 19,
   };
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    var result = analytics.GetColorIdentityCounts(cubefixture.exampleCube.cards, carddb);
+  const promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(() => {
+    const result = analytics.GetColorIdentityCounts(cubefixture.exampleCube.cards, carddb);
     expect(result).toEqual(expected);
   });
 });
 
 test('GetCurve returns a valid curve structure', () => {
   expect.assertions(1);
-  var expected = {
+  const expected = {
     black: [0, 1, 2, 3, 0, 1, 0, 0, 0, 0],
     blue: [0, 1, 3, 7, 0, 0, 0, 0, 0, 0],
     colorless: [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
@@ -167,9 +179,9 @@ test('GetCurve returns a valid curve structure', () => {
     total: [0, 7, 16, 19, 7, 3, 5, 1, 0, 0],
     white: [0, 2, 4, 4, 0, 1, 1, 0, 0, 0],
   };
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    var result = analytics.GetCurve(cubefixture.exampleCube.cards, carddb);
+  const promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(() => {
+    const result = analytics.GetCurve(cubefixture.exampleCube.cards, carddb);
     expect(result).toEqual(expected);
   });
 });
