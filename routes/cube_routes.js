@@ -1592,7 +1592,14 @@ router.post('/startdraft/:id', async (req, res) => {
     let bots = draftutil.getDraftBots(params);
     let format = draftutil.getDraftFormat(params, cube);
     let draft = new Draft();
-    draftutil.populateDraft(draft, format, draftcards, bots, params.seats, req.user ? req.user : {username:'Anonymous'});
+    draftutil.populateDraft(
+      draft,
+      format,
+      draftcards,
+      bots,
+      params.seats,
+      req.user ? req.user : { username: 'Anonymous' },
+    );
     draft.cube = cube._id;
 
     //add ratings
@@ -2276,6 +2283,24 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   }
 });
 
+/*
+//data for each seat, human or bot
+const SeatDeck = {
+  deck: [[]],
+  sideboard: [[]],
+};
+
+//data for each seat, human or bot
+const Seat = {
+  bot: [], //null bot value means human player
+  name: String,
+  userid: String,
+  drafted: [[]], //organized draft picks
+  pickorder: [],
+  packbacklog: [[]],
+};
+  */
+
 router.post('/submitdeck/:id', async (req, res) => {
   try {
     //req.body contains draft0
@@ -2283,17 +2308,26 @@ router.post('/submitdeck/:id', async (req, res) => {
     const draft = await Draft.findById(draftid);
 
     var deck = new Deck();
-    deck.playerdeck = draft.picks[0];
-    deck.cards = draft.picks.slice(1);
-    if (req.user) {
-      deck.owner = req.user._id;
-    }
     deck.cube = draft.cube;
     deck.date = Date.now();
-    deck.bots = draft.bots;
-    deck.playersideboard = [];
-    deck.pickOrder = draft.pickOrder;
+    deck.comments = [];
     deck.draft = draft._id;
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    for (const seat of draft.seats) {
+      deck.seats.push({
+        bot: seat.bot,
+        userid: seat.userid,
+        username: seat.name,
+        pickorder: seat.pickorder,
+        name: 'Draft of ' + cube.name,
+        description: '',
+        cols: 16,
+        deck: seat.drafted,
+        sideboard: [],
+      });
+    }
 
     cube = await Cube.findOne(build_id_query(draft.cube));
 
@@ -2313,9 +2347,6 @@ router.post('/submitdeck/:id', async (req, res) => {
     var [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     var owner = user ? user.username : 'Anonymous';
-    deck.name = 'Draft of ' + cube.name;
-    deck.username = owner;
-    deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
     if (!user) {

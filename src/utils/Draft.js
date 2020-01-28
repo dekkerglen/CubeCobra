@@ -23,11 +23,11 @@ function packPickNumber() {
   let picks = draft.seats[0].length;
   let picknum = 1;
   let packnum = 1;
-  while(picks > draft.initial_state[packnum-1].length) {
-    picks -= draft.initial_state[packnum-1].length;
+  while (picks > draft.initial_state[packnum - 1].length) {
+    picks -= draft.initial_state[packnum - 1].length;
     packnum++;
   }
-  return [packnum , picknum];
+  return [packnum, picknum];
 }
 
 function arrangePicks(picks) {
@@ -113,28 +113,27 @@ function passPack() {
     for (const seat of draft.seats) {
       seat.packbacklog.splice(0, 1)[0];
     }
-    
-    if(draft.unopenedPacks[0].length > 0){
+
+    if (draft.unopenedPacks[0].length > 0) {
       //give new pack
       for (const seat of draft.seats) {
-        seat.packbacklog.push(draft.unopenedPacks[0].splice(0,1)[0]);
+        seat.packbacklog.push(draft.unopenedPacks[0].splice(0, 1)[0]);
       }
     }
   } else {
     if (draft.unopenedPacks[0].length % 2 == 0) {
       //pass left
-      for(let i = 0; i < draft.seats.length; i++) {
-        const pack = draft.seats[i].packbacklog.splice(0,1)[0];
-        draft.seats[(i+1) % draft.seats.length].packbacklog.push(pack);
+      for (let i = 0; i < draft.seats.length; i++) {
+        const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
+        draft.seats[(i + 1) % draft.seats.length].packbacklog.push(pack);
       }
     } else {
       //pass right
-      for(let i = draft.seats.length - 1; i >= 0; i--) {
-        const pack = draft.seats[i].packbacklog.splice(0,1)[0];
-        if( i == 0) {
+      for (let i = draft.seats.length - 1; i >= 0; i--) {
+        const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
+        if (i == 0) {
           draft.seats[draft.seats.length - 1].packbacklog.push(pack);
-        }
-        else {
+        } else {
           draft.seats[i - 1].packbacklog.push(pack);
         }
       }

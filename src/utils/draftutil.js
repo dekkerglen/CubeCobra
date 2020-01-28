@@ -279,17 +279,17 @@ function populateDraft(draft, format, cards, bots, seats, user) {
 
   draft.seats = [];
   draft.unopenedPacks = [];
-  for(let i = 0; i < draft.initial_state.length; i++) {
+  for (let i = 0; i < draft.initial_state.length; i++) {
     const seat = {
-      bot: i == 0 ? null : bots[i-1],
-      name: i == 0 ? user.username : 'Bot ' + (i) + ': ' + bots[i-1][0] + ', ' + bots[i-1][1],
+      bot: i == 0 ? null : bots[i - 1],
+      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1][0] + ', ' + bots[i - 1][1],
       userid: i == 0 ? user._id : null,
       drafted: [], //organized draft picks
       pickorder: [],
       packbacklog: [],
-    }
+    };
 
-    for(let j = 0; j < 16; j++) {
+    for (let j = 0; j < 16; j++) {
       seat.drafted.push([]);
     }
 

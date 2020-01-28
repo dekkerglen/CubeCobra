@@ -6,59 +6,57 @@ var carddb = require('../serverjs/cards.js');
 const batch_size = 100;
 
 async function update(deck) {
-  
-
   deck.seats = [];
   deck.unopenedPacks = [];
 
   //add player
   const playerSeat = {
     bot: null,
-    userid: deck.owner,  
-    name:deck.username,
+    userid: deck.owner,
+    name: deck.username,
     pickorder: deck.pickOrder,
-    drafted: deck.picks[0], 
-    packbacklog: (deck.packs[0] && deck.packs[0][0]) ? [deck.packs[0][0]] : [],
+    drafted: deck.picks[0],
+    packbacklog: deck.packs[0] && deck.packs[0][0] ? [deck.packs[0][0]] : [],
   };
 
   deck.seats.push(playerSeat);
   deck.unopenedPacks.push(deck.packs[0] ? deck.packs[0].slice(1) : []);
 
   //add bots
-  for(let i = 1; i < deck.picks.length; i++) {
+  for (let i = 1; i < deck.picks.length; i++) {
     const bot = {
-      bot: deck.bots[i-1],
-      name: 'Bot ' + (i) + ': ' + deck.bots[i-1][0] + ', ' + deck.bots[i-1][1],
+      bot: deck.bots[i - 1],
+      name: 'Bot ' + i + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
       pickorder: deck.picks[i],
       drafted: [],
-      packbacklog: (deck.packs[i] && deck.packs[i][0]) ? [deck.packs[i][0]] : [],
-    }
+      packbacklog: deck.packs[i] && deck.packs[i][0] ? [deck.packs[i][0]] : [],
+    };
 
     //now we need to build picks from the pickorder ids
-    for(let j = 0; j < 16; j++) {
+    for (let j = 0; j < 16; j++) {
       bot.drafted.push([]);
     }
 
     bot.pickorder.forEach(function(cardid, index) {
-      if(cardid) {
+      if (cardid) {
         //inconsistent formats... find the card id
-        if(cardid[0] && cardid[0].cardID){
+        if (cardid[0] && cardid[0].cardID) {
           cardid = cardid[0].cardID;
-        } else if(cardid.cardID) {
+        } else if (cardid.cardID) {
           cardid = cardid.cardID;
         }
         //insert basic card object into correct cmc column
         const card = {
           cardId: cardid,
           details: carddb.cardFromId(cardid),
-        }
+        };
         const col = Math.min(7, card.details.cmc) + (card.details.type.toLowerCase().includes('creature') ? 0 : 8);
         bot.drafted[col].push(card);
       }
     });
 
     deck.seats.push(bot);
-  deck.unopenedPacks.push(deck.packs[i] ? deck.packs[i].slice(1) : []);
+    deck.unopenedPacks.push(deck.packs[i] ? deck.packs[i].slice(1) : []);
   }
   return deck.save(0);
 }
@@ -83,7 +81,7 @@ async function update(deck) {
         }
       }
       await Promise.all(drafts.map((draft) => update(draft)));
-      console.log('Finished: ' + Math.min(count, (i+batch_size)) + ' of ' + count + ' drafts');
+      console.log('Finished: ' + Math.min(count, i + batch_size) + ' of ' + count + ' drafts');
     }
     mongoose.disconnect();
     console.log('done');
