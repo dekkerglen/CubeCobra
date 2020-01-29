@@ -5,31 +5,31 @@ var carddb = require('../serverjs/cards.js');
 
 const batch_size = 100;
 
-async function update(deck) {
-  deck.seats = [];
-  deck.unopenedPacks = [];
+async function update(draft) {
+  draft.seats = [];
+  draft.unopenedPacks = [];
 
   //add player
   const playerSeat = {
     bot: null,
-    userid: deck.owner,
-    name: deck.username,
-    pickorder: deck.pickOrder,
-    drafted: deck.picks[0],
-    packbacklog: deck.packs[0] && deck.packs[0][0] ? [deck.packs[0][0]] : [],
+    userid: draft.owner,
+    name: draft.username,
+    pickorder: draft.pickOrder,
+    drafted: draft.picks[0],
+    packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
   };
 
-  deck.seats.push(playerSeat);
-  deck.unopenedPacks.push(deck.packs[0] ? deck.packs[0].slice(1) : []);
+  draft.seats.push(playerSeat);
+  draft.unopenedPacks.push(draft.packs[0] ? draft.packs[0].slice(1) : []);
 
   //add bots
-  for (let i = 1; i < deck.picks.length; i++) {
+  for (let i = 1; i < draft.picks.length; i++) {
     const bot = {
-      bot: deck.bots[i - 1],
-      name: 'Bot ' + i + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
-      pickorder: deck.picks[i],
+      bot: draft.bots[i - 1],
+      name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
+      pickorder: draft.picks[i],
       drafted: [],
-      packbacklog: deck.packs[i] && deck.packs[i][0] ? [deck.packs[i][0]] : [],
+      packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
     };
 
     //now we need to build picks from the pickorder ids
@@ -55,10 +55,10 @@ async function update(deck) {
       }
     });
 
-    deck.seats.push(bot);
-    deck.unopenedPacks.push(deck.packs[i] ? deck.packs[i].slice(1) : []);
+    draft.seats.push(bot);
+    draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
   }
-  return deck.save(0);
+  return draft.save(0);
 }
 
 (async () => {

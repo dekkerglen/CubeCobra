@@ -36,7 +36,7 @@ const SeatDeck = {
   sideboard: [[]],
 };
 
-// Cube schema
+// Deck schema
 let deckSchema = mongoose.Schema({
   cube: {
     type: String,

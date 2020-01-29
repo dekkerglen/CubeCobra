@@ -80,13 +80,13 @@ function botRating(botColors, card) {
 
 function botPicks() {
   // make bots take one pick out of active packs
-  for (let botIndex = 1; botIndex < draft.packs.length; botIndex++) {
+  for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
     const pack = draft.seats[botIndex].packbacklog[0];
     const botColors = draft.seats[botIndex].bot;
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
-      if (draft.ratings[pack[cardIndex].details.name]) {
+      if (draft.ratings && draft.ratings[pack[cardIndex].details.name]) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -99,8 +99,8 @@ function botPicks() {
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    pick = pack.splice(pickOrder[0], 1)[0];
-    draft.seats[botIndex].pickorder.push(pick[0].cardID);
+    pick = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+    draft.seats[botIndex].pickorder.push(pick.cardID);
   }
 }
 
@@ -116,8 +116,8 @@ function passPack() {
 
     if (draft.unopenedPacks[0].length > 0) {
       //give new pack
-      for (const seat of draft.seats) {
-        seat.packbacklog.push(draft.unopenedPacks[0].splice(0, 1)[0]);
+      for (let i = 0; i < draft.seats.length; i++) {
+        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
       }
     }
   } else {

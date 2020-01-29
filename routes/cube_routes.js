@@ -1603,23 +1603,20 @@ router.post('/startdraft/:id', async (req, res) => {
     draft.cube = cube._id;
 
     //add ratings
-    const names = new Set();
+    const names = [];
     //add in details to all cards
-    for (const seat of draft.packs) {
+    for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
-          names.add(card.details.name);
+          names.push(card.details.name);
         }
       }
     }
-    const ratings = await CardRating.find({
-      name: { $in: [...names] },
-    });
 
-    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
+    draft.ratings = await getElo(names);
 
     await draft.save();
+    
     return res.redirect('/cube/draft/' + draft._id);
   } catch (err) {
     util.handleRouteError(res, req, err, '/cube/playtest/' + req.params.id);
@@ -2283,27 +2280,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   }
 });
 
-/*
-//data for each seat, human or bot
-const SeatDeck = {
-  deck: [[]],
-  sideboard: [[]],
-};
-
-//data for each seat, human or bot
-const Seat = {
-  bot: [], //null bot value means human player
-  name: String,
-  userid: String,
-  drafted: [[]], //organized draft picks
-  pickorder: [],
-  packbacklog: [[]],
-};
-  */
-
 router.post('/submitdeck/:id', async (req, res) => {
   try {
-    //req.body contains draft0
+    //req.body contains a draft
     var draftid = req.body.body;
     const draft = await Draft.findById(draftid);
 
@@ -2404,18 +2383,11 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     var pages = [];
     for (i = 0; i < numDecks / pagesize; i++) {
-      if (page == i) {
-        pages.push({
-          url: '/cube/decks/' + cubeid + '/' + i,
-          content: i + 1,
-          active: true,
-        });
-      } else {
-        pages.push({
-          url: '/cube/decks/' + cubeid + '/' + i,
-          content: i + 1,
-        });
-      }
+      pages.push({
+        url: '/cube/decks/' + cubeid + '/' + i,
+        content: i + 1,
+        active: page == i,
+      });
     }
 
     res.render('cube/cube_decks', {
@@ -3178,9 +3150,19 @@ router.post(
 
     let [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
-    if (draft && draft.packs[0] && draft.packs[0][0]) {
-      const cards_per_pack = draft.packs[0][0].length + draft.pickNumber - 1;
-      var updatedRating = (cards_per_pack - draft.packs[0][0].length + 1) / cards_per_pack;
+
+
+    if (draft && draft.seats[0]) {
+      let picks = draft.seats[0].length;
+      let picknum = 1;
+      let packnum = 1;
+      while (picks > draft.initial_state[packnum - 1].length) {
+        picks -= draft.initial_state[packnum - 1].length;
+        packnum++;
+      }
+
+      const cards_per_pack = draft.initial_state[0][packnum].length + picknum - 1;
+      var updatedRating = (cards_per_pack - draft.initial_state[0][packnum].length + 1) / cards_per_pack;
 
       if (rating) {
         rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
@@ -3215,7 +3197,6 @@ router.post(
         rating.elo += adjustmentA;
         other.elo += adjustmentB;
       }
-
       await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }
     res.status(200).send({
