@@ -8,9 +8,13 @@ extends:
 plugins:
   - jest
   - prettier
+settings:
+  import/resolver:
+    webpack:
+      config: webpack.dev.js
 rules:
-  prettier/prettier:
-    - error
+  # prettier/prettier:
+  # - error
   no-console: 'off'
   global-require: 'off'
   no-param-reassign: 'off'
@@ -30,3 +34,4 @@ rules:
     - FunctionExpression
     - WithStatement
     - BinaryExpression[operator='in']
+  react/jsx-props-no-spreading: 'off'
