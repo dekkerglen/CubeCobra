@@ -35,3 +35,4 @@ rules:
     - WithStatement
     - BinaryExpression[operator='in']
   react/jsx-props-no-spreading: 'off'
+  react/jsx-filename-extension: 'off'

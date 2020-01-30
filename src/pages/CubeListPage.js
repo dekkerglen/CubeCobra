@@ -55,7 +55,7 @@ const CubeListPageRaw = ({
     }
   }, [cubeView]);
 
-  const defaultTagSet = new Set([].concat.apply([], cube.map((card) => card.tags)));
+  const defaultTagSet = new Set([].concat(...cube.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
@@ -120,7 +120,21 @@ const CubeListPageRaw = ({
   );
 };
 
-const CubeListPage = ({ cube, cubeID, canEdit, activeLink, ...props }) => (
+CubeListPageRaw.propTypes = {
+  maybe: PropTypes.arrayOf(PropTypes.object).isRequired,
+  defaultTagColors: PropTypes.arrayOf(
+    PropTypes.shape({
+      tag: PropTypes.string.isRequired,
+      color: PropTypes.oneOf(tagColors.map(([, c]) => c)),
+    }),
+  ).isRequired,
+  defaultShowTagColors: PropTypes.bool.isRequired,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
+  defaultView: PropTypes.string.isRequired,
+};
+
+const CubeListPage = ({ cube, cubeID, canEdit, ...props }) => (
   <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
     <CubeListPageRaw {...props} />
   </CubeLayout>
@@ -132,14 +146,11 @@ CubeListPage.propTypes = {
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(tagColors.map(([t, c]) => c)),
-    }),
-  ).isRequired,
-  defaultShowTagColors: PropTypes.bool.isRequired,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  ...CubeListPageRaw.propTypes,
+};
+
+CubeListPage.defaultProps = {
+  canEdit: false,
 };
 
 export default CubeListPage;

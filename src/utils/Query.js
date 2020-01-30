@@ -16,19 +16,19 @@ function changeQuery(params) {
   }
 }
 
-export function get(key, def) {
+function get(key, def) {
   const params = new URLSearchParams(query());
   const result = params.get(key);
   return result === null ? def : result;
 }
 
-export function set(key, value) {
+function set(key, value) {
   const params = new URLSearchParams(query());
   params.set(key, value);
   changeQuery(params);
 }
 
-export function del(key) {
+function del(key) {
   const params = new URLSearchParams(query());
   params.delete(key);
   changeQuery(params);
