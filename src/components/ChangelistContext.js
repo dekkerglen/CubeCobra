@@ -15,6 +15,8 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
   useEffect(() => {
     if (Query.get('updated', false) === 'true') {
       Query.del('updated');
+      setChanges([]);
+      return;
     }
 
     if (typeof cubeID === 'undefined') {
