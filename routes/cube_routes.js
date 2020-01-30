@@ -55,14 +55,14 @@ let CardRating = require('../models/cardrating');
 const NODE_ENV = process.env.NODE_ENV;
 
 let BulkUploadPage = null;
+let CubeDraftPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
-let DraftView = null;
 if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/components/CubeDraftPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
-  DraftView = require('../dist/components/DraftView').default;
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');
@@ -1668,8 +1668,8 @@ router.get('/draft/:id', async (req, res) => {
     };
 
     res.render('cube/cube_draft', {
-      reactHTML: DraftView
-        ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
+      reactHTML: CubeDraftPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
