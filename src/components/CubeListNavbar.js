@@ -128,7 +128,7 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
               <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
             </InputGroupAddon>
             {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
-            <Input type="text" name="cubeid" placeholder="e.g. 123456" />
+            <Input type="number" name="cubeid" placeholder="e.g. 123456" />
           </InputGroup>
         </ModalBody>
         <ModalFooter>
