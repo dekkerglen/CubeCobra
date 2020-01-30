@@ -1,10 +1,9 @@
 const express = require('express');
 
-const router = express.Router();
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
-const fs = require('fs');
+
 const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
 
@@ -13,6 +12,8 @@ const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
+
+const router = express.Router();
 
 const { ensureAuth, csrfProtection } = require('./middleware');
 
@@ -24,10 +25,12 @@ function checkUsernameValid(req) {
     max: 24,
   });
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i');
-  req.checkBody('username', 'Username may not use profanity.').custom(function(value) {
-    return !util.has_profanity(value);
-  });
+  req.checkBody('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value));
   return req;
+}
+
+function addMinutes(date, minutes) {
+  return new Date(new Date(date).getTime() + minutes * 60000);
 }
 
 router.use(csrfProtection);
@@ -51,11 +54,11 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     return res.redirect(notification.url);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
       message: err,
     });
-    console.error(err);
   }
 });
 
@@ -71,19 +74,19 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
     user.notifications = [];
     await user.save();
 
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
     });
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
 // Lost password form
-router.get('/lostpassword', function(req, res) {
+router.get('/lostpassword', (req, res) => {
   res.render('user/lostpassword');
 });
 
@@ -117,10 +120,10 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
@@ -152,15 +155,15 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
 // Lost password submit
-router.post('/lostpassword', function(req, res) {
+router.post('/lostpassword', (req, res) => {
   req.checkBody('email', 'Email is required').notEmpty();
 
   // handle error checks
@@ -175,15 +178,15 @@ router.post('/lostpassword', function(req, res) {
       {
         email: req.body.email.toLowerCase(),
       },
-      function(err) {
+      () => {
         const passwordReset = new PasswordReset();
         passwordReset.expires = addMinutes(Date.now(), 15);
         passwordReset.email = req.body.email;
         passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
 
-        passwordReset.save(function(err) {
-          if (err) {
-            console.error(err);
+        passwordReset.save((err2) => {
+          if (err2) {
+            console.error(err2);
           } else {
             // Use Smtp Protocol to send Email
             const smtpTransport = mailer.createTransport({
@@ -206,9 +209,9 @@ router.post('/lostpassword', function(req, res) {
                 `\nIf you did not request a password reset, ignore this email.`,
             };
 
-            smtpTransport.sendMail(mail, (err, response) => {
-              if (err) {
-                console.error(err);
+            smtpTransport.sendMail(mail, (err3) => {
+              if (err3) {
+                console.error(err3);
               }
 
               smtpTransport.close();
@@ -223,7 +226,7 @@ router.post('/lostpassword', function(req, res) {
   }
 });
 
-router.get('/passwordreset/:id', function(req, res) {
+router.get('/passwordreset/:id', (req, res) => {
   // create a password reset page and return it here
   PasswordReset.findById(req.params.id, (err, passwordreset) => {
     if (!passwordreset || Date.now() > passwordreset.expires) {
@@ -235,7 +238,7 @@ router.get('/passwordreset/:id', function(req, res) {
   });
 });
 
-router.post('/lostpasswordreset', function(req, res) {
+router.post('/lostpasswordreset', (req, res) => {
   req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24,
@@ -252,7 +255,7 @@ router.post('/lostpasswordreset', function(req, res) {
         code: req.body.code,
         email: req.body.email,
       },
-      (err, passwordreset) => {
+      (err2, passwordreset) => {
         if (!passwordreset) {
           req.flash('danger', 'Incorrect email and recovery code combination.');
           res.render('user/passwordreset');
@@ -261,9 +264,9 @@ router.post('/lostpasswordreset', function(req, res) {
             {
               email: req.body.email,
             },
-            (err, user) => {
-              if (err) {
-                console.error('Password reset find user error:', err);
+            (err3, user) => {
+              if (err3) {
+                console.error('Password reset find user error:', err3);
                 res.sendStatus(500);
                 return;
               }
@@ -272,31 +275,31 @@ router.post('/lostpasswordreset', function(req, res) {
                 res.render('user/passwordreset');
                 return;
               }
-              if (req.body.password2 != req.body.password) {
+              if (req.body.password2 !== req.body.password) {
                 req.flash('danger', "New passwords don't match");
                 res.render('user/passwordreset');
                 return;
               }
-              bcrypt.genSalt(10, (err, salt) => {
-                if (err) {
-                  console.error('Password reset genSalt error:', err);
+              bcrypt.genSalt(10, (err4, salt) => {
+                if (err4) {
+                  console.error('Password reset genSalt error:', err4);
                   res.sendStatus(500);
                   return;
                 }
-                bcrypt.hash(req.body.password2, salt, (err, hash) => {
-                  if (err) {
-                    console.error('Password reset hashing error:', err);
+                bcrypt.hash(req.body.password2, salt, (err5, hash) => {
+                  if (err5) {
+                    console.error('Password reset hashing error:', err5);
                     res.sendStatus(500);
                   } else {
                     user.password = hash;
-                    user.save(function(err) {
-                      if (err) {
-                        console.error('Password reset user save error:', err);
-                        res.sendStatus(500);
-                      } else {
-                        req.flash('success', 'Password updated succesfully');
-                        return res.redirect('/user/login');
+                    user.save((err6) => {
+                      if (err6) {
+                        console.error('Password reset user save error:', err6);
+                        return res.sendStatus(500);
                       }
+
+                      req.flash('success', 'Password updated succesfully');
+                      return res.redirect('/user/login');
                     });
                   }
                 });
@@ -310,21 +313,16 @@ router.post('/lostpasswordreset', function(req, res) {
 });
 
 // Register form
-router.get('/register', function(req, res) {
+router.get('/register', (req, res) => {
   res.render('user/register');
 });
 
 // Register process
-router.post('/register', function(req, res) {
+router.post('/register', (req, res) => {
   const email = req.body.email.toLowerCase();
-  const { username } = req.body;
-  const { password } = req.body;
-  const { password2 } = req.body;
+  const { username, password } = req.body;
 
-  const attempt = {
-    email,
-    username,
-  };
+  const attempt = { email, username };
 
   req = checkUsernameValid(req);
   req.checkBody('email', 'Email is required').notEmpty();
@@ -365,8 +363,8 @@ router.post('/register', function(req, res) {
             {
               email: req.body.email.toLowerCase(),
             },
-            (err, user) => {
-              if (user) {
+            (err2, user2) => {
+              if (user2) {
                 req.flash('danger', 'Email already associated with an existing account.');
                 res.render('user/register', {
                   attempt,
@@ -380,16 +378,16 @@ router.post('/register', function(req, res) {
                   confirm: 'false',
                 });
 
-                bcrypt.genSalt(10, (err, salt) => {
-                  bcrypt.hash(newUser.password, salt, (err, hash) => {
-                    if (err) {
-                      console.error(err);
+                bcrypt.genSalt(10, (err3, salt) => {
+                  bcrypt.hash(newUser.password, salt, (err4, hash) => {
+                    if (err4) {
+                      console.error(err4);
                     } else {
                       newUser.password = hash;
                       newUser.confirmed = 'false';
-                      newUser.save(function(err) {
-                        if (err) {
-                          console.error(err);
+                      newUser.save((err5) => {
+                        if (err5) {
+                          console.error(err5);
                         } else {
                           // Use Smtp Protocol to send Email
                           const smtpTransport = mailer.createTransport({
@@ -410,7 +408,7 @@ router.post('/register', function(req, res) {
                             text: `Hi ${newUser.username},\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/${newUser._id}`,
                           };
 
-                          smtpTransport.sendMail(mail, function(error, response) {
+                          smtpTransport.sendMail(mail, (error) => {
                             if (error) {
                               console.error(error);
                             }
@@ -436,25 +434,19 @@ router.post('/register', function(req, res) {
 });
 
 // Register confirm
-router.get('/register/confirm/:id', function(req, res) {
+router.get('/register/confirm/:id', (req, res) => {
   User.findById(req.params.id, (err, user) => {
     if (err) {
       req.flash('danger', 'Invalid confirmation link.');
       res.redirect('/');
-    } else if (user.confirmed == 'true') {
+    } else if (user.confirmed === 'true') {
       req.flash('success', 'User already confirmed.');
       res.redirect('/user/login');
     } else {
-      const user = {
-        confirmed: 'true',
-      };
-      const query = {
-        _id: req.params.id,
-      };
-
-      User.updateOne(query, user, function(err) {
-        if (err) {
-          req.flash('danger', 'Invalid confirmation link.');
+      user.confirmed = true;
+      user.save((err2) => {
+        if (err2) {
+          req.flash('danger', 'Failed to confirm user.');
           res.redirect('/');
         } else {
           req.flash('success', 'User successfully confirmed');
@@ -466,77 +458,38 @@ router.get('/register/confirm/:id', function(req, res) {
 });
 
 // Login route
-router.get('/login', function(req, res) {
+router.get('/login', (req, res) => {
   res.render('user/login');
 });
 
 // Login post
-router.post('/login', function(req, res, next) {
-  if (req.body.username.includes('@')) {
-    // find by email
-    User.findOne(
-      {
-        email: req.body.username,
-      },
-      (err, user) => {
-        if (!user) {
-          req.flash('danger', 'Incorrect username or email address.');
-          res.redirect('/user/login');
-        } else {
-          req.body.username = user.username;
-          // TODO: fix confirmation
-          if (true || user.confirmed == 'true') {
-            let redirect = '/';
-            if (req.body.loginCallback) {
-              redirect = req.body.loginCallback;
-            }
-            passport.authenticate('local', {
-              successRedirect: redirect,
-              failureRedirect: '/user/Login',
-              failureFlash: true,
-            })(req, res, next);
-          } else {
-            req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
-            res.redirect('/user/login');
-          }
-        }
-      },
-    );
-  } else {
-    req.body.username = req.body.username.toLowerCase();
-    // find by username
-    User.findOne(
-      {
-        username_lower: req.body.username,
-      },
-      (err, user) => {
-        if (!user) {
-          req.flash('danger', 'Incorrect username or email address.');
-          res.redirect('/user/login');
-        } else {
-          // TODO: fix confirmation
-          if (true || user.confirmed == 'true') {
-            let redirect = '/';
-            if (req.body.loginCallback) {
-              redirect = req.body.loginCallback;
-            }
-            passport.authenticate('local', {
-              successRedirect: redirect,
-              failureRedirect: '/user/Login',
-              failureFlash: true,
-            })(req, res, next);
-          } else {
-            req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
-            res.redirect('/user/login');
-          }
-        }
-      },
-    );
-  }
+router.post('/login', (req, res, next) => {
+  const query = {
+    [req.body.username.includes('@') ? 'email' : 'username_lower']: req.body.username,
+  };
+  // find by email
+  User.findOne(query, (err, user) => {
+    if (!user) {
+      req.flash('danger', 'Incorrect username or email address.');
+      res.redirect('/user/login');
+    } else {
+      req.body.username = user.username;
+      // TODO: fix confirmation and check it here.
+      let redirect = '/';
+      if (req.body.loginCallback) {
+        redirect = req.body.loginCallback;
+      }
+      passport.authenticate('local', {
+        successRedirect: redirect,
+        failureRedirect: '/user/Login',
+        failureFlash: true,
+      })(req, res, next);
+    }
+  });
 });
 
 // logout
-router.get('/logout', function(req, res) {
+router.get('/logout', (req, res) => {
   req.logout();
   req.flash('success', 'You have been logged out');
   res.redirect('/');
@@ -579,7 +532,7 @@ router.get('/view/:id', async (req, res) => {
   }
 });
 
-router.get('/decks/:userid', function(req, res) {
+router.get('/decks/:userid', (req, res) => {
   res.redirect(`/user/decks/${req.params.userid}/0`);
 });
 
@@ -599,7 +552,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
     return res.status(500).send(err);
   }
 });
-2;
+
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const { userid } = req.params;
@@ -629,7 +582,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     const pages = [];
     for (let i = 0; i < numDecks / pagesize; i++) {
-      if (page == i) {
+      if (page === i) {
         pages.push({
           url: `/user/decks/${userid}/${i}`,
           content: i + 1,
@@ -661,9 +614,9 @@ router.get('/decks/:userid/:page', async (req, res) => {
 });
 
 // account page
-router.get('/account', ensureAuth, function(req, res) {
+router.get('/account', ensureAuth, (req, res) => {
   User.findById(req.user._id, (err, user) => {
-    user_limited = {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -671,16 +624,16 @@ router.get('/account', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'info',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/account',
     });
   });
 });
 
 // account page, password reset
-router.get('/account/changepassword', ensureAuth, function(req, res) {
+router.get('/account/changepassword', ensureAuth, (req, res) => {
   User.findById(req.user._id, (err, user) => {
-    user_limited = {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -688,16 +641,16 @@ router.get('/account/changepassword', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'changepw',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/account/changepassword',
     });
   });
 });
 
 // account page, password reset
-router.get('/account/updateemail', ensureAuth, function(req, res) {
+router.get('/account/updateemail', ensureAuth, (req, res) => {
   User.findById(req.user._id, (err, user) => {
-    user_limited = {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -705,13 +658,13 @@ router.get('/account/updateemail', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'changeemail',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/updateemail',
     });
   });
 });
 
-router.post('/resetpassword', ensureAuth, function(req, res, next) {
+router.post('/resetpassword', ensureAuth, (req, res) => {
   req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24,
@@ -721,14 +674,14 @@ router.post('/resetpassword', ensureAuth, function(req, res, next) {
 
   if (errors) {
     User.findById(req.user._id, (err, user) => {
-      user_limited = {
+      const userLimited = {
         username: user.username,
         email: user.email,
         about: user.about,
       };
       res.render('user/user_account', {
         selected: 'changepw',
-        user: user_limited,
+        user: userLimited,
         errors,
         loginCallback: '/user/account/changepassword',
       });
@@ -736,28 +689,30 @@ router.post('/resetpassword', ensureAuth, function(req, res, next) {
   } else {
     User.findById(req.user._id, (err, user) => {
       if (user) {
-        bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
+        bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
           if (!isMatch) {
             req.flash('danger', 'Password is incorrect');
             return res.redirect('/user/account/changepassword');
           }
-          if (req.body.password2 != req.body.password3) {
+          if (req.body.password2 !== req.body.password3) {
             req.flash('danger', "New passwords don't match");
             return res.redirect('/user/account/changepassword');
           }
-          bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(req.body.password2, salt, (err, hash) => {
-              if (err) {
-                console.error(err);
+          return bcrypt.genSalt(10, (err3, salt) => {
+            bcrypt.hash(req.body.password2, salt, (err4, hash) => {
+              if (err4) {
+                console.error(err4);
               } else {
                 user.password = hash;
-                user.save(function(err) {
-                  if (err) {
-                    console.error(err);
-                  } else {
-                    req.flash('success', 'Password updated succesfully');
+                user.save((err5) => {
+                  if (err5) {
+                    console.error(err5);
+                    req.flash('danger', 'Error saving user.');
                     return res.redirect('/user/account/changepassword');
                   }
+
+                  req.flash('success', 'Password updated succesfully');
+                  return res.redirect('/user/account/changepassword');
                 });
               }
             });
@@ -768,7 +723,7 @@ router.post('/resetpassword', ensureAuth, function(req, res, next) {
   }
 });
 
-router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
+router.post('/updateuserinfo', ensureAuth, (req, res) => {
   User.findById(req.user._id, (err, user) => {
     if (user) {
       User.findOne(
@@ -778,7 +733,7 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
             $ne: req.user._id,
           },
         },
-        (err, duplicate_user) => {
+        (err2, duplicateUser) => {
           if (user.username !== req.body.username) {
             req = checkUsernameValid(req);
             const errors = req.validationErrors();
@@ -788,7 +743,7 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
               }
               return res.redirect('/user/account');
             }
-            if (duplicate_user) {
+            if (duplicateUser) {
               req.flash('danger', 'Username already taken.');
               return res.redirect('/user/account');
             }
@@ -798,15 +753,14 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
               {
                 owner: req.user._id,
               },
-              (err, cubes) => {
-                cubes.forEach((item, index) => {
+              (err3, cubes) => {
+                cubes.forEach((item) => {
                   item.owner_name = req.body.username;
                   Cube.updateOne(
                     {
                       _id: item._id,
                     },
                     item,
-                    function(err) {},
                   );
                 });
               },
@@ -819,13 +773,15 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
             _id: req.user._id,
           };
 
-          User.updateOne(query, user, function(err) {
-            if (err) {
-              console.error(err);
-            } else {
-              req.flash('success', 'Your profile has been updated.');
-              res.redirect('/user/account');
+          return User.updateOne(query, user, (err3) => {
+            if (err3) {
+              console.error(err3);
+              req.flash('danger', 'Error saving user.');
+              return res.redirect('/user/account');
             }
+
+            req.flash('success', 'Your profile has been updated.');
+            return res.redirect('/user/account');
           });
         },
       );
@@ -833,7 +789,7 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
   });
 });
 
-router.post('/updateemail', ensureAuth, function(req, res, next) {
+router.post('/updateemail', ensureAuth, (req, res) => {
   User.findOne(
     {
       email: req.body.email.toLowerCase(),
@@ -842,32 +798,24 @@ router.post('/updateemail', ensureAuth, function(req, res, next) {
       if (user) {
         req.flash('danger', 'Email already associated with an existing account.');
         res.redirect('/user/account/updateemail');
-      } else {
-        User.findById(req.user._id, (err, user) => {
-          if (user) {
-            user.email = req.body.email;
-
-            const query = {
-              _id: req.user._id,
-            };
-
-            User.updateOne(query, user, function(err) {
-              if (err) {
-                console.error(err);
-              } else {
-                req.flash('success', 'Your profile has been updated.');
-                res.redirect('/user/account');
-              }
-            });
+      } else if (req.user) {
+        req.user.email = req.body.email;
+        req.user.save((err2) => {
+          if (err2) {
+            console.error(err2);
+            req.flash('danger', 'Error saving user.');
+            res.redirect('/user/account/updateemail');
+          } else {
+            req.flash('success', 'Your profile has been updated.');
+            res.redirect('/user/account');
           }
         });
+      } else {
+        req.flash('danger', 'Not logged in.');
+        res.redirect('/user/account/updateemail');
       }
     },
   );
 });
-
-function addMinutes(date, minutes) {
-  return new Date(new Date(date).getTime() + minutes * 60000);
-}
 
 module.exports = router;
