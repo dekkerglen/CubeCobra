@@ -1932,7 +1932,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const deck = await Deck.findById(req.body.id);
-    const user = req.user;
+    const { user } = req;
 
     if (!user) {
       return res.status(403).send({
@@ -1993,7 +1993,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const post = await Blog.findById(req.body.id);
-    const user = req.user;
+    const { user } = req;
 
     if (!user) {
       return res.status(403).send({
