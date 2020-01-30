@@ -1743,12 +1743,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
       }
     }
 
-    //need to do numerical sort..
-    const removesArray = [...removes];
-    removesArray.sort((a, b) => a - b);
-    for (let i = removesArray.length - 1; i >= 0; i--) {
-      cube.cards.splice(removesArray[i], 1);
-    }
+    cube.cards = cube.cards.filter((card, index) => !removes.has(index));
     for (const add of adds) {
       util.addCardToCube(cube, add);
       const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
