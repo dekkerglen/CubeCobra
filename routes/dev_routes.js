@@ -1,5 +1,4 @@
 const express = require('express');
-const router = express.Router();
 var util = require('../serverjs/util.js');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
@@ -7,6 +6,8 @@ const { ensureAuth, csrfProtection } = require('./middleware');
 // Bring in models
 let User = require('../models/user');
 let Blog = require('../models/blog');
+
+const router = express.Router();
 
 router.use(csrfProtection);
 

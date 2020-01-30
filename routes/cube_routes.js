@@ -85,7 +85,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       return res.redirect(`/user/view/${req.user._id}`);
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cubes = await Cube.find({
       owner: user._id,
     });
@@ -127,7 +127,7 @@ router.post('/add', ensureAuth, async (req, res) => {
 // Add Submit POST Route
 router.get('/clone/:id', async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     if (!user) {
       req.flash('danger', 'Please log on to clone this cube.');
@@ -237,7 +237,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
     cube = setCubeType(cube, carddb);
 
     await cube.save();
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
@@ -293,7 +293,7 @@ router.post(
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -329,7 +329,7 @@ router.post(
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -356,7 +356,7 @@ router.post(
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${req.params.id}`);
@@ -380,7 +380,7 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
 
 router.post('/unfeature/:id', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${req.params.id}`);
@@ -1605,12 +1605,6 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const user = await User.findById(cube.owner);
-    if (!user) {
-      req.flash('danger', 'Owner not found');
-      return res.status(404).render('misc/404', {});
-    }
-
     draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
 
     const reactProps = {
@@ -1788,8 +1782,8 @@ router.post(
   '/api/editcomment',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const user = await User.findById(req.user._id);
     const post = await Blog.findById(req.body.id);
+    const { user } = req;
 
     if (!user) {
       return res.status(403).send({
@@ -1828,7 +1822,7 @@ router.post(
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!user || user._id !== cube.owner) {
       return res.status(403).send({
         success: 'false',
