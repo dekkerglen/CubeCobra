@@ -111,7 +111,7 @@ router.post('/add', ensureAuth, async (req, res) => {
     cube.image_name = details.full_name;
     cube.image_artist = details.artist;
     cube.description = 'This is a brand new cube!';
-    cube.ownerName = user.username;
+    cube.owner_name = user.username;
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     cube = setCubeType(cube, carddb);
@@ -160,7 +160,7 @@ router.get('/clone/:id', async (req, res) => {
     cube.image_name = source.image_name;
     cube.image_artist = source.image_artist;
     cube.description = source.description;
-    cube.ownerName = user.username;
+    cube.owner_name = user.username;
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     cube = setCubeType(cube, carddb);
@@ -1035,7 +1035,7 @@ router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
     blogpost.cube = cube._id;
     blogpost.dev = 'false';
     blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.ownerName;
+    blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
     if (missing.length === 0) {
@@ -1213,7 +1213,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
   blogpost.cube = cube._id;
   blogpost.dev = 'false';
   blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.ownerName;
+  blogpost.username = cube.owner_name;
   blogpost.cubename = cube.name;
 
   //
@@ -1326,7 +1326,7 @@ async function bulkUpload(req, res, list, cube) {
   blogpost.cube = cube._id;
   blogpost.dev = 'false';
   blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.ownerName;
+  blogpost.username = cube.owner_name;
   blogpost.cubename = cube.name;
 
   if (missing.length > 0) {
@@ -1707,7 +1707,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     blogpost.cube = cube._id;
     blogpost.dev = 'false';
     blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.ownerName;
+    blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
     cube = setCubeType(cube, carddb);
