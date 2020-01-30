@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
 
+// eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
 
