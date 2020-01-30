@@ -52,7 +52,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
       <Row noGutters>
         {pack.map((card, index) => (
           <Col
-            key={`${packNumber}:${pickNumber}:${index}`}
+            key={/* eslint-disable-line react/no-array-index-key */ `${packNumber}:${pickNumber}:${index}`}
             xs={3}
             className="col-md-1-5 d-flex justify-content-center align-items-center"
           >
@@ -113,13 +113,13 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
     setPicks(newPicks);
     Draft.arrangePicks([].concat(newPicks[0], newPicks[1]));
 
-    let pack = Draft.pack();
-    if (!Array.isArray(pack) || pack.length === 0) {
+    let newPack = Draft.pack();
+    if (!Array.isArray(newPack) || newPack.length === 0) {
       // should only happen when draft is over.
       setFinished(true);
-      pack = [];
+      newPack = [];
     }
-    setPack([...pack]);
+    setPack([...newPack]);
   }, []);
 
   useEffect(() => {
@@ -161,9 +161,9 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   const handleClickCard = useCallback(
     async (event) => {
       event.preventDefault();
-      /* global */ autocard_hide_card();
+      /* eslint-disable-line no-undef */ autocard_hide_card();
       const target = event.currentTarget;
-      const cardIndex = parseInt(target.getAttribute('data-index'));
+      const cardIndex = parseInt(target.getAttribute('data-index'), 10);
       const card = pack[cardIndex];
       const typeLine = (card.type_line || card.details.type).toLowerCase();
       const row = typeLine.includes('creature') ? 0 : 1;
@@ -225,6 +225,15 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   );
 };
 
-CubeDraftPage.propTypes = {};
+CubeDraftPage.propTypes = {
+  cube: PropTypes.shape({}).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  initialDraft: PropTypes.shape({
+    _id: PropTypes.string,
+    bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
+    packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
+    ratings: PropTypes.objectOf(PropTypes.number),
+  }).isRequired,
+};
 
 export default CubeDraftPage;
