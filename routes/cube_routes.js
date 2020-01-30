@@ -972,7 +972,7 @@ router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${req.params.id}`);
     }
-    if (Number.isNaN(req.body.cubeid)) {
+    if (!Number.isInteger(req.body.cubeid)) {
       req.flash('danger', 'Error: Provided ID is not in correct format.');
       return res.redirect(`/cube/list/${req.params.id}`);
     }
@@ -1652,7 +1652,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
       } else if (edit.charAt(0) === '-') {
         // remove id
         const indexOut = parseInt(edit.substring(1), 10);
-        if (Number.isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
+        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect(`/cube/list/${req.params.id}`);
         }
@@ -1669,7 +1669,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
 
         const indexOut = parseInt(indexOutStr, 10);
-        if (Number.isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
+        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect(`/cube/list/${req.params.id}`);
         }
@@ -2872,7 +2872,7 @@ router.post(
       (updated.colors && !Array.isArray(updated.colors)) ||
       (updated.tags && !Array.isArray(updated.tags)) ||
       !Array.isArray(selected) ||
-      selected.some((index) => Number.isNaN(index) || index < 0)
+      selected.some((index) => !Number.isInteger(index) || index < 0)
     ) {
       return res.status(400).send({
         success: 'false',
@@ -3073,7 +3073,7 @@ router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
     const id = parseInt(req.params.id.split(';')[1], 10);
 
     const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || cube.owner !== req.user.id || Number.isNaN(id) || id < 0 || id >= cube.draft_formats.length) {
+    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id < 0 || id >= cube.draft_formats.length) {
       return res.sendStatus(401);
     }
 
@@ -3138,13 +3138,13 @@ router.post(
         rating.picks = 1;
       }
 
-      if (Number.isNaN(rating.elo)) {
+      if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
       }
       // Update ELO.
       for (const other of packRatings) {
-        if (Number.isNaN(other.elo)) {
-          if (Number.isNaN(other.rating)) {
+        if (!Number.isFinite(other.elo)) {
+          if (!Number.isFinite(other.value)) {
             other.elo = ELO_BASE + ELO_RANGE / 2;
           } else {
             other.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - other.value));
