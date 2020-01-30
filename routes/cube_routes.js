@@ -406,9 +406,8 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(build_id_query(cubeID)).lean();
-    const user = req.user;
 
-    const admin = util.isAdmin(user);
+    const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
