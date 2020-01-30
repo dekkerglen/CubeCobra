@@ -229,14 +229,28 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
             <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
           ))}
           <Row>
-            <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
-              <ListGroup className="list-outline">
-                {cards.map((card) => (
-                  <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                    <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
-                  </AutocardListItem>
-                ))}
-              </ListGroup>
+            <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
+              <Row noGutters className="w-100" style={{ overflow: 'scroll', flexShrink: 1 }}>
+                <ListGroup className="list-outline w-100">
+                  {cards.map((card) => (
+                    <AutocardListItem key={card.index} card={card} noCardModal inModal>
+                      <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
+                    </AutocardListItem>
+                  ))}
+                </ListGroup>
+              </Row>
+              <Row noGutters>
+                {Number.isFinite(totalPrice) && (
+                  <TextBadge name="Price" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceFoil) && (
+                  <TextBadge name="Foil" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+              </Row>
             </Col>
             <Col xs="8">
               <Form>
@@ -335,18 +349,6 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 />
               </Form>
             </Col>
-          </Row>
-          <Row noGutters>
-            {Number.isFinite(totalPrice) && (
-              <TextBadge name="Price" className="mt-2 mr-2">
-                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
-              </TextBadge>
-            )}
-            {Number.isFinite(totalPriceFoil) && (
-              <TextBadge name="Foil" className="mt-2 mr-2">
-                <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
-              </TextBadge>
-            )}
           </Row>
         </ModalBody>
         <ModalFooter>
