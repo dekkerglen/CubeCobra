@@ -1700,7 +1700,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const adds = [];
     let changelog = '';
 
-    for (let edit of edits) {
+    for (const edit of edits) {
       if (edit.charAt(0) == '+') {
         //add id
         var details = carddb.cardFromId(edit.substring(1));
@@ -1712,16 +1712,22 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
       } else if (edit.charAt(0) == '-') {
         //remove id
-        const indexOut = parseInt(edit.substring(1));
+        const [indexOutStr, outID] = edit.substring(1).split('$');
+        const indexOut = parseInt(indexOutStr);
         if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect('/cube/list/' + req.params.id);
         }
         removes.add(indexOut);
         const card = cube.cards[indexOut];
-        changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        if (card.cardID === outID) {
+          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect('/cube/list/' + req.params.id);
+        }
       } else if (edit.charAt(0) == '/') {
-        const [indexOutStr, idIn] = edit.substring(1).split('>');
+        const [outStr, idIn] = edit.substring(1).split('>');
         const detailsIn = carddb.cardFromId(idIn);
         if (!detailsIn) {
           console.error('Card not found: ' + edit, req);
@@ -1729,6 +1735,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
           adds.push(detailsIn);
         }
 
+        const [indexOutStr, outID] = outStr.split('$');
         const indexOut = parseInt(indexOutStr);
         if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
@@ -1736,7 +1743,12 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
         removes.add(indexOut);
         const cardOut = cube.cards[indexOut];
-        changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        if (cardOut.cardID === outID) {
+          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect('/cube/list/' + req.params.id);
+        }
       } else {
         req.flash('danger', 'Bad request format.');
         return res.redirect('/cube/list/' + req.params.id);
