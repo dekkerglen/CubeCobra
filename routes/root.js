@@ -17,6 +17,10 @@ if (NODE_ENV === 'production') {
   DashboardPage = require('../dist/components/DashboardPage').default;
 }
 
+const carddb = require('../serverjs/cards.js');
+carddb.initializeCardDb();
+
+const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
 
 router.use(csrfProtection);
@@ -181,6 +185,15 @@ router.get('/dashboard', async (req, res) => {
         date: -1,
       })
       .limit(13);
+
+    // autocard the posts
+    if (posts) {
+      for (const post of posts) {
+        if (post.html) {
+          post.html = addAutocard(post.html, carddb);
+        }
+      }
+    }
 
     const reactProps = { posts, cubes, decks, userId: user._id };
 
