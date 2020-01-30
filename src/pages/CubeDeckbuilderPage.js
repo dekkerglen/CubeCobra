@@ -16,7 +16,7 @@ import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
 import { subtitle } from 'pages/CubeDraftPage';
 
-const canDrop = (source, target) => true;
+const canDrop = () => true;
 
 const oppositeLocation = {
   [Location.DECK]: Location.SIDEBOARD,
@@ -27,12 +27,12 @@ const makeInitialStacks = (playerDeck) => {
   if (playerDeck.length === 2 && Array.isArray(playerDeck[0]) && Array.isArray(playerDeck[0][0])) {
     // Already good.
     return playerDeck;
-  } else if (playerDeck.length === 16) {
+  }
+  if (playerDeck.length === 16) {
     // Already in stacks. Split into rows.
     return [playerDeck.slice(0, 8), playerDeck.slice(8, 16)];
-  } else {
-    return sortDeck(playerDeck);
   }
+  return sortDeck(playerDeck);
 };
 
 const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
@@ -41,9 +41,8 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
     const initial = initialDeck.playersideboard;
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
-    } else {
-      return [initialDeck.playersideboard.slice(0, 8)];
     }
+    return [initialDeck.playersideboard.slice(0, 8)];
   });
 
   const locationMap = {
@@ -70,7 +69,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
   const handleClickCard = useCallback(
     (event) => {
       event.preventDefault();
-      /* global */ autocard_hide_card();
+      /* eslint-disable-line no-undef */ autocard_hide_card();
       const eventTarget = event.currentTarget;
       const locationType = eventTarget.getAttribute('data-location-type');
       const locationData = JSON.parse(eventTarget.getAttribute('data-location-data'));
@@ -102,7 +101,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
 
   const currentDeck = { ...initialDeck };
   currentDeck.playerdeck = [...deck[0], ...deck[1]];
-  currentDeck.playersideboard = sideboard[0];
+  [currentDeck.playersideboard] = sideboard;
 
   const [name, setName] = useState(initialDeck.name);
   const [description, setDescription] = useState(initialDeck.description);
@@ -134,7 +133,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                ></input>
+                />
                 <br />
 
                 <h6>Description</h6>
@@ -172,8 +171,13 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
 };
 
 CubeDeckbuilderPage.propTypes = {
+  basics: PropTypes.objectOf(PropTypes.string).isRequired,
+  cube: PropTypes.shape({}).isRequired,
+  cubeID: PropTypes.string.isRequired,
   initialDeck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
+    name: PropTypes.string,
+    description: PropTypes.string,
     playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
   }).isRequired,
