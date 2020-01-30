@@ -20,7 +20,7 @@ import Maybeboard from 'components/Maybeboard';
 import { MaybeboardContextProvider } from 'components/MaybeboardContext';
 import { SortContextProvider } from 'components/SortContext';
 import TableView from 'components/TableView';
-import { tagColors, TagContextProvider } from 'components/TagContext';
+import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
 
@@ -125,7 +125,7 @@ CubeListPageRaw.propTypes = {
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(tagColors.map(([, c]) => c)),
+      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
     }),
   ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
