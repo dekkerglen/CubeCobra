@@ -10,6 +10,10 @@
     "prettier/prettier": ["error"],
     "no-console": "off",
     "global-require": "off",
-    "no-param-reassign": "off"
+    "no-param-reassign": "off",
+    "no-underscore-dangle": ["error", { "allow": ["_id"] }],
+    "camelcase": ["error", { "properties": "never", "ignoreDestructuring": true, "ignoreImports": true }],
+    "no-plusplus": ["error", {"allowForLoopAfterthoughts": true}],
+    "no-restricted-syntax": ["error", "FunctionExpression", "WithStatement", "BinaryExpression[operator='in']"]
   }
 }
