@@ -17,8 +17,8 @@ import {
   Input,
 } from 'reactstrap';
 
-import CSRFForm from './CSRFForm';
-import CustomImageToggler from './CustomImageToggler';
+import CSRFForm from 'components/CSRFForm';
+import CustomImageToggler from 'components/CustomImageToggler';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -31,14 +31,14 @@ const MAX_BASICS = 20;
 
 const BasicsModal = ({ isOpen, toggle, addBasics }) => {
   const refs = {};
-  for (const [long, short, basic] of COLORS) {
+  for (const [, , basic] of COLORS) {
     refs[basic] = useRef();
   }
 
   const handleAddBasics = useCallback(() => {
     const numBasics = {};
-    for (const basic in refs) {
-      numBasics[basic] = parseInt(refs[basic].current.value);
+    for (const basic of Object.keys(refs)) {
+      numBasics[basic] = parseInt(refs[basic].current.value, 10);
     }
     addBasics(numBasics);
     toggle();
@@ -79,9 +79,9 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
 };
 
 BasicsModal.propTypes = {
-  isOpen: PropTypes.bool,
-  toggle: PropTypes.func,
-  handleAddBasics: PropTypes.func,
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  addBasics: PropTypes.func.isRequired,
 };
 
 const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
@@ -98,7 +98,9 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
 
   const toggleBasicsModal = useCallback(
     (event) => {
-      event && event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
       setBasicsModalOpen(!basicsModalOpen);
     },
     [basicsModalOpen],
@@ -149,6 +151,14 @@ DeckbuilderNavbar.propTypes = {
     playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
   }).isRequired,
+  addBasics: PropTypes.func.isRequired,
+  name: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  className: PropTypes.string,
+};
+
+DeckbuilderNavbar.defaultProps = {
+  className: null,
 };
 
 export default DeckbuilderNavbar;

@@ -46,9 +46,11 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
 };
 
 AutocardListGroup.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   heading: PropTypes.node.isRequired,

@@ -9,7 +9,6 @@ src/components/BlogPost.js
 src/components/BlogpostEditor.js
 src/components/ButtonLink.js
 src/components/CSRFForm.js
-src/components/CardImage.js
 src/components/CardModal.js
 src/components/CardModalContext.js
 src/components/CardModalForm.js
@@ -26,7 +25,6 @@ src/components/CompareView.js
 src/components/ContentEditable.js
 src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
-src/components/CubeContext.js
 src/components/CubeListNavbar.js
 src/components/CubeOverviewModal.js
 src/components/CubePreview.js
@@ -34,9 +32,6 @@ src/components/CurveAnalysis.js
 src/components/CurveView.js
 src/components/CustomDraftFormatModal.js
 src/components/CustomImageToggler.js
-src/components/DeckPreview.js
-src/components/DeckStacks.js
-src/components/DeckbuilderNavbar.js
 src/components/DisplayContext.js
 src/components/DndProvider.js
 src/components/DraggableCard.js
@@ -52,8 +47,6 @@ src/components/ImageFallback.js
 src/components/ListView.js
 src/components/LoadingButton.js
 src/components/MassBuyButton.js
-src/components/Maybeboard.js
-src/components/MaybeboardContext.js
 src/components/MulticoloredAnalysis.js
 src/components/Notification.js
 src/components/PagedList.js

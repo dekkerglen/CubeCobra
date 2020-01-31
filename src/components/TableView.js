@@ -6,6 +6,7 @@ import { Row, Col } from 'reactstrap';
 import { countGroup, sortDeep } from 'utils/Sort';
 
 import AutocardListGroup from 'components/AutocardListGroup';
+import AutocardListItem from 'components/AutocardListItem';
 import DisplayContext from 'components/DisplayContext';
 import SortContext from 'components/SortContext';
 
@@ -49,18 +50,20 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
 };
 
 TableView.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   className: PropTypes.string,
-}
+};
 
 TableView.defaultProps = {
-  rowTag: null,
+  rowTag: AutocardListItem,
   noGroupModal: false,
   className: null,
-}
+};
 
 export default TableView;

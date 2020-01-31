@@ -643,6 +643,12 @@ img.mana-symbol {
 }
 
 .icon-button {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	padding: 0;
+	border: 0;
+	background-color: transparent;
 	font-weight: 700;
 	line-height: 1;
 	font-size: 1rem;	
