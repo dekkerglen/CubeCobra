@@ -49,14 +49,16 @@ const Changelist = () => {
     [removeChange],
   );
 
+  const getId = (card) => card.details._id || card.cardID;
+
   const changelistData = changes
     .map((change) => {
       if (change.add) {
         return '+' + (change.add.details._id || change.add.cardID);
       } else if (change.remove) {
-        return '-' + change.remove.index;
+        return '-' + change.remove.index + '$' + getId(change.remove);
       } else if (change.replace) {
-        return `/${change.replace[0].index}>${change.replace[1].details._id || change.replace[1].cardID}`;
+        return `/${change.replace[0].index + '$' + getId(change.replace[0])}>${getId(change.replace[1])}`;
       }
     })
     .join(';');

@@ -178,6 +178,7 @@ const CardModalForm = ({ children, ...props }) => {
         values={formValues}
         onChange={handleChange}
         card={renderCard}
+        maybe={maybe}
         versions={versions}
         toggle={closeCardModal}
         isOpen={isOpen}

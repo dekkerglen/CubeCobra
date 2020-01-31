@@ -16,11 +16,13 @@ import {
   Button,
 } from 'reactstrap';
 
-import { csrfFetch } from '../utils/CSRF';
-import TagInput from './TagInput';
-import { TagContextProvider } from './TagContext';
-import TextEntry from './TextEntry';
-import AutocompleteInput from './AutocompleteInput';
+import { csrfFetch } from 'utils/CSRF';
+
+import AutocompleteInput from 'components/AutocompleteInput';
+import LoadingButton from 'components/LoadingButton';
+import TagInput from 'components/TagInput';
+import { TagContextProvider } from 'components/TagContext';
+import TextEntry from 'components/TextEntry';
 
 class CubeOverviewModal extends Component {
   constructor(props) {
@@ -57,7 +59,8 @@ class CubeOverviewModal extends Component {
     this.setState({ image_dict: image_json.dict });
   }
 
-  open() {
+  open(event) {
+    event.preventDefault();
     this.setState({
       isOpen: true,
     });
@@ -78,7 +81,7 @@ class CubeOverviewModal extends Component {
     this.setState((prevState) => ({
       cube: {
         ...prevState.cube,
-        descriptionhtml: value,
+        raw_desc: value,
       },
     }));
   }
@@ -199,6 +202,7 @@ class CubeOverviewModal extends Component {
 
     var cube = this.state.cube;
     cube.tags = this.state.tags.map((tag) => tag.text);
+    cube.descriptionhtml = cube.raw_desc;
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -367,11 +371,7 @@ class CubeOverviewModal extends Component {
                 <h6>Description</h6>
                 <TextEntry
                   name="blog"
-                  value={
-                    cube.descriptionhtml && cube.descriptionhtml !== 'undefined'
-                      ? cube.descriptionhtml
-                      : cube.description
-                  }
+                  value={cube.raw_desc && cube.raw_desc !== 'undefined' ? cube.raw_desc : cube.description}
                   onChange={this.handleDescriptionChange}
                 />
                 <br />
@@ -395,9 +395,9 @@ class CubeOverviewModal extends Component {
                 <Button color="secondary" onClick={this.close}>
                   Close
                 </Button>{' '}
-                <Button color="success" onClick={this.handleApply}>
+                <LoadingButton color="success" onClick={this.handleApply}>
                   Save Changes
-                </Button>
+                </LoadingButton>
               </ModalFooter>
             </form>
           </Modal>

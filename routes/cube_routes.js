@@ -55,14 +55,14 @@ let CardRating = require('../models/cardrating');
 const NODE_ENV = process.env.NODE_ENV;
 
 let BulkUploadPage = null;
+let CubeDraftPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
-let DraftView = null;
 if (NODE_ENV === 'production') {
   BulkUploadPage = require('../dist/components/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/components/CubeDraftPage').default;
   CubeListPage = require('../dist/components/CubeListPage').default;
   CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
-  DraftView = require('../dist/components/DraftView').default;
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');
@@ -1668,8 +1668,8 @@ router.get('/draft/:id', async (req, res) => {
     };
 
     res.render('cube/cube_draft', {
-      reactHTML: DraftView
-        ? await ReactDOMServer.renderToString(React.createElement(DraftView, reactProps))
+      reactHTML: CubeDraftPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
@@ -1700,7 +1700,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const adds = [];
     let changelog = '';
 
-    for (let edit of edits) {
+    for (const edit of edits) {
       if (edit.charAt(0) == '+') {
         //add id
         var details = carddb.cardFromId(edit.substring(1));
@@ -1712,16 +1712,22 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
       } else if (edit.charAt(0) == '-') {
         //remove id
-        const indexOut = parseInt(edit.substring(1));
+        const [indexOutStr, outID] = edit.substring(1).split('$');
+        const indexOut = parseInt(indexOutStr);
         if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect('/cube/list/' + req.params.id);
         }
         removes.add(indexOut);
         const card = cube.cards[indexOut];
-        changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        if (card.cardID === outID) {
+          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect('/cube/list/' + req.params.id);
+        }
       } else if (edit.charAt(0) == '/') {
-        const [indexOutStr, idIn] = edit.substring(1).split('>');
+        const [outStr, idIn] = edit.substring(1).split('>');
         const detailsIn = carddb.cardFromId(idIn);
         if (!detailsIn) {
           console.error('Card not found: ' + edit, req);
@@ -1729,6 +1735,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
           adds.push(detailsIn);
         }
 
+        const [indexOutStr, outID] = outStr.split('$');
         const indexOut = parseInt(indexOutStr);
         if (isNaN(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
@@ -1736,19 +1743,19 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
         removes.add(indexOut);
         const cardOut = cube.cards[indexOut];
-        changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        if (cardOut.cardID === outID) {
+          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect('/cube/list/' + req.params.id);
+        }
       } else {
         req.flash('danger', 'Bad request format.');
         return res.redirect('/cube/list/' + req.params.id);
       }
     }
 
-    //need to do numerical sort..
-    const removesArray = [...removes];
-    removesArray.sort((a, b) => a - b);
-    for (let i = removesArray.length - 1; i >= 0; i--) {
-      cube.cards.splice(removesArray[i], 1);
-    }
+    cube.cards = cube.cards.filter((card, index) => !removes.has(index));
     for (const add of adds) {
       util.addCardToCube(cube, add);
       const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
