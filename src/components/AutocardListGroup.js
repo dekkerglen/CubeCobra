@@ -1,13 +1,13 @@
 import React, { useCallback, useContext } from 'react';
+import PropTypes from 'prop-types';
 
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
+import { ListGroup, ListGroupItem } from 'reactstrap';
 
-import { sortDeep } from '../utils/Sort';
-import { alphaCompare } from '../utils/Util';
+import { sortDeep } from 'utils/Sort';
 
-import AutocardListItem from './AutocardListItem';
-import CubeContext from './CubeContext';
-import GroupModalContext from './GroupModalContext';
+import AutocardListItem from 'components/AutocardListItem';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
@@ -27,12 +27,12 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
     <ListGroup className="list-outline">
       <ListGroupItem
         tag="div"
-        className={'list-group-heading' + (canGroupModal ? ' clickable' : '')}
+        className={`list-group-heading${canGroupModal ? ' clickable' : ''}`}
         onClick={canGroupModal ? handleClick : undefined}
       >
         {heading}
       </ListGroupItem>
-      {sorted.map(([label, group]) =>
+      {sorted.map(([, group]) =>
         group.map((card, index) => (
           <RowTag
             key={card._id || (typeof card.index === 'undefined' ? index : card.index)}
@@ -45,9 +45,20 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   );
 };
 
+AutocardListGroup.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  })).isRequired,
+  rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  noGroupModal: PropTypes.bool,
+  heading: PropTypes.node.isRequired,
+  sort: PropTypes.string,
+};
+
 AutocardListGroup.defaultProps = {
-  sort: 'CMC-Full',
   rowTag: AutocardListItem,
+  noGroupModal: false,
+  sort: 'CMC-Full',
 };
 
 export default AutocardListGroup;

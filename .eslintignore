@@ -2,7 +2,6 @@ webpack.*.js
 
 src/components/AgeText.js
 src/components/AspectRatioBox.js
-src/components/AutocardListGroup.js
 src/components/AutocardListItem.js
 src/components/AutocompleteInput.js
 src/components/BlogContextMenu.js
@@ -64,7 +63,6 @@ src/components/SortCollapse.js
 src/components/SortContext.js
 src/components/SortableTable.js
 src/components/SpoilerImage.js
-src/components/TableView.js
 src/components/TagColorsModal.js
 src/components/TagContext.js
 src/components/TagInput.js
