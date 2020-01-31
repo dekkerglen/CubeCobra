@@ -1,4 +1,5 @@
 import React, { useContext, useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -20,7 +21,6 @@ import {
   ModalFooter,
   ModalHeader,
   Row,
-  UncontrolledAlert,
   UncontrolledCollapse,
 } from 'reactstrap';
 
@@ -32,6 +32,7 @@ import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
 import withModal from 'components/WithModal';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
@@ -49,8 +50,8 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
         </ModalHeader>
         <ModalBody>
           <p>
-            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x
-            island"
+            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as
+            &quot;2x island&quot;
           </p>
           <Input
             type="textarea"
@@ -58,7 +59,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
             rows="10"
             placeholder="Paste Decklist Here (max length 20000)"
             name="body"
-          ></Input>
+          />
         </ModalBody>
         <ModalFooter>
           <Button color="success" type="submit">
@@ -71,6 +72,11 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
+};
+
+UploadDecklistModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
 };
 
 const UploadDecklistModalLink = withModal(NavLink, UploadDecklistModal);
@@ -86,6 +92,12 @@ const LabelRow = ({ htmlFor, label, children, ...props }) => (
   </FormGroup>
 );
 
+LabelRow.propTypes = {
+  htmlFor: PropTypes.string.isRequired,
+  label: PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
 const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ...props }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
   return (
@@ -95,7 +107,10 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
           <CardTitleH5>{format.title} (custom draft)</CardTitleH5>
         </CardHeader>
         <CardBody>
-          <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
+          <div
+            className="description-area"
+            dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
+          />
           <LabelRow htmlFor={`seats-${formatIndex}`} label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id={`seats-${formatIndex}`} defaultValue="8">
               {rangeOptions(4, 11)}
@@ -129,52 +144,76 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
   );
 };
 
-const StandardDraftCard = ({ cubeID }) => (
-  <Card className="mt-3">
-    <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+CustomDraftCard.propTypes = {
+  format: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    html: PropTypes.string.isRequired,
+  }).isRequired,
+  formatIndex: PropTypes.number.isRequired,
+  onEditFormat: PropTypes.func.isRequired,
+  onDeleteFormat: PropTypes.func.isRequired,
+};
+
+const StandardDraftCard = () => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Card className="mt-3">
+      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+        <CardHeader>
+          <CardTitleH5>Standard draft</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <LabelRow htmlFor="packs" label="Number of Packs">
+            <Input type="select" name="packs" id="packs" defaultValue="3">
+              {rangeOptions(1, 11)}
+            </Input>
+          </LabelRow>
+          <LabelRow htmlFor="cards" label="Cards per Pack">
+            <Input type="select" name="cards" id="cards" defaultValue="15">
+              {rangeOptions(5, 21)}
+            </Input>
+          </LabelRow>
+          <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
+            <Input type="select" name="seats" id="seats" defaultValue="8">
+              {rangeOptions(4, 11)}
+            </Input>
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Input type="hidden" name="id" value="-1" />
+          <Button color="success">Start Draft</Button>
+        </CardFooter>
+      </CSRFForm>
+    </Card>
+  );
+};
+
+const DecksCard = ({ decks, ...props }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Card {...props}>
       <CardHeader>
-        <CardTitleH5>Standard draft</CardTitleH5>
+        <CardTitleH5>Recent Decks</CardTitleH5>
       </CardHeader>
-      <CardBody>
-        <LabelRow htmlFor="packs" label="Number of Packs">
-          <Input type="select" name="packs" id="packs" defaultValue="3">
-            {rangeOptions(1, 11)}
-          </Input>
-        </LabelRow>
-        <LabelRow htmlFor="cards" label="Cards per Pack">
-          <Input type="select" name="cards" id="cards" defaultValue="15">
-            {rangeOptions(5, 21)}
-          </Input>
-        </LabelRow>
-        <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
-          <Input type="select" name="seats" id="seats" defaultValue="8">
-            {rangeOptions(4, 11)}
-          </Input>
-        </LabelRow>
+      <CardBody className="p-0">
+        {decks.map((deck) => (
+          <DeckPreview key={deck._id} deck={deck} />
+        ))}
       </CardBody>
       <CardFooter>
-        <Input type="hidden" name="id" value="-1" />
-        <Button color="success">Start Draft</Button>
+        <a href={`/cube/decks/${cubeID}`}>View all</a>
       </CardFooter>
-    </CSRFForm>
-  </Card>
-);
+    </Card>
+  );
+};
 
-const DecksCard = ({ decks, cubeID, ...props }) => (
-  <Card {...props}>
-    <CardHeader>
-      <CardTitleH5>Recent Decks</CardTitleH5>
-    </CardHeader>
-    <CardBody className="p-0">
-      {decks.map((deck) => (
-        <DeckPreview key={deck._id} deck={deck} />
-      ))}
-    </CardBody>
-    <CardFooter>
-      <a href={`/cube/decks/${cubeID}`}>View all</a>
-    </CardFooter>
-  </Card>
-);
+DecksCard.propTypes = {
+  decks: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+};
 
 const SamplePackCard = (props) => {
   const { cubeID } = useContext(CubeContext);
@@ -206,17 +245,15 @@ const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
 const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, addAlert] = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
 
-  const addAlert = useCallback((alert) => setAlerts((alerts) => [...alerts, alert]), []);
-
   const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
 
-  const handleCreateFormat = useCallback((event) => {
+  const handleCreateFormat = useCallback(() => {
     setEditFormat(DEFAULT_FORMAT);
     setEditFormatIndex(-1);
     setEditModalOpen(true);
@@ -224,7 +261,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   const handleEditFormat = useCallback(
     (event) => {
-      const formatIndex = parseInt(event.target.getAttribute('data-index'));
+      const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       setEditFormat(formats[formatIndex]);
       setEditFormatIndex(formatIndex);
       setEditModalOpen(true);
@@ -234,7 +271,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   const handleDeleteFormat = useCallback(
     async (event) => {
-      const formatIndex = parseInt(event.target.getAttribute('data-index'));
+      const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
         const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
           method: 'DELETE',
@@ -275,20 +312,16 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
         </Nav>
       </Navbar>
       <DynamicFlash className="mt-3 mb-0" />
-      {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert key={index} color={color} className="mt-3 mb-0">
-          {message}
-        </UncontrolledAlert>
-      ))}
+      <Alerts alerts={alerts} />
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
-          {decks.length == 0 ? '' : <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
+          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
           <SamplePackCard className="mt-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
           {formats.map((format, index) => (
             <CustomDraftCard
-              key={index}
+              key={/* eslint-disable-line react/no-array-index-key */ index}
               format={format}
               formatIndex={index}
               onDeleteFormat={handleDeleteFormat}
@@ -296,7 +329,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
               className="mt-3"
             />
           ))}
-          <StandardDraftCard cubeID={cubeID} className="mt-3" />
+          <StandardDraftCard className="mt-3" />
         </Col>
       </Row>
       <CustomDraftFormatModal
@@ -308,6 +341,16 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
       />
     </CubeLayout>
   );
+};
+
+CubePlaytestPage.propTypes = {
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool.isRequired,
+  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  draftFormats: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default CubePlaytestPage;
