@@ -207,5 +207,5 @@ const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
 const element = <CardPage data={data} card={card} prices={prices} related={related} cubes={cubes} />;
 if (wrapper) {
-  ReactDOM.render(element.wrapper);
+  ReactDOM.render(element, wrapper);
 }

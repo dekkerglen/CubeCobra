@@ -288,5 +288,5 @@ const element = (
   </ErrorBoundary>
 );
 if (wrapper) {
-  ReactDOM.render(element.wrapper);
+  ReactDOM.render(element, wrapper);
 }

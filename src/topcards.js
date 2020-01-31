@@ -96,5 +96,5 @@ const numResults = parseInt(document.getElementById('topcardsNumResults').value)
 const wrapper = document.getElementById('react-root');
 const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
 if (wrapper) {
-  ReactDOM.render(element.wrapper);
+  ReactDOM.render(element, wrapper);
 }

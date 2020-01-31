@@ -38,5 +38,5 @@ const notifications = JSON.parse(document.getElementById('notificationData').val
 const element = <Notifications notifications={notifications} />;
 const wrapper = document.getElementById('react-root');
 if (wrapper) {
-  ReactDOM.render(element.wrapper);
+  ReactDOM.render(element, wrapper);
 }
