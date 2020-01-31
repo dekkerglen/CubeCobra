@@ -102,7 +102,7 @@ async function update(deck) {
   
   const draft = deck.draft ? await Draft.findById(deck.draft) : null;
 
-  if (deck.newformat == false && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
+  if (deck.newformat == false && deck.cards[deck.cards.length - 1] && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
     //old format
     deck.seats = [];
 
