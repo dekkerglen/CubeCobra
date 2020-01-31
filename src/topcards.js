@@ -25,7 +25,7 @@ class TopCards extends Component {
   async setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
-    const response = await fetch(`/tool/api/topcards?${  params.toString()}`);
+    const response = await fetch(`/tool/api/topcards?${params.toString()}`);
     if (!response.ok) {
       return;
     }
@@ -44,7 +44,7 @@ class TopCards extends Component {
       ) : (
         <tr key={name}>
           <td>
-            <AutocardA front={img} back={img_flip || undefined} href={`/tool/card/${  encodeName(name)}`}>
+            <AutocardA front={img} back={img_flip || undefined} href={`/tool/card/${encodeName(name)}`}>
               {name}
             </AutocardA>
           </td>
@@ -95,4 +95,6 @@ const data = JSON.parse(document.getElementById('topcards').value);
 const numResults = parseInt(document.getElementById('topcardsNumResults').value);
 const wrapper = document.getElementById('react-root');
 const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element.wrapper);
+}

@@ -4,14 +4,13 @@ import ReactDOM from 'react-dom';
 import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 import Notification from './components/Notification';
 
-
 class Notifications extends Component {
   constructor(props) {
     super(props);
   }
 
   render() {
-    const {notifications} = this.props;
+    const { notifications } = this.props;
     return (
       <Card className="mx-auto" style={{ maxWidth: '40rem' }}>
         <CardHeader>
@@ -38,4 +37,6 @@ class Notifications extends Component {
 const notifications = JSON.parse(document.getElementById('notificationData').value);
 const element = <Notifications notifications={notifications} />;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element.wrapper);
+}

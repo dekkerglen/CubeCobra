@@ -62,11 +62,11 @@ class CardPage extends Component {
                 ) : (
                   <div className="card-price">TCGPlayer Market: {prices[card.tcgplayer_id].toFixed(2)}</div>
                 )}
-                {!prices[`${card.tcgplayer_id  }_foil`] ? (
+                {!prices[`${card.tcgplayer_id}_foil`] ? (
                   ''
                 ) : (
                   <div className="card-price">
-                    Foil TCGPlayer Market: {prices[`${card.tcgplayer_id  }_foil`].toFixed(2)}
+                    Foil TCGPlayer Market: {prices[`${card.tcgplayer_id}_foil`].toFixed(2)}
                   </div>
                 )}
                 {!card.elo ? '' : <div className="card-price">Elo: {card.elo}</div>}
@@ -74,9 +74,9 @@ class CardPage extends Component {
             </Col>
             <Col className="breakdown" xs="12" sm="8">
               <p>
-                Played in 
+                Played in
                 {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>
-                 Cubes total.
+                Cubes total.
               </p>
               <Row>
                 <Col xs="12" sm="6" md="6" lg="6">
@@ -134,7 +134,7 @@ class CardPage extends Component {
             <CardBody>
               <Row>
                 {related.map((item) => (
-                  <a key={item.name} href={`/tool/card/${  encodeName(item.name)}`}>
+                  <a key={item.name} href={`/tool/card/${encodeName(item.name)}`}>
                     <img width="150" height="210" src={item.image_normal} />
                   </a>
                 ))}
@@ -179,4 +179,6 @@ const cubes = JSON.parse(document.getElementById('cubes').value);
 const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
 const element = <CardPage data={data} card={card} prices={prices} related={related} cubes={cubes} />;
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element.wrapper);
+}

@@ -31,8 +31,8 @@ rules:
     - allowForLoopAfterthoughts: true
   no-restricted-syntax:
     - error
-    - FunctionExpression
     - WithStatement
+    - LabeledStatement
     - BinaryExpression[operator='in']
   react/jsx-filename-extension: off
   react/jsx-one-expression-per-line: off

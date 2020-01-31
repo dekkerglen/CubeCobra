@@ -77,4 +77,6 @@ class CubeAnalysis extends Component {
 
 const wrapper = document.getElementById('react-root');
 const element = <CubeAnalysis {...window.reactProps} />;
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element.wrapper);
+}

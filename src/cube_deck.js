@@ -5,4 +5,6 @@ import CubeDeckPage from 'pages/CubeDeckPage';
 
 const element = <CubeDeckPage {...window.reactProps} />;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element.wrapper);
+}
