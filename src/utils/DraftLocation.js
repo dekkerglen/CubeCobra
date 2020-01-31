@@ -1,4 +1,4 @@
-import { arraysEqual } from './Util';
+import { arraysEqual } from 'utils/Util';
 
 class DraftLocation {
   constructor(type, data) {

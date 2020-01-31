@@ -1,9 +1,9 @@
 import { normalizeName } from './Card';
 import { cardIsLabel } from './Sort';
 
-let rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
+const rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
 
-let categoryMap = new Map([
+const categoryMap = new Map([
   ['m', 'mana'],
   ['mana', 'mana'],
   ['cmc', 'cmc'],
@@ -43,7 +43,7 @@ let categoryMap = new Map([
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
-export const operatorsRegex = new RegExp('(?:' + operators.join('|') + ')');
+export const operatorsRegex = new RegExp(`(?:${  operators.join('|')  })`);
 
 function findEndingQuotePosition(filterText, num) {
   if (!num) {
@@ -65,23 +65,23 @@ export function tokenizeInput(filterText, tokens) {
     return true;
   }
 
-  //split string based on list of operators
-  let operators_re = operatorsRegex;
+  // split string based on list of operators
+  const operators_re = operatorsRegex;
 
   if (filterText.indexOf('(') == 0) {
     if (findEndingQuotePosition(filterText, 0)) {
-      let token = {
+      const token = {
         type: 'open',
       };
       tokens.push(token);
       return tokenizeInput(filterText.slice(1), tokens);
-    } else {
+    } 
       return false;
-    }
+    
   }
 
   if (filterText.indexOf(')') == 0) {
-    let token = {
+    const token = {
       type: 'close',
     };
     tokens.push(token);
@@ -99,31 +99,31 @@ export function tokenizeInput(filterText, tokens) {
     return tokenizeInput(filterText.slice(3), tokens);
   }
 
-  let token = {
+  const token = {
     type: 'token',
     not: false,
   };
 
-  //find not
+  // find not
   if (filterText.indexOf('-') == 0) {
     token.not = true;
     filterText = filterText.slice(1);
   }
 
-  let firstTerm = filterText.split(' ', 1);
+  const firstTerm = filterText.split(' ', 1);
 
-  //find operand
-  let operand = firstTerm[0].match(operators_re);
+  // find operand
+  const operand = firstTerm[0].match(operators_re);
   if (operand) {
     token.operand = operand[0];
   } else {
     token.operand = 'none';
   }
 
-  let quoteOp_re = new RegExp('(?:' + operators.join('|') + ')"');
+  const quoteOp_re = new RegExp(`(?:${  operators.join('|')  })"`);
   let parens = false;
 
-  //find category
+  // find category
   let category = '';
   if (token.operand == 'none') {
     category = 'name';
@@ -131,18 +131,18 @@ export function tokenizeInput(filterText, tokens) {
     category = firstTerm[0].split(operators_re)[0];
   }
 
-  //find arg value
-  //if there are two quotes, and first char is quote
+  // find arg value
+  // if there are two quotes, and first char is quote
   if (filterText.indexOf('"') == 0 && filterText.split('"').length > 2) {
-    //grab the quoted string, ignoring escaped quotes
-    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
-    //replace escaped quotes with plain quotes
+    // grab the quoted string, ignoring escaped quotes
+    const quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    // replace escaped quotes with plain quotes
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
   } else if (firstTerm[0].search(quoteOp_re) > -1 && filterText.split('"').length > 2) {
-    //check if there is a paren after an operator
-    //TODO: make sure the closing paren isn't before the operator
-    let quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
+    // check if there is a paren after an operator
+    // TODO: make sure the closing paren isn't before the operator
+    const quotes_re = new RegExp('"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"');
     token.arg = filterText.match(quotes_re)[1];
     parens = true;
   } else if (token.operand != 'none') {
@@ -163,13 +163,13 @@ export function tokenizeInput(filterText, tokens) {
   token.category = categoryMap.get(category);
   token.arg = simplifyArg(token.arg, token.category);
   if (token.operand && token.category && token.arg) {
-    //replace any escaped quotes with normal quotes
+    // replace any escaped quotes with normal quotes
     if (parens) token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);
     return tokenizeInput(filterText, tokens);
-  } else {
+  } 
     return false;
-  }
+  
 }
 
 const colorMap = new Map([
@@ -203,7 +203,7 @@ const colorMap = new Map([
 
 const rarityMap = new Map([['c', 'common'], ['u', 'uncommon'], ['r', 'rare'], ['m', 'mythic']]);
 
-//change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
+// change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
   let res = arg.toLowerCase();
   switch (category) {
@@ -223,16 +223,16 @@ function simplifyArg(arg, category) {
 }
 
 export const verifyTokens = (tokens) => {
-  let temp = tokens;
-  let inBounds = (num) => {
+  const temp = tokens;
+  const inBounds = (num) => {
     return num > -1 && num < temp.length;
   };
-  let type = (i) => temp[i].type;
-  let token = (i) => temp[i];
+  const type = (i) => temp[i].type;
+  const token = (i) => temp[i];
 
   for (let i = 0; i < temp.length; i++) {
     if (type(i) == 'open') {
-      let closed = findClose(temp, i);
+      const closed = findClose(temp, i);
       if (!closed) return false;
       temp[closed].valid = true;
     }
@@ -249,7 +249,7 @@ export const verifyTokens = (tokens) => {
         case 'color':
         case 'identity':
           // can be a number (0-5) or color:
-          let verifyColors = (element) => {
+          const verifyColors = (element) => {
             return element.search(/^[WUBRGC012345]$/) < 0;
           };
           if (token(i).arg.every(verifyColors)) {
@@ -267,7 +267,7 @@ export const verifyTokens = (tokens) => {
           if (token(i).arg.search(/^\d+$/) < 0) return false;
           break;
         case 'mana':
-          let verifyMana = (element) => {
+          const verifyMana = (element) => {
             element.search(/^(\d+|[wubrgscxyz]|{([wubrg2]\-[wubrg]|[wubrg]\-p)})$/) < 0;
           };
           if (token(i).arg.every(verifyMana)) {
@@ -302,28 +302,28 @@ const hybridMap = new Map([
 ]);
 
 function parseManaCost(cost) {
-  let res = [];
+  const res = [];
   for (let i = 0; i < cost.length; i++) {
     if (cost[i] == '{') {
-      let str = cost.slice(i + 1, i + 4).toLowerCase();
+      const str = cost.slice(i + 1, i + 4).toLowerCase();
       if (str.search(/[wubrg]\/p/) > -1) {
-        res.push(cost[i + 1] + '-p');
-        i = i + 4;
+        res.push(`${cost[i + 1]  }-p`);
+        i += 4;
       } else if (str.search(/2\/[wubrg]/) > -1) {
-        res.push('2-' + cost[i + 3]);
-        i = i + 4;
+        res.push(`2-${  cost[i + 3]}`);
+        i += 4;
       } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
-        let symbol = cost[i + 1] + '-' + cost[i + 3];
+        let symbol = `${cost[i + 1]  }-${  cost[i + 3]}`;
         if (hybridMap.has(symbol)) {
           symbol = hybridMap.get(symbol);
         }
         res.push(symbol);
-        i = i + 4;
+        i += 4;
       } else if (str.search(/^[wubrgscxyz]}/) > -1) {
         res.push(cost[i + 1]);
-        i = i + 2;
+        i += 2;
       } else if (str.search(/^[0-9]+}/) > -1) {
-        let num = str.match(/[0-9]+/)[0];
+        const num = str.match(/[0-9]+/)[0];
         if (num.length <= 2) {
           res.push(num);
         }
@@ -332,7 +332,7 @@ function parseManaCost(cost) {
     } else if (cost[i].search(/[wubrgscxyz]/) > -1) {
       res.push(cost[i]);
     } else if (cost[i].search(/[0-9]/) > -1) {
-      let num = cost.slice(i).match(/[0-9]+/)[0];
+      const num = cost.slice(i).match(/[0-9]+/)[0];
       if (num.length <= 2) {
         res.push(num);
       } else {
@@ -359,28 +359,28 @@ const findClose = (tokens, pos) => {
 };
 
 export const parseTokens = (tokens) => {
-  let peek = () => tokens[0];
-  let consume = peek;
+  const peek = () => tokens[0];
+  const consume = peek;
 
-  let result = [];
+  const result = [];
   if (peek().type == 'or') {
     return parseTokens(tokens.slice(1));
   }
   if (peek().type == 'open') {
-    let end = findClose(tokens);
+    const end = findClose(tokens);
     if (end < tokens.length - 1 && tokens[end + 1].type == 'or') result.type = 'or';
     result.push(parseTokens(tokens.slice(1, end)));
     if (tokens.length > end + 1) result.push(parseTokens(tokens.slice(end + 1)));
     return result;
-  } else if (peek().type == 'token') {
+  } if (peek().type == 'token') {
     if (tokens.length == 1) {
       return consume();
-    } else {
+    } 
       if (tokens[1].type == 'or') result.type = 'or';
       result.push(consume());
       result.push(parseTokens(tokens.slice(1)));
       return result;
-    }
+    
   }
 };
 
@@ -389,22 +389,22 @@ function filterCard(card, filters, inCube) {
   if (filters.length == 1) {
     if (filters[0].type == 'token') {
       return filterApply(card, filters[0], inCube);
-    } else {
+    } 
       return filterCard(card, filters[0], inCube);
-    }
-  } else {
+    
+  } 
     if (filters.type == 'or') {
       return (
         (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
         (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
       );
-    } else {
+    } 
       return (
         (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) &&
         (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
       );
-    }
-  }
+    
+  
 }
 
 export function filterCards(cards, filter, inCube) {
@@ -419,7 +419,7 @@ export function filterCardsDetails(cardsDetails, filter) {
 
 function areArraysEqualSets(a1, a2) {
   if (a1.length != a2.length) return false;
-  let superSet = {};
+  const superSet = {};
   for (let i = 0; i < a1.length; i++) {
     const e = a1[i] + typeof a1[i];
     superSet[e] = 1;
@@ -433,7 +433,7 @@ function areArraysEqualSets(a1, a2) {
     superSet[e] = 2;
   }
 
-  for (let e in superSet) {
+  for (const e in superSet) {
     if (superSet[e] === 1) {
       return false;
     }
@@ -462,7 +462,7 @@ function filterApply(card, filter, inCube) {
   // colors = colors in mana cost
   // color_identity = (Commander style) colors anywhere on card
   // card.colors is an override for card.details.color_identity
-  let color_identity = inCube ? card.colors : card.details.color_identity;
+  const color_identity = inCube ? card.colors : card.details.color_identity;
 
   if (filter.category == 'name') {
     res = card.details.name_lower.indexOf(normalizeName(filter.arg)) > -1;
@@ -471,7 +471,7 @@ function filterApply(card, filter, inCube) {
     res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
   }
   if (filter.category == 'color' && card.details.colors !== undefined) {
-    let is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
+    const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
       switch (filter.operand) {
         case ':':
@@ -501,8 +501,8 @@ function filterApply(card, filter, inCube) {
       }
     } else {
       // check for how many colors in identity
-      let num_colors = card.details.colors.length;
-      let filter_num = parseInt(filter.arg[0], 10);
+      const num_colors = card.details.colors.length;
+      const filter_num = parseInt(filter.arg[0], 10);
 
       switch (filter.operand) {
         case ':':
@@ -525,7 +525,7 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'identity' && color_identity !== undefined) {
-    let is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
+    const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
       // handle args that are colors: e.g ci:wu, ci>wu
       switch (filter.operand) {
@@ -552,8 +552,8 @@ function filterApply(card, filter, inCube) {
       }
     } else {
       // check for how many colors in identity
-      let num_colors = color_identity.length;
-      let filter_num = parseInt(filter.arg[0], 10);
+      const num_colors = color_identity.length;
+      const filter_num = parseInt(filter.arg[0], 10);
 
       switch (filter.operand) {
         case ':':
@@ -579,7 +579,7 @@ function filterApply(card, filter, inCube) {
     res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
   }
   if (filter.category == 'cmc' && cmc !== undefined) {
-    let arg = parseInt(filter.arg, 10);
+    const arg = parseInt(filter.arg, 10);
     cmc = parseInt(cmc, 10);
     switch (filter.operand) {
       case ':':
@@ -612,8 +612,8 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'power') {
     if (card.details.power) {
-      let cardPower = parseInt(card.details.power, 10);
-      let arg = parseInt(filter.arg, 10);
+      const cardPower = parseInt(card.details.power, 10);
+      const arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -636,8 +636,8 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'toughness') {
     if (card.details.toughness) {
-      let cardToughness = parseInt(card.details.toughness, 10);
-      let arg = parseInt(filter.arg, 10);
+      const cardToughness = parseInt(card.details.toughness, 10);
+      const arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -660,8 +660,8 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'loyalty') {
     if (card.details.loyalty) {
-      let cardLoyalty = parseInt(card.details.loyalty, 10);
-      let arg = parseInt(filter.arg, 10);
+      const cardLoyalty = parseInt(card.details.loyalty, 10);
+      const arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -705,7 +705,7 @@ function filterApply(card, filter, inCube) {
     }
     if (price) {
       price = parseFloat(price, 10);
-      let arg = parseFloat(filter.arg, 10);
+      const arg = parseFloat(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -732,7 +732,7 @@ function filterApply(card, filter, inCube) {
     var price = card.details.price_foil || null;
     if (price) {
       price = parseFloat(price, 10);
-      let arg = parseFloat(filter.arg, 10);
+      const arg = parseFloat(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -756,7 +756,7 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'rarity') {
-    let rarity = card.details.rarity;
+    const {rarity} = card.details;
     switch (filter.operand) {
       case ':':
       case '=':
@@ -781,8 +781,8 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'elo') {
     if (card.details.elo) {
-      let elo = parseInt(card.details.elo, 10);
-      let arg = parseInt(filter.arg, 10);
+      const elo = parseInt(card.details.elo, 10);
+      const arg = parseInt(filter.arg, 10);
       switch (filter.operand) {
         case ':':
         case '=':
@@ -808,7 +808,7 @@ function filterApply(card, filter, inCube) {
       case 'gold':
       case 'hybrid':
       case 'phyrexian':
-        let type = filter.arg.substring(0, 1).toUpperCase() + filter.arg.substring(1);
+        const type = filter.arg.substring(0, 1).toUpperCase() + filter.arg.substring(1);
         res = cardIsLabel(card, type, 'Manacost Type');
         break;
     }
@@ -816,17 +816,17 @@ function filterApply(card, filter, inCube) {
 
   if (filter.not) {
     return !res;
-  } else {
+  } 
     return res;
-  }
+  
 }
 
 export function filterToString(filters) {
   if (Array.isArray(filters) && Array.isArray(filters[0])) {
     return filterToString(filters[0]);
   }
-  let s = [];
-  let f, arg, operand;
+  const s = [];
+  let f; let arg; let operand;
   for (let i = 0; i < filters.length; i++) {
     f = filters[i];
     if (f.type == 'token') {
@@ -836,7 +836,7 @@ export function filterToString(filters) {
       }
       operand = f.operand;
       if (f.not) {
-        operand = '!' + operand;
+        operand = `!${  operand}`;
       }
       s.push(f.category + operand + arg);
     }

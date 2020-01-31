@@ -1,4 +1,4 @@
-import { arraysEqual } from './Util';
+import { arraysEqual } from 'utils/Util';
 
 export function normalizeName(name) {
   return name

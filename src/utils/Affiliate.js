@@ -1,8 +1,9 @@
 export function getTCGLink(card) {
-  const { tcgplayer_id, name, isToken } = card.details;
+  const { name, isToken } = card.details;
+  const tcgplayerId = card.details.tcgplayer_id;
   let tcgplayerLink = 'https://shop.tcgplayer.com/';
-  if (tcgplayer_id) {
-    tcgplayerLink += `product/productsearch?id=${tcgplayer_id}`;
+  if (tcgplayerId) {
+    tcgplayerLink += `product/productsearch?id=${tcgplayerId}`;
   } else {
     const tcgplayerName = isToken ? `${name} Token` : name;
     tcgplayerLink += `productcatalog/product/show?ProductName=${tcgplayerName}`;

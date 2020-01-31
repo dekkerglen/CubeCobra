@@ -4,11 +4,11 @@ function hash() {
   return typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
 }
 
-function changeHash(hash) {
+function changeHash(newHash) {
   if (typeof window === 'undefined') {
     return;
   }
-  const url = window.location.pathname + window.location.search + (hash ? `#${hash}` : '');
+  const url = window.location.pathname + window.location.search + (newHash ? `#${newHash}` : '');
   window.history.replaceState({}, document.title, url);
 }
 

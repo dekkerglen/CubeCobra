@@ -10,7 +10,7 @@ function changeQuery(params) {
   }
   const str = params.toString();
   if (str) {
-    window.history.replaceState({}, document.title, window.location.pathname + '?' + str + window.location.hash);
+    window.history.replaceState({}, document.title, `${window.location.pathname  }?${  str  }${window.location.hash}`);
   } else {
     window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
   }
