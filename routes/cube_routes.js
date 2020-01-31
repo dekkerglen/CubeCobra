@@ -630,7 +630,7 @@ router.get('/rss/:id', async (req, res) => {
     var cube_id = split[0];
     const cube = await Cube.findOne(build_id_query(cube_id));
     const user = await User.findById(cube.owner);
-    const blogs = await log
+    const blogs = await Blog
       .find({
         cube: cube._id,
       })
