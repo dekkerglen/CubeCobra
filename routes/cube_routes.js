@@ -871,20 +871,23 @@ router.get('/playtest/:id', async (req, res) => {
     delete cube.decks;
     delete cube.maybe;
 
-    // sort titles alphabetically
-    cube.draft_formats.sort((a, b) => a.title.localeCompare(b.title));
+    let draftFormats = [];
+    // NOTE: older cubes do not have custom drafts
+    if (cube.draft_formats) {
+      draftFormats = cube.draft_formats
+        .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
+        .map(({ packs, ...format }) => ({
+          ...format,
+          packs: JSON.parse(packs),
+        }));
+    }
 
     const reactProps = {
       cube,
       cubeID: req.params.id,
       canEdit: user._id.equals(cube.owner),
       decks,
-      draftFormats: cube.draft_formats
-        ? cube.draft_formats.map(({ packs, ...format }) => ({
-            ...format,
-            packs: JSON.parse(packs),
-          }))
-        : [],
+      draftFormats: draftFormats,
     };
 
     res.render('cube/cube_playtest', {
