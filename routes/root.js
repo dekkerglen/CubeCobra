@@ -13,7 +13,7 @@ const { NODE_ENV } = process.env;
 
 let DashboardPage = null;
 if (NODE_ENV === 'production') {
-  DashboardPage = require('../dist/components/DashboardPage').default;
+  DashboardPage = require('../dist/pages/DashboardPage').default;
 }
 
 const { csrfProtection } = require('./middleware');

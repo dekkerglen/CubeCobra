@@ -12,10 +12,10 @@
     "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' && eslint routes src",
     "nodemon": "nodemon --ignore src --ignore public",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
-    "build": "webpack --mode production --config webpack.prod.js && rollup -c",
-    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & rollup -c --watch",
+    "build": "webpack --mode production --config webpack.prod.js --progress",
+    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & webpack --config webpack.server.js --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
-    "setup": "rollup -c && node force_update.js"
+    "setup": "webpack --config webpack.server.js --progress && node force_update.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -93,7 +93,6 @@
     "jest": "^24.9.0",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "rollup": "^1.26.3",
     "sinon": "^7.4.2",
     "terser-webpack-plugin": "^2.2.1",
     "webpack": "^4.41.1",
