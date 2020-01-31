@@ -14,7 +14,7 @@ import TagContext from 'components/TagContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';
-import useAlerts from 'hooks/UseAlerts';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const colorCombos = [
   'C',
@@ -315,7 +315,7 @@ const ListView = ({ cards }) => {
   const { setGroupModalCards } = useContext(GroupModalContext);
   const { primary, secondary } = useContext(SortContext);
 
-  const { addAlert, alerts, Alerts } = useAlerts();
+  const { addAlert, alerts } = useAlerts();
 
   useEffect(() => {
     const wrapper = async () => {
