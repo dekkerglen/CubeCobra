@@ -100,7 +100,7 @@ class TopCards extends Component {
 TopCards.propTypes = {
   defaultData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
   defaultNumResults: PropTypes.number.isRequired,
-}
+};
 
 const data = JSON.parse(document.getElementById('topcards').value);
 const numResults = parseInt(document.getElementById('topcardsNumResults').value, 10);
