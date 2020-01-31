@@ -17,7 +17,8 @@ export function arrayRotate(arr, reverse) {
 
 export function arrayShuffle(array) {
   let currentIndex = array.length;
-  let temporaryValue; let randomIndex;
+  let temporaryValue;
+  let randomIndex;
 
   // While there remain elements to shuffle...
   while (currentIndex !== 0) {

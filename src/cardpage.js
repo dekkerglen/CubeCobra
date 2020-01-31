@@ -179,11 +179,11 @@ CardPage.propTypes = {
     tcgplayer_id: PropTypes.string.isRequired,
   }).isRequired,
   data: PropTypes.shape({
-    vintage: PropTypes.bool.isRequired,    
-    legacy: PropTypes.bool.isRequired,    
-    modern: PropTypes.bool.isRequired,    
-    standard: PropTypes.bool.isRequired,    
-    pauper: PropTypes.bool.isRequired,    
+    vintage: PropTypes.bool.isRequired,
+    legacy: PropTypes.bool.isRequired,
+    modern: PropTypes.bool.isRequired,
+    standard: PropTypes.bool.isRequired,
+    pauper: PropTypes.bool.isRequired,
     size180: PropTypes.number.isRequired,
     size360: PropTypes.number.isRequired,
     size450: PropTypes.number.isRequired,
@@ -192,12 +192,14 @@ CardPage.propTypes = {
     total: PropTypes.arrayOf(PropTypes.number).isRequired,
   }).isRequired,
   prices: PropTypes.objectOf(PropTypes.number).isRequired,
-  related: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    image_normal: PropTypes.string.isRequired,
-  })).isRequired,
+  related: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      image_normal: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-}
+};
 
 const data = JSON.parse(document.getElementById('data').value);
 const card = JSON.parse(document.getElementById('card').value);

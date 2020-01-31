@@ -2,13 +2,12 @@ import React, { useCallback, useState } from 'react';
 
 import { UncontrolledAlert } from 'reactstrap';
 
-export const Alerts = ({ alerts, ...props }) => (
+export const Alerts = ({ alerts, ...props }) =>
   alerts.map(({ color, message }, index) => (
     <UncontrolledAlert key={/* eslint-disable-line react/no-array-index-key */ index} color={color} {...props}>
       {message}
     </UncontrolledAlert>
-  ))
-);
+  ));
 
 const useAlerts = () => {
   const [alerts, setAlerts] = useState([]);

@@ -28,9 +28,11 @@ const Notifications = ({ notifications }) => (
 );
 
 Notifications.propTypes = {
-  notifications: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  notifications: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 const notifications = JSON.parse(document.getElementById('notificationData').value);

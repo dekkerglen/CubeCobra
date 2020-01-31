@@ -46,14 +46,18 @@ const DeckStacksStatic = ({ title, subtitle, cards, ...props }) => (
       {cards.map((row, index) => (
         <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
           {row.map((column, index2) => (
-            <Col key={/* eslint-disable-line react/no-array-index-key */ index2} className="mt-3 card-stack col-md-1-5 col-low-padding" xs={3}>
+            <Col
+              key={/* eslint-disable-line react/no-array-index-key */ index2}
+              className="mt-3 card-stack col-md-1-5 col-low-padding"
+              xs={3}
+            >
               <div className="w-100 text-center mb-1">
                 <b>{column.length > 0 ? column.length : ''}</b>
               </div>
               <div className="stack">
                 {column.map((card, index3) => (
                   <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
-                    <a href={card.cardID ? `/tool/card/${  card.cardID}` : null}>
+                    <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
                       <FoilCardImage card={card} tags={[]} autocard />
                     </a>
                   </div>
@@ -236,7 +240,12 @@ const CubeDeckPage = ({
         <h4 className="mt-3">Bot Decks</h4>
         <Row className="row-low-padding">
           {botDecks.map((botDeck, botIndex) => (
-            <Col key={/* eslint-disable-line react/no-array-index-key */ botIndex} xs={6} sm={3} className="col-md-1-4285 col-low-padding">
+            <Col
+              key={/* eslint-disable-line react/no-array-index-key */ botIndex}
+              xs={6}
+              sm={3}
+              className="col-md-1-4285 col-low-padding"
+            >
               <ListGroup className="list-outline">
                 <ListGroupItem className="list-group-heading">{bots[botIndex]}</ListGroupItem>
                 {botDeck.map((card, cardIndex) => (
@@ -245,7 +254,7 @@ const CubeDeckPage = ({
                     tag="a"
                     card={{ details: card }}
                     className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
-                    href={card._id ? `/tool/card/${  card._id}` : null}
+                    href={card._id ? `/tool/card/${card._id}` : null}
                   >
                     {card.name}
                   </AutocardItem>
@@ -260,8 +269,7 @@ const CubeDeckPage = ({
 };
 
 CubeDeckPage.propTypes = {
-  cube: PropTypes.shape({
-  }).isRequired,
+  cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
   oldFormat: PropTypes.bool.isRequired,
   drafter: PropTypes.shape({

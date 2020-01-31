@@ -91,7 +91,9 @@ CubeAnalysis.propTypes = {
   curve: PropTypes.string.isRequired,
   typeByColor: PropTypes.shape({}).isRequired,
   multicoloredCounts: PropTypes.shape({}).isRequired,
-  tokens: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.shape({}), PropTypes.arrayOf(PropTypes.shape({}))]))).isRequired,
+  tokens: PropTypes.arrayOf(
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.shape({}), PropTypes.arrayOf(PropTypes.shape({}))])),
+  ).isRequired,
   defaultNav: PropTypes.string,
 };
 

@@ -140,7 +140,9 @@ class CubeOverview extends Component {
               </Nav>
             </UncontrolledCollapse>
           </Navbar>
-        ) : <Row className="mb-3" />}
+        ) : (
+          <Row className="mb-3" />
+        )}
         <DynamicFlash />
         {alerts.map(({ color, message }, index) => (
           <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
@@ -313,7 +315,7 @@ CubeOverview.defaultProps = {
   admin: false,
   canEdit: false,
   loggedIn: false,
-}
+};
 
 const wrapper = document.getElementById('react-root');
 const element = (

@@ -21,15 +21,15 @@ CubeNavItem.propTypes = {
   link: PropTypes.string.isRequired,
   activeLink: PropTypes.string.isRequired,
   children: PropTypes.node,
-}
+};
 
 CubeNavItem.defaultProps = {
   children: false,
-}
+};
 
 const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
   const categories =
-    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} `  : '';
+    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
   const subtitle = cube.overrideCategory
     ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
     : `${cube.card_count} Card ${cube.type} Cube`;

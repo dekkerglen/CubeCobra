@@ -15,7 +15,7 @@ BlogPostPage.propTypes = {
   userid: PropTypes.string.isRequired,
   loggedIn: PropTypes.bool.isRequired,
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
-}
+};
 
 const post = JSON.parse(document.getElementById('blogData').value);
 const loggedIn = document.getElementById('userid') != null;

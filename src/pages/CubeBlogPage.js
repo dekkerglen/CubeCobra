@@ -194,9 +194,11 @@ CubeBlogPage.propTypes = {
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
   pages: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  posts: PropTypes.arrayOf(PropTypes.shape({
-    html: PropTypes.string.isRequired,
-  })).isRequired,
+  posts: PropTypes.arrayOf(
+    PropTypes.shape({
+      html: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   userid: PropTypes.string.isRequired,
   loggedIn: PropTypes.bool.isRequired,
 };

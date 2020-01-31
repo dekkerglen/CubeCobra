@@ -43,7 +43,7 @@ const categoryMap = new Map([
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
-export const operatorsRegex = new RegExp(`(?:${  operators.join('|')  })`);
+export const operatorsRegex = new RegExp(`(?:${operators.join('|')})`);
 
 function findEndingQuotePosition(filterText, num) {
   if (!num) {
@@ -75,9 +75,8 @@ export function tokenizeInput(filterText, tokens) {
       };
       tokens.push(token);
       return tokenizeInput(filterText.slice(1), tokens);
-    } 
-      return false;
-    
+    }
+    return false;
   }
 
   if (filterText.indexOf(')') == 0) {
@@ -120,7 +119,7 @@ export function tokenizeInput(filterText, tokens) {
     token.operand = 'none';
   }
 
-  const quoteOp_re = new RegExp(`(?:${  operators.join('|')  })"`);
+  const quoteOp_re = new RegExp(`(?:${operators.join('|')})"`);
   let parens = false;
 
   // find category
@@ -167,9 +166,8 @@ export function tokenizeInput(filterText, tokens) {
     if (parens) token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);
     return tokenizeInput(filterText, tokens);
-  } 
-    return false;
-  
+  }
+  return false;
 }
 
 const colorMap = new Map([
@@ -307,13 +305,13 @@ function parseManaCost(cost) {
     if (cost[i] == '{') {
       const str = cost.slice(i + 1, i + 4).toLowerCase();
       if (str.search(/[wubrg]\/p/) > -1) {
-        res.push(`${cost[i + 1]  }-p`);
+        res.push(`${cost[i + 1]}-p`);
         i += 4;
       } else if (str.search(/2\/[wubrg]/) > -1) {
-        res.push(`2-${  cost[i + 3]}`);
+        res.push(`2-${cost[i + 3]}`);
         i += 4;
       } else if (str.search(/[wubrg]\/[wubrg]/) > -1) {
-        let symbol = `${cost[i + 1]  }-${  cost[i + 3]}`;
+        let symbol = `${cost[i + 1]}-${cost[i + 3]}`;
         if (hybridMap.has(symbol)) {
           symbol = hybridMap.get(symbol);
         }
@@ -372,15 +370,15 @@ export const parseTokens = (tokens) => {
     result.push(parseTokens(tokens.slice(1, end)));
     if (tokens.length > end + 1) result.push(parseTokens(tokens.slice(end + 1)));
     return result;
-  } if (peek().type == 'token') {
+  }
+  if (peek().type == 'token') {
     if (tokens.length == 1) {
       return consume();
-    } 
-      if (tokens[1].type == 'or') result.type = 'or';
-      result.push(consume());
-      result.push(parseTokens(tokens.slice(1)));
-      return result;
-    
+    }
+    if (tokens[1].type == 'or') result.type = 'or';
+    result.push(consume());
+    result.push(parseTokens(tokens.slice(1)));
+    return result;
   }
 };
 
@@ -389,22 +387,19 @@ function filterCard(card, filters, inCube) {
   if (filters.length == 1) {
     if (filters[0].type == 'token') {
       return filterApply(card, filters[0], inCube);
-    } 
-      return filterCard(card, filters[0], inCube);
-    
-  } 
-    if (filters.type == 'or') {
-      return (
-        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
-        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
-      );
-    } 
-      return (
-        (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) &&
-        (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
-      );
-    
-  
+    }
+    return filterCard(card, filters[0], inCube);
+  }
+  if (filters.type == 'or') {
+    return (
+      (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
+      (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+    );
+  }
+  return (
+    (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) &&
+    (filters[1].type == 'token' ? filterApply(card, filters[1], inCube) : filterCard(card, filters[1], inCube))
+  );
 }
 
 export function filterCards(cards, filter, inCube) {
@@ -756,7 +751,7 @@ function filterApply(card, filter, inCube) {
     }
   }
   if (filter.category == 'rarity') {
-    const {rarity} = card.details;
+    const { rarity } = card.details;
     switch (filter.operand) {
       case ':':
       case '=':
@@ -816,9 +811,8 @@ function filterApply(card, filter, inCube) {
 
   if (filter.not) {
     return !res;
-  } 
-    return res;
-  
+  }
+  return res;
 }
 
 export function filterToString(filters) {
@@ -826,7 +820,9 @@ export function filterToString(filters) {
     return filterToString(filters[0]);
   }
   const s = [];
-  let f; let arg; let operand;
+  let f;
+  let arg;
+  let operand;
   for (let i = 0; i < filters.length; i++) {
     f = filters[i];
     if (f.type == 'token') {
@@ -836,7 +832,7 @@ export function filterToString(filters) {
       }
       operand = f.operand;
       if (f.not) {
-        operand = `!${  operand}`;
+        operand = `!${operand}`;
       }
       s.push(f.category + operand + arg);
     }

@@ -30,7 +30,7 @@ function makeFilter(filterText) {
   }
 
   if (!valid) {
-    throw new Error(`Invalid card filter: ${  filterText}`);
+    throw new Error(`Invalid card filter: ${filterText}`);
   }
   return [parseTokens(tokens)];
 }
@@ -98,7 +98,7 @@ function customDraft(cards, duplicates = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${  filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -106,7 +106,7 @@ function customDraft(cards, duplicates = false) {
     }
 
     if (validCards.length == 0) {
-      throw new Error(`Unable to create draft: not enough cards matching filter.\n${  messages.join('\n')}`);
+      throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
     index = Math.floor(Math.random() * validCards.length);
@@ -246,7 +246,7 @@ export function populateDraft(draft, format, cards, bots, seats) {
     throw new Error('Unable to create draft: no bots.');
   }
   if (seats < 2) {
-    throw new Error(`Unable to create draft: invalid seats: ${  seats}`);
+    throw new Error(`Unable to create draft: invalid seats: ${seats}`);
   }
 
   if (format.custom === true) {
@@ -262,7 +262,7 @@ export function populateDraft(draft, format, cards, bots, seats) {
   }
 
   if (!result.ok) {
-    throw new Error(`Could not create draft:\n${  result.messages.join('\n')}`);
+    throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
   // initial draft state
@@ -296,7 +296,7 @@ export function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length == 0) {
-        messages.push(`Warning: no cards matching filter: ${  filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
