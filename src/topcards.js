@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
-import FilterCollapse from './components/FilterCollapse';
-import SortableTable from './components/SortableTable';
-import withAutocard from './components/WithAutocard';
-import { encodeName } from './utils/Card';
+import { encodeName } from 'utils/Card';
+
+import FilterCollapse from 'components/FilterCollapse';
+import SortableTable from 'components/SortableTable';
+import withAutocard from 'components/WithAutocard';
 
 const AutocardA = withAutocard('a');
 
@@ -13,10 +15,12 @@ class TopCards extends Component {
   constructor(props) {
     super(props);
 
+    const { defaultData, defaultNumResults } = props;
+
     this.state = {
       filter: [],
-      data: this.props.defaultData || [],
-      numResults: this.props.defaultNumResults || 0,
+      data: defaultData || [],
+      numResults: defaultNumResults || 0,
     };
 
     this.setFilter = this.setFilter.bind(this);
@@ -38,13 +42,15 @@ class TopCards extends Component {
   }
 
   render() {
-    const rowF = ([name, img, img_flip, rating, picks, elo, cubes]) =>
+    const { data, filter, numResults } = this.state;
+
+    const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) =>
       rating === null ? (
         []
       ) : (
         <tr key={name}>
           <td>
-            <AutocardA front={img} back={img_flip || undefined} href={`/tool/card/${encodeName(name)}`}>
+            <AutocardA front={img} back={imgFlip || undefined} href={`/tool/card/${encodeName(name)}`}>
               {name}
             </AutocardA>
           </td>
@@ -61,10 +67,10 @@ class TopCards extends Component {
           <h4 className="mx-3 mb-3">Top Cards</h4>
           <FilterCollapse
             isOpen
-            filter={this.state.filter}
+            filter={filter}
             setFilter={this.setFilter}
-            numCards={this.state.numResults}
-            numShown={this.state.data.length}
+            numCards={numResults}
+            numShown={data.length}
           />
         </div>
         <SortableTable
@@ -82,7 +88,7 @@ class TopCards extends Component {
             'Total Picks': { style: { width: '10rem' }, tooltip: 'Total picks across all cubes' },
             Cubes: { style: { width: '10rem' }, tooltip: 'Cubes containing this card' },
           }}
-          data={this.state.data}
+          data={data}
           rowF={rowF}
           className="mt-3"
         />
@@ -91,8 +97,13 @@ class TopCards extends Component {
   }
 }
 
+TopCards.propTypes = {
+  defaultData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  defaultNumResults: PropTypes.number.isRequired,
+}
+
 const data = JSON.parse(document.getElementById('topcards').value);
-const numResults = parseInt(document.getElementById('topcardsNumResults').value);
+const numResults = parseInt(document.getElementById('topcardsNumResults').value, 10);
 const wrapper = document.getElementById('react-root');
 const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
 if (wrapper) {
