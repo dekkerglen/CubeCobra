@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
+
 import {
   Card,
   CardHeader,
@@ -7,7 +9,6 @@ import {
   Row,
   Col,
   CardBody,
-  CardText,
   Table,
   Nav,
   NavItem,
@@ -16,13 +17,13 @@ import {
   TabPane,
 } from 'reactstrap';
 
-import ImageFallback from './components/ImageFallback';
-import ButtonLink from './components/ButtonLink';
-import CountTableRow from './components/CountTableRow';
-import CubePreview from './components/CubePreview';
+import ImageFallback from 'components/ImageFallback';
+import ButtonLink from 'components/ButtonLink';
+import CountTableRow from 'components/CountTableRow';
+import CubePreview from 'components/CubePreview';
 
-import Affiliate from './utils/Affiliate';
-import { encodeName } from './utils/Card';
+import { getTCGLink } from 'utils/Affiliate';
+import { encodeName } from 'utils/Card';
 
 class CardPage extends Component {
   constructor(props) {
@@ -42,6 +43,7 @@ class CardPage extends Component {
 
   render() {
     const { card, data, prices, related, cubes } = this.props;
+    const { selectedTab } = this.state;
     return (
       <Card>
         <CardHeader>
@@ -57,19 +59,15 @@ class CardPage extends Component {
                 alt={card.name}
               />
               <div className="price-area">
-                {!prices[card.tcgplayer_id] ? (
-                  ''
-                ) : (
+                {prices[card.tcgplayer_id] && (
                   <div className="card-price">TCGPlayer Market: {prices[card.tcgplayer_id].toFixed(2)}</div>
                 )}
-                {!prices[`${card.tcgplayer_id}_foil`] ? (
-                  ''
-                ) : (
+                {prices[`${card.tcgplayer_id}_foil`] && (
                   <div className="card-price">
                     Foil TCGPlayer Market: {prices[`${card.tcgplayer_id}_foil`].toFixed(2)}
                   </div>
                 )}
-                {!card.elo ? '' : <div className="card-price">Elo: {card.elo}</div>}
+                {card.elo && <div className="card-price">Elo: {card.elo}</div>}
               </div>
             </Col>
             <Col className="breakdown" xs="12" sm="8">
@@ -110,7 +108,7 @@ class CardPage extends Component {
         <Nav tabs>
           <NavItem>
             <NavLink
-              className={this.state.selectedTab == '1' ? 'active mx-2' : 'mx-2 clickable'}
+              className={selectedTab === '1' ? 'active mx-2' : 'mx-2 clickable'}
               onClick={() => {
                 this.changeTab('1');
               }}
@@ -120,7 +118,7 @@ class CardPage extends Component {
           </NavItem>
           <NavItem>
             <NavLink
-              className={this.state.selectedTab == '2' ? 'active mx-2' : 'mx-2 clickable'}
+              className={selectedTab === '2' ? 'active mx-2' : 'mx-2 clickable'}
               onClick={() => {
                 this.changeTab('2');
               }}
@@ -129,13 +127,13 @@ class CardPage extends Component {
             </NavLink>
           </NavItem>
         </Nav>
-        <TabContent activeTab={this.state.selectedTab}>
+        <TabContent activeTab={selectedTab}>
           <TabPane tabId="1">
             <CardBody>
               <Row>
                 {related.map((item) => (
                   <a key={item.name} href={`/tool/card/${encodeName(item.name)}`}>
-                    <img width="150" height="210" src={item.image_normal} />
+                    <img width="150" height="210" alt={item.name} src={item.image_normal} />
                   </a>
                 ))}
               </Row>
@@ -163,13 +161,42 @@ class CardPage extends Component {
             <span className="d-none d-sm-inline">View on Scryfall</span>
             <span className="d-sm-none">Scryfall</span>
           </ButtonLink>
-          <ButtonLink className="mx-2" color="secondary" href={Affiliate.getTCGLink({ details: card })}>
+          <ButtonLink className="mx-2" color="secondary" href={getTCGLink({ details: card })}>
             Buy
           </ButtonLink>
         </CardFooter>
       </Card>
     );
   }
+}
+
+CardPage.propTypes = {
+  card: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    elo: PropTypes.number.isRequired,
+    image_normal: PropTypes.string.isRequired,
+    scryfall_uri: PropTypes.string.isRequired,
+    tcgplayer_id: PropTypes.string.isRequired,
+  }).isRequired,
+  data: PropTypes.shape({
+    vintage: PropTypes.bool.isRequired,    
+    legacy: PropTypes.bool.isRequired,    
+    modern: PropTypes.bool.isRequired,    
+    standard: PropTypes.bool.isRequired,    
+    pauper: PropTypes.bool.isRequired,    
+    size180: PropTypes.number.isRequired,
+    size360: PropTypes.number.isRequired,
+    size450: PropTypes.number.isRequired,
+    size540: PropTypes.number.isRequired,
+    size720: PropTypes.number.isRequired,
+    total: PropTypes.arrayOf(PropTypes.number).isRequired,
+  }).isRequired,
+  prices: PropTypes.objectOf(PropTypes.number).isRequired,
+  related: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    image_normal: PropTypes.string.isRequired,
+  })).isRequired,
+  cubes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 }
 
 const data = JSON.parse(document.getElementById('data').value);
