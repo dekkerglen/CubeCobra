@@ -27,6 +27,7 @@ import Tooltip from 'components/Tooltip';
 
 const CardModal = ({
   card,
+  maybe,
   versions,
   toggle,
   disabled,
@@ -150,7 +151,7 @@ const CardModal = ({
         </Row>
       </ModalBody>
       <ModalFooter>
-        {!disabled && (
+        {!disabled && !maybe && (
           <Button color="danger" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
