@@ -287,7 +287,7 @@ class CubeOverview extends Component {
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary>
-    <CubeOverview {...reactProps} />
+    <CubeOverview {...window.reactProps} />
   </ErrorBoundary>
 );
 wrapper ? ReactDOM.render(element, wrapper) : false;
