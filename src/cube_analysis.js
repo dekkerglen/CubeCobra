@@ -56,7 +56,7 @@ class CubeAnalysis extends Component {
       </NavLink>
     );
     return (
-      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false}>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="playtest">
         <DynamicFlash />
         <Row className="mt-3">
           <Col xs="12" lg="2">
