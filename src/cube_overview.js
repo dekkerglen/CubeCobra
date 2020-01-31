@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -18,6 +19,8 @@ import {
   UncontrolledAlert,
   UncontrolledCollapse,
 } from 'reactstrap';
+
+import { csrfFetch } from 'utils/CSRF';
 
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
@@ -38,10 +41,12 @@ class CubeOverview extends Component {
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
     this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
 
+    const { followed, cube } = props;
+
     this.state = {
-      followed: this.props.followed,
+      followed,
       alerts: [],
-      cube: props.cube,
+      cube,
       deleteConfirm: '',
     };
   }
@@ -72,10 +77,11 @@ class CubeOverview extends Component {
   }
 
   follow() {
+    const { cube } = this.props;
     this.setState({
       followed: true,
     });
-    csrfFetch(`/cube/follow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/follow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -86,10 +92,11 @@ class CubeOverview extends Component {
   }
 
   unfollow() {
+    const { cube } = this.props;
     this.setState({
       followed: false,
     });
-    csrfFetch(`/cube/unfollow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/unfollow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -107,11 +114,11 @@ class CubeOverview extends Component {
 
   render() {
     const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
-    const { cube, deleteConfirm } = this.state;
+    const { cube, deleteConfirm, alerts, followed } = this.state;
 
     return (
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="overview">
-        {canEdit && (
+        {canEdit ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>
@@ -133,10 +140,10 @@ class CubeOverview extends Component {
               </Nav>
             </UncontrolledCollapse>
           </Navbar>
-        )}
+        ) : <Row className="mb-3" />}
         <DynamicFlash />
-        {this.state.alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert color={color} key={index}>
+        {alerts.map(({ color, message }, index) => (
+          <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
             {message}
           </UncontrolledAlert>
         ))}
@@ -148,7 +155,7 @@ class CubeOverview extends Component {
                 <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
               </CardHeader>
               <div className="position-relative">
-                <img className="card-img-top w-100" src={cube.image_uri} />
+                <img className="card-img-top w-100" alt={cube.image_name} src={cube.image_uri} />
                 <em className="cube-preview-artist">Art by {cube.image_artist}</em>
               </div>
               <CardBody className="pt-2 px-3 pb-3">
@@ -165,8 +172,8 @@ class CubeOverview extends Component {
                   <i>
                     Designed by
                     <a href={`/user/view/${owner}`}> {owner}</a>
-                  </i>
-                  •<a href={`/cube/rss/${cube._id}`}>RSS</a>
+                  </i>{' '}
+                  • <a href={`/cube/rss/${cube._id}`}>RSS</a>
                 </h6>
                 {!cube.privatePrices && (
                   <Row noGutters className="mb-1">
@@ -197,7 +204,7 @@ class CubeOverview extends Component {
                 )}
               </CardBody>
               {loggedIn &&
-                (this.state.followed ? (
+                (followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
                   </Button>
@@ -279,6 +286,33 @@ class CubeOverview extends Component {
       </CubeLayout>
     );
   }
+}
+
+CubeOverview.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  priceOwned: PropTypes.number.isRequired,
+  pricePurchase: PropTypes.number.isRequired,
+  owner: PropTypes.string.isRequired,
+  admin: PropTypes.bool,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    image_uri: PropTypes.string.isRequired,
+    image_name: PropTypes.string.isRequired,
+    image_artist: PropTypes.string.isRequired,
+  }).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
+  userID: PropTypes.string.isRequired,
+  loggedIn: PropTypes.bool,
+  followed: PropTypes.bool.isRequired,
+};
+
+CubeOverview.defaultProps = {
+  admin: false,
+  canEdit: false,
+  loggedIn: false,
 }
 
 const wrapper = document.getElementById('react-root');
