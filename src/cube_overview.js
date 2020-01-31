@@ -155,12 +155,12 @@ class CubeOverview extends Component {
                 {cube.type && (
                   <p className="mb-1">
                     {cube.overrideCategory
-                      ? cube.card_count +
-                        ' Card ' +
-                        (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                        cube.categoryOverride +
-                        ' Cube'
-                      : cube.card_count + ' Card ' + cube.type + ' Cube'}
+                      ? `${cube.card_count 
+                        } Card ${ 
+                        cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')  } ` : '' 
+                        }${cube.categoryOverride 
+                        } Cube`
+                      : `${cube.card_count  } Card ${  cube.type  } Cube`}
                   </p>
                 )}
                 <h6 className="mb-2">
@@ -168,7 +168,7 @@ class CubeOverview extends Component {
                     Designed by
                     <a href={`/user/view/${owner}`}> {owner}</a>
                   </i>
-                  {' • '}
+                   • 
                   <a href={`/cube/rss/${cube._id}`}>RSS</a>
                 </h6>
                 {!cube.privatePrices && (

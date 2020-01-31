@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 import Notification from './components/Notification';
 
-import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
 class Notifications extends Component {
   constructor(props) {
@@ -11,7 +11,7 @@ class Notifications extends Component {
   }
 
   render() {
-    const notifications = this.props.notifications;
+    const {notifications} = this.props;
     return (
       <Card className="mx-auto" style={{ maxWidth: '40rem' }}>
         <CardHeader>

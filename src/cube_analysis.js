@@ -40,7 +40,7 @@ class CubeAnalysis extends Component {
   render() {
     const { cube, cubeID, curve, typeByColor, multicoloredCounts, tokens } = this.props;
     const active = this.state.nav;
-    let navItem = (nav, text) => (
+    const navItem = (nav, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, nav)} href="#">
         {text}
       </NavLink>

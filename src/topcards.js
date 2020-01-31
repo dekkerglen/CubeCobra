@@ -25,7 +25,7 @@ class TopCards extends Component {
   async setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
-    const response = await fetch('/tool/api/topcards?' + params.toString());
+    const response = await fetch(`/tool/api/topcards?${  params.toString()}`);
     if (!response.ok) {
       return;
     }
@@ -44,7 +44,7 @@ class TopCards extends Component {
       ) : (
         <tr key={name}>
           <td>
-            <AutocardA front={img} back={img_flip || undefined} href={'/tool/card/' + encodeName(name)}>
+            <AutocardA front={img} back={img_flip || undefined} href={`/tool/card/${  encodeName(name)}`}>
               {name}
             </AutocardA>
           </td>
@@ -60,7 +60,7 @@ class TopCards extends Component {
         <div className="usercontrols pt-3">
           <h4 className="mx-3 mb-3">Top Cards</h4>
           <FilterCollapse
-            isOpen={true}
+            isOpen
             filter={this.state.filter}
             setFilter={this.setFilter}
             numCards={this.state.numResults}
