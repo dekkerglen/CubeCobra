@@ -352,7 +352,7 @@ const ListView = ({ cards }) => {
       setChecked([]);
       setGroupModalCards([]);
     }
-  }, []);
+  }, [cards]);
 
   const handleCheck = useCallback(
     (event) => {
