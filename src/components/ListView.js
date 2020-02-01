@@ -341,18 +341,21 @@ const ListView = ({ cards }) => {
     wrapper();
   }, [cards, versionDict]);
 
-  const handleCheckAll = useCallback((event) => {
-    const target = event.target;
-    const value = target.checked;
+  const handleCheckAll = useCallback(
+    (event) => {
+      const target = event.target;
+      const value = target.checked;
 
-    if (value) {
-      setChecked(cards.map(({ index }) => index));
-      setGroupModalCards(cards);
-    } else {
-      setChecked([]);
-      setGroupModalCards([]);
-    }
-  }, [cards]);
+      if (value) {
+        setChecked(cards.map(({ index }) => index));
+        setGroupModalCards(cards);
+      } else {
+        setChecked([]);
+        setGroupModalCards([]);
+      }
+    },
+    [cards],
+  );
 
   const handleCheck = useCallback(
     (event) => {
