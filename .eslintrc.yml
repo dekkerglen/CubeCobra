@@ -8,6 +8,7 @@ extends:
 plugins:
   - jest
   - prettier
+  - react-hooks
 settings:
   import/resolver:
     webpack:
@@ -40,6 +41,8 @@ rules:
   react/no-unescaped-entities:
     - error
     - forbid: ['>', '"', '}']
+  react-hooks/rules-of-hooks: error
+  react-hooks/exhaustive-deps: error
 overrides:
   - files: ['src/**']
     rules:

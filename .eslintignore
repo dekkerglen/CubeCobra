@@ -44,7 +44,6 @@ src/components/FoilOverlay.js
 src/components/GroupModal.js
 src/components/GroupModalContext.js
 src/components/ImageFallback.js
-src/components/ListView.js
 src/components/LoadingButton.js
 src/components/MassBuyButton.js
 src/components/MulticoloredAnalysis.js
