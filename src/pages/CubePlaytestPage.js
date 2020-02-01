@@ -257,7 +257,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
     setEditFormat(DEFAULT_FORMAT);
     setEditFormatIndex(-1);
     setEditModalOpen(true);
-  });
+  }, []);
 
   const handleEditFormat = useCallback(
     (event) => {

@@ -45,7 +45,7 @@ const CubeListPageRaw = ({
     } else if (defaultFilterText && defaultFilterText.length > 0) {
       setOpenCollapse('filter');
     }
-  }, []);
+  }, [cubeID, defaultFilterText]);
 
   useEffect(() => {
     if (cubeView === 'table') {

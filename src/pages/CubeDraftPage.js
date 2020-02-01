@@ -155,7 +155,7 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
         }
       }
     },
-    [pack, picks],
+    [pack, picks, update],
   );
 
   const handleClickCard = useCallback(
@@ -175,7 +175,7 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
       const newPicks = DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card);
       update(newPicks);
     },
-    [pack, picks],
+    [pack, picks, update],
   );
 
   return (

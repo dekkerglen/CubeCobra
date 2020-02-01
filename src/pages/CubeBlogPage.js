@@ -29,7 +29,7 @@ import CubeLayout from 'layouts/CubeLayout';
 
 const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
   const { cubeID } = useContext(CubeContext);
-  const handleChangeHtml = useCallback((event) => setHtml(event.target.value), []);
+  const handleChangeHtml = useCallback((event) => setHtml(event.target.value), [setHtml]);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>

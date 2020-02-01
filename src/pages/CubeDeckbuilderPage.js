@@ -63,7 +63,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
       setSource(newSourceCards);
       setTarget(DeckStacks.moveOrAddCard(targetCards, target.data, card));
     },
-    [deck, sideboard],
+    [locationMap],
   );
 
   const handleClickCard = useCallback(
@@ -96,7 +96,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
       newDeck[1][0] = [].concat(newDeck[1][0], added);
       setDeck(newDeck);
     },
-    [deck],
+    [deck, basics],
   );
 
   const currentDeck = { ...initialDeck };

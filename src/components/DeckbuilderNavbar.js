@@ -32,6 +32,7 @@ const MAX_BASICS = 20;
 const BasicsModal = ({ isOpen, toggle, addBasics }) => {
   const refs = {};
   for (const [, , basic] of COLORS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     refs[basic] = useRef();
   }
 
@@ -42,7 +43,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
     }
     addBasics(numBasics);
     toggle();
-  }, [addBasics, toggle]);
+  }, [addBasics, toggle, refs]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="sm">
