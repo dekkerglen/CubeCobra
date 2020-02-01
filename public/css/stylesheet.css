@@ -324,6 +324,12 @@
 	}
 }
 
+/* make autocard text more obvious in comments and descriptions */
+.card-text .autocard {
+	font-weight: bolder;
+	opacity: 0.9; /* hack to lighten the color so bold isn't quite so strong */
+}
+
 .form-check {
 	border: none;
 }

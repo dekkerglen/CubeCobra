@@ -10,3 +10,8 @@ block scripts
   script(type='text/javascript').
     var reactProps = !{reactProps};
   script(src='/js/dashboard.bundle.js')
+
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    autocard_init('autocard');
+    autocard_init('dynamic-autocard');
