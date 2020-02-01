@@ -12,7 +12,7 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
   const [maybeboard, setMaybeboard] = useState([...initialCards]);
 
   const addMaybeboardCard = useCallback((card) => {
-    setMaybeboard((current) => [...current, { ...card, index: current.length }]);
+    setMaybeboard((current) => [...current, card]);
   }, []);
   const removeMaybeboardCard = useCallback((removeIndex) => {
     setMaybeboard((current) => current.filter((card, index) => index !== removeIndex));

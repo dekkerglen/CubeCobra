@@ -63,7 +63,7 @@ class TopCards extends Component {
 
     return (
       <>
-        <div className="usercontrols pt-3">
+        <div className="usercontrols pt-3 mb-3">
           <h4 className="mx-3 mb-3">Top Cards</h4>
           <FilterCollapse
             isOpen
@@ -90,7 +90,6 @@ class TopCards extends Component {
           }}
           data={data}
           rowF={rowF}
-          className="mt-3"
         />
       </>
     );
