@@ -136,6 +136,9 @@ const CardModalForm = ({ children, ...props }) => {
   const openCardModal = useCallback(
     (newCardIndex, newMaybe) => {
       const card = newMaybe ? maybeboard[newCardIndex] : cube[newCardIndex];
+      const colors = card.colors || card.details.colors;
+      const typeLine = card.type_line || card.details.type;
+      const tags = card.tags || [];
       setCardIndex(newCardIndex);
       setMaybe(!!newMaybe);
       setVersions([card.details]);
@@ -144,15 +147,15 @@ const CardModalForm = ({ children, ...props }) => {
         status: card.status,
         finish: card.finish,
         cmc: card.cmc,
-        type_line: card.type_line,
+        type_line: typeLine,
         imgUrl: card.imgUrl,
-        tags: card.tags.map((tag) => ({ id: tag, text: tag })),
+        tags: tags.map((tag) => ({ id: tag, text: tag })),
         tagInput: '',
-        colorW: card.colors.includes('W'),
-        colorU: card.colors.includes('U'),
-        colorB: card.colors.includes('B'),
-        colorR: card.colors.includes('R'),
-        colorG: card.colors.includes('G'),
+        colorW: colors.includes('W'),
+        colorU: colors.includes('U'),
+        colorB: colors.includes('B'),
+        colorR: colors.includes('R'),
+        colorG: colors.includes('G'),
       });
       setIsOpen(true);
       fetch(`/cube/api/getversions/${card.cardID}`)
@@ -175,6 +178,7 @@ const CardModalForm = ({ children, ...props }) => {
         values={formValues}
         onChange={handleChange}
         card={renderCard}
+        maybe={maybe}
         versions={versions}
         toggle={closeCardModal}
         isOpen={isOpen}

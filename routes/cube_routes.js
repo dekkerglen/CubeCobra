@@ -841,20 +841,23 @@ router.get('/playtest/:id', async (req, res) => {
     delete cube.decks;
     delete cube.maybe;
 
-    // sort titles alphabetically
-    cube.draft_formats.sort((a, b) => a.title.localeCompare(b.title));
+    let draftFormats = [];
+    // NOTE: older cubes do not have custom drafts
+    if (cube.draft_formats) {
+      draftFormats = cube.draft_formats
+        .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
+        .map(({ packs, ...format }) => ({
+          ...format,
+          packs: JSON.parse(packs),
+        }));
+    }
 
     const reactProps = {
       cube,
       cubeID: req.params.id,
       canEdit: user._id.equals(cube.owner),
       decks,
-      draftFormats: cube.draft_formats
-        ? cube.draft_formats.map(({ packs, ...format }) => ({
-            ...format,
-            packs: JSON.parse(packs),
-          }))
-        : [],
+      draftFormats,
     };
 
     return res.render('cube/cube_playtest', {
@@ -1651,16 +1654,22 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
       } else if (edit.charAt(0) === '-') {
         // remove id
-        const indexOut = parseInt(edit.substring(1), 10);
+        const [indexOutStr, outID] = edit.substring(1).split('$');
+        const indexOut = parseInt(indexOutStr, 10);
         if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
           return res.redirect(`/cube/list/${req.params.id}`);
         }
         removes.add(indexOut);
         const card = cube.cards[indexOut];
-        changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        if (card.cardID === outID) {
+          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
       } else if (edit.charAt(0) === '/') {
-        const [indexOutStr, idIn] = edit.substring(1).split('>');
+        const [outStr, idIn] = edit.substring(1).split('>');
         const detailsIn = carddb.cardFromId(idIn);
         if (!detailsIn) {
           console.error(`Card not found: ${edit}`, req);
@@ -1668,6 +1677,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
           adds.push(detailsIn);
         }
 
+        const [indexOutStr, outID] = outStr.split('$');
         const indexOut = parseInt(indexOutStr, 10);
         if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', 'Bad request format.');
@@ -1675,19 +1685,19 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
         removes.add(indexOut);
         const cardOut = cube.cards[indexOut];
-        changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        if (cardOut.cardID === outID) {
+          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
       } else {
         req.flash('danger', 'Bad request format.');
         return res.redirect(`/cube/list/${req.params.id}`);
       }
     }
 
-    // need to do numerical sort..
-    const removesArray = [...removes];
-    removesArray.sort((a, b) => a - b);
-    for (let i = removesArray.length - 1; i >= 0; i--) {
-      cube.cards.splice(removesArray[i], 1);
-    }
+    cube.cards = cube.cards.filter((card, index) => !removes.has(index));
     for (const add of adds) {
       util.addCardToCube(cube, add);
       const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);

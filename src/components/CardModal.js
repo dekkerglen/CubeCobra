@@ -27,6 +27,7 @@ import Tooltip from 'components/Tooltip';
 
 const CardModal = ({
   card,
+  maybe,
   versions,
   toggle,
   disabled,
@@ -50,17 +51,17 @@ const CardModal = ({
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
             <Row noGutters className="mb-2">
-              {card.details.price && (
+              {Number.isFinite(card.details.price) && (
                 <TextBadge name="Price" className="mt-2 mr-2">
                   <Tooltip text="TCGPlayer Market Price">${card.details.price.toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {card.details.price_foil && (
+              {Number.isFinite(card.details.price_foil) && (
                 <TextBadge name="Foil" className="mt-2 mr-2">
                   <Tooltip text="TCGPlayer Market Price">${card.details.price_foil.toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {card.details.elo && (
+              {Number.isFinite(card.details.elo) && (
                 <TextBadge name="Elo" className="mt-2">
                   {card.details.elo}
                 </TextBadge>
@@ -150,7 +151,7 @@ const CardModal = ({
         </Row>
       </ModalBody>
       <ModalFooter>
-        {!disabled && (
+        {!disabled && !maybe && (
           <Button color="danger" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
