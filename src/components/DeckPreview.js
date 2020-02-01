@@ -21,8 +21,7 @@ const DeckPreview = ({ deck }) => {
     <div className="deck-preview" {...useKeyHandlers(handleClick)}>
       <h6 className="mb-0 text-muted">
         <a href={`/cube/deck/${deck._id}`}>{name}</a> by{' '}
-        {deck.owner ? <a href={`/user/view/${deck.owner}`}>{deck.username}</a> : 'Anonymous'} -{' '}
-        <AgeText date={date} />
+        {deck.owner ? <a href={`/user/view/${deck.owner}`}>{deck.username}</a> : 'Anonymous'} - <AgeText date={date} />
       </h6>
     </div>
   );
