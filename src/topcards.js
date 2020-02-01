@@ -78,7 +78,7 @@ class TopCards extends Component {
             'Total Picks': (row) => -row[4],
             Cubes: (row) => -row[6],
           }}
-          defaultSort="Rating"
+          defaultSort="Elo"
           headers={{
             Name: {},
             Rating: { style: { width: '8rem' }, tooltip: 'Average draft pick position' },

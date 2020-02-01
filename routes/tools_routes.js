@@ -110,7 +110,8 @@ async function topCards(filter) {
       card ? card.cubes.length : null,
     ];
   });
-  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
+  /* Sort by number of picks for limit. */
+  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[4] === null ? -1 : x[4]));
   return {
     ratings,
     versions,
