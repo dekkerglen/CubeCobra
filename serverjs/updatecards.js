@@ -15,6 +15,8 @@ function initializeCatalog() {
   catalog.full_names = [];
   catalog.imagedict = {};
   catalog.cardimages = {};
+  catalog.oracleToId = {};
+  catalog.english = {};
 }
 
 initializeCatalog();
@@ -56,6 +58,10 @@ function addCardToCatalog(card, isExtra) {
     catalog.nameToId[normalizedName] = [];
   }
   catalog.nameToId[normalizedName].push(card._id);
+  if (!catalog.oracleToId[card.oracle_id]) {
+    catalog.oracleToId[card.oracle_id] = [];
+  }
+  catalog.oracleToId[card.oracle_id].push(card._id);
   util.binaryInsert(normalizedName, catalog.names);
   util.binaryInsert(normalizedFullName, catalog.full_names);
 }
@@ -689,6 +695,7 @@ function convertCard(card, isExtra) {
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
   newcard._id = convertId(card, isExtra);
+  newcard.oracle_id = card.oracle_id;
   newcard.cmc = convertCmc(card, isExtra);
   newcard.legalities = convertLegalities(card, isExtra);
   newcard.parsedCost = convertParsedCost(card, isExtra);
@@ -734,6 +741,26 @@ function convertCard(card, isExtra) {
   return newcard;
 }
 
+function addLanguageMapping(card) {
+  const sameOracle = catalog.oracleToId[card.oracle_id] || [];
+  for (const otherId of sameOracle) {
+    const otherCard = catalog.dict[otherId];
+    if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
+      catalog.english[card.id] = otherId;
+      break;
+    }
+  }
+  if (!catalog.english[card.id]) {
+    for (const otherId of catalog.nameToId[cardutil.normalizeName(card.name)]) {
+      const otherCard = catalog.dict[otherId];
+      if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
+        catalog.english[card.id] = otherId;
+        break;
+      }
+    }
+  }
+}
+
 function writeCatalog(basePath = 'private') {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
@@ -756,15 +783,16 @@ function writeCatalog(basePath = 'private') {
 }
 
 function saveAllCards(arr, basePath = 'private') {
-  arr.forEach((card) => {
+  for (const card of arr.filter((c) => c.lang === 'en')) {
     if (card.layout === 'transform') {
       addCardToCatalog(convertCard(card, true), true);
     }
     addCardToCatalog(convertCard(card));
-  });
-  arr.forEach((card) => {
     addTokens(card);
-  });
+  }
+  for (const card of arr.filter((c) => c.lang !== 'en')) {
+    addLanguageMapping(card);
+  }
   return writeCatalog(basePath);
 }
 
