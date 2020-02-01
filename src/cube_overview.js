@@ -223,7 +223,7 @@ class CubeOverview extends Component {
                   <CardText>{cube.description || ''}</CardText>
                 )}
               </CardBody>
-              {cube.tags.length > 0 && (
+              {(cube.tags || []).length > 0 && (
                 <CardFooter>
                   <div className="autocard-tags">
                     {cube.tags.map((tag) => (
