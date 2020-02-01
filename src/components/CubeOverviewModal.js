@@ -330,7 +330,7 @@ class CubeOverviewModal extends Component {
                           name="category_prefix"
                           value={label}
                           type="checkbox"
-                          checked={cube.categoryPrefixes.includes(label)}
+                          checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
                           onChange={this.handleChange}
                           disabled={cube.overrideCategory ? false : true}
                         />
