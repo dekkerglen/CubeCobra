@@ -12,7 +12,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -21,9 +20,10 @@ import {
 
 import Filter from '../utils/Filter';
 import Query from '../utils/Query';
-import { fromEntries, COLORS } from '../utils/Util';
+import { fromEntries } from '../utils/Util';
 
 import { ColorChecksAddon } from './ColorCheck';
+import LoadingButton from './LoadingButton';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -398,9 +398,9 @@ class FilterCollapse extends Component {
                     onKeyDown={this.handleKeyDown}
                   />
                   <InputGroupAddon addonType="append">
-                    <Button color="success" onClick={this.handleApply}>
+                    <LoadingButton color="success" className="square-left" onClick={this.handleApply}>
                       Apply
-                    </Button>
+                    </LoadingButton>
                   </InputGroupAddon>
                 </InputGroup>
               </Form>
