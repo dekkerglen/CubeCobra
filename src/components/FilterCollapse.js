@@ -279,7 +279,7 @@ class FilterCollapse extends Component {
 
   componentDidMount() {
     const defaultFilter = Query.get('f', '');
-    this.setState({ filterInput: defaultFilter }); 
+    this.setState({ filterInput: defaultFilter });
     this.updateFilters(defaultFilter);
   }
 
