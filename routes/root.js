@@ -17,6 +17,7 @@ if (NODE_ENV === 'production') {
 }
 
 const carddb = require('../serverjs/cards.js');
+
 carddb.initializeCardDb();
 
 const { addAutocard } = require('../serverjs/cubefn.js');
