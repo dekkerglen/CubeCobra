@@ -30,7 +30,7 @@ class CubeOverviewModal extends Component {
 
     this.state = {
       isOpen: false,
-      tags: props.cube.tags.map((tag) => ({ id: tag, text: tag })),
+      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({ id: tag, text: tag })),
       cube: JSON.parse(JSON.stringify(props.cube)),
       image_dict: {},
     };
