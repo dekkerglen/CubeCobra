@@ -317,10 +317,12 @@ ListViewRow.propTypes = {
       name: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  versions: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    version: PropTypes.string.isRequired,
-  })).isRequired,
+  versions: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      version: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   checked: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   addAlert: PropTypes.func.isRequired,
@@ -360,17 +362,20 @@ const ListView = ({ cards }) => {
     wrapper();
   }, [cards, versionDict]);
 
-  const handleCheckAll = useCallback((event) => {
-    const value = event.target.checked;
+  const handleCheckAll = useCallback(
+    (event) => {
+      const value = event.target.checked;
 
-    if (value) {
-      setChecked(cards.map(({ index }) => index));
-      setGroupModalCards(cards);
-    } else {
-      setChecked([]);
-      setGroupModalCards([]);
-    }
-  }, [cards, setGroupModalCards]);
+      if (value) {
+        setChecked(cards.map(({ index }) => index));
+        setGroupModalCards(cards);
+      } else {
+        setChecked([]);
+        setGroupModalCards([]);
+      }
+    },
+    [cards, setGroupModalCards],
+  );
 
   const handleCheck = useCallback(
     (event) => {
@@ -386,7 +391,9 @@ const ListView = ({ cards }) => {
           newChecked = checked.filter((testIndex) => testIndex !== index);
         }
         setChecked(newChecked);
-        setGroupModalCards(newChecked.map((cardIndex) => cards.find((card) => card.index === cardIndex)).filter((x) => x));
+        setGroupModalCards(
+          newChecked.map((cardIndex) => cards.find((card) => card.index === cardIndex)).filter((x) => x),
+        );
       }
     },
     [checked, cards, setGroupModalCards],
@@ -438,9 +445,11 @@ const ListView = ({ cards }) => {
 };
 
 ListView.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 export default ListView;
