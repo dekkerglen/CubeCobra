@@ -24,7 +24,7 @@ initializeCatalog();
 function downloadDefaultCards() {
   const file = fs.createWriteStream('private/cards.json');
   const promise = new Promise((resolve) => {
-    https.get('https://archive.scryfall.com/json/scryfall-default-cards.json', (response) => {
+    https.get('https://archive.scryfall.com/json/scryfall-all-cards.json', (response) => {
       const stream = response.pipe(file);
       stream.on('finish', () => {
         resolve();
@@ -747,16 +747,16 @@ function addLanguageMapping(card) {
     const otherCard = catalog.dict[otherId];
     if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
       catalog.english[card.id] = otherId;
-      break;
+      return;
     }
   }
-  if (!catalog.english[card.id]) {
-    for (const otherId of catalog.nameToId[cardutil.normalizeName(card.name)]) {
-      const otherCard = catalog.dict[otherId];
-      if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
-        catalog.english[card.id] = otherId;
-        break;
-      }
+
+  const name = cardutil.normalizeName(convertName(card));
+  for (const otherId of catalog.nameToId[name]) {
+    const otherCard = catalog.dict[otherId];
+    if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
+      catalog.english[card.id] = otherId;
+      return;
     }
   }
 }
@@ -770,6 +770,7 @@ function writeCatalog(basePath = 'private') {
   pendingWrites.push(writeFile(path.join(basePath, 'cardtree.json'), JSON.stringify(util.turnToTree(catalog.names))));
   pendingWrites.push(writeFile(path.join(basePath, 'carddict.json'), JSON.stringify(catalog.dict)));
   pendingWrites.push(writeFile(path.join(basePath, 'nameToId.json'), JSON.stringify(catalog.nameToId)));
+  pendingWrites.push(writeFile(path.join(basePath, 'english.json'), JSON.stringify(catalog.english)));
   pendingWrites.push(
     writeFile(path.join(basePath, 'full_names.json'), JSON.stringify(util.turnToTree(catalog.full_names))),
   );
