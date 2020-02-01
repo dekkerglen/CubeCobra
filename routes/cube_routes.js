@@ -444,7 +444,7 @@ router.get('/overview/:id', async (req, res) => {
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
     for (const card of cube.cards) {
-      if (card.status !== 'Not Owned') {
+      if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
           priceOwned = priceDict[card.details.tcgplayer_id + '_foil'] || 0;
