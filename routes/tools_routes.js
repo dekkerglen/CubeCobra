@@ -182,8 +182,19 @@ router.get('/card/:id', async (req, res) => {
     if (ids) {
       return res.redirect(`/tool/card/${carddb.getMostReasonable(possibleName)._id}`);
     }
+
+    // if id is a foreign cardname, redirect to english version
+    const english = carddb.getEnglishVersion(req.params.id);
+    if (english) {
+      return res.redirect(`/tool/card/${english}`);
+    }
+
+    // otherwise just go to this ID.
     const card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({ cardName: card.name_lower });
+    if (!data) {
+      return res.status(404).render('misc/404', {});
+    }
 
     const cubes = await Promise.all(
       shuffle(data.cubes)
