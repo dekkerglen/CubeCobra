@@ -20,7 +20,7 @@ import Maybeboard from 'components/Maybeboard';
 import { MaybeboardContextProvider } from 'components/MaybeboardContext';
 import { SortContextProvider } from 'components/SortContext';
 import TableView from 'components/TableView';
-import { tagColors, TagContextProvider } from 'components/TagContext';
+import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
 
@@ -45,7 +45,7 @@ const CubeListPageRaw = ({
     } else if (defaultFilterText && defaultFilterText.length > 0) {
       setOpenCollapse('filter');
     }
-  }, []);
+  }, [cubeID, defaultFilterText]);
 
   useEffect(() => {
     if (cubeView === 'table') {
@@ -55,7 +55,7 @@ const CubeListPageRaw = ({
     }
   }, [cubeView]);
 
-  const defaultTagSet = new Set([].concat.apply([], cube.map((card) => card.tags)));
+  const defaultTagSet = new Set([].concat(...cube.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
@@ -120,7 +120,21 @@ const CubeListPageRaw = ({
   );
 };
 
-const CubeListPage = ({ cube, cubeID, canEdit, activeLink, ...props }) => (
+CubeListPageRaw.propTypes = {
+  maybe: PropTypes.arrayOf(PropTypes.object).isRequired,
+  defaultTagColors: PropTypes.arrayOf(
+    PropTypes.shape({
+      tag: PropTypes.string.isRequired,
+      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+    }),
+  ).isRequired,
+  defaultShowTagColors: PropTypes.bool.isRequired,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
+  defaultView: PropTypes.string.isRequired,
+};
+
+const CubeListPage = ({ cube, cubeID, canEdit, ...props }) => (
   <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
     <CubeListPageRaw {...props} />
   </CubeLayout>
@@ -132,14 +146,11 @@ CubeListPage.propTypes = {
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(tagColors.map(([t, c]) => c)),
-    }),
-  ).isRequired,
-  defaultShowTagColors: PropTypes.bool.isRequired,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  ...CubeListPageRaw.propTypes,
+};
+
+CubeListPage.defaultProps = {
+  canEdit: false,
 };
 
 export default CubeListPage;

@@ -1,23 +1,24 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
-import Query from './utils/Query';
+import Query from 'utils/Query';
 
-import { getDraftFormat, calculateAsfans } from './utils/draftutil';
-import Filter from './utils/Filter';
+import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
+import Filter from 'utils/Filter';
 
-import AnalyticsCardGrid from './components/AnalyticsCardGrid';
-import AnalyticsChart from './components/AnalyticsChart';
-import AnalyticsCloud from './components/AnalyticsCloud';
-import AnalyticsTable from './components/AnalyticsTable';
-import CubeAnalysisNavBar from './components/CubeAnalysisNavbar';
-import DynamicFlash from './components/DynamicFlash';
-import ErrorBoundary from './components/ErrorBoundary';
-import MagicMarkdown from './components/MagicMarkdown';
+import AnalyticsCardGrid from 'components/AnalyticsCardGrid';
+import AnalyticsChart from 'components/AnalyticsChart';
+import AnalyticsCloud from 'components/AnalyticsCloud';
+import AnalyticsTable from 'components/AnalyticsTable';
+import CubeAnalysisNavBar from 'components/CubeAnalysisNavbar';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import MagicMarkdown from 'components/MagicMarkdown';
 
 class CubeAnalysis extends Component {
   constructor(props) {
@@ -49,7 +50,7 @@ class CubeAnalysis extends Component {
       filteredWithAsfan: null,
       formatId: this.props.defaultFormatId || -1,
       nav: this.props.defaultNav || 'curve',
-    };
+    } ;
 
     this.updateAsfan = this.updateAsfan.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
@@ -61,31 +62,32 @@ class CubeAnalysis extends Component {
 
   componentDidMount() {
     this.updateAsfan();
+
+    const { nav } = this.state;
     this.setState({
-      nav: Query.get('nav', this.state.nav),
+      nav: Query.get('nav', nav),
     });
+
+    this.select = this.select.bind(this);
+    this.handleNav = this.handleNav.bind(this);
   }
 
-  async updateAsfan() {
-    const { formatId } = this.state;
-    const { cube } = this.props;
-    const cardsWithAsfan = cube.cards.map((card) => Object.assign({}, card));
-    const format = getDraftFormat({ id: formatId, packs: 3, cards: 15 }, cube);
-    calculateAsfans(format, cardsWithAsfan);
-    this.setState({ cardsWithAsfan }, this.updateFilter);
+
+  setFilter(filter) {
+    console.log('Setting filter', filter);
+    this.setState({ filter }, this.updateFilter);
   }
 
-  async updateFilter() {
-    const { filter, cardsWithAsfan } = this.state;
-    if (cardsWithAsfan == null) {
-      this.updateAsfan();
-      return;
+  setFormat(formatId) {
+    console.log('Setting formatId', formatId);
+    if (formatId === -1) {
+      Query.del('formatId');
+    } else {
+      Query.set('formatId', formatId);
     }
-    const filteredWithAsfan =
-      filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
-    this.setState({ filteredWithAsfan }, this.updateData);
+    this.setState({ formatId }, this.updateAsfan);
   }
-
+  
   async updateData() {
     const { nav, workers, analytics, analytics_order, filteredWithAsfan } = this.state;
     if (filteredWithAsfan == null) {
@@ -105,20 +107,25 @@ class CubeAnalysis extends Component {
     }
     workers[nav].postMessage(filteredWithAsfan);
   }
-
-  setFilter(filter) {
-    console.log('Setting filter', filter);
-    this.setState({ filter }, this.updateFilter);
-  }
-
-  setFormat(formatId) {
-    console.log('Setting formatId', formatId);
-    if (formatId === -1) {
-      Query.del('formatId');
-    } else {
-      Query.set('formatId', formatId);
+  
+  async updateFilter() {
+    const { filter, cardsWithAsfan } = this.state;
+    if (cardsWithAsfan == null) {
+      this.updateAsfan();
+      return;
     }
-    this.setState({ formatId }, this.updateAsfan);
+    const filteredWithAsfan =
+      filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
+    this.setState({ filteredWithAsfan }, this.updateData);
+  }
+  
+  async updateAsfan() {
+    const { formatId } = this.state;
+    const { cube } = this.props;
+    const cardsWithAsfan = cube.cards.map((card) => ({...card}));
+    const format = getDraftFormat({ id: formatId, packs: 3, cards: 15 }, cube);
+    calculateAsfans(format, cardsWithAsfan);
+    this.setState({ cardsWithAsfan }, this.updateFilter);
   }
 
   select(nav) {
@@ -143,7 +150,7 @@ class CubeAnalysis extends Component {
     const filteredCards =
       (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
     const navItem = (active, text) => (
-      <NavLink active={active === nav} onClick={this.select.bind(this, active)} href="#" key={active}>
+      <NavLink active={active === nav} onClick={() => this.select.bind(active)} href="#" key={active}>
         {text}
       </NavLink>
     );
@@ -156,14 +163,14 @@ class CubeAnalysis extends Component {
       else if (data.type === 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
     }
     return (
-      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false}>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="playtest">
         <DynamicFlash />
         <CubeAnalysisNavBar
           draftFormats={cube.draft_formats}
           formatId={formatId}
-          setFormatId={this.setFormat.bind(this)}
+          setFormatId={this.setFormat}
           filter={filter}
-          setFilter={this.setFilter.bind(this)}
+          setFilter={this.setFilter}
           numCards={filteredCards.length}
           defaultFilterText=""
         />
@@ -190,6 +197,18 @@ class CubeAnalysis extends Component {
   }
 }
 
+CubeAnalysis.propTypes = {
+  cube: PropTypes.shape({cards: [], draft_formats: []}).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  defaultNav: PropTypes.string,
+};
+
+CubeAnalysis.defaultProps = {
+  defaultNav: 'curve',
+};
+
 const wrapper = document.getElementById('react-root');
-const element = <CubeAnalysis {...reactProps} />;
-wrapper ? ReactDOM.render(element, wrapper) : false;
+const element = <CubeAnalysis {...window.reactProps} />;
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}

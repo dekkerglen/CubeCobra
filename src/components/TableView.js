@@ -1,12 +1,14 @@
 import React, { useContext } from 'react';
+import PropTypes from 'prop-types';
 
 import { Row, Col } from 'reactstrap';
 
-import { countGroup, sortDeep } from '../utils/Sort';
+import { countGroup, sortDeep } from 'utils/Sort';
 
-import AutocardListGroup from './AutocardListGroup';
-import DisplayContext from './DisplayContext';
-import SortContext from './SortContext';
+import AutocardListGroup from 'components/AutocardListGroup';
+import AutocardListItem from 'components/AutocardListItem';
+import DisplayContext from 'components/DisplayContext';
+import SortContext from 'components/SortContext';
 
 const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
   const { primary, secondary } = useContext(SortContext);
@@ -15,8 +17,8 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
   const sorted = sortDeep(cards, primary, secondary);
 
   return (
-    <div className={'table-view-container' + (className ? ` ${className}` : '')}>
-      <Row className={'table-view' + (compressedView ? ' compressed' : '')} {...props}>
+    <div className={`table-view-container${className ? ` ${className}` : ''}`}>
+      <Row className={`table-view${compressedView ? ' compressed' : ''}`} {...props}>
         {sorted.map(([columnLabel, column]) => (
           <Col
             key={columnLabel}
@@ -45,6 +47,23 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
       </Row>
     </div>
   );
+};
+
+TableView.propTypes = {
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  noGroupModal: PropTypes.bool,
+  className: PropTypes.string,
+};
+
+TableView.defaultProps = {
+  rowTag: AutocardListItem,
+  noGroupModal: false,
+  className: null,
 };
 
 export default TableView;

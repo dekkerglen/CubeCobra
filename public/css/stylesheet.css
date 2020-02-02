@@ -627,6 +627,11 @@ img.mana-symbol {
 	height: 1.8rem;
 }
 
+.square-left {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
 .square-right {
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;
@@ -649,6 +654,12 @@ img.mana-symbol {
 }
 
 .icon-button {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	padding: 0;
+	border: 0;
+	background-color: transparent;
 	font-weight: 700;
 	line-height: 1;
 	font-size: 1rem;	

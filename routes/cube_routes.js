@@ -61,10 +61,10 @@ let CubeDraftPage = null;
 let CubeListPage = null;
 let CubePlaytestPage = null;
 if (NODE_ENV === 'production') {
-  BulkUploadPage = require('../dist/components/BulkUploadPage').default;
-  CubeDraftPage = require('../dist/components/CubeDraftPage').default;
-  CubeListPage = require('../dist/components/CubeListPage').default;
-  CubePlaytestPage = require('../dist/components/CubePlaytestPage').default;
+  BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/pages/CubeDraftPage').default;
+  CubeListPage = require('../dist/pages/CubeListPage').default;
+  CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
 }
 
 const { ensureAuth, csrfProtection } = require('./middleware');
@@ -486,7 +486,7 @@ router.get('/overview/:id', async (req, res) => {
       cubeID,
       userID: user ? user._id : null,
       loggedIn: !!user,
-      canEdit: user && user._id === cube.owner,
+      canEdit: user && user.id === cube.owner,
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
       followed: user ? user.followed_cubes.includes(cube._id) : false,
@@ -1870,7 +1870,7 @@ router.post(
     }
 
     const { user } = req;
-    if (!user || user._id !== cube.owner) {
+    if (!user || user.id !== cube.owner) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -2455,7 +2455,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (baseUser && baseUser._id !== user.id) {
+    if (baseUser && baseUser.id !== user.id) {
       await util.addNotification(
         baseUser,
         user,

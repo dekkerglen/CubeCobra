@@ -1,4 +1,5 @@
 import React, { Fragment, useCallback, useContext, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { Button, Col, Form, Input, Label, Row } from 'reactstrap';
 
@@ -32,7 +33,9 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
         addChange({ add: { details: card } });
         setAddValue('');
         setLoading(false);
-        addInput.current && addInput.current.focus();
+        if (addInput.current) {
+          addInput.current.focus();
+        }
       } catch (e) {
         console.error(e);
       }
@@ -50,7 +53,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
       <Row>
         <Col>
           {missing.split('\n').map((card, index) => (
-            <Fragment key={index}>
+            <Fragment key={/* eslint-disable-line react/no-array-index-key */ index}>
               {card}
               <br />
             </Fragment>
@@ -90,6 +93,15 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
   );
 };
 
+BulkUploadPageRaw.propTypes = {
+  cubeID: PropTypes.string.isRequired,
+  missing: PropTypes.string.isRequired,
+  blogpost: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    html: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 const BulkUploadPage = ({ cubeID, added, ...props }) => (
   <ChangelistContextProvider
     cubeID={cubeID}
@@ -100,5 +112,16 @@ const BulkUploadPage = ({ cubeID, added, ...props }) => (
     <BulkUploadPageRaw cubeID={cubeID} {...props} />
   </ChangelistContextProvider>
 );
+
+BulkUploadPage.propTypes = {
+  cubeID: PropTypes.string.isRequired,
+  added: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      image_normal: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  ...BulkUploadPageRaw.propTypes,
+};
 
 export default BulkUploadPage;
