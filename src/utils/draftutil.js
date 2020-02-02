@@ -146,9 +146,7 @@ function customDraftAsfan(cards, duplicates = false) {
     if (validCardGroups.length === 0) {
       throw new Error('Unable to create draft asfan: not enough cards matching filter.');
     }
-    console.log("ValidCardGroups:", validCardGroups.length); 
     for (const validCards of validCardGroups) {
-      console.log(validCards.length);
       if (duplicates) {
         const poolCount = validCards.length;
         const poolWeight = 1 / poolCount / validCardGroups.length;
@@ -189,12 +187,10 @@ export function getDraftBots(params) {
 
 export function getDraftFormat(params, cube) {
   let format;
-  console.log(params.id);
   if (params.id >= 0) {
     format = parseDraftFormat(cube.draft_formats[params.id].packs);
     format.custom = true;
     format.multiples = cube.draft_formats[params.id].multiples;
-    console.log(format);
   } else {
     // default format
     format = [];

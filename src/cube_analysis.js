@@ -1,7 +1,9 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
+
+import CubeLayout from 'layouts/CubeLayout';
 
 import Query from './utils/Query';
 
@@ -13,7 +15,6 @@ import AnalyticsChart from './components/AnalyticsChart';
 import AnalyticsCloud from './components/AnalyticsCloud';
 import AnalyticsTable from './components/AnalyticsTable';
 import CubeAnalysisNavBar from './components/CubeAnalysisNavbar';
-import CubeLayout from 'layouts/CubeLayout';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
 import MagicMarkdown from './components/MagicMarkdown';
@@ -39,9 +40,9 @@ class CubeAnalysis extends Component {
         'typeBreakdown',
         'typeBreakdownCounts',
         'colorCount',
+        'cumulativeColorCount',
         'tokenGrid',
         'tagCloud',
-        'cumulativeColorCount',
       ],
       filter: [],
       cardsWithAsfan: null,

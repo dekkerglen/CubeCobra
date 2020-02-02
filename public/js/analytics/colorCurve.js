@@ -1,38 +1,36 @@
 function GetColorCat(type, colors) {
   if (type.toLowerCase().includes('land')) {
     return 'l';
-  } else if (colors.length == 0) {
+  }
+  if (colors.length === 0) {
     return 'c';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'm';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length === 1) {
     switch (colors[0]) {
       case 'W':
         return 'w';
-        break;
       case 'U':
         return 'u';
-        break;
       case 'B':
         return 'b';
-        break;
       case 'R':
         return 'r';
-        break;
       case 'G':
         return 'g';
-        break;
       case 'C':
+      default:
         return 'c';
-        break;
     }
   }
 }
 
 onmessage = (e) => {
   if (!e) return;
-  var cards = e.data;
-  var curve = {
+  const cards = e.data;
+  const curve = {
     white: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     blue: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     black: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -43,8 +41,8 @@ onmessage = (e) => {
     total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   };
 
-  cards.forEach(function(card, index) {
-    var category;
+  for (const card of cards) {
+    let category;
     switch (GetColorCat(card.details.type, card.colors)) {
       case 'w':
         category = curve.white;
@@ -61,11 +59,13 @@ onmessage = (e) => {
       case 'g':
         category = curve.green;
         break;
+      case 'm':
+        category = curve.multi;
+        break;
       case 'c':
         category = curve.colorless;
         break;
-      case 'm':
-        category = curve.multi;
+      default:
         break;
     }
     // const asfan = card.asfan || 15 / cards.length;
@@ -79,7 +79,7 @@ onmessage = (e) => {
         curve.total[Math.floor(card.cmc)] += asfan;
       }
     }
-  });
+  }
   const datasets = {
     labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9+'],
     datasets: [
@@ -132,9 +132,10 @@ onmessage = (e) => {
   };
   postMessage({
     type: 'chart',
+    description:
+      'Expected count of cards at each CMC by color identity, excluding lands. Click the labels to filter the datasets. Lands are omitted for the curve chart.',
     chartType: 'bar',
-    datasets: datasets,
-    options: options,
-    description: 'Click the labels to filter the datasets. Lands are omitted for the curve chart.',
+    datasets,
+    options,
   });
 };

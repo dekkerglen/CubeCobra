@@ -2,7 +2,7 @@ onmessage = (e) => {
   if (!e) return;
   const cards = e.data;
 
-  var tags = {};
+  const tags = {};
   cards.forEach((card) =>
     card.tags.forEach((tag) => {
       if (tags[tag]) {
@@ -13,5 +13,10 @@ onmessage = (e) => {
     }),
   );
   const words = Object.keys(tags).map((key) => ({ value: key, count: tags[key] }));
-  postMessage({ type: 'cloud', words: words });
+  postMessage({
+    type: 'cloud',
+    description:
+      'Tags in your cube with random colors weighted by the expected number of cards with that tag in a pool.',
+    words,
+  });
 };

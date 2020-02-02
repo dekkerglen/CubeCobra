@@ -1,6 +1,6 @@
 function areArraysEqualSets(a1, a2) {
-  if (a1.length != a2.length) return false;
-  let superSet = {};
+  if (a1.length !== a2.length) return false;
+  const superSet = {};
   for (let i = 0; i < a1.length; i++) {
     const e = a1[i] + typeof a1[i];
     superSet[e] = 1;
@@ -14,7 +14,7 @@ function areArraysEqualSets(a1, a2) {
     superSet[e] = 2;
   }
 
-  for (let e in superSet) {
+  for (const e in superSet) {
     if (superSet[e] === 1) {
       return false;
     }
@@ -25,8 +25,8 @@ function areArraysEqualSets(a1, a2) {
 
 onmessage = (e) => {
   if (!e) return;
-  var cards = e.data;
-  var colorCombinations = [
+  const cards = e.data;
+  const colorCombinations = [
     [],
     ['W'],
     ['U'],
@@ -60,14 +60,13 @@ onmessage = (e) => {
     ['W', 'U', 'B', 'R'],
     ['W', 'U', 'B', 'R', 'G'],
   ];
-  var ColorCounts = Array.from(colorCombinations, (label) => 0);
-  var ColorAsfans = Array.from(colorCombinations, (label) => 0);
-  var cardColors;
-  var totalCount = 0;
-  var totalAsfan = 0;
-  cards.forEach((card, index) => {
-    asfan = card.asfan || 15 / cards.length;
-    cardColors = card.colors || card.details.colors || [];
+  const ColorCounts = Array.from(colorCombinations, () => 0);
+  const ColorAsfans = Array.from(colorCombinations, () => 0);
+  let totalCount = 0;
+  let totalAsfan = 0;
+  for (const card of cards) {
+    const asfan = card.asfan || 15 / cards.length;
+    const cardColors = card.colors || card.details.colors || [];
 
     totalCount += 1;
     totalAsfan += asfan;
@@ -77,15 +76,16 @@ onmessage = (e) => {
         ColorAsfans[idx] += asfan;
       }
     });
-  });
-  datapoints = Array.from(colorCombinations, (combination, idx) => ({
-    label: combination.length == 0 ? '{c}' : combination.map((c) => '{' + c.toLowerCase() + '}').join(''),
+  }
+  const datapoints = Array.from(colorCombinations, (combination, idx) => ({
+    label: combination.length === 0 ? '{c}' : combination.map((c) => `{${c.toLowerCase()}}`).join(''),
     asfan: ColorAsfans[idx].toFixed(2),
     count: ColorCounts[idx],
   }));
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
+    description: 'Counts for cards that are exactly these color identities.',
     columns: [
       { header: 'Color Combination', key: 'label', rowHeader: true },
       { header: 'Expected Count of Exact Matches in Pool', key: 'asfan' },
