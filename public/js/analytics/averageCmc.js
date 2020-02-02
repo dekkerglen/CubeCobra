@@ -56,17 +56,21 @@ onmessage = (e) => {
   postMessage({
     type: 'table',
     description: 'The average CMC in the cube as a whole, and the expected average in a players pool.',
-    columns: [
-      { header: 'Color', key: 'label', rowHeader: true },
-      { header: 'Average CMC in Cube', key: 'countAverage' },
-      { header: 'Expected Average CMC in Pool', key: 'asfanAverage' },
-    ],
-    data: Object.keys(ColorCounts)
-      .map((key) => ColorCounts[key])
-      .map(({ label, asfan, count, totalAsfan, totalCount }) => ({
-        label,
-        countAverage: totalCount > 0 ? (count / totalCount).toFixed(2) : 0,
-        asfanAverage: totalAsfan > 0 ? (asfan / totalAsfan).toFixed(2) : 0,
-      })),
+    tables: [
+      {
+        columns: [
+          { header: 'Color', key: 'label', rowHeader: true },
+          { header: 'Average CMC in Cube', key: 'countAverage' },
+          { header: 'Expected Average CMC in Pool', key: 'asfanAverage' },
+        ],
+        rows: Object.keys(ColorCounts)
+          .map((key) => ColorCounts[key])
+          .map(({ label, asfan, count, totalAsfan, totalCount }) => ({
+            label,
+            countAverage: totalCount > 0 ? (count / totalCount).toFixed(2) : 0,
+            asfanAverage: totalAsfan > 0 ? (asfan / totalAsfan).toFixed(2) : 0,
+          })),
+      },
+    ]
   });
 };

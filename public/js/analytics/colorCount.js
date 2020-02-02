@@ -82,15 +82,32 @@ onmessage = (e) => {
     asfan: ColorAsfans[idx].toFixed(2),
     count: ColorCounts[idx],
   }));
+  const columns = [
+    { header: 'Color Combination', key: 'label', rowHeader: true },
+    { header: 'Expected Count of Exact Matches in Pool', key: 'asfan' },
+    { header: 'Count of Exact Match', key: 'count' },
+  ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
     description: 'Counts for cards that are exactly these color identities.',
-    columns: [
-      { header: 'Color Combination', key: 'label', rowHeader: true },
-      { header: 'Expected Count of Exact Matches in Pool', key: 'asfan' },
-      { header: 'Count of Exact Match', key: 'count' },
+    tables: [
+      {
+        columns,
+        rows: datapoints.slice(0,6),
+      },
+      {
+        columns,
+        rows: datapoints.slice(6,16),
+      },
+      {
+        columns,
+        rows: datapoints.slice(16,26),
+      },
+      {
+        columns,
+        rows: datapoints.slice(26),
+      },
     ],
-    data: datapoints,
   });
 };

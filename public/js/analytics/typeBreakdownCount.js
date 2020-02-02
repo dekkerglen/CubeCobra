@@ -173,26 +173,30 @@ onmessage = (e) => {
   postMessage({
     type: 'table',
     description: 'The count of cards in that type and color, percentages are relative to the bottom row of totals.',
-    columns: [
-      { header: '', key: 'label', rowHeader: true },
-      { header: '{w}', key: 'White' },
-      { header: '{u}', key: 'Blue' },
-      { header: '{b}', key: 'Black' },
-      { header: '{r}', key: 'Red' },
-      { header: '{g}', key: 'Green' },
-      { header: '{c}', key: 'Colorless' },
-      { header: '{m}', key: 'Multi' },
-      { header: 'Total', key: 'Total' },
-    ],
-    data: [
-      TypeByColor.Creatures,
-      TypeByColor.Instants,
-      TypeByColor.Sorceries,
-      TypeByColor.Enchantments,
-      TypeByColor.Artifacts,
-      TypeByColor.Planeswalkers,
-      TypeByColor.Lands,
-      TypeByColor.Total,
+    tables: [
+      {
+        columns: [
+          { header: '', key: 'label', rowHeader: true },
+          { header: '{w}', key: 'White' },
+          { header: '{u}', key: 'Blue' },
+          { header: '{b}', key: 'Black' },
+          { header: '{r}', key: 'Red' },
+          { header: '{g}', key: 'Green' },
+          { header: '{c}', key: 'Colorless' },
+          { header: '{m}', key: 'Multi' },
+          { header: 'Total', key: 'Total' },
+        ],
+        rows: [
+          TypeByColor.Creatures,
+          TypeByColor.Instants,
+          TypeByColor.Sorceries,
+          TypeByColor.Enchantments,
+          TypeByColor.Artifacts,
+          TypeByColor.Planeswalkers,
+          TypeByColor.Lands,
+          TypeByColor.Total,
+        ],
+      },
     ],
   });
 };

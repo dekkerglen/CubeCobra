@@ -62,15 +62,32 @@ onmessage = (e) => {
     asfan: ColorAsfans[idx].toFixed(2),
     count: ColorCounts[idx],
   }));
+  const columns = [
+    { header: 'Color Combination', key: 'label', rowHeader: true },
+    { header: 'Expected Count in Poll Contained In', key: 'asfan' },
+    { header: 'Count of Contained In', key: 'count' },
+  ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
     description: 'Count of all cards that can be played if you only use these colors.',
-    columns: [
-      { header: 'Color Combination', key: 'label', rowHeader: true },
-      { header: 'Expected Count in Poll Contained In', key: 'asfan' },
-      { header: 'Count of Contained In', key: 'count' },
+    tables: [
+      {
+        columns,
+        rows: datapoints.slice(0,6),
+      },
+      {
+        columns,
+        rows: datapoints.slice(6,16),
+      },
+      {
+        columns,
+        rows: datapoints.slice(16,26),
+      },
+      {
+        columns,
+        rows: datapoints.slice(26),
+      },
     ],
-    data: datapoints,
   });
 };
