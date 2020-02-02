@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 
-import { Col, Container, Dropdown, DropdownMenu, DropdownToggle, DropdownItem, Nav, NavLink, Row } from 'reactstrap';
+import { Col, Nav, NavLink, Row } from 'reactstrap';
 
 import Query from './utils/Query';
 
@@ -12,10 +12,10 @@ import AnalyticsCardGrid from './components/AnalyticsCardGrid';
 import AnalyticsChart from './components/AnalyticsChart';
 import AnalyticsCloud from './components/AnalyticsCloud';
 import AnalyticsTable from './components/AnalyticsTable';
+import CubeAnalysisNavBar from './components/CubeAnalysisNavbar';
 import CubeLayout from 'layouts/CubeLayout';
 import DynamicFlash from './components/DynamicFlash';
 import ErrorBoundary from './components/ErrorBoundary';
-import FilterCollapse from './components/FilterCollapse';
 import MagicMarkdown from './components/MagicMarkdown';
 
 class CubeAnalysis extends Component {
@@ -47,7 +47,6 @@ class CubeAnalysis extends Component {
       cardsWithAsfan: null,
       filteredWithAsfan: null,
       formatId: this.props.defaultFormatId || -1,
-      formatDropdownOpen: false,
       nav: this.props.defaultNav || 'curve',
     };
 
@@ -61,21 +60,9 @@ class CubeAnalysis extends Component {
 
   componentDidMount() {
     this.updateAsfan();
-  }
-
-  componentDidMount() {
     this.setState({
       nav: Query.get('nav', this.state.nav),
     });
-  }
-
-  select(nav) {
-    if (nav === 'curve') {
-      Query.del('nav');
-    } else {
-      Query.set('nav', nav);
-    }
-    this.setState({ nav }, this.updateData);
   }
 
   async updateAsfan() {
@@ -119,11 +106,13 @@ class CubeAnalysis extends Component {
   }
 
   setFilter(filter) {
+    console.log("Setting filter", filter);
     this.setState({ filter }, this.updateFilter);
   }
 
   setFormat(formatId) {
-    if (formatId == -1) {
+    console.log("Setting formatId", formatId);
+    if (formatId === -1) {
       Query.del('formatId');
     } else {
       Query.set('formatId', formatId);
@@ -131,19 +120,28 @@ class CubeAnalysis extends Component {
     this.setState({ formatId }, this.updateAsfan);
   }
 
+  select(nav) {
+    if (nav === 'curve') {
+      Query.del('nav');
+    } else {
+      Query.set('nav', nav);
+    }
+    this.setState({ nav }, this.updateData);
+  }
+
   toggleFormatDropdownOpen() {
-    this.setState((prevState, props) => {
+    this.setState((prevState) => {
       return { formatDropdownOpen: !prevState.formatDropdownOpen };
     });
   }
 
   render() {
     const { cube, cubeID } = this.props;
-    const { analytics, analytics_order, data, filter, formatDropdownOpen, formatId, nav } = this.state;
-    const cards = cube.cards;
+    const { analytics, analytics_order, data, filter, formatId, nav } = this.state;
+    const { cards } = cube;
     const filteredCards =
       (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
-    let navItem = (active, text) => (
+    const navItem = (active, text) => (
       <NavLink active={active === nav} onClick={this.select.bind(this, active)} href="#" key={active}>
         {text}
       </NavLink>
@@ -151,47 +149,23 @@ class CubeAnalysis extends Component {
     let visualization = <p>Loading Data</p>;
     if (data) {
       // Formats for data are documented in their respective components
-      if (data.type == 'table') visualization = <AnalyticsTable data={data} />;
-      else if (data.type == 'chart') visualization = <AnalyticsChart data={data} />;
-      else if (data.type == 'cloud') visualization = <AnalyticsCloud data={data} />;
-      else if (data.type == 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
-    }
-
-    let dropdownElement = <h5>Default Draft Format</h5>;
-    if (cube.draft_formats) {
-      dropdownElement = (
-        <Row>
-          <Col>
-            <h5>{formatId >= 0 ? cube.draft_formats[formatId].title : 'Default Draft Format'}</h5>
-          </Col>
-          <Col>
-            <Dropdown isOpen={formatDropdownOpen} toggle={this.toggleFormatDropdownOpen}>
-              <DropdownToggle caret>Change Draft Format</DropdownToggle>
-              <DropdownMenu>
-                <DropdownItem key="default" onClick={() => this.setFormat(-1)}>
-                  Default Draft Format
-                </DropdownItem>
-                <DropdownItem header key="customformatsheader">
-                  Custom Formats
-                </DropdownItem>
-                {cube.draft_formats
-                  ? cube.draft_formats.map((format, formatIndex) => (
-                      <DropdownItem key={`format-${formatIndex}`} onClick={() => this.setFormat(formatIndex)}>
-                        {format.title}
-                      </DropdownItem>
-                    ))
-                  : ''}
-              </DropdownMenu>
-            </Dropdown>
-          </Col>
-        </Row>
-      );
+      if (data.type === 'table') visualization = <AnalyticsTable data={data} />;
+      else if (data.type === 'chart') visualization = <AnalyticsChart data={data} />;
+      else if (data.type === 'cloud') visualization = <AnalyticsCloud data={data} />;
+      else if (data.type === 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
     }
     return (
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={false}>
         <DynamicFlash />
-        <FilterCollapse filter={filter} setFilter={this.setFilter} numCards={filteredCards.length} isOpen={true} />
-        {dropdownElement}
+        <CubeAnalysisNavBar
+          draftFormats={cube.draft_formats}
+          formatId={formatId}
+          setFormatId={this.setFormat.bind(this)}
+          filter={filter}
+          setFilter={this.setFilter.bind(this)}
+          numCards={filteredCards.length}
+          defaultFilterText=""
+        />
         <Row className="mt-3">
           <Col xs="12" lg="2">
             <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">

@@ -75,8 +75,10 @@ function standardDraftAsfan(cards) {
   }
   const poolCount = cards.length;
   const poolWeight = 1 / poolCount;
-  return (cardFilters) => {
-    cards.forEach((card) => (card.asfan += poolWeight));
+  return () => {
+    for (const card of cards) {
+      card.asfan += poolWeight;
+    }
     return { card: true, messages: [] };
   };
 }
@@ -124,13 +126,13 @@ function customDraft(cards, duplicates = false) {
 }
 
 function customDraftAsfan(cards, duplicates = false) {
-  return function(cardFilters) {
+  return (cardFilters) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft asfan: not enough cards.');
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
-    let validCardGroups = [];
+    const validCardGroups = [];
     for (let i = 0; i < cardFilters.length; i++) {
       let validCards = matchingCards(cards, cardFilters[i]);
       if (!duplicates) {
@@ -141,21 +143,26 @@ function customDraftAsfan(cards, duplicates = false) {
       }
     }
 
-    if (validCardGroups.length == 0) {
+    if (validCardGroups.length === 0) {
       throw new Error('Unable to create draft asfan: not enough cards matching filter.');
     }
-
-    validCardGroups.forEach((validCards) => {
+    console.log("ValidCardGroups:", validCardGroups.length); 
+    for (const validCards of validCardGroups) {
+      console.log(validCards.length);
       if (duplicates) {
         const poolCount = validCards.length;
         const poolWeight = 1 / poolCount / validCardGroups.length;
-        validCards.forEach((card) => (card.asfan += poolWeight));
+        for (const card of validCards) {
+          card.asfan += poolWeight;
+        }
       } else {
         const poolCount = validCards.reduce((sum, card) => sum + (1 - card.asfan), 0);
         const poolWeight = 1 / poolCount / validCardGroups.length;
-        validCards.forEach((card) => (card.asfan += (1 - card.asfan) * poolWeight));
+        for (const card of validCards) {
+          card.asfan += (1 - card.asfan) * poolWeight;
+        }
       }
-    });
+    }
     return { card: true, messages: [] };
   };
 }
@@ -182,10 +189,12 @@ export function getDraftBots(params) {
 
 export function getDraftFormat(params, cube) {
   let format;
+  console.log(params.id);
   if (params.id >= 0) {
     format = parseDraftFormat(cube.draft_formats[params.id].packs);
     format.custom = true;
     format.multiples = cube.draft_formats[params.id].multiples;
+    console.log(format);
   } else {
     // default format
     format = [];
@@ -277,7 +286,9 @@ export function populateDraft(draft, format, cards, bots, seats) {
 export function calculateAsfans(format, cards) {
   let nextCardFn = null;
 
-  cards.forEach((card) => (card.asfan = 0));
+  cards.forEach((card) => {
+    card.asfan = 0;
+  });
 
   if (format.custom === true) {
     nextCardFn = customDraftAsfan(cards, format.multiples);
@@ -291,18 +302,18 @@ export function calculateAsfans(format, cards) {
 export function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
-    let messages = [];
+    const messages = [];
     for (let i = 0; i < cardFilters.length; i++) {
-      let filter = cardFilters[i];
-      let validCards = matchingCards(cards, filter);
-      if (validCards.length == 0) {
+      const filter = cardFilters[i];
+      const validCards = matchingCards(cards, filter);
+      if (validCards.length === 0) {
         messages.push('Warning: no cards matching filter: ' + filterToString(filter));
       }
     }
     if (messages.length > 0) {
       throw new Error(messages.join('\n'));
     }
-    return { ok: messages.length == 0, messages: messages };
+    return { ok: messages.length === 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
 }
