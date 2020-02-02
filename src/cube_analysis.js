@@ -55,7 +55,7 @@ class CubeAnalysis extends Component {
       formatId: defaultFormatId || -1,
       nav: defaultNav || 'curve',
     };
-    
+
     this.updateAsfan = this.updateAsfan.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
     this.updateData = this.updateData.bind(this);
@@ -194,7 +194,10 @@ class CubeAnalysis extends Component {
 }
 
 CubeAnalysis.propTypes = {
-  cube: PropTypes.shape({ cards: PropTypes.arrayOf(PropTypes.shape({})), draft_formats: PropTypes.arrayOf(PropTypes.shape({})) }).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({})),
+    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+  }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultNav: PropTypes.string,
   defaultFormatId: PropTypes.number,

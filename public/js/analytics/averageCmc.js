@@ -29,14 +29,14 @@ onmessage = (e) => {
   const cards = e.data;
 
   const ColorCounts = {
-    White:     { label: '{w}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Blue:      { label: '{u}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Black:     { label: '{b}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Red:       { label: '{r}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Green:     { label: '{g}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    White: { label: '{w}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Blue: { label: '{u}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Black: { label: '{b}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Red: { label: '{r}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Green: { label: '{g}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
     Colorless: { label: '{c}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Multi:     { label: '{m}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Total:     { label: 'Total', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Multi: { label: '{m}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Total: { label: 'Total', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
   };
 
   for (const card of cards) {
@@ -61,10 +61,12 @@ onmessage = (e) => {
       { header: 'Average CMC in Cube', key: 'countAverage' },
       { header: 'Expected Average CMC in Pool', key: 'asfanAverage' },
     ],
-    data: Object.keys(ColorCounts).map((key) => ColorCounts[key]).map(({label, asfan, count, totalAsfan, totalCount}) => ({
-      label,
-      countAverage: totalCount > 0 ? (count / totalCount).toFixed(2) : 0,
-      asfanAverage: totalAsfan > 0 ? (asfan / totalAsfan).toFixed(2) : 0,
-    })),
+    data: Object.keys(ColorCounts)
+      .map((key) => ColorCounts[key])
+      .map(({ label, asfan, count, totalAsfan, totalCount }) => ({
+        label,
+        countAverage: totalCount > 0 ? (count / totalCount).toFixed(2) : 0,
+        asfanAverage: totalAsfan > 0 ? (asfan / totalAsfan).toFixed(2) : 0,
+      })),
   });
-}
+};

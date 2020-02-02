@@ -87,6 +87,6 @@ MagicMarkdown.propTypes = {
 MagicMarkdown.defaultProps = {
   markdown: '',
   cube: null,
-}
+};
 
 export default MagicMarkdown;
