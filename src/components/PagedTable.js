@@ -32,9 +32,7 @@ class PagedTable extends Component {
 
     return (
       <>
-        {validPages.length === 1 ? (
-          ''
-        ) : (
+        {validPages.length > 1 && (
           <Pagination aria-label="Table page">
             {validPages.map((page) => (
               <PaginationItem key={page} active={page === this.state.page}>

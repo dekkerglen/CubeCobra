@@ -1,6 +1,5 @@
 const serialize = require('serialize-javascript');
 const express = require('express');
-const router = express.Router();
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
@@ -10,24 +9,29 @@ const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
 
-const NODE_ENV = process.env.NODE_ENV;
+const { NODE_ENV } = process.env;
 
 let DashboardPage = null;
 if (NODE_ENV === 'production') {
   DashboardPage = require('../dist/components/DashboardPage').default;
 }
 
+const carddb = require('../serverjs/cards.js');
+
+carddb.initializeCardDb();
+
+const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
+
+const router = express.Router();
 
 router.use(csrfProtection);
 
 // Home route
-router.get('/', async (req, res) => {
-  req.user ? res.redirect('/dashboard') : res.redirect('/landing');
-});
+router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const user_id = req.user ? req.user._id : '';
+  const userID = req.user ? req.user._id : '';
 
   const recentsq = Cube.find({
     $or: [
@@ -44,7 +48,7 @@ router.get('/explore', async (req, res) => {
         ],
       },
       {
-        owner: user_id,
+        owner: userID,
       },
     ],
   })
@@ -67,7 +71,7 @@ router.get('/explore', async (req, res) => {
         isListed: null,
       },
       {
-        owner: user_id,
+        owner: userID,
       },
     ],
   })
@@ -96,22 +100,22 @@ router.get('/explore', async (req, res) => {
 
   res.render('index', {
     devblog: blog.length > 0 ? blog[0] : null,
-    recents: recents,
-    drafted: drafted,
-    decks: decks,
-    featured: featured,
+    recents,
+    drafted,
+    decks,
+    featured,
     loginCallback: '/explore',
   });
 });
 
-//format: {search};{search};{search}:{page}
-//list like:
-//{property}{symbol}{value};
-//properties:
-//name, owner
-//symbols:
-//=,~(contains)
-router.get('/advanced_search', function(req, res) {
+// format: {search};{search};{search}:{page}
+// list like:
+// {property}{symbol}{value};
+// properties:
+// name, owner
+// symbols:
+//= ,~(contains)
+router.get('/advanced_search', (req, res) => {
   res.render('search/advanced_search', {
     loginCallback: '/advanced_search',
   });
@@ -119,9 +123,9 @@ router.get('/advanced_search', function(req, res) {
 
 router.get('/random', async (req, res) => {
   const count = await Cube.count();
-  var random = Math.floor(Math.random() * count);
+  const random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random);
-  res.redirect('/cube/overview/' + (cube.urlAlias ? cube.urlAlias : cube.shortID));
+  res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
 });
 
 router.get('/dashboard', async (req, res) => {
@@ -165,7 +169,7 @@ router.get('/dashboard', async (req, res) => {
       })
       .limit(50);
 
-    //We can do these queries in parallel
+    // We can do these queries in parallel
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
     const cubeIds = cubes.map((cube) => cube._id);
 
@@ -181,6 +185,15 @@ router.get('/dashboard', async (req, res) => {
         date: -1,
       })
       .limit(13);
+
+    // autocard the posts
+    if (posts) {
+      for (const post of posts) {
+        if (post.html) {
+          post.html = addAutocard(post.html, carddb);
+        }
+      }
+    }
 
     const reactProps = { posts, cubes, decks, userId: user._id };
 
@@ -201,7 +214,7 @@ router.get('/dashboard', async (req, res) => {
 router.get('/dashboard/decks/:page', async (req, res) => {
   try {
     const pagesize = 30;
-    const page = req.params.page;
+    const { page } = req.params;
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.redirect('/landing');
@@ -237,25 +250,25 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       },
     }).exec();
 
-    var pages = [];
-    for (i = 0; i < numDecks / pagesize; i++) {
-      if (page == i) {
+    const pages = [];
+    for (let i = 0; i < numDecks / pagesize; i++) {
+      if (page === i) {
         pages.push({
-          url: '/dashboard/decks/' + i,
+          url: `/dashboard/decks/${i}`,
           content: i + 1,
           active: true,
         });
       } else {
         pages.push({
-          url: '/dashboard/decks/' + i,
+          url: `/dashboard/decks/${i}`,
           content: i + 1,
         });
       }
     }
 
     return res.render('dashboard_decks', {
-      decks: decks,
-      pages: pages,
+      decks,
+      pages,
       loginCallback: '/',
     });
   } catch (err) {
@@ -271,7 +284,7 @@ router.get('/landing', async (req, res) => {
 
   const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
 
-  //this regex add commas to the number
+  // this regex add commas to the number
   res.render('landing', {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
@@ -280,58 +293,61 @@ router.get('/landing', async (req, res) => {
   });
 });
 
-router.post('/advanced_search', function(req, res) {
-  var url = '/search/';
+router.post('/advanced_search', (req, res) => {
+  let url = '/search/';
   if (req.body.name && req.body.name.length > 0) {
-    url += 'name' + req.body.nameType + req.body.name + ';';
+    url += `name${req.body.nameType}${req.body.name};`;
   }
   if (req.body.owner && req.body.owner.length > 0) {
-    url += 'owner_name' + req.body.ownerType + req.body.owner + ';';
+    url += `owner_name${req.body.ownerType}${req.body.owner};`;
   }
   res.redirect(url);
 });
 
-router.post('/search', function(req, res) {
-  if (!req.body.search || req.body.search.length == 0) {
+router.post('/search', (req, res) => {
+  if (!req.body.search || req.body.search.length === 0) {
     req.flash('danger', 'No Search Parameters');
     res.redirect('/advanced_search');
   } else {
-    var query = req.body.search;
+    const query = req.body.search;
     if (query.includes(';')) {
-      res.redirect('/search/' + query);
+      res.redirect(`/search/${query}`);
     } else {
-      res.redirect('/search/name~' + query);
+      res.redirect(`/search/name~${query}`);
     }
   }
 });
 
-router.get('/search/:id', function(req, res) {
-  var raw_split = req.params.id.split(':');
-  var raw_queries = raw_split[0].split(';');
-  var page = parseInt(raw_split[1]);
-  var query = {};
-  var terms = [];
-  raw_queries.forEach(function(search_expression) {
-    let field, filter, search_regex;
+router.get('/search/:id', (req, res) => {
+  const rawSplit = req.params.id.split(':');
+  const rawQueries = rawSplit[0].split(';');
+  let page = parseInt(rawSplit[1], 10);
+  let query = {};
+  const terms = [];
+  rawQueries.forEach((searchExpression) => {
+    let field;
+    let filter;
+    let searchRegex;
+    let expressionTerm;
 
-    if (search_expression.includes('=')) {
-      [field, filter] = search_expression.split('=');
-      search_regex = new RegExp(`^${filter}$`, 'i');
-      expression_term = 'is exactly';
-    } else if (search_expression.includes('~')) {
-      [field, filter] = search_expression.split('~');
-      search_regex = new RegExp(filter, 'i');
-      expression_term = 'contains';
+    if (searchExpression.includes('=')) {
+      [field, filter] = searchExpression.split('=');
+      searchRegex = new RegExp(`^${filter}$`, 'i');
+      expressionTerm = 'is exactly';
+    } else if (searchExpression.includes('~')) {
+      [field, filter] = searchExpression.split('~');
+      searchRegex = new RegExp(filter, 'i');
+      expressionTerm = 'contains';
     }
 
-    if (search_regex) {
-      query[field] = { $regex: search_regex };
-      terms.push(`${field.replace('owner_name', 'owner')} ${expression_term} ${filter.toLowerCase()}`);
+    if (searchRegex) {
+      query[field] = { $regex: searchRegex };
+      terms.push(`${field.replace('owner_name', 'owner')} ${expressionTerm} ${filter.toLowerCase()}`);
     }
   });
 
-  var user_id = '';
-  if (req.user) user_id = req.user._id;
+  let userID = '';
+  if (req.user) userID = req.user._id;
   query = {
     $and: [
       query,
@@ -341,7 +357,7 @@ router.get('/search/:id', function(req, res) {
             isListed: true,
           },
           {
-            owner: user_id,
+            owner: userID,
           },
         ],
       },
@@ -352,102 +368,102 @@ router.get('/search/:id', function(req, res) {
     .sort({
       date_updated: -1,
     })
-    .exec(function(err, cubes) {
-      var pages = [];
+    .exec((err, cubes) => {
+      const pages = [];
       if (cubes.length > 12) {
         if (!page) {
           page = 0;
         }
-        for (i = 0; i < cubes.length / 12; i++) {
-          if (page == i) {
+        for (let i = 0; i < cubes.length / 12; i++) {
+          if (page === i) {
             pages.push({
-              url: raw_split[0] + ':' + i,
+              url: `${rawSplit[0]}:${i}`,
               content: i + 1,
               active: true,
             });
           } else {
             pages.push({
-              url: raw_split[0] + ':' + i,
+              url: `${rawSplit[0]}:${i}`,
               content: i + 1,
             });
           }
         }
-        cube_page = [];
-        for (i = 0; i < 12; i++) {
+        const cubePage = [];
+        for (let i = 0; i < 12; i++) {
           if (cubes[i + page * 12]) {
-            cube_page.push(cubes[i + page * 12]);
+            cubePage.push(cubes[i + page * 12]);
           }
         }
         res.render('search', {
-          results: cube_page,
+          results: cubePage,
           search: req.params.id,
-          terms: terms,
-          pages: pages,
+          terms,
+          pages,
           numresults: cubes.length,
-          loginCallback: '/search/' + req.params.id,
+          loginCallback: `/search/${req.params.id}`,
         });
       } else {
         res.render('search', {
           results: cubes,
           search: req.params.id,
-          terms: terms,
+          terms,
           numresults: cubes.length,
-          loginCallback: '/search/' + req.params.id,
+          loginCallback: `/search/${req.params.id}`,
         });
       }
     });
 });
 
-router.get('/contact', function(req, res) {
+router.get('/contact', (req, res) => {
   res.render('info/contact', {
     loginCallback: '/contact',
   });
 });
 
-router.get('/tos', function(req, res) {
+router.get('/tos', (req, res) => {
   res.render('info/tos', {
     loginCallback: '/tos',
   });
 });
 
-router.get('/filters', function(req, res) {
+router.get('/filters', (req, res) => {
   res.render('info/filters', {
     loginCallback: '/filters',
   });
 });
 
-router.get('/privacy', function(req, res) {
+router.get('/privacy', (req, res) => {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy',
   });
 });
 
-router.get('/cookies', function(req, res) {
+router.get('/cookies', (req, res) => {
   res.render('info/cookies', {
     loginCallback: '/cookies',
   });
 });
 
-router.get('/ourstory', function(req, res) {
+router.get('/ourstory', (req, res) => {
   res.render('info/ourstory', {
     loginCallback: '/ourstory',
   });
 });
 
-router.get('/faq', function(req, res) {
+router.get('/faq', (req, res) => {
   res.render('info/faq', {
     loginCallback: '/faq',
   });
 });
 
-router.get('/donate', function(req, res) {
+router.get('/donate', (req, res) => {
   res.render('info/donate', {
     loginCallback: '/donate',
   });
 });
 
-router.get('/c/:id', function(req, res) {
-  res.redirect('/cube/list/' + req.params.id);
+router.get('/c/:id', (req, res) => {
+  res.redirect(`/cube/list/${req.params.id}`);
 });
 
 module.exports = router;

@@ -1,9 +1,11 @@
-const carddb = require('../../serverjs/cards');
 const fixturesPath = 'fixtures';
-const cubefixture = require('../../fixtures/examplecube');
+const cubefixture = require('../../../fixtures/examplecube');
 
-import Filter from '../../src/utils/Filter';
-import { expectOperator } from '../helpers';
+const carddb = require('../../../serverjs/cards');
+
+import Filter from '../../../src/utils/Filter';
+
+import { expectOperator } from '../../helpers';
 
 const setCounts = (cards, propertyName) => {
   let greenCardCount = 0;

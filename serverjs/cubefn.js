@@ -1,4 +1,5 @@
 const sanitizeHtml = require('sanitize-html');
+const serialize = require('serialize-javascript');
 
 const Blog = require('../models/blog');
 const CardRating = require('../models/cardrating');
@@ -112,6 +113,26 @@ function cardsAreEquivalent(card, details) {
   }
 
   return true;
+}
+
+function setCubeType(cube, carddb) {
+  let pauper = true;
+  let type = legalityToInt('Standard');
+  for (const card of cube.cards) {
+    if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
+      pauper = false;
+    }
+    while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
+      type -= 1;
+    }
+  }
+
+  cube.type = intToLegality(type);
+  if (pauper) {
+    cube.type += ' Pauper';
+  }
+  cube.card_count = cube.cards.length;
+  return cube;
 }
 
 function cardHtml(card) {
@@ -231,36 +252,16 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-function setCubeType(cube, carddb) {
-  var pauper = true;
-  var type = legalityToInt('Standard');
-  cube.cards.forEach(function(card, index) {
-    if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
-      pauper = false;
-    }
-    while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
-      type -= 1;
-    }
-  });
-
-  cube.type = intToLegality(type);
-  if (pauper) {
-    cube.type += ' Pauper';
-  }
-  cube.card_count = cube.cards.length;
-  return cube;
-}
-
 function CSVtoCards(cards, carddb) {
   let missing = '';
-  let newCards = [];
-  let newMaybe = [];
-  for (let card_raw of cards) {
-    let split = util.CSVtoArray(card_raw);
-    let name = split[0];
-    let maybeboard = split[8];
-    let card = {
-      name: name,
+  const newCards = [];
+  const newMaybe = [];
+  for (const rawCard of cards) {
+    const split = util.CSVtoArray(rawCard);
+    const name = split[0];
+    const maybeboard = split[8];
+    const card = {
+      name,
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
       colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
@@ -269,38 +270,38 @@ function CSVtoCards(cards, carddb) {
       collector_number: split[5],
       status: split[6],
       finish: split[7],
-      imgUrl: split[9] && split[9] != 'undefined' ? split[9] : null,
+      imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
       tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
     };
 
-    let potentialIds = carddb.allIds(card);
+    const potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
-      let matchingSetAndNumber = potentialIds.find((id) => {
+      const matchingSetAndNumber = potentialIds.find((id) => {
         const dbCard = carddb.cardFromId(id);
         return (
-          card.set.toUpperCase() == dbCard.set.toUpperCase() &&
-          card.collector_number.toUpperCase() == dbCard.collector_number.toUpperCase()
+          card.set.toUpperCase() === dbCard.set.toUpperCase() &&
+          card.collector_number.toUpperCase() === dbCard.collector_number.toUpperCase()
         );
       });
-      let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
-      let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
-      let first = potentialIds[0];
+      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
+      const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
+      const first = potentialIds[0];
       card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
-      if (maybeboard == 'true') {
+      if (maybeboard === 'true') {
         newMaybe.push(card);
       } else {
         newCards.push(card);
       }
     } else {
-      missing += card.name + '\n';
+      missing += `${card.name}\n`;
     }
   }
-  return { newCards: newCards, newMaybe: newMaybe, missing: missing };
+  return { newCards, newMaybe, missing };
 }
 
 async function generateBlogpost(req, res, cube, changelog, added, missing, carddb) {
-  var blogpost = new Blog();
+  const blogpost = new Blog();
   blogpost.title = 'Cube Bulk Import - Automatic Post';
   blogpost.html = changelog;
   blogpost.owner = cube.owner;
@@ -318,141 +319,115 @@ async function generateBlogpost(req, res, cube, changelog, added, missing, cardd
       added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
       blogpost: blogpost.toObject(),
     };
-    res.render('cube/bulk_upload', {
-      reactHTML:
-        NODE_ENV === 'production'
-          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-          : undefined,
+    return res.render('cube/bulk_upload', {
       reactProps: serialize(reactProps),
-      cube: cube,
+      cube,
       cube_id: req.params.id,
       title: `${abbreviate(cube.name)} - Bulk Upload`,
     });
-  } else {
-    blogpost.save(function(err) {
-      cube = setCubeType(cube, carddb);
-      Cube.updateOne(
-        {
-          _id: cube._id,
-        },
-        cube,
-        function(err) {
-          if (err) {
-            req.flash('danger', 'Error adding cards. Please try again.');
-            res.redirect('/cube/list/' + req.params.id);
-          } else {
-            req.flash('success', 'All cards successfully added.');
-            res.redirect('/cube/list/' + req.params.id);
-          }
-        },
-      );
-    });
   }
+  await blogpost.save();
+  cube = setCubeType(cube, carddb);
+  try {
+    await Cube.updateOne({ _id: cube._id }, cube);
+  } catch (err) {
+    if (err) {
+      req.flash('danger', 'Error adding cards. Please try again.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+  }
+  req.flash('success', 'All cards successfully added.');
+  return res.redirect(`/cube/list/${req.params.id}`);
 }
 
 // prices should be the prices module with the GetPrices function.
 // elo should be in the form { round: bool }.
 // requested details is a string to pass to carddb.cardFromId.
-async function populateCardDetails(
-  card_lists,
-  carddb,
-  prices = null,
-  elo = null,
-  requested_details = undefined,
-  allDetails = false,
-) {
+async function populateCardDetails(cardLists, carddb, { GetPrices = null, elo = null, requested_details = undefined }) {
   const pids = new Set();
   const cardNames = new Set();
-  const all_card_lists = [...card_lists];
-  card_lists.forEach((cards) => {
-    cards.forEach(function(card, index) {
+  const lists = cardLists.map((list) => [...list]);
+  for (let i = 0; i < lists.length; i++) {
+    const cards = lists[i];
+    for (let j = 0; j < cards.length; j++) {
+      const card = cards[j];
       card.details = {
         ...carddb.cardFromId(card.cardID, requested_details),
       };
-      if (allDetails) {
-        const allVersions = carddb.getIdsFromName(card.details.name) || [];
-        card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
-        card.allDetails.forEach((details) => {
-          if (details.tcgplayer_id) {
-            pids.add(details.tcgplayer_id);
-          }
-        });
-        all_card_lists.push(card.allDetails.map((details) => ({ details })));
-      }
-
       if (!card.type_line) {
         card.type_line = card.details.type;
       }
-      if (prices && card.details.tcgplayer_id) {
+      if (GetPrices && card.details.tcgplayer_id) {
         pids.add(card.details.tcgplayer_id);
       }
-      if (elo) {
+      if (elo !== null) {
         cardNames.add(card.details.name);
       }
-    });
-  });
-  if (prices || elo) {
-    const queries = [prices && prices.GetPrices([...pids]), elo && getElo([...cardNames], elo.round)];
-    const [price_dict, elo_dict] = await Promise.all(queries);
-    all_card_lists.forEach((cards) => {
-      cards.forEach(function(card, index) {
-        if (prices && card.details.tcgplayer_id) {
-          if (price_dict[card.details.tcgplayer_id]) {
-            card.details.price = price_dict[card.details.tcgplayer_id];
-          }
-          if (price_dict[card.details.tcgplayer_id + '_foil']) {
-            card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-          }
-        }
-        if (elo && elo_dict[card.details.name]) {
-          card.details.elo = elo_dict[card.details.name];
-        }
-      });
-    });
+    }
   }
-  return card_lists;
+  if (GetPrices !== null || elo !== null) {
+    const queries = [GetPrices !== null && GetPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
+    const [priceDict, eloDict] = await Promise.all(queries);
+    for (let i = 0; i < lists.length; i++) {
+      const cards = lists[i];
+      for (let j = 0; j < cards.length; j++) {
+        const card = cards[j];
+        if (GetPrices !== null && card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (elo !== null && eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+    }
+  }
+  return lists;
 }
 
 async function compareCubes(cardsA, cardsB) {
-  let in_both = [];
-  let only_a = cardsA.slice(0);
-  let only_b = cardsB.slice(0);
-  let a_names = only_a.map((card) => card.details.name);
-  let b_names = only_b.map((card) => card.details.name);
+  const inBoth = [];
+  const onlyA = cardsA.slice(0);
+  const onlyB = cardsB.slice(0);
+  const aNames = onlyA.map((card) => card.details.name);
+  const bNames = onlyB.map((card) => card.details.name);
+  for (const card of cardsA) {
+    if (bNames.includes(card.details.name)) {
+      inBoth.push(card);
 
-  cardsA.forEach(function(card, index) {
-    if (b_names.includes(card.details.name)) {
-      in_both.push(card);
+      onlyA.splice(aNames.indexOf(card.details.name), 1);
+      onlyB.splice(bNames.indexOf(card.details.name), 1);
 
-      only_a.splice(a_names.indexOf(card.details.name), 1);
-      only_b.splice(b_names.indexOf(card.details.name), 1);
-
-      a_names.splice(a_names.indexOf(card.details.name), 1);
-      b_names.splice(b_names.indexOf(card.details.name), 1);
+      aNames.splice(aNames.indexOf(card.details.name), 1);
+      bNames.splice(bNames.indexOf(card.details.name), 1);
     }
-  });
+  }
 
-  let all_cards = in_both.concat(only_a).concat(only_b);
+  const allCards = inBoth.concat(onlyA).concat(onlyB);
   return {
-    in_both,
-    only_a,
-    only_b,
-    a_names,
-    b_names,
-    all_cards,
+    inBoth,
+    onlyA,
+    onlyB,
+    aNames,
+    bNames,
+    allCards,
   };
 }
 
-var methods = {
+const methods = {
   getBasics: function(carddb) {
-    var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    var set = 'unh';
-    var res = {};
+    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
+    const set = 'unh';
+    const res = {};
     names.forEach(function(name, index) {
-      var found = false;
-      var options = carddb.nameToId[name.toLowerCase()];
+      let found = false;
+      const options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
-        var card = carddb.cardFromId(option);
+        const card = carddb.cardFromId(option);
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
@@ -464,6 +439,7 @@ var methods = {
     return res;
   },
   cardsAreEquivalent: cardsAreEquivalent,
+  setCubeType,
   sanitize: function(html) {
     return sanitizeHtml(html, {
       allowedTags: [
@@ -489,20 +465,20 @@ var methods = {
   },
   addAutocard: function(src, carddb, cube) {
     while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
-      var cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
-      var mid = cardname;
+      const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
+      let mid = cardname;
       if (carddb.nameToId[cardname.toLowerCase()]) {
-        var possible = carddb.nameToId[cardname.toLowerCase()];
-        var cardID = null;
+        const possible = carddb.nameToId[cardname.toLowerCase()];
+        let cardID = null;
         if (cube && cube.cards) {
-          var allIds = cube.cards.map((card) => card.cardID);
-          var matchingNameIds = allIds.filter((id) => possible.includes(id));
+          const allIds = cube.cards.map((card) => card.cardID);
+          const matchingNameIds = allIds.filter((id) => possible.includes(id));
           cardID = matchingNameIds[0];
         }
         if (!cardID) {
           cardID = possible[0];
         }
-        var card = carddb.cardFromId(cardID);
+        const card = carddb.cardFromId(cardID);
         if (card.image_flip) {
           mid =
             '<a class="autocard" card="' +

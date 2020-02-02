@@ -247,12 +247,12 @@
 	background-color: #d4edff;
 }
 .black {
-	border-color: #e5dff2;
-	background-color: #e5dff2;
+	border-color: #d6cbd6;
+	background-color: #d6cbd6;
 }
 .red {
-	border-color: #ffd8d4;
-	background-color: #ffd8d4;
+	border-color: #ffc8c8;
+	background-color: #ffc8c8;
 }
 .green {
 	border-color: #e9ffd4;
@@ -263,12 +263,12 @@
 	background-color: #fcf8a9;
 }
 .colorless {
-	border-color: #dcdae0;
-	background-color: #dcdae0;
+	border-color: #e9e7eb;
+	background-color: #e9e7eb;
 }
 .lands {
-	border-color: #ffdac4;
-	background-color: #ffdac4;
+	border-color: #ffe0c0;
+	background-color: #ffe0c0;
 }
 
 .dropdown-menu a:focus {
@@ -322,6 +322,12 @@
 	#autocard_popup {
 		display: none !important;
 	}
+}
+
+/* make autocard text more obvious in comments and descriptions */
+.card-text .autocard {
+	font-weight: bolder;
+	opacity: 0.9; /* hack to lighten the color so bold isn't quite so strong */
 }
 
 .form-check {
@@ -640,4 +646,21 @@ img.mana-symbol {
 
 .font-weight-boldish {
 	font-weight: 600;
+}
+
+.icon-button {
+	font-weight: 700;
+	line-height: 1;
+	font-size: 1rem;	
+	text-shadow: 0 1px 0 #fff;
+	opacity: 0.5;
+}
+
+.icon-button:hover {
+	opacity: 1.0;
+}
+
+.icon-button span {
+	vertical-align: top;
+	line-height: 0.9;	
 }

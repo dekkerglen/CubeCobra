@@ -145,7 +145,9 @@ class CubeOverview extends Component {
             <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
+                <h6 className="card-subtitle mb-2 text-muted">
+                  {(cube.users_following ? cube.users_following : []).length} followers
+                </h6>
               </CardHeader>
               <div className="position-relative">
                 <img className="card-img-top w-100" src={cube.image_uri} />
@@ -223,7 +225,7 @@ class CubeOverview extends Component {
                   <CardText>{cube.description || ''}</CardText>
                 )}
               </CardBody>
-              {cube.tags.length > 0 && (
+              {cube.tags && cube.tags.length > 0 && (
                 <CardFooter>
                   <div className="autocard-tags">
                     {cube.tags.map((tag) => (
