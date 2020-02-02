@@ -107,12 +107,12 @@ class CubeAnalysis extends Component {
   }
 
   setFilter(filter) {
-    console.log("Setting filter", filter);
+    console.log('Setting filter', filter);
     this.setState({ filter }, this.updateFilter);
   }
 
   setFormat(formatId) {
-    console.log("Setting formatId", formatId);
+    console.log('Setting formatId', formatId);
     if (formatId === -1) {
       Query.del('formatId');
     } else {
