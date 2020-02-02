@@ -109,7 +109,7 @@ CubeAnalysisNavBar.propTypes = {
   draftFormats: PropTypes.arrayOf(PropTypes.object).isRequired,
   formatId: PropTypes.number.isRequired,
   setFormatId: PropTypes.func.isRequired,
-  filter: PropTypes.string.isRequired,
+  filter: PropTypes.arrayOf(PropTypes.object).isRequired,
   setFilter: PropTypes.func.isRequired,
   numCards: PropTypes.number.isRequired,
   defaultFilterText: PropTypes.string.isRequired,

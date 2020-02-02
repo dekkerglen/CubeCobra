@@ -27,8 +27,8 @@ const HeaderCell = ({ children, ...props }) => (
   </th>
 );
 const RegularCell = ({ children, ...props }) => <td {...props}>{children}</td>;
-RegularCell.propTypes = { children: PropTypes.arrayOf(PropTypes.shape({})).isRequired };
-HeaderCell.propTypes = { children: PropTypes.arrayOf(PropTypes.shape({})).isRequired };
+RegularCell.propTypes = { children: PropTypes.shape({}).isRequired };
+HeaderCell.propTypes = { children: PropTypes.shape({}).isRequired };
 
 const AnalyticsTable = ({ data }) => (
   <Row>
@@ -55,7 +55,7 @@ const AnalyticsTable = ({ data }) => (
                 }
                 return (
                   <Cell key={/* eslint-disable-line react/no-array-index-key */ `${key}-${position}`}>
-                    <MagicMarkdown markdown={datapoint[key]} />
+                    <MagicMarkdown markdown={String(datapoint[key])} />
                   </Cell>
                 );
               })}
@@ -76,7 +76,7 @@ AnalyticsTable.propTypes = {
         rowHeader: PropTypes.bool,
       }),
     ),
-    data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
+    data: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }).isRequired,
 };
 

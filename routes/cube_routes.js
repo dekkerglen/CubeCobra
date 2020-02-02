@@ -931,7 +931,8 @@ router.get('/analysis/:id', async (req, res) => {
       cube,
       cubeID: req.params.id,
       defaultNav: req.query.nav,
-      defaultFormatId: req.query.formatId,
+      defaultFormatId: Number(req.query.formatId),
+      defaultFilterText: req.query.f,
     };
 
     return res.render('cube/cube_analysis', {

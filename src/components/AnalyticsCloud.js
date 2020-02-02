@@ -31,12 +31,12 @@ const AnalyticsCloud = ({ data }) => {
 
 AnalyticsCloud.propTypes = {
   data: PropTypes.shape({
-    words: PropTypes.shape({
+    words: PropTypes.arrayOf(PropTypes.shape({
       value: PropTypes.string.isRequired,
       count: PropTypes.number.isRequired,
       key: PropTypes.string,
       color: PropTypes.string,
-    }).isRequired,
+    })).isRequired,
   }).isRequired,
 };
 

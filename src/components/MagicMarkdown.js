@@ -70,7 +70,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
 };
 
 MagicMarkdown.propTypes = {
-  markdown: PropTypes.string.isRequired,
+  markdown: PropTypes.string,
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(
       PropTypes.shape({
@@ -81,7 +81,12 @@ MagicMarkdown.propTypes = {
         }).isRequired,
       }),
     ).isRequired,
-  }).isRequired,
+  }),
 };
+
+MagicMarkdown.defaultProps = {
+  markdown: '',
+  cube: null,
+}
 
 export default MagicMarkdown;

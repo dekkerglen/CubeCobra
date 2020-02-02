@@ -31,15 +31,17 @@ class CubeAnalysis extends Component {
       workers: {},
       analytics: {
         curve: { url: '/js/analytics/colorCurve.js', title: 'Curve' },
+        averageCmc: { url: '/js/analytics/averageCmc.js', title: 'Average CMC' },
         typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
         typeBreakdownCounts: { url: '/js/analytics/typeBreakdownCount.js', title: 'Type Breakdown Counts' },
         colorCount: { url: '/js/analytics/colorCount.js', title: 'Color Counts' },
+        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
         tokenGrid: { url: '/js/analytics/tokenGrid.js', title: 'Tokens' },
         tagCloud: { url: '/js/analytics/tagCloud.js', title: 'Tag Cloud' },
-        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
       },
       analytics_order: [
         'curve',
+        'averageCmc',
         'typeBreakdown',
         'typeBreakdownCounts',
         'colorCount',
@@ -53,6 +55,14 @@ class CubeAnalysis extends Component {
       formatId: defaultFormatId || -1,
       nav: defaultNav || 'curve',
     };
+    
+    this.updateAsfan = this.updateAsfan.bind(this);
+    this.updateFilter = this.updateFilter.bind(this);
+    this.updateData = this.updateData.bind(this);
+    this.setFilter = this.setFilter.bind(this);
+    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
+    this.setFormat = this.setFormat.bind(this);
+    this.handleNav = this.handleNav.bind(this);
   }
 
   componentDidMount() {
@@ -62,14 +72,6 @@ class CubeAnalysis extends Component {
     this.setState({
       nav: Query.get('nav', nav),
     });
-
-    this.updateAsfan = this.updateAsfan.bind(this);
-    this.updateFilter = this.updateFilter.bind(this);
-    this.updateData = this.updateData.bind(this);
-    this.setFilter = this.setFilter.bind(this);
-    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
-    this.setFormat = this.setFormat.bind(this);
-    this.handleNav = this.handleNav.bind(this);
   }
 
   setFilter(filter) {
@@ -192,10 +194,10 @@ class CubeAnalysis extends Component {
 }
 
 CubeAnalysis.propTypes = {
-  cube: PropTypes.shape({ cards: [], draft_formats: [] }).isRequired,
+  cube: PropTypes.shape({ cards: PropTypes.arrayOf(PropTypes.shape({})), draft_formats: PropTypes.arrayOf(PropTypes.shape({})) }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultNav: PropTypes.string,
-  defaultFormatId: PropTypes.string,
+  defaultFormatId: PropTypes.number,
   defaultFilterText: PropTypes.string,
 };
 
