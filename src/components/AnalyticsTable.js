@@ -36,7 +36,7 @@ HeaderCell.propTypes = { children: PropTypes.shape({}).isRequired };
 
 const AnalyticsTable = ({ data }) => (
   <Row>
-    {data.tables.map(({columns, rows}, tablePosition) => (
+    {data.tables.map(({ columns, rows }, tablePosition) => (
       <Col key={/* eslint-disable-line react/no-array-index-key */ `table-${tablePosition}`}>
         <Table bordered responsive className="mt-lg-3">
           <thead>
@@ -75,16 +75,18 @@ const AnalyticsTable = ({ data }) => (
 
 AnalyticsTable.propTypes = {
   data: PropTypes.shape({
-    tables: PropTypes.arrayOf(PropTypes.shape({
-      columns: PropTypes.arrayOf(
-        PropTypes.shape({
-          header: PropTypes.string.isRequired,
-          key: PropTypes.string.isRequired,
-          rowHeader: PropTypes.bool,
-        }),
-      ),
-      rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    })),
+    tables: PropTypes.arrayOf(
+      PropTypes.shape({
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            header: PropTypes.string.isRequired,
+            key: PropTypes.string.isRequired,
+            rowHeader: PropTypes.bool,
+          }),
+        ),
+        rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+      }),
+    ),
   }).isRequired,
 };
 

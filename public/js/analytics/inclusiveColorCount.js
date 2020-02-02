@@ -74,15 +74,15 @@ onmessage = (e) => {
     tables: [
       {
         columns,
-        rows: datapoints.slice(0,6),
+        rows: datapoints.slice(0, 6),
       },
       {
         columns,
-        rows: datapoints.slice(6,16),
+        rows: datapoints.slice(6, 16),
       },
       {
         columns,
-        rows: datapoints.slice(16,26),
+        rows: datapoints.slice(16, 26),
       },
       {
         columns,

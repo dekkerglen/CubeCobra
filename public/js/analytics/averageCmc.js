@@ -71,6 +71,6 @@ onmessage = (e) => {
             asfanAverage: totalAsfan > 0 ? (asfan / totalAsfan).toFixed(2) : 0,
           })),
       },
-    ]
+    ],
   });
 };

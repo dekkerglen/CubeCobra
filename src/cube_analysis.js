@@ -67,7 +67,6 @@ class CubeAnalysis extends Component {
     this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
     this.setFormat = this.setFormat.bind(this);
     this.handleNav = this.handleNav.bind(this);
-    
   }
 
   componentDidMount() {
