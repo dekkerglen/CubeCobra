@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 // Data should be:
 // {
@@ -18,15 +19,25 @@ class AnalyticsBarChart extends Component {
       <Row>
         <Col>
           <ChartComponent
-            ref={(ref) => (this.chartInstance = ref && ref.chartInstance)}
-            options={data['options']}
-            data={data['datasets']}
-            type={data['chartType']}
+            ref={(ref) => {
+              this.chartInstance = ref && ref.chartInstance;
+            }}
+            options={data.options}
+            data={data.datasets}
+            type={data.chartType}
           />
         </Col>
       </Row>
     );
   }
 }
+
+AnalyticsBarChart.propTypes = {
+  data: PropTypes.shape({
+    options: PropTypes.shape({}),
+    datasets: PropTypes.shape({}).isRequired,
+    chartType: PropTypes.string.isRequired,
+  }).isRequired,
+};
 
 export default AnalyticsBarChart;

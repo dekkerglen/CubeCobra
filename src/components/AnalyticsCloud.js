@@ -1,5 +1,7 @@
+import React from 'react';
 import { TagCloud } from 'react-tagcloud';
 import { Col, Row } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 // Data should be:
 // {
@@ -21,10 +23,21 @@ const AnalyticsCloud = ({ data }) => {
   return (
     <Row>
       <Col>
-        <TagCloud minSize={10} maxSize={80} colorOptions={colorOptions} tags={data['words']} />
+        <TagCloud minSize={10} maxSize={80} colorOptions={colorOptions} tags={data.words} />
       </Col>
     </Row>
   );
+};
+
+AnalyticsCloud.propTypes = {
+  data: PropTypes.shape({
+    words: PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      count: PropTypes.number.isRequired,
+      key: PropTypes.string,
+      color: PropTypes.string,
+    }).isRequired,
+  }).isRequired,
 };
 
 export default AnalyticsCloud;

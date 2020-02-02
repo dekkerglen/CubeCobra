@@ -183,7 +183,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
     let message = '';
-    console.log(req.body.id);
     if (req.body.id === '-1') {
       if (!cube.draft_formats) {
         cube.draft_formats = [];
@@ -195,7 +194,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
         packs: req.body.format,
       });
       message = 'Custom format successfully added.';
-      console.warn(cube.draft_formats);
     } else {
       cube.draft_formats[req.body.id] = {
         title: req.body.title,
@@ -216,7 +214,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     await cube.save();
     req.flash('success', message);
-    console.warn(cube.draft_formats, format);
     return res.redirect(`/cube/playtest/${req.params.id}`);
   } catch (err) {
     return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);

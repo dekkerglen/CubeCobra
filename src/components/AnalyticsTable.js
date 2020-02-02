@@ -1,8 +1,8 @@
 import React from 'react';
-
 import { Col, Row, Table } from 'reactstrap';
+import PropTypes from 'prop-types';
 
-import MagicMarkdown from './MagicMarkdown';
+import MagicMarkdown from 'components/MagicMarkdown';
 
 // Data should be:
 // {
@@ -21,7 +21,16 @@ import MagicMarkdown from './MagicMarkdown';
 //     }
 //   ],
 // }
-const AnalyticsTable = ({ data, ...props }) => (
+const HeaderCell = ({ children, ...props }) => (
+  <th scope="row" {...props}>
+    {children}
+  </th>
+);
+const RegularCell = ({ children, ...props }) => <td {...props}>{children}</td>;
+RegularCell.propTypes = { children: PropTypes.arrayOf(PropTypes.shape({})).isRequired };
+HeaderCell.propTypes = { children: PropTypes.arrayOf(PropTypes.shape({})).isRequired };
+
+const AnalyticsTable = ({ data }) => (
   <Row>
     <Col>
       <Table bordered responsive className="mt-lg-3">
@@ -36,17 +45,16 @@ const AnalyticsTable = ({ data, ...props }) => (
         </thead>
         <tbody className="breakdown">
           {data.data.map((datapoint, position) => (
-            <tr key={`${position}-row`}>
-              {data.columns.map(({ key, rowHeader }, columnPosition) => {
-                var Cell = ({ children, ...props }) => <td {...props}>{children}</td>;
-                if (rowHeader)
-                  Cell = ({ children, ...props }) => (
-                    <th scope="row" {...props}>
-                      {children}
-                    </th>
-                  );
+            <tr key={/* eslint-disable-line react/no-array-index-key */ `row-${position}`}>
+              {data.columns.map(({ key, rowHeader }) => {
+                let Cell;
+                if (rowHeader) {
+                  Cell = HeaderCell;
+                } else {
+                  Cell = RegularCell;
+                }
                 return (
-                  <Cell key={`${key}-${position}`}>
+                  <Cell key={/* eslint-disable-line react/no-array-index-key */ `${key}-${position}`}>
                     <MagicMarkdown markdown={datapoint[key]} />
                   </Cell>
                 );
@@ -58,5 +66,18 @@ const AnalyticsTable = ({ data, ...props }) => (
     </Col>
   </Row>
 );
+
+AnalyticsTable.propTypes = {
+  data: PropTypes.shape({
+    columns: PropTypes.arrayOf(
+      PropTypes.shape({
+        header: PropTypes.string.isRequired,
+        key: PropTypes.string.isRequired,
+        rowHeader: PropTypes.bool,
+      }),
+    ),
+    data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
+  }).isRequired,
+};
 
 export default AnalyticsTable;

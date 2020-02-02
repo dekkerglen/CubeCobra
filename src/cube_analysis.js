@@ -24,6 +24,8 @@ class CubeAnalysis extends Component {
   constructor(props) {
     super(props);
 
+    const { defaultFormatId, defaultNav } = this.props;
+
     this.state = {
       data: { type: 'none' },
       workers: {},
@@ -48,16 +50,9 @@ class CubeAnalysis extends Component {
       filter: [],
       cardsWithAsfan: null,
       filteredWithAsfan: null,
-      formatId: this.props.defaultFormatId || -1,
-      nav: this.props.defaultNav || 'curve',
-    } ;
-
-    this.updateAsfan = this.updateAsfan.bind(this);
-    this.updateFilter = this.updateFilter.bind(this);
-    this.updateData = this.updateData.bind(this);
-    this.setFilter = this.setFilter.bind(this);
-    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
-    this.setFormat = this.setFormat.bind(this);
+      formatId: defaultFormatId || -1,
+      nav: defaultNav || 'curve',
+    };
   }
 
   componentDidMount() {
@@ -68,18 +63,20 @@ class CubeAnalysis extends Component {
       nav: Query.get('nav', nav),
     });
 
-    this.select = this.select.bind(this);
+    this.updateAsfan = this.updateAsfan.bind(this);
+    this.updateFilter = this.updateFilter.bind(this);
+    this.updateData = this.updateData.bind(this);
+    this.setFilter = this.setFilter.bind(this);
+    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
+    this.setFormat = this.setFormat.bind(this);
     this.handleNav = this.handleNav.bind(this);
   }
 
-
   setFilter(filter) {
-    console.log('Setting filter', filter);
     this.setState({ filter }, this.updateFilter);
   }
 
   setFormat(formatId) {
-    console.log('Setting formatId', formatId);
     if (formatId === -1) {
       Query.del('formatId');
     } else {
@@ -87,7 +84,7 @@ class CubeAnalysis extends Component {
     }
     this.setState({ formatId }, this.updateAsfan);
   }
-  
+
   async updateData() {
     const { nav, workers, analytics, analytics_order, filteredWithAsfan } = this.state;
     if (filteredWithAsfan == null) {
@@ -101,13 +98,13 @@ class CubeAnalysis extends Component {
           this.setState({ data: e.data });
         });
       } else {
-        this.select(analytics_order[0]);
+        this.handleNav(analytics_order[0]);
         return;
       }
     }
     workers[nav].postMessage(filteredWithAsfan);
   }
-  
+
   async updateFilter() {
     const { filter, cardsWithAsfan } = this.state;
     if (cardsWithAsfan == null) {
@@ -118,17 +115,17 @@ class CubeAnalysis extends Component {
       filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
     this.setState({ filteredWithAsfan }, this.updateData);
   }
-  
+
   async updateAsfan() {
     const { formatId } = this.state;
     const { cube } = this.props;
-    const cardsWithAsfan = cube.cards.map((card) => ({...card}));
+    const cardsWithAsfan = cube.cards.map((card) => ({ ...card }));
     const format = getDraftFormat({ id: formatId, packs: 3, cards: 15 }, cube);
     calculateAsfans(format, cardsWithAsfan);
     this.setState({ cardsWithAsfan }, this.updateFilter);
   }
 
-  select(nav) {
+  handleNav(nav) {
     if (nav === 'curve') {
       Query.del('nav');
     } else {
@@ -144,13 +141,10 @@ class CubeAnalysis extends Component {
   }
 
   render() {
-    const { cube, cubeID } = this.props;
-    const { analytics, analytics_order, data, filter, formatId, nav } = this.state;
-    const { cards } = cube;
-    const filteredCards =
-      (filter && filter.length) > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+    const { cube, cubeID, defaultFilterText } = this.props;
+    const { analytics, analytics_order, data, filter, formatId, nav, filteredWithAsfan } = this.state;
     const navItem = (active, text) => (
-      <NavLink active={active === nav} onClick={() => this.select.bind(active)} href="#" key={active}>
+      <NavLink active={active === nav} onClick={() => this.handleNav(active)} href="#" key={active}>
         {text}
       </NavLink>
     );
@@ -171,8 +165,8 @@ class CubeAnalysis extends Component {
           setFormatId={this.setFormat}
           filter={filter}
           setFilter={this.setFilter}
-          numCards={filteredCards.length}
-          defaultFilterText=""
+          numCards={filteredWithAsfan ? filteredWithAsfan.length : 0}
+          defaultFilterText={defaultFilterText}
         />
         <Row className="mt-3">
           <Col xs="12" lg="2">
@@ -198,13 +192,17 @@ class CubeAnalysis extends Component {
 }
 
 CubeAnalysis.propTypes = {
-  cube: PropTypes.shape({cards: [], draft_formats: []}).isRequired,
+  cube: PropTypes.shape({ cards: [], draft_formats: [] }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultNav: PropTypes.string,
+  defaultFormatId: PropTypes.string,
+  defaultFilterText: PropTypes.string,
 };
 
 CubeAnalysis.defaultProps = {
   defaultNav: 'curve',
+  defaultFormatId: -1,
+  defaultFilterText: '',
 };
 
 const wrapper = document.getElementById('react-root');

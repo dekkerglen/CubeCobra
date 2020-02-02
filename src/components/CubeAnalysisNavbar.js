@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import {
   Collapse,
@@ -15,7 +16,7 @@ import {
   UncontrolledDropdown,
 } from 'reactstrap';
 
-import FilterCollapse from './FilterCollapse';
+import FilterCollapse from 'components/FilterCollapse';
 
 const CubeAnalysisNavBar = ({
   draftFormats,
@@ -28,7 +29,7 @@ const CubeAnalysisNavBar = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(null);
-  const toggle = useCallback(() => setIsOpen((open) => !open));
+  const toggle = useCallback(() => setIsOpen((open) => !open), []);
 
   let dropdownElement = <h5>Default Draft Format</h5>;
 
@@ -40,6 +41,15 @@ const CubeAnalysisNavBar = ({
       setOpenCollapse((currentCollapse) => (currentCollapse === collapse ? null : collapse));
     },
     [setOpenCollapse],
+  );
+
+  const dropdownCustomFormat = (format, formatIndex) => (
+    <DropdownItem
+      key={/* eslint-disable-line react/no-array-index-key */ `format-${formatIndex}`}
+      onClick={() => setFormatId(formatIndex)}
+    >
+      {format.title}
+    </DropdownItem>
   );
 
   if (draftFormats) {
@@ -60,13 +70,7 @@ const CubeAnalysisNavBar = ({
               <DropdownItem header key="customformatsheader">
                 Custom Formats
               </DropdownItem>
-              {draftFormats
-                ? draftFormats.map((format, formatIndex) => (
-                    <DropdownItem key={`format-${formatIndex}`} onClick={() => setFormatId(formatIndex)}>
-                      {format.title}
-                    </DropdownItem>
-                  ))
-                : ''}
+              {draftFormats ? draftFormats.map(dropdownCustomFormat) : ''}
             </DropdownMenu>
           </UncontrolledDropdown>
         </Col>
@@ -99,6 +103,16 @@ const CubeAnalysisNavBar = ({
       />
     </div>
   );
+};
+
+CubeAnalysisNavBar.propTypes = {
+  draftFormats: PropTypes.arrayOf(PropTypes.object).isRequired,
+  formatId: PropTypes.number.isRequired,
+  setFormatId: PropTypes.func.isRequired,
+  filter: PropTypes.string.isRequired,
+  setFilter: PropTypes.func.isRequired,
+  numCards: PropTypes.number.isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
 };
 
 export default CubeAnalysisNavBar;
