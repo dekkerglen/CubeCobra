@@ -210,11 +210,11 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       message = 'Custom format successfully edited.';
     }
     // check pack formats are sane
-    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
+    let draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
     if (draftcards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
-    populateCardDetails([draftcards], carddb);
+    [draftcards] = populateCardDetails([draftcards], carddb);
     // test format for errors
     const format = draftutil.parseDraftFormat(req.body.format);
     draftutil.checkFormat(format, draftcards);
@@ -1103,8 +1103,9 @@ async function bulkUpload(req, res, list, cube) {
   if (cards) {
     if (cards[0].trim() === CSV_HEADER) {
       cards.splice(0, 1);
-      const { newCards, newMaybe, missing: missingCSV } = CSVtoCards(cards, carddb);
-      missing = missingCSV;
+      let newCards = [];
+      let newMaybe = [];
+      ({ newCards, newMaybe, missing } = CSVtoCards(cards, carddb));
       newCards.forEach((card) => {
         changelog += addCardHtml(carddb.cardFromId(card.cardID));
       });
@@ -1233,10 +1234,14 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     if (cards) {
       if (cards[0].trim() === CSV_HEADER) {
         cards.splice(0, 1);
-        const { newCards, newMaybe, missing: missingCSV } = CSVtoCards(cards, carddb);
-        missing = missingCSV;
-        await populateCardDetails([cube.cards, newCards, newMaybe], carddb, { GetPrices });
-        const { onlyA, onlyB } = await compareCubes(cube.cards, newCards);
+        let newCards = [];
+        let newMaybe = [];
+        ({ newCards, newMaybe, missing } = CSVtoCards(cards, carddb));
+        let cardDetails = [];
+        [cardDetails, newCards, newMaybe] = await populateCardDetails([cube.cards, newCards, newMaybe], carddb, {
+          GetPrices,
+        });
+        const { onlyA, onlyB } = await compareCubes(cardDetails, newCards);
         for (const card of onlyA) {
           changelog += removeCardHtml(carddb.cardFromId(card.cardID));
         }
@@ -1245,7 +1250,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         }
         cube.cards = newCards;
         cube.maybe = newMaybe;
-        added.concat(onlyA, onlyB);
+        added.push(...onlyB);
       }
     }
     return generateBlogpost(req, res, cube, changelog, added, missing, carddb);
