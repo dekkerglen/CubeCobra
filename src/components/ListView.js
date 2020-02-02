@@ -242,7 +242,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
           type="checkbox"
           bsSize="sm"
           data-index={index}
-          value={checked}
+          checked={checked}
           onChange={onCheck}
           className="d-block mx-auto"
         />
@@ -341,18 +341,21 @@ const ListView = ({ cards }) => {
     wrapper();
   }, [cards, versionDict]);
 
-  const handleCheckAll = useCallback((event) => {
-    const target = event.target;
-    const value = target.checked;
+  const handleCheckAll = useCallback(
+    (event) => {
+      const target = event.target;
+      const value = target.checked;
 
-    if (value) {
-      setChecked(cards.map(({ index }) => index));
-      setGroupModalCards(cards);
-    } else {
-      setChecked([]);
-      setGroupModalCards([]);
-    }
-  }, []);
+      if (value) {
+        setChecked(cards.map(({ index }) => index));
+        setGroupModalCards(cards);
+      } else {
+        setChecked([]);
+        setGroupModalCards([]);
+      }
+    },
+    [cards],
+  );
 
   const handleCheck = useCallback(
     (event) => {

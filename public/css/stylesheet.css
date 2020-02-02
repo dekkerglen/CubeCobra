@@ -168,9 +168,17 @@
 	}
 }
 
-.table-view.compressed .table-col {
-	flex: 0 0 calc(100% / 8);
-	width: calc(100% / 8);
+@media(max-width: 991.98px) {
+	.compressed.table-view.row {
+		transform: scale(0.5) translate(-50%, -50%);
+		padding: 0;
+		margin: 0 -15px;
+		width: 200vw;
+		overflow: visible;
+	}
+	.compressed .card-list-heading {
+		font-size: 10pt !important;
+	}
 }
 
 @media(max-width: 649.98px) {
@@ -178,18 +186,15 @@
 		margin-top: 0.375rem !important;
 	}
 	.compressed .card-list-heading {
-		font-size: 7pt;
 		margin-bottom: 0.375rem !important;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 	.compressed .list-group-heading {
 		padding: 2px 4px;
-		font-size: 5pt;
 	}
 	.compressed .card-list-item {
-		font-size: 5pt;
-		padding: 1px 1px;
+		padding: 0 2px;
 		text-overflow: clip;
 	}
 }
@@ -242,12 +247,12 @@
 	background-color: #d4edff;
 }
 .black {
-	border-color: #e5dff2;
-	background-color: #e5dff2;
+	border-color: #d6cbd6;
+	background-color: #d6cbd6;
 }
 .red {
-	border-color: #ffd8d4;
-	background-color: #ffd8d4;
+	border-color: #ffc8c8;
+	background-color: #ffc8c8;
 }
 .green {
 	border-color: #e9ffd4;
@@ -258,12 +263,12 @@
 	background-color: #fcf8a9;
 }
 .colorless {
-	border-color: #dcdae0;
-	background-color: #dcdae0;
+	border-color: #e9e7eb;
+	background-color: #e9e7eb;
 }
 .lands {
-	border-color: #ffdac4;
-	background-color: #ffdac4;
+	border-color: #ffe0c0;
+	background-color: #ffe0c0;
 }
 
 .dropdown-menu a:focus {
@@ -317,6 +322,12 @@
 	#autocard_popup {
 		display: none !important;
 	}
+}
+
+/* make autocard text more obvious in comments and descriptions */
+.card-text .autocard {
+	font-weight: bolder;
+	opacity: 0.9; /* hack to lighten the color so bold isn't quite so strong */
 }
 
 .form-check {
@@ -559,7 +570,7 @@ body.busy-cursor {
 		overflow: hidden;
 		width: 100vw;
 		padding: 0 calc(50vw - 50%);
-		margin: 0 calc(-50vw + 50%);
+		margin: -0.5rem calc(-50vw + 50%) 0rem;
 	}
 
 	.table-view.row {
@@ -635,4 +646,21 @@ img.mana-symbol {
 
 .font-weight-boldish {
 	font-weight: 600;
+}
+
+.icon-button {
+	font-weight: 700;
+	line-height: 1;
+	font-size: 1rem;	
+	text-shadow: 0 1px 0 #fff;
+	opacity: 0.5;
+}
+
+.icon-button:hover {
+	opacity: 1.0;
+}
+
+.icon-button span {
+	vertical-align: top;
+	line-height: 0.9;	
 }
