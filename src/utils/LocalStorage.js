@@ -1,12 +1,13 @@
-export function get(key) {
+function get(key) {
   if (typeof localStorage !== 'undefined') {
     return localStorage.getItem(key);
   }
+  return null;
 }
 
-export function set(key, value) {
+function set(key, value) {
   if (typeof localStorage !== 'undefined') {
-    return localStorage.setItem(key, value);
+    localStorage.setItem(key, value);
   }
 }
 

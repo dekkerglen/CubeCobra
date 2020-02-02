@@ -13,9 +13,11 @@ function ISODateToYYYYMMDD(dateString) {
 function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'Multicolored';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length == 1) {
     switch (colors[0]) {
       case 'W':
         return 'White';
@@ -42,11 +44,14 @@ function GetColorIdentity(colors) {
 function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
     return 'Lands';
-  } else if (colors.length == 0) {
+  }
+  if (colors.length == 0) {
     return 'Colorless';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'Multicolored';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length == 1) {
     switch (colors[0]) {
       case 'W':
         return 'White';
@@ -110,18 +115,24 @@ const ALL_CMCS = Array.from(Array(33).keys())
 export function getLabels(cube, sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
-  } else if (sort == 'Color Identity') {
+  }
+  if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
-  } else if (sort == 'CMC') {
+  }
+  if (sort == 'CMC') {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
-  } else if (sort == 'CMC2') {
+  }
+  if (sort == 'CMC2') {
     return ['0-1', '2', '3', '4', '5', '6', '7+'];
-  } else if (sort == 'CMC-Full') {
+  }
+  if (sort == 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
     return ALL_CMCS;
-  } else if (sort == 'Color') {
+  }
+  if (sort == 'Color') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-  } else if (sort == 'Type') {
+  }
+  if (sort == 'Type') {
     return [
       'Creature',
       'Planeswalker',
@@ -138,9 +149,11 @@ export function getLabels(cube, sort) {
       'Land',
       'Other',
     ];
-  } else if (sort == 'Supertype') {
+  }
+  if (sort == 'Supertype') {
     return ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
-  } else if (sort == 'Tags') {
+  }
+  if (sort == 'Tags') {
     var tags = [];
     cube.forEach(function(card, index) {
       card.tags.forEach(function(tag, index2) {
@@ -150,7 +163,8 @@ export function getLabels(cube, sort) {
       });
     });
     return tags.sort();
-  } else if (sort == 'Date Added') {
+  }
+  if (sort == 'Date Added') {
     var days = [],
       formattedDay;
     cube.forEach(function(card, index) {
@@ -163,7 +177,8 @@ export function getLabels(cube, sort) {
       }
     });
     return days.sort();
-  } else if (sort == 'Status') {
+  }
+  if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
   } else if (sort == 'Finish') {
     return ['Non-foil', 'Foil'];
@@ -359,31 +374,30 @@ export function getLabels(cube, sort) {
 
 function getEloBucket(elo) {
   const bucket_floor = Math.round(elo / 50) * 50;
-  return bucket_floor + '-' + (bucket_floor + 49);
+  return `${bucket_floor}-${bucket_floor + 49}`;
 }
 
 var price_buckets = [0.25, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100];
 
-//returns the price bucket label at the index designating the upper bound
-//at index == 0, returns < lowest
-//at index == length, returs >= highest
+// returns the price bucket label at the index designating the upper bound
+// at index == 0, returns < lowest
+// at index == length, returs >= highest
 function price_bucket_label(index) {
   if (index == 0) {
-    return '< $' + price_buckets[0];
-  } else if (index == price_buckets.length) {
-    return '>= $' + price_buckets[price_buckets.length - 1];
-  } else {
-    return '$' + price_buckets[index - 1] + ' - $' + (price_buckets[index] - 0.01);
+    return `< $${price_buckets[0]}`;
   }
+  if (index == price_buckets.length) {
+    return `>= $${price_buckets[price_buckets.length - 1]}`;
+  }
+  return `$${price_buckets[index - 1]} - $${price_buckets[index] - 0.01}`;
 }
 
 function cmcToNumber(card) {
   const cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
   if (isNaN(cmc)) {
     return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
-  } else {
-    return cmc;
   }
+  return cmc;
 }
 
 const COLOR_MAP = {
@@ -429,35 +443,39 @@ function typeLine(card) {
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
     return [GetColorCategory(typeLine(card), colorIdentity(card))];
-  } else if (sort == 'Color Identity') {
+  }
+  if (sort == 'Color Identity') {
     return [GetColorIdentity(colorIdentity(card))];
-  } else if (sort == 'Color') {
+  }
+  if (sort == 'Color') {
     if (card.details.colors.length === 0) {
       return ['Colorless'];
-    } else {
-      return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
-  } else if (sort == '4+ Color') {
+    return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
+  }
+  if (sort == '4+ Color') {
     if (colorIdentity(card).length < 4) {
       return [];
-    } else if (colorIdentity(card).length === 5) {
-      return ['Five Color'];
-    } else {
-      return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
-  } else if (sort == 'CMC') {
+    if (colorIdentity(card).length === 5) {
+      return ['Five Color'];
+    }
+    return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+  }
+  if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
       return ['8+'];
-    } else {
-      return [cmc.toString()];
     }
-  } else if (sort == 'CMC2') {
+    return [cmc.toString()];
+  }
+  if (sort == 'CMC2') {
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
       return ['7+'];
-    } else if (cmc <= 1) {
+    }
+    if (cmc <= 1) {
       return ['0-1'];
     } else {
       return [cmc.toString()];
@@ -684,25 +702,23 @@ function sortGroupsOrdered(cards, sort) {
 export function sortDeep(cards, ...sorts) {
   if (sorts.length === 0) {
     return [...cards].sort(alphaCompare);
-  } else {
-    const [first, ...rest] = sorts;
-    const result = sortGroupsOrdered(cards, first);
-    for (const labelGroup of result) {
-      if (rest.length > 0) {
-        labelGroup[1] = sortDeep(labelGroup[1], ...rest);
-      } else {
-        labelGroup[1].sort(alphaCompare);
-      }
-    }
-    return result;
   }
+  const [first, ...rest] = sorts;
+  const result = sortGroupsOrdered(cards, first);
+  for (const labelGroup of result) {
+    if (rest.length > 0) {
+      labelGroup[1] = sortDeep(labelGroup[1], ...rest);
+    } else {
+      labelGroup[1].sort(alphaCompare);
+    }
+  }
+  return result;
 }
 
 export function countGroup(group) {
   if (Array.isArray(group[0])) {
     const counts = group.map(([label, group2]) => countGroup(group2));
     return counts.reduce((a, b) => a + b, 0);
-  } else {
-    return group.length;
   }
+  return group.length;
 }
