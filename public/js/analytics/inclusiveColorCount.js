@@ -64,8 +64,8 @@ onmessage = (e) => {
   }));
   const columns = [
     { header: 'Color Combination', key: 'label', rowHeader: true },
-    { header: 'Expected Count in Poll Contained In', key: 'asfan' },
-    { header: 'Count of Contained In', key: 'count' },
+    { header: 'Expected in Pool', key: 'asfan' },
+    { header: 'Count', key: 'count' },
   ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({

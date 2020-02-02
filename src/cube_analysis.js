@@ -35,7 +35,7 @@ class CubeAnalysis extends Component {
         typeBreakdown: { url: '/js/analytics/typeBreakdown.js', title: 'Type Breakdown' },
         typeBreakdownCounts: { url: '/js/analytics/typeBreakdownCount.js', title: 'Type Breakdown Counts' },
         colorCount: { url: '/js/analytics/colorCount.js', title: 'Color Counts' },
-        cumulativeColorCount: { url: '/js/analytics/cumulativeColorCount.js', title: 'Cumulative Color Counts' },
+        inclusiveColorCount: { url: '/js/analytics/inclusiveColorCount.js', title: 'Inclusive Color Counts' },
         tokenGrid: { url: '/js/analytics/tokenGrid.js', title: 'Tokens' },
         tagCloud: { url: '/js/analytics/tagCloud.js', title: 'Tag Cloud' },
       },
@@ -45,7 +45,7 @@ class CubeAnalysis extends Component {
         'typeBreakdown',
         'typeBreakdownCounts',
         'colorCount',
-        'cumulativeColorCount',
+        'inclusiveColorCount',
         'tokenGrid',
         'tagCloud',
       ],
@@ -55,6 +55,10 @@ class CubeAnalysis extends Component {
       formatId: defaultFormatId || -1,
       nav: defaultNav || 'curve',
     };
+    const { analytics, nav } = this.state;
+    if (!analytics[nav]) {
+      this.state.nav = 'curve';
+    }
 
     this.updateAsfan = this.updateAsfan.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
@@ -63,15 +67,17 @@ class CubeAnalysis extends Component {
     this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
     this.setFormat = this.setFormat.bind(this);
     this.handleNav = this.handleNav.bind(this);
+    
   }
 
   componentDidMount() {
     this.updateAsfan();
 
     const { nav } = this.state;
-    this.setState({
-      nav: Query.get('nav', nav),
-    });
+    const newNav = Query.get('nav', nav);
+    if (newNav !== nav) {
+      this.handleNav(newNav);
+    }
   }
 
   setFilter(filter) {
@@ -128,8 +134,10 @@ class CubeAnalysis extends Component {
   }
 
   handleNav(nav) {
-    if (nav === 'curve') {
+    const { analytics } = this.state;
+    if (nav === 'curve' || !analytics[nav]) {
       Query.del('nav');
+      nav = 'curve';
     } else {
       Query.set('nav', nav);
     }
