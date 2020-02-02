@@ -214,7 +214,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     if (draftcards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
-    [draftcards] = populateCardDetails([draftcards], carddb);
+    [draftcards] = populateCardDetails([draftcards], carddb, {});
     // test format for errors
     const format = draftutil.parseDraftFormat(req.body.format);
     draftutil.checkFormat(format, draftcards);
@@ -1409,7 +1409,7 @@ router.post('/startdraft/:id', async (req, res) => {
     if (draftcards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
-    [draftcards] = await populateCardDetails([draftcards], carddb);
+    [draftcards] = await populateCardDetails([draftcards], carddb, {});
     const bots = draftutil.getDraftBots(params);
     const format = draftutil.getDraftFormat(params, cube);
     const draft = new Draft();

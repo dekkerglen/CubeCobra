@@ -255,12 +255,10 @@ describe('CSVtoCards', () => {
     await carddb.initializeCardDb(fixturesPath, true);
     const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards, carddb);
     expect.extend({
-      equalsArray(received, expected) {
-        return {
-          message: () => `expected ${received} to equal array ${expected}`,
-          pass: arraysEqual(received, expected),
-        };
-      },
+      equalsArray: (received, expected) => ({
+        message: () => `expected ${received} to equal array ${expected}`,
+        pass: arraysEqual(received, expected),
+      }),
     });
     const expectSame = (card, expected) => {
       expect(card.cardID).toBe(expectedId);
@@ -285,26 +283,25 @@ describe('CSVtoCards', () => {
 describe('compareCubes', () => {
   it('can calculate the diff between two cubes', async () => {
     await carddb.initializeCardDb(fixturesPath, true);
-    var queryMockPromise = new Promise((resolve, reject) => {
+    const queryMockPromise = new Promise((resolve) => {
       process.nextTick(() => {
         resolve({});
       });
     });
-    var queryMock = jest.fn();
+    const queryMock = jest.fn();
     queryMock.mockReturnValue(queryMockPromise);
-    const prices = { GetPrices: queryMock };
     const cardsA = [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]];
     const cardsB = [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]];
-    await cubefn.populateCardDetails([cardsA, cardsB], carddb);
-    const { in_both, only_a, only_b, a_names, b_names, all_cards } = await cubefn.compareCubes(cardsA, cardsB);
-    expect(in_both.length).toBe(1);
-    expect(in_both[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
-    expect(only_a.length).toBe(1);
-    expect(only_a[0].cardID).toBe(cubefixture.exampleCube.cards[0].cardID);
-    expect(only_b.length).toBe(1);
-    expect(only_b[0].cardID).toBe(cubefixture.exampleCube.cards[2].cardID);
-    expect(a_names.length).toBe(1);
-    expect(b_names.length).toBe(1);
-    expect(all_cards.length).toBe(3);
+    await cubefn.populateCardDetails([cardsA, cardsB], carddb, {});
+    const { inBoth, onlyA, onlyB, aNames, bNames, allCards } = await cubefn.compareCubes(cardsA, cardsB);
+    expect(inBoth.length).toBe(1);
+    expect(inBoth[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
+    expect(onlyA.length).toBe(1);
+    expect(onlyA[0].cardID).toBe(cubefixture.exampleCube.cards[0].cardID);
+    expect(onlyB.length).toBe(1);
+    expect(onlyB[0].cardID).toBe(cubefixture.exampleCube.cards[2].cardID);
+    expect(aNames.length).toBe(1);
+    expect(bNames.length).toBe(1);
+    expect(allCards.length).toBe(3);
   });
 });
