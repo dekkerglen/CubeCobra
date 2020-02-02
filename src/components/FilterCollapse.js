@@ -12,7 +12,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -21,9 +20,10 @@ import {
 
 import Filter from '../utils/Filter';
 import Query from '../utils/Query';
-import { fromEntries, COLORS } from '../utils/Util';
+import { fromEntries } from '../utils/Util';
 
 import { ColorChecksAddon } from './ColorCheck';
+import LoadingButton from './LoadingButton';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -259,6 +259,7 @@ class FilterCollapse extends Component {
     super(props);
 
     this.state = {
+      loading: false,
       advancedOpen: false,
       filterInput: this.props.defaultFilterText || '',
       ...fromEntries(allFields.map((n) => [n, ''])),
@@ -277,7 +278,13 @@ class FilterCollapse extends Component {
   }
 
   componentDidMount() {
-    this.updateFilters();
+    const defaultFilter = Query.get('f', '');
+    this.setState({ filterInput: defaultFilter });
+    this.updateFilters(defaultFilter);
+  }
+
+  componentDidUpdate() {
+    Query.set('f', this.state.filterInput);
   }
 
   toggleAdvanced() {
@@ -286,7 +293,7 @@ class FilterCollapse extends Component {
     });
   }
 
-  applyAdvanced() {
+  async applyAdvanced() {
     // Advanced Filter change. Render to filter input.
     const tokens = [];
     for (const name of allFields) {
@@ -316,10 +323,10 @@ class FilterCollapse extends Component {
       advancedOpen: false,
       filterInput,
     });
-    this.updateFilters(filterInput);
+    await this.updateFilters(filterInput);
   }
 
-  updateFilters(overrideFilter) {
+  async updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
@@ -333,8 +340,9 @@ class FilterCollapse extends Component {
     if (tokens.length > 0) {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
-      this.props.setFilter(filters, filterInput);
-      Query.set('f', filterInput);
+      this.setState({ loading: true });
+      await this.props.setFilter(filters, filterInput);
+      this.setState({ loading: false });
     }
   }
 
@@ -348,15 +356,15 @@ class FilterCollapse extends Component {
     });
   }
 
-  handleApply(event) {
+  async handleApply(event) {
     event.preventDefault();
-    this.updateFilters();
+    await this.updateFilters();
   }
 
-  handleKeyDown(event) {
+  async handleKeyDown(event) {
     if (event.keyCode === 13 /* ENTER */) {
       event.preventDefault();
-      this.updateFilters();
+      await this.updateFilters();
     }
   }
 
@@ -368,7 +376,7 @@ class FilterCollapse extends Component {
 
   render() {
     const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
-    const { filterInput, advancedOpen } = this.state;
+    const { loading, filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     const appliedText =
@@ -398,9 +406,9 @@ class FilterCollapse extends Component {
                     onKeyDown={this.handleKeyDown}
                   />
                   <InputGroupAddon addonType="append">
-                    <Button color="success" onClick={this.handleApply}>
+                    <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
                       Apply
-                    </Button>
+                    </LoadingButton>
                   </InputGroupAddon>
                 </InputGroup>
               </Form>

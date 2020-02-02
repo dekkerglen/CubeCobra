@@ -627,6 +627,11 @@ img.mana-symbol {
 	height: 1.8rem;
 }
 
+.square-left {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
 .square-right {
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;

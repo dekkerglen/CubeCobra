@@ -5,6 +5,7 @@ import URLSearchParams from 'core-js-pure/features/url-search-params';
 
 import { encodeName } from 'utils/Card';
 
+import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
 import SortableTable from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
@@ -44,22 +45,19 @@ class TopCards extends Component {
   render() {
     const { data, filter, numResults } = this.state;
 
-    const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) =>
-      rating === null ? (
-        []
-      ) : (
-        <tr key={name}>
-          <td>
-            <AutocardA front={img} back={imgFlip || undefined} href={`/tool/card/${encodeName(name)}`}>
-              {name}
-            </AutocardA>
-          </td>
-          <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
-          <td>{elo === null ? '' : elo.toFixed(0)}</td>
-          <td>{picks === null ? '' : picks}</td>
-          <td>{cubes === null ? '' : cubes}</td>
-        </tr>
-      );
+    const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
+      <tr key={name}>
+        <td>
+          <AutocardA front={img} back={imgFlip || undefined} href={`/tool/card/${encodeName(name)}`}>
+            {name}
+          </AutocardA>
+        </td>
+        <td>{rating === null ? '' : ((1 - rating) * 100).toFixed(0)}</td>
+        <td>{elo === null ? '' : elo.toFixed(0)}</td>
+        <td>{picks === null ? '' : picks}</td>
+        <td>{cubes === null ? '' : cubes}</td>
+      </tr>
+    );
 
     return (
       <>
@@ -80,13 +78,13 @@ class TopCards extends Component {
             'Total Picks': (row) => -row[4],
             Cubes: (row) => -row[6],
           }}
-          defaultSort="Rating"
+          defaultSort="Elo"
           headers={{
             Name: {},
-            Rating: { style: { width: '10rem' }, tooltip: 'Average draft pick position' },
-            Elo: { style: { width: '10rem' }, tooltip: 'Elo rating of card' },
-            'Total Picks': { style: { width: '10rem' }, tooltip: 'Total picks across all cubes' },
-            Cubes: { style: { width: '10rem' }, tooltip: 'Cubes containing this card' },
+            Rating: { style: { width: '8rem' }, tooltip: 'Average draft pick position' },
+            Elo: { style: { width: '8rem' }, tooltip: 'Elo rating of card' },
+            'Total Picks': { style: { width: '8rem' }, tooltip: 'Total picks across all cubes' },
+            Cubes: { style: { width: '8rem' }, tooltip: 'Cubes containing this card' },
           }}
           data={data}
           rowF={rowF}
@@ -104,7 +102,11 @@ TopCards.propTypes = {
 const data = JSON.parse(document.getElementById('topcards').value);
 const numResults = parseInt(document.getElementById('topcardsNumResults').value, 10);
 const wrapper = document.getElementById('react-root');
-const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
+const element = (
+  <ErrorBoundary>
+    <TopCards defaultData={data} defaultNumResults={numResults} />
+  </ErrorBoundary>
+);
 if (wrapper) {
   ReactDOM.render(element, wrapper);
 }
