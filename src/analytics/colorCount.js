@@ -1,12 +1,6 @@
-function areArraysEqualSets(a1, a2) {
-  const set1 = new Set(a1);
-  const set2 = new Set(a2);
-  return a1.every((x) => set2.has(x)) && a2.every((x) => set1.has(x));
-}
+import { arraysAreEqualSets } from 'utils/Util';
 
-onmessage = (e) => {
-  if (!e) return;
-  const cards = e.data;
+async function colorCount(cards) {
   const colorCombinations = [
     [],
     ['W'],
@@ -52,7 +46,7 @@ onmessage = (e) => {
     totalCount += 1;
     totalAsfan += asfan;
     colorCombinations.forEach((combination, idx) => {
-      if (areArraysEqualSets(combination, cardColors)) {
+      if (arraysAreEqualSets(combination, cardColors)) {
         ColorCounts[idx] += 1;
         ColorAsfans[idx] += asfan;
       }
@@ -69,7 +63,7 @@ onmessage = (e) => {
     { header: 'Count', key: 'count' },
   ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
-  postMessage({
+  return {
     type: 'table',
     description:
       'Counts of cards that are exactly these color identities and the number you expect a player to open on average.',
@@ -91,5 +85,7 @@ onmessage = (e) => {
         rows: datapoints.slice(26),
       },
     ],
-  });
-};
+  };
+}
+
+export default colorCount;

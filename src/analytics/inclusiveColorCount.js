@@ -1,10 +1,6 @@
-function arrayContainsOtherArray(arr1, arr2) {
-  return arr2.every((v) => arr1.includes(v));
-}
+import { arrayIsSubset } from 'utils/Util';
 
-onmessage = (e) => {
-  if (!e) return;
-  const cards = e.data;
+async function inclusiveColorCount(cards) {
   const colorCombinations = [
     [],
     ['W'],
@@ -51,7 +47,7 @@ onmessage = (e) => {
     totalCount += 1;
     totalAsfan += asfan;
     colorCombinations.forEach((combination, idx) => {
-      if (arrayContainsOtherArray(combination, cardColors)) {
+      if (arrayIsSubset(cardColors, combination)) {
         ColorCounts[idx] += 1;
         ColorAsfans[idx] += asfan;
       }
@@ -68,7 +64,7 @@ onmessage = (e) => {
     { header: 'Count', key: 'count' },
   ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
-  postMessage({
+  return {
     type: 'table',
     description:
       'Count of cards that can be played if you use only these colors and the number you expect a player to open on average.',
@@ -90,5 +86,7 @@ onmessage = (e) => {
         rows: datapoints.slice(26),
       },
     ],
-  });
-};
+  };
+}
+
+export default inclusiveColorCount;

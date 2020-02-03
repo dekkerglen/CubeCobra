@@ -1,33 +1,6 @@
-function GetColorCat(colors) {
-  if (colors.length === 0) {
-    return 'Colorless';
-  }
-  if (colors.length > 1) {
-    return 'Multi';
-  }
-  if (colors.length === 1) {
-    switch (colors[0]) {
-      case 'W':
-        return 'White';
-      case 'U':
-        return 'Blue';
-      case 'B':
-        return 'Black';
-      case 'R':
-        return 'Red';
-      case 'G':
-        return 'Green';
-      case 'C':
-      default:
-        return 'Colorless';
-    }
-  }
-}
+import { GetCmc, GetColorCat } from 'utils/AnalyticUtils';
 
-onmessage = (e) => {
-  if (!e) return;
-  const cards = e.data;
-
+async function averageCmc(cards) {
   const ColorCounts = {
     White: { label: '{w}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
     Blue: { label: '{u}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
@@ -42,7 +15,7 @@ onmessage = (e) => {
   for (const card of cards) {
     const asfan = card.asfan || 15 / cards.length;
     const colorCat = GetColorCat(card.colors || card.details.color_identity);
-    const cmc = card.cmc !== undefined ? card.cmc : card.details.cmc;
+    const cmc = GetCmc(card);
     ColorCounts[colorCat].count += cmc;
     ColorCounts.Total.count += cmc;
     ColorCounts[colorCat].totalCount += 1;
@@ -53,7 +26,7 @@ onmessage = (e) => {
     ColorCounts.Total.totalAsfan += asfan;
   }
 
-  postMessage({
+  return {
     type: 'table',
     description: 'The average(mean) CMC in the cube as a whole, and the expected average(mean) a player will open.',
     tables: [
@@ -72,5 +45,7 @@ onmessage = (e) => {
           })),
       },
     ],
-  });
-};
+  };
+}
+
+export default averageCmc;

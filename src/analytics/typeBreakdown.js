@@ -1,33 +1,6 @@
-function GetColorCat(colors) {
-  if (colors.length === 0) {
-    return 'Colorless';
-  }
-  if (colors.length > 1) {
-    return 'Multi';
-  }
-  if (colors.length === 1) {
-    switch (colors[0]) {
-      case 'W':
-        return 'White';
-      case 'U':
-        return 'Blue';
-      case 'B':
-        return 'Black';
-      case 'R':
-        return 'Red';
-      case 'G':
-        return 'Green';
-      case 'C':
-      default:
-        return 'Colorless';
-    }
-  }
-}
+import { GetColorCat } from 'utils/AnalyticUtils';
 
-onmessage = (e) => {
-  if (!e) return;
-  const cards = e.data;
-
+async function typeBreakdown(cards) {
   const TypeByColor = Object.fromEntries(
     ['Creatures', 'Enchantments', 'Lands', 'Planeswalkers', 'Instants', 'Sorceries', 'Artifacts', 'Total'].map(
       (header) => [
@@ -95,7 +68,7 @@ onmessage = (e) => {
       }
     }
   }
-  postMessage({
+  return {
     type: 'table',
     description:
       'The expected count to find in the packs a player will open on average, percentages are relative to the bottom row of totals.',
@@ -124,5 +97,7 @@ onmessage = (e) => {
         ],
       },
     ],
-  });
-};
+  };
+}
+
+export default typeBreakdown;

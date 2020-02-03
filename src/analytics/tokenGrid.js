@@ -18,10 +18,7 @@ const dedupeCards = (cards) => {
   return [...map.values()];
 };
 
-onmessage = (e) => {
-  if (!e) return;
-  const cards = e.data;
-
+function tokenGrid(cards) {
   const mentionedTokens = [];
   cards.forEach((card, position) => {
     card.position = position;
@@ -45,10 +42,12 @@ onmessage = (e) => {
       .map(({ position }) => `[[${position}]]`)
       .join('\n\n'),
   }));
-  postMessage({
+  return {
     type: 'cardGrid',
     description: 'All the tokens and emblems your cube uses and what cards require each of them.',
     massBuyLabel: 'Buy all tokens',
     cards: data,
-  });
-};
+  };
+}
+
+export default tokenGrid;
