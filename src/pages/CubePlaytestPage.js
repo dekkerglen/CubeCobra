@@ -245,7 +245,7 @@ const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
 const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
-  const [alerts, addAlert] = useAlerts();
+  const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
@@ -345,7 +345,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
 CubePlaytestPage.propTypes = {
   cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
