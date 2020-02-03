@@ -71,7 +71,8 @@ onmessage = (e) => {
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
-    description: 'Counts of cards that are exactly these color identities and the number you expect a player to open on average.',
+    description:
+      'Counts of cards that are exactly these color identities and the number you expect a player to open on average.',
     tables: [
       {
         columns,
