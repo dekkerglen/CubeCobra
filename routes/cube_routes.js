@@ -38,7 +38,7 @@ const carddb = require('../serverjs/cards.js');
 
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
-const { GetPrices } = require('../serverjs/prices.js');
+const { addPrices, GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
@@ -885,17 +885,10 @@ router.get('/analysis/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    const pids = [];
     for (const card of cube.cards) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
       card.details.display_image = util.getCardImageURL(card);
       if (!card.type_line) {
         card.type_line = card.details.type;
-      }
-      if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-        pids.push(card.details.tcgplayer_id);
       }
       if (card.details.tokens) {
         for (const element of card.details.tokens) {
@@ -915,17 +908,7 @@ router.get('/analysis/:id', async (req, res) => {
         }
       }
     }
-    const priceDict = await GetPrices(pids);
-    for (const card of cube.cards) {
-      if (card.details.tcgplayer_id) {
-        if (priceDict[card.details.tcgplayer_id]) {
-          card.details.price = priceDict[card.details.tcgplayer_id];
-        }
-        if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-          card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-        }
-      }
-    }
+    cube.cards = await addPrices(cube.cards);
 
     const reactProps = {
       cube,

@@ -1,26 +1,7 @@
 function areArraysEqualSets(a1, a2) {
-  if (a1.length !== a2.length) return false;
-  const superSet = {};
-  for (let i = 0; i < a1.length; i++) {
-    const e = a1[i] + typeof a1[i];
-    superSet[e] = 1;
-  }
-
-  for (let i = 0; i < a2.length; i++) {
-    const e = a2[i] + typeof a2[i];
-    if (!superSet[e]) {
-      return false;
-    }
-    superSet[e] = 2;
-  }
-
-  for (const e in superSet) {
-    if (superSet[e] === 1) {
-      return false;
-    }
-  }
-
-  return true;
+  const set1 = new Set(a1);
+  const set2 = new Set(a2);
+  return a1.every((x) => set2.has(x)) && a2.every((x) => set1.has(x));
 }
 
 onmessage = (e) => {
@@ -84,13 +65,13 @@ onmessage = (e) => {
   }));
   const columns = [
     { header: 'Color Combination', key: 'label', rowHeader: true },
-    { header: 'Expected in Pool', key: 'asfan' },
+    { header: 'Expected Opened', key: 'asfan' },
     { header: 'Count', key: 'count' },
   ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
-    description: 'Counts for cards that are exactly these color identities.',
+    description: 'Counts of cards that are exactly these color identities and the number you expect a player to open on average.',
     tables: [
       {
         columns,

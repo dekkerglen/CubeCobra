@@ -16,7 +16,7 @@ onmessage = (e) => {
   postMessage({
     type: 'cloud',
     description:
-      'Tags in your cube with random colors weighted by the expected number of cards with that tag in a pool.',
+      'Tags in your cube with random colors weighted by the expected number of cards with that tag a player will open on average.',
     words,
   });
 };

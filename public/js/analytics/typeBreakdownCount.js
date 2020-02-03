@@ -28,96 +28,22 @@ onmessage = (e) => {
   if (!e) return;
   const cards = e.data;
 
-  const TypeByColor = {
-    Creatures: {
-      label: 'Creatures',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Enchantments: {
-      label: 'Enchantments',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Lands: {
-      label: 'Lands',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Planeswalkers: {
-      label: 'Planeswalkers',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Instants: {
-      label: 'Instants',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Sorceries: {
-      label: 'Sorceries',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Artifacts: {
-      label: 'Artifacts',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-    Total: {
-      label: 'Total',
-      White: { asfan: 0, count: 0 },
-      Blue: { asfan: 0, count: 0 },
-      Black: { asfan: 0, count: 0 },
-      Red: { asfan: 0, count: 0 },
-      Green: { asfan: 0, count: 0 },
-      Colorless: { asfan: 0, count: 0 },
-      Multi: { asfan: 0, count: 0 },
-      Total: { asfan: 0, count: 0 },
-    },
-  };
+  const TypeByColor = Object.fromEntries(
+    ['Creatures', 'Enchantments', 'Lands', 'Planeswalkers', 'Instants', 'Sorceries', 'Artifacts', 'Total'].map(
+      (header) => [
+        header,
+        {
+          label: header,
+          ...Object.fromEntries(
+            ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multi', 'Total'].map((color) => [
+              color,
+              { asfan: 0, count: 0 },
+            ]),
+          ),
+        },
+      ],
+    ),
+  );
   for (const card of cards) {
     const asfan = card.asfan || 15 / cards.length;
     const colorCategory = GetColorCat(card.colors);

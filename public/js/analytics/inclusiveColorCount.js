@@ -64,13 +64,13 @@ onmessage = (e) => {
   }));
   const columns = [
     { header: 'Color Combination', key: 'label', rowHeader: true },
-    { header: 'Expected in Pool', key: 'asfan' },
+    { header: 'Expected Opened', key: 'asfan' },
     { header: 'Count', key: 'count' },
   ];
   datapoints.push({ key: 'total', label: 'Total', asfan: totalAsfan.toFixed(2), count: totalCount });
   postMessage({
     type: 'table',
-    description: 'Count of all cards that can be played if you only use these colors.',
+    description: 'Count of cards that can be played if you use only these colors and the number you expect a player to open on average.',
     tables: [
       {
         columns,

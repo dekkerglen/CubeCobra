@@ -27,6 +27,10 @@ function GetColorCat(type, colors) {
   }
 }
 
+function GetCmc(card) {
+  return card.cmc !== undefined ? card.cmc : card.details.cmc;
+}
+
 onmessage = (e) => {
   if (!e) return;
   const cards = e.data;
@@ -69,14 +73,15 @@ onmessage = (e) => {
         break;
     }
     // const asfan = card.asfan || 15 / cards.length;
+    // Giving raw count instead of asfan currently.
     const asfan = 1;
     if (category) {
-      if (card.cmc >= 9) {
+      if (GetCmc(card) >= 9) {
         category[9] += asfan;
         curve.total[9] += asfan;
       } else {
-        category[Math.floor(card.cmc)] += asfan;
-        curve.total[Math.floor(card.cmc)] += asfan;
+        category[Math.floor(GetCmc(card))] += asfan;
+        curve.total[Math.floor(GetCmc(card))] += asfan;
       }
     }
   }
@@ -133,7 +138,7 @@ onmessage = (e) => {
   postMessage({
     type: 'chart',
     description:
-      'Expected count of cards at each CMC by color identity, excluding lands. Click the labels to filter the datasets. Lands are omitted for the curve chart.',
+      'Count of cards at each CMC by color identity. Click the labels to filter the datasets. Lands are omitted for the curve chart.',
     chartType: 'bar',
     datasets,
     options,
