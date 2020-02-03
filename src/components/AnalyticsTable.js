@@ -31,7 +31,7 @@ const HeaderCell = ({ children, ...props }) => (
   </th>
 );
 const RegularCell = ({ children, ...props }) => <td {...props}>{children}</td>;
-RegularCell.propTypes = { children: PropTypes.shape({}).isRequired };
+RegularCell.propTypes = { children: PropTypes.node.isRequired };
 HeaderCell.propTypes = { children: PropTypes.shape({}).isRequired };
 
 const AnalyticsTable = ({ data }) => (
