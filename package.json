@@ -13,9 +13,9 @@
     "nodemon": "nodemon --ignore src --ignore public",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js --progress",
-    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & webpack --config webpack.server.js --watch",
+    "start": "nodemon --ignore src --ignore public & webpack-dev-server --config webpack.dev.js & webpack --mode development --config webpack.server.js --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
-    "setup": "webpack --config webpack.server.js --progress && node --max-old-space-size=4096 force_update.js"
+    "setup": "webpack --mode development --config webpack.server.js --progress && node --max-old-space-size=4096 force_update.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
