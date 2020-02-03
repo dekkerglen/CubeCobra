@@ -886,6 +886,9 @@ router.get('/analysis/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
     for (const card of cube.cards) {
+      card.details = {
+        ...carddb.cardFromId(card.cardID),
+      };
       card.details.display_image = util.getCardImageURL(card);
       if (!card.type_line) {
         card.type_line = card.details.type;
