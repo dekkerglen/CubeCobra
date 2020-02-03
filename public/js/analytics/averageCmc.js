@@ -42,7 +42,7 @@ onmessage = (e) => {
   for (const card of cards) {
     const asfan = card.asfan || 15 / cards.length;
     const colorCat = GetColorCat(card.colors || card.details.color_identity);
-    const cmc = card.cmc || card.details.cmc;
+    const cmc = card.cmc !== undefined ? card.cmc : card.details.cmc;
     ColorCounts[colorCat].count += cmc;
     ColorCounts.Total.count += cmc;
     ColorCounts[colorCat].totalCount += 1;
