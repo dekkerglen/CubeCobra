@@ -3,42 +3,54 @@ import PropTypes from 'prop-types';
 
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
-import { csrfFetch } from '../utils/CSRF';
+import { csrfFetch } from 'utils/CSRF';
+import Filter from 'utils/Filter';
 
-import AutocompleteInput from './AutocompleteInput';
-import ChangelistContext from './ChangelistContext';
-import CubeContext from './CubeContext';
-import DisplayContext from './DisplayContext';
-import Filter from '../utils/Filter';
-import { getCard } from './EditCollapse';
-import LoadingButton from './LoadingButton';
-import MaybeboardContext, { MaybeboardContextProvider } from './MaybeboardContext';
-import TableView from './TableView';
-import { getCardColorClass } from './TagContext';
-import withAutocard from './WithAutocard';
+import AutocompleteInput from 'components/AutocompleteInput';
+import CardModalContext from 'components/CardModalContext';
+import CardModalForm from 'components/CardModalForm';
+import ChangelistContext from 'components/ChangelistContext';
+import CubeContext from 'components/CubeContext';
+import DisplayContext from 'components/DisplayContext';
+import { getCard } from 'components/EditCollapse';
+import LoadingButton from 'components/LoadingButton';
+import MaybeboardContext from 'components/MaybeboardContext';
+import TableView from 'components/TableView';
+import { getCardColorClass } from 'components/TagContext';
+import withAutocard from 'components/WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
 const MaybeboardListItem = ({ card, className }) => {
   const { canEdit, cubeID } = useContext(CubeContext);
   const { removeMaybeboardCard } = useContext(MaybeboardContext);
-  const { addChange } = useContext(ChangelistContext);
+  const { removeInputRef, setAddValue, openEditCollapse } = useContext(ChangelistContext);
+  const openCardModal = useContext(CardModalContext);
   const [loading, setLoading] = useState(false);
 
-  const handleClickCard = useCallback(
+  const handleEdit = useCallback(() => {
+    openCardModal(card.index, true);
+  }, [card, openCardModal]);
+
+  const handleAdd = useCallback(
     (event) => {
       event.preventDefault();
-      addChange({ add: { details: card.details } });
+      event.stopPropagation();
+      setAddValue(card.details.name);
+      openEditCollapse();
+      if (removeInputRef.current) {
+        removeInputRef.current.focus();
+      }
     },
-    [card, addChange],
+    [card, setAddValue, openEditCollapse, removeInputRef],
   );
 
   const handleRemove = useCallback(
     async (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const index = parseInt(event.currentTarget.getAttribute('data-index'));
-      if (isNaN(index)) {
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      if (!Number.isInteger(index)) {
         console.error('Bad index');
         return;
       }
@@ -57,7 +69,7 @@ const MaybeboardListItem = ({ card, className }) => {
         const json = await response.json();
         if (json.success === 'true') {
           removeMaybeboardCard(index);
-          /* global */ autocard_hide_card();
+          /* eslint-disable-line no-undef */ autocard_hide_card();
         } else {
           setLoading(false);
           console.error(json.message);
@@ -72,20 +84,32 @@ const MaybeboardListItem = ({ card, className }) => {
       className={`d-flex card-list-item ${getCardColorClass(card)} ${className || ''}`}
       card={card}
       data-index={card.index}
-      onClick={canEdit ? handleClickCard : undefined}
+      onClick={handleEdit}
     >
       <div className="name">{card.details.name}</div>
       {canEdit &&
         (loading ? (
           <Spinner size="sm" className="ml-auto" />
         ) : (
-          <Button
-            size="sm"
-            close
-            className="ml-auto float-none"
-            data-index={card.index}
-            onClick={canEdit ? handleRemove : undefined}
-          />
+          <>
+            <button
+              type="button"
+              className="icon-button ml-auto"
+              data-index={card.index}
+              onClick={handleAdd}
+              aria-label="Add"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+            <Button
+              size="sm"
+              close
+              className="float-none"
+              data-index={card.index}
+              onClick={handleRemove}
+              aria-label="Remove"
+            />
+          </>
         ))}
     </AutocardItem>
   );
@@ -100,7 +124,12 @@ MaybeboardListItem.propTypes = {
       name: PropTypes.string.isRequired,
       image_normal: PropTypes.string.isRequired,
     }).isRequired,
-  }),
+  }).isRequired,
+  className: PropTypes.string,
+};
+
+MaybeboardListItem.defaultProps = {
+  className: null,
 };
 
 const Maybeboard = ({ filter, ...props }) => {
@@ -159,15 +188,14 @@ const Maybeboard = ({ filter, ...props }) => {
   }, [filter, maybeboardIndex]);
 
   return (
-    <>
+    <CardModalForm>
       <Row>
         <Col className="mr-auto">
           <h4>Maybeboard</h4>
         </Col>
         <Col xs="auto">
           <Button color="primary" size="sm" onClick={toggleShowMaybeboard}>
-            Hide
-            <span className="d-none d-sm-inline">{' Maybeboard'}</span>
+            Hide <span className="d-none d-sm-inline">Maybeboard</span>
           </Button>
         </Col>
       </Row>
@@ -205,7 +233,7 @@ const Maybeboard = ({ filter, ...props }) => {
         <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
       )}
       <hr />
-    </>
+    </CardModalForm>
   );
 };
 

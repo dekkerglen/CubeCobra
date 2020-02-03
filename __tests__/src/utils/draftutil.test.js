@@ -1,13 +1,17 @@
-const carddb = require('../../serverjs/cards');
-const fixturesPath = 'fixtures';
-const cubefixture = require('../../fixtures/examplecube');
 const sinon = require('sinon');
-const methods = require('../../dist/utils/draftutil');
-let CardRating = require('../../models/cardrating');
-let Draft = require('../../models/draft');
 
-import Filter from '../../src/utils/Filter';
-import { expectOperator } from '../helpers';
+const fixturesPath = 'fixtures';
+const cubefixture = require('../../../fixtures/examplecube');
+
+let CardRating = require('../../../models/cardrating');
+let Draft = require('../../../models/draft');
+
+const carddb = require('../../../serverjs/cards');
+
+import Filter from '../../../src/utils/Filter';
+import methods from '../../../src/utils/draftutil';
+
+import { expectOperator } from '../../helpers';
 
 describe('getDraftBots', () => {
   it('can get the correct number of draft bots', () => {

@@ -150,7 +150,7 @@ export const getTagColorClass = (tagColors, tag) => {
   }
 };
 
-export const tagColors = [
+export const TAG_COLORS = [
   ['None', null],
   ['Red', 'red'],
   ['Brown', 'brown'],

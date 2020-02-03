@@ -83,7 +83,7 @@ test('addCardToCube adds a well-formed object', () => {
   expect(testCube.cards.length).toBe(initialLength + 1);
   const result = testCube.cards[0];
   expect(result.tags.length).toBe(0);
-  expect(result.status).toBe('Not Owned');
+  expect(result.status).toBe('Owned');
   expect(result.finish).toBe('Non-foil');
   expect(result.colors).toBe(testCard.color_identity);
   expect(result.cmc).toBe(testCard.cmc);

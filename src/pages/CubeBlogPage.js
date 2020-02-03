@@ -1,4 +1,5 @@
 import React, { useContext, useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -28,7 +29,7 @@ import CubeLayout from 'layouts/CubeLayout';
 
 const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
   const { cubeID } = useContext(CubeContext);
-  const handleChangeHtml = useCallback((event) => setHtml(event.target.value), []);
+  const handleChangeHtml = useCallback((event) => setHtml(event.target.value), [setHtml]);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
@@ -53,6 +54,21 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
       </CSRFForm>
     </Modal>
   );
+};
+
+EditBlogModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  html: PropTypes.string.isRequired,
+  setHtml: PropTypes.func.isRequired,
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+  }),
+};
+
+EditBlogModal.defaultProps = {
+  post: null,
 };
 
 const DeleteBlogModal = ({ isOpen, toggle, post }) => {
@@ -89,6 +105,14 @@ const DeleteBlogModal = ({ isOpen, toggle, post }) => {
       </ModalFooter>
     </Modal>
   );
+};
+
+DeleteBlogModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
 };
 
 const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn }) => {
@@ -163,6 +187,24 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn })
       <DeleteBlogModal isOpen={deleteOpen} toggle={toggleDelete} post={posts[deletePostIndex]} />
     </CubeLayout>
   );
+};
+
+CubeBlogPage.propTypes = {
+  cube: PropTypes.shape({}).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
+  pages: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  posts: PropTypes.arrayOf(
+    PropTypes.shape({
+      html: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  userid: PropTypes.string.isRequired,
+  loggedIn: PropTypes.bool.isRequired,
+};
+
+CubeBlogPage.defaultProps = {
+  canEdit: false,
 };
 
 export default CubeBlogPage;

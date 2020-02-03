@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -19,11 +20,15 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
+import { csrfFetch } from 'utils/CSRF';
+
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import CubeOverviewModal from 'components/CubeOverviewModal';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 import CubeLayout from 'layouts/CubeLayout';
 
 class CubeOverview extends Component {
@@ -36,10 +41,12 @@ class CubeOverview extends Component {
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
     this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
 
+    const { followed, cube } = props;
+
     this.state = {
-      followed: this.props.followed,
+      followed,
       alerts: [],
-      cube: props.cube,
+      cube,
       deleteConfirm: '',
     };
   }
@@ -70,10 +77,11 @@ class CubeOverview extends Component {
   }
 
   follow() {
+    const { cube } = this.props;
     this.setState({
       followed: true,
     });
-    csrfFetch(`/cube/follow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/follow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -84,10 +92,11 @@ class CubeOverview extends Component {
   }
 
   unfollow() {
+    const { cube } = this.props;
     this.setState({
       followed: false,
     });
-    csrfFetch(`/cube/unfollow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/unfollow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -104,12 +113,12 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, price, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
-    const { cube, deleteConfirm } = this.state;
+    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
+    const { cube, deleteConfirm, alerts, followed } = this.state;
 
     return (
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="overview">
-        {canEdit && (
+        {canEdit ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>
@@ -131,10 +140,12 @@ class CubeOverview extends Component {
               </Nav>
             </UncontrolledCollapse>
           </Navbar>
+        ) : (
+          <Row className="mb-3" />
         )}
         <DynamicFlash />
-        {this.state.alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert color={color} key={index}>
+        {alerts.map(({ color, message }, index) => (
+          <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
             {message}
           </UncontrolledAlert>
         ))}
@@ -143,46 +154,51 @@ class CubeOverview extends Component {
             <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
+                <h6 className="card-subtitle mb-2 text-muted">
+                  {(cube.users_following ? cube.users_following : []).length} followers
+                </h6>
               </CardHeader>
-              <img className="card-img-top w-100" src={cube.image_uri} />
-              <em className="text-right p-1">
-                Art by:
-                {cube.image_artist}
-              </em>
-              <CardBody>
+              <div className="position-relative">
+                <img className="card-img-top w-100" alt={cube.image_name} src={cube.image_uri} />
+                <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+              </div>
+              <CardBody className="pt-2 px-3 pb-3">
                 {cube.type && (
-                  <>
-                    <a>
-                      {cube.overrideCategory
-                        ? cube.card_count +
-                          ' Card ' +
-                          (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                          cube.categoryOverride +
-                          ' Cube'
-                        : cube.card_count + ' Card ' + cube.type + ' Cube'}
-                    </a>
-                    <br />
-                  </>
+                  <p className="mb-1">
+                    {cube.overrideCategory
+                      ? `${cube.card_count} Card ${
+                          cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : ''
+                        }${cube.categoryOverride} Cube`
+                      : `${cube.card_count} Card ${cube.type} Cube`}
+                  </p>
                 )}
-                {!cube.privatePrices && (
-                  <>
-                    <a>Approx: ${price}</a>
-                    <br />
-                  </>
-                )}
-                <a href={`/cube/rss/${cube._id}`}>RSS</a>
-                <em>
-                  <h6>
+                <h6 className="mb-2">
+                  <i>
                     Designed by
                     <a href={`/user/view/${owner}`}> {owner}</a>
-                  </h6>
-                </em>
+                  </i>{' '}
+                  • <a href={`/cube/rss/${cube._id}`}>RSS</a>
+                </h6>
+                {!cube.privatePrices && (
+                  <Row noGutters className="mb-1">
+                    <TextBadge name="Owned" className="mr-2">
+                      <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                        ${Math.round(priceOwned).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                    <TextBadge name="Buy">
+                      <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                        ${Math.round(pricePurchase).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                  </Row>
+                )}
                 {admin && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
                     action={`/cube/${cube.isFeatured ? 'unfeature/' : 'feature/'}${cube._id}`}
+                    className="mt-2"
                   >
                     <Button color="success" type="submit">
                       {' '}
@@ -191,8 +207,8 @@ class CubeOverview extends Component {
                   </CSRFForm>
                 )}
               </CardBody>
-              {loggedIn ? (
-                this.state.followed ? (
+              {loggedIn &&
+                (followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
                   </Button>
@@ -200,10 +216,7 @@ class CubeOverview extends Component {
                   <Button color="success" className="rounded-0" onClick={this.follow}>
                     Follow
                   </Button>
-                )
-              ) : (
-                []
-              )}
+                ))}
             </Card>
           </Col>
           <Col>
@@ -218,7 +231,7 @@ class CubeOverview extends Component {
                   <CardText>{cube.description || ''}</CardText>
                 )}
               </CardBody>
-              {cube.tags.length > 0 && (
+              {cube.tags && cube.tags.length > 0 && (
                 <CardFooter>
                   <div className="autocard-tags">
                     {cube.tags.map((tag) => (
@@ -279,10 +292,39 @@ class CubeOverview extends Component {
   }
 }
 
+CubeOverview.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  priceOwned: PropTypes.number.isRequired,
+  pricePurchase: PropTypes.number.isRequired,
+  owner: PropTypes.string.isRequired,
+  admin: PropTypes.bool,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    image_uri: PropTypes.string.isRequired,
+    image_name: PropTypes.string.isRequired,
+    image_artist: PropTypes.string.isRequired,
+  }).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
+  userID: PropTypes.string.isRequired,
+  loggedIn: PropTypes.bool,
+  followed: PropTypes.bool.isRequired,
+};
+
+CubeOverview.defaultProps = {
+  admin: false,
+  canEdit: false,
+  loggedIn: false,
+};
+
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary>
-    <CubeOverview {...reactProps} />
+    <CubeOverview {...window.reactProps} />
   </ErrorBoundary>
 );
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}

@@ -5,7 +5,7 @@ const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
 const Filter = require('../dist/utils/Filter');
-var { getElo } = require('../serverjs/cubefn.js');
+const { getElo } = require('../serverjs/cubefn.js');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');
@@ -14,7 +14,7 @@ const Cube = require('../models/cube');
 const router = express.Router();
 
 /* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 40;
+const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 1000;
 
@@ -39,9 +39,8 @@ async function matchingCards(filter) {
     const firstPass = Filter.filterCardsDetails(cards, filter);
     const withPrices = await addPrices(firstPass);
     return Filter.filterCardsDetails(withPrices, filter);
-  } else {
-    return cards;
   }
+  return cards;
 }
 
 function makeFilter(filterText) {
@@ -61,7 +60,7 @@ function makeFilter(filterText) {
   };
 }
 
-async function topCards(filter, res) {
+async function topCards(filter) {
   const cards = await matchingCards(filter);
   const nameMap = new Map();
   for (const card of cards) {
@@ -80,9 +79,6 @@ async function topCards(filter, res) {
   const ratingsQ = CardRating.find({
     name: {
       $in: names,
-    },
-    picks: {
-      $gte: MIN_PICKS,
     },
   });
   const cardDataQ = Card.find(
@@ -103,18 +99,19 @@ async function topCards(filter, res) {
     const card = cardDataDict.get(v.name.toLowerCase());
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
+    const qualifies = rating && typeof rating.picks !== 'undefined' && rating.picks > MIN_PICKS;
     return [
       v.name,
       v.image_normal,
       v.image_flip || null,
-      rating ? adjust(rating) : null,
-      rating ? rating.picks : null,
-      rating && rating.elo ? rating.elo : null,
+      qualifies && rating.value ? adjust(rating) : null,
+      rating && typeof rating.picks !== 'undefined' ? rating.picks : null,
+      qualifies && rating.elo ? rating.elo : null,
       card ? card.cubes.length : null,
     ];
   });
-  const nonNullData = fullData.filter((x) => x[3] !== null);
-  const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
+  /* Sort by number of picks for limit. */
+  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[4] === null ? -1 : x[4]));
   return {
     ratings,
     versions,
@@ -177,13 +174,13 @@ router.get('/topcards', async (req, res) => {
 
 router.get('/card/:id', async (req, res) => {
   try {
-    //if id is a cardname, redirect to the default version for that card
-    let possibleName = cardutil.decodeName(req.params.id);
-    let ids = carddb.getIdsFromName(possibleName);
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(req.params.id);
+    const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      return res.redirect('/tool/card/' + carddb.getMostReasonable(possibleName)._id);
+      return res.redirect(`/tool/card/${carddb.getMostReasonable(possibleName)._id}`);
     }
-    let card = carddb.cardFromId(req.params.id);
+    const card = carddb.cardFromId(req.params.id);
     const data = await Card.findOne({ cardName: card.name_lower });
 
     const cubes = await Promise.all(
@@ -193,19 +190,19 @@ router.get('/card/:id', async (req, res) => {
     );
 
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    prices = await GetPrices(pids);
+    const prices = await GetPrices(pids);
     card.elo = (await getElo([card.name], true))[card.name];
-    res.render('tool/cardpage', {
-      card: card,
-      data: data,
-      prices: prices,
-      cubes: cubes,
+    return res.render('tool/cardpage', {
+      card,
+      data,
+      prices,
+      cubes,
       related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
     });
   } catch (err) {
     console.error(err);
     req.flash('danger', err.message);
-    res.redirect('/404');
+    return res.redirect('/404');
   }
 });
 

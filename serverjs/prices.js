@@ -81,41 +81,42 @@ async function GetPrices(card_ids) {
   let access_token;
   try {
     access_token = await GetToken();
-  } catch (e) {
+    const responses = await Promise.all(
+      chunks.map((chunk) =>
+        fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {
+          headers: {
+            Authorization: ' Bearer ' + access_token,
+          },
+        })
+          .then(checkStatus)
+          .then((response) => response.json())
+          .catch((err) => console.error('TCGPlayer request failed', err)),
+      ),
+    );
+    for (response of responses) {
+      if (!response.success) {
+        continue;
+      }
+      for (item of response.results) {
+        if (!cached_prices[item.productId]) {
+          cached_prices[item.productId] = {};
+        }
+        if (item.marketPrice && item.subTypeName == 'Normal') {
+          price_dict[item.productId] = item.marketPrice;
+          cached_prices[item.productId].price = item.marketPrice;
+          cached_prices[item.productId].expires = Tomorrow();
+        } else if (item.marketPrice && item.subTypeName == 'Foil') {
+          price_dict[item.productId + '_foil'] = item.marketPrice;
+          cached_prices[item.productId].price_foil = item.marketPrice;
+          cached_prices[item.productId].expires = Tomorrow();
+        }
+      }
+    }
+    return price_dict;
+  } catch (err) {
+    console.error(err);
     return price_dict;
   }
-  const responses = await Promise.all(
-    chunks.map((chunk) =>
-      fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {
-        headers: {
-          Authorization: ' Bearer ' + access_token,
-        },
-      })
-        .then(checkStatus)
-        .then((response) => response.json())
-        .catch((err) => console.error('TCGPlayer request failed', err)),
-    ),
-  );
-  for (response of responses) {
-    if (!response.success) {
-      continue;
-    }
-    for (item of response.results) {
-      if (!cached_prices[item.productId]) {
-        cached_prices[item.productId] = {};
-      }
-      if (item.marketPrice && item.subTypeName == 'Normal') {
-        price_dict[item.productId] = item.marketPrice;
-        cached_prices[item.productId].price = item.marketPrice;
-        cached_prices[item.productId].expires = Tomorrow();
-      } else if (item.marketPrice && item.subTypeName == 'Foil') {
-        price_dict[item.productId + '_foil'] = item.marketPrice;
-        cached_prices[item.productId].price_foil = item.marketPrice;
-        cached_prices[item.productId].expires = Tomorrow();
-      }
-    }
-  }
-  return price_dict;
 }
 
 async function addPrices(cards) {

@@ -8,5 +8,10 @@ block content
 block scripts
   include react
   script(type='text/javascript').
-    var reactProps = !{reactProps};
+    window.reactProps = !{reactProps};
   script(src='/js/dashboard.bundle.js')
+
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    autocard_init('autocard');
+    autocard_init('dynamic-autocard');

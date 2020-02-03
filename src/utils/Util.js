@@ -3,7 +3,7 @@ export function arraysEqual(a, b) {
   if (!Array.isArray(a) || !Array.isArray(b)) return false;
   if (a.length !== b.length) return false;
 
-  for (var i = 0; i < a.length; ++i) {
+  for (let i = 0; i < a.length; ++i) {
     if (a[i] !== b[i]) return false;
   }
   return true;
@@ -17,10 +17,11 @@ export function arrayRotate(arr, reverse) {
 
 export function arrayShuffle(array) {
   let currentIndex = array.length;
-  let temporaryValue, randomIndex;
+  let temporaryValue;
+  let randomIndex;
 
   // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
+  while (currentIndex !== 0) {
     // Pick a remaining element...
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex -= 1;
@@ -43,7 +44,7 @@ export function arrayMove(arr, oldIndex, newIndex) {
 
 export function arrayDelete(arr, index) {
   const result = [...arr];
-  result.splice(arr, 1);
+  result.splice(index, 1);
   return result;
 }
 
@@ -67,16 +68,16 @@ export function fromEntries(entries) {
 export function alphaCompare(a, b) {
   const textA = a.details.name.toUpperCase();
   const textB = b.details.name.toUpperCase();
-  return textA < textB ? -1 : textA > textB ? 1 : 0;
+  return textA.localeCompare(textB);
 }
 
 export function cmcColumn(card) {
-  let cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
-  if (isNaN(cmc)) {
-    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
+  let cmc = Object.prototype.hasOwnProperty.call(card, 'cmc') ? card.cmc : card.details.cmc;
+  if (!Number.isFinite(cmc)) {
+    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc, 10);
   }
   // Round to half-integer then take ceiling to support Little Girl
-  let cmcDoubleInt = Math.round(cmc * 2);
+  const cmcDoubleInt = Math.round(cmc * 2);
   let cmcInt = Math.round((cmcDoubleInt + (cmcDoubleInt % 2)) / 2);
   if (cmcInt < 0) {
     cmcInt = 0;
@@ -124,7 +125,8 @@ export function isTouchDevice() {
 
   const mq = (query) => window.matchMedia(query).matches;
 
-  if ('ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch)) {
+  // eslint-disable-next-line no-undef
+  if (window.ontouchstart || (window.DocumentTouch && document instanceof DocumentTouch)) {
     return true;
   }
 

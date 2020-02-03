@@ -1,48 +1,54 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import Query from '../utils/Query';
+import Query from 'utils/Query';
 
-const ChangelistContext = React.createContext([]);
+const ChangelistContext = React.createContext({});
 
 export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChanges, noSave, ...props }) => {
-  const storageKey = `changelist-${cubeID}`;
+  const [changes, setChanges] = useState(initialChanges || []);
+  const [addValue, setAddValue] = useState('');
+  const [removeValue, setRemoveValue] = useState('');
 
-  const [changes, setChanges] = useState(() => {
-    if (initialChanges) {
-      return initialChanges;
-    } else if (typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
-      if (Query.get('updated', false) === 'true') {
-        Query.del('updated');
-        return [];
-      }
+  const addInputRef = useRef();
+  const removeInputRef = useRef();
 
-      let result;
-      try {
-        result = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      } catch (e) {
-        return [];
-      }
-      if (result.length > 0) {
-        if (
-          result.some(
-            (update) =>
-              (update.add && !update.add.details) ||
-              (update.remove && !update.remove.details) ||
-              (update.replace && !update.replace.every((card) => card.details)),
-          )
-        ) {
-          // Old save format. Reset.
-          return [];
-        }
-      }
-      return result;
-    } else {
-      return [];
+  useEffect(() => {
+    if (noSave || !cubeID) {
+      return;
     }
-  });
+
+    if (Query.get('updated', false) === 'true') {
+      Query.del('updated');
+      setChanges([]);
+      return;
+    }
+
+    let storedChanges = [];
+    const storageKey = `changelist-${cubeID}`;
+    try {
+      storedChanges = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    } catch (e) {}
+    if (storedChanges.length > 0) {
+      if (
+        storedChanges.some(
+          (update) =>
+            (update.add && !update.add.details) ||
+            (update.remove && !update.remove.details) ||
+            (update.replace && !update.replace.every((card) => card.details)),
+        )
+      ) {
+        // Old save format. Reset.
+        storedChanges = [];
+      } else {
+        setOpenCollapse('edit');
+      }
+    }
+    setChanges(storedChanges);
+  }, [cubeID]);
 
   useEffect(() => {
     if (!noSave && typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
+      const storageKey = `changelist-${cubeID}`;
       localStorage.setItem(storageKey, JSON.stringify(changes));
     }
   }, [changes]);
@@ -84,7 +90,23 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
   const removeChange = useCallback((changeId) => {
     setChanges((changes) => changes.filter((change) => change.id !== changeId));
   }, []);
-  const value = { changes, setChanges, addChange, addChanges, removeChange };
+
+  const openEditCollapse = useCallback(() => setOpenCollapse('edit'), [setOpenCollapse]);
+
+  const value = {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    setChanges,
+    addChange,
+    addChanges,
+    removeChange,
+    openEditCollapse,
+  };
 
   return <ChangelistContext.Provider value={value} {...props} />;
 };

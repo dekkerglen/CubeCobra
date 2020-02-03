@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 import Filter from 'utils/Filter';
 import Query from 'utils/Query';
@@ -10,7 +11,7 @@ import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortContextProvider } from 'components/SortContext';
-import { TagContextProvider } from 'components/TagContext';
+import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
 
 const deduplicateTags = (tagColors) => {
   const used = new Set();
@@ -38,7 +39,7 @@ const CubeComparePage = ({
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState([]);
 
-  const defaultTagSet = new Set([].concat.apply([], cards.map((card) => card.tags)));
+  const defaultTagSet = new Set([].concat(...cards.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
@@ -74,6 +75,27 @@ const CubeComparePage = ({
       </DisplayContextProvider>
     </SortContextProvider>
   );
+};
+
+CubeComparePage.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cube: PropTypes.shape({}).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  cubeB: PropTypes.shape({}).isRequired,
+  cubeBID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
+  defaultTagColors: PropTypes.arrayOf(
+    PropTypes.shape({
+      tag: PropTypes.string.isRequired,
+      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+    }),
+  ).isRequired,
+  defaultShowTagColors: PropTypes.bool.isRequired,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
+
+CubeComparePage.defaultProps = {
+  canEdit: false,
 };
 
 export default CubeComparePage;
