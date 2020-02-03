@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import CubeComparePage from 'pages/CubeComparePage';
 
 const wrapper = document.getElementById('react-root');
-const element = <CubeComparePage {...reactProps} />;
+const element = <CubeComparePage {...window.reactProps} />;
 if (wrapper) {
   if (wrapper.children.length === 0) {
     ReactDOM.render(element, wrapper);

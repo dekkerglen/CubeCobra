@@ -13,11 +13,13 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
   const removeInputRef = useRef();
 
   useEffect(() => {
-    if (Query.get('updated', false) === 'true') {
-      Query.del('updated');
+    if (noSave || !cubeID) {
+      return;
     }
 
-    if (typeof cubeID === 'undefined') {
+    if (Query.get('updated', false) === 'true') {
+      Query.del('updated');
+      setChanges([]);
       return;
     }
 

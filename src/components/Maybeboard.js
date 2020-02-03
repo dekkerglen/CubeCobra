@@ -28,12 +28,9 @@ const MaybeboardListItem = ({ card, className }) => {
   const openCardModal = useContext(CardModalContext);
   const [loading, setLoading] = useState(false);
 
-  const handleEdit = useCallback(
-    (event) => {
-      openCardModal(card.index, true);
-    },
-    [card],
-  );
+  const handleEdit = useCallback(() => {
+    openCardModal(card.index, true);
+  }, [card, openCardModal]);
 
   const handleAdd = useCallback(
     (event) => {
@@ -41,7 +38,9 @@ const MaybeboardListItem = ({ card, className }) => {
       event.stopPropagation();
       setAddValue(card.details.name);
       openEditCollapse();
-      removeInputRef.current && removeInputRef.current.focus();
+      if (removeInputRef.current) {
+        removeInputRef.current.focus();
+      }
     },
     [card, setAddValue, openEditCollapse, removeInputRef],
   );
@@ -50,8 +49,8 @@ const MaybeboardListItem = ({ card, className }) => {
     async (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const index = parseInt(event.currentTarget.getAttribute('data-index'));
-      if (isNaN(index)) {
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      if (!Number.isInteger(index)) {
         console.error('Bad index');
         return;
       }
@@ -70,7 +69,7 @@ const MaybeboardListItem = ({ card, className }) => {
         const json = await response.json();
         if (json.success === 'true') {
           removeMaybeboardCard(index);
-          /* global */ autocard_hide_card();
+          /* eslint-disable-line no-undef */ autocard_hide_card();
         } else {
           setLoading(false);
           console.error(json.message);
@@ -93,10 +92,23 @@ const MaybeboardListItem = ({ card, className }) => {
           <Spinner size="sm" className="ml-auto" />
         ) : (
           <>
-            <div className="icon-button ml-auto" data-index={card.index} onClick={handleAdd} aria-label="Add">
+            <button
+              type="button"
+              className="icon-button ml-auto"
+              data-index={card.index}
+              onClick={handleAdd}
+              aria-label="Add"
+            >
               <span aria-hidden="true">+</span>
-            </div>
-            <Button size="sm" close className="float-none" data-index={card.index} onClick={handleRemove} />
+            </button>
+            <Button
+              size="sm"
+              close
+              className="float-none"
+              data-index={card.index}
+              onClick={handleRemove}
+              aria-label="Remove"
+            />
           </>
         ))}
     </AutocardItem>
@@ -112,7 +124,12 @@ MaybeboardListItem.propTypes = {
       name: PropTypes.string.isRequired,
       image_normal: PropTypes.string.isRequired,
     }).isRequired,
-  }),
+  }).isRequired,
+  className: PropTypes.string,
+};
+
+MaybeboardListItem.defaultProps = {
+  className: null,
 };
 
 const Maybeboard = ({ filter, ...props }) => {
@@ -178,8 +195,7 @@ const Maybeboard = ({ filter, ...props }) => {
         </Col>
         <Col xs="auto">
           <Button color="primary" size="sm" onClick={toggleShowMaybeboard}>
-            Hide
-            <span className="d-none d-sm-inline">{' Maybeboard'}</span>
+            Hide <span className="d-none d-sm-inline">Maybeboard</span>
           </Button>
         </Col>
       </Row>

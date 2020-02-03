@@ -10,6 +10,6 @@ block content
 block scripts
   script(src='/js/autocard.js')
   script(type='text/javascript').
-    var reactProps = !{reactProps};
+    window.reactProps = !{reactProps};
   include ../react
   script(src='/js/cube_deckbuilder.bundle.js')

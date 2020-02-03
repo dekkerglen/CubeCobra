@@ -1,17 +1,20 @@
 const express = require('express');
-const router = express.Router();
+
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
-const emailconfig = require('../../cubecobrasecrets/email');
 const mailer = require('nodemailer');
-const fs = require('fs');
+
+// eslint-disable-next-line import/no-unresolved
+const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
 
 // Bring in models
-let User = require('../models/user');
-let PasswordReset = require('../models/passwordreset');
-let Cube = require('../models/cube');
-let Deck = require('../models/deck');
+const User = require('../models/user');
+const PasswordReset = require('../models/passwordreset');
+const Cube = require('../models/cube');
+const Deck = require('../models/deck');
+
+const router = express.Router();
 
 const { ensureAuth, csrfProtection } = require('./middleware');
 
@@ -23,10 +26,12 @@ function checkUsernameValid(req) {
     max: 24,
   });
   req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i');
-  req.checkBody('username', 'Username may not use profanity.').custom(function(value) {
-    return !util.has_profanity(value);
-  });
+  req.checkBody('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value));
   return req;
+}
+
+function addMinutes(date, minutes) {
+  return new Date(new Date(date).getTime() + minutes * 60000);
 }
 
 router.use(csrfProtection);
@@ -50,11 +55,11 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     return res.redirect(notification.url);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
       message: err,
     });
-    console.error(err);
   }
 });
 
@@ -70,19 +75,19 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
     user.notifications = [];
     await user.save();
 
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
     });
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
-//Lost password form
-router.get('/lostpassword', function(req, res) {
+// Lost password form
+router.get('/lostpassword', (req, res) => {
   res.render('user/lostpassword');
 });
 
@@ -110,16 +115,16 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
       user.followed_users.push(other._id);
     }
 
-    await util.addNotification(other, user, '/user/view/' + user._id, user.username + ' has followed you!');
+    await util.addNotification(other, user, `/user/view/${user._id}`, `${user.username} has followed you!`);
 
     await Promise.all([user.save(), other.save()]);
 
-    return res.redirect('/user/view/' + req.params.id);
+    return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
@@ -149,43 +154,43 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     await Promise.all([user.save(), other.save()]);
 
-    return res.redirect('/user/view/' + req.params.id);
+    return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    res.status(500).send({
+    console.error(err);
+    return res.status(500).send({
       success: 'false',
     });
-    console.error(err);
   }
 });
 
-//Lost password submit
-router.post('/lostpassword', function(req, res) {
+// Lost password submit
+router.post('/lostpassword', (req, res) => {
   req.checkBody('email', 'Email is required').notEmpty();
 
-  //handle error checks
-  let errors = req.validationErrors();
+  // handle error checks
+  const errors = req.validationErrors();
 
   if (errors) {
     res.render('user/lostpassword', {
-      errors: errors,
+      errors,
     });
   } else {
     PasswordReset.deleteOne(
       {
         email: req.body.email.toLowerCase(),
       },
-      function(err) {
-        let passwordReset = new PasswordReset();
+      () => {
+        const passwordReset = new PasswordReset();
         passwordReset.expires = addMinutes(Date.now(), 15);
         passwordReset.email = req.body.email;
         passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
 
-        passwordReset.save(function(err) {
-          if (err) {
-            console.error(err);
+        passwordReset.save((err2) => {
+          if (err2) {
+            console.error(err2);
           } else {
             // Use Smtp Protocol to send Email
-            var smtpTransport = mailer.createTransport({
+            const smtpTransport = mailer.createTransport({
               service: 'Gmail',
               auth: {
                 user: emailconfig.username,
@@ -193,29 +198,21 @@ router.post('/lostpassword', function(req, res) {
               },
             });
 
-            var mail = {
+            const mail = {
               from: 'Cube Cobra Team <support@cubecobra.com>',
               to: passwordReset.email,
               subject: 'Password Reset',
               html:
-                'A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href="https://cubecobra.com/user/passwordreset/' +
-                passwordReset._id +
-                '">here</a>.<br> Your recovery code is: ' +
-                passwordReset.code +
-                '<br> This link expires in 15 minutes.' +
-                '<br> If you did not request a password reset, ignore this email.',
+                `A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href="https://cubecobra.com/user/passwordreset/${passwordReset._id}">here</a>.<br> Your recovery code is: ${passwordReset.code}<br> This link expires in 15 minutes.` +
+                `<br> If you did not request a password reset, ignore this email.`,
               text:
-                'A password reset was requested for the account that belongs to this email.\nTo proceed, go to https://cubecobra.com/user/passwordreset/' +
-                passwordReset._id +
-                '\nYour recovery code is: ' +
-                passwordReset.code +
-                '\nThis link expires in 15 minutes.' +
-                '\nIf you did not request a password reset, ignore this email.',
+                `A password reset was requested for the account that belongs to this email.\nTo proceed, go to https://cubecobra.com/user/passwordreset/${passwordReset._id}\nYour recovery code is: ${passwordReset.code}\nThis link expires in 15 minutes.` +
+                `\nIf you did not request a password reset, ignore this email.`,
             };
 
-            smtpTransport.sendMail(mail, function(err, response) {
-              if (err) {
-                console.error(err);
+            smtpTransport.sendMail(mail, (err3) => {
+              if (err3) {
+                console.error(err3);
               }
 
               smtpTransport.close();
@@ -230,9 +227,9 @@ router.post('/lostpassword', function(req, res) {
   }
 });
 
-router.get('/passwordreset/:id', function(req, res) {
-  //create a password reset page and return it here
-  PasswordReset.findById(req.params.id, function(err, passwordreset) {
+router.get('/passwordreset/:id', (req, res) => {
+  // create a password reset page and return it here
+  PasswordReset.findById(req.params.id, (err, passwordreset) => {
     if (!passwordreset || Date.now() > passwordreset.expires) {
       req.flash('danger', 'Password recovery link expired');
       res.redirect('/');
@@ -242,16 +239,16 @@ router.get('/passwordreset/:id', function(req, res) {
   });
 });
 
-router.post('/lostpasswordreset', function(req, res) {
+router.post('/lostpasswordreset', (req, res) => {
   req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24,
   });
-  let errors = req.validationErrors();
+  const errors = req.validationErrors();
 
   if (errors) {
     res.render('user/passwordreset', {
-      errors: errors,
+      errors,
     });
   } else {
     PasswordReset.findOne(
@@ -259,7 +256,7 @@ router.post('/lostpasswordreset', function(req, res) {
         code: req.body.code,
         email: req.body.email,
       },
-      function(err, passwordreset) {
+      (err2, passwordreset) => {
         if (!passwordreset) {
           req.flash('danger', 'Incorrect email and recovery code combination.');
           res.render('user/passwordreset');
@@ -268,9 +265,9 @@ router.post('/lostpasswordreset', function(req, res) {
             {
               email: req.body.email,
             },
-            function(err, user) {
-              if (err) {
-                console.error('Password reset find user error:', err);
+            (err3, user) => {
+              if (err3) {
+                console.error('Password reset find user error:', err3);
                 res.sendStatus(500);
                 return;
               }
@@ -279,31 +276,31 @@ router.post('/lostpasswordreset', function(req, res) {
                 res.render('user/passwordreset');
                 return;
               }
-              if (req.body.password2 != req.body.password) {
+              if (req.body.password2 !== req.body.password) {
                 req.flash('danger', "New passwords don't match");
                 res.render('user/passwordreset');
                 return;
               }
-              bcrypt.genSalt(10, function(err, salt) {
-                if (err) {
-                  console.error('Password reset genSalt error:', err);
+              bcrypt.genSalt(10, (err4, salt) => {
+                if (err4) {
+                  console.error('Password reset genSalt error:', err4);
                   res.sendStatus(500);
                   return;
                 }
-                bcrypt.hash(req.body.password2, salt, function(err, hash) {
-                  if (err) {
-                    console.error('Password reset hashing error:', err);
+                bcrypt.hash(req.body.password2, salt, (err5, hash) => {
+                  if (err5) {
+                    console.error('Password reset hashing error:', err5);
                     res.sendStatus(500);
                   } else {
                     user.password = hash;
-                    user.save(function(err) {
-                      if (err) {
-                        console.error('Password reset user save error:', err);
-                        res.sendStatus(500);
-                      } else {
-                        req.flash('success', 'Password updated succesfully');
-                        return res.redirect('/user/login');
+                    user.save((err6) => {
+                      if (err6) {
+                        console.error('Password reset user save error:', err6);
+                        return res.sendStatus(500);
                       }
+
+                      req.flash('success', 'Password updated succesfully');
+                      return res.redirect('/user/login');
                     });
                   }
                 });
@@ -316,22 +313,17 @@ router.post('/lostpasswordreset', function(req, res) {
   }
 });
 
-//Register form
-router.get('/register', function(req, res) {
+// Register form
+router.get('/register', (req, res) => {
   res.render('user/register');
 });
 
-//Register process
-router.post('/register', function(req, res) {
+// Register process
+router.post('/register', (req, res) => {
   const email = req.body.email.toLowerCase();
-  const username = req.body.username;
-  const password = req.body.password;
-  const password2 = req.body.password2;
+  const { username, password } = req.body;
 
-  let attempt = {
-    email: email,
-    username: username,
-  };
+  const attempt = { email, username };
 
   req = checkUsernameValid(req);
   req.checkBody('email', 'Email is required').notEmpty();
@@ -347,12 +339,12 @@ router.post('/register', function(req, res) {
     min: 8,
     max: 24,
   });
-  let errors = req.validationErrors();
+  const errors = req.validationErrors();
 
   if (errors) {
     res.render('user/register', {
-      errors: errors,
-      attempt: attempt,
+      errors,
+      attempt,
       user: null,
     });
   } else {
@@ -360,47 +352,46 @@ router.post('/register', function(req, res) {
       {
         username_lower: req.body.username.toLowerCase(),
       },
-      function(err, user) {
+      (err, user) => {
         if (user) {
           req.flash('danger', 'Username already taken.');
           res.render('user/register', {
-            attempt: attempt,
+            attempt,
           });
         } else {
-          //check if user exists
+          // check if user exists
           User.findOne(
             {
               email: req.body.email.toLowerCase(),
             },
-            function(err, user) {
-              if (user) {
+            (err2, user2) => {
+              if (user2) {
                 req.flash('danger', 'Email already associated with an existing account.');
                 res.render('user/register', {
-                  attempt: attempt,
+                  attempt,
                 });
               } else {
-                let newUser = new User({
-                  email: email,
-                  username: username,
+                const newUser = new User({
+                  email,
+                  username,
                   username_lower: username.toLowerCase(),
-                  password: password,
+                  password,
                   confirm: 'false',
                 });
 
-                bcrypt.genSalt(10, function(err, salt) {
-                  bcrypt.hash(newUser.password, salt, function(err, hash) {
-                    if (err) {
-                      console.error(err);
+                bcrypt.genSalt(10, (err3, salt) => {
+                  bcrypt.hash(newUser.password, salt, (err4, hash) => {
+                    if (err4) {
+                      console.error(err4);
                     } else {
                       newUser.password = hash;
                       newUser.confirmed = 'false';
-                      newUser.save(function(err) {
-                        if (err) {
-                          console.error(err);
-                          return;
+                      newUser.save((err5) => {
+                        if (err5) {
+                          console.error(err5);
                         } else {
                           // Use Smtp Protocol to send Email
-                          var smtpTransport = mailer.createTransport({
+                          const smtpTransport = mailer.createTransport({
                             name: 'CubeCobra.com',
                             secure: true,
                             service: 'Gmail',
@@ -410,24 +401,15 @@ router.post('/register', function(req, res) {
                             },
                           });
 
-                          var mail = {
+                          const mail = {
                             from: 'Cube Cobra Team <support@cubecobra.com>',
                             to: email,
                             subject: 'Confirm Account',
-                            html:
-                              'Hi ' +
-                              newUser.username +
-                              ',</br> Thanks for joining! To confirm your email, click <a href="https://cubecobra.com/user/register/confirm/' +
-                              newUser._id +
-                              '">here</a>.',
-                            text:
-                              'Hi ' +
-                              newUser.username +
-                              ',\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/' +
-                              newUser._id,
+                            html: `Hi ${newUser.username},</br> Thanks for joining! To confirm your email, click <a href="https://cubecobra.com/user/register/confirm/${newUser._id}">here</a>.`,
+                            text: `Hi ${newUser.username},\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/${newUser._id}`,
                           };
 
-                          smtpTransport.sendMail(mail, function(error, response) {
+                          smtpTransport.sendMail(mail, (error) => {
                             if (error) {
                               console.error(error);
                             }
@@ -435,7 +417,7 @@ router.post('/register', function(req, res) {
                             smtpTransport.close();
                           });
 
-                          //req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                          // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
                           req.flash('success', 'Account succesfully created. You are now able to login.');
                           res.redirect('/user/login');
                         }
@@ -452,110 +434,63 @@ router.post('/register', function(req, res) {
   }
 });
 
-//Register confirm
-router.get('/register/confirm/:id', function(req, res) {
-  User.findById(req.params.id, function(err, user) {
+// Register confirm
+router.get('/register/confirm/:id', (req, res) => {
+  User.findById(req.params.id, (err, user) => {
     if (err) {
       req.flash('danger', 'Invalid confirmation link.');
       res.redirect('/');
+    } else if (user.confirmed === 'true') {
+      req.flash('success', 'User already confirmed.');
+      res.redirect('/user/login');
     } else {
-      if (user.confirmed == 'true') {
-        req.flash('success', 'User already confirmed.');
-        res.redirect('/user/login');
-      } else {
-        let user = {
-          confirmed: 'true',
-        };
-        let query = {
-          _id: req.params.id,
-        };
-
-        User.updateOne(query, user, function(err) {
-          if (err) {
-            req.flash('danger', 'Invalid confirmation link.');
-            res.redirect('/');
-          } else {
-            req.flash('success', 'User successfully confirmed');
-            res.redirect('/user/login');
-          }
-        });
-      }
+      user.confirmed = true;
+      user.save((err2) => {
+        if (err2) {
+          req.flash('danger', 'Failed to confirm user.');
+          res.redirect('/');
+        } else {
+          req.flash('success', 'User successfully confirmed');
+          res.redirect('/user/login');
+        }
+      });
     }
   });
 });
 
-//Login route
-router.get('/login', function(req, res) {
+// Login route
+router.get('/login', (req, res) => {
   res.render('user/login');
 });
 
-//Login post
-router.post('/login', function(req, res, next) {
-  if (req.body.username.includes('@')) {
-    //find by email
-    User.findOne(
-      {
-        email: req.body.username,
-      },
-      function(err, user) {
-        if (!user) {
-          req.flash('danger', 'Incorrect username or email address.');
-          res.redirect('/user/login');
-        } else {
-          req.body.username = user.username;
-          //TODO: fix confirmation
-          if (true || user.confirmed == 'true') {
-            var redirect = '/';
-            if (req.body.loginCallback) {
-              redirect = req.body.loginCallback;
-            }
-            passport.authenticate('local', {
-              successRedirect: redirect,
-              failureRedirect: '/user/Login',
-              failureFlash: true,
-            })(req, res, next);
-          } else {
-            req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
-            res.redirect('/user/login');
-          }
-        }
-      },
-    );
-  } else {
-    req.body.username = req.body.username.toLowerCase();
-    //find by username
-    User.findOne(
-      {
-        username_lower: req.body.username,
-      },
-      function(err, user) {
-        if (!user) {
-          req.flash('danger', 'Incorrect username or email address.');
-          res.redirect('/user/login');
-        } else {
-          //TODO: fix confirmation
-          if (true || user.confirmed == 'true') {
-            var redirect = '/';
-            if (req.body.loginCallback) {
-              redirect = req.body.loginCallback;
-            }
-            passport.authenticate('local', {
-              successRedirect: redirect,
-              failureRedirect: '/user/Login',
-              failureFlash: true,
-            })(req, res, next);
-          } else {
-            req.flash('danger', 'User not confirmed. Please check your email for confirmation link.');
-            res.redirect('/user/login');
-          }
-        }
-      },
-    );
-  }
+// Login post
+router.post('/login', (req, res, next) => {
+  const query = {
+    [req.body.username.includes('@') ? 'email' : 'username_lower']: req.body.username,
+  };
+  // find by email
+  User.findOne(query, (err, user) => {
+    if (!user) {
+      req.flash('danger', 'Incorrect username or email address.');
+      res.redirect('/user/login');
+    } else {
+      req.body.username = user.username;
+      // TODO: fix confirmation and check it here.
+      let redirect = '/';
+      if (req.body.loginCallback) {
+        redirect = req.body.loginCallback;
+      }
+      passport.authenticate('local', {
+        successRedirect: redirect,
+        failureRedirect: '/user/Login',
+        failureFlash: true,
+      })(req, res, next);
+    }
+  });
 });
 
-//logout
-router.get('/logout', function(req, res) {
+// logout
+router.get('/logout', (req, res) => {
   req.logout();
   req.flash('success', 'You have been logged out');
   res.redirect('/');
@@ -563,7 +498,7 @@ router.get('/logout', function(req, res) {
 
 router.get('/view/:id', async (req, res) => {
   try {
-    var user;
+    let user;
     try {
       user = await User.findById(req.params.id);
     } catch (err) {
@@ -587,8 +522,8 @@ router.get('/view/:id', async (req, res) => {
         about: user.about,
         id: user._id,
       },
-      cubes: cubes,
-      loginCallback: '/user/view/' + req.params.id,
+      cubes,
+      loginCallback: `/user/view/${req.params.id}`,
       followers: user.users_following.length,
       following: req.user ? user.users_following.includes(req.user._id) : false,
     });
@@ -598,8 +533,8 @@ router.get('/view/:id', async (req, res) => {
   }
 });
 
-router.get('/decks/:userid', function(req, res) {
-  res.redirect('/user/decks/' + req.params.userid + '/0');
+router.get('/decks/:userid', (req, res) => {
+  res.redirect(`/user/decks/${req.params.userid}/0`);
 });
 
 router.get('/notifications', ensureAuth, async (req, res) => {
@@ -618,11 +553,11 @@ router.get('/notifications', ensureAuth, async (req, res) => {
     return res.status(500).send(err);
   }
 });
-2;
+
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
-    const userid = req.params.userid;
-    const page = req.params.page;
+    const { userid } = req.params;
+    const { page } = req.params;
     const pagesize = 30;
 
     const userq = User.findById(userid).exec();
@@ -647,16 +582,16 @@ router.get('/decks/:userid/:page', async (req, res) => {
     }
 
     const pages = [];
-    for (i = 0; i < numDecks / pagesize; i++) {
-      if (page == i) {
+    for (let i = 0; i < numDecks / pagesize; i++) {
+      if (page === i) {
         pages.push({
-          url: '/user/decks/' + userid + '/' + i,
+          url: `/user/decks/${userid}/${i}`,
           content: i + 1,
           active: true,
         });
       } else {
         pages.push({
-          url: '/user/decks/' + userid + '/' + i,
+          url: `/user/decks/${userid}/${i}`,
           content: i + 1,
         });
       }
@@ -669,9 +604,9 @@ router.get('/decks/:userid/:page', async (req, res) => {
         about: user.about,
         id: user._id,
       },
-      loginCallback: '/user/decks/' + userid,
-      decks: decks ? decks : [],
-      pages: pages ? pages : null,
+      loginCallback: `/user/decks/${userid}`,
+      decks: decks || [],
+      pages: pages || null,
     });
   } catch (err) {
     console.error(err);
@@ -679,10 +614,10 @@ router.get('/decks/:userid/:page', async (req, res) => {
   }
 });
 
-//account page
-router.get('/account', ensureAuth, function(req, res) {
-  User.findById(req.user._id, function(err, user) {
-    user_limited = {
+// account page
+router.get('/account', ensureAuth, (req, res) => {
+  User.findById(req.user._id, (err, user) => {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -690,16 +625,16 @@ router.get('/account', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'info',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/account',
     });
   });
 });
 
-//account page, password reset
-router.get('/account/changepassword', ensureAuth, function(req, res) {
-  User.findById(req.user._id, function(err, user) {
-    user_limited = {
+// account page, password reset
+router.get('/account/changepassword', ensureAuth, (req, res) => {
+  User.findById(req.user._id, (err, user) => {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -707,16 +642,16 @@ router.get('/account/changepassword', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'changepw',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/account/changepassword',
     });
   });
 });
 
-//account page, password reset
-router.get('/account/updateemail', ensureAuth, function(req, res) {
-  User.findById(req.user._id, function(err, user) {
-    user_limited = {
+// account page, password reset
+router.get('/account/updateemail', ensureAuth, (req, res) => {
+  User.findById(req.user._id, (err, user) => {
+    const userLimited = {
       username: user.username,
       email: user.email,
       about: user.about,
@@ -724,74 +659,73 @@ router.get('/account/updateemail', ensureAuth, function(req, res) {
     };
     res.render('user/user_account', {
       selected: 'changeemail',
-      user: user_limited,
+      user: userLimited,
       loginCallback: '/user/updateemail',
     });
   });
 });
 
-router.post('/resetpassword', ensureAuth, function(req, res, next) {
+router.post('/resetpassword', ensureAuth, (req, res) => {
   req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength({
     min: 8,
     max: 24,
   });
 
-  let errors = req.validationErrors();
+  const errors = req.validationErrors();
 
   if (errors) {
-    User.findById(req.user._id, function(err, user) {
-      user_limited = {
+    User.findById(req.user._id, (err, user) => {
+      const userLimited = {
         username: user.username,
         email: user.email,
         about: user.about,
       };
       res.render('user/user_account', {
         selected: 'changepw',
-        user: user_limited,
-        errors: errors,
+        user: userLimited,
+        errors,
         loginCallback: '/user/account/changepassword',
       });
     });
   } else {
-    User.findById(req.user._id, function(err, user) {
+    User.findById(req.user._id, (err, user) => {
       if (user) {
-        bcrypt.compare(req.body.password, user.password, function(err, isMatch) {
+        bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
           if (!isMatch) {
             req.flash('danger', 'Password is incorrect');
             return res.redirect('/user/account/changepassword');
-          } else {
-            if (req.body.password2 != req.body.password3) {
-              req.flash('danger', "New passwords don't match");
-              return res.redirect('/user/account/changepassword');
-            } else {
-              bcrypt.genSalt(10, function(err, salt) {
-                bcrypt.hash(req.body.password2, salt, function(err, hash) {
-                  if (err) {
-                    console.error(err);
-                  } else {
-                    user.password = hash;
-                    user.save(function(err) {
-                      if (err) {
-                        console.error(err);
-                        return;
-                      } else {
-                        req.flash('success', 'Password updated succesfully');
-                        return res.redirect('/user/account/changepassword');
-                      }
-                    });
-                  }
-                });
-              });
-            }
           }
+          if (req.body.password2 !== req.body.password3) {
+            req.flash('danger', "New passwords don't match");
+            return res.redirect('/user/account/changepassword');
+          }
+          return bcrypt.genSalt(10, (err3, salt) => {
+            bcrypt.hash(req.body.password2, salt, (err4, hash) => {
+              if (err4) {
+                console.error(err4);
+              } else {
+                user.password = hash;
+                user.save((err5) => {
+                  if (err5) {
+                    console.error(err5);
+                    req.flash('danger', 'Error saving user.');
+                    return res.redirect('/user/account/changepassword');
+                  }
+
+                  req.flash('success', 'Password updated succesfully');
+                  return res.redirect('/user/account/changepassword');
+                });
+              }
+            });
+          });
         });
       }
     });
   }
 });
 
-router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
-  User.findById(req.user._id, function(err, user) {
+router.post('/updateuserinfo', ensureAuth, (req, res) => {
+  User.findById(req.user._id, (err, user) => {
     if (user) {
       User.findOne(
         {
@@ -800,56 +734,55 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
             $ne: req.user._id,
           },
         },
-        function(err, duplicate_user) {
+        (err2, duplicateUser) => {
           if (user.username !== req.body.username) {
             req = checkUsernameValid(req);
-            let errors = req.validationErrors();
+            const errors = req.validationErrors();
             if (errors) {
-              for (i = 0; i < errors.length; i++) {
+              for (let i = 0; i < errors.length; i++) {
                 req.flash('danger', errors[i].msg);
               }
               return res.redirect('/user/account');
-            } else {
-              if (duplicate_user) {
-                req.flash('danger', 'Username already taken.');
-                return res.redirect('/user/account');
-              } else {
-                user.username = req.body.username;
-                user.username_lower = req.body.username.toLowerCase();
-                Cube.find(
-                  {
-                    owner: req.user._id,
-                  },
-                  function(err, cubes) {
-                    cubes.forEach(function(item, index) {
-                      item.owner_name = req.body.username;
-                      Cube.updateOne(
-                        {
-                          _id: item._id,
-                        },
-                        item,
-                        function(err) {},
-                      );
-                    });
-                  },
-                );
-              }
             }
+            if (duplicateUser) {
+              req.flash('danger', 'Username already taken.');
+              return res.redirect('/user/account');
+            }
+            user.username = req.body.username;
+            user.username_lower = req.body.username.toLowerCase();
+            Cube.find(
+              {
+                owner: req.user._id,
+              },
+              (err3, cubes) => {
+                cubes.forEach((item) => {
+                  item.owner_name = req.body.username;
+                  Cube.updateOne(
+                    {
+                      _id: item._id,
+                    },
+                    item,
+                  );
+                });
+              },
+            );
           }
 
           user.about = req.body.body;
 
-          let query = {
+          const query = {
             _id: req.user._id,
           };
 
-          User.updateOne(query, user, function(err) {
-            if (err) {
-              console.error(err);
-            } else {
-              req.flash('success', 'Your profile has been updated.');
-              res.redirect('/user/account');
+          return User.updateOne(query, user, (err3) => {
+            if (err3) {
+              console.error(err3);
+              req.flash('danger', 'Error saving user.');
+              return res.redirect('/user/account');
             }
+
+            req.flash('success', 'Your profile has been updated.');
+            return res.redirect('/user/account');
           });
         },
       );
@@ -857,41 +790,33 @@ router.post('/updateuserinfo', ensureAuth, function(req, res, next) {
   });
 });
 
-router.post('/updateemail', ensureAuth, function(req, res, next) {
+router.post('/updateemail', ensureAuth, (req, res) => {
   User.findOne(
     {
       email: req.body.email.toLowerCase(),
     },
-    function(err, user) {
+    (err, user) => {
       if (user) {
         req.flash('danger', 'Email already associated with an existing account.');
         res.redirect('/user/account/updateemail');
-      } else {
-        User.findById(req.user._id, function(err, user) {
-          if (user) {
-            user.email = req.body.email;
-
-            let query = {
-              _id: req.user._id,
-            };
-
-            User.updateOne(query, user, function(err) {
-              if (err) {
-                console.error(err);
-              } else {
-                req.flash('success', 'Your profile has been updated.');
-                res.redirect('/user/account');
-              }
-            });
+      } else if (req.user) {
+        req.user.email = req.body.email;
+        req.user.save((err2) => {
+          if (err2) {
+            console.error(err2);
+            req.flash('danger', 'Error saving user.');
+            res.redirect('/user/account/updateemail');
+          } else {
+            req.flash('success', 'Your profile has been updated.');
+            res.redirect('/user/account');
           }
         });
+      } else {
+        req.flash('danger', 'Not logged in.');
+        res.redirect('/user/account/updateemail');
       }
     },
   );
 });
-
-function addMinutes(date, minutes) {
-  return new Date(new Date(date).getTime() + minutes * 60000);
-}
 
 module.exports = router;

@@ -228,16 +228,16 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-var methods = {
+const methods = {
   getBasics: function(carddb) {
-    var names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    var set = 'unh';
-    var res = {};
+    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
+    const set = 'unh';
+    const res = {};
     names.forEach(function(name, index) {
-      var found = false;
-      var options = carddb.nameToId[name.toLowerCase()];
+      let found = false;
+      const options = carddb.nameToId[name.toLowerCase()];
       options.forEach(function(option, index2) {
-        var card = carddb.cardFromId(option);
+        const card = carddb.cardFromId(option);
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
@@ -250,8 +250,8 @@ var methods = {
   },
   cardsAreEquivalent: cardsAreEquivalent,
   setCubeType: function(cube, carddb) {
-    var pauper = true;
-    var type = legalityToInt('Standard');
+    let pauper = true;
+    let type = legalityToInt('Standard');
     cube.cards.forEach(function(card, index) {
       if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
         pauper = false;
@@ -293,20 +293,20 @@ var methods = {
   },
   addAutocard: function(src, carddb, cube) {
     while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
-      var cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
-      var mid = cardname;
+      const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
+      let mid = cardname;
       if (carddb.nameToId[cardname.toLowerCase()]) {
-        var possible = carddb.nameToId[cardname.toLowerCase()];
-        var cardID = null;
+        const possible = carddb.nameToId[cardname.toLowerCase()];
+        let cardID = null;
         if (cube && cube.cards) {
-          var allIds = cube.cards.map((card) => card.cardID);
-          var matchingNameIds = allIds.filter((id) => possible.includes(id));
+          const allIds = cube.cards.map((card) => card.cardID);
+          const matchingNameIds = allIds.filter((id) => possible.includes(id));
           cardID = matchingNameIds[0];
         }
         if (!cardID) {
           cardID = possible[0];
         }
-        var card = carddb.cardFromId(cardID);
+        const card = carddb.cardFromId(cardID);
         if (card.image_flip) {
           mid =
             '<a class="autocard" card="' +

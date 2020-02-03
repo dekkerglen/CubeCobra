@@ -12,7 +12,7 @@ block content
 block scripts
   include ../react
   script(type='text/javascript').
-    var reactProps = !{reactProps};
+    window.reactProps = !{reactProps};
 
   script(src='/js/cube_overview.bundle.js')
 
