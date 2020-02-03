@@ -21,8 +21,8 @@ function initializeCatalog() {
 
 initializeCatalog();
 
-function downloadDefaultCards() {
-  const file = fs.createWriteStream('private/cards.json');
+function downloadDefaultCards(basePath = 'private') {
+  const file = fs.createWriteStream(`${basePath}/cards.json`);
   const promise = new Promise((resolve) => {
     https.get('https://archive.scryfall.com/json/scryfall-all-cards.json', (response) => {
       const stream = response.pipe(file);
@@ -698,7 +698,7 @@ function convertCard(card, isExtra) {
   newcard.oracle_id = card.oracle_id;
   newcard.cmc = convertCmc(card, isExtra);
   newcard.legalities = convertLegalities(card, isExtra);
-  newcard.parsedCost = convertParsedCost(card, isExtra);
+  newcard.parsed_cost = convertParsedCost(card, isExtra);
   newcard.colors = convertColors(card, isExtra);
   newcard.type = convertType(card, isExtra);
   newcard.full_art = card.full_art;
@@ -797,18 +797,18 @@ function saveAllCards(arr, basePath = 'private') {
   return writeCatalog(basePath);
 }
 
-function updateCardbase(filepath) {
+function updateCardbase(filepath, basePath = 'private') {
   if (filepath === undefined) {
-    filepath = 'private/cards.json';
+    filepath = `${basePath}/cards.json`;
   }
-  if (!fs.existsSync('private')) {
-    fs.mkdirSync('private');
+  if (!fs.existsSync(basePath)) {
+    fs.mkdirSync(basePath);
   }
-  return module.exports.downloadDefaultCards().then(() => {
+  return module.exports.downloadDefaultCards(basePath).then(() => {
     console.log('Updating cardbase, this might take a little while...');
     const contents = fs.readFileSync(filepath);
     const cards = JSON.parse(contents);
-    saveAllCards(cards);
+    saveAllCards(cards, basePath);
     console.log('Finished cardbase update...');
   });
 }
