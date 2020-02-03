@@ -7,7 +7,7 @@ block content
 block scripts
   include ../react
   script(type='text/javascript').
-    var reactProps = !{reactProps};
+    window.reactProps = !{reactProps};
 
   script(src='/js/autocard.js', async)
   script(src='/js/cube_analysis.bundle.js')

@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 import { Form, Input } from 'reactstrap';
 
@@ -14,7 +15,7 @@ import TagContext from 'components/TagContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';
-import useAlerts from 'hooks/UseAlerts';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const colorCombos = [
   'C',
@@ -98,13 +99,13 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
         const json = await response.json();
         if (json.success === 'true') {
           const oldCardID = card.cardID;
-          card = { ...card, ...updated };
-          updateCubeCard(card.index, card);
+          const newCard = { ...card, ...updated };
+          updateCubeCard(card.index, newCard);
           if (updated.cardID !== oldCardID) {
             // changed version
             const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
             const getJson = await getResponse.json();
-            updateCubeCard(card.index, { ...card, details: getJson.card });
+            updateCubeCard(card.index, { ...newCard, details: getJson.card });
           }
         }
       } catch (err) {
@@ -112,7 +113,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
         throw err;
       }
     },
-    [cubeID, card],
+    [cubeID, card, updateCubeCard, addAlert],
   );
 
   const addTag = useCallback(
@@ -120,7 +121,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
       const newTags = [...tags, tag];
       setTags(newTags);
       try {
-        await syncCard({ tags: newTags.map((tag) => tag.text) });
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
       } catch (err) {
         setTags(tags);
       }
@@ -129,11 +130,11 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
   );
 
   const deleteTag = useCallback(
-    async (tagIndex) => {
-      const newTags = tags.filter((tag, index) => index !== tagIndex);
+    async (deleteIndex) => {
+      const newTags = tags.filter((tag, tagIndex) => tagIndex !== deleteIndex);
       setTags(newTags);
       try {
-        await syncCard({ tags: newTags.map((tag) => tag.text) });
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
       } catch (err) {
         setTags(tags);
       }
@@ -148,7 +149,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
       newTags.splice(newIndex, 0, tag);
       setTags(newTags);
       try {
-        await syncCard({ tags: newTags.map((tag) => tag.text) });
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
       } catch (err) {
         setTags(tags);
       }
@@ -170,16 +171,16 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
 
   const handleChange = useCallback(
     async (event) => {
-      const target = event.target;
+      const { target } = event;
       const value = target.type === 'checkbox' ? target.checked : target.value;
-      const name = target.name;
+      const { name, tagName } = target;
 
-      const updateF = (values) => ({
-        ...values,
+      const updateF = (currentValues) => ({
+        ...currentValues,
         [name]: value,
       });
 
-      if (target.tagName.toLowerCase() === 'select') {
+      if (tagName.toLowerCase() === 'select') {
         try {
           const updatedCard = {};
           if (name === 'colors') {
@@ -204,14 +205,12 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
 
   const handleBlur = useCallback(
     async (event) => {
-      const target = event.target;
-      const name = target.name;
-      const value = target.value;
+      const { target } = event;
+      const { name, value, tagName } = target;
 
       // <select>s handled in handleChange above.
-      if (target.tagName.toLowerCase() !== 'select') {
+      if (tagName.toLowerCase() !== 'select') {
         try {
-          // TODO: Apply some kind of loading indicator to the element.
           // Note: We can use this logic on all but the colors field, which is a select anyway so this path is irrelevant.
           await syncCard({
             [name]: value,
@@ -308,6 +307,27 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
   );
 };
 
+ListViewRow.propTypes = {
+  card: PropTypes.shape({
+    index: PropTypes.number.isRequired,
+    cardID: PropTypes.string.isRequired,
+    colors: PropTypes.arrayOf(PropTypes.oneOf([...'WUBRG'])).isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string).isRequired,
+    details: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+  versions: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      version: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  checked: PropTypes.bool.isRequired,
+  onCheck: PropTypes.func.isRequired,
+  addAlert: PropTypes.func.isRequired,
+};
+
 const ListView = ({ cards }) => {
   const [versionDict, setVersionDict] = useState({});
   const [checked, setChecked] = useState([]);
@@ -315,7 +335,7 @@ const ListView = ({ cards }) => {
   const { setGroupModalCards } = useContext(GroupModalContext);
   const { primary, secondary } = useContext(SortContext);
 
-  const { addAlert, alerts, Alerts } = useAlerts();
+  const { addAlert, alerts } = useAlerts();
 
   useEffect(() => {
     const wrapper = async () => {
@@ -331,11 +351,12 @@ const ListView = ({ cards }) => {
           },
         });
         if (!response.ok) {
-          return console.error(response);
+          console.error(response);
+          return;
         }
 
         const json = await response.json();
-        setVersionDict((versionDict) => ({ ...versionDict, ...json.dict }));
+        setVersionDict((current) => ({ ...current, ...json.dict }));
       }
     };
     wrapper();
@@ -343,8 +364,7 @@ const ListView = ({ cards }) => {
 
   const handleCheckAll = useCallback(
     (event) => {
-      const target = event.target;
-      const value = target.checked;
+      const value = event.target.checked;
 
       if (value) {
         setChecked(cards.map(({ index }) => index));
@@ -354,14 +374,14 @@ const ListView = ({ cards }) => {
         setGroupModalCards([]);
       }
     },
-    [cards],
+    [cards, setGroupModalCards],
   );
 
   const handleCheck = useCallback(
     (event) => {
       const value = event.target.checked;
-      const index = parseInt(event.target.getAttribute('data-index'));
-      if (!isNaN(value)) {
+      const index = parseInt(event.target.getAttribute('data-index'), 10);
+      if (Number.isInteger(value)) {
         let newChecked = checked;
         if (value) {
           if (!newChecked.includes(index)) {
@@ -371,16 +391,18 @@ const ListView = ({ cards }) => {
           newChecked = checked.filter((testIndex) => testIndex !== index);
         }
         setChecked(newChecked);
-        setGroupModalCards(newChecked.map((index) => cards.find((card) => card.index === index)).filter((x) => x));
+        setGroupModalCards(
+          newChecked.map((cardIndex) => cards.find((card) => card.index === cardIndex)).filter((x) => x),
+        );
       }
     },
-    [checked],
+    [checked, cards, setGroupModalCards],
   );
 
   const sorted = sortDeep(cards, primary, secondary);
 
-  const rows = sorted.map(([label1, group1]) =>
-    group1.map(([label2, group2]) =>
+  const rows = sorted.map(([, group1]) =>
+    group1.map(([, group2]) =>
       group2.map((card) => (
         <ListViewRow
           key={card._id}
@@ -394,7 +416,7 @@ const ListView = ({ cards }) => {
     ),
   );
 
-  const rowsFlat = [].concat.apply([], [].concat.apply([], rows));
+  const rowsFlat = [].concat(...[].concat(...rows));
 
   return (
     <>
@@ -420,6 +442,14 @@ const ListView = ({ cards }) => {
       </Form>
     </>
   );
+};
+
+ListView.propTypes = {
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 export default ListView;

@@ -14,7 +14,7 @@ const Cube = require('../models/cube');
 const router = express.Router();
 
 /* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 40;
+const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 1000;
 
@@ -80,9 +80,6 @@ async function topCards(filter) {
     name: {
       $in: names,
     },
-    picks: {
-      $gte: MIN_PICKS,
-    },
   });
   const cardDataQ = Card.find(
     {
@@ -102,18 +99,19 @@ async function topCards(filter) {
     const card = cardDataDict.get(v.name.toLowerCase());
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
+    const qualifies = rating && typeof rating.picks !== 'undefined' && rating.picks > MIN_PICKS;
     return [
       v.name,
       v.image_normal,
       v.image_flip || null,
-      rating ? adjust(rating) : null,
-      rating ? rating.picks : null,
-      rating && rating.elo ? rating.elo : null,
+      qualifies && rating.value ? adjust(rating) : null,
+      rating && typeof rating.picks !== 'undefined' ? rating.picks : null,
+      qualifies && rating.elo ? rating.elo : null,
       card ? card.cubes.length : null,
     ];
   });
-  const nonNullData = fullData.filter((x) => x[3] !== null);
-  const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
+  /* Sort by number of picks for limit. */
+  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[4] === null ? -1 : x[4]));
   return {
     ratings,
     versions,

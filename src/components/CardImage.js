@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import DisplayContext from './DisplayContext';
-import ImageFallback from './ImageFallback';
-import withAutocard from './WithAutocard';
+import DisplayContext from 'components/DisplayContext';
+import ImageFallback from 'components/ImageFallback';
+import withAutocard from 'components/WithAutocard';
 
 const ImageAutocard = withAutocard(ImageFallback);
 
@@ -18,7 +18,7 @@ const CardImage = ({ card, autocard, className, ...props }) => {
       fallbackSrc="/content/default_card.png"
       alt={card.details.name}
       width="100%"
-      className={className ? className + ' card-border' : 'card-border'}
+      className={className ? `${className} card-border` : 'card-border'}
       {...props}
     />
   );
@@ -34,6 +34,11 @@ CardImage.propTypes = {
   }).isRequired,
   autocard: PropTypes.bool,
   className: PropTypes.string,
+};
+
+CardImage.defaultProps = {
+  autocard: false,
+  className: null,
 };
 
 export default CardImage;
