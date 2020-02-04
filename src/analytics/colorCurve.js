@@ -1,7 +1,6 @@
 import { getCmc } from 'utils/Card';
 import { GetColorCategory } from 'utils/Sort';
 
-
 async function colorCurve(cards) {
   const curve = {
     White: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
