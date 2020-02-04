@@ -23,6 +23,7 @@
   "browserslist": "> 0.5%, Firefox ESR, not dead, not IE > 0, not IE_Mob > 0, not safari < 7, not kaios > 0",
   "dependencies": {
     "@react-mock/fetch": "^0.3.0",
+    "JSONStream": "^1.3.5",
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -32,6 +33,7 @@
     "connect-mongodb-session": "^2.2.0",
     "core-js-pure": "^3.6.3",
     "csurf": "^1.10.0",
+    "event-stream": "^4.0.1",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.6",
     "express-messages": "^1.0.1",

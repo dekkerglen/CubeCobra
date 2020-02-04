@@ -222,7 +222,7 @@ afterEach(() => {
 });
 
 test('updateCardbase creates the expected files', () => {
-  expect.assertions(7);
+  expect.assertions(8);
   var noopPromise = new Promise((resolve, reject) => {
     process.nextTick(() => {
       resolve();
@@ -239,6 +239,7 @@ test('updateCardbase creates the expected files', () => {
     expect(fs.existsSync('private-test/names.json')).toBe(true);
     expect(fs.existsSync('private-test/carddict.json')).toBe(true);
     expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
+    expect(fs.existsSync('private-test/english.json')).toBe(true);
     expect(fs.existsSync('private-test/full_names.json')).toBe(true);
   });
   updatecards.downloadDefaultCards = initialDownloadDefaultCards;
@@ -265,6 +266,7 @@ test("addCardToCatalog successfully adds a card's information to the internal st
   expect(catalog.cardimages[normalizedName]).toEqual(expectedCardimagesStructure);
   expect(Object.keys(catalog.nameToId).length).toBe(1);
   expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.english).length).toBe(0);
   expect(Object.keys(catalog.names).length).toBe(1);
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
@@ -289,19 +291,29 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   expect(Object.keys(catalog.cardimages).length).toBe(0);
   expect(Object.keys(catalog.nameToId).length).toBe(1);
   expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.english).length).toBe(0);
   expect(Object.keys(catalog.names).length).toBe(1);
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
+test("addLanguageMapping successfully adds a language mapping to the internal structures", () => {
+  const card = convertedExampleCard;
+  updatecards.addCardToCatalog(card);
+  updatecards.addLanguageMapping(examplecards.exampleForeignCard);
+
+  const catalog = updatecards.catalog;
+  expect(Object.keys(catalog.english).length).toBe(1);
+  expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id)
+});
+
 test('initializeCatalog clears the updatecards structures', () => {
-  expect.assertions(6);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards, 'private-test').then(function() {
+  expect.assertions(7);
+  return updatecards.saveAllCards(cardsFixturePath, 'private-test').then(function() {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
+    expect(Object.keys(updatecards.catalog.english).length).toBe(0);
     expect(updatecards.catalog.full_names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
     expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
@@ -309,16 +321,15 @@ test('initializeCatalog clears the updatecards structures', () => {
 });
 
 test('saveAllCards creates the expected files', () => {
-  expect.assertions(7);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards, 'private-test').then(function() {
+  expect.assertions(8);
+  return updatecards.saveAllCards(cardsFixturePath, 'private-test').then(function() {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
     expect(fs.existsSync('private-test/names.json')).toBe(true);
     expect(fs.existsSync('private-test/carddict.json')).toBe(true);
     expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
+    expect(fs.existsSync('private-test/english.json')).toBe(true);
     expect(fs.existsSync('private-test/full_names.json')).toBe(true);
   });
 });

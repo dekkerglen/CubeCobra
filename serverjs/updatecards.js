@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const JSONStream = require('JSONStream');
+const es = require('event-stream');
 const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
@@ -742,6 +744,10 @@ function convertCard(card, isExtra) {
 }
 
 function addLanguageMapping(card) {
+  if (card.lang === 'en') {
+    return;
+  }
+
   const sameOracle = catalog.oracleToId[card.oracle_id] || [];
   for (const otherId of sameOracle) {
     const otherCard = catalog.dict[otherId];
@@ -783,40 +789,58 @@ function writeCatalog(basePath = 'private') {
   return allWritesPromise;
 }
 
-function saveAllCards(arr, basePath = 'private') {
-  for (const card of arr.filter((c) => c.lang === 'en')) {
-    if (card.layout === 'transform') {
-      addCardToCatalog(convertCard(card, true), true);
-    }
-    addCardToCatalog(convertCard(card));
-    addTokens(card);
+function saveEnglishCard(card) {
+  if (card.lang !== 'en') {
+    return;
   }
-  for (const card of arr.filter((c) => c.lang !== 'en')) {
-    addLanguageMapping(card);
+
+  if (card.layout === 'transform') {
+    addCardToCatalog(convertCard(card, true), true);
   }
-  return writeCatalog(basePath);
+  addCardToCatalog(convertCard(card));
+  addTokens(card);
 }
 
-function updateCardbase(filepath, basePath = 'private') {
+async function saveAllCards(sourcePath, basePath = 'private') {
+  await new Promise((resolve) =>
+    fs.createReadStream(sourcePath)
+      .pipe(JSONStream.parse('*'))
+      .pipe(es.mapSync(saveEnglishCard))
+      .on('close', resolve)
+  );
+
+  console.log('Creating language mappings...')
+  await new Promise((resolve) =>
+    fs.createReadStream(sourcePath)
+      .pipe(JSONStream.parse('*'))
+      .pipe(es.mapSync(addLanguageMapping))
+      .on('close', resolve)
+  );
+
+  await writeCatalog(basePath);
+}
+
+async function updateCardbase(filepath, basePath = 'private') {
   if (filepath === undefined) {
     filepath = `${basePath}/cards.json`;
   }
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
-  return module.exports.downloadDefaultCards(basePath).then(() => {
-    console.log('Updating cardbase, this might take a little while...');
-    const contents = fs.readFileSync(filepath);
-    const cards = JSON.parse(contents);
-    saveAllCards(cards, basePath);
-    console.log('Finished cardbase update...');
-  });
+
+  await module.exports.downloadDefaultCards(basePath);
+
+  console.log('Updating cardbase, this might take a little while...');
+  await saveAllCards(filepath, basePath);
+
+  console.log('Finished cardbase update...');
 }
 
 module.exports = {
   initializeCatalog,
   catalog,
   addCardToCatalog,
+  addLanguageMapping,
   updateCardbase,
   downloadDefaultCards,
   saveAllCards,

@@ -368,8 +368,119 @@ const exampleAdventureCard = {
   },
 };
 
+const exampleForeignCard = {
+  object: "card",
+  id: "4fde2a57-5340-4ee9-8558-b5bf50b89db6",
+  oracle_id: "aa1a63dd-acb1-465f-8970-667b8d7c57c9",
+  multiverse_ids: [
+    473963
+  ],
+  name: "Inspiring Veteran",
+  printed_name: "Vétéran inspirateur",
+  lang: "fr",
+  released_at: "2019-10-04",
+  uri: "https://api.scryfall.com/cards/4fde2a57-5340-4ee9-8558-b5bf50b89db6",
+  scryfall_uri: "https://scryfall.com/card/eld/194/fr/v%C3%A9t%C3%A9ran-inspirateur?utm_source=api",
+  layout: "normal",
+  highres_image: false,
+  image_uris: {
+    small: "https://img.scryfall.com/cards/small/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.jpg?1570000812",
+    normal: "https://img.scryfall.com/cards/normal/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.jpg?1570000812",
+    large: "https://img.scryfall.com/cards/large/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.jpg?1570000812",
+    png: "https://img.scryfall.com/cards/png/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.png?1570000812",
+    art_crop: "https://img.scryfall.com/cards/art_crop/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.jpg?1570000812",
+    border_crop: "https://img.scryfall.com/cards/border_crop/front/4/f/4fde2a57-5340-4ee9-8558-b5bf50b89db6.jpg?1570000812"
+  },
+  mana_cost: "{R}{W}",
+  cmc: 2.0,
+  type_line: "Creature — Human Knight",
+  printed_type_line: "Créature : humain et chevalier",
+  oracle_text: "Other Knights you control get +1/+1.",
+  printed_text: "Les autres chevaliers que vous contrôlez gagnent +1/+1.",
+  power: "2",
+  toughness: "2",
+  colors: [
+    "R",
+    "W"
+  ],
+  color_identity: [
+    "R",
+    "W"
+  ],
+  legalities: {
+    standard: "legal",
+    future: "legal",
+    historic: "legal",
+    pioneer: "legal",
+    modern: "legal",
+    legacy: "legal",
+    pauper: "not_legal",
+    vintage: "legal",
+    penny: "legal",
+    commander: "legal",
+    brawl: "legal",
+    duel: "legal",
+    oldschool: "not_legal"
+  },
+  games: [
+    "arena",
+    "mtgo",
+    "paper"
+  ],
+  reserved: false,
+  foil: true,
+  nonfoil: true,
+  oversized: false,
+  promo: false,
+  reprint: false,
+  variation: false,
+  set: "eld",
+  set_name: "Throne of Eldraine",
+  set_type: "expansion",
+  set_uri: "https://api.scryfall.com/sets/a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
+  set_search_uri: "https://api.scryfall.com/cards/search?order=set&q=e%3Aeld&unique=prints",
+  scryfall_set_uri: "https://scryfall.com/sets/eld?utm_source=api",
+  rulings_uri: "https://api.scryfall.com/cards/4fde2a57-5340-4ee9-8558-b5bf50b89db6/rulings",
+  prints_search_uri: "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaa1a63dd-acb1-465f-8970-667b8d7c57c9&unique=prints",
+  collector_number: "194",
+  digital: false,
+  rarity: "uncommon",
+  flavor_text: "« Je me bats pour ma fille, qui ne mettra pas le pied sur un champ de bataille avant bien des années. N'oubliez pas pour qui vous vous battez. »",
+  card_back_id: "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  artist: "Scott Murphy",
+  artist_ids: [
+    "07c7ac65-dfa6-4273-9c66-ec9d8f3e2226"
+  ],
+  illustration_id: "d2e27a3e-1540-4a9e-9c82-c1e3210f75e7",
+  border_color: "black",
+  frame: "2015",
+  full_art: false,
+  textless: false,
+  booster: true,
+  story_spotlight: false,
+  edhrec_rank: 5122,
+  prices: {
+    usd: null,
+    usd_foil: null,
+    eur: null,
+    tix: null
+  },
+  related_uris: {
+    gatherer: "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473963&printed=true",
+    tcgplayer_decks: "https://decks.tcgplayer.com/magic/deck/search?contains=Inspiring+Veteran&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+    edhrec: "https://edhrec.com/route/?cc=Inspiring+Veteran",
+    mtgtop8: "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Inspiring+Veteran"
+  },
+  purchase_uris: {
+    tcgplayer: "https://shop.tcgplayer.com/productcatalog/product/show?ProductName=Inspiring+Veteran&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+    cardmarket: "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Inspiring+Veteran&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    cardhoarder: "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Inspiring+Veteran&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+};
+
 module.exports = {
-  exampleCard: exampleCard,
-  exampleDoubleFacedCard: exampleDoubleFacedCard,
-  exampleAdventureCard: exampleAdventureCard,
+  exampleCard,
+  exampleDoubleFacedCard,
+  exampleAdventureCard,
+  exampleForeignCard,
 };
