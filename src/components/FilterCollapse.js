@@ -284,7 +284,7 @@ class FilterCollapse extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.filter === this.props.filter) {
+    if (prevProps.filter !== this.props.filter) {
       Query.set('f', this.state.filterInput);
     }
   }
