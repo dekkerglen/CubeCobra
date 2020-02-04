@@ -1,4 +1,4 @@
-import { GetColorCat } from 'utils/AnalyticUtils';
+import { GetColorIdentity } from 'utils/Sort';
 
 async function typeBreakdown(cards) {
   const TypeByColor = Object.fromEntries(
@@ -8,7 +8,7 @@ async function typeBreakdown(cards) {
         {
           label: header,
           ...Object.fromEntries(
-            ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multi', 'Total'].map((color) => [
+            ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multicolored', 'Total'].map((color) => [
               color,
               { asfan: 0, count: 0 },
             ]),
@@ -19,7 +19,7 @@ async function typeBreakdown(cards) {
   );
   for (const card of cards) {
     const asfan = card.asfan || 15 / cards.length;
-    const colorCategory = GetColorCat(card.colors);
+    const colorCategory = GetColorIdentity(card.colors);
 
     TypeByColor.Total[colorCategory].count += 1;
     TypeByColor.Total[colorCategory].asfan += asfan;
@@ -82,7 +82,7 @@ async function typeBreakdown(cards) {
           { header: '{r}', key: 'Red' },
           { header: '{g}', key: 'Green' },
           { header: '{c}', key: 'Colorless' },
-          { header: '{m}', key: 'Multi' },
+          { header: '{m}', key: 'Multicolored' },
           { header: 'Total', key: 'Total' },
         ],
         rows: [

@@ -28,4 +28,8 @@ export function cardsAreEquivalent(a, b) {
   );
 }
 
-export default { normalizeName, encodeName, decodeName, cardsAreEquivalent };
+export function getCmc(card) {
+  return card.cmc !== undefined ? card.cmc : card.details.cmc;
+}
+
+export default { normalizeName, encodeName, decodeName, cardsAreEquivalent, getCmc };

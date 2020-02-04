@@ -1,4 +1,6 @@
-import { GetCmc, GetColorCat } from 'utils/AnalyticUtils';
+import { getCmc } from 'utils/Card';
+import { GetColorCategory } from 'utils/Sort';
+
 
 async function colorCurve(cards) {
   const curve = {
@@ -8,12 +10,12 @@ async function colorCurve(cards) {
     Red: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     Green: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     Colorless: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Multi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Multicolored: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     Total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   };
 
   for (const card of cards) {
-    let colorCategory = GetColorCat(card.colors);
+    let colorCategory = GetColorCategory(card.details.type, card.colors);
     if (card.details.type.toLowerCase().includes('land')) {
       colorCategory = 'Land';
     }
@@ -21,7 +23,7 @@ async function colorCurve(cards) {
     // Giving raw count instead of asfan currently.
     const asfan = 1;
     if (category) {
-      let cmc = Math.floor(GetCmc(card));
+      let cmc = Math.floor(getCmc(card));
       if (cmc >= 9) {
         cmc = 9;
       }
@@ -41,7 +43,7 @@ async function colorCurve(cards) {
       ['Red', curve.Red, '#D85F69'],
       ['Green', curve.Green, '#6AB572'],
       ['Colorless', curve.Colorless, '#ADADAD'],
-      ['Multicolored', curve.Multi, '#DBC467'],
+      ['Multicolored', curve.Multicolored, '#DBC467'],
       ['Total', curve.Total, '#000000'],
     ].map((color) => ({
       label: color[0],

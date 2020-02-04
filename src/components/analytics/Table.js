@@ -25,14 +25,7 @@ import MagicMarkdown from 'components/MagicMarkdown';
 //     },
 //   ],
 // }
-const HeaderCell = ({ children, ...props }) => (
-  <th scope="row" {...props}>
-    {children}
-  </th>
-);
-const RegularCell = ({ children, ...props }) => <td {...props}>{children}</td>;
-RegularCell.propTypes = { children: PropTypes.node.isRequired };
-HeaderCell.propTypes = { children: PropTypes.shape({}).isRequired };
+const HeaderCell = (props) => <th scope="row" {...props} />;
 
 const AnalyticsTable = ({ data }) => (
   <Row>
@@ -56,7 +49,7 @@ const AnalyticsTable = ({ data }) => (
                   if (rowHeader) {
                     Cell = HeaderCell;
                   } else {
-                    Cell = RegularCell;
+                    Cell = 'td';
                   }
                   return (
                     <Cell key={/* eslint-disable-line react/no-array-index-key */ `${key}-${position}`}>

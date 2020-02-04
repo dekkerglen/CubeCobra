@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { getTCGLink } from 'utils/Affiliate';
-
+import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
 
 const AutocardLink = withAutocard('a');
@@ -35,7 +35,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
               key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
               href={getTCGLink(card)}
             >
-              <img src={card.details.image_normal} className="card-img-top" alt={card.details.name} />
+              <FoilCardImage autocard card={card} className="clickable" />
             </a>
           );
         }

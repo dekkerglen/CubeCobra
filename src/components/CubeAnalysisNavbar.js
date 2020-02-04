@@ -1,5 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+
+import useToggle from 'hooks/UseToggle';
 
 import {
   Collapse,
@@ -27,21 +29,10 @@ const CubeAnalysisNavBar = ({
   numCards,
   defaultFilterText,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [openCollapse, setOpenCollapse] = useState(null);
-  const toggle = useCallback(() => setIsOpen((open) => !open), []);
+  const [isOpen, , toggleIsOpen] = useToggle(false);
+  const [filterCollapseOpen, , toggleFilterCollapseOpen] = useToggle(false);
 
   let dropdownElement = <h5>Default Draft Format</h5>;
-
-  const handleOpenCollapse = useCallback(
-    (event) => {
-      event.preventDefault();
-      const { target } = event;
-      const collapse = target.getAttribute('data-target');
-      setOpenCollapse((currentCollapse) => (currentCollapse === collapse ? null : collapse));
-    },
-    [setOpenCollapse],
-  );
 
   const dropdownCustomFormat = (format, formatIndex) => (
     <DropdownItem
@@ -82,12 +73,12 @@ const CubeAnalysisNavBar = ({
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           {dropdownElement}
-          <NavbarToggler onClick={toggle} />
+          <NavbarToggler onClick={toggleIsOpen} />
         </div>
         <Collapse isOpen={isOpen} navbar>
           <Nav className="ml-auto" navbar>
             <NavItem>
-              <NavLink href="#" data-target="filter" onClick={handleOpenCollapse}>
+              <NavLink href="#" data-target="filter" onClick={toggleFilterCollapseOpen}>
                 Filter
               </NavLink>
             </NavItem>
@@ -99,7 +90,7 @@ const CubeAnalysisNavBar = ({
         filter={filter}
         setFilter={setFilter}
         numCards={numCards}
-        isOpen={openCollapse === 'filter'}
+        isOpen={filterCollapseOpen}
       />
     </div>
   );

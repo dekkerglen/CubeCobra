@@ -1,4 +1,5 @@
-import { GetCmc, GetColorCat } from 'utils/AnalyticUtils';
+import { getCmc } from 'utils/Card';
+import { GetColorCategory } from 'utils/Sort';
 
 async function averageCmc(cards) {
   const ColorCounts = {
@@ -13,17 +14,21 @@ async function averageCmc(cards) {
   };
 
   for (const card of cards) {
-    const asfan = card.asfan || 15 / cards.length;
-    const colorCat = GetColorCat(card.colors || card.details.color_identity);
-    const cmc = GetCmc(card);
-    ColorCounts[colorCat].count += cmc;
-    ColorCounts.Total.count += cmc;
-    ColorCounts[colorCat].totalCount += 1;
-    ColorCounts.Total.totalCount += 1;
-    ColorCounts[colorCat].asfan += cmc * asfan;
-    ColorCounts.Total.asfan += cmc * asfan;
-    ColorCounts[colorCat].totalAsfan += asfan;
-    ColorCounts.Total.totalAsfan += asfan;
+    if (!card.details.type.toLowerCase().includes('land')) {
+      const asfan = card.asfan || 15 / cards.length;
+      const colorCat = GetColorCategory(card.details.type, card.colors);
+      const cmc = getCmc(card);
+      if (ColorCounts[colorCat]) {
+        ColorCounts[colorCat].count += cmc;
+        ColorCounts.Total.count += cmc;
+        ColorCounts[colorCat].totalCount += 1;
+        ColorCounts.Total.totalCount += 1;
+        ColorCounts[colorCat].asfan += cmc * asfan;
+        ColorCounts.Total.asfan += cmc * asfan;
+        ColorCounts[colorCat].totalAsfan += asfan;
+        ColorCounts.Total.totalAsfan += asfan;
+      }
+    }
   }
 
   return {

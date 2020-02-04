@@ -168,7 +168,7 @@ class CubeAnalysisPage extends Component {
       else if (data.type === 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
     }
     return (
-      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="playtest">
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
         <DynamicFlash />
         <CubeAnalysisNavBar
           draftFormats={cube.draft_formats}

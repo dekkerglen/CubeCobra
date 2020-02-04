@@ -283,6 +283,12 @@ class FilterCollapse extends Component {
     this.updateFilters(defaultFilter);
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.filter === this.props.filter) {
+      Query.set('f', this.state.filterInput);
+    }
+  }
+
   toggleAdvanced() {
     this.setState({
       advancedOpen: !this.state.advancedOpen,
@@ -334,7 +340,6 @@ class FilterCollapse extends Component {
     if (!valid) return;
 
     if (tokens.length > 0) {
-      Query.set('f', this.state.filterInput);
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
       this.setState({ loading: true });
