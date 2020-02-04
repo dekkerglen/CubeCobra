@@ -323,20 +323,22 @@ class CubeOverviewModal extends Component {
                     </FormGroup>
                   </Col>
                   <Col>
-                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'].map((label) => (
-                      <div className="form-check" key={label}>
-                        <input
-                          className="form-check-input"
-                          name="category_prefix"
-                          value={label}
-                          type="checkbox"
-                          checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
-                          onChange={this.handleChange}
-                          disabled={cube.overrideCategory ? false : true}
-                        />
-                        <label className="form-check-label">{label}</label>
-                      </div>
-                    ))}
+                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'].map(
+                      (label) => (
+                        <div className="form-check" key={label}>
+                          <input
+                            className="form-check-input"
+                            name="category_prefix"
+                            value={label}
+                            type="checkbox"
+                            checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
+                            onChange={this.handleChange}
+                            disabled={cube.overrideCategory ? false : true}
+                          />
+                          <label className="form-check-label">{label}</label>
+                        </div>
+                      ),
+                    )}
                   </Col>
                 </Row>
 
