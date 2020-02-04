@@ -31,7 +31,10 @@ block content
 			h5 About:
 		.card-body
 			if user_limited.about
-				p #{user_limited.about}
+				each para, i in user_limited.about.trim().split(/[\r\n]+/)
+					if i !== 0
+						br
+					| #{para}
 			else
 				em This user has not filled out their about section.
 		if user && user.id == user_limited.id

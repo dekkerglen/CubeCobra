@@ -1,6 +1,6 @@
 const fs = require('fs');
 const util = require('./util.js');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 
 var data = {
   cardtree: {},
@@ -48,13 +48,22 @@ function getPlaceholderCard(_id) {
   };
 }
 
-function cardFromId(id) {
+function cardFromId(id, fields) {
+  let details;
   if (data._carddict[id]) {
-    return data._carddict[id];
+    details = data._carddict[id];
   } else {
     console.log('Could not find card from id: ' + id);
-    return getPlaceholderCard(id);
+    details = getPlaceholderCard(id);
   }
+
+  if (typeof fields === 'undefined') {
+    return details;
+  } else if (!Array.isArray(fields)) {
+    fields = fields.split(' ');
+  }
+
+  return util.fromEntries(fields.map((field) => [field, details[field]]));
 }
 
 function getCardDetails(card) {

@@ -1,7 +1,17 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
-var {
+const serialize = require('serialize-javascript');
+const mergeImages = require('merge-images');
+const RSS = require('rss');
+const { Canvas, Image } = require('canvas');
+
+Canvas.Image = Image;
+
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
+
+const {
   addAutocard,
   generatePack,
   sanitize,
@@ -11,81 +21,54 @@ var {
   generate_short_id,
   build_id_query,
   get_cube_id,
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
+  abbreviate,
+  insertComment,
+  getOwnerFromComment,
+  saveEdit,
+  build_tag_colors,
+  maybeCards,
+  getElo,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
-const draftutil = require('../serverjs/draftutil.js');
-const cardutil = require('../dist/util/Card.js');
+const draftutil = require('../dist/utils/draftutil.js');
+const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
+
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
 const { GetPrices } = require('../serverjs/prices.js');
-const mergeImages = require('merge-images');
 const generateMeta = require('../serverjs/meta.js');
-const { Canvas, Image } = require('canvas');
-Canvas.Image = Image;
 
-const RSS = require('rss');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
+const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags';
 
-//grabbing sortfilter.cardIsLabel from client-side
-var sortfilter = require('../public/js/sortfilter.js');
 const router = express.Router();
 // Bring in models
-let Cube = require('../models/cube');
-let Deck = require('../models/deck');
-let Blog = require('../models/blog');
-let User = require('../models/user');
-let Draft = require('../models/draft');
-let CardRating = require('../models/cardrating');
+const Cube = require('../models/cube');
+const Deck = require('../models/deck');
+const Blog = require('../models/blog');
+const User = require('../models/user');
+const Draft = require('../models/draft');
+const CardRating = require('../models/cardrating');
+
+const { NODE_ENV } = process.env;
+
+let BulkUploadPage = null;
+let CubeDraftPage = null;
+let CubeListPage = null;
+let CubePlaytestPage = null;
+if (NODE_ENV === 'production') {
+  BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
+  CubeDraftPage = require('../dist/pages/CubeDraftPage').default;
+  CubeListPage = require('../dist/pages/CubeListPage').default;
+  CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
+}
 
 const { ensureAuth, csrfProtection } = require('./middleware');
-
-function cardHtml(card) {
-  if (card.image_flip) {
-    return (
-      '<a class="dynamic-autocard" card="' +
-      card.image_normal +
-      '" card_flip="' +
-      card.image_flip +
-      '">' +
-      card.name +
-      '</a>'
-    );
-  } else {
-    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
-  }
-}
-
-function addCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
-}
-
-function removeCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
-}
-
-function replaceCardHtml(oldCard, newCard) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' +
-    cardHtml(oldCard) +
-    ' &gt; ' +
-    cardHtml(newCard) +
-    '<br/>'
-  );
-}
-
-function abbreviate(name) {
-  return name.length < 20 ? name : name.slice(0, 20) + '…';
-}
 
 router.use(csrfProtection);
 
@@ -94,15 +77,15 @@ router.post('/add', ensureAuth, async (req, res) => {
   try {
     if (req.body.name.length < 5 || req.body.name.length > 100) {
       req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
-      return res.redirect('/user/view/' + req.user._id);
+      return res.redirect(`/user/view/${req.user.id}`);
     }
 
     if (util.has_profanity(req.body.name)) {
       req.flash('danger', 'Cube name should not use profanity.');
-      return res.redirect('/user/view/' + req.user._id);
+      return res.redirect(`/user/view/${req.user.id}`);
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cubes = await Cube.find({
       owner: user._id,
     });
@@ -112,18 +95,18 @@ router.post('/add', ensureAuth, async (req, res) => {
         'danger',
         'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
       );
-      return res.redirect('/user/view/' + req.user._id);
+      return res.redirect(`/user/view/${req.user.id}`);
     }
 
-    let short_id = await generate_short_id();
+    const shortID = await generate_short_id();
     let cube = new Cube();
-    cube.shortID = short_id;
+    cube.shortID = shortID;
     cube.name = req.body.name;
-    cube.owner = req.user._id;
+    cube.owner = req.user.id;
     cube.cards = [];
     cube.decks = [];
     cube.articles = [];
-    var details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
+    const details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
     cube.image_uri = details.art_crop;
     cube.image_name = details.full_name;
     cube.image_artist = details.artist;
@@ -135,19 +118,64 @@ router.post('/add', ensureAuth, async (req, res) => {
     await cube.save();
 
     req.flash('success', 'Cube Added');
-    return res.redirect('/cube/overview/' + cube.shortID);
+    return res.redirect(`/cube/overview/${cube.shortID}`);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
+    return util.handleRouteError(res, req, err, `/user/view/${req.user.id}`);
+  }
+});
+
+// Add Submit POST Route
+router.get('/clone/:id', async (req, res) => {
+  try {
+    const { user } = req;
+
+    if (!user) {
+      req.flash('danger', 'Please log on to clone this cube.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
+    const cubes = await Cube.find({
+      owner: user._id,
     });
+
+    if (cubes.length >= 24) {
+      req.flash(
+        'danger',
+        'Cannot clone this cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
+      );
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
+    const source = await Cube.findOne(build_id_query(req.params.id));
+
+    const shortID = await generate_short_id();
+    let cube = new Cube();
+    cube.shortID = shortID;
+    cube.name = `Clone of ${source.name}`;
+    cube.owner = req.user.id;
+    cube.cards = source.cards;
+    cube.decks = [];
+    cube.articles = [];
+    cube.image_uri = source.image_uri;
+    cube.image_name = source.image_name;
+    cube.image_artist = source.image_artist;
+    cube.description = source.description;
+    cube.owner_name = user.username;
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+    await cube.save();
+
+    req.flash('success', 'Cube Cloned');
+    return res.redirect(`/cube/overview/${cube.shortID}`);
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/list/${req.params.id}`);
   }
 });
 
 // GEt view cube Route
-router.get('/view/:id', function(req, res) {
-  res.redirect('/cube/overview/' + req.params.id);
+router.get('/view/:id', (req, res) => {
+  return res.redirect(`/cube/overview/${req.params.id}`);
 });
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
@@ -155,123 +183,121 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.body.html = sanitize(req.body.html);
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
+    let message = '';
 
-    if (req.body.id == -1) {
+    if (req.body.id === -1) {
       if (!cube.draft_formats) {
         cube.draft_formats = [];
       }
       cube.draft_formats.push({
         title: req.body.title,
-        multiples: req.body.multiples == 'true',
+        multiples: req.body.multiples === 'true',
         html: req.body.html,
         packs: req.body.format,
       });
+      message = 'Custom format successfully added.';
     } else {
       cube.draft_formats[req.body.id] = {
         title: req.body.title,
-        multiples: req.body.multiples == 'true',
+        multiples: req.body.multiples === 'true',
         html: req.body.html,
         packs: req.body.format,
       };
+      message = 'Custom format successfully edited.';
     }
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      cube,
-    );
+    // check pack formats are sane
+    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
+    if (draftcards.length === 0) {
+      throw new Error('Could not create draft: no cards');
+    }
+    // test format for errors
+    const format = draftutil.parseDraftFormat(req.body.format);
+    draftutil.checkFormat(format, draftcards);
 
-    req.flash('success', 'Custom format successfully added.');
-    res.redirect('/cube/playtest/' + req.params.id);
+    await cube.save();
+    req.flash('success', message);
+    return res.redirect(`/cube/playtest/${req.params.id}`);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
-router.post('/blog/post/:id', ensureAuth, function(req, res) {
-  req.body.html = sanitize(req.body.html);
-  if (req.body.title.length < 5 || req.body.title.length > 100) {
-    req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
-    res.redirect('/cube/blog/' + req.params.id);
-  } else if (req.body.html.length <= 10) {
-    req.flash('danger', 'Blog body length must be greater than 10 characters.');
-    res.redirect('/cube/blog/' + req.params.id);
-  } else {
-    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-      if (err || !cube) {
-        req.flash('danger', 'Cube not found');
-        res.status(404).render('misc/404', {});
-      } else {
-        cube.date_updated = Date.now();
-        cube.updated_string = cube.date_updated.toLocaleString('en-US');
-        cube = setCubeType(cube, carddb);
-        cube.save(function(err) {
-          User.findById(cube.owner, function(err, user) {
-            if (req.body.id && req.body.id.length > 0) {
-              Blog.findById(req.body.id, function(err, blog) {
-                if (err || !blog) {
-                  req.flash('success', 'Unable to update this blog post.');
-                  res.redirect('/cube/blog/' + req.params.id);
-                } else {
-                  blog.html = req.body.html;
-                  blog.title = req.body.title;
-
-                  blog.save(function(err) {
-                    if (err) {
-                      console.log(err, req);
-                    } else {
-                      req.flash('success', 'Blog update successful');
-                      res.redirect('/cube/blog/' + req.params.id);
-                    }
-                  });
-                }
-              });
-            } else {
-              var blogpost = new Blog();
-              blogpost.html = req.body.html;
-              blogpost.title = req.body.title;
-              blogpost.owner = user._id;
-              blogpost.date = Date.now();
-              blogpost.cube = cube._id;
-              blogpost.dev = 'false';
-              blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-              blogpost.username = user.username;
-              blogpost.cubename = cube.name;
-
-              blogpost.save(function(err) {
-                if (err) {
-                  console.log(err, req);
-                } else {
-                  req.flash('success', 'Blog post successful');
-                  res.redirect('/cube/blog/' + req.params.id);
-                }
-              });
-            }
-          });
-        });
-      }
-    });
-  }
-});
-
-router.post('/follow/:id', ensureAuth, async (req, res) => {
+router.post('/blog/post/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
+    req.body.html = sanitize(req.body.html);
+    if (req.body.title.length < 5 || req.body.title.length > 100) {
+      req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
+      return res.redirect(`/cube/blog/${req.params.id}`);
+    }
+
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    await cube.save();
+    const { user } = req;
+
+    if (req.body.id && req.body.id.length > 0) {
+      // update an existing blog post
+      const blog = await Blog.findById(req.body.id);
+
+      if (blog.owner !== user._id) {
+        req.flash('danger', 'Unable to update this blog post: Unauthorized.');
+        return res.redirect(`/cube/blog/${req.params.id}`);
+      }
+
+      blog.html = req.body.html;
+      blog.title = req.body.title;
+
+      await blog.save();
+
+      req.flash('success', 'Blog update successful');
+      return res.redirect(`/cube/blog/${req.params.id}`);
+    }
+    // post new blog
+    if (cube.owner !== user._id) {
+      req.flash('danger', 'Unable to post this blog post: Unauthorized.');
+      return res.redirect(`/cube/blog/${req.params.id}`);
+    }
+
+    const blogpost = new Blog();
+    blogpost.html = req.body.html;
+    blogpost.title = req.body.title;
+    blogpost.owner = user._id;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = user.username;
+    blogpost.cubename = cube.name;
+
+    await blogpost.save();
+
+    req.flash('success', 'Blog post successful');
+    return res.redirect(`/cube/blog/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/blog/${req.params.id}`);
+  }
+});
+
+router.post(
+  '/follow/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    if (!req.user) {
       req.flash('danger', 'Not Authorized');
       res.status(404).send({
         success: 'false',
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.status(404).send({
+      res.status(404).send({
         success: 'false',
       });
     }
@@ -289,24 +315,21 @@ router.post('/follow/:id', ensureAuth, async (req, res) => {
     res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    res.status(500).send({
-      success: 'false',
-    });
-    console.error(err);
-  }
-});
+  }),
+);
 
-router.post('/unfollow/:id', ensureAuth, async (req, res) => {
-  try {
-    if (!req.user._id) {
+router.post(
+  '/unfollow/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    if (!req.user) {
       req.flash('danger', 'Not Authorized');
       res.status(404).send({
         success: 'false',
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -328,126 +351,119 @@ router.post('/unfollow/:id', ensureAuth, async (req, res) => {
     res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    res.status(500).send({
-      success: 'false',
-    });
-    console.error(err);
-  }
-});
+  }),
+);
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/overview/' + req.params.id);
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/overview/' + req.params.id);
+      return res.redirect(`/cube/overview/${req.params.id}`);
     }
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/overview/' + req.params.id);
+      return res.redirect(`/cube/overview/${req.params.id}`);
     }
 
     cube.isFeatured = true;
     await cube.save();
 
     req.flash('success', 'Cube updated successfully.');
-    return res.redirect('/cube/overview/' + req.params.id);
+    return res.redirect(`/cube/overview/${req.params.id}`);
   } catch (err) {
-    req.flash('danger', 'Server Error');
-    return res.redirect('/cube/overview/' + req.params.id);
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
   }
 });
 
-router.post('/unfeature/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/overview/' + req.params.id);
-  } else {
-    User.findById(req.user._id, function(err, user) {
-      if (!util.isAdmin(user)) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/overview/' + req.params.id);
-      } else {
-        Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-          if (err) {
-            req.flash('danger', 'Server Error');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else if (!cube) {
-            req.flash('danger', 'Cube not found');
-            res.redirect('/cube/overview/' + req.params.id);
-          } else {
-            cube.isFeatured = false;
-            cube.save(function(err) {
-              if (err) {
-                req.flash('danger', 'Server Error');
-                res.redirect('/cube/overview/' + req.params.id);
-              } else {
-                req.flash('success', 'Cube updated successfully.');
-                res.redirect('/cube/overview/' + req.params.id);
-              }
-            });
-          }
-        });
-      }
-    });
+router.post('/unfeature/:id', ensureAuth, async (req, res) => {
+  try {
+    const { user } = req;
+    if (!util.isAdmin(user)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect(`/cube/overview/${req.params.id}`);
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect(`/cube/overview/${req.params.id}`);
+    }
+
+    cube.isFeatured = false;
+    await cube.save();
+
+    req.flash('success', 'Cube updated successfully.');
+    return res.redirect(`/cube/overview/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
   }
 });
 
 router.get('/overview/:id', async (req, res) => {
   try {
-    var split = req.params.id.split(';');
-    var cube_id = split[0];
-    var currentUser;
-    admin = false;
-    if (req.user) {
-      currentUser = await User.findById(req.user._id);
-      admin = util.isAdmin(currentUser);
-    }
-    const cube = await Cube.findOne(build_id_query(cube_id));
+    const cubeID = req.params.id;
+    const cube = await Cube.findOne(build_id_query(cubeID)).lean();
+
+    const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    var pids = [];
-    cube.cards.forEach(function(card, index) {
+    const pids = new Set();
+    for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
-      if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-        pids.push(card.details.tcgplayer_id);
+      const allVersions = carddb.getIdsFromName(card.details.name) || [];
+      card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
+      for (const details of card.allDetails) {
+        if (details.tcgplayer_id) {
+          pids.add(details.tcgplayer_id);
+        }
       }
-    });
+    }
 
-    const price_dict = await GetPrices(pids);
-    var sum = 0;
-    cube.cards.forEach(function(card, index) {
-      if (price_dict[card.details.tcgplayer_id]) {
-        sum += price_dict[card.details.tcgplayer_id];
-      } else if (price_dict[card.details.tcgplayer_id + '_foil']) {
-        sum += price_dict[card.details.tcgplayer_id + '_foil'];
-      }
-    });
-    const user = await User.findById(cube.owner);
-    const blogs = await Blog.find({
+    const userQ = User.findById(cube.owner);
+    const blogsQ = Blog.find({
       cube: cube._id,
     }).sort('date');
+    const priceDictQ = GetPrices([...pids]);
+    const [user, blogs, priceDict] = await Promise.all([userQ, blogsQ, priceDictQ]);
+
+    let totalPriceOwned = 0;
+    let totalPricePurchase = 0;
+    for (const card of cube.cards) {
+      if (!['Not Owned', 'Proxied'].includes(card.status)) {
+        let priceOwned = 0;
+        if (card.finish === 'Foil') {
+          priceOwned = priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
+        } else {
+          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
+        }
+        totalPriceOwned += priceOwned;
+      }
+
+      const allPrices = card.allDetails.map((details) => [
+        priceDict[details.tcgplayer_id],
+        priceDict[`${details.tcgplayer_id}_foil`],
+      ]);
+      const allPricesFlat = [].concat(...allPrices).filter((p) => p && p > 0.001);
+      if (allPricesFlat.length > 0) {
+        totalPricePurchase += Math.min(...allPricesFlat) || 0;
+      }
+    }
 
     if (blogs) {
-      blogs.forEach(function(item, index) {
+      for (const item of blogs) {
         if (!item.date_formatted) {
           item.date_formatted = item.date.toLocaleString('en-US');
         }
         if (item.html) {
           item.html = addAutocard(item.html, carddb, cube);
         }
-      });
+      }
       if (blogs.length > 0) {
         blogs.reverse();
       }
@@ -457,347 +473,349 @@ router.get('/overview/:id', async (req, res) => {
       cube.raw_desc = cube.descriptionhtml;
       cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb, cube);
     }
-    return res.render('cube/cube_overview', {
-      cube: cube,
-      is_following: JSON.stringify(currentUser ? currentUser.followed_cubes.includes(cube._id) : null),
-      cube_id: cube_id,
-      title: `${abbreviate(cube.name)} - Overview`,
-      activeLink: 'overview',
-      num_cards: cube.cards.length,
+
+    // Performance
+    delete cube.cards;
+    delete cube.decks;
+    delete cube.draft_formats;
+    delete cube.maybe;
+
+    const reactProps = {
+      cube,
+      cubeID,
+      userID: user ? user._id : null,
+      loggedIn: !!user,
+      canEdit: user && user.id === cube.owner,
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
+      followed: user ? user.followed_cubes.includes(cube._id) : false,
+      editorvalue: cube.raw_desc,
+      priceOwned: cube.privatePrices || totalPriceOwned,
+      pricePurchase: cube.privatePrices || totalPricePurchase,
+      admin,
+    };
+
+    return res.render('cube/cube_overview', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Overview`,
       metadata: generateMeta(
         `Cube Cobra Overview: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
         cube.image_uri,
         `https://cubecobra.com/cube/overview/${req.params.id}`,
       ),
-      loginCallback: '/cube/overview/' + req.params.id,
-      editorvalue: cube.raw_desc,
-      price: sum.toFixed(2),
-      admin: JSON.stringify(admin),
+      loginCallback: `/cube/overview/${req.params.id}`,
     });
   } catch (err) {
-    req.flash('danger', 'Server Error');
-    return res.redirect('/cube/overview/' + req.params.id);
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
   }
 });
 
-router.get('/blogsrc/:id', function(req, res) {
-  Blog.findById(req.params.id, function(err, blog) {
-    if (err || !blog) {
-      res.status(400).send({
-        success: 'false',
-      });
-    } else {
-      res.status(200).send({
-        success: 'true',
-        src: blog.html,
-        title: blog.title,
-        body: blog.body,
-      });
-    }
-  });
-});
+router.get(
+  '/blogsrc/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const blog = await Blog.findById(req.params.id);
+    res.status(200).send({
+      success: 'true',
+      src: blog.html,
+      title: blog.title,
+      body: blog.body,
+    });
+  }),
+);
 
-router.get('/blog/:id', function(req, res) {
-  res.redirect('/cube/blog/' + req.params.id + '/0');
+router.get('/blog/:id', (req, res) => {
+  res.redirect(`/cube/blog/${req.params.id}/0`);
 });
 
 router.get('/blog/:id/:page', async (req, res) => {
   try {
-    var cube_id = req.params.id;
-    cube = await Cube.findOne(build_id_query(cube_id));
+    const cubeID = req.params.id;
+    const cube = await Cube.findOne(build_id_query(cubeID), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    user = await User.findById(cube.owner);
-    blogs = await Blog.find({
+    const userQ = User.findById(cube.owner);
+    const blogsQ = Blog.find({
       cube: cube._id,
     });
+    const [user, blogs] = await Promise.all([userQ, blogsQ]);
 
-    if (!user) {
-      user = {
-        username: 'unknown',
-      };
-    }
-
-    blogs.forEach(function(item, index) {
+    for (const item of blogs) {
       if (!item.date_formatted) {
         item.date_formatted = item.date.toLocaleString('en-US');
       }
       if (item.html) {
         item.html = addAutocard(item.html, carddb, cube);
       }
-    });
+    }
 
-    var pages = [];
-    var blog_page = [];
+    const pages = [];
+    let blogPage = [];
     if (blogs.length > 0) {
       blogs.reverse();
 
-      var page = parseInt(req.params.page);
-      if (!page) {
+      let page = parseInt(req.params.page, 10);
+      if (Number.isNaN(page)) {
         page = 0;
       }
-      for (var i = 0; i < blogs.length / 10; i++) {
-        if (page == i) {
+      blogPage = blogs.slice(page * 10, (page + 1) * 10);
+      for (let i = 0; i < blogs.length / 10; i += 1) {
+        if (page === i) {
           pages.push({
-            url: '/cube/blog/' + cube_id + '/' + i,
+            url: `/cube/blog/${cubeID}/${i}`,
             content: i + 1,
             active: true,
           });
         } else {
           pages.push({
-            url: '/cube/blog/' + cube_id + '/' + i,
+            url: `/cube/blog/${cubeID}/${i}`,
             content: i + 1,
           });
         }
       }
-      blog_page = [];
-      for (var i = 0; i < 10; i++) {
-        if (blogs[i + page * 10]) {
-          blog_page.push(blogs[i + page * 10]);
-        }
-      }
     }
 
-    return res.render('cube/cube_blog', {
-      cube: cube,
-      cube_id: cube_id,
-      owner: user.username,
-      activeLink: 'blog',
-      title: `${abbreviate(cube.name)} - Blog`,
-      posts: blogs.length > 0 ? blog_page : blogs,
+    const reactProps = {
+      cube,
+      cubeID,
+      canEdit: req.user ? req.user.id === cube.owner : false,
+      posts: blogs.length > 0 ? blogPage : blogs,
       pages: blogs.length > 0 ? pages : null,
+      userid: user._id,
+    };
+
+    return res.render('cube/cube_blog', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Blog`,
       metadata: generateMeta(
         `Cube Cobra Blog: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
         cube.image_uri,
         `https://cubecobra.com/cube/blog/${req.params.id}`,
       ),
-      loginCallback: '/cube/blog/' + req.params.id,
+      loginCallback: `/cube/blog/${req.params.id}`,
     });
   } catch (err) {
-    return res.status(500).send(err);
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
   }
 });
 
-router.get('/rss/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cube_id = split[0];
-  Cube.findOne(build_id_query(cube_id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/404/');
-    } else {
-      User.findById(cube.owner, function(err, user) {
-        Blog.find({
-          cube: cube._id,
-        })
-          .sort('-date')
-          .exec(function(err, blogs) {
-            if (!user) {
-              user = {
-                username: 'unknown',
-              };
-            }
+router.get('/rss/:id', async (req, res) => {
+  try {
+    const split = req.params.id.split(';');
+    const cubeID = split[0];
+    const cube = await Cube.findOne(build_id_query(cubeID));
+    const blogs = await Blog.find({
+      cube: cube._id,
+    })
+      .sort('-date')
+      .exec();
 
-            const feed = new RSS({
-              title: cube.name,
-              feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
-              site_url: 'https://cubecobra.com',
-            });
-
-            blogs.forEach((blog) => {
-              let content = blog.html ? blog.html : blog.content;
-
-              if (blog.changelist) {
-                const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
-                if (content) {
-                  content = content + changeSetElement;
-                } else {
-                  content = changeSetElement;
-                }
-              }
-
-              feed.item({
-                title: blog.title,
-                description: content,
-                guid: blog.id,
-                date: blog.date,
-              });
-            });
-            res.set('Content-Type', 'text/xml');
-            res.status(200).send(feed.xml());
-          });
-      });
-    }
-  });
-});
-
-router.get('/compare/:id_a/to/:id_b', function(req, res) {
-  const id_a = req.params.id_a;
-  const id_b = req.params.id_b;
-  const user_id = req.user ? req.user._id : '';
-  Cube.findOne(build_id_query(id_a), function(err, cubeA) {
-    Cube.findOne(build_id_query(id_b), function(err, cubeB) {
-      if (!cubeA) {
-        req.flash('danger', 'Base cube not found');
-        res.status(404).render('misc/404', {});
-      } else if (!cubeB) {
-        req.flash('danger', 'Comparison cube was not found');
-        res.redirect('/cube/list/' + id_a);
-      } else {
-        let pids = [];
-        cubeA.cards.forEach(function(card, index) {
-          card.details = {
-            ...carddb.cardFromId(card.cardID),
-          };
-          if (!card.type_line) {
-            card.type_line = card.details.type;
-          }
-          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-            pids.push(card.details.tcgplayer_id);
-          }
-        });
-        cubeB.cards.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
-          if (!card.type_line) {
-            card.type_line = card.details.type;
-          }
-          if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-            pids.push(card.details.tcgplayer_id);
-          }
-        });
-        GetPrices(pids).then(function(price_dict) {
-          cubeA.cards.forEach(function(card, index) {
-            if (card.details.tcgplayer_id) {
-              if (price_dict[card.details.tcgplayer_id]) {
-                card.details.price = price_dict[card.details.tcgplayer_id];
-              }
-              if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-              }
-            }
-          });
-          cubeB.cards.forEach(function(card, index) {
-            if (card.details.tcgplayer_id) {
-              if (price_dict[card.details.tcgplayer_id]) {
-                card.details.price = price_dict[card.details.tcgplayer_id];
-              }
-              if (price_dict[card.details.tcgplayer_id + '_foil']) {
-                card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-              }
-            }
-          });
-          User.findById(cubeA.owner, function(err, ownerA) {
-            User.findById(cubeB.owner, function(err, ownerB) {
-              let in_both = [];
-              let only_a = cubeA.cards.slice(0);
-              let only_b = cubeB.cards.slice(0);
-              let a_names = only_a.map((card) => card.details.name);
-              let b_names = only_b.map((card) => card.details.name);
-
-              cubeA.cards.forEach(function(card, index) {
-                if (b_names.includes(card.details.name)) {
-                  in_both.push(card);
-
-                  only_a.splice(a_names.indexOf(card.details.name), 1);
-                  only_b.splice(b_names.indexOf(card.details.name), 1);
-
-                  a_names.splice(a_names.indexOf(card.details.name), 1);
-                  b_names.splice(b_names.indexOf(card.details.name), 1);
-                }
-              });
-
-              let all_cards = in_both.concat(only_a).concat(only_b);
-
-              params = {
-                cube: cubeA,
-                cubeB: cubeB,
-                cube_id: id_a,
-                cube_b_id: id_b,
-                title: `Comparing ${cubeA.name} to ${cubeB.name}`,
-                in_both: JSON.stringify(in_both.map((card) => card.details.name)),
-                only_a: JSON.stringify(a_names),
-                only_b: JSON.stringify(b_names),
-                cube_raw: JSON.stringify(all_cards),
-                metadata: generateMeta(
-                  'Cube Cobra Compare Cubes',
-                  `Comparing "${cubeA.name}" To "${cubeB.name}"`,
-                  cubeA.image_uri,
-                  `https://cubecobra.com/cube/compare/${id_a}/to/${id_b}`,
-                ),
-                loginCallback: '/cube/compare/' + id_a + '/to/' + id_b,
-              };
-
-              if (ownerA) params.owner = ownerA.username;
-              else params.author = 'unknown';
-
-              res.render('cube/cube_compare', params);
-            });
-          });
-        });
-      }
+    const feed = new RSS({
+      title: cube.name,
+      feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
+      site_url: 'https://cubecobra.com',
     });
-  });
+
+    blogs.forEach((blog) => {
+      let content = blog.html ? blog.html : blog.content;
+
+      if (blog.changelist) {
+        const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+        if (content) {
+          content += changeSetElement;
+        } else {
+          content = changeSetElement;
+        }
+      }
+
+      feed.item({
+        title: blog.title,
+        description: content,
+        guid: blog.id,
+        date: blog.date,
+      });
+    });
+    res.set('Content-Type', 'text/xml');
+    return res.status(200).send(feed.xml());
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404/');
+  }
 });
 
-router.get('/list/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      var pids = [];
-      cube.cards.forEach(function(card, index) {
+router.get('/compare/:idA/to/:idB', async (req, res) => {
+  try {
+    const { idA } = req.params;
+    const { idB } = req.params;
+
+    const cubeAq = Cube.findOne(build_id_query(idA));
+    const cubeBq = Cube.findOne(build_id_query(idB));
+
+    const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
+
+    const pids = new Set();
+    [cubeA, cubeB].forEach((cube) => {
+      for (const card of cube.cards) {
         card.details = {
           ...carddb.cardFromId(card.cardID),
         };
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
-        if (card.details.tcgplayer_id && !pids.includes(card.details.tcgplayer_id)) {
-          pids.push(card.details.tcgplayer_id);
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
         }
-      });
-      GetPrices(pids).then(function(price_dict) {
-        cube.cards.forEach(function(card, index) {
-          if (card.details.tcgplayer_id) {
-            if (price_dict[card.details.tcgplayer_id]) {
-              card.details.price = price_dict[card.details.tcgplayer_id];
-            }
-            if (price_dict[card.details.tcgplayer_id + '_foil']) {
-              card.details.price_foil = price_dict[card.details.tcgplayer_id + '_foil'];
-            }
+      }
+    });
+
+    const priceDict = await GetPrices([...pids]);
+    [cubeA, cubeB].forEach((cube) => {
+      for (const card of cube.cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
           }
-        });
-        res.render('cube/cube_list', {
-          cube: cube,
-          activeLink: 'list',
-          cube_id: req.params.id,
-          title: `${abbreviate(cube.name)} - List`,
-          cube_raw: JSON.stringify(cube.cards),
-          metadata: generateMeta(
-            `Cube Cobra List: ${cube.name}`,
-            cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-            cube.image_uri,
-            `https://cubecobra.com/cube/list/${req.params.id}`,
-          ),
-          loginCallback: '/cube/list/' + req.params.id,
-        });
-      });
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+      }
+    });
+
+    const inBoth = [];
+    const onlyA = cubeA.cards.slice(0);
+    const onlyB = cubeB.cards.slice(0);
+    const aNames = onlyA.map((card) => card.details.name);
+    const bNames = onlyB.map((card) => card.details.name);
+
+    for (const card of cubeA.cards) {
+      if (bNames.includes(card.details.name)) {
+        inBoth.push(card);
+
+        onlyA.splice(aNames.indexOf(card.details.name), 1);
+        onlyB.splice(bNames.indexOf(card.details.name), 1);
+
+        aNames.splice(aNames.indexOf(card.details.name), 1);
+        bNames.splice(bNames.indexOf(card.details.name), 1);
+      }
     }
-  });
+
+    const allCards = inBoth.concat(onlyA).concat(onlyB);
+
+    const reactProps = {
+      cube: cubeA,
+      cubeID: idA,
+      cubeB,
+      cubeBID: idB,
+      onlyA: aNames,
+      onlyB: bNames,
+      both: inBoth.map((card) => card.details.name),
+      cards: allCards.map((card, index) => Object.assign(card, { index })),
+      defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
+      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      defaultSorts: cubeA.default_sorts,
+    };
+
+    return res.render('cube/cube_compare', {
+      reactProps: serialize(reactProps),
+      title: `Comparing ${cubeA.name} to ${cubeB.name}`,
+      metadata: generateMeta(
+        'Cube Cobra Compare Cubes',
+        `Comparing "${cubeA.name}" To "${cubeB.name}"`,
+        cubeA.image_uri,
+        `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
+      ),
+      loginCallback: `/cube/compare/${idA}/to/${idB}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404/');
+  }
+});
+
+router.get('/list/:id', async (req, res) => {
+  try {
+    const fields =
+      'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
+    const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const pids = new Set();
+    const cardNames = [];
+    const { cards } = cube;
+    cards.forEach((card, index) => {
+      card.details = {
+        ...carddb.cardFromId(card.cardID),
+      };
+      card.index = index;
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.push(card.details.name);
+    });
+
+    const priceDict = await GetPrices([...pids]);
+    const eloDict = await getElo(cardNames, true);
+    for (const card of cards) {
+      if (card.details.tcgplayer_id) {
+        if (priceDict[card.details.tcgplayer_id]) {
+          card.details.price = priceDict[card.details.tcgplayer_id];
+        }
+        if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+          card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+        }
+      }
+      if (eloDict[card.details.name]) {
+        card.details.elo = eloDict[card.details.name];
+      }
+    }
+
+    const reactProps = {
+      cube,
+      cubeID: req.params.id,
+      canEdit: req.user ? req.user.id === cube.owner : false,
+      defaultView: req.query.view || 'table',
+      defaultFilterText: req.query.f || '',
+      defaultTagColors: cube.tag_colors || [],
+      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      defaultSorts: cube.default_sorts,
+      maybe: maybeCards(cube, carddb),
+    };
+
+    return res.render('cube/cube_list', {
+      reactHTML: CubeListPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        : undefined,
+      reactProps: serialize(reactProps),
+      cube,
+      cubeID: req.params.id,
+      activeLink: 'list',
+      title: `${abbreviate(cube.name)} - List`,
+      metadata: generateMeta(
+        `Cube Cobra List: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/list/${req.params.id}`,
+      ),
+      loginCallback: `/cube/list/${req.params.id}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
+  }
 });
 
 router.get('/playtest/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -805,9 +823,12 @@ router.get('/playtest/:id', async (req, res) => {
     }
 
     const userq = User.findById(cube.owner).exec();
-    const decksq = Deck.find({
-      cube: cube._id,
-    })
+    const decksq = Deck.find(
+      {
+        cube: cube._id,
+      },
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })
@@ -816,164 +837,147 @@ router.get('/playtest/:id', async (req, res) => {
 
     const [user, decks] = await Promise.all([userq, decksq]);
 
-    res.render('cube/cube_playtest', {
-      cube: cube,
-      cube_id: req.params.id,
-      activeLink: 'playtest',
+    delete cube.cards;
+    delete cube.decks;
+    delete cube.maybe;
+
+    let draftFormats = [];
+    // NOTE: older cubes do not have custom drafts
+    if (cube.draft_formats) {
+      draftFormats = cube.draft_formats
+        .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
+        .map(({ packs, ...format }) => ({
+          ...format,
+          packs: JSON.parse(packs),
+        }));
+    }
+
+    const reactProps = {
+      cube,
+      cubeID: req.params.id,
+      canEdit: user._id.equals(cube.owner),
+      decks,
+      draftFormats,
+    };
+
+    return res.render('cube/cube_playtest', {
+      reactHTML: CubePlaytestPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+        : undefined,
+      reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Playtest`,
-      owner: user ? user.username : 'Unknown',
-      decks: decks,
-      cube_raw: JSON.stringify(cube),
       metadata: generateMeta(
         `Cube Cobra Playtest: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
         cube.image_uri,
         `https://cubecobra.com/cube/playtest/${req.params.id}`,
       ),
-      loginCallback: '/cube/playtest/' + req.params.id,
+      loginCallback: `/cube/playtest/${req.params.id}`,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
   }
 });
 
-router.get('/analysis/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      User.findById(cube.owner, function(err, user) {
-        if (!user) {
-          user = {
-            username: 'unknown',
-          };
-        }
-        if (err) {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
-          });
-        } else {
-          res.render('cube/cube_analysis', {
-            cube: cube,
-            cube_id: req.params.id,
-            owner: user.username,
-            activeLink: 'analysis',
-            title: `${abbreviate(cube.name)} - Analysis`,
-            TypeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-            MulticoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-            curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-            GeneratedTokensCounts: analytics.GetTokens(cube.cards, carddb),
-            metadata: generateMeta(
-              `Cube Cobra Analysis: ${cube.name}`,
-              cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-              cube.image_uri,
-              `https://cubecobra.com/cube/analysis/${req.params.id}`,
-            ),
-            loginCallback: '/cube/analysis/' + req.params.id,
-          });
-        }
-      });
-    }
-  });
-});
-
-router.get('/samplepack/:id', function(req, res) {
-  res.redirect('/cube/samplepack/' + req.params.id + '/' + Date.now().toString());
-});
-
-router.get('/samplepack/:id/:seed', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    }
-    generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
-      if (err) {
-        req.flash('danger', 'Pack could not be created');
-        res.status(404).render('misc/404', {});
-      } else {
-        res.render('cube/cube_samplepack', {
-          cube,
-          title: `${abbreviate(cube.name)} - Sample Pack`,
-          pack: pack.pack,
-          seed: pack.seed,
-          cube_id: req.params.id,
-          activeLink: 'playtest',
-          metadata: generateMeta(
-            'Cube Cobra Sample Pack',
-            `A sample pack from ${cube.name}`,
-            `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-            `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
-            CARD_WIDTH * 5,
-            CARD_HEIGHT * 3,
-          ),
-          loginCallback: '/cube/samplepack/' + req.params.id,
-        });
-      }
-    });
-  });
-});
-
-router.get('/samplepackimage/:id/:seed', function(req, res) {
-  req.params.seed = req.params.seed.replace('.png', '');
-  generatePack(req.params.id, carddb, req.params.seed, function(err, pack) {
-    if (err) {
-      req.flash('danger', 'Pack could not be created');
-      res.status(404).render('misc/404', {});
-    } else {
-      var srcArray = pack.pack.map((card, index) => {
-        return {
-          src: card.image_normal,
-          x: CARD_WIDTH * (index % 5),
-          y: CARD_HEIGHT * Math.floor(index / 5),
-        };
-      });
-      mergeImages(srcArray, {
-        width: CARD_WIDTH * 5,
-        height: CARD_HEIGHT * 3,
-        Canvas,
-      }).then(function(image) {
-        res.writeHead(200, {
-          'Content-Type': 'image/png',
-        });
-        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-      });
-    }
-  });
-});
-
-router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
+router.get('/analysis/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
-    if (cube.owner != req.user._id) {
+
+    const reactProps = {
+      cube,
+      cubeID: req.params.id,
+      defaultNav: req.query.nav,
+      curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
+      typeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
+      multicoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
+      tokens: analytics.GetTokens(cube.cards, carddb),
+    };
+
+    return res.render('cube/cube_analysis', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Analysis`,
+      metadata: generateMeta(
+        `Cube Cobra Analysis: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/analysis/${req.params.id}`,
+      ),
+      loginCallback: `/cube/analysis/${req.params.id}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/overview/${req.params.id}`);
+  }
+});
+
+router.get('/samplepack/:id', (req, res) => {
+  res.redirect(`/cube/samplepack/${req.params.id}/${Date.now().toString()}`);
+});
+
+router.get('/samplepack/:id/:seed', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+    return res.render('cube/cube_samplepack', {
+      cube,
+      title: `${abbreviate(cube.name)} - Sample Pack`,
+      pack: pack.pack,
+      seed: pack.seed,
+      cubeID: req.params.id,
+      activeLink: 'playtest',
+      metadata: generateMeta(
+        'Cube Cobra Sample Pack',
+        `A sample pack from ${cube.name}`,
+        `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+        `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+        CARD_WIDTH * 5,
+        CARD_HEIGHT * 3,
+      ),
+      loginCallback: `/cube/samplepack/${req.params.id}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
+router.get('/samplepackimage/:id/:seed', async (req, res) => {
+  try {
+    req.params.seed = req.params.seed.replace('.png', '');
+    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+
+    const srcArray = pack.pack.map((card, index) => {
+      return {
+        src: card.image_normal,
+        x: CARD_WIDTH * (index % 5),
+        y: CARD_HEIGHT * Math.floor(index / 5),
+      };
+    });
+
+    return mergeImages(srcArray, {
+      width: CARD_WIDTH * 5,
+      height: CARD_HEIGHT * 3,
+      Canvas,
+    }).then((image) => {
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+      });
+      res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (cube.owner !== req.user.id) {
       req.flash('danger', 'Not Authorized');
-      res.redirect('/cube/list/' + req.params.id);
-      return;
+      return res.redirect(`/cube/list/${req.params.id}`);
     }
-    if (isNaN(req.body.cubeid)) {
+    if (!Number.isInteger(req.body.cubeid)) {
       req.flash('danger', 'Error: Provided ID is not in correct format.');
-      res.redirect('/cube/list/' + req.params.id);
-      return;
+      return res.redirect(`/cube/list/${req.params.id}`);
     }
 
     const response = await fetch(`https://www.cubetutor.com/viewcube/${req.body.cubeid}`, {
@@ -984,23 +988,22 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
     });
     if (!response.ok) {
       req.flash('danger', 'Error accessing CubeTutor.');
-      res.redirect('/cube/list' + req.params.id);
-      return;
+      return res.redirect(`/cube/list${req.params.id}`);
     }
     const text = await response.text();
     const data = cheerio.load(text);
 
     const tagColors = new Map();
     data('.keyColour').each((i, elem) => {
-      const text = elem.firstChild.nodeValue.trim();
-      tagColors.set(elem.attribs['class'].split(' ')[1], text);
+      const nodeText = elem.firstChild.nodeValue.trim();
+      tagColors.set(elem.attribs.class.split(' ')[1], nodeText);
     });
 
     const cards = [];
     data('.cardPreview').each((i, elem) => {
       const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
       const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
-      const tagColorClasses = elem.attribs['class'].split(' ').filter((c) => tagColors.has(c));
+      const tagColorClasses = elem.attribs.class.split(' ').filter((c) => tagColors.has(c));
       const tags = tagColorClasses.map((c) => tagColors.get(c));
       cards.push({
         set: str.includes('/') ? str.split('/')[0] : 'unknown',
@@ -1015,7 +1018,7 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
     for (const card of cards) {
       const potentialIds = carddb.allIds(card);
       if (potentialIds && potentialIds.length > 0) {
-        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
+        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
         const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
         const selected = matchingSet || nonPromo || potentialIds[0];
         const details = carddb.cardFromId(selected);
@@ -1023,7 +1026,7 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
         util.addCardToCube(cube, details, card.tags);
         changelog += addCardHtml(details);
       } else {
-        missing += card.name + '\n';
+        missing += `${card.name}\n`;
       }
     }
 
@@ -1038,40 +1041,43 @@ router.post('/importcubetutor/:id', ensureAuth, async function(req, res) {
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
-    if (missing.length > 0) {
-      res.render('cube/bulk_upload', {
-        missing: missing,
-        cube_id: req.params.id,
+    if (missing.length === 0) {
+      const reactProps = {
+        cubeID: req.params.id,
+        missing,
+        added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+        blogpost: blogpost.toObject(),
+      };
+      return res.render('cube/bulk_upload', {
+        reactHTML:
+          NODE_ENV === 'production'
+            ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+            : undefined,
+        reactProps: serialize(reactProps),
+        cube,
+        cubeID: req.params.id,
         title: `${abbreviate(cube.name)} - Bulk Upload`,
-        added: JSON.stringify(added),
-        cube: cube,
-        user: {
-          id: req.user._id,
-          username: req.user.username,
-        },
       });
-    } else {
-      try {
-        const blogQ = blogpost.save();
-        setCubeType(cube, carddb);
-        const cubeQ = cube.save();
-        await Promise.all([blogQ, cubeQ]);
-        req.flash('success', 'All cards successfully added.');
-        res.redirect('/cube/list/' + req.params.id);
-      } catch (e) {
-        console.error(e);
-        req.flash('danger', 'Error adding cards. Please try again.');
-        res.redirect('/cube/list/' + req.params.id);
-      }
+    }
+
+    try {
+      const blogQ = blogpost.save();
+      setCubeType(cube, carddb);
+      const cubeQ = cube.save();
+      await Promise.all([blogQ, cubeQ]);
+      req.flash('success', 'All cards successfully added.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    } catch (e) {
+      console.error(e);
+      req.flash('danger', 'Error adding cards. Please try again.');
+      return res.redirect(`/cube/list/${req.params.id}`);
     }
   } catch (err) {
-    console.error(err);
-    req.flash('danger', 'Error: Unable to import this cube.');
-    res.redirect('/cube/list/' + req.params.id);
+    return util.handleRouteError(res, req, err, `/cube/list/${req.params.id}`);
   }
 });
 
-router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
+router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
@@ -1079,42 +1085,41 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
       return res.redirect('/404');
     }
 
-    if (cube.owner != req.user._id) {
+    if (cube.owner !== req.user.id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect('/cube/playtest/' + req.params.id);
+      return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
-    cards = req.body.body.match(/[^\r\n]+/g);
+    const cards = req.body.body.match(/[^\r\n]+/g);
     if (!cards) {
       req.flash('danger', 'No cards detected');
-      return res.redirect('/cube/playtest/' + req.params.id);
+      return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
-    //list of cardids
-    var added = [];
+    // list of cardids
+    const added = [];
     for (let i = 0; i < 16; i++) {
       added.push([]);
     }
-    let missing = '';
 
-    for (i = 0; i < cards.length; i++) {
-      item = cards[i].toLowerCase().trim();
+    for (let i = 0; i < cards.length; i++) {
+      const item = cards[i].toLowerCase().trim();
       if (/([0-9]+x )(.*)/.test(item)) {
-        var count = parseInt(item.substring(0, item.indexOf('x')));
-        for (j = 0; j < count; j++) {
+        const count = parseInt(item.substring(0, item.indexOf('x')), 10);
+        for (let j = 0; j < count; j++) {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
       } else {
-        let selected = undefined;
-        //does not have set info
-        let normalizedName = cardutil.normalizeName(item);
-        let potentialIds = carddb.getIdsFromName(normalizedName);
+        let selected;
+        // does not have set info
+        const normalizedName = cardutil.normalizeName(item);
+        const potentialIds = carddb.getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
-          //change this to grab a version that exists in the cube
-          for (let i = 0; i < cube.cards.length; i++) {
-            if (carddb.cardFromId(cube.cards[i].cardID).name_lower == normalizedName) {
-              selected = cube.cards[i];
-              selected.details = carddb.cardFromId(cube.cards[i].cardID);
+          // TODO: change this to grab a version that exists in the cube
+          for (let k = 0; k < cube.cards.length; i++) {
+            if (carddb.cardFromId(cube.cards[k].cardID).name_lower === normalizedName) {
+              selected = cube.cards[k];
+              selected.details = carddb.cardFromId(cube.cards[k].cardID);
             }
           }
           if (!selected) {
@@ -1124,19 +1129,17 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
           }
         }
         if (selected) {
-          //push into correct column.
+          // push into correct column.
           let column = Math.min(7, selected.details.cmc);
           if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
           added[column].push(selected);
-        } else {
-          missing += item + '\n';
         }
       }
     }
 
-    var deck = new Deck();
+    const deck = new Deck();
     deck.playerdeck = added;
     deck.owner = req.user._id;
     deck.cube = cube._id;
@@ -1145,7 +1148,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
     deck.playersideboard = [];
     deck.pickOrder = [];
     deck.newformat = true;
-    deck.name = req.user.username + "'s decklist upload on " + deck.date.toLocaleString('en-US');
+    deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
 
     if (!cube.decks) {
       cube.decks = [];
@@ -1159,56 +1162,22 @@ router.post('/uploaddecklist/:id', ensureAuth, async function(req, res) {
 
     await Promise.all([cube.save(), deck.save()]);
 
-    return res.redirect('/cube/deckbuilder/' + deck._id);
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
-    console.log(err);
-    req.flash('danger', err.message);
-    res.redirect('/404');
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
-router.post('/bulkupload/:id', ensureAuth, function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.log(err, req);
-    } else {
-      if (cube.owner != req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/list/' + req.params.id);
-      } else {
-        bulkUpload(req, res, req.body.body, cube);
-      }
-    }
-  });
-});
-
-router.post('/bulkuploadfile/:id', ensureAuth, function(req, res) {
-  if (!req.files) {
-    req.flash('danger', 'Please attach a file');
-    res.redirect('/cube/list/' + req.params.id);
-  } else {
-    items = req.files.document.data.toString('utf8'); // the uploaded file object
-
-    Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-      if (cube.owner != req.user._id) {
-        req.flash('danger', 'Not Authorized');
-        res.redirect('/cube/list/' + req.params.id);
-      } else {
-        bulkUpload(req, res, items, cube);
-      }
-    });
-  }
-});
-
-function bulkuploadCSV(req, res, cards, cube) {
-  let added = [];
+async function bulkUploadCSV(req, res, cards, cube) {
+  const added = [];
   let missing = '';
   let changelog = '';
-  for (let card_raw of cards) {
-    let split = util.CSVtoArray(card_raw);
-    let name = split[0];
-    let card = {
-      name: name,
+  for (const cardRaw of cards) {
+    const split = util.CSVtoArray(cardRaw);
+    const name = split[0];
+    const maybeboard = split[8];
+    const card = {
+      name,
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
       colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
@@ -1216,24 +1185,30 @@ function bulkuploadCSV(req, res, cards, cube) {
       addedTmsp: new Date(),
       collector_number: split[5],
       status: split[6],
-      tags: split[7] && split[7].length > 0 ? split[7].split(',') : [],
+      finish: split[7],
+      imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
+      tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
     };
 
-    let potentialIds = carddb.allIds(card);
+    const potentialIds = carddb.allIds(card);
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
-      let matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == card.set);
-      let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
-      let first = potentialIds[0];
+      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
+      const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
+      const first = potentialIds[0];
       card.cardID = matchingSet || nonPromo || first;
-      cube.cards.push(card);
+      if (maybeboard === 'true') {
+        cube.maybe.push(card);
+      } else {
+        cube.cards.push(card);
+      }
       changelog += addCardHtml(carddb.cardFromId(card.cardID));
     } else {
-      missing += card.name + '\n';
+      missing += `${card.name}\n`;
     }
   }
 
-  var blogpost = new Blog();
+  const blogpost = new Blog();
   blogpost.title = 'Cube Bulk Import - Automatic Post';
   blogpost.html = changelog;
   blogpost.owner = cube.owner;
@@ -1246,486 +1221,359 @@ function bulkuploadCSV(req, res, cards, cube) {
 
   //
   if (missing.length > 0) {
-    res.render('cube/bulk_upload', {
-      missing: missing,
-      cube_id: get_cube_id(cube),
+    const reactProps = {
+      cubeID: req.params.id,
+      missing,
+      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+      blogpost: blogpost.toObject(),
+    };
+    return res.render('cube/bulk_upload', {
+      reactHTML:
+        NODE_ENV === 'production'
+          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
+      reactProps: serialize(reactProps),
+      cube,
+      cubeID: req.params.id,
       title: `${abbreviate(cube.name)} - Bulk Upload`,
-      added: JSON.stringify(added),
-      cube: cube,
-      user: {
-        id: req.user._id,
-        username: req.user.username,
+    });
+  }
+
+  try {
+    await blogpost.save();
+    cube = setCubeType(cube, carddb);
+    await Cube.updateOne(
+      {
+        _id: cube._id,
       },
-    });
-  } else {
-    blogpost.save(function(err) {
-      cube = setCubeType(cube, carddb);
-      Cube.updateOne(
-        {
-          _id: cube._id,
-        },
-        cube,
-        function(err) {
-          if (err) {
-            req.flash('danger', 'Error adding cards. Please try again.');
-            res.redirect('/cube/list/' + req.params.id);
-          } else {
-            req.flash('success', 'All cards successfully added.');
-            res.redirect('/cube/list/' + req.params.id);
-          }
-        },
-      );
-    });
+      cube,
+    );
+    req.flash('success', 'All cards successfully added.');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('danger', 'Error adding cards. Please try again.');
+    return res.redirect(`/cube/list/${req.params.id}`);
   }
 }
 
-function bulkUpload(req, res, list, cube) {
-  cards = list.match(/[^\r\n]+/g);
-  if (cards) {
-    if (cards[0].trim() == 'Name,CMC,Type,Color,Set,Collector Number,Status,Tags') {
-      cards.splice(0, 1);
-      bulkuploadCSV(req, res, cards, cube);
+async function bulkUpload(req, res, list, cube) {
+  const cards = list.match(/[^\r\n]+/g);
+  if (!cards) {
+    req.flash('danger', 'Invalid request.');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  }
+
+  if (cards[0].trim() === CSV_HEADER) {
+    cards.splice(0, 1);
+    return bulkUploadCSV(req, res, cards, cube);
+  }
+
+  cube.date_updated = Date.now();
+  cube.updated_string = cube.date_updated.toLocaleString('en-US');
+  let missing = '';
+  const added = [];
+  let changelog = '';
+  for (let i = 0; i < cards.length; i++) {
+    const item = cards[i].toLowerCase().trim();
+    if (/([0-9]+x )(.*)/.test(item)) {
+      const count = parseInt(item.substring(0, item.indexOf('x')), 10);
+      for (let j = 0; j < count; j++) {
+        cards.push(item.substring(item.indexOf('x') + 1));
+      }
     } else {
-      cube.date_updated = Date.now();
-      cube.updated_string = cube.date_updated.toLocaleString('en-US');
-      if (!cards) {
-        req.flash('danger', 'No Cards Detected');
-        res.redirect('/cube/list/' + req.params.id);
+      let selected;
+      if (/(.*)( \((.*)\))/.test(item)) {
+        // has set info
+        if (
+          carddb.nameToId[
+            item
+              .toLowerCase()
+              .substring(0, item.indexOf('('))
+              .trim()
+          ]
+        ) {
+          const name = item
+            .toLowerCase()
+            .substring(0, item.indexOf('('))
+            .trim();
+          const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
+          // if we've found a match, and it DOES need to be parsed with cubecobra syntax
+          const potentialIds = carddb.nameToId[name];
+          selected = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+        }
       } else {
-        var missing = '';
-        var added = [];
-        var changelog = '';
-        for (i = 0; i < cards.length; i++) {
-          item = cards[i].toLowerCase().trim();
-          if (/([0-9]+x )(.*)/.test(item)) {
-            var count = parseInt(item.substring(0, item.indexOf('x')));
-            for (j = 0; j < count; j++) {
-              cards.push(item.substring(item.indexOf('x') + 1));
-            }
-          } else {
-            let selected = undefined;
-            if (/(.*)( \((.*)\))/.test(item)) {
-              //has set info
-              if (
-                carddb.nameToId[
-                  item
-                    .toLowerCase()
-                    .substring(0, item.indexOf('('))
-                    .trim()
-                ]
-              ) {
-                let name = item
-                  .toLowerCase()
-                  .substring(0, item.indexOf('('))
-                  .trim();
-                let set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
-                //if we've found a match, and it DOES need to be parsed with cubecobra syntax
-                let potentialIds = carddb.nameToId[name];
-                selected = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() == set);
-              }
-            } else {
-              //does not have set info
-              let potentialIds = carddb.nameToId[item.toLowerCase().trim()];
-              if (potentialIds && potentialIds.length > 0) {
-                let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
-                selected = nonPromo || potentialIds[0];
-              }
-            }
-            if (selected) {
-              let details = carddb.cardFromId(selected);
-              util.addCardToCube(cube, details);
-              added.push(details);
-              changelog += addCardHtml(details);
-            } else {
-              missing += item + '\n';
-            }
-          }
-        }
-
-        var blogpost = new Blog();
-        blogpost.title = 'Cube Bulk Import - Automatic Post';
-        blogpost.html = changelog;
-        blogpost.owner = cube.owner;
-        blogpost.date = Date.now();
-        blogpost.cube = cube._id;
-        blogpost.dev = 'false';
-        blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-        blogpost.username = cube.owner_name;
-        blogpost.cubename = cube.name;
-
-        //
-        if (missing.length > 0) {
-          res.render('cube/bulk_upload', {
-            missing: missing,
-            cube_id: get_cube_id(cube),
-            title: `${abbreviate(cube.name)} - Bulk Upload`,
-            added: JSON.stringify(added),
-            cube: cube,
-            user: {
-              id: req.user._id,
-              username: req.user.username,
-            },
-          });
-        } else {
-          blogpost.save(function(err) {
-            cube = setCubeType(cube, carddb);
-            Cube.updateOne(
-              {
-                _id: cube._id,
-              },
-              cube,
-              function(err) {
-                if (err) {
-                  req.flash('danger', 'Error adding cards. Please try again.');
-                  res.redirect('/cube/list/' + req.params.id);
-                } else {
-                  req.flash('success', 'All cards successfully added.');
-                  res.redirect('/cube/list/' + req.params.id);
-                }
-              },
-            );
-          });
+        // does not have set info
+        const potentialIds = carddb.nameToId[item.toLowerCase().trim()];
+        if (potentialIds && potentialIds.length > 0) {
+          const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
+          selected = nonPromo || potentialIds[0];
         }
       }
+      if (selected) {
+        const details = carddb.cardFromId(selected);
+        util.addCardToCube(cube, details);
+        added.push(details);
+        changelog += addCardHtml(details);
+      } else {
+        missing += `${item}\n`;
+      }
     }
-  } else {
-    req.flash('danger', 'Error adding cards. Invalid format.');
-    res.redirect('/cube/list/' + req.params.id);
   }
-}
 
-router.get('/download/cubecobra/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        res.write(carddb.cardFromId(card.cardID).full_name + '\r\n');
-      });
-      res.end();
-    }
-  });
-});
+  const blogpost = new Blog();
+  blogpost.title = 'Cube Bulk Import - Automatic Post';
+  blogpost.html = changelog;
+  blogpost.owner = cube.owner;
+  blogpost.date = Date.now();
+  blogpost.cube = cube._id;
+  blogpost.dev = 'false';
+  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+  blogpost.username = cube.owner_name;
+  blogpost.cubename = cube.name;
 
-router.get('/download/csv/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.csv');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      res.write('Name,CMC,Type,Color,Set,Collector Number,Status,Tags\r\n');
-      cube.cards.forEach(function(card, index) {
-        if (!card.type_line) {
-          card.type_line = carddb.cardFromId(card.cardID).type;
-        }
-        var name = carddb.cardFromId(card.cardID).name;
-        while (name.includes('"')) {
-          name = name.replace('"', '-quote-');
-        }
-        while (name.includes('-quote-')) {
-          name = name.replace('-quote-', '""');
-        }
-        res.write('"' + name + '"' + ',');
-        res.write(card.cmc + ',');
-        res.write('"' + card.type_line.replace('—', '-') + '"' + ',');
-        res.write(card.colors.join('') + ',');
-        res.write('"' + carddb.cardFromId(card.cardID).set + '"' + ',');
-        res.write('"' + carddb.cardFromId(card.cardID).collector_number + '"' + ',');
-        res.write(card.status + ',"');
-        card.tags.forEach(function(tag, t_index) {
-          if (t_index != 0) {
-            res.write(', ');
-          }
-          res.write(tag);
-        });
-        res.write('"\r\n');
-      });
-      res.end();
-    }
-  });
-});
-
-router.get('/download/forge/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      res.write('[metadata]\r\n');
-      res.write('Name=' + cube.name + '\r\n');
-      res.write('[Main]\r\n');
-      cube.cards.forEach(function(card, index) {
-        var name = carddb.cardFromId(card.cardID).name;
-        var set = carddb.cardFromId(card.cardID).set;
-        res.write('1 ' + name + '|' + set.toUpperCase() + '\r\n');
-      });
-      res.end();
-    }
-  });
-});
-
-router.get('/download/xmage/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.dck');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        var name = carddb.cardFromId(card.cardID).name;
-        var set = carddb.cardFromId(card.cardID).set;
-        var collectorNumber = carddb.cardFromId(card.cardID).collector_number;
-        res.write('1 [' + set.toUpperCase() + ':' + collectorNumber + '] ' + name + '\r\n');
-      });
-      res.end();
-    }
-  });
-});
-
-router.get('/download/plaintext/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      res.setHeader('Content-disposition', 'attachment; filename=' + cube.name.replace(/\W/g, '') + '.txt');
-      res.setHeader('Content-type', 'text/plain');
-      res.charset = 'UTF-8';
-      cube.cards.forEach(function(card, index) {
-        res.write(carddb.cardFromId(card.cardID).name + '\r\n');
-      });
-      res.end();
-    }
-  });
-});
-
-function startCustomDraft(req, res, id, seats, cube) {
-  //setup draft conditions
-  cards = cube.cards;
-
-  console.log(id);
-  if (cube.draft_formats[id].multiples) {
-    var format = JSON.parse(cube.draft_formats[id].packs);
-    for (let j = 0; j < format.length; j++) {
-      for (let k = 0; k < format[j].length; k++) {
-        format[j][k] = format[j][k].split(',');
-        for (let m = 0; m < format[j][k].length; m++) {
-          format[j][k][m] = format[j][k][m].trim().toLowerCase();
-        }
-      }
-    }
-    var pools = {};
-    //sort the cards into groups by tag, then we can pull from them randomly
-    pools['*'] = [];
-    cards.forEach(function(card, index) {
-      pools['*'].push(index);
-      if (card.tags && card.tags.length > 0) {
-        card.tags.forEach(function(tag, tag_index) {
-          tag = tag.toLowerCase();
-          if (tag != '*') {
-            if (!pools[tag]) {
-              pools[tag] = [];
-            }
-            if (!pools[tag].includes(index)) {
-              pools[tag].push(index);
-            }
-          }
-        });
-      }
+  if (missing.length > 0) {
+    const reactProps = {
+      cubeID: req.params.id,
+      missing,
+      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+      blogpost: blogpost.toObject(),
+    };
+    return res.render('cube/bulk_upload', {
+      reactHTML: BulkUploadPage
+        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+        : undefined,
+      reactProps: serialize(reactProps),
+      cube,
+      cubeID: req.params.id,
+      title: `${abbreviate(cube.name)} - Bulk Upload`,
     });
-    var draft = new Draft();
+  }
 
-    //setup draftbots
-    draft.bots = draftutil.getDraftBots(seats);
-
-    var fail = false;
-    var failMessage = '';
-
-    draft.picks = [];
-    draft.packs = [];
-    draft.cube = cube._id;
-    draft.pickNumber = 1;
-    draft.packNumber = 1;
-    for (let i = 0; i < seats; i++) {
-      draft.picks.push([]);
-      draft.packs.push([]);
-      for (let j = 0; j < format.length; j++) {
-        draft.packs[i].push([]);
-        for (let k = 0; k < format[j].length; k++) {
-          draft.packs[i][j].push(0);
-          var tag = format[j][k][Math.floor(Math.random() * format[j][k].length)];
-          var pool = pools[tag];
-          if (pool && pool.length > 0) {
-            var card = cards[pool[Math.floor(Math.random() * pool.length)]];
-            draft.packs[i][j][k] = card;
-          } else {
-            fail = true;
-            failMessage = 'Unable to create draft, no card with tag "' + tag + '" found.';
-          }
-        }
-      }
-    }
-    draft.initial_state = draft.packs.slice();
-    if (!fail) {
-      draft.save(function(err) {
-        if (err) {
-          console.log(err, req);
-        } else {
-          res.redirect('/cube/draft/' + draft._id);
-        }
-      });
-    } else {
-      req.flash('danger', failMessage);
-      res.redirect('/cube/playtest/' + req.id);
-    }
-  } else {
-    var cardpool = util.shuffle(cards.slice());
-    var format = JSON.parse(cube.draft_formats[id].packs);
-    for (let j = 0; j < format.length; j++) {
-      for (let k = 0; k < format[j].length; k++) {
-        format[j][k] = format[j][k].split(',');
-        for (let m = 0; m < format[j][k].length; m++) {
-          format[j][k][m] = format[j][k][m].trim().toLowerCase();
-        }
-      }
-    }
-    var draft = new Draft();
-    //setup draftbots
-    draft.bots = draftutil.getDraftBots(seats);
-
-    var fail = false;
-    var failMessage = '';
-
-    draft.picks = [];
-    draft.packs = [];
-    draft.cube = cube._id;
-    draft.pickNumber = 1;
-    draft.packNumber = 1;
-    for (i = 0; i < seats; i++) {
-      draft.picks.push([]);
-      draft.packs.push([]);
-      for (j = 0; j < format.length; j++) {
-        draft.packs[i].push([]);
-        for (k = 0; k < format[j].length; k++) {
-          if (!fail) {
-            draft.packs[i][j].push(0);
-            var tag = format[j][k][Math.floor(Math.random() * format[j][k].length)];
-            var index = draftutil.indexOfTag(cardpool, tag);
-            //slice out the first card with the index, or error out
-            if (index != -1 && cardpool.length > 0) {
-              draft.packs[i][j][k] = cardpool.splice(index, 1)[0];
-            } else {
-              fail = true;
-              failMessage = 'Unable to create draft, not enough cards with tag "' + tag + '" found.';
-            }
-          }
-        }
-      }
-    }
-    draft.initial_state = draft.packs.slice();
-    if (!fail) {
-      draft.save(function(err) {
-        if (err) {
-          console.log(err, req);
-        } else {
-          res.redirect('/cube/draft/' + draft._id);
-        }
-      });
-    } else {
-      req.flash('danger', failMessage);
-      res.redirect('/cube/playtest/' + cube._id);
-    }
+  try {
+    await blogpost.save();
+    cube = setCubeType(cube, carddb);
+    await Cube.updateOne(
+      {
+        _id: cube._id,
+      },
+      cube,
+    );
+    req.flash('success', 'All cards successfully added.');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  } catch (err) {
+    console.error(err);
+    req.flash('danger', 'Error adding cards. Please try again.');
+    return res.redirect(`/cube/list/${req.params.id}`);
   }
 }
 
-router.post('/startdraft/custom/:id', async function(req, res) {
+router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
+    if (cube.owner !== req.user.id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
 
-    const formatId = parseInt(req.body.id);
-    const seats = parseInt(req.body.seats);
-    return startCustomDraft(req, res, formatId, seats, cube);
+    return await bulkUpload(req, res, req.body.body, cube);
   } catch (err) {
-    console.error(err);
-    req.flash('Error starting draft.');
-    res.redirect(`/cube/playtest/${req.params.id}`);
+    return util.handleRouteError(res, req, err, `/cube/list/${req.params.id}`);
   }
 });
 
-function arrayRepeat(valueF, count) {
-  return new Array(count).fill(null).map(valueF);
-}
-
-router.post('/startdraft/booster/:id', async function(req, res) {
+router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
   try {
+    if (!req.files) {
+      req.flash('danger', 'Please attach a file');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
+    const items = req.files.document.data.toString('utf8'); // the uploaded file object
+
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-
-    const seats = parseInt(req.body.seats);
-    const packs = parseInt(req.body.packs);
-    const cards = parseInt(req.body.cards);
-
-    //setup draft conditions
-    let cardpool = util.shuffle(cube.cards.slice(0));
-    const draft = new Draft();
-
-    draft.bots = draftutil.getDraftBots(seats);
-    const totalCards = packs * cards * seats;
-    if (cardpool.length < totalCards) {
-      req.flash(
-        'danger',
-        `Requested draft requires ${totalCards} cards, but this cube only has ${cardpool.length} cards.`,
-      );
-      return res.redirect('/cube/playtest/' + cube._id);
+    if (cube.owner !== req.user.id) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect(`/cube/list/${req.params.id}`);
     }
 
-    draft.picks = arrayRepeat(() => [], seats);
-    draft.cube = cube._id;
-    draft.packNumber = 1;
-    draft.pickNumber = 1;
-
-    const draftPacks = arrayRepeat(() => [], seats);
-    for (const seat of draftPacks) {
-      for (let i = 0; i < packs; i++) {
-        const pack = cardpool.slice(0, cards);
-        seat.push(pack);
-        cardpool = cardpool.slice(cards);
-      }
-    }
-    draft.packs = draftPacks;
-    draft.initial_state = draft.packs.map(seat => seat.slice(0));
-
-    await draft.save();
-    res.redirect(`/cube/draft/${draft._id}`);
+    return await bulkUpload(req, res, items, cube);
   } catch (err) {
-    console.error(err);
-    req.flash('Error starting draft.');
-    res.redirect(`/cube/playtest/${req.id}`);
+    return util.handleRouteError(res, req, err, `/cube/list/${req.params.id}`);
+  }
+});
+
+router.get('/download/cubecobra/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    for (const card of cube.cards) {
+      res.write(`${carddb.cardFromId(card.cardID).full_name}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.get('/download/csv/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write(`${CSV_HEADER}\r\n`);
+    const writeCard = (card, maybe) => {
+      if (!card.type_line) {
+        card.type_line = carddb.cardFromId(card.cardID).type;
+      }
+      let { name } = carddb.cardFromId(card.cardID);
+      while (name.includes('"')) {
+        name = name.replace('"', '-quote-');
+      }
+      while (name.includes('-quote-')) {
+        name = name.replace('-quote-', '""');
+      }
+      let { imgUrl } = card;
+      if (imgUrl) {
+        imgUrl = `"${imgUrl}"`;
+      } else {
+        imgUrl = '';
+      }
+      res.write(`"${name}",`);
+      res.write(`${card.cmc},`);
+      res.write(`"${card.type_line.replace('—', '-')}",`);
+      res.write(`${card.colors.join('')},`);
+      res.write(`"${carddb.cardFromId(card.cardID).set}",`);
+      res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+      res.write(`${card.status},`);
+      res.write(`${card.finish},`);
+      res.write(`${maybe},`);
+      res.write(`${imgUrl},"`);
+      card.tags.forEach((tag, tagIndex) => {
+        if (tagIndex !== 0) {
+          res.write(', ');
+        }
+        res.write(tag);
+      });
+      res.write('"\r\n');
+    };
+    for (const card of cube.cards) {
+      return writeCard(card, false);
+    }
+    for (const card of cube.maybe) {
+      return writeCard(card, true);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.get('/download/forge/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write('[metadata]\r\n');
+    res.write(`Name=${cube.name}\r\n`);
+    res.write('[Main]\r\n');
+    for (const card of cube.cards) {
+      const { name } = carddb.cardFromId(card.cardID);
+      const { set } = carddb.cardFromId(card.cardID);
+      res.write(`1 ${name}|${set.toUpperCase()}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.get('/download/xmage/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    for (const card of cube.cards) {
+      const { name } = carddb.cardFromId(card.cardID);
+      const { set } = carddb.cardFromId(card.cardID);
+      const collectorNumber = carddb.cardFromId(card.cardID).collector_number;
+      res.write(`1 [${set.toUpperCase()}:${collectorNumber}] ${name}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.get('/download/plaintext/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    for (const card of cube.cards) {
+      res.write(`${carddb.cardFromId(card.cardID).name}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
+});
+
+router.post('/startdraft/booster/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id), '_id name draft_formats card_count type cards');
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const params = {
+      id: parseInt(req.body.id, 10), // < 0 is standard draft, otherwise custom draft
+      seats: parseInt(req.body.seats, 10),
+      packs: parseInt(req.body.packs, 10),
+      cards: parseInt(req.body.cards, 10),
+    };
+
+    // setup draft
+    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
+    if (draftcards.length === 0) {
+      throw new Error('Could not create draft: no cards');
+    }
+    const bots = draftutil.getDraftBots(params);
+    const format = draftutil.getDraftFormat(params, cube);
+    const draft = new Draft();
+    draftutil.populateDraft(draft, format, draftcards, bots, params.seats);
+    draft.cube = cube._id;
+    await draft.save();
+    return res.redirect(`/cube/draft/${draft._id}`);
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
 const GRID_ROWS = 3;
 const GRID_COLUMNS = 3;
-router.post('/startdraft/grid/:id', async function(req, res) {
+router.post('/startdraft/grid/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (!cube) {
@@ -1733,13 +1581,13 @@ router.post('/startdraft/grid/:id', async function(req, res) {
       return res.status(404).render('misc/404', {});
     }
 
-    //setup draft conditions
+    // setup draft conditions
     let cardpool = util.shuffle(cube.cards.slice(0));
     const draft = new Draft();
     draft.type = 'grid';
     draft.bots = draftutil.getDraftBots(2);
 
-    const packs = parseInt(req.body.packs);
+    const packs = parseInt(req.body.packs, 10);
     const cards = GRID_ROWS * GRID_COLUMNS;
     const totalCards = packs * cards;
     if (cardpool.length < totalCards) {
@@ -1747,10 +1595,10 @@ router.post('/startdraft/grid/:id', async function(req, res) {
         'danger',
         `Requested draft requires ${totalCards} cards, but this cube only has ${cardpool.length} cards.`,
       );
-      return res.redirect('/cube/playtest/' + cube._id);
+      return res.redirect(`/cube/playtest/${cube._id}`);
     }
 
-    draft.picks = arrayRepeat(() => [], 2);
+    draft.picks = [[], []];
     draft.cube = cube._id;
     draft.packNumber = 1;
     draft.pickNumber = 1;
@@ -1765,272 +1613,190 @@ router.post('/startdraft/grid/:id', async function(req, res) {
     draft.initial_state = draft.packs.map(pack => pack.slice(0));
 
     await draft.save();
-    res.redirect(`/cube/draft/${draft._id}`);
+    return res.redirect(`/cube/draft/${draft._id}`);
   } catch (err) {
     console.error(err);
     req.flash('Error starting draft.');
-    res.redirect(`/cube/playtest/${req.id}`);
+    return res.redirect(`/cube/playtest/${req.id}`);
   }
 });
 
-router.get('/draft/:id', function(req, res) {
-  Draft.findById(req.params.id, function(err, draft) {
+router.get('/draft/:id', async (req, res) => {
+  try {
+    const draft = await Draft.findById(req.params.id);
     if (!draft) {
       req.flash('danger', 'Draft not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      var pickNumber = draft.pickNumber;
-      var packNumber = draft.packNumber;
-      var title = 'Pack ' + packNumber + ', Pick ' + pickNumber;
-      var packsleft = (draft.type === 'booster' ? draft.packs[0].length : draft.packs.length) + 1 - packNumber;
-      var subtitle = packsleft + ' unopened packs left.';
-      if (packsleft == 1) {
-        subtitle = packsleft + ' unopened pack left.';
-      }
-      const namesSet = new Set();
-      //add in details to all cards
-      for (const seatOrPack of draft.packs) {
-        for (const packOrCard of seatOrPack) {
-          if (Array.isArray(packOrCard)) {
-            for (const card of packOrCard) {
-              card.details = carddb.cardFromId(card.cardID);
-              namesSet.add(card.details.name);
-            }
-          } else {
-            const card = packOrCard;
-            card.details = carddb.cardFromId(card.cardID);
-            namesSet.add(card.details.name);
-          }
+      return res.status(404).render('misc/404', {});
+    }
+
+    const names = new Set();
+    // add in details to all cards
+    for (const seat of draft.packs) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
+          names.add(card.details.name);
         }
       }
-      const names = [...namesSet];
-      draftutil.getCardRatings(names, CardRating, function(ratings) {
-        draft.ratings = ratings;
-        Cube.findOne(build_id_query(draft.cube), function(err, cube) {
-          if (!cube) {
-            req.flash('danger', 'Cube not found');
-            res.status(404).render('misc/404', {});
-          } else {
-            User.findById(cube.owner, function(err, user) {
-              if (!user || err) {
-                res.render('cube/cube_draft', {
-                  cube: cube,
-                  cube_id: get_cube_id(cube),
-                  owner: 'Unknown',
-                  activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - Draft`,
-                  metadata: generateMeta(
-                    `Cube Cobra Draft: ${cube.name}`,
-                    cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                    cube.image_uri,
-                    `https://cubecobra.com/cube/draft/${req.params.id}`,
-                  ),
-                  loginCallback: '/cube/draft/' + req.params.id,
-                  draft_raw: JSON.stringify(draft),
-                });
-              } else {
-                res.render('cube/cube_draft', {
-                  cube: cube,
-                  cube_id: get_cube_id(cube),
-                  owner: user.username,
-                  activeLink: 'playtest',
-                  title: `${abbreviate(cube.name)} - Draft`,
-                  metadata: generateMeta(
-                    `Cube Cobra Draft: ${cube.name}`,
-                    cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-                    cube.image_uri,
-                    `https://cubecobra.com/cube/draft/${req.params.id}`,
-                  ),
-                  loginCallback: '/cube/draft/' + req.params.id,
-                  draft_raw: JSON.stringify(draft),
-                });
-              }
-            });
-          }
-        });
-      });
     }
-  });
+
+    const ratingsQ = CardRating.find({
+      name: { $in: [...names] },
+    });
+    const cubeQ = Cube.findOne(build_id_query(draft.cube));
+    const [cube, ratings] = await Promise.all([cubeQ, ratingsQ]);
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    draft.ratings = util.fromEntries(ratings.map((r) => [r.name, r.elo]));
+
+    const reactProps = {
+      cube,
+      cubeID: get_cube_id(cube),
+      initialDraft: draft,
+    };
+
+    return res.render('cube/cube_draft', {
+      reactHTML: CubeDraftPage
+        ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
+        : undefined,
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Draft`,
+      metadata: generateMeta(
+        `Cube Cobra Draft: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/draft/${req.params.id}`,
+      ),
+      loginCallback: `/cube/draft/${req.params.id}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
+  }
 });
 
 // Edit Submit POST Route
-router.post('/edit/:id', ensureAuth, function(req, res) {
-  req.body.blog = sanitize(req.body.blog);
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
+router.post('/edit/:id', ensureAuth, async (req, res) => {
+  try {
+    req.body.blog = sanitize(req.body.blog);
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    if (err) {
-      req.flash('danger', 'Server Error');
-      res.redirect('/cube/list/' + req.params.id);
-    } else if (!cube) {
-      req.flash('danger', 'Cube not found');
-      res.redirect('/cube/list/' + req.params.id);
-    } else {
-      var edits = req.body.body.split(';');
-      var fail_remove = [];
-      var adds = [];
-      var removes = [];
-      var changelog = '';
-      for (let edit of edits) {
-        if (edit.charAt(0) == '+') {
-          //add id
-          var details = carddb.cardFromId(edit.substring(1));
-          if (!details) {
-            console.log('Card not found: ' + edit, req);
-          } else {
-            util.addCardToCube(cube, details);
-            changelog += addCardHtml(carddb.cardFromId(edit.substring(1)));
-          }
-        } else if (edit.charAt(0) == '-') {
-          //remove id
-          var rm_index = -1;
-          cube.cards.forEach(function(card_to_remove, remove_index) {
-            if (rm_index == -1) {
-              if (card_to_remove.cardID == edit.substring(1)) {
-                rm_index = remove_index;
-              }
-            }
-          });
-          if (rm_index != -1) {
-            cube.cards.splice(rm_index, 1);
-            changelog += removeCardHtml(carddb.cardFromId(edit.substring(1)));
-          } else {
-            fail_remove.push(edit.substring(1));
-          }
-        } else if (edit.charAt(0) == '/') {
-          var tmp_split = edit.substring(1).split('>');
-          var details = carddb.cardFromId(tmp_split[1]);
-          util.addCardToCube(cube, details);
 
-          var rm_index = -1;
-          cube.cards.forEach(function(card_to_remove, remove_index) {
-            if (rm_index == -1) {
-              if (card_to_remove.cardID == tmp_split[0]) {
-                rm_index = remove_index;
-              }
-            }
-          });
-          if (rm_index != -1) {
-            cube.cards.splice(rm_index, 1);
-            changelog += replaceCardHtml(carddb.cardFromId(tmp_split[0]), carddb.cardFromId(tmp_split[1]));
-          } else {
-            fail_remove.push(tmp_split[0]);
-            changelog += addCardHtml(carddb.cardFromId(tmp_split[1]));
-          }
-        }
-      }
+    const edits = req.body.body.split(';');
+    const removes = new Set();
+    const adds = [];
+    let changelog = '';
 
-      var blogpost = new Blog();
-      blogpost.title = req.body.title;
-      if (req.body.blog.length > 0) {
-        blogpost.html = req.body.blog;
-      }
-      blogpost.changelist = changelog;
-      blogpost.owner = cube.owner;
-      blogpost.date = Date.now();
-      blogpost.cube = cube._id;
-      blogpost.dev = 'false';
-      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-      blogpost.username = cube.owner_name;
-      blogpost.cubename = cube.name;
-
-      blogpost.save(function(err) {
-        if (err) {
-          console.log(err, req);
+    for (const edit of edits) {
+      if (edit.charAt(0) === '+') {
+        // add id
+        const details = carddb.cardFromId(edit.substring(1));
+        if (!details) {
+          console.error(`Card not found: ${edit}`, req);
         } else {
-          if (fail_remove.length > 0) {
-            var errors = '';
-            fail_remove.forEach(function(fail, index) {
-              if (!carddb.cardFromId(fail).error) {
-                if (index != 0) {
-                  errors += ', ';
-                }
-                errors += carddb.cardFromId(fail).name;
-              } else {
-                console.log('ERROR: Could not find the card with ID: ' + fail, req);
-              }
-            });
-            cube = setCubeType(cube, carddb);
-            Cube.updateOne(
-              {
-                _id: cube._id,
-              },
-              cube,
-              function(err) {
-                if (err) {
-                  console.log(err, req);
-                } else {
-                  req.flash('warning', 'Cube Updated With Errors, could not remove the following cards: ' + errors);
-                  res.redirect('/cube/list/' + req.params.id);
-                }
-              },
-            );
-          } else {
-            cube = setCubeType(cube, carddb);
-            Cube.updateOne(
-              {
-                _id: cube._id,
-              },
-              cube,
-              function(err) {
-                if (err) {
-                  console.log(err, req);
-                } else {
-                  req.flash('success', 'Cube Updated');
-                  res.redirect('/cube/list/' + req.params.id);
-                }
-              },
-            );
-          }
+          adds.push(details);
+          changelog += addCardHtml(details);
         }
-      });
+      } else if (edit.charAt(0) === '-') {
+        // remove id
+        const [indexOutStr, outID] = edit.substring(1).split('$');
+        const indexOut = parseInt(indexOutStr, 10);
+        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
+        removes.add(indexOut);
+        const card = cube.cards[indexOut];
+        if (card.cardID === outID) {
+          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
+      } else if (edit.charAt(0) === '/') {
+        const [outStr, idIn] = edit.substring(1).split('>');
+        const detailsIn = carddb.cardFromId(idIn);
+        if (!detailsIn) {
+          console.error(`Card not found: ${edit}`, req);
+        } else {
+          adds.push(detailsIn);
+        }
+
+        const [indexOutStr, outID] = outStr.split('$');
+        const indexOut = parseInt(indexOutStr, 10);
+        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
+        removes.add(indexOut);
+        const cardOut = cube.cards[indexOut];
+        if (cardOut.cardID === outID) {
+          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+        } else {
+          req.flash('danger', 'Bad request format.');
+          return res.redirect(`/cube/list/${req.params.id}`);
+        }
+      } else {
+        req.flash('danger', 'Bad request format.');
+        return res.redirect(`/cube/list/${req.params.id}`);
+      }
     }
-  });
+
+    cube.cards = cube.cards.filter((card, index) => !removes.has(index));
+    for (const add of adds) {
+      util.addCardToCube(cube, add);
+      const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
+      if (maybeIndex !== -1) {
+        cube.maybe.splice(maybeIndex, 1);
+      }
+    }
+
+    const blogpost = new Blog();
+    blogpost.title = req.body.title;
+    if (req.body.blog.length > 0) {
+      blogpost.html = req.body.blog;
+    }
+    blogpost.changelist = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    cube = setCubeType(cube, carddb);
+
+    await blogpost.save();
+    await cube.save();
+
+    req.flash('success', 'Cube Updated');
+    return res.redirect(`/cube/list/${req.params.id}?updated=true`);
+  } catch (err) {
+    return util.handleRouteError(res, req, err, `/cube/list/${req.params.id}`);
+  }
 });
 
-//API routes
-router.get('/api/cardnames', function(req, res) {
-  res.status(200).send({
+// API routes
+router.get('/api/cardnames', (req, res) => {
+  return res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
   });
 });
 
 // Get the full card images including image_normal and image_flip
-router.get('/api/cardimages', function(req, res) {
-  res.status(200).send({
+router.get('/api/cardimages', (req, res) => {
+  return res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
   });
 });
-
-function insertComment(comments, position, comment) {
-  if (position.length <= 0) {
-    comment.index = comments.length;
-    comments.push(comment);
-    return comment;
-  } else {
-    return insertComment(comments[position[0]].comments, position.slice(1), comment);
-  }
-}
-
-function getOwnerFromComment(comments, position) {
-  if (position.length <= 0) {
-    return '';
-  } else if (position.length == 1) {
-    return comments[position[0]].owner;
-  } else {
-    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
-  }
-}
-
-function saveEdit(comments, position, comment) {
-  if (position.length == 1) {
-    comments[position[0]] = comment;
-  } else if (position.length > 1) {
-    saveEdit(comments[position[0]].comments, position.slice(1), comment);
-  }
-}
 
 router.get('/blogpost/:id', async (req, res) => {
   try {
@@ -2038,12 +1804,12 @@ router.get('/blogpost/:id', async (req, res) => {
     const owner = await User.findById(post.owner);
 
     return res.render('cube/blogpost', {
-      post: post,
+      post,
       owner: owner._id,
-      loginCallback: '/blogpost/' + req.params.id,
+      loginCallback: `/blogpost/${req.params.id}`,
     });
   } catch (err) {
-    res.redirect('/404');
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
@@ -2055,55 +1821,53 @@ router.get('/viewcomment/:id/:position', async (req, res) => {
     const owner = await User.findById(post.owner);
 
     return res.render('cube/blogpost', {
-      post: post,
+      post,
       owner: owner._id,
       loginCallback: `/blogpost/${id}`,
       position: position.split('-'),
     });
   } catch (err) {
-    res.redirect('/404');
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
-router.post('/api/editcomment', ensureAuth, async (req, res) => {
-  user = await User.findById(req.user._id);
-  post = await Blog.findById(req.body.id);
+router.post(
+  '/api/editcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const post = await Blog.findById(req.body.id);
+    const { user } = req;
 
-  if (!user) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
 
-  if (!post) {
-    return res.status(404).send({
-      success: 'false',
-      message: 'Post not found',
-    });
-  }
+    if (!post) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Post not found',
+      });
+    }
 
-  try {
     req.body.comment.content = sanitize(req.body.comment.content);
     saveEdit(post.comments, req.body.position.slice(0, 22), req.body.comment);
     await post.save();
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.post('/api/editoverview', ensureAuth, async (req, res) => {
-  try {
+router.post(
+  '/api/editoverview',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
 
-    cube = await Cube.findById(updatedCube._id);
+    const cube = await Cube.findById(updatedCube._id);
     if (!cube) {
       return res.status(404).send({
         success: 'false',
@@ -2111,8 +1875,8 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       });
     }
 
-    user = await User.findById(req.user._id);
-    if (!user || user._id != cube.owner) {
+    const { user } = req;
+    if (!user || user.id !== cube.owner) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -2133,8 +1897,9 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       });
     }
 
-    if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias != cube.urlAlias) {
-      let urlAliasMaxLength = 100;
+    if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias !== cube.urlAlias) {
+      updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
+      const urlAliasMaxLength = 100;
 
       if (!updatedCube.urlAlias.match(/^[0-9a-zA-Z_]*$/)) {
         res.statusMessage = 'Custom URL must contain only alphanumeric characters or underscores.';
@@ -2144,7 +1909,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       }
 
       if (updatedCube.urlAlias.length > urlAliasMaxLength) {
-        res.statusMessage = 'Custom URL may not be longer than ' + urlAliasMaxLength + ' characters.';
+        res.statusMessage = `Custom URL may not be longer than ${urlAliasMaxLength} characters.`;
         return res.status(400).send({
           success: 'false',
         });
@@ -2167,7 +1932,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       }
 
       cube.urlAlias = updatedCube.urlAlias;
-    } else if (!updatedCube.urlAlias || updatedCube.urlAlias == '') {
+    } else if (!updatedCube.urlAlias || updatedCube.urlAlias === '') {
       cube.urlAlias = null;
     }
 
@@ -2187,9 +1952,9 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
     cube.descriptionhtml = sanitize(updatedCube.descriptionhtml);
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
+    setCubeType(cube, carddb);
 
-    //cube category override
+    // cube category override
     if (cube.overrideCategory) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
       const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered'];
@@ -2201,7 +1966,7 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
         });
       }
 
-      for (var i = 0; i < updatedCube.categoryPrefixes.length; i++) {
+      for (let i = 0; i < updatedCube.categoryPrefixes.length; i++) {
         if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
           res.statusMessage = 'Not a valid category prefix.';
           return res.status(400).send({
@@ -2214,296 +1979,317 @@ router.post('/api/editoverview', ensureAuth, async (req, res) => {
       cube.categoryPrefixes = updatedCube.categoryPrefixes;
     }
 
-    //cube tags
+    // cube tags
     cube.tags = updatedCube.tags.map((tag) => tag.text);
 
     await cube.save();
     return res.status(200).send({ success: 'true' });
-  } catch (err) {
-    res.statusMessage = err;
-    console.log(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.post('/api/postcomment', ensureAuth, async (req, res) => {
-  const userq = User.findById(req.user._id);
-  const postq = Blog.findById(req.body.id);
+router.post(
+  '/api/postdeckcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const deck = await Deck.findById(req.body.id);
+    const { user } = req;
 
-  const [user, post] = await Promise.all([userq, postq]);
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
 
-  if (!user) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
+    if (!deck) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Deck not found',
+      });
+    }
 
-  if (!post) {
-    return res.status(404).send({
-      success: 'false',
-      message: 'Post not found',
-    });
-  }
-
-  try {
-    //slice limits the recursive depth
-    var comment = insertComment(post.comments, req.body.position.slice(0, 22), {
+    // slice limits the recursive depth
+    const comment = insertComment(deck.comments, req.body.position.slice(0, 22), {
       owner: user._id,
       ownerName: user.username,
       ownerImage: '',
       content: sanitize(req.body.content),
-      //the -1000 is to prevent weird time display error
+      // the -1000 is to prevent weird time display error
       timePosted: Date.now() - 1000,
       comments: [],
     });
 
-    //give notification to owner
-    if (req.body.position.length == 0) {
-      //owner is blog post owner
+    // give notification to owner
+    if (req.body.position.length === 0) {
+      // owner is blog deck owner
+      const owner = await User.findById(deck.owner);
+      await util.addNotification(
+        owner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} added a comment to ${deck.name}`,
+      );
+    } else {
+      // need to find owner from comment tree
+      const owner = await User.findById(getOwnerFromComment(deck.comments, req.body.position));
+      await util.addNotification(
+        owner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} replied to your comment on ${deck.name}`,
+      );
+    }
+
+    await deck.save();
+    return res.status(200).send({
+      success: 'true',
+      comment,
+    });
+  }),
+);
+
+router.post(
+  '/api/postcomment',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const post = await Blog.findById(req.body.id);
+    const { user } = req;
+
+    if (!user) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    if (!post) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Post not found',
+      });
+    }
+
+    // slice limits the recursive depth
+    const comment = insertComment(post.comments, req.body.position.slice(0, 22), {
+      owner: user._id,
+      ownerName: user.username,
+      ownerImage: '',
+      content: sanitize(req.body.content),
+      // the -1000 is to prevent weird time display error
+      timePosted: Date.now() - 1000,
+      comments: [],
+    });
+
+    // give notification to owner
+    if (req.body.position.length === 0) {
+      // owner is blog post owner
       const owner = await User.findById(post.owner);
       await util.addNotification(
         owner,
         user,
-        '/cube/blogpost/' + post._id,
-        user.username + ' added a comment to ' + post.title,
+        `/cube/blogpost/${post._id}`,
+        `${user.username} added a comment to ${post.title}`,
       );
     } else {
-      //need to find owner from comment tree
+      // need to find owner from comment tree
       const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
-      var positionText = '';
-      req.body.position.forEach(function(pos, index) {
-        positionText += pos + '-';
-      });
+      let positionText = '';
+      for (const pos of req.body.position) {
+        positionText += `${pos}-`;
+      }
       positionText += comment.index;
       await util.addNotification(
         owner,
         user,
-        '/cube/viewcomment/' + post._id + '/' + positionText,
-        user.username + ' replied to your comment on ' + post.title,
+        `/cube/viewcomment/${post._id}/${positionText}`,
+        `${user.username} replied to your comment on ${post.title}`,
       );
     }
 
     await post.save();
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
-      comment: comment,
+      comment,
     });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
+  }),
+);
 
-router.get('/api/imagedict', function(req, res) {
+router.get('/api/imagedict', (req, res) => {
   res.status(200).send({
     success: 'true',
     dict: carddb.imagedict,
   });
 });
 
-router.get('/api/fullnames', function(req, res) {
+router.get('/api/fullnames', (req, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.full_names,
   });
 });
 
-router.get('/api/cubecardnames/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    var cardnames = [];
-    cube.cards.forEach(function(item, index) {
-      util.binaryInsert(carddb.cardFromId(item.cardID).name, cardnames);
-    });
-    var result = util.turnToTree(cardnames);
-    res.status(200).send({
+router.get(
+  '/api/cubecardnames/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    const cardnames = [];
+    for (const card of cube.cards) {
+      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
+    }
+
+    const result = util.turnToTree(cardnames);
+    return res.status(200).send({
       success: 'true',
       cardnames: result,
     });
-  });
-});
+  }),
+);
 
-router.post('/api/saveshowtagcolors', function(req, res) {
-  if (req.user) {
-    req.user.hide_tag_colors = !req.body.show_tag_colors;
+router.post(
+  '/api/saveshowtagcolors',
+  util.wrapAsyncApi(async (req, res) => {
+    if (req.user) {
+      req.user.hide_tag_colors = !req.body.show_tag_colors;
+      await req.user.save();
 
-    req.user.save(function(err) {
-      if (err) console.log(err);
-      res.status(200).send({
+      return res.status(200).send({
         success: 'true',
       });
-    });
-  } else {
-    res.status(200).send({
-      success: 'true',
-    });
-  }
-});
+    }
 
-router.post('/api/savetagcolors/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (!cube) {
-      res.status(404).send({
+    return res.status(401).send({
+      success: 'false',
+    });
+  }),
+);
+
+router.post(
+  '/api/savetagcolors/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    if (req.user.id !== cube.owner) {
+      return res.status(401).send({
         success: 'false',
       });
-      return;
     }
 
     cube.tag_colors = req.body;
 
-    cube.save(function(err) {
-      if (err) console.log(err);
-      res.status(200).send({
-        success: 'true',
-      });
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
     });
-  });
-});
+  }),
+);
 
-function build_tag_colors(cube) {
-  let tag_colors = cube.tag_colors;
-  let tags = tag_colors.map((item) => item.tag);
-  let not_found = tag_colors.map((item) => item.tag);
+router.get(
+  '/api/cubetagcolors/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
-  cube.cards.forEach(function(card, index) {
-    card.tags.forEach(function(tag, index) {
-      tag = tag.trim();
-      if (!tags.includes(tag)) {
-        tag_colors.push({
-          tag,
-          color: null,
-        });
-        tags.push(tag);
-      }
-      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
-    });
-  });
+    const tagColors = build_tag_colors(cube);
+    const tags = tagColors.map((item) => item.tag);
 
-  let tmp = [];
-  tag_colors.forEach(function(item, index) {
-    if (!not_found.includes(item.tag)) tmp.push(item);
-  });
-  tag_colors = tmp;
+    // this is for the case of cube compare
+    const cubeB = await Cube.findOne(build_id_query(req.query.b_id));
 
-  return tag_colors;
-}
-
-router.get('/api/cubetagcolors/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    let tag_colors = build_tag_colors(cube);
-    let tags = tag_colors.map((item) => item.tag);
-
-    Cube.findOne(build_id_query(req.query.b_id), function(err, cubeB) {
-      if (cubeB) {
-        let b_tag_colors = build_tag_colors(cubeB);
-        for (let b_tag of b_tag_colors) {
-          if (!tags.includes(b_tag.tag)) {
-            tag_colors.push(b_tag);
-          }
+    if (cubeB) {
+      const bTagColors = build_tag_colors(cubeB);
+      for (const bTag of bTagColors) {
+        if (!tags.includes(bTag.tag)) {
+          tagColors.push(bTag);
         }
       }
+    }
 
-      let show_tag_colors = req.user ? !req.user.hide_tag_colors : true;
+    const showTagColors = req.user ? !req.user.hide_tag_colors : true;
 
-      res.status(200).send({
-        success: 'true',
-        tag_colors,
-        show_tag_colors,
-      });
+    res.status(200).send({
+      success: 'true',
+      tagColors,
+      showTagColors,
     });
-  });
-});
+  }),
+);
 
-router.get('/api/getcardfromcube/:id', function(req, res) {
-  var split = req.params.id.split(';');
-  var cube = split[0];
-  let cardname = split[1];
-  cardname = cardutil.decodeName(cardname);
-  cardname = cardutil.normalizeName(cardname);
+router.get(
+  '/api/getcardfromcube/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const split = req.params.id.split(';');
+    const cubeid = split[0];
+    let cardname = split[1];
+    cardname = cardutil.decodeName(cardname);
+    cardname = cardutil.normalizeName(cardname);
 
-  Cube.findOne(build_id_query(cube), function(err, cube) {
-    var found = false;
-    cube.cards.forEach(function(card, index) {
-      if (!found && carddb.cardFromId(card.cardID).name_lower == cardname) {
+    const cube = await Cube.findOne(build_id_query(cubeid));
+
+    for (const card of cube.cards) {
+      if (carddb.cardFromId(card.cardID).name_lower === cardname) {
         card.details = carddb.cardFromId(card.cardID);
-        res.status(200).send({
+        return res.status(200).send({
           success: 'true',
           card: card.details,
         });
-        found = true;
       }
+    }
+    return res.status(200).send({
+      success: 'true',
     });
-    if (!found) {
-      res.status(200).send({
-        success: 'true',
-      });
-    }
-  });
-});
+  }),
+);
 
-router.get('/api/cubelist/:id', function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.error(err);
-      res.sendStatus(500);
-    } else if (!cube) {
-      res.sendStatus(404);
-    } else {
-      const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
-      res.contentType('text/plain');
-      res.status(200).send(names.join('\n'));
-    }
-  });
-});
+router.get(
+  '/api/cubelist/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
 
-router.post('/editdeck/:id', async (req, res) => {
+    const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
+    res.contentType('text/plain');
+    return res.status(200).send(names.join('\n'));
+  }),
+);
+
+router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
 
-    if (!deck) {
-      req.flash('danger', 'Deck not found');
-      return res.status(404).render('misc/404', {});
-    }
-    if ((deck.owner && !req.user) || (deck.owner && deck.owner != req.user._id)) {
+    if (deck.owner && deck.owner !== req.user.id) {
       req.flash('danger', 'Unauthorized');
       return res.status(404).render('misc/404', {});
     }
 
-    var newdeck = JSON.parse(req.body.draftraw);
+    const newdeck = JSON.parse(req.body.draftraw);
+    const name = JSON.parse(req.body.name);
+    const description = sanitize(JSON.parse(req.body.description));
 
     deck.cards = newdeck.cards;
     deck.playerdeck = newdeck.playerdeck;
     deck.playersideboard = newdeck.playersideboard;
     deck.cols = newdeck.cols;
+    deck.name = name;
+    deck.description = description;
 
     await deck.save();
 
     req.flash('success', 'Deck saved succesfully');
-    res.redirect('/cube/deck/' + deck._id);
+    return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
 router.post('/submitdeck/:id', async (req, res) => {
   try {
-    //req.body contains draft0
-    var draftid = req.body.body;
+    // req.body contains draft0
+    const draftid = req.body.body;
     const draft = await Draft.findById(draftid);
 
-    var deck = new Deck();
-    deck.playerdeck = draft.picks[0];
-    deck.cards = draft.picks.slice(1);
+    const deck = new Deck();
+    const [userPicks, ...botPicks] = draft.picks;
+    deck.playerdeck = userPicks;
+    deck.cards = botPicks;
     if (req.user) {
       deck.owner = req.user._id;
     }
@@ -2514,7 +2300,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.pickOrder = draft.pickOrder;
     deck.draft = draft._id;
 
-    cube = await Cube.findOne(build_id_query(draft.cube));
+    const cube = await Cube.findOne(build_id_query(draft.cube));
 
     if (!cube.decks) {
       cube.decks = [];
@@ -2529,45 +2315,36 @@ router.post('/submitdeck/:id', async (req, res) => {
     const userq = User.findById(deck.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
-    var [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
+    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
-    var owner = user ? user.username : 'Anonymous';
-    deck.name = owner + "'s draft of " + cube.name + ' on ' + deck.date.toLocaleString('en-US');
+    const owner = user ? user.username : 'Anonymous';
+    deck.name = `Draft of ${cube.name}`;
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
-    if (!user) {
-      user = {
-        _id: '',
-        username: 'Anonymous',
-      };
+    if (user) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} drafted your cube: ${cube.name}`,
+      );
     }
-
-    await util.addNotification(
-      cubeOwner,
-      user,
-      '/cube/deck/' + deck._id,
-      user.username + ' drafted your cube: ' + cube.name,
-    );
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 
-    return res.redirect('/cube/deckbuilder/' + deck._id);
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
 router.get('/decks/:cubeid/:page', async (req, res) => {
   try {
-    var cubeid = req.params.cubeid;
-    var page = req.params.page;
-    var pagesize = 30;
+    const { cubeid } = req.params;
+    const { page } = req.params;
+    const pagesize = 30;
 
     const cube = await Cube.findOne(build_id_query(cubeid));
 
@@ -2592,51 +2369,47 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     const [decks, numDecks, owner] = await Promise.all([decksq, numDecksq, ownerq]);
 
-    var owner_name = owner ? owner.username : 'unknown';
+    const ownerName = owner ? owner.username : 'unknown';
 
-    var pages = [];
-    for (i = 0; i < numDecks / pagesize; i++) {
-      if (page == i) {
+    const pages = [];
+    for (let i = 0; i < numDecks / pagesize; i++) {
+      if (page === i) {
         pages.push({
-          url: '/cube/decks/' + cubeid + '/' + i,
+          url: `/cube/decks/${cubeid}/${i}`,
           content: i + 1,
           active: true,
         });
       } else {
         pages.push({
-          url: '/cube/decks/' + cubeid + '/' + i,
+          url: `/cube/decks/${cubeid}/${i}`,
           content: i + 1,
         });
       }
     }
 
-    res.render('cube/cube_decks', {
-      cube: cube,
+    return res.render('cube/cube_decks', {
+      cube,
       cube_id: cubeid,
-      owner: owner_name,
+      owner: ownerName,
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Draft Decks`,
-      decks: decks,
-      pages: pages,
+      decks,
+      pages,
       metadata: generateMeta(
         `Cube Cobra Decks: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
         cube.image_uri,
-        `https://cubecobra.com/user/decks/${req.params.id}`,
+        `https://cubecobra.com/user/decks/${req.params.cubeid}`,
       ),
-      loginCallback: '/user/decks/' + cubeid,
+      loginCallback: `/user/decks/${cubeid}`,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.cubeid}`);
   }
 });
 
 router.get('/decks/:id', async (req, res) => {
-  res.redirect('/cube/decks/' + req.params.id + '/0');
+  res.redirect(`/cube/decks/${req.params.id}/0`);
 });
 
 router.get('/rebuild/:id', ensureAuth, async (req, res) => {
@@ -2647,7 +2420,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    var deck = new Deck();
+    const deck = new Deck();
     deck.playerdeck = base.playerdeck;
     deck.cards = base.cards;
     deck.owner = req.user._id;
@@ -2656,7 +2429,7 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
     deck.bots = base.bots;
     deck.playersideboard = base.playersideboard;
 
-    cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube));
 
     if (!cube.decks) {
       cube.decks = [];
@@ -2674,37 +2447,34 @@ router.get('/rebuild/:id', ensureAuth, async (req, res) => {
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
 
-    var owner = user ? user.username : 'Anonymous';
-    deck.name = owner + "'s rebuild from " + cube.name + ' on ' + deck.date.toLocaleString('en-US');
+    const owner = user ? user.username : 'Anonymous';
+    deck.name = `${owner}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`;
     deck.username = owner;
     deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
-    if (cubeOwner._id != user.id) {
+    if (cubeOwner._id !== user.id) {
       await util.addNotification(
         cubeOwner,
         user,
-        '/cube/deck/' + deck._id,
-        user.username + ' rebuilt a deck from your cube: ' + cube.name,
+        `/cube/deck/${deck._id}`,
+        `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (baseUser._id != user.id) {
+    if (baseUser && baseUser.id !== user.id) {
       await util.addNotification(
         baseUser,
         user,
-        '/cube/deck/' + deck._id,
-        user.username + ' rebuilt your deck from cube: ' + cube.name,
+        `/cube/deck/${deck._id}`,
+        `${user.username} rebuilt your deck from cube: ${cube.name}`,
       );
     }
 
     await Promise.all([cube.save(), deck.save()]);
 
-    return res.redirect('/cube/deckbuilder/' + deck._id);
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
-    console.log(err);
-
-    req.flash('danger', 'This deck is not able to be cloned and rebuilt.');
-    res.redirect('/cube/deck/' + req.params.id);
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
@@ -2721,10 +2491,10 @@ router.get('/redraft/:id', async (req, res) => {
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
-      res.redirect('/cube/deck/' + req.params.id);
+      res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    var draft = new Draft();
+    const draft = new Draft();
     draft.bots = base.bots.slice();
     draft.cube = base.cube.slice();
     draft.packNumber = 1;
@@ -2734,17 +2504,14 @@ router.get('/redraft/:id', async (req, res) => {
     draft.packs = srcDraft.initial_state.slice();
     draft.picks = [];
 
-    for (i = 0; i < draft.packs.length; i++) {
+    for (let i = 0; i < draft.packs.length; i++) {
       draft.picks.push([]);
     }
 
     await draft.save();
-    res.redirect('/cube/draft/' + draft._id);
+    return res.redirect(`/cube/draft/${draft._id}`);
   } catch (err) {
-    console.log(err);
-
-    req.flash('danger', 'This deck is not able to be redrafted.');
-    res.redirect('/cube/deck/' + req.params.id);
+    return util.handleRouteError(res, req, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
@@ -2758,39 +2525,38 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
     const deckOwner = await User.findById(deck.owner);
 
-    if (!req.user || deckOwner._id != req.user.id) {
+    if (!req.user || deckOwner._id !== req.user.id) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
-      return res.redirect('/cube/deck/' + req.params.id);
+      return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    //add images to cards
-    deck.cards.forEach(function(card, index) {
-      if (Array.isArray(card)) {
-        card.forEach(function(item, index2) {
-          if (item) {
-            item = {
-              cardID: item,
-            };
-            item.details = carddb.cardFromId(item.cardID);
-          }
-        });
+    // add images to cards
+    for (const cardOrStack of deck.cards) {
+      if (Array.isArray(cardOrStack)) {
+        for (const card of cardOrStack) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
       } else {
-        card.details = carddb.cardFromId(card);
+        cardOrStack.details = carddb.cardFromId(cardOrStack);
       }
-    });
+    }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
+    const reactProps = {
+      cube,
+      cubeID: get_cube_id(cube),
+      initialDeck: deck,
+      basics: getBasics(carddb),
+    };
+
     return res.render('cube/cube_deckbuilder', {
-      cube: cube,
-      cube_id: get_cube_id(cube),
-      owner: deckOwner ? deckOwner.username : 'Unknown',
-      ownerid: deckOwner ? deckOwner._id : '',
+      reactProps: serialize(reactProps),
       activeLink: 'playtest',
       title: `${abbreviate(cube.name)} - Deckbuilder`,
       metadata: generateMeta(
@@ -2799,15 +2565,10 @@ router.get('/deckbuilder/:id', async (req, res) => {
         cube.image_uri,
         `https://cubecobra.com/cube/draft/${req.params.id}`,
       ),
-      loginCallback: '/cube/draft/' + req.params.id,
-      deck_raw: JSON.stringify(deck),
-      basics_raw: JSON.stringify(getBasics(carddb)),
-      deckid: deck._id,
+      loginCallback: `/cube/draft/${req.params.id}`,
     });
   } catch (err) {
-    console.log(err);
-    req.flash('danger', err.message);
-    res.redirect('/404');
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
@@ -2820,19 +2581,19 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube));
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    let owner = {
+    const owner = {
       name: 'Unknown',
       id: null,
       profileUrl: null,
     };
 
-    let drafter = {
+    const drafter = {
       name: 'Anonymous',
       id: null,
       profileUrl: null,
@@ -2855,641 +2616,649 @@ router.get('/deck/:id', async (req, res) => {
       owner.profileUrl = `/user/view/${cubeUser._id}`;
     }
 
-    var player_deck = [];
-    var bot_decks = [];
-    if (deck.newformat == false && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
-      //old format
-      deck.cards[0].forEach(function(card, index) {
+    const playerDeck = [];
+    const botDecks = [];
+    if (deck.newformat === false && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
+      // old format
+      for (const card of deck.cards[0]) {
         card.details = carddb.cardFromId(card);
-        player_deck.push(card.details);
-      });
-      for (i = 1; i < deck.cards.length; i++) {
-        var bot_deck = [];
-        deck.cards[i].forEach(function(card, index) {
+        playerDeck.push(card.details);
+      }
+      for (let i = 1; i < deck.cards.length; i++) {
+        const botDeck = [];
+        for (const card of deck.cards[i]) {
           if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
-            console.log(
-              req.params.id + ': Could not find seat ' + (bot_decks.length + 1) + ', pick ' + (bot_deck.length + 1),
-            );
+            console.error(`${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`);
           } else {
-            var details = carddb.cardFromId(card[0].cardID);
-            bot_deck.push(details);
+            const details = carddb.cardFromId(card[0].cardID);
+            botDeck.push(details);
           }
-        });
-        bot_decks.push(bot_deck);
+        }
+        botDecks.push(botDeck);
       }
-      var bot_names = [];
-      for (i = 0; i < deck.bots.length; i++) {
-        bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
+      const botNames = [];
+      for (let i = 0; i < deck.bots.length; i++) {
+        botNames.push(`Seat ${i + 2}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`);
       }
-      return res.render('cube/cube_deck', {
-        oldformat: true,
+
+      const reactProps = {
+        cube,
+        cubeID: get_cube_id(cube),
+        oldFormat: true,
+        drafter,
+        cards: playerDeck,
+        description: deck.description,
+        name: deck.name,
+        sideboard: deck.sideboard,
+        botDecks,
+        bots: botNames,
+        canEdit: req.user ? req.user.id === owner.id : false,
+        comments: deck.comments,
         deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
+        userid: req.user ? req.user.id : null,
+      };
+
+      return res.render('cube/cube_deck', {
+        reactProps: serialize(reactProps),
         title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
-        cards: player_deck,
-        bot_decks: bot_decks,
-        bots: bot_names,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
           cube.image_uri,
           `https://cubecobra.com/cube/deck/${req.params.id}`,
         ),
-        loginCallback: '/cube/deck/' + req.params.id,
-      });
-    } else {
-      //new format
-      for (i = 0; i < deck.cards.length; i++) {
-        var bot_deck = [];
-        deck.cards[i].forEach(function(cardid, index) {
-          if (carddb.cardFromId(cardid).error) {
-            console.log(
-              req.params.id + ': Could not find seat ' + (bot_decks.length + 1) + ', pick ' + (bot_deck.length + 1),
-            );
-          } else {
-            var details = carddb.cardFromId(cardid);
-            bot_deck.push(details);
-          }
-        });
-        bot_decks.push(bot_deck);
-      }
-      var bot_names = [];
-      for (i = 0; i < deck.bots.length; i++) {
-        bot_names.push('Seat ' + (i + 2) + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1]);
-      }
-      return res.render('cube/cube_deck', {
-        oldformat: false,
-        deckid: deck._id,
-        cube: cube,
-        cube_id: get_cube_id(cube),
-        owner: owner,
-        activeLink: 'playtest',
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        drafter: drafter,
-        deck: JSON.stringify(deck.playerdeck),
-        bot_decks: bot_decks,
-        bots: bot_names,
-        metadata: generateMeta(
-          `Cube Cobra Deck: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-          cube.image_uri,
-          `https://cubecobra.com/cube/deck/${req.params.id}`,
-        ),
-        loginCallback: '/cube/deck/' + req.params.id,
+        loginCallback: `/cube/deck/${req.params.id}`,
       });
     }
+    // new format
+    for (let i = 0; i < deck.cards.length; i++) {
+      const botDeck = [];
+      for (const cardID of deck.cards[i]) {
+        if (carddb.cardFromId(cardID).error) {
+          console.error(`${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`);
+        } else {
+          const details = carddb.cardFromId(cardID);
+          botDeck.push(details);
+        }
+      }
+      botDecks.push(botDeck);
+    }
+    const botNames = [];
+    for (let i = 0; i < deck.bots.length; i++) {
+      botNames.push(`Seat ${i + 2}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`);
+    }
+
+    const reactProps = {
+      cube,
+      cubeID: get_cube_id(cube),
+      oldFormat: false,
+      drafter,
+      deck: deck.playerdeck,
+      sideboard: deck.playersideboard,
+      description: deck.description,
+      name: deck.name,
+      botDecks,
+      bots: botNames,
+      canEdit: req.user ? req.user.id === owner.id : false,
+      comments: deck.comments,
+      deckid: deck._id,
+      userid: req.user ? req.user.id : null,
+    };
+
+    return res.render('cube/cube_deck', {
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+      metadata: generateMeta(
+        `Cube Cobra Deck: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/deck/${req.params.id}`,
+      ),
+      loginCallback: `/cube/deck/${req.params.id}`,
+    });
   } catch (err) {
-    req.flash('danger', err);
-    res.redirect('/404');
+    return util.handleRouteError(res, req, err, '/404');
   }
 });
 
-router.get('/api/getcard/:name', function(req, res) {
-  let potentialIds = carddb.getIdsFromName(cardutil.decodeName(req.params.name));
+router.get('/api/getcard/:name', (req, res) => {
+  const potentialIds = carddb.getIdsFromName(cardutil.decodeName(req.params.name));
   if (potentialIds && potentialIds.length > 0) {
-    let nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
-    let selected = nonPromo || potentialIds[0];
-    let card = carddb.cardFromId(selected);
-    res.status(200).send({
+    const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
+    const selected = nonPromo || potentialIds[0];
+    const card = carddb.cardFromId(selected);
+    return res.status(200).send({
       success: 'true',
-      card: card,
-    });
-  } else {
-    res.status(200).send({
-      success: 'false',
+      card,
     });
   }
-});
-
-router.get('/api/getimage/:name', function(req, res) {
-  var reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-  var img = carddb.imagedict[reasonable.name];
-  if (!img) {
-    res.status(200).send({
-      success: 'false',
-    });
-  } else {
-    res.status(200).send({
-      success: 'true',
-      img: img,
-    });
-  }
-});
-
-router.get('/api/getcardfromid/:id', function(req, res) {
-  var card = carddb.cardFromId(req.params.id);
-  //need to get the price of the card with the new version in here
-  var tcg = [];
-  if (card.tcgplayer_id) {
-    tcg.push(card.tcgplayer_id);
-  }
-  GetPrices(tcg).then(function(price_dict) {
-    if (card.error) {
-      res.status(200).send({
-        success: 'false',
-      });
-    } else {
-      if (price_dict[card.tcgplayer_id]) {
-        card.price = price_dict[card.tcgplayer_id];
-      }
-      if (price_dict[card.tcgplayer_id + '_foil']) {
-        card.price_foil = price_dict[card.tcgplayer_id + '_foil'];
-      }
-      res.status(200).send({
-        success: 'true',
-        card: card,
-      });
-    }
+  return res.status(200).send({
+    success: 'false',
   });
 });
 
-router.get('/api/getversions/:id', function(req, res) {
-  cards = [];
-  tcg = [];
-  carddb.allIds(carddb.cardFromId(req.params.id)).forEach(function(id, index) {
-    const card = carddb.cardFromId(id);
-    cards.push(card);
+router.get(
+  '/api/getimage/:name',
+  util.wrapAsyncApi(async (req, res) => {
+    const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
+    const img = carddb.imagedict[reasonable.name];
+    if (!img) {
+      return res.status(200).send({
+        success: 'false',
+      });
+    }
+    return res.status(200).send({
+      success: 'true',
+      img,
+    });
+  }),
+);
+
+router.get(
+  '/api/getcardfromid/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const card = carddb.cardFromId(req.params.id);
+    // need to get the price of the card with the new version in here
+    const tcg = [];
     if (card.tcgplayer_id) {
       tcg.push(card.tcgplayer_id);
     }
-  });
-  GetPrices(tcg).then(function(price_dict) {
-    cards.forEach(function(card, index) {
+    const priceDict = await GetPrices(tcg);
+    if (card.error) {
+      return res.status(200).send({
+        success: 'false',
+      });
+    }
+    if (priceDict[card.tcgplayer_id]) {
+      card.price = priceDict[card.tcgplayer_id];
+    }
+    if (priceDict[`${card.tcgplayer_id}_foil`]) {
+      card.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
+    }
+    return res.status(200).send({
+      success: 'true',
+      card,
+    });
+  }),
+);
+
+router.get(
+  '/api/getversions/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cards = [];
+    const tcg = [];
+    const names = [];
+    for (const id of carddb.allIds(carddb.cardFromId(req.params.id))) {
+      const card = carddb.cardFromId(id);
+      cards.push(card);
       if (card.tcgplayer_id) {
-        const card_price_data = price_dict[card.tcgplayer_id];
-        if (card_price_data) {
-          card.price = card_price_data;
+        tcg.push(card.tcgplayer_id);
+      }
+      names.push(card.name);
+    }
+    const priceDict = await GetPrices(tcg);
+    const eloDict = await getElo(names, true);
+    for (const card of cards) {
+      if (card.tcgplayer_id) {
+        const cardPriceData = priceDict[card.tcgplayer_id];
+        if (cardPriceData) {
+          card.price = cardPriceData;
         }
-        const card_foil_price_data = price_dict[card.tcgplayer_id + '_foil'];
-        if (card_foil_price_data) {
-          card.price_foil = card_foil_price_data;
+        const cardFoilPriceData = priceDict[`${card.tcgplayer_id}_foil`];
+        if (cardFoilPriceData) {
+          card.price_foil = cardFoilPriceData;
         }
       }
-    });
-    res.status(200).send({
+      if (eloDict[card.name]) {
+        card.elo = eloDict[card.name];
+      }
+    }
+    return res.status(200).send({
       success: 'true',
-      cards: cards,
+      cards,
     });
-  });
-});
+  }),
+);
 
-router.post('/api/getversions', function(req, res) {
-  cards = {};
+router.post(
+  '/api/getversions',
+  util.wrapAsyncApi(async (req, res) => {
+    const cards = {};
 
-  req.body.forEach(function(cardid, index) {
-    cards[cardid] = [];
-    carddb.nameToId[
-      carddb
-        .cardFromId(cardid)
-        .name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-    ].forEach(function(id, index) {
-      const card = carddb.cardFromId(id);
-      cards[cardid].push({
-        id: id,
-        version: card.full_name
-          .toUpperCase()
-          .substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
-        img: card.image_normal,
+    for (const cardid of req.body) {
+      cards[cardid] = [];
+      carddb.nameToId[
+        carddb
+          .cardFromId(cardid)
+          .name.toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+      ].forEach((id) => {
+        const card = carddb.cardFromId(id);
+        cards[cardid].push({
+          id,
+          version: card.full_name
+            .toUpperCase()
+            .substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
+          img: card.image_normal,
+        });
       });
+    }
+    return res.status(200).send({
+      success: 'true',
+      dict: cards,
     });
-  });
-  res.status(200).send({
-    success: 'true',
-    dict: cards,
-  });
-});
+  }),
+);
 
-router.post('/api/updatecard/:id', ensureAuth, function(req, res) {
-  const { src, updated } = req.body;
-  if (
-    !src ||
-    (src && typeof src.index !== 'number') ||
-    (updated.cardID && typeof updated.cardID !== 'string') ||
-    (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
-    (updated.status && typeof updated.status !== 'string') ||
-    (updated.type_line && typeof updated.type_line !== 'string') ||
-    (updated.colors && !Array.isArray(updated.colors)) ||
-    (updated.tags && !Array.isArray(updated.tags)) ||
-    (updated.finish && typeof updated.finish !== 'string')
-  ) {
-    res.status(400).send({
-      success: 'false',
-      message: 'Failed input validation',
-    });
-    return;
-  }
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (err) {
-      console.error(err);
-      res.status(500).send({
+router.post(
+  '/api/updatecard/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const { src, updated } = req.body;
+    if (
+      !src ||
+      (src && typeof src.index !== 'number') ||
+      (updated.cardID && typeof updated.cardID !== 'string') ||
+      (updated.cmc && !['number', 'string'].includes(typeof updated.cmc)) ||
+      (updated.status && typeof updated.status !== 'string') ||
+      (updated.type_line && typeof updated.type_line !== 'string') ||
+      (updated.colors && !Array.isArray(updated.colors)) ||
+      (updated.tags && !Array.isArray(updated.tags)) ||
+      (updated.finish && typeof updated.finish !== 'string')
+    ) {
+      return res.status(400).send({
         success: 'false',
-        message: 'Internal server error',
+        message: 'Failed input validation',
       });
-    } else if (!cube) {
-      res.status(400).send({
-        success: 'false',
-        message: 'No such cube',
-      });
-    } else if (cube.owner !== String(req.user.id)) {
-      res.status(401).send({
+    }
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    if (cube.owner !== String(req.user.id)) {
+      return res.status(401).send({
         success: 'false',
         message: 'Insufficient permissions',
       });
-    } else if (src.index >= cube.cards.length) {
-      res.status(400).send({
+    }
+    if (src.index >= cube.cards.length) {
+      return res.status(400).send({
         success: 'false',
         message: 'No such card',
       });
-    } else {
-      const card = cube.cards[src.index];
-      if (!card.type_line) {
-        card.type_line = carddb.cardFromId(card.cardID).type;
-      }
-      if (!cardsAreEquivalent(src, card)) {
-        console.log(src);
-        console.log(card);
-        res.status(400).send({
-          success: 'false',
-          message: 'Cards not equivalent',
-        });
-      } else {
-        Object.keys(Cube.schema.paths.cards.schema.paths).forEach(function(key) {
-          if (!updated.hasOwnProperty(key)) {
-            updated[key] = card[key];
-          }
-        });
-        Object.keys(updated).forEach(function(key) {
-          if (updated[key] === null) {
-            delete updated[key];
-          }
-        });
-        cube.cards[src.index] = updated;
+    }
 
-        cube = setCubeType(cube, carddb);
+    const card = cube.cards[src.index];
+    if (!card.type_line) {
+      card.type_line = carddb.cardFromId(card.cardID).type;
+    }
 
-        console.log(updated);
+    if (!cardsAreEquivalent(src, card)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cards not equivalent',
+      });
+    }
 
-        cube.save(function(err) {
-          if (err) {
-            console.error(err);
-            res.status(500).send({
-              success: 'false',
-              message: 'Error saving cube',
-            });
-          } else {
-            res.status(200).send({
-              success: 'true',
-            });
-          }
-        });
+    for (const key of Object.keys(Cube.schema.paths.cards.schema.paths)) {
+      if (!Object.prototype.hasOwnProperty.call(updated, key)) {
+        updated[key] = card[key];
       }
     }
-  });
-});
+    for (const key of Object.keys(updated)) {
+      if (updated[key] === null) {
+        delete updated[key];
+      }
+    }
+    cube.cards[src.index] = updated;
 
-router.post('/api/updatecards/:id', ensureAuth, function(req, res) {
-  const { selected, updated } = req.body;
-  if (
-    (updated.cmc && typeof updated.cmc !== 'number') ||
-    (updated.status && typeof updated.status !== 'string') ||
-    (updated.type_line && typeof updated.type_line !== 'string') ||
-    (updated.colors && !Array.isArray(updated.colors)) ||
-    (updated.tags && !Array.isArray(updated.tags))
-  ) {
-    res.status(400).send({
-      success: 'false',
-      message: 'Failed input validation',
+    setCubeType(cube, carddb);
+
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
     });
-    return;
-  }
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === String(req.user._id)) {
-      const allUpdates = {
-        $set: {},
-      };
-      for (const { index } of selected) {
-        if (typeof index !== 'number' || !cube.cards[index]) {
-          continue;
-        }
-        if (updated.status) {
-          allUpdates.$set[`cards.${index}.status`] = updated.status;
-        }
-        if (updated.cmc) {
-          allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
-        }
-        if (updated.type_line) {
-          allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
-        }
-        if (updated.colors) {
-          allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
-        }
-        if (updated.colorC) {
-          allUpdates.$set[`cards.${index}.colors`] = [];
-        }
-        if (updated.finish) {
-          allUpdates.$set[`cards.${index}.finish`] = updated.finish;
-        }
-        if (updated.tags) {
-          if (updated.addTags) {
-            if (!allUpdates.$addToSet) {
-              allUpdates.$addToSet = {};
-            }
-            allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
+  }),
+);
+
+router.post(
+  '/api/updatecards/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const { selected, updated } = req.body;
+    if (
+      (updated.cmc && typeof updated.cmc !== 'number') ||
+      (updated.status && typeof updated.status !== 'string') ||
+      (updated.type_line && typeof updated.type_line !== 'string') ||
+      (updated.colors && !Array.isArray(updated.colors)) ||
+      (updated.tags && !Array.isArray(updated.tags)) ||
+      !Array.isArray(selected) ||
+      selected.some((index) => !Number.isInteger(index) || index < 0)
+    ) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Failed input validation',
+      });
+    }
+
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (cube.owner !== req.user.id) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    const allUpdates = {
+      $set: {},
+    };
+    for (const index of selected) {
+      if (updated.status) {
+        allUpdates.$set[`cards.${index}.status`] = updated.status;
+      }
+      if (updated.cmc) {
+        allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
+      }
+      if (updated.type_line) {
+        allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
+      }
+      if (updated.colors) {
+        allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
+      }
+      if (updated.colorC) {
+        allUpdates.$set[`cards.${index}.colors`] = [];
+      }
+      if (updated.finish) {
+        allUpdates.$set[`cards.${index}.finish`] = updated.finish;
+      }
+      if (updated.tags) {
+        if (updated.addTags) {
+          if (!allUpdates.$addToSet) {
+            allUpdates.$addToSet = {};
           }
-          if (updated.deleteTags) {
-            if (!allUpdates.$pullAll) {
-              allUpdates.$pullAll = {};
-            }
-            allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
+          allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
+        }
+        if (updated.deleteTags) {
+          if (!allUpdates.$pullAll) {
+            allUpdates.$pullAll = {};
           }
+          allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
         }
       }
-      cube.updateOne(allUpdates, function(err) {
-        if (err) {
-          console.error(err);
-          res.status(500).send({
-            success: 'false',
-            message: 'Error saving cube',
-          });
-        } else {
-          res.status(200).send({
-            success: 'true',
-          });
-        }
+    }
+
+    await cube.updateOne(allUpdates);
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
+
+router.get(
+  '/api/maybe/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    return res.status(200).send({
+      success: 'true',
+      maybe: maybeCards(cube, carddb),
+    });
+  }),
+);
+
+router.post(
+  '/api/maybe/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (req.user.id !== cube.owner) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Maybeboard can only be updated by cube owner.',
       });
     }
-  });
-});
 
-router.delete('/remove/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/cube/' + req.params.id);
+    const maybe = [...(cube.maybe || [])];
+
+    const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
+    const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
+
+    const addCards = Array.isArray(req.body.add) ? req.body.add : [];
+    const addCardsNoDetails = addCards.map(({ details, ...card }) => ({ ...util.newCard(details), ...card }));
+    const withAdded = [...withRemoved, ...addCardsNoDetails];
+
+    cube.maybe = withAdded;
+    await cube.save();
+
+    const added = cube.maybe.slice(cube.maybe.length - addCardsNoDetails.length);
+
+    return res.status(200).send({
+      success: 'true',
+      added: util.fromEntries(added.map(({ _id, cardID }) => [cardID, _id])),
+    });
+  }),
+);
+
+router.post(
+  '/api/maybe/update/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (req.user.id !== cube.owner) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Maybeboard can only be updated by cube owner.',
+      });
+    }
+
+    const card = cube.maybe.find((c) => c._id.equals(req.body.id));
+    if (!card) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'No card found to update.',
+      });
+    }
+
+    const { updated } = req.body;
+    if (!updated) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Bad request.',
+      });
+    }
+    const newVersion = updated.cardID && updated.cardID !== card.cardID;
+    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {
+      if (Object.prototype.hasOwnProperty.call(updated, field)) {
+        card[field] = updated[field];
+      }
+    }
+    await cube.save();
+
+    if (newVersion) {
+      return res.status(200).send({
+        success: 'true',
+        details: carddb.cardFromId(card.cardID),
+      });
+    }
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
+
+router.post('/remove/:id', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    if (req.user.id !== cube.owner) {
+      req.flash('danger', 'Not Authorized');
+      res.redirect(`/cube/overview/${req.params.id}`);
+    }
+    await Cube.deleteOne(build_id_query(req.params.id));
+
+    req.flash('success', 'Cube Removed');
+    return res.redirect('/dashboard');
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/404');
   }
-
-  let query = build_id_query(req.params.id);
-
-  Cube.findOne(query, function(err, cube) {
-    if (err || !cube || cube.owner != req.user._id) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Cube.deleteOne(query, function(err) {
-        if (err) {
-          console.log(err, req);
-        }
-        req.flash('success', 'Cube Removed');
-        res.send('Success');
-      });
-    }
-  });
 });
 
-router.delete('/blog/remove/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/' + req.params.id);
+router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
+  try {
+    const query = {
+      _id: req.params.id,
+    };
+
+    const blog = await Blog.findById(req.params.id);
+
+    if (blog.owner !== req.user.id) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
+    }
+    await Blog.deleteOne(query);
+
+    req.flash('success', 'Post Removed');
+    return res.send('Success');
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error deleting post.',
+    });
   }
-
-  let query = {
-    _id: req.params.id,
-  };
-
-  Blog.findById(req.params.id, function(err, blog) {
-    if (err || blog.owner != req.user._id) {
-      req.flash('danger', 'Cube not found');
-      res.status(404).render('misc/404', {});
-    } else {
-      Blog.deleteOne(query, function(err) {
-        if (err) {
-          console.log(err, req);
-        }
-        req.flash('success', 'Post Removed');
-        res.send('Success');
-      });
-    }
-  });
 });
 
-router.delete('/format/remove/:id', ensureAuth, function(req, res) {
-  if (!req.user._id) {
-    req.flash('danger', 'Not Authorized');
-    res.redirect('/' + req.params.id);
+router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
+  try {
+    const cubeid = req.params.id.split(';')[0];
+    const id = parseInt(req.params.id.split(';')[1], 10);
+
+    const cube = await Cube.findOne(build_id_query(cubeid));
+    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id < 0 || id >= cube.draft_formats.length) {
+      return res.sendStatus(401);
+    }
+
+    cube.draft_formats.splice(id, 1);
+
+    await Cube.save();
+    return res.status(200).send({
+      success: 'true',
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error deleting format.',
+    });
   }
-
-  var cubeid = req.params.id.split(';')[0];
-  var id = parseInt(req.params.id.split(';')[1]);
-
-  Cube.findOne(build_id_query(cubeid), function(err, cube) {
-    if (err || !cube || cube.owner != req.user._id || id === NaN || id < 0 || id >= cube.draft_formats.length) {
-      res.sendStatus(401);
-    } else {
-      cube.draft_formats.splice(id, 1);
-
-      Cube.updateOne(
-        {
-          _id: cube._id,
-        },
-        cube,
-        function(err) {
-          if (err) {
-            console.log(err, req);
-            res.sendStatus(500);
-          } else {
-            res.sendStatus(200);
-          }
-        },
-      );
-    }
-  });
 });
 
-router.post('/api/savesorts/:id', ensureAuth, function(req, res) {
-  Cube.findOne(build_id_query(req.params.id), function(err, cube) {
-    if (cube.owner === String(req.user._id)) {
-      var found = false;
-      cube.default_sorts = req.body.sorts;
-      cube.save(function(err) {
-        if (err) {
-          res.status(500).send({
-            success: 'false',
-            message: 'Error saving cube',
-          });
-        } else {
-          res.status(200).send({
-            success: 'true',
-          });
-        }
+router.post(
+  '/api/savesorts/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(build_id_query(req.params.id));
+
+    if (cube.owner !== req.user.id) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Unauthorized',
       });
     }
-  });
-});
 
-// Constants for draft elo system.
+    cube.default_sorts = req.body.sorts;
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
+
 const ELO_BASE = 400;
 const ELO_RANGE = 1600;
 const ELO_SPEED = 1000;
-router.post('/api/draftpickcard/:id', async function(req, res) {
-  try {
+router.post(
+  '/api/draftpickcard/:id',
+  util.wrapAsyncApi(async (req, res) => {
     const draftQ = Draft.findById({ _id: req.body.draft_id });
-    const ratingQ = CardRating.find({ name: { $in: req.body.picks } });
+    const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 
-    let [draft, pickRatings, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
+    const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
-    const pickRatingMap = {};
-    for (const pickRating of pickRatings) {
-      pickRatingMap[pickRating.name] = pickRating;
-    }
+    if (draft && draft.packs[0] && draft.packs[0][0]) {
+      const cardsPerPack = draft.packs[0][0].length + draft.pickNumber - 1;
+      const updatedRating = (cardsPerPack - draft.packs[0][0].length + 1) / cardsPerPack;
 
-    if (!draft) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Couldn\'t find draft.',
-      });
-    }
-
-    const cardsPerPack = {
-      grid: GRID_ROWS * GRID_COLUMNS,
-      booster: req.body.pack.length + draft.pickNumber - 1,
-    }[draft.type || 'booster'];
-    const cardsLeftInPack = req.body.pack.length;
-
-    for (const ratingName of req.body.picks) {
-      let rating = pickRatingMap[ratingName];
-      const updatedRating = (cardsPerPack - cardsLeftInPack) / cardsPerPack;
-      if (rating) {
+      if (rating.picks) {
         rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
         rating.picks += 1;
       } else {
-        rating = new CardRating();
-        rating.name = ratingName;
+        rating.name = req.body.pick;
         rating.value = updatedRating;
         rating.elo = ELO_BASE + ELO_RANGE / 2;
         rating.picks = 1;
-        pickRatingMap[ratingName] = rating;
       }
 
-      if (isNaN(rating.elo)) {
-        rating.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - rating.value)));
+      if (!Number.isFinite(rating.elo)) {
+        rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
       }
       // Update ELO.
       for (const other of packRatings) {
-        if (isNaN(other.elo)) {
-          if (isNaN(other.rating)) {
+        if (!Number.isFinite(other.elo)) {
+          if (!Number.isFinite(other.value)) {
             other.elo = ELO_BASE + ELO_RANGE / 2;
           } else {
-            other.elo = ELO_BASE + ELO_RANGE / (1 + Math.pow(ELO_SPEED, -(0.5 - other.value)));
+            other.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - other.value));
           }
         }
 
-        // console.log(`[${rating.name}] over [${other.name}]:`);
-        // console.log('Initial:', rating.elo, other.elo);
         const diff = other.elo - rating.elo;
         // Expected performance for pick.
-        const expectedA = 1 / (1 + Math.pow(10, diff / 400));
+        const expectedA = 1 / (1 + 10 ** (diff / 400));
         const expectedB = 1 - expectedA;
         const adjustmentA = 2 * (1 - expectedA);
         const adjustmentB = 2 * (0 - expectedB);
         rating.elo += adjustmentA;
         other.elo += adjustmentB;
-        // console.log('Updated:', rating.elo, other.elo);
       }
 
-      try {
-        await Promise.all([
-          ...Object.values(pickRatingMap).map((r) => r.save()),
-          ...packRatings.map((r) => r.save())
-        ]);
-        return res.status(200).send({
-          success: 'true',
-        });
-      } catch (err) {
-        console.error(err);
-        return res.status(500).send({
-          success: 'false',
-          message: 'Error saving pick rating',
-        });
-      }
+      await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      success: 'false',
-      message: err,
-    });
-  }
-});
-
-router.post('/api/savedraft/:id', async function(req, res) {
-  if (!req.body) {
-    return res.status(400).send({
-      success: 'false',
-      message: 'No draft passed',
-    });
-  }
-  try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      return res.status(404).send({
-        success: 'false',
-      });
-    }
-    await Draft.updateOne(
-      {
-        _id: req.body._id,
-      },
-      req.body,
-    );
     return res.status(200).send({
       success: 'true',
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({
-      success: 'false',
-      message: err,
+  }),
+);
+
+router.post('/api/draftpick/:id', async (req, res) => {
+  await Draft.updateOne({ _id: req.body._id }, req.body);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
+router.get(
+  '/api/p1p1/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const result = await generatePack(req.params.id, carddb, false);
+
+    return res.status(200).send({
+      seed: result.seed,
+      pack: result.pack.map((card) => card.name),
     });
-  }
-});
+  }),
+);
 
-router.get('/api/p1p1/:id', function(req, res) {
-  generatePack(req.params.id, carddb, false, function(err, result) {
-    if (err) {
-      res.status(500).send({
-        success: false,
-      });
-    } else {
-      const pack = {
-        seed: result.seed,
-        pack: result.pack.map((card) => card.name),
-      };
-      res.status(200).send(pack);
-    }
-  });
-});
+router.get(
+  '/api/p1p1/:id/:seed',
+  util.wrapAsyncApi(async (req, res) => {
+    const result = await generatePack(req.params.id, carddb, req.params.seed);
 
-router.get('/api/p1p1/:id/:seed', function(req, res) {
-  generatePack(req.params.id, carddb, req.params.seed, function(err, result) {
-    if (err) {
-      res.status(500).send({
-        success: false,
-      });
-    } else {
-      const pack = {
-        seed: req.params.seed,
-        pack: result.pack.map((card) => card.name),
-      };
-      res.status(200).send(pack);
-    }
-  });
-});
+    return res.status(200).send({
+      seed: req.params.seed,
+      pack: result.pack.map((card) => card.name),
+    });
+  }),
+);
 
 module.exports = router;

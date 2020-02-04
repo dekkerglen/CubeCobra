@@ -79,6 +79,7 @@ const _RankleMasterofFixtures = {
     Modern: true,
     Standard: true,
     Pauper: false,
+    Pioneer: true,
   },
   parsed_cost: ['b', 'b', '2'],
   colors: ['B'],
@@ -101,6 +102,21 @@ test('cardFromId returns a well-formed card object', () => {
   var promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(function() {
     const result = carddb.cardFromId(_id);
+    expect(result).toEqual(expected);
+  });
+});
+
+test('cardFromId returns only selected fields', () => {
+  expect.assertions(1);
+  const _id = _RankleMasterofFixtures._id;
+  const expected = {
+    _id: '93c2c11d-dfc3-4ba9-8c0f-a98114090396',
+    name: 'Rankle, Master of Pranks',
+    colors: ['B'],
+  };
+  var promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(function() {
+    const result = carddb.cardFromId(_id, '_id name colors');
     expect(result).toEqual(expected);
   });
 });

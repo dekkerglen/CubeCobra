@@ -1,55 +1,81 @@
 const path = require('path');
+const merge = require('webpack-merge');
+const nodeExternals = require('webpack-node-externals');
 
-module.exports = {
-  context: path.resolve(__dirname, 'src'),
+const config = {
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        exclude: /node_modules[\/\\](?!react-dnd|dnd-core)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            configFile: path.resolve(__dirname, 'babel.config.js'),
+          },
+        },
+      },
+    ],
+  },
+  devtool: 'source-map',
+  resolve: {
+    modules: ['src', 'node_modules'],
+  },
+};
+
+const clientConfig = merge(config, {
   entry: {
-    cube_analysis: ['./cube_analysis.js'],
-    cube_blog: ['./cube_blog.js'],
-    cube_compare: ['./cube_compare.js'],
-    cube_deck: ['./cube_deck.js'],
-    cube_deckbuilder: ['./cube_deckbuilder.js'],
-    cube_draft: ['./cube_draft.js'],
-    cube_list: ['./cube_list.js'],
-    cube_overview: ['./cube_overview.js'],
-    cube_playtest: ['./cube_playtest.js'],
-    topcards: ['./topcards.js'],
-    dashboard: ['./dashboard.js'],
-    blogpost: ['./blogpost.js'],
-    notifications: ['./notifications.js'],
-    cardpage: ['./cardpage.js']
+    bulk_upload: './src/bulk_upload.js',
+    cube_analysis: './src/cube_analysis.js',
+    cube_blog: './src/cube_blog.js',
+    cube_compare: './src/cube_compare.js',
+    cube_deck: './src/cube_deck.js',
+    cube_deckbuilder: './src/cube_deckbuilder.js',
+    cube_draft: './src/cube_draft.js',
+    cube_list: './src/cube_list.js',
+    cube_overview: './src/cube_overview.js',
+    cube_playtest: './src/cube_playtest.js',
+    topcards: './src/topcards.js',
+    dashboard: './src/dashboard.js',
+    blogpost: './src/blogpost.js',
+    notifications: './src/notifications.js',
+    cardpage: './src/cardpage.js',
   },
   output: {
     filename: '[name].bundle.js',
     sourceMapFilename: '[name].js.map',
     path: path.resolve(__dirname, 'dist'),
   },
-  module: {
-    rules: [{
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          'css-loader'
-        ]
-      },
-      {
-        test: /\.jsx?$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/,
-        query: {
-          presets: [
-            ['@babel/preset-env', {
-              'useBuiltIns': 'usage',
-              'corejs': 2,
-            }],
-            '@babel/preset-react',
-          ],
-        },
-      },
-    ],
-  },
   externals: {
     react: 'React',
     'react-dom': 'ReactDOM',
   },
-  devtool: 'source-map',
-};
+});
+
+const serverConfig = merge(config, {
+  target: 'node',
+  entry: {
+    'pages/BulkUploadPage': './src/pages/BulkUploadPage.js',
+    'pages/CubeDraftPage': './src/pages/CubeDraftPage.js',
+    'pages/CubeListPage': './src/pages/CubeListPage.js',
+    'pages/CubePlaytestPage': './src/pages/CubePlaytestPage.js',
+    'pages/DashboardPage': './src/pages/DashboardPage.js',
+    'utils/Card': './src/utils/Card.js',
+    'utils/draftutil': './src/utils/draftutil.js',
+    'utils/Filter': './src/utils/Filter.js',
+    'utils/Util': './src/utils/Util.js',
+  },
+  output: {
+    filename: '[name].js',
+    sourceMapFilename: '[name].js.map',
+    path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'commonjs2',
+  },
+  externals: [
+    nodeExternals({
+      whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+    }),
+  ],
+});
+
+module.exports = { clientConfig, serverConfig };

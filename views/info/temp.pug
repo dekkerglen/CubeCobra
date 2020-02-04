@@ -1,22 +1,30 @@
 p
-	a This update marks the start of site-wide card analytics. We've added card pages that show some useful information regarding individual card inclusion rates, cards drafted frequently with a given card, and a basic way to see a few cubes that run a particular card. 
+	a 
 p
 	a New Features:
 p
 	ul
-		li Card Pages. You can see card pages by clicking on a card from the 'Top Cards' page, or by middle clicking, or ctrl+clicking a card from a cube.
-		li Default versions of cards are now more 'reasonable' (no more anime WAR walkers!)
-		li Added in several missing tokens.
-		li Notifications can be cleared without causing a page refresh.
-		li Visible tags are now imported from CubeTutor. (imported tags must have the color set on CT).
-		li Advanced search is no longer case sensitive.
-		li Cube Owners can now upload decklists to their cube.
-		li Added price filter to top cards.
+		li Added a button to clone cubes.
+		li Draft bot improvements, now only use Elo and modified land and color priority.
+		li Elo for cards can be viewing on card modal.
+		li Added Elo as a sort and filter.
+		li Added Elo to card pages.
+		li Styling improvements for prices and Elo.
+		li Cube prices improved.
+		li Small UI Improvements to custom draft formats.
+		li Added Proxied as a card status.
+		li Card list item color tweaked.
+		li Mayboard items added to CSV import/export.
+		li Updated group modal with single card modal changes. (tagging w/o clicking tab is the important change)
+		li Added creature/noncreature as a sort.
+		li Group modals now dismiss when the last card is removed.
+		li Improved compressed view.
 p
 	a Bugfixes:
 	ul
-		li Fixed an issue where the draft bots wouldn't take into account the card type properly.
-		li Fixed issue where the card modal wouldn't open up in visual spoiler.
-		li Fixed an issue where the time elapsed would erraneously show over a month ago.
-		li DFCs now display the back side in card preview correctly again.
-		li Fixed an issue where dropdowns needed to be double-clicked.
+		li Fixed an issue where editing a custom format loads incorrect state.
+		li Fixed an issue where editing cube tags would cause a crash.
+		li Fixed several issues with server-side rendering.
+		li Fixed an issue with faulty autocard on top cards.
+		li Fixed several issues related to maybeboard.
+		li Fixed a bug where importing with csv would remove all cube images.

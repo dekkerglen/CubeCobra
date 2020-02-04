@@ -1,69 +1,90 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { Button, Col, Collapse, Form, Input, Label, Row, UncontrolledAlert } from 'reactstrap';
+import { Button, Col, Collapse, Form, InputGroup, InputGroupAddon, Row, UncontrolledAlert } from 'reactstrap';
+
+import { encodeName } from '../utils/Card';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
 import Changelist from './Changelist';
 import ChangelistContext from './ChangelistContext';
-import ContentEditable from './ContentEditable';
+import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
+import DisplayContext from './DisplayContext';
 
-async function getCard(name) {
+export const getCard = async (name, setAlerts) => {
   if (name && name.length > 0) {
-    const normalized = name.replace('?', '-q-');
-    while (normalized.includes('//')) {
-      normalized = normalized.replace('//', '-slash-');
-    }
+    const normalized = encodeName(name);
     const response = await fetch(`/cube/api/getcard/${normalized}`);
     if (!response.ok) {
-      throw new Error(`Couldn\'t get card: ${response.status}.`);
+      const message = `Couldn't get card: ${response.status}.`;
+      if (setAlerts) {
+        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+      } else {
+        console.error(message);
+      }
+      return null;
     }
 
     const json = await response.json();
     if (json.success !== 'true' || !json.card) {
+      const message = `Couldn't find card [${name}].`;
+      if (setAlerts) {
+        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+      } else {
+        console.error(message);
+      }
       return null;
     }
     return json.card;
   }
-}
+};
 
 const EditCollapse = ({ cubeID, ...props }) => {
+  const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
-  const [addValue, setAddValue] = useState('');
-  const [removeValue, setRemoveValue] = useState('');
 
-  const { changes, addChange, setChanges } = useContext(ChangelistContext);
+  const {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    addChange,
+    setChanges,
+  } = useContext(ChangelistContext);
+  const { cube } = useContext(CubeContext);
+  const { toggleShowMaybeboard } = useContext(DisplayContext);
 
-  const addInput = useRef();
-  const removeInput = useRef();
   const changelistForm = useRef();
 
   const handleChange = useCallback((event) => {
     return {
-      postContent: setPostContent,
+      blog: setPostContent,
       add: setAddValue,
       remove: setRemoveValue,
     }[event.target.name](event.target.value);
-  });
+  }, []);
 
   const handleAdd = useCallback(
     async (event, newValue) => {
       event.preventDefault();
       try {
-        const card = await getCard(newValue || addValue);
+        const card = await getCard(newValue || addValue, setAlerts);
         if (!card) {
           return;
         }
-        addChange({ add: card });
+        addChange({ add: { details: card } });
         setAddValue('');
         setRemoveValue('');
-        addInput.current && addInput.current.focus();
+        addInputRef.current && addInputRef.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput],
+    [addChange, addValue, addInputRef],
   );
 
   const handleRemoveReplace = useCallback(
@@ -71,37 +92,46 @@ const EditCollapse = ({ cubeID, ...props }) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = await getCard(newValue || removeValue);
+        const cardOut = cube.find(
+          (card) =>
+            card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
+            !changes.some(
+              (change) =>
+                (change.remove && change.remove.index === card.index) ||
+                (Array.isArray(change.replace) && change.replace[0].index === card.index),
+            ),
+        );
         if (!cardOut) {
+          setAlerts((alerts) => [
+            ...alerts,
+            { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` },
+          ]);
           return;
         }
         if (replace) {
-          const cardIn = await getCard(addValue);
+          const cardIn = await getCard(addValue, setAlerts);
           if (!cardIn) {
             return;
           }
-          addChange({ replace: [cardOut, cardIn] });
+          addChange({ replace: [cardOut, { details: cardIn }] });
         } else {
           addChange({ remove: cardOut });
         }
         setAddValue('');
         setRemoveValue('');
-        /* If replace, put focus back in addInput; otherwise leave it here. */
-        const focus = replace ? addInput : removeInput;
+        /* If replace, put focus back in addInputRef; otherwise leave it here. */
+        const focus = replace ? addInputRef : removeInputRef;
         focus.current && focus.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addInput, addValue, removeInput, removeValue],
+    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, changes],
   );
 
-  const handleDiscardAll = useCallback(
-    (event) => {
-      setChanges([]);
-    },
-    [setChanges],
-  );
+  const handleDiscardAll = useCallback((event) => {
+    setChanges([]);
+  }, []);
 
   const handleSaveChanges = useCallback((event) => {
     changelistForm.current && changelistForm.current.submit();
@@ -109,64 +139,75 @@ const EditCollapse = ({ cubeID, ...props }) => {
 
   return (
     <Collapse className="px-3" {...props}>
-      <Row className="collapse warnings">
-        <Col>
-          <UncontrolledAlert color="danger">Invalid input: card not recognized.</UncontrolledAlert>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs="12" sm="auto">
-          <Form inline className="mb-2" onSubmit={handleAdd}>
-            <AutocompleteInput
-              treeUrl="/cube/api/cardnames"
-              treePath="cardnames"
-              type="text"
-              className="mr-2"
-              ref={addInput}
-              name="add"
-              value={addValue}
-              onChange={handleChange}
-              onSubmit={handleAdd}
-              placeholder="Card to Add"
-              autoComplete="off"
-              data-lpignore
-            />
-            <Button color="success" type="submit">
-              Just Add
-            </Button>
+      {alerts.map(({ color, message }, index) => (
+        <UncontrolledAlert key={index} color={color} className="mt-2">
+          {message}
+        </UncontrolledAlert>
+      ))}
+      <Row noGutters>
+        <Row noGutters className="mr-auto">
+          <Form inline className="mb-2 mr-2" onSubmit={handleAdd}>
+            <InputGroup className="flex-nowrap">
+              <AutocompleteInput
+                treeUrl="/cube/api/cardnames"
+                treePath="cardnames"
+                type="text"
+                innerRef={addInputRef}
+                name="add"
+                value={addValue}
+                onChange={handleChange}
+                onSubmit={handleAdd}
+                placeholder="Card to Add"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <InputGroupAddon addonType="append">
+                <Button color="success" type="submit" disabled={addValue.length === 0}>
+                  Add
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </Form>
-        </Col>
-        <Col xs="12" sm="auto">
-          <Form inline className="mb-2" onSubmit={handleRemoveReplace}>
-            <AutocompleteInput
-              treeUrl={`/cube/api/cubecardnames/${cubeID}`}
-              treePath="cardnames"
-              type="text"
-              className="mr-2"
-              ref={removeInput}
-              name="remove"
-              value={removeValue}
-              onChange={handleChange}
-              onSubmit={handleRemoveReplace}
-              placeholder="Card to Remove"
-              autoComplete="off"
-              data-lpignore
-            />
-            <Button color="success" type="submit">
-              Remove/Replace
-            </Button>
+          <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
+            <InputGroup className="flex-nowrap">
+              <AutocompleteInput
+                treeUrl={`/cube/api/cubecardnames/${cubeID}`}
+                treePath="cardnames"
+                type="text"
+                innerRef={removeInputRef}
+                name="remove"
+                value={removeValue}
+                onChange={handleChange}
+                onSubmit={handleRemoveReplace}
+                placeholder="Card to Remove"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <InputGroupAddon addonType="append">
+                <Button color="success" type="submit" disabled={removeValue.length === 0}>
+                  Remove/Replace
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </Form>
-        </Col>
+        </Row>
+        <Button color="primary" className="mb-2" onClick={toggleShowMaybeboard}>
+          Maybeboard
+        </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm ref={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>
+        <CSRFForm innerRef={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>
           <Row>
             <Col>
               <h6>Changelist</h6>
-              <Changelist />
+              <div className="changelist-container mb-2">
+                <Changelist />
+              </div>
             </Col>
             <Col>
-              <BlogpostEditor value={postContent} onChange={handleChange} />
+              <BlogpostEditor name="blog" value={postContent} onChange={handleChange} />
             </Col>
           </Row>
           <Row className="mb-2">

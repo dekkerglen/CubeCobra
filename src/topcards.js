@@ -1,78 +1,92 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
+import URLSearchParams from 'core-js-pure/features/url-search-params';
 
-import FilterCollapse from './components/FilterCollapse';
-import SortableTable from './components/SortableTable';
-import withAutocard from './components/WithAutocard';
-import { encodeName } from './util/Card';
+import { encodeName } from 'utils/Card';
 
-const AutocardTd = withAutocard('td');
+import ErrorBoundary from 'components/ErrorBoundary';
+import FilterCollapse from 'components/FilterCollapse';
+import SortableTable from 'components/SortableTable';
+import withAutocard from 'components/WithAutocard';
+
+const AutocardA = withAutocard('a');
 
 class TopCards extends Component {
   constructor(props) {
     super(props);
 
+    const { defaultData, defaultNumResults } = props;
+
     this.state = {
       filter: [],
-      data: this.props.defaultData || [],
-      numResults: this.props.defaultNumResults || 0,
+      data: defaultData || [],
+      numResults: defaultNumResults || 0,
     };
 
     this.setFilter = this.setFilter.bind(this);
   }
 
-  setFilter(filter, filterInput) {
+  async setFilter(filter, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
     this.setState({ filter });
-    fetch('/tool/api/topcards?' + params.toString())
-      .then((response) => response.json())
-      .then((json) => {
-        this.setState({
-          data: json.data,
-          numResults: json.numResults,
-        });
-      })
-      .catch((err) => console.error(err));
+    const response = await fetch(`/tool/api/topcards?${params.toString()}`);
+    if (!response.ok) {
+      return;
+    }
+
+    const json = await response.json();
+    this.setState({
+      data: json.data,
+      numResults: json.numResults,
+    });
   }
 
   render() {
-    const rowF = ([name, img, img_flip, rating, picks, elo]) =>
-      rating === null ? (
-        []
-      ) : (
-        <tr key={name}>
-          <AutocardTd front={img} back={img_flip || undefined}>
-            <a href={'/tool/card/' + encodeName(name)}>{name}</a>
-          </AutocardTd>
-          <td>{rating === null ? 'None' : ((1 - rating) * 100).toFixed(0)}</td>
-          <td>{elo === null ? '' : elo.toFixed(0)}</td>
-          <td>{picks}</td>
-        </tr>
-      );
+    const { data, filter, numResults } = this.state;
+
+    const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
+      <tr key={name}>
+        <td>
+          <AutocardA front={img} back={imgFlip || undefined} href={`/tool/card/${encodeName(name)}`}>
+            {name}
+          </AutocardA>
+        </td>
+        <td>{rating === null ? '' : ((1 - rating) * 100).toFixed(0)}</td>
+        <td>{elo === null ? '' : elo.toFixed(0)}</td>
+        <td>{picks === null ? '' : picks}</td>
+        <td>{cubes === null ? '' : cubes}</td>
+      </tr>
+    );
 
     return (
       <>
-        <div className="usercontrols pt-3">
+        <div className="usercontrols pt-3 mb-3">
           <h4 className="mx-3 mb-3">Top Cards</h4>
           <FilterCollapse
-            isOpen={true}
-            filter={this.state.filter}
+            isOpen
+            filter={filter}
             setFilter={this.setFilter}
-            numCards={this.state.numResults}
-            numShown={this.state.data.length}
-            useQuery
+            numCards={numResults}
+            numShown={data.length}
           />
         </div>
         <SortableTable
-          sorts={{ Rating: (row) => row[3], Elo: (row) => -(row[5] || -1), 'Total Picks': (row) => -row[4] }}
-          defaultSort="Rating"
+          sorts={{
+            Rating: (row) => row[3],
+            Elo: (row) => -(row[5] || -1),
+            'Total Picks': (row) => -row[4],
+            Cubes: (row) => -row[6],
+          }}
+          defaultSort="Elo"
           headers={{
             Name: {},
-            Rating: { style: { width: '10rem' } },
-            Elo: { style: { width: '10rem' } },
-            'Total Picks': { style: { width: '10rem' } },
+            Rating: { style: { width: '8rem' }, tooltip: 'Average draft pick position' },
+            Elo: { style: { width: '8rem' }, tooltip: 'Elo rating of card' },
+            'Total Picks': { style: { width: '8rem' }, tooltip: 'Total picks across all cubes' },
+            Cubes: { style: { width: '8rem' }, tooltip: 'Cubes containing this card' },
           }}
-          data={this.state.data}
+          data={data}
           rowF={rowF}
         />
       </>
@@ -80,8 +94,19 @@ class TopCards extends Component {
   }
 }
 
+TopCards.propTypes = {
+  defaultData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  defaultNumResults: PropTypes.number.isRequired,
+};
+
 const data = JSON.parse(document.getElementById('topcards').value);
-const numResults = parseInt(document.getElementById('topcardsNumResults').value);
+const numResults = parseInt(document.getElementById('topcardsNumResults').value, 10);
 const wrapper = document.getElementById('react-root');
-const element = <TopCards defaultData={data} defaultNumResults={numResults} />;
-wrapper ? ReactDOM.render(element, wrapper) : false;
+const element = (
+  <ErrorBoundary>
+    <TopCards defaultData={data} defaultNumResults={numResults} />
+  </ErrorBoundary>
+);
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}

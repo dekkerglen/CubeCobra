@@ -1,6 +1,6 @@
 # Introduction
 
-### What is cube cobra?
+### What is Cube Cobra?
 
 The main goal with Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app. I want to create a platform that is easy to use, that still has advanced features that allow users a high degree of freedom to organize and analyze their cube in a way that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.
 
@@ -166,21 +166,13 @@ a GitHub issue, comment, or pull request.
 
 ### Code Style
 
-Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and HTML. Please refer to the following guidelines with respect to each language.
+Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and JSX. Before creating your pull request, you can fix any style errors by running `npm run-script beautify`.
 
-#### Javascript
-
-For Javascript please make sure your code is formatted using the prettier standard. This can be done by running `npm run-script beautify`.
-
-#### Jade/PUG CSS and HTML
-
-For Jade/PUG, you can use the following atom package: https://atom.io/packages/jade-beautify
-For HTML class names, please use all lower case name, with tokens separated by dashes (e.g. edit-blog-button). For HTML ID's, please use on alphabetic characters in camelcase.
 
 ### Development Server
 
-The development server can be accessed at: http://162.243.163.51/
-This server runs off the master branch, uses http instead of https, and has it's own database. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
+The development server can be accessed at: http://codecobradev.com/
+This server usually runs on a more up to date, experimental branch than the production server. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
 
 # Release Schedule
 

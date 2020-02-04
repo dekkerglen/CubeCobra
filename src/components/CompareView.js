@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
+import { getLabels, sortIntoGroups } from '../utils/Sort';
+
 import AutocardListItem from './AutocardListItem';
 import SortContext from './SortContext';
 
@@ -20,14 +22,14 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
           <Col>({onlyB.length})</Col>
         </Row>
       </ListGroupItem>
-      {getLabels('CMC')
+      {getLabels(null, 'CMC')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">
             {[[bothCmc, 'both'], [onlyACmc, 'a'], [onlyBCmc, 'b']].map(([cards, key]) => (
               <Col xs="4" key={key}>
-                {(cards[cmc] || []).map((card) => (
-                  <AutocardListItem key={card.cardID} card={card} />
+                {(cards[cmc] || []).map((card, index) => (
+                  <AutocardListItem key={index} card={card} />
                 ))}
               </Col>
             ))}
@@ -72,13 +74,13 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
 
-  both = both.slice(0);
-  only_a = onlyA.slice(0);
-  only_b = onlyB.slice(0);
+  const bothCopy = both.slice(0);
+  const onlyACopy = onlyA.slice(0);
+  const onlyBCopy = onlyB.slice(0);
 
   return (
     <>
-      {getLabels(primary)
+      {getLabels(cards, primary)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
           let column = columns[columnLabel];
@@ -112,7 +114,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                     </Col>
                   </Row>
                 </div>
-                {getLabels(secondary)
+                {getLabels(column, secondary)
                   .filter((label) => column[label])
                   .map((label) => {
                     let group = column[label];
@@ -121,15 +123,15 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                       onlyBGroup = [];
 
                     for (let card of group) {
-                      if (both.includes(card.details.name)) {
+                      if (bothCopy.includes(card.details.name)) {
                         bothGroup.push(card);
-                        both.splice(both.indexOf(card.details.name), 1);
-                      } else if (only_a.includes(card.details.name)) {
+                        bothCopy.splice(bothCopy.indexOf(card.details.name), 1);
+                      } else if (onlyACopy.includes(card.details.name)) {
                         onlyAGroup.push(card);
-                        only_a.splice(only_a.indexOf(card.details.name), 1);
-                      } else if (only_b.includes(card.details.name)) {
+                        onlyACopy.splice(onlyACopy.indexOf(card.details.name), 1);
+                      } else if (onlyBCopy.includes(card.details.name)) {
                         onlyBGroup.push(card);
-                        only_b.splice(only_b.indexOf(card.details.name), 1);
+                        onlyBCopy.splice(onlyBCopy.indexOf(card.details.name), 1);
                       }
                     }
 

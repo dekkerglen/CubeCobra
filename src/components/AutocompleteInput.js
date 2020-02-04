@@ -165,7 +165,7 @@ deepmerge.all = function deepmergeAll(array, optionsArgument) {
 };
 
 // Map URL => Promise returning tree
-const treeCache = {};
+export const treeCache = {};
 
 const fetchTree = async (treeUrl, treePath) => {
   const response = await fetch(treeUrl);
@@ -211,7 +211,7 @@ const AutocompleteInput = forwardRef(
       (event) => {
         setInputValue(event.target.value);
         setVisible(true);
-        onChange(event);
+        onChange && onChange(event);
       },
       [onChange],
     );
@@ -225,10 +225,11 @@ const AutocompleteInput = forwardRef(
         setInputValue(newValue);
         setVisible(false);
         setPosition(-1);
-        onChange({
-          target,
-          currentTarget: target,
-        });
+        onChange &&
+          onChange({
+            target,
+            currentTarget: target,
+          });
       },
       [onChange, props.name],
     );
@@ -241,8 +242,13 @@ const AutocompleteInput = forwardRef(
       [acceptSuggestion],
     );
 
-    const matches = useMemo(() => getAllMatches(tree, inputValue), [tree, inputValue]);
-    const showMatches = visible && inputValue && !(matches.length === 1 && matches[0] === inputValue);
+    // Replace curly quotes with straight quotes. Needed for iOS.
+    const normalizedValue = inputValue.replace(/[\u2018\u2019\u201C\u201D]/g, (c) =>
+      '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1),
+    );
+    const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
+    const showMatches =
+      visible && inputValue && matches.length > 0 && !(matches.length === 1 && matches[0] === inputValue);
 
     const handleKeyDown = useCallback(
       (event) => {

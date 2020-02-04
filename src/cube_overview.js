@@ -1,22 +1,35 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
+
 import {
-  Row,
-  Col,
+  Button,
   Card,
   CardHeader,
   CardBody,
   CardFooter,
   CardText,
-  Button,
+  Col,
+  Nav,
   Navbar,
+  NavbarToggler,
+  NavItem,
+  NavLink,
+  Row,
   UncontrolledAlert,
+  UncontrolledCollapse,
 } from 'reactstrap';
 
-import DynamicFlash from './components/DynamicFlash';
-import BlogPost from './components/BlogPost';
-import CSRFForm from './components/CSRFForm';
-import CubeOverviewModal from './components/CubeOverviewModal';
+import { csrfFetch } from 'utils/CSRF';
+
+import BlogPost from 'components/BlogPost';
+import CSRFForm from 'components/CSRFForm';
+import CubeOverviewModal from 'components/CubeOverviewModal';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
+import CubeLayout from 'layouts/CubeLayout';
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -26,11 +39,15 @@ class CubeOverview extends Component {
     this.unfollow = this.unfollow.bind(this);
     this.error = this.error.bind(this);
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
+    this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
+
+    const { followed, cube } = props;
 
     this.state = {
-      followed: this.props.followed,
+      followed,
       alerts: [],
-      cube: props.cube,
+      cube,
+      deleteConfirm: '',
     };
   }
 
@@ -60,10 +77,11 @@ class CubeOverview extends Component {
   }
 
   follow() {
+    const { cube } = this.props;
     this.setState({
       followed: true,
     });
-    csrfFetch(`/cube/follow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/follow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -74,10 +92,11 @@ class CubeOverview extends Component {
   }
 
   unfollow() {
+    const { cube } = this.props;
     this.setState({
       followed: false,
     });
-    csrfFetch(`/cube/unfollow/${this.props.cube._id}`, {
+    csrfFetch(`/cube/unfollow/${cube._id}`, {
       method: 'POST',
       headers: {},
     }).then((response) => {
@@ -87,81 +106,99 @@ class CubeOverview extends Component {
     });
   }
 
+  handleChangeDeleteConfirm(event) {
+    this.setState({
+      deleteConfirm: event.target.value,
+    });
+  }
+
   render() {
-    const { post, price, owner, admin, canEdit } = this.props;
-    const cube = this.state.cube;
+    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
+    const { cube, deleteConfirm, alerts, followed } = this.state;
+
     return (
-      <>
-        {canEdit && (
-          <div className="usercontrols">
-            <Navbar expand="md" className="navbar-light">
-              <div className="collapse navbar-collapse">
-                <ul className="navbar-nav flex-wrap">
-                  <li className="nav-item">
-                    <CubeOverviewModal cube={cube} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
-                  </li>
-                  <li className="nav-item">
-                    <a className="nav-link" href="#" data-toggle="modal" data-target="#deleteCubeModal">
-                      Delete Cube
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </Navbar>
-          </div>
+      <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="overview">
+        {canEdit ? (
+          <Navbar expand="md" light className="usercontrols mb-3">
+            <Nav navbar>
+              <NavItem>
+                <CubeOverviewModal cube={cube} cubeID={cubeID} onError={this.error} onCubeUpdate={this.onCubeUpdate} />
+              </NavItem>
+            </Nav>
+            <NavbarToggler
+              className="ml-auto"
+              id="cubeOverviewNavbarToggler"
+              aria-controls="cubeOverviewNavbarCollapse"
+            />
+            <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
+              <Nav navbar>
+                <NavItem>
+                  <NavLink href="#" data-toggle="modal" data-target="#deleteCubeModal">
+                    Delete Cube
+                  </NavLink>
+                </NavItem>
+              </Nav>
+            </UncontrolledCollapse>
+          </Navbar>
+        ) : (
+          <Row className="mb-3" />
         )}
         <DynamicFlash />
-        {this.state.alerts.map(({ color, message }) => (
-          <div key={message}>
-            <br />
-            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
-          </div>
+        {alerts.map(({ color, message }, index) => (
+          <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
+            {message}
+          </UncontrolledAlert>
         ))}
         <Row>
-          <Col md="4">
-            <Card className="mt-3">
+          <Col md="4" className="mb-3">
+            <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2 text-muted">{cube.users_following.length} followers</h6>
+                <h6 className="card-subtitle mb-2 text-muted">
+                  {(cube.users_following ? cube.users_following : []).length} followers
+                </h6>
               </CardHeader>
-              <img className="card-img-top w-100" src={cube.image_uri} />
-              <em className="text-right p-1">
-                Art by:
-                {cube.image_artist}
-              </em>
-              <CardBody>
+              <div className="position-relative">
+                <img className="card-img-top w-100" alt={cube.image_name} src={cube.image_uri} />
+                <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+              </div>
+              <CardBody className="pt-2 px-3 pb-3">
                 {cube.type && (
-                  <>
-                    <a>
-                      {cube.overrideCategory
-                        ? cube.card_count +
-                          ' Card ' +
-                          (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                          cube.categoryOverride +
-                          ' Cube'
-                        : cube.card_count + ' Card ' + cube.type + ' Cube'}
-                    </a>
-                    <br />
-                  </>
+                  <p className="mb-1">
+                    {cube.overrideCategory
+                      ? `${cube.card_count} Card ${
+                          cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : ''
+                        }${cube.categoryOverride} Cube`
+                      : `${cube.card_count} Card ${cube.type} Cube`}
+                  </p>
                 )}
-                {!cube.privatePrices && (
-                  <>
-                    <a>Approx: ${price}</a>
-                    <br />
-                  </>
-                )}
-                <a href={`/cube/rss/${cube._id}`}>RSS</a>
-                <em>
-                  <h6>
+                <h6 className="mb-2">
+                  <i>
                     Designed by
                     <a href={`/user/view/${owner}`}> {owner}</a>
-                  </h6>
-                </em>
+                  </i>{' '}
+                  • <a href={`/cube/rss/${cube._id}`}>RSS</a>
+                </h6>
+                {!cube.privatePrices && (
+                  <Row noGutters className="mb-1">
+                    <TextBadge name="Owned" className="mr-2">
+                      <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                        ${Math.round(priceOwned).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                    <TextBadge name="Buy">
+                      <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                        ${Math.round(pricePurchase).toLocaleString()}
+                      </Tooltip>
+                    </TextBadge>
+                  </Row>
+                )}
                 {admin && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
                     action={`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}${cube._id}`}
+                    className="mt-2"
                   >
                     <Button color="success" type="submit">
                       {' '}
@@ -170,8 +207,8 @@ class CubeOverview extends Component {
                   </CSRFForm>
                 )}
               </CardBody>
-              {loggedIn ? (
-                this.state.followed ? (
+              {loggedIn &&
+                (followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
                   </Button>
@@ -179,25 +216,22 @@ class CubeOverview extends Component {
                   <Button color="success" className="rounded-0" onClick={this.follow}>
                     Follow
                   </Button>
-                )
-              ) : (
-                []
-              )}
+                ))}
             </Card>
           </Col>
           <Col>
-            <Card className="mt-3">
+            <Card>
               <CardHeader>
                 <h5 className="card-title">Description</h5>
               </CardHeader>
               <CardBody>
-                {cube.descriptionhtml ? (
+                {cube.descriptionhtml && cube.descriptionhtml !== 'undefined' ? (
                   <CardText dangerouslySetInnerHTML={{ __html: cube.descriptionhtml }} />
                 ) : (
-                  <CardText>{cube.description}</CardText>
+                  <CardText>{cube.description || ''}</CardText>
                 )}
               </CardBody>
-              {cube.tags.length > 0 && (
+              {cube.tags && cube.tags.length > 0 && (
                 <CardFooter>
                   <div className="autocard-tags">
                     {cube.tags.map((tag) => (
@@ -211,31 +245,86 @@ class CubeOverview extends Component {
             </Card>
           </Col>
         </Row>
-        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={loggedIn} />}
-      </>
+        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userID} loggedIn={loggedIn} />}
+        <div
+          className="modal fade"
+          id="deleteCubeModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="deleteCubeModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog" role="document">
+            <CSRFForm method="POST" action={`/cube/remove/${cubeID}`}>
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="deleteCubeModalLabel">
+                    Confirm Delete
+                  </h5>
+                  <button className="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <p>Are you sure you wish to delete this cube? This action cannot be undone.</p>
+                  <p>Please type 'Delete' in order to confirm</p>
+                  <input
+                    className="form-control"
+                    type="text"
+                    value={deleteConfirm}
+                    onChange={this.handleChangeDeleteConfirm}
+                  />
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-danger" type="submit" disabled={deleteConfirm !== 'Delete'}>
+                    Delete
+                  </button>
+                  <button className="btn btn-secondary" type="button" data-dismiss="modal">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </CSRFForm>
+          </div>
+        </div>
+      </CubeLayout>
     );
   }
 }
 
-const loggedIn = document.getElementById('userid') != null;
-const userid = loggedIn ? document.getElementById('userid').value : '';
-const canEdit = document.getElementById('canEdit').value === 'true';
-const blog = JSON.parse(document.getElementById('blogData').value);
-const cube = JSON.parse(document.getElementById('cubeData').value);
-const price = document.getElementById('priceData').value;
-const owner = document.getElementById('ownerData').value;
-const admin = JSON.parse(document.getElementById('adminData').value) == true;
-const followed = JSON.parse(document.getElementById('followedData').value) == true;
+CubeOverview.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  priceOwned: PropTypes.number.isRequired,
+  pricePurchase: PropTypes.number.isRequired,
+  owner: PropTypes.string.isRequired,
+  admin: PropTypes.bool,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    image_uri: PropTypes.string.isRequired,
+    image_name: PropTypes.string.isRequired,
+    image_artist: PropTypes.string.isRequired,
+  }).isRequired,
+  cubeID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool,
+  userID: PropTypes.string.isRequired,
+  loggedIn: PropTypes.bool,
+  followed: PropTypes.bool.isRequired,
+};
+
+CubeOverview.defaultProps = {
+  admin: false,
+  canEdit: false,
+  loggedIn: false,
+};
+
 const wrapper = document.getElementById('react-root');
 const element = (
-  <CubeOverview
-    post={blog || null}
-    cube={cube}
-    price={price}
-    owner={owner}
-    admin={admin}
-    followed={followed}
-    canEdit={canEdit}
-  />
+  <ErrorBoundary>
+    <CubeOverview {...window.reactProps} />
+  </ErrorBoundary>
 );
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}

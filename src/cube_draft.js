@@ -1,14 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Draft from './util/Draft';
+import CubeDraftPage from 'pages/CubeDraftPage';
 
-import BoosterDraftPage from './components/BoosterDraftPage';
-import GridDraftPage from './components/GridDraftPage';
-
-const element = {
-  booster: Draft.init(initialDraft) || <BoosterDraftPage />,
-  grid: <GridDraftPage initialDraft={initialDraft} />,
-}[initialDraft.type || 'booster'];
 const wrapper = document.getElementById('react-root');
-wrapper && ReactDOM.render(element, wrapper);
+const element = <CubeDraftPage {...window.reactProps} />;
+if (wrapper) {
+  if (wrapper.children.length === 0) {
+    ReactDOM.render(element, wrapper);
+  } else {
+    ReactDOM.hydrate(element, wrapper);
+  }
+}

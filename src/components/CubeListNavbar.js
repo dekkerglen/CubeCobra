@@ -1,16 +1,24 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import {
   Button,
   Collapse,
   Col,
   Container,
+  CustomInput,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
   Form,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Nav,
   NavItem,
   NavLink,
@@ -21,240 +29,355 @@ import {
 } from 'reactstrap';
 
 import CardModalContext from './CardModalContext';
+import CSRFForm from './CSRFForm';
+import CubeContext from './CubeContext';
 import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
+import withModal from './WithModal';
 
-// FIXME: Bring into React
-function compare(event) {
-  event.preventDefault();
-  const id_a = $('#cubeID').val();
-  let id_b = $('#compareInput').val();
-  if (id_b.includes('/')) {
-    let parts = id_b.split('/');
-    id_b = parts[parts.length - 1];
-  }
-  if (id_b) window.location.href = '/cube/compare/' + id_a + '/to/' + id_b;
-}
+const PasteBulkModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="pasteBulkModalTitle">
+      <ModalHeader id="pasteBulkModalTitle" toggle={toggle}>
+        Bulk Upload - Paste Text
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`}>
+        <ModalBody>
+          <p>
+            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x
+            island"
+          </p>
+          <Input
+            type="textarea"
+            maxLength="20000"
+            rows="10"
+            placeholder="Paste Cube Here (max length 20000)"
+            name="body"
+          />
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onclick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
 
-const CompareCollapse = (props) => (
-  <Collapse {...props}>
-    <Container>
-      <Row>
-        <Col>
-          <Form inline onSubmit={compare}>
-            <Input type="text" id="compareInput" className="mb-2 mr-2" placeholder="Comparison Cube ID" />
-            <Button type="submit" color="success" className="mb-2">
-              Compare Cubes
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
-  </Collapse>
+const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
+
+const UploadBulkModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
+      <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
+        Bulk Upload - Upload File
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
+        <ModalBody>
+          <p>
+            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
+            our .csv export.
+          </p>
+          <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
+          <Label for="customFile" className="sr-only">
+            Choose file
+          </Label>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
+
+const CubetutorImportModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="cubetutorImportModalTitle">
+      <ModalHeader id="cubetutorImportModalTitle" toggle={toggle}>
+        Bulk Upload - Import from Cubetutor
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/importcubetutor/${cubeID}`}>
+        <ModalBody>
+          <p>
+            Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags
+            will not be imported. Cubetutor does not recognize alternate versions of cards with the same name, in the
+            same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked
+            to ensure the desired version has been added.
+          </p>
+          <InputGroup>
+            <InputGroupAddon addonType="prepend">
+              <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
+            </InputGroupAddon>
+            {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
+            <Input type="number" name="cubeid" placeholder="e.g. 123456" />
+          </InputGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Import
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+const CubetutorImportModalItem = withModal(DropdownItem, CubetutorImportModal);
+
+const SelectEmptyModal = ({ isOpen, toggle }) => (
+  <Modal isOpen={isOpen} toggle={toggle} labelledBy="selectEmptyTitle">
+    <ModalHeader id="selectEmptyTitle" toggle={toggle}>
+      Cannot Edit Selected
+    </ModalHeader>
+    <ModalBody>
+      <p className="mb-0">
+        No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
+      </p>
+    </ModalBody>
+    <ModalFooter>
+      <Button color="secondary" onClick={toggle}>
+        Close
+      </Button>
+    </ModalFooter>
+  </Modal>
 );
 
-class CubeListNavbarRaw extends Component {
-  constructor(props) {
-    super(props);
+const CompareCollapse = (props) => {
+  const { cubeID } = useContext(CubeContext);
+  const [compareID, setCompareID] = useState('');
+  const handleChange = useCallback((event) => setCompareID(event.target.value), []);
 
-    this.state = {
-      isOpen: false,
-      tagColorsModalOpen: false,
-    };
+  const targetUrl = `/cube/compare/${cubeID}/to/${compareID}`;
 
-    this.toggle = this.toggle.bind(this);
-    this.handleChangeCubeView = this.handleChangeCubeView.bind(this);
-    this.handleMassEdit = this.handleMassEdit.bind(this);
-    this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
-    this.handleOpenTagColorsModal = this.handleOpenTagColorsModal.bind(this);
-    this.handleToggleTagColorsModal = this.handleToggleTagColorsModal.bind(this);
-  }
+  return (
+    <Collapse {...props}>
+      <Container>
+        <Row>
+          <Col>
+            <Form method="GET" action={targetUrl} inline>
+              <Input
+                type="text"
+                className="mb-2 mr-2"
+                placeholder="Comparison Cube ID"
+                value={compareID}
+                onChange={handleChange}
+              />
+              <Button color="success" className="mb-2" href={targetUrl}>
+                Compare Cubes
+              </Button>
+            </Form>
+          </Col>
+        </Row>
+      </Container>
+    </Collapse>
+  );
+};
 
-  toggle() {
-    this.setState(({ isOpen }) => ({
-      isOpen: !isOpen,
-    }));
-  }
+const CubeListNavbar = ({
+  cards,
+  cubeView,
+  setCubeView,
+  openCollapse,
+  setOpenCollapse,
+  defaultFilterText,
+  filter,
+  setFilter,
+  className,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
+  const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
 
-  handleChangeCubeView(event) {
-    const target = event.target;
-    const value = target.value;
-    this.props.changeCubeView(value);
-  }
+  const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
+  const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
+  const openCardModal = useContext(CardModalContext);
+  const {
+    showCustomImages,
+    toggleShowCustomImages,
+    compressedView,
+    toggleCompressedView,
+    showMaybeboard,
+    toggleShowMaybeboard,
+  } = useContext(DisplayContext);
 
-  handleMassEdit(event) {
-    // This is full of globals and needs to be restructured.
-    event.preventDefault();
-    const cards = this.props.groupModalCards;
-    if (this.props.cubeView === 'list') {
-      if (cards.length === 1) {
-        this.props.openCardModal(cards[0].index);
-      } else if (cards.length > 1) {
-        this.props.openGroupModal();
+  const toggle = useCallback(() => setIsOpen((open) => !open));
+
+  const handleChangeCubeView = useCallback(
+    (event) => {
+      const target = event.target;
+      const value = target.value;
+      setCubeView(value);
+    },
+    [setCubeView],
+  );
+
+  const handleMassEdit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const cards = groupModalCards;
+      if (cubeView === 'list') {
+        if (cards.length === 0) {
+          setSelectEmptyModalOpen(true);
+        } else if (cards.length === 1) {
+          openCardModal(cards[0].index);
+        } else if (cards.length > 1) {
+          openGroupModal();
+        }
+      } else {
+        setCubeView('list');
       }
-    } else {
-      this.props.changeCubeView('list');
-    }
-  }
+    },
+    [groupModalCards, openCardModal, openGroupModal, setCubeView],
+  );
 
-  handleOpenCollapse(event) {
-    event.preventDefault();
-    const target = event.target;
-    const collapse = target.getAttribute('data-target');
-    const { setOpenCollapse } = this.props;
-    setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
-  }
+  const handleOpenCollapse = useCallback(
+    (event) => {
+      event.preventDefault();
+      const target = event.target;
+      const collapse = target.getAttribute('data-target');
+      setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
+    },
+    [setOpenCollapse],
+  );
 
-  handleOpenTagColorsModal(event) {
-    event.preventDefault();
-    this.setState({ tagColorsModalOpen: true });
-  }
+  const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true), []);
+  const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false), []);
+  const handleToggleSelectEmptyModal = useCallback((event) => setSelectEmptyModalOpen(false), []);
 
-  handleToggleTagColorsModal() {
-    this.setState({ tagColorsModalOpen: false });
-  }
-
-  render() {
-    const { canEdit, cubeView, cubeID, hasCustomImages, filter, setFilter, cards } = this.props;
-    const { tagColorsModalOpen } = this.state;
-    return (
-      <div className="usercontrols">
-        <Navbar expand="md" className="navbar-light">
-          <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
-            <div className="view-style-select">
-              <Label className="sr-only" for="viewSelect">
-                Cube View Style
-              </Label>
-              <Input type="select" id="viewSelect" value={cubeView} onChange={this.handleChangeCubeView}>
-                <option value="table">Table View</option>
-                <option value="spoiler">Visual Spoiler</option>
-                {!canEdit ? '' : <option value="list">List View</option>}
-                <option value="curve">Curve View</option>
-              </Input>
-            </div>
-            <NavbarToggler onClick={this.toggle} />
+  return (
+    <div className={`usercontrols${className ? ` ${className}` : ''}`}>
+      <Navbar expand="md" className="navbar-light">
+        <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
+          <div className="view-style-select">
+            <Label className="sr-only" for="viewSelect">
+              Cube View Style
+            </Label>
+            <Input type="select" id="viewSelect" value={cubeView} onChange={handleChangeCubeView}>
+              <option value="table">Table View</option>
+              <option value="spoiler">Visual Spoiler</option>
+              {!canEdit ? '' : <option value="list">List View</option>}
+              <option value="curve">Curve View</option>
+            </Input>
           </div>
-          <Collapse isOpen={this.state.isOpen} navbar>
-            <Nav className="ml-auto" navbar>
-              {!canEdit ? (
-                ''
-              ) : (
-                <NavItem>
-                  <NavLink href="#" data-target="edit" onClick={this.handleOpenCollapse}>
-                    Add/Remove
-                  </NavLink>
-                </NavItem>
-              )}
+          <NavbarToggler onClick={toggle} />
+        </div>
+        <Collapse isOpen={isOpen} navbar>
+          <Nav className="ml-auto" navbar>
+            {!canEdit ? (
+              ''
+            ) : (
               <NavItem>
-                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
-                  Sort
+                <NavLink href="#" data-target="edit" onClick={handleOpenCollapse}>
+                  Add/Remove
                 </NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
-                  Filter
+            )}
+            <NavItem>
+              <NavLink href="#" data-target="sort" onClick={handleOpenCollapse}>
+                Sort
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" data-target="filter" onClick={handleOpenCollapse}>
+                Filter
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" data-target="compare" onClick={handleOpenCollapse}>
+                Compare
+              </NavLink>
+            </NavItem>
+            {!canEdit ? (
+              ''
+            ) : (
+              <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
+                <NavLink href="#" onClick={handleMassEdit}>
+                  {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
                 </NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink href="#" data-target="compare" onClick={this.handleOpenCollapse}>
-                  Compare
-                </NavLink>
-              </NavItem>
-              {!canEdit ? (
-                ''
-              ) : (
-                <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
-                  <NavLink href="#" onClick={this.handleMassEdit}>
-                    {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
-                  </NavLink>
-                </NavItem>
-              )}
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  Display
-                </DropdownToggle>
-                <DropdownMenu right>
-                  <DropdownItem onClick={() => this.setState({ tagColorsModalOpen: true })}>
-                    {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
+            )}
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                Display
+              </DropdownToggle>
+              <DropdownMenu right>
+                <DropdownItem onClick={handleOpenTagColorsModal}>
+                  {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
+                </DropdownItem>
+                {!hasCustomImages && (
+                  <DropdownItem onClick={toggleShowCustomImages}>
+                    {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
                   </DropdownItem>
-                  <DisplayContext.Consumer>
-                    {({ showCustomImages, toggleShowCustomImages }) =>
-                      !hasCustomImages ? (
-                        ''
-                      ) : (
-                        <DropdownItem onClick={toggleShowCustomImages}>
-                          {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
-                        </DropdownItem>
-                      )
-                    }
-                  </DisplayContext.Consumer>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  {canEdit ? 'Import/Export' : 'Export'}
-                </DropdownToggle>
-                <DropdownMenu right>
-                  {!canEdit ? (
-                    ''
-                  ) : (
-                    <>
-                      <DropdownItem disabled>Import</DropdownItem>
-                      <DropdownItem data-toggle="modal" data-target="#pasteBulkModal">
-                        Paste Text
-                      </DropdownItem>
-                      <DropdownItem data-toggle="modal" data-target="#uploadBulkModal">
-                        Upload File
-                      </DropdownItem>
-                      <DropdownItem data-toggle="modal" data-target="#importModal">
-                        Import from CubeTutor
-                      </DropdownItem>
-                      <DropdownItem divider />
-                      <DropdownItem disabled>Export</DropdownItem>
-                    </>
-                  )}
-                  <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                  <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
-                  <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
-                  <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={this.props.openCollapse === 'edit'} />}
-        <SortCollapse isOpen={this.props.openCollapse === 'sort'} />
-        <FilterCollapse
-          filter={filter}
-          setFilter={setFilter}
-          numCards={cards.length}
-          isOpen={this.props.openCollapse === 'filter'}
-        />
-        <CompareCollapse isOpen={this.props.openCollapse === 'compare'} />
-        <TagColorsModal
-          canEdit={canEdit}
-          isOpen={this.state.tagColorsModalOpen}
-          toggle={this.handleToggleTagColorsModal}
-        />
-      </div>
-    );
-  }
-}
-
-const CubeListNavbar = (props) => (
-  <GroupModalContext.Consumer>
-    {({ groupModalCards, setGroupModalCards, openGroupModal }) => (
-      <CardModalContext.Consumer>
-        {(openCardModal) => (
-          <CubeListNavbarRaw {...{ groupModalCards, setGroupModalCards, openGroupModal, openCardModal }} {...props} />
-        )}
-      </CardModalContext.Consumer>
-    )}
-  </GroupModalContext.Consumer>
-);
+                )}
+                <DropdownItem onClick={toggleCompressedView}>
+                  {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
+                </DropdownItem>
+                <DropdownItem onClick={toggleShowMaybeboard}>
+                  {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
+                </DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                {canEdit ? 'Import/Export' : 'Export'}
+              </DropdownToggle>
+              <DropdownMenu right>
+                {canEdit && (
+                  <>
+                    <DropdownItem disabled>Import</DropdownItem>
+                    <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
+                    <UploadBulkModalItem>Upload File</UploadBulkModalItem>
+                    <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
+                    <DropdownItem divider />
+                    <DropdownItem disabled>Export</DropdownItem>
+                  </>
+                )}
+                <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
+                <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+          </Nav>
+        </Collapse>
+      </Navbar>
+      {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
+      <SortCollapse isOpen={openCollapse === 'sort'} />
+      <FilterCollapse
+        defaultFilterText={defaultFilterText}
+        filter={filter}
+        setFilter={setFilter}
+        numCards={cards.length}
+        isOpen={openCollapse === 'filter'}
+      />
+      <CompareCollapse isOpen={openCollapse === 'compare'} />
+      <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
+      <SelectEmptyModal isOpen={selectEmptyModalOpen} toggle={handleToggleSelectEmptyModal} />
+    </div>
+  );
+};
 
 export default CubeListNavbar;

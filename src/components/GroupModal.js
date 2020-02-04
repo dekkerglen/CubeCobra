@@ -4,6 +4,7 @@ import {
   Button,
   Row,
   Col,
+  CustomInput,
   Form,
   FormGroup,
   FormText,
@@ -20,18 +21,19 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import { tcgMassEntryUrl } from '../util/Affiliate';
-import { csrfFetch } from '../util/CSRF';
-import { fromEntries } from '../util/Util';
+import { csrfFetch } from 'utils/CSRF';
+import { fromEntries } from 'utils/Util';
 
-import AutocardListItem from './AutocardListItem';
-import ChangelistContext from './ChangelistContext';
-import { ColorChecksAddon } from './ColorCheck';
-import CubeContext from './CubeContext';
-import GroupModalContext from './GroupModalContext';
-import LoadingButton from './LoadingButton';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
+import AutocardListItem from 'components/AutocardListItem';
+import ChangelistContext from 'components/ChangelistContext';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
+import LoadingButton from 'components/LoadingButton';
+import MassBuyButton from 'components/MassBuyButton';
+import TagInput from 'components/TagInput';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 
 const DEFAULT_FORM_VALUES = {
   status: '',
@@ -42,16 +44,17 @@ const DEFAULT_FORM_VALUES = {
   addTags: true,
   deleteTags: false,
   tags: [],
+  tagInput: '',
 };
 
-const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) => {
+const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [cardIndices, setCardIndices] = useState([]);
   const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
 
   const { cube, updateCubeCards } = useContext(CubeContext);
-  const { addChange } = useContext(ChangelistContext);
+  const { addChanges } = useContext(ChangelistContext);
 
   const open = useCallback(() => {
     setFormValues(DEFAULT_FORM_VALUES);
@@ -80,7 +83,6 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
     if (name === 'deleteTags') {
       extra.addTags = false;
     }
-
     setFormValues((formValues) => ({
       ...formValues,
       [name]: value,
@@ -89,15 +91,33 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   });
 
   const handleRemoveCard = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
-    setCardIndices((cards) => cards.filter((c) => c.index !== parseInt(index)));
+
+    if (cards.length == 1) {
+      close();
+    } else {
+      setCardIndices((cards) => cards.filter((c) => c !== parseInt(index)));
+    }
   });
+
+  const setTagInput = useCallback((value) =>
+    setFormValues((formValues) => ({
+      ...formValues,
+      tagInput: value,
+    })),
+  );
 
   const setTags = useCallback((tagF) => {
     setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
   });
-  const addTag = useCallback((tag) => setTags((tags) => [...tags, tag]));
+  const addTag = useCallback((tag) => {
+    setTags((tags) => [...tags, tag]);
+    setTagInput('');
+  });
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }));
   const deleteTag = useCallback((tagIndex) => {
     setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
   });
@@ -111,7 +131,10 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
 
       const selected = cardIndices;
       const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
-      const updated = { ...formValues };
+      const updated = {
+        ...formValues,
+        tags: formValues.tags.map((tag) => tag.text),
+      };
       updated.cmc = parseInt(updated.cmc);
       if (isNaN(updated.cmc)) {
         delete updated.cmc;
@@ -168,16 +191,14 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
   const handleRemoveAll = useCallback(
     (event) => {
       event.preventDefault();
-      const cards = cardIndices.map((index) => cube[index]);
-      for (const card of cards) {
-        addChange({
-          remove: card.details,
-        });
-      }
-      setOpenCollapse(() => 'edit');
+      addChanges(
+        cardIndices.map((index) => ({
+          remove: cube[index],
+        })),
+      );
       close();
     },
-    [cardIndices, cube, setOpenCollapse, close],
+    [addChanges, cardIndices, cube, close],
   );
 
   const cards = cardIndices.map((index) => cube[index]);
@@ -208,14 +229,28 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
             <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
           ))}
           <Row>
-            <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
-              <ListGroup className="list-outline">
-                {cards.map((card) => (
-                  <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                    <Button close className="float-none mr-1" data-index={card.index} onClick={handleRemoveCard} />
-                  </AutocardListItem>
-                ))}
-              </ListGroup>
+            <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
+              <Row noGutters className="w-100" style={{ overflow: 'scroll', flexShrink: 1 }}>
+                <ListGroup className="list-outline w-100">
+                  {cards.map((card) => (
+                    <AutocardListItem key={card.index} card={card} noCardModal inModal>
+                      <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
+                    </AutocardListItem>
+                  ))}
+                </ListGroup>
+              </Row>
+              <Row noGutters>
+                {Number.isFinite(totalPrice) && (
+                  <TextBadge name="Price" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceFoil) && (
+                  <TextBadge name="Foil" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+              </Row>
             </Col>
             <Col xs="8">
               <Form>
@@ -226,11 +261,17 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Status</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
-                    {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
+                  <CustomInput
+                    type="select"
+                    id="groupStatus"
+                    name="status"
+                    value={formValues.status}
+                    onChange={handleChange}
+                  >
+                    {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <Label for="groupStatus">
@@ -240,11 +281,17 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Finish</InputGroupText>
                   </InputGroupAddon>
-                  <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
+                  <CustomInput
+                    type="select"
+                    id="groupFinish"
+                    name="finish"
+                    value={formValues.finish}
+                    onChange={handleChange}
+                  >
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
-                  </Input>
+                  </CustomInput>
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>
@@ -254,7 +301,7 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                   </InputGroupAddon>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
-                <InputGroup className="mb-3">
+                <InputGroup className="mb-2">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Type</InputGroupText>
                   </InputGroupAddon>
@@ -262,10 +309,14 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                 </InputGroup>
 
                 <InputGroup>
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Color Identity</InputGroupText>
-                  </InputGroupAddon>
-                  <ColorChecksAddon colorless prefix="color" values={formValues} onChange={handleChange} />
+                  <InputGroupText className="square-right">Color Identity</InputGroupText>
+                  <ColorChecksAddon
+                    addonType="append"
+                    colorless
+                    prefix="color"
+                    values={formValues}
+                    onChange={handleChange}
+                  />
                 </InputGroup>
                 <FormText>
                   Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
@@ -287,14 +338,16 @@ const GroupModal = ({ cubeID, canEdit, setOpenCollapse, children, ...props }) =>
                     </Label>
                   </FormGroup>
                 </FormGroup>
-                <TagInput tags={formValues.tags} {...{ addTag, deleteTag, reorderTag }} />
+                <TagInput
+                  tags={formValues.tags}
+                  inputValue={formValues.tagInput}
+                  handleInputChange={setTagInput}
+                  handleInputBlur={addTagText}
+                  addTag={addTag}
+                  deleteTag={deleteTag}
+                  reorderTag={reorderTag}
+                />
               </Form>
-            </Col>
-          </Row>
-          <Row>
-            <Col xs="4">
-              <div className="card-price">Total Price: ${totalPrice.toFixed(2)}</div>
-              <div className="card-price">Total Foil Price: ${totalPriceFoil.toFixed(2)}</div>
             </Col>
           </Row>
         </ModalBody>

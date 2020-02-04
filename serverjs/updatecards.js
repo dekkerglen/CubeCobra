@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
 const carddb = require('./cards.js');
@@ -40,6 +40,7 @@ function updateCardbase(filepath) {
     fs.mkdirSync('private');
   }
   return module.exports.downloadDefaultCards().then(function() {
+    console.log('Updating cardbase, this might take a little while...');
     var contents = fs.readFileSync(filepath);
     var cards = JSON.parse(contents);
     saveAllCards(cards);

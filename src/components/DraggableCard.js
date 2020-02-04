@@ -1,9 +1,8 @@
 import React, { useRef } from 'react';
-import { DragPreviewImage, useDrag, useDrop } from 'react-dnd';
+import { useDrag, useDrop } from 'react-dnd';
 
 import CardImage from './CardImage';
 import FoilCardImage from './FoilCardImage';
-import ImageFallback from './ImageFallback';
 
 const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
   const [{ isDragging }, drag, preview] = useDrag({

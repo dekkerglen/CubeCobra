@@ -1,5 +1,18 @@
 const mongoose = require('mongoose');
 
+const Card = {
+  tags: [String],
+  finish: { type: String, default: 'Non-foil' },
+  status: String,
+  colors: [String],
+  cmc: Number,
+  cardID: String,
+  type_line: String,
+  addedTmsp: Date,
+  imgUrl: String,
+  details: {},
+};
+
 // Cube schema
 const cubeSchema = mongoose.Schema({
   name: {
@@ -50,20 +63,14 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
-  cards: [
-    {
-      tags: [String],
-      finish: { type: String, default: 'Non-foil' },
-      status: String,
-      colors: [String],
-      cmc: Number,
-      cardID: String,
-      type_line: String,
-      addedTmsp: Date,
-      imgUrl: String,
-      details: {},
-    },
-  ],
+  cards: {
+    type: [Card],
+    default: [],
+  },
+  maybe: {
+    type: [Card],
+    default: [],
+  },
   tag_colors: [
     {
       tag: String,
@@ -83,11 +90,25 @@ const cubeSchema = mongoose.Schema({
   default_sorts: [String],
   card_count: Number,
   type: String,
-  draft_formats: {},
+  draft_formats: {
+    type: [
+      {
+        title: String,
+        multiples: Boolean,
+        html: String,
+        packs: String,
+      },
+    ],
+    default: [],
+  },
   users_following: {
     type: [String],
     default: [],
   },
 });
 
-const Cube = (module.exports = mongoose.model('Cube', cubeSchema));
+const Cube = mongoose.model('Cube', cubeSchema);
+
+Cube.LAYOUT_FIELDS = 'owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+
+module.exports = Cube;

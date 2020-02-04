@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { classes } from '../util/Util';
+import { classes } from 'utils/Util';
 
-import DisplayContext from './DisplayContext';
-import ImageFallback from './ImageFallback';
-import withAutocard from './WithAutocard';
+import DisplayContext from 'components/DisplayContext';
+import ImageFallback from 'components/ImageFallback';
+import withAutocard from 'components/WithAutocard';
 
 const ImageAutocard = withAutocard(ImageFallback);
 
@@ -53,6 +53,8 @@ CardImage.propTypes = {
 
 CardImage.defaultProps = {
   card: CardImage.defaultCard,
+  autocard: false,
+  className: null,
 };
 
 export default CardImage;

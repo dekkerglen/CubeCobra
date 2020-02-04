@@ -5,9 +5,9 @@ const webpack = require('webpack');
 
 const common = require('./webpack.common.js');
 
-module.exports = merge(common, {
+const config = {
   mode: 'production',
-  devtool: false,
+  devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production'),
@@ -15,7 +15,7 @@ module.exports = merge(common, {
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
-      debug: false
+      debug: false,
     }),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   ],
@@ -24,7 +24,14 @@ module.exports = merge(common, {
     minimizer: [
       new TerserPlugin({
         parallel: true,
+        sourceMap: true,
       }),
     ],
-  }
-});
+    usedExports: true,
+  },
+};
+
+const clientConfig = merge(common.clientConfig, config, {});
+const serverConfig = merge(common.serverConfig, config, {});
+
+module.exports = [clientConfig, serverConfig];

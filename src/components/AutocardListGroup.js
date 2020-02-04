@@ -1,51 +1,65 @@
-import React from 'react';
+import React, { useCallback, useContext } from 'react';
+import PropTypes from 'prop-types';
 
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
+import { ListGroup, ListGroupItem } from 'reactstrap';
 
-import { alphaCompare } from '../util/Util';
+import { sortDeep } from 'utils/Sort';
 
-import AutocardListItem from './AutocardListItem';
-import GroupModalContext from './GroupModalContext';
+import AutocardListItem from 'components/AutocardListItem';
+import CubeContext from 'components/CubeContext';
+import GroupModalContext from 'components/GroupModalContext';
 
-const AutocardListGroup = ({ cards, heading, sort }) => {
-  const groups = sortIntoGroups(cards, sort);
+const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
+  const RowTag = rowTag;
+  const sorted = sortDeep(cards, sort);
+  const { canEdit } = useContext(CubeContext);
+  const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
+  const canGroupModal = !noGroupModal && canEdit;
+  const handleClick = useCallback(
+    (event) => {
+      event.preventDefault();
+      setGroupModalCards(cards);
+      openGroupModal();
+    },
+    [cards, openGroupModal, setGroupModalCards],
+  );
   return (
     <ListGroup className="list-outline">
-      <GroupModalContext.Consumer>
-        {({ openGroupModal, setGroupModalCards }) => (
-          <ListGroupItem
-            tag="a"
-            href="#"
-            className="list-group-heading"
-            onClick={(e) => {
-              e.preventDefault();
-              setGroupModalCards(cards);
-              openGroupModal();
-            }}
-          >
-            {heading}
-          </ListGroupItem>
-        )}
-      </GroupModalContext.Consumer>
-      {getLabels(sort)
-        .filter((cmc) => groups[cmc])
-        .map((cmc) => (
-          <Row key={cmc} noGutters className="cmc-group">
-            <Col>
-              {groups[cmc].sort(alphaCompare).map((card) => (
-                <AutocardListItem
-                  key={typeof card.index === 'undefined' ? card.details.name : card.index}
-                  card={card}
-                />
-              ))}
-            </Col>
-          </Row>
-        ))}
+      <ListGroupItem
+        tag="div"
+        className={`list-group-heading${canGroupModal ? ' clickable' : ''}`}
+        onClick={canGroupModal ? handleClick : undefined}
+      >
+        {heading}
+      </ListGroupItem>
+      {sorted.map(([, group]) =>
+        group.map((card, index) => (
+          <RowTag
+            key={card._id || (typeof card.index === 'undefined' ? index : card.index)}
+            card={card}
+            className={index === 0 ? 'cmc-group' : undefined}
+          />
+        )),
+      )}
     </ListGroup>
   );
 };
 
+AutocardListGroup.propTypes = {
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  noGroupModal: PropTypes.bool,
+  heading: PropTypes.node.isRequired,
+  sort: PropTypes.string,
+};
+
 AutocardListGroup.defaultProps = {
+  rowTag: AutocardListItem,
+  noGroupModal: false,
   sort: 'CMC-Full',
 };
 

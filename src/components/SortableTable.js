@@ -1,37 +1,75 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+
+import { Tooltip } from 'reactstrap';
 
 import PagedTable from './PagedTable';
 
-const SortableTable = ({ sorts, defaultSort, headers, data, rowF }) => {
+const Header = ({ header, headerProps, active, sorts, setSort }) => {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  const toggleTooltip = () => setTooltipOpen((open) => !open);
+
+  const { tooltip, ...rest } = headerProps;
+  const sortable = !!sorts[header];
+  const tooltipElement = tooltip && (
+    <Tooltip
+      placement="top"
+      boundariesElement="window"
+      trigger="hover"
+      target={header.replace(' ', '')}
+      isOpen={tooltipOpen}
+      toggle={toggleTooltip}
+    >
+      {tooltip}
+    </Tooltip>
+  );
+  if (sortable) {
+    return (
+      <th onClick={() => setSort(header)} scope="col" {...rest} style={{ cursor: 'pointer', ...rest.style }}>
+        <span id={header.replace(' ', '')}>
+          {header}
+          {active ? ' ▼' : ''}
+        </span>
+        {tooltipElement}
+      </th>
+    );
+  } else {
+    return (
+      <th scope="col" {...rest}>
+        <span id={header.replace(' ', '')}>{header}</span>
+        {tooltipElement}
+      </th>
+    );
+  }
+};
+
+const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) => {
   const [sort, setSort] = useState(defaultSort);
   const sortKeyF = sorts[sort];
+  let sortedData = data;
   if (sortKeyF) {
-    data.sort((x, y) => sortKeyF(x) - sortKeyF(y));
+    sortedData = useMemo(() => {
+      const result = [...data];
+      result.sort((x, y) => sortKeyF(x) - sortKeyF(y));
+      return result;
+    }, [data, sortKeyF]);
   }
-  const rows = data.map(rowF).flat();
+
+  const rows = sortedData.map(rowF);
   return (
-    <PagedTable rows={rows}>
+    <PagedTable rows={rows} {...props}>
       <thead>
         <tr>
-          {[...Object.keys(headers)].map((header) => {
-            const sortable = !!sorts[header];
-            if (sortable) {
-              return (
-                <th
-                  key={header}
-                  onClick={() => setSort(header)}
-                  scope="col"
-                  {...headers[header]}
-                  style={{ cursor: 'pointer', ...headers[header].style }}
-                >
-                  {header}
-                  {sort === header ? ' ▼' : ''}
-                </th>
-              );
-            } else {
-              return <th key={header}>{header}</th>;
-            }
-          })}
+          {[...Object.entries(headers)].map(([header, props]) => (
+            <Header
+              key={header}
+              header={header}
+              headerProps={props}
+              active={sort === header}
+              sorts={sorts}
+              setSort={setSort}
+            />
+          ))}
         </tr>
       </thead>
     </PagedTable>

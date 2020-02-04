@@ -2,7 +2,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Button, FormGroup, Input, InputGroupAddon, Label } from 'reactstrap';
 
-import { COLORS } from '../util/Util';
+import { COLORS } from '../utils/Util';
 
 export const ColorChecks = ({ prefix, values, onChange }) =>
   COLORS.map(([color, short]) => (
@@ -56,7 +56,7 @@ export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
       onClick={handleClick}
       aria-label={color}
     >
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
+      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className="mana-symbol" />
     </Button>
   );
 };

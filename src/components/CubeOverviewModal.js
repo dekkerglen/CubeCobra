@@ -16,12 +16,13 @@ import {
   Button,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
-import { fromEntries } from '../util/Util';
-import TagInput from './TagInput';
-import TagContext from './TagContext';
-import TextEntry from './TextEntry';
-import AutocompleteInput from './AutocompleteInput';
+import { csrfFetch } from 'utils/CSRF';
+
+import AutocompleteInput from 'components/AutocompleteInput';
+import LoadingButton from 'components/LoadingButton';
+import TagInput from 'components/TagInput';
+import { TagContextProvider } from 'components/TagContext';
+import TextEntry from 'components/TextEntry';
 
 class CubeOverviewModal extends Component {
   constructor(props) {
@@ -29,9 +30,8 @@ class CubeOverviewModal extends Component {
 
     this.state = {
       isOpen: false,
-      tags: props.cube.tags.map((tag) => ({ id: tag, text: tag })),
+      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({ id: tag, text: tag })),
       cube: JSON.parse(JSON.stringify(props.cube)),
-      description: props.cube.descriptionhtml ? props.cube.descriptionhtml : props.cube.description,
       image_dict: {},
     };
 
@@ -59,7 +59,8 @@ class CubeOverviewModal extends Component {
     this.setState({ image_dict: image_json.dict });
   }
 
-  open() {
+  open(event) {
+    event.preventDefault();
     this.setState({
       isOpen: true,
     });
@@ -80,7 +81,7 @@ class CubeOverviewModal extends Component {
     this.setState((prevState) => ({
       cube: {
         ...prevState.cube,
-        descriptionhtml: value,
+        raw_desc: value,
       },
     }));
   }
@@ -200,7 +201,8 @@ class CubeOverviewModal extends Component {
     event.preventDefault();
 
     var cube = this.state.cube;
-    cube.tags = this.state.tags;
+    cube.tags = this.state.tags.map((tag) => tag.text);
+    cube.descriptionhtml = cube.raw_desc;
     await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -221,15 +223,15 @@ class CubeOverviewModal extends Component {
   }
 
   render() {
-    const { cube, tags, isOpen } = this.state;
+    const { cube, cubeID, tags, isOpen } = this.state;
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>
           Edit Overview
         </a>
 
-        <TagContext.Provider
-          cubeID={cube._id}
+        <TagContextProvider
+          cubeID={cubeID}
           defaultTagColors={cube.tag_colors}
           defaultShowTagColors={false}
           defaultTags={[]}
@@ -237,7 +239,7 @@ class CubeOverviewModal extends Component {
           <Modal size="lg" isOpen={isOpen} toggle={this.close}>
             <ModalHeader toggle={this.close}>Edit Overview</ModalHeader>
 
-            <form id="postBlogForm" method="POST" action="/cube/editoverview/cedh" autoComplete="off">
+            <form method="POST" action={`/cube/editoverview/${cubeID}`} autoComplete="off">
               <ModalBody>
                 <h6>Cube Name</h6>
                 <input
@@ -328,7 +330,7 @@ class CubeOverviewModal extends Component {
                           name="category_prefix"
                           value={label}
                           type="checkbox"
-                          checked={cube.categoryPrefixes.includes(label)}
+                          checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
                           onChange={this.handleChange}
                           disabled={cube.overrideCategory ? false : true}
                         />
@@ -368,8 +370,9 @@ class CubeOverviewModal extends Component {
 
                 <h6>Description</h6>
                 <TextEntry
-                  content={this.state.cube.descriptionhtml ? this.state.cube.descriptionhtml : ''}
-                  handleChange={this.handleDescriptionChange}
+                  name="blog"
+                  value={cube.raw_desc && cube.raw_desc !== 'undefined' ? cube.raw_desc : cube.description}
+                  onChange={this.handleDescriptionChange}
                 />
                 <br />
 
@@ -392,13 +395,13 @@ class CubeOverviewModal extends Component {
                 <Button color="secondary" onClick={this.close}>
                   Close
                 </Button>{' '}
-                <Button color="success" onClick={this.handleApply}>
+                <LoadingButton color="success" onClick={this.handleApply}>
                   Save Changes
-                </Button>
+                </LoadingButton>
               </ModalFooter>
             </form>
           </Modal>
-        </TagContext.Provider>
+        </TagContextProvider>
       </>
     );
   }

@@ -62,14 +62,25 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    var post = this.props.post;
+    const { post, onDelete, onEdit } = this.props;
+    if (post.html == 'undefined') {
+      post.html = null;
+    }
     return (
       <Card className="shadowed rounded-0 mt-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
             {post.title}
             <div className="float-sm-right">
-              {this.props.canEdit && <BlogContextMenu className="float-sm-right" post={post} value="..." />}
+              {this.props.canEdit && (
+                <BlogContextMenu
+                  className="float-sm-right"
+                  post={post}
+                  value="..."
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                />
+              )}
             </div>
           </h5>
           <h6 className="card-subtitle mb-2 text-muted">
@@ -108,7 +119,7 @@ class BlogPost extends React.Component {
         </div>
         {this.props.loggedIn && (
           <CardBody className="px-4 pt-2 pb-0 border-top">
-            <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
+            <CommentEntry id={post._id} position={[]} onPost={this.onPost} submitUrl={`/cube/api/postcomment`}>
               <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
             </CommentEntry>
           </CardBody>
@@ -125,6 +136,7 @@ class BlogPost extends React.Component {
               loggedIn={this.props.loggedIn}
               submitEdit={this.submitEdit}
               focused={this.props.focused}
+              submitUrl={`/cube/api/postcomment`}
             />
           </CardBody>
         )}

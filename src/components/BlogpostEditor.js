@@ -19,7 +19,7 @@ const clickToolbar = (event) => {
   } else document.execCommand(command, false, null);
 };
 
-const BlogpostEditor = ({ name, value, onChange }) => (
+const BlogpostEditor = ({ name, value, onChange, ...props }) => (
   <>
     <h6>Blog Post</h6>
     <FormGroup>
@@ -55,7 +55,7 @@ const BlogpostEditor = ({ name, value, onChange }) => (
             </Row>
           </Toolbar>
         </CardHeader>
-        <ContentEditable className="blogpost-editor" value={value} onChange={onChange} />
+        <ContentEditable className="blogpost-editor" name={name} value={value} onChange={onChange} />
         <Input type="hidden" name={name} value={value} />
       </Card>
       <FormText>To tag cards in post, use '[[cardname]]'. E.g. [[Island]]</FormText>

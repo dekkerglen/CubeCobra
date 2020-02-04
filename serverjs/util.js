@@ -91,18 +91,21 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
-function addCardToCube(cube, card_details, tags) {
-  cube.cards.push({
+function newCard(card_details, tags) {
+  return {
     tags: Array.isArray(tags) ? tags : [],
-    status: 'Not Owned',
+    status: 'Owned',
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: card_details._id,
     type_line: card_details.type,
     addedTmsp: new Date(),
-    imgUrl: undefined,
     finish: 'Non-foil',
-  });
+  };
+}
+
+function addCardToCube(cube, card_details, tags) {
+  cube.cards.push(newCard(card_details, tags));
 }
 
 function getCardImageURL(card) {
@@ -142,7 +145,27 @@ async function addNotification(user, from, url, text) {
   await user.save();
 }
 
-var methods = {
+function wrapAsyncApi(route) {
+  return (...args) => {
+    try {
+      return route(...args);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        success: 'false',
+        message: 'Internal server error',
+      });
+    }
+  };
+}
+
+function handleRouteError(res, req, err, reroute) {
+  console.error(err);
+  req.flash('danger', err.message);
+  res.redirect(reroute);
+}
+
+var exports = {
   shuffle: function(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -157,6 +180,7 @@ var methods = {
     return res;
   },
   binaryInsert,
+  newCard,
   addCardToCube,
   getCardImageURL,
   arraysEqual: function(a, b) {
@@ -202,6 +226,8 @@ var methods = {
     return user && user.username == adminname;
   },
   addNotification,
+  wrapAsyncApi,
+  handleRouteError,
 };
 
-module.exports = methods;
+module.exports = exports;

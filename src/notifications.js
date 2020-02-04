@@ -1,41 +1,43 @@
-import React, { Component } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 
-import Notification from './components/Notification';
+import { Card, CardHeader, CardBody } from 'reactstrap';
 
-import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+import Notification from 'components/Notification';
 
-class Notifications extends Component {
-  constructor(props) {
-    super(props);
-  }
+const Notifications = ({ notifications }) => (
+  <Card className="mx-auto" style={{ maxWidth: '40rem' }}>
+    <CardHeader>
+      <h5>Notifications</h5>
+    </CardHeader>
+    <CardBody className="p-0">
+      {notifications.length > 0 ? (
+        notifications
+          .slice()
+          .reverse()
+          .map((notification) => <Notification key={notification._id} notification={notification} />)
+      ) : (
+        <p className="m-2">
+          You don't have any notifications! Why don't you try sharing your cube on the{' '}
+          <a href="https://discord.gg/Hn39bCU">Cube Cobra Discord?</a>
+        </p>
+      )}
+    </CardBody>
+  </Card>
+);
 
-  render() {
-    const notifications = this.props.notifications;
-    return (
-      <Card className="mx-auto" style={{ maxWidth: '40rem' }}>
-        <CardHeader>
-          <h5>Notifications</h5>
-        </CardHeader>
-        <CardBody className="p-0">
-          {notifications.length > 0 ? (
-            notifications
-              .slice()
-              .reverse()
-              .map((notification) => <Notification key={notification.date} notification={notification} />)
-          ) : (
-            <p className="m-2">
-              You don't have any notifications! Why don't you try sharing your cube on the{' '}
-              <a href="https://discord.gg/Hn39bCU">Cube Cobra Discord?</a>
-            </p>
-          )}
-        </CardBody>
-      </Card>
-    );
-  }
-}
+Notifications.propTypes = {
+  notifications: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+};
 
 const notifications = JSON.parse(document.getElementById('notificationData').value);
 const element = <Notifications notifications={notifications} />;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}
