@@ -19,6 +19,7 @@ import {
   CardText,
 } from 'reactstrap';
 
+import Draft from 'utils/Draft';
 import { sortDeck } from 'utils/Util';
 
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -30,7 +31,6 @@ import withAutocard from 'components/WithAutocard';
 import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import CubeLayout from 'layouts/CubeLayout';
-import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -227,7 +227,7 @@ const CubeDeckPage = ({
         </Row>
         <Row className="mt-3">
           <Col>
-            <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(deck.flat().flat())} />
+            <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={Draft.subtitle(deck.flat().flat())} />
           </Col>
         </Row>
         {stackedSideboard && stackedSideboard.length > 0 && (

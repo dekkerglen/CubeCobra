@@ -5,18 +5,18 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import { botRating, saveDraft } from '../util/Draft';
-import Location from '../util/DraftLocation';
-import { classes, cmcColumn } from '../util/Util';
+import { botRating, saveDraft } from 'utils/Draft';
+import Location from 'utils/DraftLocation';
+import { classes, cmcColumn } from 'utils/Util';
 
-import CSRFForm from './CSRFForm';
-import CustomImageToggler from './CustomImageToggler';
-import DeckStacks from './DeckStacks';
-import DeckStacksStatic from './DeckStacksStatic';
-import { DisplayContextProvider } from './DisplayContext';
-import DynamicFlash from './DynamicFlash';
-import ErrorBoundary from './ErrorBoundary';
-import FoilCardImage from './FoilCardImage';
+import CSRFForm from 'components/CSRFForm';
+import CustomImageToggler from 'components/CustomImageToggler';
+import DeckStacks from 'components/DeckStacks';
+import DeckStacksStatic from 'components/DeckStacksStatic';
+import { DisplayContextProvider } from 'components/DisplayContext';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
+import FoilCardImage from 'components/FoilCardImage';
 
 class GridLine {
   constructor(type, index) {
@@ -48,9 +48,8 @@ class GridLine {
   indices() {
     if (this.type === 'row') {
       return [0, 1, 2].map((n) => 3 * this.index + n);
-    } else {
-      return [0, 1, 2].map((n) => 3 * n + this.index);
     }
+    return [0, 1, 2].map((n) => 3 * n + this.index);
   }
 
   cards(pack) {
@@ -68,7 +67,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
       onClick(line);
       setHover(null);
     }
-  }, [onClick]);
+  }, [pack, onClick]);
   const handleMouseOver = useCallback((event) => {
     const target = event.currentTarget;
     const newHover = GridLine.fromString(target.getAttribute('data-line'));
@@ -103,9 +102,9 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
           <Col xs={2} />
           <Col xs={8} className="position-static">
             <Row className="row-grid">
-              {columns.map((line, index) =>
+              {columns.map((line, index) => (
                 <Col
-                  key={index}
+                  key={/* eslint-disable-line react/no-array-index-key */ index}
                   xs={4}
                   className="text-center clickable col-grid position-static"
                   data-line={JSON.stringify(line)}
@@ -116,7 +115,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
                     <div className="grid-hover column-hover" />
                   )}
                 </Col>
-              )}
+              ))}
             </Row>
           </Col>
         </Row>
@@ -193,7 +192,7 @@ const makeBotPicks = (draft) => {
   return newDraft;
 };
 
-const GridDraftPage = ({ initialDraft }) => {
+const GridDraftView = ({ initialDraft }) => {
   const [draft, setDraft] = useState(initialDraft);
   const pack = draft.packs[0];
 
@@ -319,16 +318,6 @@ const GridDraftPage = ({ initialDraft }) => {
 
   return (
     <DisplayContextProvider>
-      <div className="usercontrols">
-        <Navbar expand="xs" light>
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-          </Collapse>
-        </Navbar>
-      </div>
-      <DynamicFlash />
       <CSRFForm className="d-none" innerRef={submitForm} method="POST" action={`/cube/submitdeck/${initialDraft.cube}`}>
         <Input type="hidden" name="body" value={initialDraft._id} />
       </CSRFForm>
@@ -365,4 +354,4 @@ const GridDraftPage = ({ initialDraft }) => {
   );
 };
 
-export default GridDraftPage;
+export default GridDraftView;

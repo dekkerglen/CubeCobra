@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
+import Draft from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { sortDeck } from 'utils/Util';
 
@@ -14,7 +15,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
-import { subtitle } from 'pages/CubeDraftPage';
 
 const canDrop = () => true;
 
@@ -148,7 +148,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
               className="mt-3"
               cards={deck}
               title="Deck"
-              subtitle={subtitle(deck.flat().flat())}
+              subtitle={Draft.subtitle(deck.flat().flat())}
               locationType={Location.DECK}
               canDrop={canDrop}
               onMoveCard={handleMoveCard}

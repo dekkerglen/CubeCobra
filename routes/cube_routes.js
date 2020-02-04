@@ -1585,7 +1585,7 @@ router.post('/startdraft/grid/:id', async (req, res) => {
     let cardpool = util.shuffle(cube.cards.slice(0));
     const draft = new Draft();
     draft.type = 'grid';
-    draft.bots = draftutil.getDraftBots(2);
+    draft.bots = draftutil.getDraftBots({ seats: 2 });
 
     const packs = parseInt(req.body.packs, 10);
     const cards = GRID_ROWS * GRID_COLUMNS;
@@ -1623,7 +1623,7 @@ router.post('/startdraft/grid/:id', async (req, res) => {
 
 router.get('/draft/:id', async (req, res) => {
   try {
-    const draft = await Draft.findById(req.params.id);
+    const draft = await Draft.findById(req.params.id).lean();
     if (!draft) {
       req.flash('danger', 'Draft not found');
       return res.status(404).render('misc/404', {});
@@ -1631,10 +1631,16 @@ router.get('/draft/:id', async (req, res) => {
 
     const names = new Set();
     // add in details to all cards
-    for (const seat of draft.packs) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
+    for (const seatOrPack of draft.packs) {
+      for (const packOrCard of seatOrPack) {
+        if (Array.isArray(packOrCard)) {
+          for (const card of packOrCard) {
+            card.details = carddb.cardFromId(card.cardID);
+            names.add(card.details.name);
+          }
+        } else {
+          const card = packOrCard;
+          card.details = carddb.cardFromId(card.cardID);
           names.add(card.details.name);
         }
       }
@@ -3185,8 +3191,9 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft && draft.packs[0] && draft.packs[0][0]) {
-      const cardsPerPack = draft.packs[0][0].length + draft.pickNumber - 1;
-      const updatedRating = (cardsPerPack - draft.packs[0][0].length + 1) / cardsPerPack;
+      const packSize = draft.type === 'grid' ? draft.packs[0].length : draft.packs[0][0].length;
+      const cardsPerPack = packSize + draft.pickNumber - 1;
+      const updatedRating = (cardsPerPack - packSize + 1) / cardsPerPack;
 
       if (rating.picks) {
         rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));

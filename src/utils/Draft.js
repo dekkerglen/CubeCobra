@@ -44,8 +44,8 @@ const fetchLands = [
   'Wooded Foothills',
 ];
 
-export function botRating(botColors, card) {
-  let rating = draft.ratings[card.details.name] || 0.5;
+export function botRating(ratings, botColors, card) {
+  let rating = ratings[card.details.name] || 1200;
   const colors = card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
   const overlap = botColors.some((c) => colors.includes(c));
@@ -86,8 +86,9 @@ function botPicks() {
       }
     }
 
+    // eslint-disable-next-line no-loop-func
     ratedPicks.sort((x, y) =>
-      botRating(botColors, botPack[x]) - botRating(botColors, botPack[y])
+      botRating(draft.ratings, botColors, botPack[x]) - botRating(draft.ratings, botColors, botPack[y])
     );
     arrayShuffle(unratedPicks);
 
@@ -176,4 +177,22 @@ async function finish() {
   }
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, saveDraft, finish };
+function subtitle(cards) {
+  const numCards = cards.length;
+  const allTypes = cards.map((card) => (card.type_line || card.details.type).toLowerCase());
+  const numLands = allTypes.filter((type) => type.includes('land')).length;
+  const numNonlands = allTypes.filter(
+    (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
+  ).length;
+  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numNonCreatures = numNonlands - numCreatures;
+  return (
+    `${numCards} card${numCards === 1 ? '' : 's'}: ` +
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numNonlands} nonland: ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}`
+  );
+}
+
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, saveDraft, finish, subtitle };

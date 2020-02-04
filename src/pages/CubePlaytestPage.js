@@ -102,7 +102,7 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
   const { cubeID, canEdit } = useContext(CubeContext);
   return (
     <Card {...props}>
-      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/startdraft/booster/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>{format.title} (custom draft)</CardTitleH5>
         </CardHeader>
@@ -158,7 +158,7 @@ const StandardDraftCard = () => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card className="mt-3">
-      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/startdraft/booster/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>Standard draft</CardTitleH5>
         </CardHeader>
@@ -188,25 +188,28 @@ const StandardDraftCard = () => {
   );
 };
 
-const GridDraftCard = ({ cubeID }) => (
-  <Card className="mt-3">
-    <CSRFForm method="POST" action={`/cube/startdraft/grid/${cubeID}`}>
-      <CardHeader>
-        <CardTitleH5>Start a grid draft</CardTitleH5>
-      </CardHeader>
-      <CardBody>
-        <LabelRow htmlFor="packs" label="Number of Packs" className="mb-0">
-          <Input type="select" name="packs" id="packs" defaultValue="18">
-            {rangeOptions(10, 31)}
-          </Input>
-        </LabelRow>
-      </CardBody>
-      <CardFooter>
-        <Button color="success">Start Draft</Button>
-      </CardFooter>
-    </CSRFForm>
-  </Card>
-);
+const GridDraftCard = () => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Card className="mt-3">
+      <CSRFForm method="POST" action={`/cube/startdraft/grid/${cubeID}`}>
+        <CardHeader>
+          <CardTitleH5>Start a grid draft</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <LabelRow htmlFor="packs" label="Number of Packs" className="mb-0">
+            <Input type="select" name="packs" id="packs" defaultValue="18">
+              {rangeOptions(10, 31)}
+            </Input>
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Button color="success">Start Draft</Button>
+        </CardFooter>
+      </CSRFForm>
+    </Card>
+  );
+};
 
 GridDraftCard.propTypes = {
   cubeID: PropTypes.string.isRequired,
@@ -354,7 +357,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
             />
           ))}
           <StandardDraftCard className="mt-3" />
-          <GridDraftCard cubeID={cubeID} className="mt-3" />
+          <GridDraftCard className="mt-3" />
         </Col>
       </Row>
       <CustomDraftFormatModal
