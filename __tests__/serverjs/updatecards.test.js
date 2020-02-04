@@ -296,14 +296,14 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
-test("addLanguageMapping successfully adds a language mapping to the internal structures", () => {
+test('addLanguageMapping successfully adds a language mapping to the internal structures', () => {
   const card = convertedExampleCard;
   updatecards.addCardToCatalog(card);
   updatecards.addLanguageMapping(examplecards.exampleForeignCard);
 
   const catalog = updatecards.catalog;
   expect(Object.keys(catalog.english).length).toBe(1);
-  expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id)
+  expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id);
 });
 
 test('initializeCatalog clears the updatecards structures', () => {

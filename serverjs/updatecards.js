@@ -803,18 +803,20 @@ function saveEnglishCard(card) {
 
 async function saveAllCards(sourcePath, basePath = 'private') {
   await new Promise((resolve) =>
-    fs.createReadStream(sourcePath)
+    fs
+      .createReadStream(sourcePath)
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(saveEnglishCard))
-      .on('close', resolve)
+      .on('close', resolve),
   );
 
-  console.log('Creating language mappings...')
+  console.log('Creating language mappings...');
   await new Promise((resolve) =>
-    fs.createReadStream(sourcePath)
+    fs
+      .createReadStream(sourcePath)
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
-      .on('close', resolve)
+      .on('close', resolve),
   );
 
   await writeCatalog(basePath);
