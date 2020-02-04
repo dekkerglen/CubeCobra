@@ -106,9 +106,9 @@ class CubeOverviewModal extends Component {
         image_name: value,
       },
     }));
-    if (this.state.image_dict[value]) {
-      var url = this.state.image_dict[value].uri;
-      var artist = this.state.image_dict[value].artist;
+    if (this.state.image_dict[value.toLowerCase()]) {
+      var url = this.state.image_dict[value.toLowerCase()].uri;
+      var artist = this.state.image_dict[value.toLowerCase()].artist;
       this.setState((prevState) => ({
         cube: {
           ...prevState.cube,
@@ -323,7 +323,7 @@ class CubeOverviewModal extends Component {
                     </FormGroup>
                   </Col>
                   <Col>
-                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered'].map((label) => (
+                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'].map((label) => (
                       <div className="form-check" key={label}>
                         <input
                           className="form-check-input"
