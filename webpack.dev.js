@@ -25,6 +25,4 @@ const clientConfig = merge(common.clientConfig, config, {
   },
 });
 
-const serverConfig = merge(common.serverConfig, config, {});
-
-module.exports = [clientConfig, serverConfig];
+module.exports = clientConfig;

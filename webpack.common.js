@@ -55,16 +55,20 @@ const clientConfig = merge(config, {
 const serverConfig = merge(config, {
   target: 'node',
   entry: {
-    BulkUploadPage: './src/pages/BulkUploadPage.js',
-    CubeDraftPage: './src/pages/CubeDraftPage.js',
-    CubeListPage: './src/pages/CubeListPage.js',
-    CubePlaytestPage: './src/pages/CubePlaytestPage.js',
-    DashboardPage: './src/pages/DashboardPage.js',
+    'pages/BulkUploadPage': './src/pages/BulkUploadPage.js',
+    'pages/CubeDraftPage': './src/pages/CubeDraftPage.js',
+    'pages/CubeListPage': './src/pages/CubeListPage.js',
+    'pages/CubePlaytestPage': './src/pages/CubePlaytestPage.js',
+    'pages/DashboardPage': './src/pages/DashboardPage.js',
+    'utils/Card': './src/utils/Card.js',
+    'utils/draftutil': './src/utils/draftutil.js',
+    'utils/Filter': './src/utils/Filter.js',
+    'utils/Util': './src/utils/Util.js',
   },
   output: {
     filename: '[name].js',
     sourceMapFilename: '[name].js.map',
-    path: path.resolve(__dirname, 'dist', 'components'),
+    path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'commonjs2',
   },
   externals: [

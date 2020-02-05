@@ -6,6 +6,7 @@ const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/utils/Card.js');
 
+const emptyFixturePath = 'fixtures/empty.json';
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
@@ -24,6 +25,7 @@ const convertedExampleCard = {
   rarity: 'uncommon',
   oracle_text: 'Other Knights you control get +1/+1.',
   _id: '0c3f372d-259d-4a31-9491-2d369b3f3f8b',
+  oracle_id: 'aa1a63dd-acb1-465f-8970-667b8d7c57c9',
   cmc: 2,
   legalities: {
     Legacy: true,
@@ -73,6 +75,7 @@ const convertedExampleDoubleFacedCard = {
   },
   name: 'Scorned Villager',
   name_lower: 'scorned villager',
+  oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   oracle_text:
     '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   parsed_cost: [''],
@@ -99,13 +102,13 @@ const convertedExampleDoubleFacedCardFlipFace = {
   name_lower: 'moonscarred werewolf',
   full_art: false,
   full_name: 'Moonscarred Werewolf [dka-125]',
-  full_art: false,
   artist: 'Cynthia Sheppard',
   scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   rarity: 'common',
   oracle_text:
     '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
+  oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   cmc: 0,
   language: 'en',
   legalities: {
@@ -155,6 +158,7 @@ const convertedExampleAdventureCard = {
   },
   name: 'Flaxen Intruder',
   name_lower: 'flaxen intruder',
+  oracle_id: 'bacedc99-46d9-4757-8a27-8df77d7c2f02',
   oracle_text:
     'Whenever Flaxen Intruder deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment.\nCreate three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
   parsed_cost: ['g', 'g', '5', 'split', 'g'],
@@ -210,16 +214,16 @@ const convertFnToAttribute = {
 };
 
 beforeEach(() => {
-  rimraf.sync('private');
+  rimraf.sync('private-test');
   updatecards.initializeCatalog();
 });
 
 afterEach(() => {
-  rimraf.sync('private');
+  rimraf.sync('private-test');
 });
 
 test('updateCardbase creates the expected files', () => {
-  expect.assertions(7);
+  expect.assertions(8);
   var noopPromise = new Promise((resolve, reject) => {
     process.nextTick(() => {
       resolve();
@@ -229,14 +233,15 @@ test('updateCardbase creates the expected files', () => {
   downloadMock.mockReturnValue(noopPromise);
   var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase(cardsFixturePath).then(function() {
-    expect(fs.existsSync('private/cardtree.json')).toBe(true);
-    expect(fs.existsSync('private/imagedict.json')).toBe(true);
-    expect(fs.existsSync('private/cardimages.json')).toBe(true);
-    expect(fs.existsSync('private/names.json')).toBe(true);
-    expect(fs.existsSync('private/carddict.json')).toBe(true);
-    expect(fs.existsSync('private/nameToId.json')).toBe(true);
-    expect(fs.existsSync('private/full_names.json')).toBe(true);
+  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+    expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
+    expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
+    expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
+    expect(fs.existsSync('private-test/names.json')).toBe(true);
+    expect(fs.existsSync('private-test/carddict.json')).toBe(true);
+    expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
+    expect(fs.existsSync('private-test/english.json')).toBe(true);
+    expect(fs.existsSync('private-test/full_names.json')).toBe(true);
   });
   updatecards.downloadDefaultCards = initialDownloadDefaultCards;
 });
@@ -262,6 +267,7 @@ test("addCardToCatalog successfully adds a card's information to the internal st
   expect(catalog.cardimages[normalizedName]).toEqual(expectedCardimagesStructure);
   expect(Object.keys(catalog.nameToId).length).toBe(1);
   expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.english).length).toBe(0);
   expect(Object.keys(catalog.names).length).toBe(1);
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
@@ -286,19 +292,29 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   expect(Object.keys(catalog.cardimages).length).toBe(0);
   expect(Object.keys(catalog.nameToId).length).toBe(1);
   expect(catalog.nameToId[normalizedName]).toEqual([card._id]);
+  expect(Object.keys(catalog.english).length).toBe(0);
   expect(Object.keys(catalog.names).length).toBe(1);
   expect(Object.keys(catalog.full_names).length).toBe(1);
 });
 
+test('addLanguageMapping successfully adds a language mapping to the internal structures', () => {
+  const card = convertedExampleCard;
+  updatecards.addCardToCatalog(card);
+  updatecards.addLanguageMapping(examplecards.exampleForeignCard);
+
+  const catalog = updatecards.catalog;
+  expect(Object.keys(catalog.english).length).toBe(1);
+  expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id);
+});
+
 test('initializeCatalog clears the updatecards structures', () => {
-  expect.assertions(6);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards).then(function() {
+  expect.assertions(7);
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.nameToId).length).toBe(0);
+    expect(Object.keys(updatecards.catalog.english).length).toBe(0);
     expect(updatecards.catalog.full_names.length).toBe(0);
     expect(Object.keys(updatecards.catalog.imagedict).length).toBe(0);
     expect(Object.keys(updatecards.catalog.cardimages).length).toBe(0);
@@ -306,17 +322,16 @@ test('initializeCatalog clears the updatecards structures', () => {
 });
 
 test('saveAllCards creates the expected files', () => {
-  expect.assertions(7);
-  var contents = fs.readFileSync(cardsFixturePath);
-  var cards = JSON.parse(contents);
-  return updatecards.saveAllCards(cards).then(function() {
-    expect(fs.existsSync('private/cardtree.json')).toBe(true);
-    expect(fs.existsSync('private/imagedict.json')).toBe(true);
-    expect(fs.existsSync('private/cardimages.json')).toBe(true);
-    expect(fs.existsSync('private/names.json')).toBe(true);
-    expect(fs.existsSync('private/carddict.json')).toBe(true);
-    expect(fs.existsSync('private/nameToId.json')).toBe(true);
-    expect(fs.existsSync('private/full_names.json')).toBe(true);
+  expect.assertions(8);
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+    expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
+    expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
+    expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
+    expect(fs.existsSync('private-test/names.json')).toBe(true);
+    expect(fs.existsSync('private-test/carddict.json')).toBe(true);
+    expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
+    expect(fs.existsSync('private-test/english.json')).toBe(true);
+    expect(fs.existsSync('private-test/full_names.json')).toBe(true);
   });
 });
 

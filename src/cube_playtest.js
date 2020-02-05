@@ -7,7 +7,7 @@ import CubePlaytestPage from 'pages/CubePlaytestPage';
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary className="mt-3">
-    <CubePlaytestPage {...reactProps} />
+    <CubePlaytestPage {...window.reactProps} />
   </ErrorBoundary>
 );
 if (wrapper) {
