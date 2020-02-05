@@ -2529,9 +2529,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const deckOwner = await User.findById(deck.owner);
-
-    if (!req.user || deckOwner._id !== req.user.id) {
+    if (!req.user || deck.owner !== req.user.id) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -3236,7 +3234,7 @@ router.post(
   }),
 );
 
-router.post('/api/draftpick/:id', async (req, res) => {
+router.post('/api/savedraft/:id', async (req, res) => {
   await Draft.updateOne({ _id: req.body._id }, req.body);
 
   return res.status(200).send({

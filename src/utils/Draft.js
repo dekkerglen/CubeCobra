@@ -139,38 +139,32 @@ async function pick(cardIndex) {
   });
 }
 
+function removeDetails(arr) {
+  const result = [...arr];
+  for (let i = 0; i < result.length; i++) {
+    if (Array.isArray(result[i])) {
+      result[i] = removeDetails(result[i]);
+    } else {
+      delete result.details;
+    }
+  }
+}
+
 export async function saveDraft(currentDraft) {
   const temp = JSON.parse(JSON.stringify(currentDraft));
-  for (const seatOrPack of temp.packs) {
-    for (const packOrCard of seatOrPack) {
-      if (Array.isArray(packOrCard)) {
-        for (const card of packOrCard) {
-          delete card.details;
-        }
-      } else {
-        delete packOrCard.details;
-      }
-    }
-  }
-  for (const picks of temp.picks) {
-    if (Array.isArray(picks)) {
-      for (const card of picks) {
-        if (card) {
-          delete card.details;
-        }
-      }
-    } else {
-      delete picks.details;
-    }
-  }
+  temp.packs = removeDetails(temp.packs);
+  temp.picks = removeDetails(temp.picks);
   // save draft. if we fail, we fail
-  await csrfFetch(`/cube/api/savedraft/${currentDraft.cube}`, {
+  const response = await csrfFetch(`/cube/api/savedraft/${currentDraft.cube}`, {
     method: 'POST',
     body: JSON.stringify(temp),
     headers: {
       'Content-Type': 'application/json',
     },
   });
+  if (!response.ok) {
+    throw new Error('Saving draft failed.');
+  }
 }
 
 async function finish() {
