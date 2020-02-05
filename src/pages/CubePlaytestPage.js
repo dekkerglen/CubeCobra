@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useState } from 'react';
+import React, { useContext, useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -98,8 +98,9 @@ LabelRow.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ...props }) => {
+const CustomDraftCard = ({ format, onEditFormat, onDeleteFormat, ...props }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
+  const { index } = format;
   return (
     <Card {...props}>
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
@@ -111,28 +112,28 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
             className="description-area"
             dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
           />
-          <LabelRow htmlFor={`seats-${formatIndex}`} label="Total Seats" className="mb-0">
-            <Input type="select" name="seats" id={`seats-${formatIndex}`} defaultValue="8">
+          <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
+            <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
               {rangeOptions(4, 11)}
             </Input>
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Input type="hidden" name="id" value={formatIndex} />
+          <Input type="hidden" name="id" value={index} />
           <Button type="submit" color="success" className="mr-2">
             Start Draft
           </Button>
           {canEdit && (
             <>
-              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={formatIndex}>
+              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
                 Edit
               </Button>
-              <Button color="danger" id={`deleteToggler-${formatIndex}`}>
+              <Button color="danger" id={`deleteToggler-${index}`}>
                 Delete
               </Button>
-              <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
+              <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
                 <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-                <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex}>
+                <Button color="danger" onClick={onDeleteFormat} data-index={index}>
                   Yes, delete this format
                 </Button>
               </UncontrolledCollapse>
@@ -146,10 +147,10 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
 
 CustomDraftCard.propTypes = {
   format: PropTypes.shape({
+    index: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
     html: PropTypes.string.isRequired,
   }).isRequired,
-  formatIndex: PropTypes.number.isRequired,
   onEditFormat: PropTypes.func.isRequired,
   onDeleteFormat: PropTypes.func.isRequired,
 };
@@ -285,7 +286,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
           color: 'success',
           message: 'Format successfully deleted.',
         });
-        setFormats(formats.filter((format, index) => index !== formatIndex));
+        setFormats(formats.filter(({ index }) => index !== formatIndex));
       } catch (err) {
         console.error(err);
         addAlert({
@@ -295,6 +296,12 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
       }
     },
     [addAlert, cubeID, formats],
+  );
+
+  // Sort formats alphabetically.
+  const formatsSorted = useMemo(
+    () => formats.map((format, index) => ({ ...format, index })).sort((a, b) => a.localeCompare(b)),
+    [formats],
   );
 
   return (
@@ -319,11 +326,10 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
           <SamplePackCard className="mt-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
-          {formats.map((format, index) => (
+          {formatsSorted.map((format) => (
             <CustomDraftCard
-              key={/* eslint-disable-line react/no-array-index-key */ index}
+              key={format._id}
               format={format}
-              formatIndex={index}
               onDeleteFormat={handleDeleteFormat}
               onEditFormat={handleEditFormat}
               className="mt-3"
