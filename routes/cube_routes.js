@@ -32,7 +32,6 @@ const {
   maybeCards,
   getElo,
   CSVtoCards,
-  generateBlogpost,
   populateCardDetails,
   compareCubes,
 } = require('../serverjs/cubefn.js');
@@ -210,11 +209,10 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       message = 'Custom format successfully edited.';
     }
     // check pack formats are sane
-    let draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
-    if (draftcards.length === 0) {
+    if (cube.cards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
-    [draftcards] = populateCardDetails([draftcards], carddb, {});
+    const [draftcards] = populateCardDetails([...cube.cards], carddb, {});
     // test format for errors
     const format = draftutil.parseDraftFormat(req.body.format);
     draftutil.checkFormat(format, draftcards);
@@ -1095,6 +1093,46 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   }
 });
 
+async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
+  const blogpost = new Blog();
+  blogpost.title = 'Cube Bulk Import - Automatic Post';
+  blogpost.html = changelog;
+  blogpost.owner = cube.owner;
+  blogpost.date = Date.now();
+  blogpost.cube = cube._id;
+  blogpost.dev = 'false';
+  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+  blogpost.username = cube.owner_name;
+  blogpost.cubename = cube.name;
+
+  if (missing.length > 0) {
+    const reactProps = {
+      cubeID: req.params.id,
+      missing,
+      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+      blogpost: blogpost.toObject(),
+    };
+    return res.render('cube/bulk_upload', {
+      reactProps: serialize(reactProps),
+      cube,
+      cube_id: req.params.id,
+      title: `${abbreviate(cube.name)} - Bulk Upload`,
+    });
+  }
+  await blogpost.save();
+  cube = setCubeType(cube, carddb);
+  try {
+    await Cube.updateOne({ _id: cube._id }, cube);
+  } catch (err) {
+    if (err) {
+      req.flash('danger', 'Error adding cards. Please try again.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+  }
+  req.flash('success', 'All cards successfully added.');
+  return res.redirect(`/cube/list/${req.params.id}`);
+}
+
 async function bulkUpload(req, res, list, cube) {
   const cards = list.match(/[^\r\n]+/g);
   let missing = '';
@@ -1163,7 +1201,7 @@ async function bulkUpload(req, res, list, cube) {
       }
     }
   }
-  return generateBlogpost(req, res, cube, changelog, added, missing, carddb);
+  return updateCubeAndBlog(req, res, cube, changelog, added, missing, carddb);
 }
 
 router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
@@ -1253,7 +1291,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         added.push(...onlyB);
       }
     }
-    return generateBlogpost(req, res, cube, changelog, added, missing, carddb);
+    return updateCubeAndBlog(req, res, cube, changelog, added, missing, carddb);
   } catch (err) {
     console.log(err);
     req.flash('danger', 'Error making bulk replacement');

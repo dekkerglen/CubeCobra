@@ -300,46 +300,6 @@ function CSVtoCards(cards, carddb) {
   return { newCards, newMaybe, missing };
 }
 
-async function generateBlogpost(req, res, cube, changelog, added, missing, carddb) {
-  const blogpost = new Blog();
-  blogpost.title = 'Cube Bulk Import - Automatic Post';
-  blogpost.html = changelog;
-  blogpost.owner = cube.owner;
-  blogpost.date = Date.now();
-  blogpost.cube = cube._id;
-  blogpost.dev = 'false';
-  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.owner_name;
-  blogpost.cubename = cube.name;
-
-  if (missing.length > 0) {
-    const reactProps = {
-      cubeID: req.params.id,
-      missing,
-      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-      blogpost: blogpost.toObject(),
-    };
-    return res.render('cube/bulk_upload', {
-      reactProps: serialize(reactProps),
-      cube,
-      cube_id: req.params.id,
-      title: `${abbreviate(cube.name)} - Bulk Upload`,
-    });
-  }
-  await blogpost.save();
-  cube = setCubeType(cube, carddb);
-  try {
-    await Cube.updateOne({ _id: cube._id }, cube);
-  } catch (err) {
-    if (err) {
-      req.flash('danger', 'Error adding cards. Please try again.');
-      return res.redirect(`/cube/list/${req.params.id}`);
-    }
-  }
-  req.flash('success', 'All cards successfully added.');
-  return res.redirect(`/cube/list/${req.params.id}`);
-}
-
 // prices should be the prices module with the GetPrices function.
 // elo should be in the form { round: bool }.
 // requested details is a string to pass to carddb.cardFromId.
@@ -347,10 +307,8 @@ async function populateCardDetails(cardLists, carddb, { GetPrices = null, elo = 
   const pids = new Set();
   const cardNames = new Set();
   const lists = cardLists.map((list) => [...list]);
-  for (let i = 0; i < lists.length; i++) {
-    const cards = lists[i];
-    for (let j = 0; j < cards.length; j++) {
-      const card = cards[j];
+  for (const cards of lists) {
+    for (const card of cards) {
       card.details = {
         ...carddb.cardFromId(card.cardID, requested_details),
       };
@@ -368,10 +326,8 @@ async function populateCardDetails(cardLists, carddb, { GetPrices = null, elo = 
   if (GetPrices !== null || elo !== null) {
     const queries = [GetPrices !== null && GetPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
     const [priceDict, eloDict] = await Promise.all(queries);
-    for (let i = 0; i < lists.length; i++) {
-      const cards = lists[i];
-      for (let j = 0; j < cards.length; j++) {
-        const card = cards[j];
+    for (const cards of lists) {
+      for (const card of cards) {
         if (GetPrices !== null && card.details.tcgplayer_id) {
           if (priceDict[card.details.tcgplayer_id]) {
             card.details.price = priceDict[card.details.tcgplayer_id];
@@ -439,7 +395,7 @@ const methods = {
     return res;
   },
   cardsAreEquivalent: cardsAreEquivalent,
-  setCubeType,
+ setCubeType,
   sanitize: function(html) {
     return sanitizeHtml(html, {
       allowedTags: [
@@ -528,9 +484,7 @@ const methods = {
   build_tag_colors,
   maybeCards,
   getElo,
-  setCubeType,
   CSVtoCards,
-  generateBlogpost,
   populateCardDetails,
   compareCubes,
 };
