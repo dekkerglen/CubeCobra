@@ -23,17 +23,23 @@ function initializeCatalog() {
 
 initializeCatalog();
 
-function downloadDefaultCards(basePath = 'private') {
-  const file = fs.createWriteStream(`${basePath}/cards.json`);
-  const promise = new Promise((resolve) => {
-    https.get('https://archive.scryfall.com/json/scryfall-all-cards.json', (response) => {
+function downloadFile(url, filePath) {
+  const file = fs.createWriteStream(filePath);
+  return new Promise((resolve) => {
+    https.get(url, (response) => {
       const stream = response.pipe(file);
-      stream.on('finish', () => {
-        resolve();
-      });
+      stream.on('finish', resolve);
     });
   });
-  return promise;
+}
+
+async function downloadDefaultCards(basePath = 'private', defaultSourcePath = null, allSourcePath = null) {
+  const defaultUrl = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
+  const allUrl = 'https://archive.scryfall.com/json/scryfall-all-cards.json';
+  return Promise.all([
+    downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
+    downloadFile(allUrl, allSourcePath || path.resolve(basePath, 'all-cards.json')),
+  ]);
 }
 
 function addCardToCatalog(card, isExtra) {
@@ -801,10 +807,10 @@ function saveEnglishCard(card) {
   addTokens(card);
 }
 
-async function saveAllCards(sourcePath, basePath = 'private') {
+async function saveAllCards(basePath = 'private', defaultPath = null, allPath = null) {
   await new Promise((resolve) =>
     fs
-      .createReadStream(sourcePath)
+      .createReadStream(defaultPath || path.resolve(basePath, 'cards.json'))
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(saveEnglishCard))
       .on('close', resolve),
@@ -813,7 +819,7 @@ async function saveAllCards(sourcePath, basePath = 'private') {
   console.log('Creating language mappings...');
   await new Promise((resolve) =>
     fs
-      .createReadStream(sourcePath)
+      .createReadStream(allPath || path.resolve(basePath, 'all-cards.json'))
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
@@ -822,18 +828,15 @@ async function saveAllCards(sourcePath, basePath = 'private') {
   await writeCatalog(basePath);
 }
 
-async function updateCardbase(filepath, basePath = 'private') {
-  if (filepath === undefined) {
-    filepath = `${basePath}/cards.json`;
-  }
+async function updateCardbase(basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
 
-  await module.exports.downloadDefaultCards(basePath);
+  await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
   console.log('Updating cardbase, this might take a little while...');
-  await saveAllCards(filepath, basePath);
+  await saveAllCards(basePath, defaultPath, allPath);
 
   console.log('Finished cardbase update...');
 }

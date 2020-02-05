@@ -6,6 +6,7 @@ const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/utils/Card.js');
 
+const emptyFixturePath = 'fixtures/cards_small.json';
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
@@ -232,7 +233,7 @@ test('updateCardbase creates the expected files', () => {
   downloadMock.mockReturnValue(noopPromise);
   var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase(cardsFixturePath, 'private-test').then(function() {
+  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(function() {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -308,7 +309,7 @@ test('addLanguageMapping successfully adds a language mapping to the internal st
 
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(7);
-  return updatecards.saveAllCards(cardsFixturePath, 'private-test').then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
@@ -322,7 +323,7 @@ test('initializeCatalog clears the updatecards structures', () => {
 
 test('saveAllCards creates the expected files', () => {
   expect.assertions(8);
-  return updatecards.saveAllCards(cardsFixturePath, 'private-test').then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
