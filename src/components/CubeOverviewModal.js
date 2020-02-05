@@ -106,9 +106,9 @@ class CubeOverviewModal extends Component {
         image_name: value,
       },
     }));
-    if (this.state.image_dict[value]) {
-      var url = this.state.image_dict[value].uri;
-      var artist = this.state.image_dict[value].artist;
+    if (this.state.image_dict[value.toLowerCase()]) {
+      var url = this.state.image_dict[value.toLowerCase()].uri;
+      var artist = this.state.image_dict[value.toLowerCase()].artist;
       this.setState((prevState) => ({
         cube: {
           ...prevState.cube,
@@ -323,20 +323,22 @@ class CubeOverviewModal extends Component {
                     </FormGroup>
                   </Col>
                   <Col>
-                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered'].map((label) => (
-                      <div className="form-check" key={label}>
-                        <input
-                          className="form-check-input"
-                          name="category_prefix"
-                          value={label}
-                          type="checkbox"
-                          checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
-                          onChange={this.handleChange}
-                          disabled={cube.overrideCategory ? false : true}
-                        />
-                        <label className="form-check-label">{label}</label>
-                      </div>
-                    ))}
+                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'].map(
+                      (label) => (
+                        <div className="form-check" key={label}>
+                          <input
+                            className="form-check-input"
+                            name="category_prefix"
+                            value={label}
+                            type="checkbox"
+                            checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
+                            onChange={this.handleChange}
+                            disabled={cube.overrideCategory ? false : true}
+                          />
+                          <label className="form-check-label">{label}</label>
+                        </div>
+                      ),
+                    )}
                   </Col>
                 </Row>
 
