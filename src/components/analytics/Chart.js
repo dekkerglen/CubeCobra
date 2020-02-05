@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ChartComponent from 'react-chartjs-2';
-import { Col, Row } from 'reactstrap';
+import { Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 // Data should be:
