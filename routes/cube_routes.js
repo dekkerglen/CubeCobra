@@ -2590,92 +2590,11 @@ router.get('/deck/:id', async (req, res) => {
       owner.profileUrl = `/user/view/${cubeUser._id}`;
     }
 
-    const playerDeck = [];
-    const botDecks = [];
-    if (deck.newformat === false && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
-      // old format
-      for (const card of deck.cards[0]) {
-        card.details = carddb.cardFromId(card);
-        playerDeck.push(card.details);
-      }
-      for (let i = 1; i < deck.cards.length; i++) {
-        const botDeck = [];
-        for (const card of deck.cards[i]) {
-          if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
-            console.error(`${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`);
-          } else {
-            const details = carddb.cardFromId(card[0].cardID);
-            botDeck.push(details);
-          }
-        }
-        botDecks.push(botDeck);
-      }
-      const botNames = [];
-      for (let i = 0; i < deck.bots.length; i++) {
-        botNames.push(`Seat ${i + 2}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`);
-      }
-
-      const reactProps = {
-        cube,
-        cubeID: get_cube_id(cube),
-        oldFormat: true,
-        drafter,
-        cards: playerDeck,
-        description: deck.description,
-        name: deck.name,
-        sideboard: deck.sideboard,
-        botDecks,
-        bots: botNames,
-        canEdit: req.user ? req.user.id === owner.id : false,
-        comments: deck.comments,
-        deckid: deck._id,
-        userid: req.user ? req.user.id : null,
-      };
-
-      return res.render('cube/cube_deck', {
-        reactProps: serialize(reactProps),
-        title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
-        metadata: generateMeta(
-          `Cube Cobra Deck: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-          cube.image_uri,
-          `https://cubecobra.com/cube/deck/${req.params.id}`,
-        ),
-        loginCallback: `/cube/deck/${req.params.id}`,
-      });
-    }
-    // new format
-    for (let i = 0; i < deck.cards.length; i++) {
-      const botDeck = [];
-      for (const cardID of deck.cards[i]) {
-        if (carddb.cardFromId(cardID).error) {
-          console.error(`${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`);
-        } else {
-          const details = carddb.cardFromId(cardID);
-          botDeck.push(details);
-        }
-      }
-      botDecks.push(botDeck);
-    }
-    const botNames = [];
-    for (let i = 0; i < deck.bots.length; i++) {
-      botNames.push(`Seat ${i + 2}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`);
-    }
-
     const reactProps = {
       cube,
-      cubeID: get_cube_id(cube),
-      oldFormat: false,
       drafter,
-      deck: deck.playerdeck,
-      sideboard: deck.playersideboard,
-      description: deck.description,
-      name: deck.name,
-      botDecks,
-      bots: botNames,
+      deck,
       canEdit: req.user ? req.user.id === owner.id : false,
-      comments: deck.comments,
-      deckid: deck._id,
       userid: req.user ? req.user.id : null,
     };
 
