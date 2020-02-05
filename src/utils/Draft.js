@@ -139,12 +139,16 @@ async function pick(cardIndex) {
   });
 }
 
-export async function saveDraft() {
-  const temp = JSON.parse(JSON.stringify(draft));
-  for (const seat of temp.packs) {
-    for (const seatPack of seat) {
-      for (const card of seatPack) {
-        delete card.details;
+export async function saveDraft(currentDraft) {
+  const temp = JSON.parse(JSON.stringify(currentDraft));
+  for (const seatOrPack of temp.packs) {
+    for (const packOrCard of seatOrPack) {
+      if (Array.isArray(packOrCard)) {
+        for (const card of packOrCard) {
+          delete card.details;
+        }
+      } else {
+        delete packOrCard.details;
       }
     }
   }
@@ -160,7 +164,7 @@ export async function saveDraft() {
     }
   }
   // save draft. if we fail, we fail
-  await csrfFetch(`/cube/api/savedraft/${draft.cube}`, {
+  await csrfFetch(`/cube/api/savedraft/${currentDraft.cube}`, {
     method: 'POST',
     body: JSON.stringify(temp),
     headers: {
@@ -170,7 +174,7 @@ export async function saveDraft() {
 }
 
 async function finish() {
-  await saveDraft();
+  await saveDraft(draft);
   const form = document.getElementById('submitDeckForm');
   if (form) {
     form.submit();

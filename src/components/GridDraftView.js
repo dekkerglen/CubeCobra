@@ -1,20 +1,20 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Input, Row, Spinner } from 'reactstrap';
 
+import { csrfFetch } from 'utils/CSRF';
 import { botRating, saveDraft } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { classes, cmcColumn } from 'utils/Util';
 
 import CSRFForm from 'components/CSRFForm';
-import CustomImageToggler from 'components/CustomImageToggler';
+import CubeContext from 'components/CubeContext';
 import DeckStacks from 'components/DeckStacks';
 import DeckStacksStatic from 'components/DeckStacksStatic';
 import { DisplayContextProvider } from 'components/DisplayContext';
-import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FoilCardImage from 'components/FoilCardImage';
 
@@ -119,9 +119,9 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
             </Row>
           </Col>
         </Row>
-        {gridded.map(([indices, cards, line], rowIndex) =>
-          <Row key={rowIndex} noGutters className={picking.length === 0 && hover && hover.is('row', rowIndex) ? 'grid-hover' : undefined}>
-            <Col xs={2} className={classes('d-flex py-2', picking.length === 0 && 'clickable')}  data-line={JSON.stringify(line)} {...interactProps}>
+        {gridded.map(([, cards, line], rowIndex) => (
+          <Row key={/* eslint-disable-line react/no-array-index-key */ rowIndex} noGutters className={picking.length === 0 && hover && hover.is('row', rowIndex) ? 'grid-hover' : undefined}>
+            <Col xs={2} className={classes('d-flex py-2', picking.length === 0 && 'clickable')} data-line={JSON.stringify(line)} {...interactProps}>
               <h4 className="align-self-center ml-auto mr-2">{rowIndex + 1}</h4>
             </Col>
             <Col xs={8}>
@@ -130,7 +130,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
                   const isPicking = card && picking.includes(rowIndex * 3 + index);
                   return (
                     <Col
-                      key={index}
+                      key={/* eslint-disable-line react/no-array-index-key */ index}
                       xs={4}
                       className="col-grid d-flex justify-content-center align-items-center"
                     >
@@ -146,7 +146,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onClick }) => {
             </Col>
             <Col xs={2} className={classes(picking.length === 0 && 'clickable')} data-line={JSON.stringify(line)} {...interactProps} />
           </Row>
-        )}
+        ))}
       </CardBody>
     </Card>
   );
@@ -156,7 +156,7 @@ Pack.propTypes = {
   pack: PropTypes.arrayOf(PropTypes.object).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
-  picking: PropTypes.arrayOf(PropTypes.number),
+  picking: PropTypes.arrayOf(PropTypes.number).isRequired,
   onClick: PropTypes.func.isRequired,
 };
 
@@ -173,7 +173,7 @@ const makeBotPicks = (draft) => {
   let maxOption = options[0];
   for (const option of options) {
     const optionCards = option.indices().map((i) => pack[i]);
-    const optionScores = optionCards.map((card) => card ? (1 - botRating(draft, botColors, card)) : 0);
+    const optionScores = optionCards.map((card) => card ? botRating(draft, botColors, card) : 0);
     const score = optionScores.reduce((a, b) => a + b);
     if (score >= maxScore) {
       maxScore = score;
@@ -184,8 +184,10 @@ const makeBotPicks = (draft) => {
   const newPack = [...pack];
   const pickedCards = [];
   for (const index of maxOption.indices()) {
-    pickedCards.push(pack[index]);
-    newPack[index] = null;
+    if (pack[index]) {
+      pickedCards.push(pack[index]);
+      newPack[index] = null;
+    }
   }
   newDraft.packs = [newPack, ...newDraft.packs.slice(1)];
   newDraft.picks = [newDraft.picks[0], [...newDraft.picks[1], ...pickedCards]];
@@ -203,6 +205,8 @@ const GridDraftView = ({ initialDraft }) => {
   // State for showing loading while waiting for next pick.
   // Array of indexes.
   const [picking, setPicking] = useState([]);
+
+  const { cubeID } = useContext(CubeContext);
 
   const submitForm = useRef();
 
@@ -226,9 +230,8 @@ const GridDraftView = ({ initialDraft }) => {
     const newPack = [...pack];
     newDraft.picks = [...newDraft.picks];
     newDraft.picks[0] = [...newDraft.picks[0]];
-    for (const index of pickIndices) {
-      const card = newPack[index];
-      if (!card) continue;
+    for (const pickIndex of pickIndices.filter((index) => newPack[index])) {
+      const card = newPack[pickIndex];
       const typeLine = (card.type_line || card.details.type).toLowerCase();
       const row = typeLine.includes('creature') ? 0 : 1;
       const col = cmcColumn(card);
@@ -237,10 +240,10 @@ const GridDraftView = ({ initialDraft }) => {
       pickedCardNames.push(card.details.name);
 
       setPicks(DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card));
-      newPack[index] = null;
+      newPack[pickIndex] = null;
     }
 
-    await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
+    await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
       method: 'POST',
       body: JSON.stringify({
         draft_id: draft._id,
@@ -258,7 +261,8 @@ const GridDraftView = ({ initialDraft }) => {
       newDraft.pickNumber = 1;
       newDraft.packNumber += 1;
       if (newDraft.packs.length === 0) {
-        return await finishDraft(newDraft);
+        await finishDraft(newDraft);
+        return;
       }
     } else {
       // This is the first pick from the pack, so bots pick, pass, and bots pick again.
@@ -278,7 +282,8 @@ const GridDraftView = ({ initialDraft }) => {
       newDraft.packNumber += 1;
       if (newDraft.packs.length === 0) {
         setBotPicks(newBotPicks);
-        return await finishDraft(newDraft);
+        await finishDraft(newDraft);
+        return;
       }
 
       // bot pick again.
@@ -318,7 +323,7 @@ const GridDraftView = ({ initialDraft }) => {
 
   return (
     <DisplayContextProvider>
-      <CSRFForm className="d-none" innerRef={submitForm} method="POST" action={`/cube/submitdeck/${initialDraft.cube}`}>
+      <CSRFForm className="d-none" innerRef={submitForm} method="POST" action={`/cube/submitdeck/${cubeID}`}>
         <Input type="hidden" name="body" value={initialDraft._id} />
       </CSRFForm>
       <DndProvider backend={HTML5Backend}>
@@ -352,6 +357,15 @@ const GridDraftView = ({ initialDraft }) => {
       </DndProvider>
     </DisplayContextProvider>
   );
+};
+
+GridDraftView.propTypes = {
+  initialDraft: PropTypes.shape({
+    _id: PropTypes.string,
+    bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
+    packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    ratings: PropTypes.objectOf(PropTypes.number),
+  }).isRequired,
 };
 
 export default GridDraftView;
