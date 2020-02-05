@@ -395,7 +395,7 @@ const methods = {
     return res;
   },
   cardsAreEquivalent: cardsAreEquivalent,
- setCubeType,
+  setCubeType,
   sanitize: function(html) {
     return sanitizeHtml(html, {
       allowedTags: [
