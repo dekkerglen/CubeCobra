@@ -300,7 +300,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
-    () => formats.map((format, index) => ({ ...format, index })).sort((a, b) => a.localeCompare(b)),
+    () => formats.map((format, index) => ({ ...format, index })).sort((a, b) => a.title.localeCompare(b.title)),
     [formats],
   );
 
@@ -356,7 +356,11 @@ CubePlaytestPage.propTypes = {
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  draftFormats: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  draftFormats: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 export default CubePlaytestPage;
