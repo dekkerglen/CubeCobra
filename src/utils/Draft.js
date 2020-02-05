@@ -1,5 +1,5 @@
-import { csrfFetch } from './CSRF';
-import { arrayIsSubset, arrayRotate, arrayShuffle } from './Util';
+import { csrfFetch } from 'utils/CSRF';
+import { arrayIsSubset, arrayRotate, arrayShuffle } from 'utils/Util';
 
 let draft = null;
 
@@ -55,7 +55,7 @@ function botRating(botColors, card) {
 
   if (isLand) {
     if (subset) {
-      //if fetches don't have the color identity override, they get lumped into this category
+      // if fetches don't have the color identity override, they get lumped into this category
       rating *= 1.4;
     } else if (overlap || isFetch) {
       rating *= 1.2;
@@ -74,12 +74,12 @@ function botRating(botColors, card) {
 function botPicks() {
   // make bots take one pick out of active packs
   for (let botIndex = 1; botIndex < draft.packs.length; botIndex++) {
-    const pack = draft.packs[botIndex][0];
+    const botPack = draft.packs[botIndex][0];
     const botColors = draft.bots[botIndex - 1];
     const ratedPicks = [];
     const unratedPicks = [];
-    for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
-      if (draft.ratings[pack[cardIndex].details.name]) {
+    for (let cardIndex = 0; cardIndex < botPack.length; cardIndex++) {
+      if (draft.ratings[botPack[cardIndex].details.name]) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -87,33 +87,34 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
+      return botRating(botColors, botPack[y]) - botRating(botColors, botPack[x]);
     });
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    pick = pack.splice(pickOrder[0], 1);
-    draft.picks[botIndex].push(pick[0].cardID);
+    const [botPick] = botPack.splice(pickOrder[0], 1);
+    draft.picks[botIndex].push(botPick.cardID);
   }
 }
 
 function passPack() {
   draft.pickNumber += 1;
   botPicks();
-  //check if pack is done
+  // check if pack is done
   if (draft.packs.every((seat) => seat[0].length === 0)) {
     draft.packNumber += 1;
     draft.pickNumber = 1;
-    //splice the first pack out
+    // splice the first pack out
     for (const drafter of draft.packs) {
       drafter.splice(0, 1);
     }
   } else {
-    if (draft.packs[0].length % 2 == 0) {
-      //pass left
+    // eslint-disable-next-line no-lonely-if
+    if (draft.packs[0].length % 2 === 0) {
+      // pass left
       arrayRotate(draft.packs, false);
     } else {
-      //pass right
+      // pass right
       arrayRotate(draft.packs, true);
     }
   }
@@ -121,15 +122,15 @@ function passPack() {
 
 async function pick(cardIndex) {
   const [card] = draft.packs[0][0].splice(cardIndex, 1);
-  const pack = draft.packs[0][0];
+  const currentPack = draft.packs[0][0];
   draft.pickOrder.push(card.cardID);
   passPack();
-  await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
+  await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: pack.map((c) => c.details.name),
+      pack: currentPack.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -140,8 +141,8 @@ async function pick(cardIndex) {
 async function finish() {
   const temp = JSON.parse(JSON.stringify(draft));
   for (const seat of temp.packs) {
-    for (const pack of seat) {
-      for (const card of pack) {
+    for (const seatPack of seat) {
+      for (const card of seatPack) {
         delete card.details;
       }
     }
@@ -157,8 +158,8 @@ async function finish() {
       delete picks.details;
     }
   }
-  //save draft. if we fail, we fail
-  await csrfFetch('/cube/api/draftpick/' + draft.cube, {
+  // save draft. if we fail, we fail
+  await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify(temp),
     headers: {

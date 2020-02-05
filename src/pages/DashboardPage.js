@@ -1,11 +1,12 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import BlogPost from 'components/BlogPost';
 import PagedList from 'components/PagedList';
 import CubePreview from 'components/CubePreview';
 import DeckPreview from 'components/DeckPreview';
 
-import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
 const DashboardPage = ({ posts, cubes, decks, userId }) => (
   <Row className="mt-3">
@@ -25,14 +26,14 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
             ) : (
               <p className="m-2">
                 You don't have any cubes.{' '}
-                <a href="#" data-toggle="modal" data-target="#cubeModal">
+                <Button tag="a" data-toggle="modal" data-target="#cubeModal">
                   Add a new cube?
-                </a>
+                </Button>
               </p>
             )}
           </Row>
         </CardBody>
-        <CardFooter>{cubes.length > 2 && <a href={'/user/view/' + cubes[0].owner}>View All</a>}</CardFooter>
+        <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
       </Card>
     </Col>
     <Col xs="12" md="6">
@@ -63,9 +64,9 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
         <PagedList
           pageSize={10}
           rows={posts.slice(0).map((post) => (
-            <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn={true} />
+            <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn />
           ))}
-        ></PagedList>
+        />
       ) : (
         <p>
           No posts to show. <a href="/explore">Find some cubes</a> to follow!
@@ -74,5 +75,16 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
     </Col>
   </Row>
 );
+
+DashboardPage.propTypes = {
+  posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      owner: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  userId: PropTypes.string.isRequired,
+};
 
 export default DashboardPage;
