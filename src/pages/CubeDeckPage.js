@@ -11,14 +11,20 @@ import {
   NavLink,
   Row,
   Label,
-  Input
+  Input,
+  ListGroup,
+  ListGroupItem
 } from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
+import { getCardColorClass } from 'components/TagContext';
+import withAutocard from 'components/WithAutocard';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
+
+const AutocardItem = withAutocard(ListGroupItem);
 
 const CubeDeckPage = ({
   cube,
@@ -42,6 +48,8 @@ const CubeDeckPage = ({
     },
     [isOpen],
   );
+
+    console.log(deck.seats);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
@@ -80,6 +88,32 @@ const CubeDeckPage = ({
           <Col>
             <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} drafter={drafter} deckid={deck._id}/>
           </Col>
+        </Row>
+        <Row className="row-low-padding">
+          {deck.seats.map((seat, botIndex) => (
+            seat.pickorder &&
+            <Col
+              key={/* eslint-disable-line react/no-array-index-key */ botIndex}
+              xs={6}
+              sm={3}
+              className="col-md-1-4285 col-low-padding"
+            >
+              <ListGroup className="list-outline">
+                <ListGroupItem className="list-group-heading">{seat.username ? seat.username : seat.name}</ListGroupItem>
+                {seat.pickorder.map((card, cardIndex) => (
+                  <AutocardItem
+                    key={/* eslint-disable-line react/no-array-index-key */ cardIndex}
+                    tag="a"
+                    card={{ details: card }}
+                    className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+                    href={card._id ? `/tool/card/${card._id}` : null}
+                  >
+                    {card.name}
+                  </AutocardItem>
+                ))}
+              </ListGroup>
+            </Col>
+          ))}
         </Row>
       </DisplayContextProvider>
     </CubeLayout>
