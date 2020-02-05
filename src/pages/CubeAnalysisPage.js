@@ -10,10 +10,10 @@ import Query from 'utils/Query';
 import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
 import Filter from 'utils/Filter';
 
-import AnalyticsCardGrid from 'components/analytics/CardGrid';
-import AnalyticsChart from 'components/analytics/Chart';
-import AnalyticsCloud from 'components/analytics/Cloud';
-import AnalyticsTable from 'components/analytics/Table';
+import CardGrid from 'components/analytics/CardGrid';
+import Chart from 'components/analytics/Chart';
+import Cloud from 'components/analytics/Cloud';
+import AnalyticsTable from 'components/analytics/AnalyticsTable';
 import CubeAnalysisNavBar from 'components/CubeAnalysisNavbar';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -163,9 +163,9 @@ class CubeAnalysisPage extends Component {
     if (data) {
       // Formats for data are documented in their respective components
       if (data.type === 'table') visualization = <AnalyticsTable data={data} />;
-      else if (data.type === 'chart') visualization = <AnalyticsChart data={data} />;
-      else if (data.type === 'cloud') visualization = <AnalyticsCloud data={data} />;
-      else if (data.type === 'cardGrid') visualization = <AnalyticsCardGrid data={data} cube={cube} />;
+      else if (data.type === 'chart') visualization = <Chart data={data} />;
+      else if (data.type === 'cloud') visualization = <Cloud data={data} />;
+      else if (data.type === 'cardGrid') visualization = <CardGrid data={data} cube={cube} />;
     }
     return (
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">

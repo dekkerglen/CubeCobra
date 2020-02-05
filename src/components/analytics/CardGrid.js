@@ -19,7 +19,7 @@ import MassBuyButton from 'components/MassBuyButton';
 //     }
 //    ],
 // }
-const AnalyticsCardGrid = ({ data, cube }) => (
+const CardGrid = ({ data, cube }) => (
   <>
     <Row className="mb-3">
       <Col>
@@ -47,7 +47,7 @@ const AnalyticsCardGrid = ({ data, cube }) => (
   </>
 );
 
-AnalyticsCardGrid.propTypes = {
+CardGrid.propTypes = {
   data: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object).isRequired,
     massBuyLabel: PropTypes.string.isRequired,
@@ -55,4 +55,4 @@ AnalyticsCardGrid.propTypes = {
   cube: PropTypes.shape({}).isRequired,
 };
 
-export default AnalyticsCardGrid;
+export default CardGrid;

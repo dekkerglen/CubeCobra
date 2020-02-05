@@ -18,7 +18,7 @@ import PropTypes from 'prop-types';
 //   ],
 // }
 // See https://www.npmjs.com/package/react-tagcloud for more information.
-const AnalyticsCloud = ({ data }) => {
+const Cloud = ({ data }) => {
   const colorOptions = { luminosity: 'dark' };
   return (
     <Row>
@@ -29,7 +29,7 @@ const AnalyticsCloud = ({ data }) => {
   );
 };
 
-AnalyticsCloud.propTypes = {
+Cloud.propTypes = {
   data: PropTypes.shape({
     words: PropTypes.arrayOf(
       PropTypes.shape({
@@ -42,4 +42,4 @@ AnalyticsCloud.propTypes = {
   }).isRequired,
 };
 
-export default AnalyticsCloud;
+export default Cloud;

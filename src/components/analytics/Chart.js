@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
@@ -12,27 +12,17 @@ import PropTypes from 'prop-types';
 //   options: [], options field of Chart
 // }
 // See https://github.com/jerairrest/react-chartjs-2 for more information.
-class AnalyticsBarChart extends Component {
-  render() {
-    const { data } = this.props;
-    return (
-      <Row>
-        <Col>
-          <ChartComponent
-            ref={(ref) => {
-              this.chartInstance = ref && ref.chartInstance;
-            }}
-            options={data.options}
-            data={data.datasets}
-            type={data.chartType}
-          />
-        </Col>
-      </Row>
-    );
-  }
-}
+const Chart = ({ data }) => (
+  <Row>
+    <ChartComponent
+      options={data.options}
+      data={data.datasets}
+      type={data.chartType}
+    />
+  </Row>
+);
 
-AnalyticsBarChart.propTypes = {
+Chart.propTypes = {
   data: PropTypes.shape({
     options: PropTypes.shape({}),
     datasets: PropTypes.shape({}).isRequired,
@@ -40,4 +30,4 @@ AnalyticsBarChart.propTypes = {
   }).isRequired,
 };
 
-export default AnalyticsBarChart;
+export default Chart;
