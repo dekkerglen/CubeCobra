@@ -796,10 +796,6 @@ function writeCatalog(basePath = 'private') {
 }
 
 function saveEnglishCard(card) {
-  if (card.lang !== 'en') {
-    return;
-  }
-
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, true), true);
   }
