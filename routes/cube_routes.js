@@ -769,12 +769,10 @@ router.get('/playtest/:id', async (req, res) => {
     let draftFormats = [];
     // NOTE: older cubes do not have custom drafts
     if (cube.draft_formats) {
-      draftFormats = cube.draft_formats
-        .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
-        .map(({ packs, ...format }) => ({
-          ...format,
-          packs: JSON.parse(packs),
-        }));
+      draftFormats = cube.draft_formats.map(({ packs, ...format }) => ({
+        ...format,
+        packs: JSON.parse(packs),
+      }));
     }
 
     const reactProps = {
