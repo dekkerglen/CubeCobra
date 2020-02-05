@@ -6,7 +6,7 @@ const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/utils/Card.js');
 
-const emptyFixturePath = 'fixtures/cards_small.json';
+const emptyFixturePath = 'fixtures/empty.json';
 const cardsFixturePath = 'fixtures/cards_small.json';
 
 const convertedExampleCard = {
