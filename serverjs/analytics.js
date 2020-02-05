@@ -1,112 +1,65 @@
-/* used in the now abandoned GetTokens attempt to get token counts from rules text. If  
-var Small = {
-  'zero': 0,
-  'one': 1,
-  'two': 2,
-  'three': 3,
-  'four': 4,
-  'five': 5,
-  'six': 6,
-  'seven': 7,
-  'eight': 8,
-  'nine': 9,
-  'ten': 10,
-  'eleven': 11,
-  'twelve': 12,
-  'thirteen': 13,
-  'fourteen': 14,
-  'fifteen': 15,
-  'sixteen': 16,
-  'seventeen': 17,
-  'eighteen': 18,
-  'nineteen': 19,
-  'twenty': 20,
-};
-
-var a, n, g;
-
-function text2num(a) {
-  return Small[a];  
-}
-*/
-function CheckContentsEqualityOfArray(target, candidate) {
-  var isValid = candidate.length == target.length;
-  if (!isValid) return false;
-
-  for (idx = 0; idx < target.length; idx++) {
-    if (!candidate.includes(target[idx])) {
-      isValid = false;
-      break;
-    }
-  }
-  return isValid;
-}
-
 function GetColorCat(type, colors) {
   if (type.toLowerCase().includes('land')) {
     return 'l';
-  } else if (colors.length == 0) {
+  }
+  if (colors.length === 0) {
     return 'c';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'm';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length === 1) {
     switch (colors[0]) {
       case 'W':
         return 'w';
-        break;
       case 'U':
         return 'u';
-        break;
       case 'B':
         return 'b';
-        break;
       case 'R':
         return 'r';
-        break;
       case 'G':
         return 'g';
-        break;
       case 'C':
         return 'c';
-        break;
+      default:
+        return null;
     }
   }
 }
 
 function GetColorIdentity(colors) {
-  if (colors.length == 0) {
+  if (colors.length === 0) {
     return 'Colorless';
-  } else if (colors.length > 1) {
+  }
+  if (colors.length > 1) {
     return 'Multicolored';
-  } else if (colors.length == 1) {
+  }
+  if (colors.length === 1) {
     switch (colors[0]) {
       case 'W':
         return 'White';
-        break;
       case 'U':
         return 'Blue';
-        break;
       case 'B':
         return 'Black';
-        break;
       case 'R':
         return 'Red';
-        break;
       case 'G':
         return 'Green';
-        break;
       case 'C':
         return 'Colorless';
-        break;
+      default:
+        return null;
     }
   }
 }
 
-var methods = {
-  GetColorCat: GetColorCat,
-  GetColorIdentity: GetColorIdentity,
-  GetTypeByColorIdentity: function(cards, carddb) {
-    var TypeByColor = {
+const methods = {
+  GetColorCat,
+  GetColorIdentity,
+  GetTypeByColorIdentity: (cards, carddb) => {
+    const TypeByColor = {
       Creatures: {
         White: 0,
         Blue: 0,
@@ -188,32 +141,32 @@ var methods = {
         Total: 0,
       },
     };
-    cards.forEach(function(card, index) {
+    for (const card of cards) {
       card.details = carddb.cardFromId(card.cardID);
-    });
-    cards.forEach(function(card, index) {
-      var type = {};
+    }
+    for (const card of cards) {
+      let type = {};
       if (card.details.type.toLowerCase().includes('creature')) {
-        type = TypeByColor['Creatures'];
+        type = TypeByColor.Creatures;
       } else if (card.details.type.toLowerCase().includes('enchantment')) {
-        type = TypeByColor['Enchantments'];
+        type = TypeByColor.Enchantments;
       } else if (card.details.type.toLowerCase().includes('land')) {
-        type = TypeByColor['Lands'];
+        type = TypeByColor.Lands;
       } else if (card.details.type.toLowerCase().includes('planeswalker')) {
-        type = TypeByColor['Planeswalkers'];
+        type = TypeByColor.Planeswalkers;
       } else if (card.details.type.toLowerCase().includes('instant')) {
-        type = TypeByColor['Instants'];
+        type = TypeByColor.Instants;
       } else if (card.details.type.toLowerCase().includes('sorcery')) {
-        type = TypeByColor['Sorceries'];
+        type = TypeByColor.Sorceries;
       } else if (card.details.type.toLowerCase().includes('artifact')) {
-        type = TypeByColor['Artifacts'];
+        type = TypeByColor.Artifacts;
       }
 
-      var colorCategory = GetColorCat(card.details.type, card.colors);
+      let colorCategory = GetColorCat(card.details.type, card.colors);
 
       // special case for land
-      if (colorCategory == 'l') {
-        if (card.colors.length == 0) {
+      if (colorCategory === 'l') {
+        if (card.colors.length === 0) {
           colorCategory = 'c';
         } else if (card.colors.length > 1) {
           colorCategory = 'm';
@@ -224,54 +177,54 @@ var methods = {
 
       switch (colorCategory) {
         case 'w':
-          type['White'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['White'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.White += 1;
+          type.Total += 1;
+          TypeByColor.Total.White += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'u':
-          type['Blue'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Blue'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Blue += 1;
+          type.Total += 1;
+          TypeByColor.Total.Blue += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'b':
-          type['Black'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Black'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Black += 1;
+          type.Total += 1;
+          TypeByColor.Total.Black += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'r':
-          type['Red'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Red'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Red += 1;
+          type.Total += 1;
+          TypeByColor.Total.Red += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'g':
-          type['Green'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Green'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Green += 1;
+          type.Total += 1;
+          TypeByColor.Total.Green += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'm':
-          type['Multi'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Multi'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Multi += 1;
+          type.Total += 1;
+          TypeByColor.Total.Multi += 1;
+          TypeByColor.Total.Total += 1;
           break;
         case 'c':
-          type['Colorless'] += 1;
-          type['Total'] += 1;
-          TypeByColor['Total']['Colorless'] += 1;
-          TypeByColor['Total']['Total'] += 1;
+          type.Colorless += 1;
+          type.Total += 1;
+          TypeByColor.Total.Colorless += 1;
+          TypeByColor.Total.Total += 1;
           break;
         default:
       }
-    });
+    }
     return TypeByColor;
   },
-  GetColorIdentityCounts: function(cards, carddb) {
-    var ColorCounts = {
+  GetColorIdentityCounts: (cards, carddb) => {
+    const ColorCounts = {
       Colorless: 0,
       White: 0,
       Blue: 0,
@@ -305,12 +258,11 @@ var methods = {
       NonGreen: 0,
       FiveColor: 0,
     };
-    cards.forEach(function(card, index) {
+    for (const card of cards) {
       card.details = carddb.cardFromId(card.cardID);
-    });
-    var cardColors;
-    cards.forEach(function(card, index) {
-      cardColors = card.colors || [];
+    }
+    for (const card of cards) {
+      const cardColors = card.colors || [];
       if (cardColors.length === 0) {
         ColorCounts.Colorless += 1;
       } else if (cardColors.length === 1) {
@@ -367,7 +319,7 @@ var methods = {
           ColorCounts.Green += 1;
           ColorCounts.Blue += 1;
         }
-      } else if (cardColors.length == 3) {
+      } else if (cardColors.length === 3) {
         if (cardColors.includes('G') && cardColors.includes('B') && cardColors.includes('R')) {
           ColorCounts.Jund += 1;
           ColorCounts.Green += 1;
@@ -419,7 +371,7 @@ var methods = {
           ColorCounts.Black += 1;
           ColorCounts.White += 1;
         }
-      } else if (cardColors.length == 4) {
+      } else if (cardColors.length === 4) {
         if (!cardColors.includes('W')) {
           ColorCounts.NonWhite += 1;
           ColorCounts.Green += 1;
@@ -451,7 +403,7 @@ var methods = {
           ColorCounts.Blue += 1;
           ColorCounts.Red += 1;
         }
-      } else if (cardColors.length == 5) {
+      } else if (cardColors.length === 5) {
         ColorCounts.FiveColor += 1;
         ColorCounts.Green += 1;
         ColorCounts.Black += 1;
@@ -459,13 +411,13 @@ var methods = {
         ColorCounts.Blue += 1;
         ColorCounts.Red += 1;
       }
-    });
+    }
     return ColorCounts;
   },
-  GetTokens: function(cards, carddb) {
-    var mentionedTokens = [];
+  GetTokens: (cards, carddb) => {
+    const mentionedTokens = [];
 
-    for (var card of cards) {
+    for (const card of cards) {
       card.details = carddb.cardFromId(card.cardID);
 
       if (card.details.tokens) {
@@ -475,22 +427,22 @@ var methods = {
       }
     }
 
-    let resultingTokens = [];
-    var tokenIndexArray = [];
+    const resultingTokens = [];
+    const tokenIndexArray = [];
     mentionedTokens.forEach((element) => {
-      var relevantIndex = tokenIndexArray.indexOf(element.tokenId);
+      const relevantIndex = tokenIndexArray.indexOf(element.tokenId);
       if (relevantIndex >= 0) {
         resultingTokens[relevantIndex][1].push(carddb.cardFromId(element.sourceCardId));
       } else {
-        var cardId = [carddb.cardFromId(element.tokenId), [carddb.cardFromId(element.sourceCardId)]];
+        const cardId = [carddb.cardFromId(element.tokenId), [carddb.cardFromId(element.sourceCardId)]];
         resultingTokens.push(cardId);
         tokenIndexArray.push(element.tokenId);
       }
     });
     return resultingTokens;
   },
-  GetCurve: function(cards, carddb) {
-    var curve = {
+  GetCurve: (cards, carddb) => {
+    const curve = {
       white: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       blue: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       black: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -501,11 +453,11 @@ var methods = {
       total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
 
-    cards.forEach(function(card, index) {
+    for (const card of cards) {
       card.details = carddb.cardFromId(card.cardID);
-    });
-    cards.forEach(function(card, index) {
-      var category;
+    }
+    for (const card of cards) {
+      let category;
       switch (GetColorCat(card.details.type, card.colors)) {
         case 'w':
           category = curve.white;
@@ -528,6 +480,9 @@ var methods = {
         case 'm':
           category = curve.multi;
           break;
+        default:
+          category = null;
+          break;
       }
       if (category) {
         if (card.cmc >= 9) {
@@ -538,7 +493,7 @@ var methods = {
           curve.total[Math.floor(card.cmc)] += 1;
         }
       }
-    });
+    }
     return curve;
   },
 };
