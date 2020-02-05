@@ -14,11 +14,7 @@ import PropTypes from 'prop-types';
 // See https://github.com/jerairrest/react-chartjs-2 for more information.
 const Chart = ({ data }) => (
   <Row>
-    <ChartComponent
-      options={data.options}
-      data={data.datasets}
-      type={data.chartType}
-    />
+    <ChartComponent options={data.options} data={data.datasets} type={data.chartType} />
   </Row>
 );
 
