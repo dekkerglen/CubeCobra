@@ -342,7 +342,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
       <Alerts alerts={alerts} />
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
+          {decks.length !== 0 && <DecksCard decks={decks} className="mt-3" />}
           <SamplePackCard className="mt-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
