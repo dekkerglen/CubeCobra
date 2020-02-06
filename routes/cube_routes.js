@@ -844,12 +844,10 @@ router.get('/playtest/:id', async (req, res) => {
     let draftFormats = [];
     // NOTE: older cubes do not have custom drafts
     if (cube.draft_formats) {
-      draftFormats = cube.draft_formats
-        .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
-        .map(({ packs, ...format }) => ({
-          ...format,
-          packs: JSON.parse(packs),
-        }));
+      draftFormats = cube.draft_formats.map(({ packs, ...format }) => ({
+        ...format,
+        packs: JSON.parse(packs),
+      }));
     }
 
     const reactProps = {
@@ -1933,7 +1931,7 @@ router.post(
     // cube category override
     if (cube.overrideCategory) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
-      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered'];
+      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
 
       if (!categories.includes(updatedCube.categoryOverride)) {
         res.statusMessage = 'Not a valid category override.';

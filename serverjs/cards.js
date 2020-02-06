@@ -9,6 +9,7 @@ var data = {
   cardnames: [],
   full_names: [],
   nameToId: {},
+  english: {},
   _carddict: {},
 };
 var fileToAttribute = {
@@ -19,6 +20,7 @@ var fileToAttribute = {
   'full_names.json': 'full_names',
   'imagedict.json': 'imagedict',
   'cardimages.json': 'cardimages',
+  'english.json': 'english',
 };
 
 function getPlaceholderCard(_id) {
@@ -167,9 +169,14 @@ function getIdsFromName(name) {
   return data.nameToId[cardutil.normalizeName(name)];
 }
 
+function getEnglishVersion(id) {
+  return data.english[id];
+}
+
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;
 data.getIdsFromName = getIdsFromName;
+data.getEnglishVersion = getEnglishVersion;
 data.allIds = (card) => getIdsFromName(card.name);
 data.allCards = () => Object.values(data._carddict);
 data.initializeCardDb = initializeCardDb;
