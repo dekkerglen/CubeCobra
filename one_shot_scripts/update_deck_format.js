@@ -145,7 +145,7 @@ async function update(deck) {
 
       deck.seats.push(playerSeat);
 
-      //add bots
+      //add bots 
       for (let i = 1; i < deck.cards.length; i += 1) {
         //need to build a deck with this pool...
         const botdeck = await buildDeck(deck.cards[i]);

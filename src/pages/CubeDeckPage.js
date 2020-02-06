@@ -28,7 +28,6 @@ const AutocardItem = withAutocard(ListGroupItem);
 
 const CubeDeckPage = ({
   cube,
-  drafter,
   deck,
   canEdit,
 }) => {
@@ -84,7 +83,7 @@ const CubeDeckPage = ({
         <DynamicFlash />     
         <Row className="mt-3">
           <Col>
-            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} drafter={drafter} deckid={deck._id}/>
+            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id}/>
           </Col>
         </Row>
         
@@ -95,10 +94,6 @@ const CubeDeckPage = ({
 
 CubeDeckPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
-  drafter: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    profileUrl: PropTypes.string.isRequired,
-  }).isRequired,
   deck: PropTypes.shape({}).isRequired,
   canEdit: PropTypes.bool,
 };

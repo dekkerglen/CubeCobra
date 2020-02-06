@@ -209,6 +209,9 @@ async function finish() {
       const res = await buildDeck(draft.seats[i].pickorder, draft.seats[i].bot);
       draft.seats[i].drafted = res.deck;
       draft.seats[i].sideboard = res.sideboard;
+      
+      draft.seats[i].name = 'Bot ' + (i+1) + ': ' + draft.seats[i].bot[0] + ', ' + draft.seats[i].bot[1];
+      draft.seats[i].description ='This deck was drafted by a bot with color preference for ' + draft.seats[i].bot[0] + ' and ' + draft.seats[i].bot[1] + '.';
     }
   }
   

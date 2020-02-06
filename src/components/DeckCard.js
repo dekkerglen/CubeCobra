@@ -62,7 +62,6 @@ DeckStacksStatic.defaultProps = {
 const DeckCard = ({
   seat,
   comments,
-  drafter,
   deckid
 }) => {
   const [commentList, setCommentList] = useState(comments);
@@ -121,16 +120,16 @@ const DeckCard = ({
     row.splice(startCut, row.length - startCut);
   }
 
-  console.log(seat);
-
   return (
     <Card>
         <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
             <h4 className="mb-0 mr-auto">{seat.name}</h4>
-            <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-            Drafted by {drafter.profileUrl ? <a href={drafter.profileUrl}>{drafter.name}</a> : drafter.name}
-            </h6>
+            {!seat.bot &&
+              <h6 className="mb-0 font-weight-normal d-none d-sm-block">
+              Drafted by {seat.userid ? <a href={'/user/view/'+seat.userid}>{seat.username}</a> : 'Anonymous'}
+              </h6>
+            }
         </CardTitle>
         </CardHeader>
         <Row className="mt-3">

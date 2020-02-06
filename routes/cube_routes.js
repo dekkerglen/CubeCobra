@@ -2592,7 +2592,6 @@ router.get('/deck/:id', async (req, res) => {
 
     const reactProps = {
       cube,
-      drafter,
       deck,
       canEdit: req.user ? req.user.id === owner.id : false,
       userid: req.user ? req.user.id : null,
