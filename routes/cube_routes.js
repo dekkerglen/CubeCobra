@@ -207,7 +207,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       message = 'Custom format successfully edited.';
     }
     // check pack formats are sane
-    const draftcards = cube.cards.slice(); //.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
+    const draftcards = cube.cards.slice();
     if (draftcards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
@@ -847,8 +847,9 @@ router.get('/playtest/:id', async (req, res) => {
     if (cube.draft_formats) {
       draftFormats = cube.draft_formats
         .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
-        .map(({ _id, packs, ...format }) => ({
+        .map(({ _id, packs, ...format }, index) => ({
           id: _id,
+          index: index,
           ...format,
           packs: JSON.parse(packs),
         }));

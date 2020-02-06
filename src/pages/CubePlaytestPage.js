@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useState } from 'react';
+import React, { useContext, useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -98,8 +98,9 @@ LabelRow.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ...props }) => {
+const CustomDraftCard = ({ format, onEditFormat, onDeleteFormat, ...props }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
+  const { index } = format;
   return (
     <Card data-id={format.id} {...props}>
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
@@ -111,8 +112,8 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
             className="description-area"
             dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
           />
-          <LabelRow htmlFor={`seats-${formatIndex}`} label="Total Seats" className="mb-0">
-            <Input type="select" name="seats" id={`seats-${formatIndex}`} defaultValue="8">
+          <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
+            <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
               {rangeOptions(4, 11)}
             </Input>
           </LabelRow>
@@ -124,21 +125,15 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
           </Button>
           {canEdit && (
             <>
-              <Button
-                color="success"
-                className="mr-2"
-                onClick={onEditFormat}
-                data-index={formatIndex}
-                data-id={format.id}
-              >
+              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index} data-id={format.id}>
                 Edit
               </Button>
-              <Button color="danger" id={`deleteToggler-${formatIndex}`}>
+              <Button color="danger" id={`deleteToggler-${index}`}>
                 Delete
               </Button>
-              <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
+              <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
                 <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-                <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex} data-id={format.id}>
+                <Button color="danger" onClick={onDeleteFormat} data-index={index} data-id={format.id}>
                   Yes, delete this format
                 </Button>
               </UncontrolledCollapse>
@@ -153,10 +148,10 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
 CustomDraftCard.propTypes = {
   format: PropTypes.shape({
     id: PropTypes.string.isRequired,
+    index: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
     html: PropTypes.string.isRequired,
   }).isRequired,
-  formatIndex: PropTypes.number.isRequired,
   onEditFormat: PropTypes.func.isRequired,
   onDeleteFormat: PropTypes.func.isRequired,
 };
@@ -321,11 +316,10 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
           <SamplePackCard className="mt-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
-          {formats.map((format, index) => (
+          {formats.map((format) => (
             <CustomDraftCard
               key={format.id}
               format={format}
-              formatIndex={index}
               onDeleteFormat={handleDeleteFormat}
               onEditFormat={handleEditFormat}
               className="mt-3"
@@ -352,7 +346,11 @@ CubePlaytestPage.propTypes = {
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  draftFormats: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  draftFormats: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
 export default CubePlaytestPage;
