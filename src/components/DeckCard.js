@@ -121,6 +121,8 @@ const DeckCard = ({
     row.splice(startCut, row.length - startCut);
   }
 
+  console.log(seat);
+
   return (
     <Card>
         <CardHeader>

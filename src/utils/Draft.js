@@ -79,55 +79,22 @@ function botRating(botColors, card) {
 }
 
 async function buildDeck(cards, bot) {
-  cards = cards.map((id) => {
-    if(Array.isArray(id)) {
-      if(id.length <= 0) {
-        const details = carddb.getPlaceholderCard('');
-        return {
-          tags: [],
-          colors:details.colors,
-          cardID: details._id,
-          cmc:details.cmc,
-          type_line: details.type,
-          details: details,
-        }
-      }
-      if(id[0].cardID) {
-        id = id[0].cardID;
-      } else {
-        id = id[0];
-      }
-    } else if(id.cardID) {
-      id = id.cardID;
-    }
-    const details = carddb.cardFromId(id);
-    return {
-      tags: [],
-      colors:details.colors,
-      cardID: details._id,
-      cmc:details.cmc,
-      type_line: details.type,
-      details: details,
-    }
-  });
-
-  const elos = await cubefn.getElo(cards.map((card) => card.details.name));
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
-  sort_fn = function(a,b) {
+  const sort_fn = function(a,b) {
     if(bot) {
-      return  botRating(b,bot,elos[b.details.name]) - botRating(a,bot,elos[a.details.name]);
+      return  botRating(bot,b) - botRating(bot, a);
     } else {
-      return elos[b.details.name] = elos[a.details.name];
+      return draft.ratings[b.details.name] = draft.ratings[a.details.name];
     }
   }
 
   nonlands.sort(sort_fn);
   lands.sort(sort_fn);
 
-  const main = nonlands.slice(0,23);
-  const side = lands.slice(17);
+  const main = nonlands.slice(0,23).concat(lands.slice(0,17));
+  const side = nonlands.slice(23).concat(lands.slice(17));
 
   const deck = [];
   const sideboard = [];
@@ -171,7 +138,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, botPack[y]) - botRating(botColors, botPack[x]);
+      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
     });
     arrayShuffle(unratedPicks);
 
@@ -182,7 +149,6 @@ function botPicks() {
 }
 
 function passPack() {
-  console.log(draft);
   botPicks();
   //check if pack is done
   if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
@@ -228,7 +194,7 @@ async function pick(cardIndex) {
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: currentPack.map((c) => c.details.name),
+      pack: pack.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -238,11 +204,11 @@ async function pick(cardIndex) {
 
 async function finish() {
   //build bot decks
-  for(let seat of draft) {
-    if(seat.bot) {
-      const res = buildDeck(seat.pickorder, seat.bot);
-      seat.deck = res.deck;
-      seat.sideboard = res.sideboard;
+  for(let i = 0; i < draft.seats.length; i++) {
+    if(draft.seats[i].bot) {
+      const res = await buildDeck(draft.seats[i].pickorder, draft.seats[i].bot);
+      draft.seats[i].drafted = res.deck;
+      draft.seats[i].sideboard = res.sideboard;
     }
   }
   

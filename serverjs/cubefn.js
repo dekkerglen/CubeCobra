@@ -221,6 +221,10 @@ async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
   const result = {};
 
+  for(const cardname of cardnames){
+    result[cardname] = 1200; // default values
+  }
+
   ratings.forEach(function(item, index) {
     result[item.name] = round ? Math.round(item.elo) : item.elo;
   });

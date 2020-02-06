@@ -89,8 +89,8 @@ async function buildDeck(cards, bot) {
   nonlands.sort(sort_fn);
   lands.sort(sort_fn);
 
-  const main = nonlands.slice(0,23);
-  const side = lands.slice(17);
+  const main = nonlands.slice(0,23).concat(lands.slice(0,17));
+  const side = nonlands.slice(23).concat(lands.slice(17));
 
   const deck = [];
   const sideboard = [];
@@ -112,6 +112,7 @@ async function buildDeck(cards, bot) {
     sideboard[Math.min(card.cmc, 7)].push(card);
   }
 
+  console.log(sideboard);
   return {
     deck,
     sideboard,
@@ -120,101 +121,104 @@ async function buildDeck(cards, bot) {
 
 async function update(deck) {
   
-  const draft = deck.draft ? await Draft.findById(deck.draft) : null;
+  //has old format to update
+  if(deck.owner && deck.owner.length > 0) {
+    const draft = deck.draft ? await Draft.findById(deck.draft) : null;
 
-  if (deck.newformat == false && deck.cards[deck.cards.length - 1] && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
-    //old format
-    deck.seats = [];
+    if (deck.newformat == false && deck.cards[deck.cards.length - 1] && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
+      //old format
+      deck.seats = [];
 
-    const playerdeck = await buildDeck(deck.cards[0]);
-    
-    const playerSeat = {
-      bot: null,
-      userid: deck.owner,
-      username: deck.username,
-      pickorder: deck.cards[0],
-      name: deck.name,
-      description: deck.description,
-      cols: 16,
-      deck: playerdeck.deck,
-      sideboard: playerdeck.sideboard,
-    };
-
-    deck.seats.push(playerSeat);
-
-    //add bots
-    for (let i = 1; i < deck.cards.length; i += 1) {
-      //need to build a deck with this pool...
-      const botdeck = await buildDeck(deck.cards[i]);
-      const bot = {
-        bot: deck.bots[i-1],
-        pickorder: deck.cards[i].map((id) => {
-          if (typeof id === 'string' || id instanceof String) {        
-            const details = carddb.cardFromId(id);
-            return {
-              tags: [],
-              colors:details.colors,
-              cardID: details._id,
-              cmc:details.cmc,
-              type_line: details.type
-            }
-          } else {
-            return id;
-          }
-        }),
-        name: 'Bot ' + (i+1) + ': ' + deck.bots[i-1][0] + ', ' + deck.bots[i-1][1],
-        description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i-1][0] + ' and ' + deck.bots[i-1][1] + '.',
+      const playerdeck = await buildDeck(deck.cards[0]);
+      
+      const playerSeat = {
+        bot: null,
+        userid: deck.owner,
+        username: deck.username,
+        pickorder: deck.cards[0],
+        name: deck.name,
+        description: deck.description,
         cols: 16,
-        deck: botdeck.deck,
-        sideboard: botdeck.sideboard,
+        deck: playerdeck.deck,
+        sideboard: playerdeck.sideboard,
       };
-      deck.seats.push(bot);
-    }
-  } else {
-    //new format
-    deck.seats = [];
 
-    const playerSeat = {
-      bot: null,
-      userid: deck.owner,
-      username: deck.username,
-      pickorder: draft ? draft.pickorder : [],
-      name: deck.name,
-      description: deck.description,
-      cols: 16,
-      deck: deck.playerdeck,
-      sideboard: deck.playersideboard,
-    };
+      deck.seats.push(playerSeat);
 
-    deck.seats.push(playerSeat);
-
-    //add bots
-    for (let i = 0; i < deck.cards.length; i += 1) {
-      //need to build a deck with this pool...
-      const botdeck = await buildDeck(deck.cards[i]);
-      const bot = {
-        bot: deck.bots[i],
-        pickorder: deck.cards[i].map((id) => {
-          if (typeof id === 'string' || id instanceof String) {        
-            const details = carddb.cardFromId(id);
-            return {
-              tags: [],
-              colors:details.colors,
-              cardID: details._id,
-              cmc:details.cmc,
-              type_line: details.type
+      //add bots
+      for (let i = 1; i < deck.cards.length; i += 1) {
+        //need to build a deck with this pool...
+        const botdeck = await buildDeck(deck.cards[i]);
+        const bot = {
+          bot: deck.bots[i-1],
+          pickorder: deck.cards[i].map((id) => {
+            if (typeof id === 'string' || id instanceof String) {        
+              const details = carddb.cardFromId(id);
+              return {
+                tags: [],
+                colors:details.colors,
+                cardID: details._id,
+                cmc:details.cmc,
+                type_line: details.type
+              }
+            } else {
+              return id;
             }
-          } else {
-            return id;
-          }
-        }),
-        name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
-        description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i][0] + ' and ' + deck.bots[i][1] + '.',
+          }),
+          name: 'Bot ' + (i+1) + ': ' + deck.bots[i-1][0] + ', ' + deck.bots[i-1][1],
+          description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i-1][0] + ' and ' + deck.bots[i-1][1] + '.',
+          cols: 16,
+          deck: botdeck.deck,
+          sideboard: botdeck.sideboard,
+        };
+        deck.seats.push(bot);
+      }
+    } else {
+      //new format
+      deck.seats = [];
+
+      const playerSeat = {
+        bot: null,
+        userid: deck.owner,
+        username: deck.username,
+        pickorder: draft ? draft.pickorder : [],
+        name: deck.name,
+        description: deck.description,
         cols: 16,
-        deck: botdeck.deck,
-        sideboard: botdeck.sideboard,
+        deck: deck.playerdeck,
+        sideboard: deck.playersideboard,
       };
-      deck.seats.push(bot);
+
+      deck.seats.push(playerSeat);
+
+      //add bots
+      for (let i = 0; i < deck.cards.length; i += 1) {
+        //need to build a deck with this pool...
+        const botdeck = await buildDeck(deck.cards[i]);
+        const bot = {
+          bot: deck.bots[i],
+          pickorder: deck.cards[i].map((id) => {
+            if (typeof id === 'string' || id instanceof String) {        
+              const details = carddb.cardFromId(id);
+              return {
+                tags: [],
+                colors:details.colors,
+                cardID: details._id,
+                cmc:details.cmc,
+                type_line: details.type
+              }
+            } else {
+              return id;
+            }
+          }),
+          name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
+          description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i][0] + ' and ' + deck.bots[i][1] + '.',
+          cols: 16,
+          deck: botdeck.deck,
+          sideboard: botdeck.sideboard,
+        };
+        deck.seats.push(bot);
+      }
     }
   }
 

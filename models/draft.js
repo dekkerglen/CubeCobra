@@ -6,6 +6,7 @@ const Seat = {
   name: String,
   userid: String,
   drafted: [[]], //organized draft picks
+  sideboard: [[]], //organized draft picks
   pickorder: [],
   packbacklog: [[]],
 };

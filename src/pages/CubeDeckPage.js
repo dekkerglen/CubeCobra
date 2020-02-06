@@ -48,9 +48,7 @@ const CubeDeckPage = ({
     },
     [isOpen],
   );
-
-    console.log(deck.seats);
-
+  
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>

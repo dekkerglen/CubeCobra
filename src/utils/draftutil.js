@@ -6,6 +6,24 @@ var Util = require('./Util.js');
 require('./Card.js');
 var Filter = require('./Filter.js');
 
+function arrayShuffle(array) {
+  let currentIndex = array.length;
+  let temporaryValue;
+  let randomIndex; // While there remain elements to shuffle...
+
+  while (currentIndex !== 0) {
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1; // And swap it with the current element.
+
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
@@ -185,7 +203,7 @@ export function getDraftBots(params) {
   return draftbots;
 }
 
-function getDraftFormat(params, cube) {
+export function getDraftFormat(params, cube) {
   let format;
   if (params.id >= 0) {
     format = parseDraftFormat(cube.draft_formats[params.id].packs);
@@ -248,7 +266,7 @@ function createPacks(draft, format, seats, nextCardFn) {
   };
   */
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-function populateDraft(draft, format, cards, bots, seats, user) {
+export function populateDraft(draft, format, cards, bots, seats, user) {
   let nextCardFn = null;
 
   if (cards.length === 0) {

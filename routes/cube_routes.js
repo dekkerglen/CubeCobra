@@ -827,7 +827,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube: cube._id,
       },
-      '_id name owner username date',
+      '_id date seats',
     )
       .sort({
         date: -1,
@@ -2259,6 +2259,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     //req.body contains a draft
     var draftid = req.body.body;
     const draft = await Draft.findById(draftid);
+    const cube = await Cube.findOne(build_id_query(draft.cube));
 
     var deck = new Deck();
     deck.cube = draft.cube;
@@ -2268,7 +2269,9 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.cubename = cube.name;
     deck.seats = [];
 
+
     for (const seat of draft.seats) {
+      console.log(seat);
       deck.seats.push({
         bot: seat.bot,
         userid: seat.userid,
@@ -2278,11 +2281,10 @@ router.post('/submitdeck/:id', async (req, res) => {
         description: '',
         cols: 16,
         deck: seat.drafted,
-        sideboard: [],
+        sideboard: seat.sideboard ? seat.sideboard : [],
       });
     }
 
-    const cube = await Cube.findOne(build_id_query(draft.cube));
 
     if (!cube.decks) {
       cube.decks = [];
@@ -3075,20 +3077,18 @@ router.post(
 
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
-    if (draft && draft.packs[0] && draft.packs[0][0]) {
-      const cardsPerPack = draft.packs[0][0].length + draft.pickNumber - 1;
-      const updatedRating = (cardsPerPack - draft.packs[0][0].length + 1) / cardsPerPack;
-
-      if (rating.picks) {
-        rating.value = rating.value * (rating.picks / (rating.picks + 1)) + updatedRating * (1 / (rating.picks + 1));
-        rating.picks += 1;
-      } else {
-        rating.name = req.body.pick;
-        rating.value = updatedRating;
-        rating.elo = ELO_BASE + ELO_RANGE / 2;
-        rating.picks = 1;
+    if (draft) {
+      let picks = draft.seats[0].length;
+      let picknum = 1;
+      let packnum = 1;
+      while (picks > draft.initial_state[packnum - 1].length) {
+        picks -= draft.initial_state[packnum - 1].length;
+        packnum++;
       }
 
+      rating.name = req.body.pick;
+      rating.elo = ELO_BASE + ELO_RANGE / 2;
+      
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
       }
