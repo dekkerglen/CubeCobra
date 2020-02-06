@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo, useState } from 'react';
+import React, { useContext, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -190,7 +190,7 @@ const StandardDraftCard = () => {
   );
 };
 
-const DecksCard = ({ decks, ...props }) => {
+const DecksCard = ({ decks }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card>
@@ -273,7 +273,6 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   const handleDeleteFormat = useCallback(
     async (event) => {
-      const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       const formatID = event.target.getAttribute('data-id');
       try {
         const response = await csrfFetch(`/cube/${cubeID}/format/${formatID}`, {
@@ -288,7 +287,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
         setFormats(formats.filter((format) => format.id !== formatID));
       } catch (err) {
         console.error(err);
-        addAlert('danger', 'Failed to delete format. ' + err.message);
+        addAlert('danger', `Failed to delete format. ${err.message}`);
       }
     },
     [addAlert, cubeID, formats],

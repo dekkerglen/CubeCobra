@@ -849,7 +849,7 @@ router.get('/playtest/:id', async (req, res) => {
         .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
         .map(({ _id, packs, ...format }, index) => ({
           id: _id,
-          index: index,
+          index,
           ...format,
           packs: JSON.parse(packs),
         }));
@@ -3097,7 +3097,7 @@ router.delete('/:cubeId/format/:formatId', ensureAuth, async (req, res) => {
   } catch (err) {
     return res.status(500).send({
       success: 'false',
-      message: 'Error deleting format: ' + err.message,
+      message: `Error deleting format: ${err.message}`,
     });
   }
 });

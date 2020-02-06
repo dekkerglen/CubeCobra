@@ -259,7 +259,6 @@ function removeDraftFormat(cube, id) {
 
 // returns -1 if format id not found
 function getDraftFormatIndex(cube, id) {
-  console.log('getDraftFormatIndex', cube, id);
   if (!cube.draft_formats) {
     throw new Error('Cube has no draft formats');
   }
