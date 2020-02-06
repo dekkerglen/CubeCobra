@@ -62,7 +62,7 @@ function botRating(botColors, card) {
 
   if (isLand) {
     if (subset) {
-      //if fetches don't have the color identity override, they get lumped into this category
+      // if fetches don't have the color identity override, they get lumped into this category
       rating *= 1.4;
     } else if (overlap || isFetch) {
       rating *= 1.2;
@@ -94,7 +94,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
+      return botRating(botColors, botPack[y]) - botRating(botColors, botPack[x]);
     });
     arrayShuffle(unratedPicks);
 
@@ -146,12 +146,12 @@ async function pick(cardIndex) {
   const pack = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card.cardID);
   passPack();
-  await csrfFetch('/cube/api/draftpickcard/' + draft.cube, {
+  await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: pack.map((c) => c.details.name),
+      pack: currentPack.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',

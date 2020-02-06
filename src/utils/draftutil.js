@@ -27,15 +27,15 @@ function makeFilter(filterText) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
-      tagfilterText = '"' + filterText + '"';
+      tagfilterText = `"${filterText}"`;
     }
-    tagfilterText = 'tag:' + tagfilterText; // TODO: use tag instead of 'tag'
+    tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
     tokens = [];
     valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
   }
 
   if (!valid) {
-    throw new Error('Invalid card filter: ' + filterText);
+    throw new Error(`Invalid card filter: ${filterText}`);
   }
   return [Filter.parseTokens(tokens)];
 }
@@ -45,8 +45,8 @@ function makeFilter(filterText) {
 
       [pack][card in pack][token,token...]
 */
-function parseDraftFormat(packsJSON, splitter = ',') {
-  let format = JSON.parse(packsJSON);
+export function parseDraftFormat(packsJSON, splitter = ',') {
+  const format = JSON.parse(packsJSON);
   for (let j = 0; j < format.length; j++) {
     for (let k = 0; k < format[j].length; k++) {
       format[j][k] = format[j][k].split(splitter);
@@ -63,8 +63,8 @@ function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = Util.arrayShuffle(cards);
-  return function(cardFilters) {
+  cards = arrayShuffle(cards);
+  return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
@@ -95,15 +95,15 @@ function customDraft(cards, duplicates = false) {
     // each filter is an array of parsed filter tokens, we choose one randomly
     let validCards = cards;
     let index = null;
-    let messages = [];
+    const messages = [];
     if (cardFilters.length > 0) {
       do {
         index = Math.floor(Math.random() * cardFilters.length);
-        let filter = cardFilters[index];
+        const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push('Warning: no cards matching filter: ' + Filter.filterToString(filter));
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -111,20 +111,20 @@ function customDraft(cards, duplicates = false) {
     }
 
     if (validCards.length == 0) {
-      throw new Error('Unable to create draft: not enough cards matching filter.\n' + messages.join('\n'));
+      throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
     index = Math.floor(Math.random() * validCards.length);
 
     // slice out the first card with the index, or error out
-    let card = validCards[index];
+    const card = validCards[index];
     if (!duplicates) {
       // remove from cards
       index = cards.indexOf(card);
       cards.splice(index, 1);
     }
 
-    return { card: card, messages: messages };
+    return { card, messages };
   };
 }
 
@@ -135,7 +135,7 @@ function customDraftAsfan(cards, duplicates = false) {
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
-    let validCardGroups = [];
+    const validCardGroups = [];
     for (let i = 0; i < cardFilters.length; i++) {
       let validCards = matchingCards(cards, cardFilters[i]);
       if (!duplicates) {
@@ -165,10 +165,10 @@ function customDraftAsfan(cards, duplicates = false) {
   };
 }
 
-function getDraftBots(params) {
-  var botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
-  var draftbots = [];
-  var colors = [];
+export function getDraftBots(params) {
+  const botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
+  const draftbots = [];
+  let colors = [];
   for (let i = 0; i < botcolors; i++) {
     colors.push('W');
     colors.push('U');
@@ -178,7 +178,7 @@ function getDraftBots(params) {
   }
   colors = Util.arrayShuffle(colors);
   for (let i = 0; i < params.seats - 1; i++) {
-    var colorcombo = [colors.pop(), colors.pop()];
+    const colorcombo = [colors.pop(), colors.pop()];
     draftbots.push(colorcombo);
   }
   // TODO: order the bots to avoid same colors next to each other
@@ -218,7 +218,7 @@ function createPacks(draft, format, seats, nextCardFn) {
       draft.initial_state[seat].push([]);
       let pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
-        let result = nextCardFn(format[packNum][cardNum]);
+        const result = nextCardFn(format[packNum][cardNum]);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
@@ -231,7 +231,7 @@ function createPacks(draft, format, seats, nextCardFn) {
       draft.initial_state[seat][packNum] = pack;
     }
   }
-  return { ok: ok, messages: messages };
+  return { ok, messages };
 }
 /*
   //new format, will convert to
@@ -258,7 +258,7 @@ function populateDraft(draft, format, cards, bots, seats, user) {
     throw new Error('Unable to create draft: no bots.');
   }
   if (seats < 2) {
-    throw new Error('Unable to create draft: invalid seats: ' + seats);
+    throw new Error(`Unable to create draft: invalid seats: ${seats}`);
   }
 
   if (format.custom === true) {
@@ -274,7 +274,7 @@ function populateDraft(draft, format, cards, bots, seats, user) {
   }
 
   if (!result.ok) {
-    throw new Error('Could not create draft:\n' + result.messages.join('\n'));
+    throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
   draft.seats = [];
@@ -318,18 +318,18 @@ function calculateAsfans(format, cards) {
 function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
-    let messages = [];
+    const messages = [];
     for (let i = 0; i < cardFilters.length; i++) {
-      let filter = cardFilters[i];
-      let validCards = matchingCards(cards, filter);
+      const filter = cardFilters[i];
+      const validCards = matchingCards(cards, filter);
       if (validCards.length == 0) {
-        messages.push('Warning: no cards matching filter: ' + Filter.filterToString(filter));
+        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
       throw new Error(messages.join('\n'));
     }
-    return { ok: messages.length == 0, messages: messages };
+    return { ok: messages.length == 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
 }

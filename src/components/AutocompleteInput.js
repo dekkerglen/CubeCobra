@@ -242,7 +242,11 @@ const AutocompleteInput = forwardRef(
       [acceptSuggestion],
     );
 
-    const matches = useMemo(() => getAllMatches(tree, inputValue), [tree, inputValue]);
+    // Replace curly quotes with straight quotes. Needed for iOS.
+    const normalizedValue = inputValue.replace(/[\u2018\u2019\u201C\u201D]/g, (c) =>
+      '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1),
+    );
+    const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
     const showMatches =
       visible && inputValue && matches.length > 0 && !(matches.length === 1 && matches[0] === inputValue);
 

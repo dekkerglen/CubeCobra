@@ -7,7 +7,7 @@ import DashboardPage from 'pages/DashboardPage';
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary className="mt-3">
-    <DashboardPage {...reactProps} />
+    <DashboardPage {...window.reactProps} />
   </ErrorBoundary>
 );
 if (wrapper) {
