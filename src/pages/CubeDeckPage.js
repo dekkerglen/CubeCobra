@@ -89,32 +89,7 @@ const CubeDeckPage = ({
             <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} drafter={drafter} deckid={deck._id}/>
           </Col>
         </Row>
-        <Row className="row-low-padding">
-          {deck.seats.map((seat, botIndex) => (
-            seat.pickorder &&
-            <Col
-              key={/* eslint-disable-line react/no-array-index-key */ botIndex}
-              xs={6}
-              sm={3}
-              className="col-md-1-4285 col-low-padding"
-            >
-              <ListGroup className="list-outline">
-                <ListGroupItem className="list-group-heading">{seat.username ? seat.username : seat.name}</ListGroupItem>
-                {seat.pickorder.map((card, cardIndex) => (
-                  <AutocardItem
-                    key={/* eslint-disable-line react/no-array-index-key */ cardIndex}
-                    tag="a"
-                    card={{ details: card }}
-                    className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
-                    href={card._id ? `/tool/card/${card._id}` : null}
-                  >
-                    {card.name}
-                  </AutocardItem>
-                ))}
-              </ListGroup>
-            </Col>
-          ))}
-        </Row>
+        
       </DisplayContextProvider>
     </CubeLayout>
   );

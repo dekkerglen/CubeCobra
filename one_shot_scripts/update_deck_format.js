@@ -43,6 +43,26 @@ async function buildDeck(cards, bot) {
   //cards will be a list of cardids
 
   cards = cards.map((id) => {
+    if(Array.isArray(id)) {
+      if(id.length <= 0) {
+        const details = carddb.getPlaceholderCard('');
+        return {
+          tags: [],
+          colors:details.colors,
+          cardID: details._id,
+          cmc:details.cmc,
+          type_line: details.type,
+          details: details,
+        }
+      }
+      if(id[0].cardID) {
+        id = id[0].cardID;
+      } else {
+        id = id[0];
+      }
+    } else if(id.cardID) {
+      id = id.cardID;
+    }
     const details = carddb.cardFromId(id);
     return {
       tags: [],
@@ -83,7 +103,7 @@ async function buildDeck(cards, bot) {
 
   for(const card of main) {
     let index = Math.min(card.cmc, 7);
-    if(card.type_line.toLowerCase().includes('creature')) {
+    if(!card.type_line.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
@@ -128,7 +148,20 @@ async function update(deck) {
       const botdeck = await buildDeck(deck.cards[i]);
       const bot = {
         bot: deck.bots[i-1],
-        pickorder: deck.cards[i],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {        
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors:details.colors,
+              cardID: details._id,
+              cmc:details.cmc,
+              type_line: details.type
+            }
+          } else {
+            return id;
+          }
+        }),
         name: 'Bot ' + (i+1) + ': ' + deck.bots[i-1][0] + ', ' + deck.bots[i-1][1],
         description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i-1][0] + ' and ' + deck.bots[i-1][1] + '.',
         cols: 16,
@@ -161,7 +194,20 @@ async function update(deck) {
       const botdeck = await buildDeck(deck.cards[i]);
       const bot = {
         bot: deck.bots[i],
-        pickorder: deck.cards[i],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {        
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors:details.colors,
+              cardID: details._id,
+              cmc:details.cmc,
+              type_line: details.type
+            }
+          } else {
+            return id;
+          }
+        }),
         name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
         description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i][0] + ' and ' + deck.bots[i][1] + '.',
         cols: 16,

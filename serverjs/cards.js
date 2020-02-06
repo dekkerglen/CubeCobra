@@ -53,7 +53,8 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    console.log('Could not find card from id: ' + id);
+    console.log('Could not find card from id: ');
+    console.log(id);
     details = getPlaceholderCard(id);
   }
 
