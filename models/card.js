@@ -16,6 +16,9 @@ let cardSchema = mongoose.Schema({
   modern: [Number],
   standard: [Number],
   vintage: [Number],
+  pioneer: [Number],
+  peasant: [Number],
+  'legacy+': [Number],
   total: [Number],
   cubedWith: [[String]], //this is list of card ids
   cubes: [String], //this is a list of cube ids

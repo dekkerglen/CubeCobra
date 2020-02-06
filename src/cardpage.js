@@ -44,6 +44,7 @@ class CardPage extends Component {
   render() {
     const { card, data, prices, related, cubes } = this.props;
     const { selectedTab } = this.state;
+    console.log(data);
     return (
       <Card>
         <CardHeader>
@@ -83,9 +84,12 @@ class CardPage extends Component {
                     <tbody>
                       <CountTableRow label="Vintage" value={data.vintage} />
                       <CountTableRow label="Legacy" value={data.legacy} />
+                      <CountTableRow label="Legacy+" value={data['legacy+']} />
                       <CountTableRow label="Modern" value={data.modern} />
+                      <CountTableRow label="Pioneer" value={data.pioneer} />
                       <CountTableRow label="Standard" value={data.standard} />
                       <CountTableRow label="Pauper" value={data.pauper} />
+                      <CountTableRow label="Peasant" value={data.peasant} />
                     </tbody>
                   </Table>
                 </Col>

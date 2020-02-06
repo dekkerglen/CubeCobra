@@ -26,6 +26,9 @@ const cardSizeUses = {
     modern: {},
     standard: {},
     vintage: {},
+    peasant: {},
+    pioneer: {},
+    'legacy+': {},
 };
 
 //global cube stats
@@ -41,6 +44,9 @@ const cubeCounts = {
     modern: 0,
     standard: 0,
     vintage: 0,
+    peasant: 0,
+    pioneer: 0,
+    'legacy+': 0,
 }
 
 const correlationIndex = {};
@@ -114,74 +120,87 @@ async function processDeck(deck) {
 }
 
 async function processCube(cube) {
+    if(cube) {
+        let cubeSizeDict = cardSizeUses.size180;
+        let cubeLegalityDict = cardSizeUses.vintage;
 
-    let cubeSizeDict = cardSizeUses.size180;
-    let cubeLegalityDict = cardSizeUses.vintage;
-
-    cubeCounts.total++;
-    if(cube.card_count <= 180) {
-        cubeSizeDict = cardSizeUses.size180;
-        cubeCounts.size180++;
-    } else if(cube.card_count <= 360) {
-        cubeSizeDict = cardSizeUses.size360;
-        cubeCounts.size360++;
-    } else if(cube.card_count <= 450) {
-        cubeSizeDict = cardSizeUses.size450;
-        cubeCounts.size450++;
-    } else if(cube.card_count <= 540) {
-        cubeSizeDict = cardSizeUses.size540;
-        cubeCounts.size540++;
-    } else  {
-        cubeSizeDict = cardSizeUses.size720;
-        cubeCounts.size720++;
-    }
-
-    let isPauper = false;
-    if(cube.type) {
-        if(cube.type.toLowerCase().includes('standard')) {
-            cubeLegalityDict = cardSizeUses.standard;
-            cubeCounts.standard++;
-        } else if(cube.type.toLowerCase().includes('modern')) {
-            cubeLegalityDict = cardSizeUses.modern;
-            cubeCounts.modern++;
-        } else if(cube.type.toLowerCase().includes('legacy')) {
-            cubeLegalityDict = cardSizeUses.legacy;
-            cubeCounts.legacy++;
-        }else if(cube.type.toLowerCase().includes('vintage')) {
-            cubeLegalityDict = cardSizeUses.vintage;
-            cubeCounts.vintage++;
+        cubeCounts.total++;
+        if(cube.card_count <= 180) {
+            cubeSizeDict = cardSizeUses.size180;
+            cubeCounts.size180++;
+        } else if(cube.card_count <= 360) {
+            cubeSizeDict = cardSizeUses.size360;
+            cubeCounts.size360++;
+        } else if(cube.card_count <= 450) {
+            cubeSizeDict = cardSizeUses.size450;
+            cubeCounts.size450++;
+        } else if(cube.card_count <= 540) {
+            cubeSizeDict = cardSizeUses.size540;
+            cubeCounts.size540++;
+        } else  {
+            cubeSizeDict = cardSizeUses.size720;
+            cubeCounts.size720++;
         }
 
-        if(cube.type.toLowerCase().includes('pauper')) {
-            cubeLegalityDict = cardSizeUses.pauper;
-            cubeCounts.pauper++;
-        }
-    }
-    
-    // cardnames = [];
-    cube.cards.forEach(function(card, index) {        
-        let cardobj = carddb.cardFromId(card.cardID);
-        const cardname = cardobj.name.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim();
-        if(correlationIndex[cardname]) {
-            cubesWithCard[correlationIndex[cardname]].push(cube._id);
+        let isPauper = false;
+        let cubetype = cube.overrideCategory ? (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') + cube.categoryOverride : cube.type;
+        
+        if(cubetype) {
+            cubetype = cubetype.toLowerCase();
+            if(cubetype.includes('standard')) {
+                cubeLegalityDict = cardSizeUses.standard;
+                cubeCounts.standard++;
+            } else if(cubetype.includes('pioneer')) {
+                cubeLegalityDict = cardSizeUses.pioneer;
+                cubeCounts.pioneer++;
+            } else if(cubetype.includes('modern')) {
+                cubeLegalityDict = cardSizeUses.modern;
+                cubeCounts.modern++;
+            } else if(cubetype.includes('legacy')) {
+                cubeLegalityDict = cardSizeUses.legacy;
+                cubeCounts.legacy++;
+            }else if(cubetype.includes('legacy+')) {
+                cubeLegalityDict = cardSizeUses['legacy+'];
+                cubeCounts['legacy+']++;
+            } else if(cubetype.includes('vintage')) {
+                cubeLegalityDict = cardSizeUses.vintage;
+                cubeCounts.vintage++;
+            }
+
+            if(cubetype.includes('pauper')) {
+                cubeLegalityDict = cardSizeUses.pauper;
+                cubeCounts.pauper++;
+            }        
+            if(cubetype.includes('peasant')) {
+                cubeLegalityDict = cardSizeUses.peasant;
+                cubeCounts.peasant++;
+            }  
         }
         
-        //total
-        attemptIncrement(cardUses, cardobj.name.toLowerCase());
+        // cardnames = [];
+        cube.cards.forEach(function(card, index) {        
+            let cardobj = carddb.cardFromId(card.cardID);
+            const cardname = cardobj.name.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+            if(correlationIndex[cardname]) {
+                cubesWithCard[correlationIndex[cardname]].push(cube._id);
+            }
+            
+            //total
+            attemptIncrement(cardUses, cardobj.name.toLowerCase());
 
-        //cube sizes
-        attemptIncrement(cubeSizeDict, cardobj.name.toLowerCase());
+            //cube sizes
+            attemptIncrement(cubeSizeDict, cardobj.name.toLowerCase());
 
-        //cube type
-        attemptIncrement(cubeLegalityDict, cardobj.name.toLowerCase());
-        if(isPauper) {
-            attemptIncrement(cardSizeUses.pauper, cardobj.name.toLowerCase());
-        }
-    });
-
+            //cube type
+            attemptIncrement(cubeLegalityDict, cardobj.name.toLowerCase());
+            if(isPauper) {
+                attemptIncrement(cardSizeUses.pauper, cardobj.name.toLowerCase());
+            }
+        });
+    }
     return;
 }
 
@@ -197,6 +216,10 @@ async function processCard(card) {
     card.modern = cardSizeUses.modern[card.cardName] ? [cardSizeUses.modern[card.cardName],cardSizeUses.modern[card.cardName]/cubeCounts.modern] : [0,0];
     card.standard = cardSizeUses.standard[card.cardName] ? [cardSizeUses.standard[card.cardName],cardSizeUses.standard[card.cardName]/cubeCounts.standard] : [0,0];
     card.pauper = cardSizeUses.pauper[card.cardName] ? [cardSizeUses.pauper[card.cardName],cardSizeUses.pauper[card.cardName]/cubeCounts.pauper] : [0,0];    
+
+    card.pioneer = cardSizeUses.pioneer[card.cardName] ? [cardSizeUses.pioneer[card.cardName],cardSizeUses.pioneer[card.cardName]/cubeCounts.pioneer] : [0,0];
+    card.peasant = cardSizeUses.peasant[card.cardName] ? [cardSizeUses.peasant[card.cardName],cardSizeUses.peasant[card.cardName]/cubeCounts.peasant] : [0,0];
+    card['legacy+'] = cardSizeUses['legacy+'][card.cardName] ? [cardSizeUses['legacy+'][card.cardName],cardSizeUses['legacy+'][card.cardName]/cubeCounts['legacy+']] : [0,0];    
 
     card.cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
 
