@@ -133,12 +133,12 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be used to
             match any card.
           </FormText>
-          {packs.map((pack, index) => (
-            <Card key={index} className="mb-3">
+          {packs.map((pack, packIndex) => (
+            <Card key={packIndex} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
-                  Pack {index + 1} - {pack.length} Cards
-                  <Button close onClick={handleRemovePack} data-index={index} />
+                  Pack {packIndex + 1} - {pack.length} Cards
+                  <Button close onClick={handleRemovePack} data-index={packIndex} />
                 </CardTitle>
               </CardHeader>
               <CardBody>
@@ -151,7 +151,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                       type="text"
                       value={card}
                       onChange={handleChangeCard}
-                      data-pack={index}
+                      data-pack={packIndex}
                       data-index={cardIndex}
                     />
                     <InputGroupAddon addonType="append">
@@ -159,7 +159,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                         color="secondary"
                         outline
                         onClick={handleRemoveCard}
-                        data-pack={index}
+                        data-pack={packIndex}
                         data-index={cardIndex}
                       >
                         Remove
@@ -169,10 +169,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                 ))}
               </CardBody>
               <CardFooter>
-                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={index}>
+                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={packIndex}>
                   Add Card Slot
                 </Button>
-                <Button color="success" onClick={handleDuplicatePack} data-index={index}>
+                <Button color="success" onClick={handleDuplicatePack} data-index={packIndex}>
                   Duplicate Pack
                 </Button>
               </CardFooter>
@@ -184,7 +184,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         </ModalBody>
         <ModalFooter>
           <Input type="hidden" name="format" value={JSON.stringify(packs)} />
-          <Input type="hidden" name="id" value={formatIndex} />
+          <Input type="hidden" name="id" value={format.id} />
           <Button color="success" type="submit">
             Save
           </Button>

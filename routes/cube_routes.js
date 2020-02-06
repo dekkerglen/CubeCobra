@@ -31,6 +31,9 @@ const {
   build_tag_colors,
   maybeCards,
   getElo,
+  addDraftFormat,
+  editDraftFormat,
+  removeDraftFormat,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/utils/draftutil.js');
@@ -185,11 +188,9 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     let message = '';
 
+    // create a new format if id not set
     if (req.body.id === -1) {
-      if (!cube.draft_formats) {
-        cube.draft_formats = [];
-      }
-      cube.draft_formats.push({
+      addDraftFormat(cube, {
         title: req.body.title,
         multiples: req.body.multiples === 'true',
         html: req.body.html,
@@ -197,16 +198,16 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       });
       message = 'Custom format successfully added.';
     } else {
-      cube.draft_formats[req.body.id] = {
+      editDraftFormat(cube, req.body.id, {
         title: req.body.title,
         multiples: req.body.multiples === 'true',
         html: req.body.html,
         packs: req.body.format,
-      };
+      });
       message = 'Custom format successfully edited.';
     }
     // check pack formats are sane
-    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
+    const draftcards = cube.cards.slice(); //.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
     if (draftcards.length === 0) {
       throw new Error('Could not create draft: no cards');
     }
@@ -846,7 +847,8 @@ router.get('/playtest/:id', async (req, res) => {
     if (cube.draft_formats) {
       draftFormats = cube.draft_formats
         .sort((a, b) => a.title.localeCompare(b.title)) // sort titles alphabetically
-        .map(({ packs, ...format }) => ({
+        .map(({ _id, packs, ...format }) => ({
+          id: _id,
           ...format,
           packs: JSON.parse(packs),
         }));
@@ -3077,26 +3079,24 @@ router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
+router.delete('/:cubeId/format/:formatId', ensureAuth, async (req, res) => {
   try {
-    const cubeid = req.params.id.split(';')[0];
-    const id = parseInt(req.params.id.split(';')[1], 10);
-
-    const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id < 0 || id >= cube.draft_formats.length) {
+    const cube = await Cube.findOne(build_id_query(req.params.cubeId));
+    if (!cube || cube.owner !== req.user.id) {
       return res.sendStatus(401);
     }
 
-    cube.draft_formats.splice(id, 1);
+    removeDraftFormat(cube, req.params.formatId);
 
-    await Cube.save();
+    await cube.save();
+
     return res.status(200).send({
       success: 'true',
     });
   } catch (err) {
     return res.status(500).send({
       success: 'false',
-      message: 'Error deleting format.',
+      message: 'Error deleting format: ' + err.message,
     });
   }
 });

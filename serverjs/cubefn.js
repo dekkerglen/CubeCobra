@@ -228,6 +228,49 @@ async function getElo(cardnames, round) {
   return result;
 }
 
+function addDraftFormat(cube, { title, multiples, html, packs }) {
+  if (!cube.draft_formats) {
+    cube.draft_formats = [];
+  }
+  cube.draft_formats.push({ title, multiples, html, packs });
+}
+
+function editDraftFormat(cube, id, { title, multiples, html, packs }) {
+  if (!cube.draft_formats) {
+    throw new Error('Cube has no draft formats');
+  }
+  const index = getDraftFormatIndex(cube, id);
+  if (index < 0) {
+    throw new Error('Format ' + id + ' not found');
+  }
+  cube.draft_formats[index] = { title, multiples, html, packs };
+}
+
+function removeDraftFormat(cube, id) {
+  if (!cube.draft_formats) {
+    throw new Error('Cube has no draft formats');
+  }
+  const index = getDraftFormatIndex(cube, id);
+  if (index < 0) {
+    throw new Error('Format ' + id + ' not found');
+  }
+  cube.draft_formats.splice(index, 1);
+}
+
+// returns -1 if format id not found
+function getDraftFormatIndex(cube, id) {
+  console.log('getDraftFormatIndex', cube, id);
+  if (!cube.draft_formats) {
+    throw new Error('Cube has no draft formats');
+  }
+  if (!id || id == '') {
+    throw new Error('Invalid format id');
+  }
+  return cube.draft_formats.findIndex((format) => {
+    return format._id == id;
+  });
+}
+
 const methods = {
   getBasics: function(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -356,6 +399,9 @@ const methods = {
   build_tag_colors,
   maybeCards,
   getElo,
+  addDraftFormat,
+  editDraftFormat,
+  removeDraftFormat,
 };
 
 module.exports = methods;

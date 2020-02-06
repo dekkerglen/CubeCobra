@@ -101,7 +101,7 @@ LabelRow.propTypes = {
 const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ...props }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
   return (
-    <Card {...props}>
+    <Card data-id={format.id} {...props}>
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>{format.title} (custom draft)</CardTitleH5>
@@ -118,13 +118,19 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Input type="hidden" name="id" value={formatIndex} />
+          <Input type="hidden" name="id" value={format.id} />
           <Button type="submit" color="success" className="mr-2">
             Start Draft
           </Button>
           {canEdit && (
             <>
-              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={formatIndex}>
+              <Button
+                color="success"
+                className="mr-2"
+                onClick={onEditFormat}
+                data-index={formatIndex}
+                data-id={format.id}
+              >
                 Edit
               </Button>
               <Button color="danger" id={`deleteToggler-${formatIndex}`}>
@@ -132,7 +138,7 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
               </Button>
               <UncontrolledCollapse toggler={`#deleteToggler-${formatIndex}`}>
                 <h6 className="my-3">Are you sure? This action cannot be undone.</h6>
-                <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex}>
+                <Button color="danger" onClick={onDeleteFormat} data-index={formatIndex} data-id={format.id}>
                   Yes, delete this format
                 </Button>
               </UncontrolledCollapse>
@@ -146,6 +152,7 @@ const CustomDraftCard = ({ format, formatIndex, onEditFormat, onDeleteFormat, ..
 
 CustomDraftCard.propTypes = {
   format: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     html: PropTypes.string.isRequired,
   }).isRequired,
@@ -191,7 +198,7 @@ const StandardDraftCard = () => {
 const DecksCard = ({ decks, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
-    <Card {...props}>
+    <Card>
       <CardHeader>
         <CardTitleH5>Recent Decks</CardTitleH5>
       </CardHeader>
@@ -272,26 +279,21 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
   const handleDeleteFormat = useCallback(
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
+      const formatID = event.target.getAttribute('data-id');
       try {
-        const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
+        const response = await csrfFetch(`/cube/${cubeID}/format/${formatID}`, {
           method: 'DELETE',
         });
-        if (!response.ok) throw Error();
+        if (!response.ok) throw Error(response.statusText);
 
         const json = await response.json();
         if (json.success !== 'true') throw Error();
 
-        addAlert({
-          color: 'success',
-          message: 'Format successfully deleted.',
-        });
-        setFormats(formats.filter((format, index) => index !== formatIndex));
+        addAlert('success', 'Format successfully deleted.');
+        setFormats(formats.filter((format) => format.id !== formatID));
       } catch (err) {
         console.error(err);
-        addAlert({
-          color: 'danger',
-          message: 'Failed to delete format.',
-        });
+        addAlert('danger', 'Failed to delete format. ' + err.message);
       }
     },
     [addAlert, cubeID, formats],
@@ -321,7 +323,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
         <Col xs="12" md="6" xl="6">
           {formats.map((format, index) => (
             <CustomDraftCard
-              key={/* eslint-disable-line react/no-array-index-key */ index}
+              key={format.id}
               format={format}
               formatIndex={index}
               onDeleteFormat={handleDeleteFormat}
