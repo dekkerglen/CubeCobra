@@ -32,14 +32,13 @@ const {
   maybeCards,
   getElo,
 } = require('../serverjs/cubefn.js');
-const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 
 carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
-const { GetPrices } = require('../serverjs/prices.js');
+const { addPrices, GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
@@ -184,8 +183,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
     let message = '';
-
-    if (req.body.id === -1) {
+    if (req.body.id === '-1') {
       if (!cube.draft_formats) {
         cube.draft_formats = [];
       }
@@ -881,14 +879,44 @@ router.get('/analysis/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
 
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+    for (const card of cube.cards) {
+      card.details = {
+        ...carddb.cardFromId(card.cardID),
+      };
+      card.details.display_image = util.getCardImageURL(card);
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (card.details.tokens) {
+        for (const element of card.details.tokens) {
+          const tokenDetails = carddb.cardFromId(element.tokenId);
+          element.token = {
+            tags: [],
+            status: 'Not Owned',
+            colors: tokenDetails.color_identity,
+            cmc: tokenDetails.cmc,
+            cardID: tokenDetails._id,
+            type_line: tokenDetails.type,
+            addedTmsp: new Date(),
+            imgUrl: undefined,
+            finish: 'Non-foil',
+            details: { ...tokenDetails },
+          };
+        }
+      }
+    }
+    cube.cards = await addPrices(cube.cards);
+
     const reactProps = {
       cube,
       cubeID: req.params.id,
       defaultNav: req.query.nav,
-      curve: JSON.stringify(analytics.GetCurve(cube.cards, carddb)),
-      typeByColor: analytics.GetTypeByColorIdentity(cube.cards, carddb),
-      multicoloredCounts: analytics.GetColorIdentityCounts(cube.cards, carddb),
-      tokens: analytics.GetTokens(cube.cards, carddb),
+      defaultFormatId: Number(req.query.formatId),
+      defaultFilterText: req.query.f,
     };
 
     return res.render('cube/cube_analysis', {
