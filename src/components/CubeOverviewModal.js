@@ -162,7 +162,7 @@ class CubeOverviewModal extends Component {
       headers: {
         'Content-Type': 'application/json',
       },
-    })
+    });
     const json = await response.json();
     if (response.ok) {
       this.props.onCubeUpdate({
