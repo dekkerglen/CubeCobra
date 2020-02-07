@@ -732,7 +732,7 @@ router.post(
 router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationErrors, async (req, res) => {
   try {
     const { user } = req;
-    if (!req.validated || user.username !== req.body.username) {
+    if (!req.validated) {
       return res.redirect('/user/account');
     }
 
