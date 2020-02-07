@@ -82,44 +82,44 @@ async function buildDeck(cards, bot) {
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
-  const sort_fn = function(a,b) {
-    if(bot) {
-      return  botRating(bot,b) - botRating(bot, a);
+  const sort_fn = function(a, b) {
+    if (bot) {
+      return botRating(bot, b) - botRating(bot, a);
     } else {
-      return draft.ratings[b.details.name] = draft.ratings[a.details.name];
+      return (draft.ratings[b.details.name] = draft.ratings[a.details.name]);
     }
-  }
+  };
 
   nonlands.sort(sort_fn);
   lands.sort(sort_fn);
 
-  const main = nonlands.slice(0,23).concat(lands.slice(0,17));
+  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
   const side = nonlands.slice(23).concat(lands.slice(17));
 
   const deck = [];
   const sideboard = [];
-  for(let i = 0; i < 16; i += 1) {
+  for (let i = 0; i < 16; i += 1) {
     deck.push([]);
-    if(i < 8) {
+    if (i < 8) {
       sideboard.push([]);
     }
   }
 
-  for(const card of main) {
+  for (const card of main) {
     let index = Math.min(card.cmc, 7);
-    if(!card.type_line.toLowerCase().includes('creature')) {
+    if (!card.type_line.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
   }
-  for(const card of side) {
+  for (const card of side) {
     sideboard[Math.min(card.cmc, 7)].push(card);
   }
 
   return {
     deck,
     sideboard,
-  }
+  };
 }
 
 function botPicks() {
@@ -138,7 +138,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return - botRating(botColors, pack[x]);
+      return -botRating(botColors, pack[x]);
     });
     arrayShuffle(unratedPicks);
 
@@ -204,19 +204,24 @@ async function pick(cardIndex) {
 
 async function finish() {
   //build bot decks
-  for(let i = 0; i < draft.seats.length; i++) {
-    if(draft.seats[i].bot) {
+  for (let i = 0; i < draft.seats.length; i++) {
+    if (draft.seats[i].bot) {
       const res = await buildDeck(draft.seats[i].pickorder, draft.seats[i].bot);
       draft.seats[i].drafted = res.deck;
       draft.seats[i].sideboard = res.sideboard;
-      
-      draft.seats[i].name = 'Bot ' + (i+1) + ': ' + draft.seats[i].bot[0] + ', ' + draft.seats[i].bot[1];
-      draft.seats[i].description ='This deck was drafted by a bot with color preference for ' + draft.seats[i].bot[0] + ' and ' + draft.seats[i].bot[1] + '.';
+
+      draft.seats[i].name = 'Bot ' + (i + 1) + ': ' + draft.seats[i].bot[0] + ', ' + draft.seats[i].bot[1];
+      draft.seats[i].description =
+        'This deck was drafted by a bot with color preference for ' +
+        draft.seats[i].bot[0] +
+        ' and ' +
+        draft.seats[i].bot[1] +
+        '.';
     }
   }
-  
+
   const temp = JSON.parse(JSON.stringify(draft));
-  
+
   //save draft. if we fail, we fail
   await csrfFetch('/cube/api/draftpick/' + draft.cube, {
     method: 'POST',

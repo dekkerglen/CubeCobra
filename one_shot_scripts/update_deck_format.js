@@ -8,7 +8,6 @@ var cubefn = require('../serverjs/cubefn.js');
 
 const batch_size = 100;
 
-
 function arrayIsSubset(needles, haystack) {
   return needles.every((x) => haystack.includes(x));
 }
@@ -43,72 +42,72 @@ async function buildDeck(cards, bot) {
   //cards will be a list of cardids
 
   cards = cards.map((id) => {
-    if(Array.isArray(id)) {
-      if(id.length <= 0) {
+    if (Array.isArray(id)) {
+      if (id.length <= 0) {
         const details = carddb.getPlaceholderCard('');
         return {
           tags: [],
-          colors:details.colors,
+          colors: details.colors,
           cardID: details._id,
-          cmc:details.cmc,
+          cmc: details.cmc,
           type_line: details.type,
           details: details,
-        }
+        };
       }
-      if(id[0].cardID) {
+      if (id[0].cardID) {
         id = id[0].cardID;
       } else {
         id = id[0];
       }
-    } else if(id.cardID) {
+    } else if (id.cardID) {
       id = id.cardID;
     }
     const details = carddb.cardFromId(id);
     return {
       tags: [],
-      colors:details.colors,
+      colors: details.colors,
       cardID: details._id,
-      cmc:details.cmc,
+      cmc: details.cmc,
       type_line: details.type,
       details: details,
-    }
+    };
   });
 
   const elos = await cubefn.getElo(cards.map((card) => card.details.name));
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
-  sort_fn = function(a,b) {
-    if(bot) {
-      return  botRating(b,bot,elos[b.details.name]) - botRating(a,bot,elos[a.details.name]);
+  sort_fn = function(a, b) {
+    if (bot) {
+      return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
     } else {
-      return elos[b.details.name] = elos[a.details.name];
+      return (elos[b.details.name] = elos[a.details.name]);
     }
-  }
+  };
 
   nonlands.sort(sort_fn);
   lands.sort(sort_fn);
 
-  const main = nonlands.slice(0,23).concat(lands.slice(0,17));
+  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
   const side = nonlands.slice(23).concat(lands.slice(17));
 
   const deck = [];
   const sideboard = [];
-  for(let i = 0; i < 16; i += 1) {
+  for (let i = 0; i < 16; i += 1) {
     deck.push([]);
-    if(i < 8) {
+    if (i < 8) {
       sideboard.push([]);
     }
   }
 
-  for(const card of main) {
+  for (const card of main) {
     let index = Math.min(card.cmc, 7);
-    if(!card.type_line.toLowerCase().includes('creature')) {
+    if (!card.type_line.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
   }
-  for(const card of side) {
+  for (const card of side) {
     sideboard[Math.min(card.cmc, 7)].push(card);
   }
 
@@ -116,21 +115,24 @@ async function buildDeck(cards, bot) {
   return {
     deck,
     sideboard,
-  }
+  };
 }
 
 async function update(deck) {
-  
   //has old format to update
-  if(deck.owner && deck.owner.length > 0) {
+  if (deck.owner && deck.owner.length > 0) {
     const draft = deck.draft ? await Draft.findById(deck.draft) : null;
 
-    if (deck.newformat == false && deck.cards[deck.cards.length - 1] && typeof deck.cards[deck.cards.length - 1][0] === 'object') {
+    if (
+      deck.newformat == false &&
+      deck.cards[deck.cards.length - 1] &&
+      typeof deck.cards[deck.cards.length - 1][0] === 'object'
+    ) {
       //old format
       deck.seats = [];
 
       const playerdeck = await buildDeck(deck.cards[0]);
-      
+
       const playerSeat = {
         bot: null,
         userid: deck.owner,
@@ -145,28 +147,33 @@ async function update(deck) {
 
       deck.seats.push(playerSeat);
 
-      //add bots 
+      //add bots
       for (let i = 1; i < deck.cards.length; i += 1) {
         //need to build a deck with this pool...
         const botdeck = await buildDeck(deck.cards[i]);
         const bot = {
-          bot: deck.bots[i-1],
+          bot: deck.bots[i - 1],
           pickorder: deck.cards[i].map((id) => {
-            if (typeof id === 'string' || id instanceof String) {        
+            if (typeof id === 'string' || id instanceof String) {
               const details = carddb.cardFromId(id);
               return {
                 tags: [],
-                colors:details.colors,
+                colors: details.colors,
                 cardID: details._id,
-                cmc:details.cmc,
-                type_line: details.type
-              }
+                cmc: details.cmc,
+                type_line: details.type,
+              };
             } else {
               return id;
             }
           }),
-          name: 'Bot ' + (i+1) + ': ' + deck.bots[i-1][0] + ', ' + deck.bots[i-1][1],
-          description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i-1][0] + ' and ' + deck.bots[i-1][1] + '.',
+          name: 'Bot ' + (i + 1) + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
+          description:
+            'This deck was drafted by a bot with color preference for ' +
+            deck.bots[i - 1][0] +
+            ' and ' +
+            deck.bots[i - 1][1] +
+            '.',
           cols: 16,
           deck: botdeck.deck,
           sideboard: botdeck.sideboard,
@@ -198,21 +205,26 @@ async function update(deck) {
         const bot = {
           bot: deck.bots[i],
           pickorder: deck.cards[i].map((id) => {
-            if (typeof id === 'string' || id instanceof String) {        
+            if (typeof id === 'string' || id instanceof String) {
               const details = carddb.cardFromId(id);
               return {
                 tags: [],
-                colors:details.colors,
+                colors: details.colors,
                 cardID: details._id,
-                cmc:details.cmc,
-                type_line: details.type
-              }
+                cmc: details.cmc,
+                type_line: details.type,
+              };
             } else {
               return id;
             }
           }),
           name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
-          description: 'This deck was drafted by a bot with color preference for ' + deck.bots[i][0] + ' and ' + deck.bots[i][1] + '.',
+          description:
+            'This deck was drafted by a bot with color preference for ' +
+            deck.bots[i][0] +
+            ' and ' +
+            deck.bots[i][1] +
+            '.',
           cols: 16,
           deck: botdeck.deck,
           sideboard: botdeck.sideboard,

@@ -13,7 +13,7 @@ import {
   Label,
   Input,
   ListGroup,
-  ListGroupItem
+  ListGroupItem,
 } from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -26,18 +26,13 @@ import DeckCard from 'components/DeckCard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const CubeDeckPage = ({
-  cube,
-  deck,
-  canEdit,
-}) => {
+const CubeDeckPage = ({ cube, deck, canEdit }) => {
   const [seatIndex, setSeatIndex] = useState(0);
-  const handleChangeSeat =
-    (event) => {
-      const target = event.target;
-      const value = target.value;
-      setSeatIndex(value);
-    };
+  const handleChangeSeat = (event) => {
+    const target = event.target;
+    const value = target.value;
+    setSeatIndex(value);
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const toggleNavbar = useCallback(
@@ -47,7 +42,7 @@ const CubeDeckPage = ({
     },
     [isOpen],
   );
-  
+
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>
@@ -56,10 +51,12 @@ const CubeDeckPage = ({
             <Label className="sr-only" for="viewSelect">
               Cube View Style
             </Label>
-            <Input type="select" id="viewSelect"  value={seatIndex} onChange={handleChangeSeat}>
-              {deck.seats.map((seat, index) => 
-                <option key={index} value={index}>{seat.username ? seat.username : seat.name}</option>
-              )}
+            <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
+              {deck.seats.map((seat, index) => (
+                <option key={index} value={index}>
+                  {seat.username ? seat.username : seat.name}
+                </option>
+              ))}
             </Input>
           </div>
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -80,13 +77,12 @@ const CubeDeckPage = ({
             </Nav>
           </Collapse>
         </Navbar>
-        <DynamicFlash />     
+        <DynamicFlash />
         <Row className="mt-3">
           <Col>
-            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id}/>
+            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id} />
           </Col>
         </Row>
-        
       </DisplayContextProvider>
     </CubeLayout>
   );

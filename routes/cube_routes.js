@@ -1,5 +1,6 @@
 const express = require('express');
-const fetch = require('node-fetch');``
+const fetch = require('node-fetch');
+``;
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
@@ -1142,15 +1143,17 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.comments = [];
     deck.cubename = cube.name;
     deck.cube = cube._id;
-    deck.seats = [{
-      userid:req.user._id,
-      username:req.user.username,
-      pickOrder: [],
-      deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
-      cols:16,
-      deck:added,
-      sideboard:[]
-    }];
+    deck.seats = [
+      {
+        userid: req.user._id,
+        username: req.user.username,
+        pickOrder: [],
+        deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
+        cols: 16,
+        deck: added,
+        sideboard: [],
+      },
+    ];
 
     if (!cube.decks) {
       cube.decks = [];
@@ -2234,9 +2237,6 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const deck = await Deck.findById(req.params.id);
     const deckOwner = await User.findById(deck.seats[0].userid);
 
-    console.log(deckOwner._id);
-    console.log(req.user.id);
-
     if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Unauthorized');
       return res.status(404).render('misc/404', {});
@@ -2245,9 +2245,6 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const newdeck = JSON.parse(req.body.draftraw);
     const name = JSON.parse(req.body.name);
     const description = sanitize(JSON.parse(req.body.description));
-
-
-    console.log(newdeck);
 
     deck.seats[0].deck = newdeck.playerdeck;
     deck.seats[0].sideboard = newdeck.playersideboard;
@@ -2279,7 +2276,6 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.cubename = cube.name;
     deck.seats = [];
 
-
     for (const seat of draft.seats) {
       deck.seats.push({
         bot: seat.bot,
@@ -2293,7 +2289,6 @@ router.post('/submitdeck/:id', async (req, res) => {
         sideboard: seat.sideboard ? seat.sideboard : [],
       });
     }
-
 
     if (!cube.decks) {
       cube.decks = [];
@@ -2408,16 +2403,18 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.comments = [];
-    deck.seats = [{
-      userid:req.user._id,
-      username:req.user.username,
-      pickorder:base.seats[req.params.index].pickorder,
-      name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
-      description: 'This deck was rebuilt from another draft deck.',
-      cols: base.seats[req.params.index].cols,
-      deck: base.seats[req.params.index].deck,
-      sideboard: base.seats[req.params.index].sideboard,
-    }];
+    deck.seats = [
+      {
+        userid: req.user._id,
+        username: req.user.username,
+        pickorder: base.seats[req.params.index].pickorder,
+        name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
+        description: 'This deck was rebuilt from another draft deck.',
+        cols: base.seats[req.params.index].cols,
+        deck: base.seats[req.params.index].deck,
+        sideboard: base.seats[req.params.index].sideboard,
+      },
+    ];
 
     cube.numDecks += 1;
 
@@ -2476,9 +2473,9 @@ router.get('/redraft/:id', async (req, res) => {
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
-    
-    for(let i = 0; i < draft.seats.length; i++) {
-      if(!draft.seats[i].bot) {
+
+    for (let i = 0; i < draft.seats.length; i++) {
+      if (!draft.seats[i].bot) {
         draft.seats[i].userid = req.user ? req.user._id : null;
         draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
       }
@@ -2488,7 +2485,7 @@ router.get('/redraft/:id', async (req, res) => {
       draft.seats[i].pickorder = [];
       draft.seats[i].packbacklog = [];
 
-      for(let j = 0; j < 16; j++) {
+      for (let j = 0; j < 16; j++) {
         draft.seats[i].drafted.push([]);
       }
 
@@ -2505,10 +2502,8 @@ router.get('/redraft/:id', async (req, res) => {
         }
       }
     }
-    
-    draft.ratings = await getElo(names);
 
-    console.log(names, draft.ratings);
+    draft.ratings = await getElo(names);
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2576,7 +2571,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
-    console.log(req.params.id);
     const deck = await Deck.findById(req.params.id);
 
     if (!deck) {
@@ -2612,7 +2606,6 @@ router.get('/deck/:id', async (req, res) => {
       drafter.id = deckUser._id;
       drafter.profileUrl = `/user/view/${deckUser._id}`;
     }
-
 
     const reactProps = {
       cube,
@@ -3111,7 +3104,7 @@ router.post(
 
       rating.name = req.body.pick;
       rating.elo = ELO_BASE + ELO_RANGE / 2;
-      
+
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
       }

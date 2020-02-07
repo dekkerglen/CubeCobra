@@ -1,16 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  Col,
-  ListGroupItem,
-  Row,
-  CardText,
-} from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, ListGroupItem, Row, CardText } from 'reactstrap';
 
 import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
@@ -20,7 +11,7 @@ import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const DeckStacksStatic = ({cards, ...props }) => (
+const DeckStacksStatic = ({ cards, ...props }) => (
   <CardBody className="pt-0 border-bottom">
     {cards.map((row, index) => (
       <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
@@ -59,14 +50,10 @@ DeckStacksStatic.defaultProps = {
   subtitle: false,
 };
 
-const DeckCard = ({
-  seat,
-  comments,
-  deckid
-}) => {
+const DeckCard = ({ seat, comments, deckid }) => {
   const [commentList, setCommentList] = useState(comments);
   const [childExpanded, setChildCollapse] = useState(false);
-  
+
   const onPost = (comment) => {
     comment.index = commentList.length;
     const newList = commentList.slice();
@@ -91,11 +78,11 @@ const DeckCard = ({
   const stackedDeck = [seat.deck.slice(0, 8), seat.deck.slice(8, 16)];
   const stackedSideboard = [seat.sideboard.slice(0, 16)];
   let sbCount = 0;
-  for(var col of stackedSideboard[0]) {
-      sbCount += col.length;
+  for (var col of stackedSideboard[0]) {
+    sbCount += col.length;
   }
-  if(sbCount <= 0) {
-    stackedSideboard.splice(0,stackedSideboard.length);
+  if (sbCount <= 0) {
+    stackedSideboard.splice(0, stackedSideboard.length);
   }
   // Cut off empty columns at the end.
   let lastFull;
@@ -122,40 +109,42 @@ const DeckCard = ({
 
   return (
     <Card>
-        <CardHeader>
+      <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
-            <h4 className="mb-0 mr-auto">{seat.name}</h4>
-            {!seat.bot &&
-              <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <a href={'/user/view/'+seat.userid}>{seat.username}</a> : 'Anonymous'}
-              </h6>
-            }
+          <h4 className="mb-0 mr-auto">{seat.name}</h4>
+          {!seat.bot && (
+            <h6 className="mb-0 font-weight-normal d-none d-sm-block">
+              Drafted by {seat.userid ? <a href={'/user/view/' + seat.userid}>{seat.username}</a> : 'Anonymous'}
+            </h6>
+          )}
         </CardTitle>
-        </CardHeader>
-        <Row className="mt-3">
+      </CardHeader>
+      <Row className="mt-3">
         <Col>
-            <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(seat.deck.flat().flat())} />
+          <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(seat.deck.flat().flat())} />
         </Col>
-        </Row>
-        {stackedSideboard && stackedSideboard.length > 0 && (
+      </Row>
+      {stackedSideboard && stackedSideboard.length > 0 && (
         <Row>
-            <Col>
-            <CardBody className='border-bottom'><h4>Sideboard</h4></CardBody>                    
+          <Col>
+            <CardBody className="border-bottom">
+              <h4>Sideboard</h4>
+            </CardBody>
             <DeckStacksStatic cards={stackedSideboard} title="Sideboard" />
-            </Col>
+          </Col>
         </Row>
-        )}   
-        <CardBody>
+      )}
+      <CardBody>
         <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
-        </CardBody>
-        <CardBody className="px-4 pt-2 pb-0 border-top">
+      </CardBody>
+      <CardBody className="px-4 pt-2 pb-0 border-top">
         <CommentEntry id={deckid} position={[]} onPost={onPost} submitUrl="/cube/api/postdeckcomment">
-            <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
+          <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
         </CommentEntry>
-        </CardBody>
-        {commentList.length > 0 && (
+      </CardBody>
+      {commentList.length > 0 && (
         <CardBody className=" px-4 pt-2 pb-0 border-top">
-            <CommentsSection
+          <CommentsSection
             expanded={childExpanded}
             toggle={toggleChildCollapse}
             id={deckid}
@@ -166,14 +155,11 @@ const DeckCard = ({
             submitEdit={submitEdit}
             focused={false}
             submitUrl="/cube/api/postdeckcomment"
-            />
+          />
         </CardBody>
-        )}
+      )}
     </Card>
   );
 };
 
 export default DeckCard;
-
-
-

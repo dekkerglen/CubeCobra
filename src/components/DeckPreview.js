@@ -21,7 +21,12 @@ const DeckPreview = ({ deck }) => {
     <div className="deck-preview" {...useKeyHandlers(handleClick)}>
       <h6 className="mb-0 text-muted">
         <a href={`/cube/deck/${deck._id}`}>{name}</a> by{' '}
-        {deck.seats[0].userid ? <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a> : 'Anonymous'} - <AgeText date={date} />
+        {deck.seats[0].userid ? (
+          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
+        ) : (
+          'Anonymous'
+        )}{' '}
+        - <AgeText date={date} />
       </h6>
     </div>
   );

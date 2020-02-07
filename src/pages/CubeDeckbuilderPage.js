@@ -118,7 +118,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
         />
         <DynamicFlash />
         <Row>
-          <Col>          
+          <Col>
             <Card>
               <ErrorBoundary>
                 <DndProvider>
@@ -142,7 +142,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
                   />
                 </DndProvider>
               </ErrorBoundary>
-              <CardHeader className='border-top'>
+              <CardHeader className="border-top">
                 <CardTitle className="mb-0 d-flex flex-row align-items-end">
                   <h4 className="mb-0 mr-auto">About</h4>
                 </CardTitle>
