@@ -153,33 +153,32 @@ class CubeOverviewModal extends Component {
   async handleApply(event) {
     event.preventDefault();
 
-    var cube = this.state.cube;
+    const cube = { ...this.state.cube };
     cube.tags = this.state.tags.map((tag) => tag.text);
     cube.descriptionhtml = cube.raw_desc;
-    await csrfFetch('/cube/api/editoverview', {
+    const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
       headers: {
         'Content-Type': 'application/json',
       },
     })
-      .then(async (response) => {
-        if (response.status == 200) {
-          this.props.onCubeUpdate(this.state.cube);
-          this.close();
-        } else {
-          const json = await response.json();
-          if (json.message) {
-            this.error(json.message);
-          } else if (json.errors) {
-            for (const error of json.errors) {
-              this.error(error);
-            }
-          }
-          this.close();
+    const json = await response.json();
+    if (response.ok) {
+      this.props.onCubeUpdate({
+        ...this.state.cube,
+        descriptionhtml: json.descriptionhtml,
+      });
+    } else {
+      if (json.message) {
+        this.error(json.message);
+      } else if (json.errors) {
+        for (const error of json.errors) {
+          this.error(error);
         }
-      })
-      .catch((err) => this.error(err));
+      }
+    }
+    this.close();
   }
 
   render() {

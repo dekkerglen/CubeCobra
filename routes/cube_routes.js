@@ -1898,7 +1898,10 @@ router.post(
     cube.tags = updatedCube.tags.map((tag) => tag.text);
 
     await cube.save();
-    return res.status(200).send({ success: 'true' });
+    return res.status(200).send({
+      success: 'true',
+      descriptionhtml: addAutocard(cube.descriptionhtml, carddb, cube),
+    });
   }),
 );
 
