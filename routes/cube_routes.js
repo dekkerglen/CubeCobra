@@ -2232,8 +2232,12 @@ router.get(
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
+    const deckOwner = await User.findById(deck.seats[0].userid);
 
-    if (deck.owner && deck.owner !== req.user.id) {
+    console.log(deckOwner._id);
+    console.log(req.user.id);
+
+    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Unauthorized');
       return res.status(404).render('misc/404', {});
     }
@@ -2245,12 +2249,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     console.log(newdeck);
 
-    deck.cards = newdeck.cards;
-    deck.playerdeck = newdeck.playerdeck;
-    deck.playersideboard = newdeck.playersideboard;
+    deck.seats[0].deck = newdeck.playerdeck;
+    deck.seats[0].sideboard = newdeck.playersideboard;
     deck.cols = newdeck.cols;
-    deck.name = name;
-    deck.description = description;
+    deck.seats[0].name = name;
+    deck.seats[0].description = description;
 
     await deck.save();
 
@@ -2579,6 +2582,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
+    console.log(req.params.id);
     const deck = await Deck.findById(req.params.id);
 
     if (!deck) {

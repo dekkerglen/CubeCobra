@@ -36,13 +36,13 @@ const makeInitialStacks = (playerDeck) => {
 };
 
 const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
-  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.playerdeck));
+  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
   const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.playersideboard;
+    const initial = initialDeck.seats[0].sideboard;
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
     }
-    return [initialDeck.playersideboard.slice(0, 8)];
+    return [initialDeck.seats[0].sideboard.slice(0, 8)];
   });
 
   const locationMap = {
@@ -103,8 +103,8 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
   currentDeck.playerdeck = [...deck[0], ...deck[1]];
   [currentDeck.playersideboard] = sideboard;
 
-  const [name, setName] = useState(initialDeck.name);
-  const [description, setDescription] = useState(initialDeck.description);
+  const [name, setName] = useState(initialDeck.seats[0].name);
+  const [description, setDescription] = useState(initialDeck.seats[0].description);
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
@@ -118,9 +118,31 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
         />
         <DynamicFlash />
         <Row>
-          <Col>
+          <Col>          
             <Card>
-              <CardHeader>
+              <ErrorBoundary>
+                <DndProvider>
+                  <DeckStacks
+                    cards={deck}
+                    title="Deck"
+                    subtitle={subtitle(deck.flat().flat())}
+                    locationType={Location.DECK}
+                    canDrop={canDrop}
+                    onMoveCard={handleMoveCard}
+                    onClickCard={handleClickCard}
+                  />
+                  <DeckStacks
+                    className="border-top"
+                    cards={sideboard}
+                    title="Sideboard"
+                    locationType={Location.SIDEBOARD}
+                    canDrop={canDrop}
+                    onMoveCard={handleMoveCard}
+                    onClickCard={handleClickCard}
+                  />
+                </DndProvider>
+              </ErrorBoundary>
+              <CardHeader className='border-top'>
                 <CardTitle className="mb-0 d-flex flex-row align-items-end">
                   <h4 className="mb-0 mr-auto">About</h4>
                 </CardTitle>
@@ -142,45 +164,16 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
             </Card>
           </Col>
         </Row>
-        <ErrorBoundary>
-          <DndProvider>
-            <DeckStacks
-              className="mt-3"
-              cards={deck}
-              title="Deck"
-              subtitle={subtitle(deck.flat().flat())}
-              locationType={Location.DECK}
-              canDrop={canDrop}
-              onMoveCard={handleMoveCard}
-              onClickCard={handleClickCard}
-            />
-            <DeckStacks
-              className="mt-3"
-              cards={sideboard}
-              title="Sideboard"
-              locationType={Location.SIDEBOARD}
-              canDrop={canDrop}
-              onMoveCard={handleMoveCard}
-              onClickCard={handleClickCard}
-            />
-          </DndProvider>
-        </ErrorBoundary>
       </DisplayContextProvider>
     </CubeLayout>
   );
 };
 
 CubeDeckbuilderPage.propTypes = {
-  basics: PropTypes.objectOf(PropTypes.string).isRequired,
+  basics: PropTypes.objectOf(PropTypes.object).isRequired,
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
-  initialDeck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    name: PropTypes.string,
-    description: PropTypes.string,
-    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
-    playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
-  }).isRequired,
+  initialDeck: PropTypes.object.isRequired,
 };
 
 export default CubeDeckbuilderPage;
