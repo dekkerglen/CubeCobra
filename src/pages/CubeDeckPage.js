@@ -74,7 +74,7 @@ const CubeDeckPage = ({
                 <NavLink href={`/cube/redraft/${deck._id}`}>Redraft</NavLink>
               </NavItem>
               <NavItem className="mr-auto">
-                <NavLink href={`/cube/rebuild/${deck._id}`}>Clone and Rebuild</NavLink>
+                <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
               </NavItem>
               <CustomImageToggler />
             </Nav>

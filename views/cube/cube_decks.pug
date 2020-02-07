@@ -22,7 +22,10 @@ block cube_content
     .card-body
       if decks.length > 0
         each deck, i in decks
-          a(href='/cube/deck/'+deck._id) #{deck.name}
+          if deck.seats && deck.seats.length > 0
+            a(href='/cube/deck/'+deck._id) #{deck.seats[0].name}
+          else
+            a(href='/cube/deck/'+deck._id) #{deck.name}
           br
   if pages
     hr

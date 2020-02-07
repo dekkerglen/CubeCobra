@@ -2394,45 +2394,39 @@ router.get('/decks/:id', async (req, res) => {
   res.redirect(`/cube/decks/${req.params.id}/0`);
 });
 
-router.get('/rebuild/:id', ensureAuth, async (req, res) => {
+router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
     const base = await Deck.findById(req.params.id);
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
+    const cube = await Cube.findById(base.cube);
 
     const deck = new Deck();
-    deck.playerdeck = base.playerdeck;
-    deck.cards = base.cards;
-    deck.owner = req.user._id;
     deck.cube = base.cube;
     deck.date = Date.now();
-    deck.bots = base.bots;
-    deck.playersideboard = base.playersideboard;
-
-    const cube = await Cube.findOne(build_id_query(deck.cube));
-
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-
-    cube.decks.push(deck._id);
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
+    deck.cubename = cube.name;
+    deck.comments = [];
+    deck.seats = [{
+      userid:req.user._id,
+      username:req.user.username,
+      pickorder:base.seats[req.params.index].pickorder,
+      name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
+      description: 'This deck was rebuilt from another draft deck.',
+      cols: base.seats[req.params.index].cols,
+      deck: base.seats[req.params.index].deck,
+      sideboard: base.seats[req.params.index].sideboard,
+    }];
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.owner);
+
+    const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
 
-    const owner = user ? user.username : 'Anonymous';
-    deck.name = `${owner}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`;
-    deck.username = owner;
-    deck.cubename = cube.name;
     cube.decks.push(deck._id);
 
     if (cubeOwner._id !== user.id) {
