@@ -72,7 +72,7 @@ async function topCards(filter) {
   }
   const names = [...nameMap.keys()];
   const versions = [...nameMap.values()].map((possible) => {
-    const nonPromo = possible.find((card) => carddb.notPromoOrDigitalCard(card));
+    const nonPromo = possible.find((card) => carddb.reasonableCard(card));
     return nonPromo || possible[0];
   });
 

@@ -1,20 +1,24 @@
 import React, { useCallback, useState } from 'react';
 
-const withModal = (Tag, ModalTag) => ({ children, ...props }) => {
+const withModal = (Tag, ModalTag) => ({ children, className, modalProps, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = useCallback(
     (event) => {
-      event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
       setIsOpen(!isOpen);
     },
     [isOpen],
   );
 
   return (
-    <Tag {...props} onClick={toggle}>
-      {children}
-      <ModalTag isOpen={isOpen} toggle={toggle} />
-    </Tag>
+    <>
+      <Tag {...props} className={className ? `${className} clickable` : 'clickable'} onClick={toggle}>
+        {children}
+      </Tag>
+      <ModalTag isOpen={isOpen} toggle={toggle} {...modalProps} />
+    </>
   );
 };
 

@@ -34,7 +34,7 @@ const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
     ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
     : `${cube.card_count} Card ${cube.type} Cube`;
   return (
-    <CubeContextProvider initialCube={cube.cards || []} cubeID={cubeID} canEdit={canEdit}>
+    <CubeContextProvider initialCube={cube} cubeID={cubeID} canEdit={canEdit}>
       <link rel="stylesheet" href="/css/autocomplete.css" />
       <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
         <div className="nav-item px-lg-4 px-3 text-sm-left text-center font-weight-boldish mt-auto mb-2">

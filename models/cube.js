@@ -105,6 +105,15 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
+  defaultStatus: {
+    type: String,
+    default: 'Owned',
+  },
+  defaultPrinting: {
+    type: String,
+    // Values: first, recent
+    default: 'recent',
+  },
 });
 
 const Cube = mongoose.model('Cube', cubeSchema);

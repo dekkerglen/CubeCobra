@@ -63,6 +63,7 @@ const serverConfig = merge(config, {
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
     'utils/Filter': './src/utils/Filter.js',
+    'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',
   },
   output: {
