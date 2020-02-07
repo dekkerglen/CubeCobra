@@ -204,3 +204,123 @@ test('addAutocard correctly replaces autocard format strings', () => {
     expect(result).toBe(expected);
   });
 });
+
+describe('getDraftFormatIndex', () => {
+  let cube;
+  let existingFormatID = '1ee7';
+
+  beforeEach(() => {
+    cube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+    cube.draft_formats = [];
+    cube.draft_formats.push({ _id: existingFormatID });
+  });
+
+  test('returns -1 if format not found', () => {
+    expect(cubefn.getDraftFormatIndex(cube, 'notexisting')).toBe(-1);
+  });
+
+  test('returns index of format found', () => {
+    expect(cubefn.getDraftFormatIndex(cube, existingFormatID)).toBe(0);
+    cube.draft_formats.push({ _id: '1' });
+    cube.draft_formats.push({ _id: '2' });
+    cube.draft_formats.push({ _id: '3' });
+    expect(cubefn.getDraftFormatIndex(cube, '2')).toBe(2);
+  });
+
+  test('returns error if cube has no formats', () => {
+    cube.draft_formats = [];
+    expect(() => {
+      cubefn.getDraftFormatIndex(cube, existingFormatID);
+    }).toThrow();
+
+    delete cube.draft_formats;
+    expect(() => {
+      cubefn.getDraftFormatIndex(cube, existingFormatID);
+    }).toThrow();
+  });
+
+  test('returns error if format id invalid', () => {
+    expect(() => {
+      cubefn.getDraftFormatIndex(cube);
+    }).toThrow();
+
+    expect(() => {
+      cubefn.getDraftFormatIndex(cube, '');
+    }).toThrow();
+  });
+});
+
+describe('addDraftFormat', () => {
+  let cube;
+  let existingFormatID = '1ee7';
+
+  beforeEach(() => {
+    cube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+    cube.draft_formats = [];
+    cube.draft_formats.push({ _id: existingFormatID });
+  });
+
+  test('adds format to existing', () => {
+    const format = { title: 'Title', multiples: false, html: '<h1>Test</h1>', packs: '[[]]' };
+    cubefn.addDraftFormat(cube, format);
+    expect(cube.draft_formats[1]).toEqual(format);
+  });
+
+  test('adds format when none exist', () => {
+    delete cube.draft_formats;
+    const format = { title: 'Title', multiples: false, html: '<h1>Test</h1>', packs: '[[]]' };
+    cubefn.addDraftFormat(cube, format);
+    expect(cube.draft_formats[0]).toEqual(format);
+  });
+});
+
+describe('updateDraftFormat', () => {
+  let cube;
+  let existingFormatID = '1ee7';
+
+  beforeEach(() => {
+    cube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+    cube.draft_formats = [];
+    cube.draft_formats.push({ _id: existingFormatID });
+  });
+
+  test('update existing format to existing', () => {
+    const new_format = { title: 'Title', multiples: false, html: '<h1>Test</h1>', packs: '[[]]' };
+    cubefn.updateDraftFormat(cube, existingFormatID, new_format);
+    const format = cube.draft_formats[0];
+    expect(format.title).toEqual(new_format.title);
+    expect(format.multiples).toEqual(new_format.multiples);
+    expect(format.html).toEqual(new_format.html);
+    expect(format.packs).toEqual(new_format.packs);
+  });
+
+  test("throws error if format doesn't exist", () => {
+    const new_format = { title: 'Title', multiples: false, html: '<h1>Test</h1>', packs: '[[]]' };
+    expect(() => {
+      cubefn.updateDraftFormat(cube, 'not_exist', format);
+    }).toThrow();
+  });
+});
+
+describe('deleteDraftFormat', () => {
+  let cube;
+  let existingFormatID = '1ee7';
+
+  beforeEach(() => {
+    cube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+    cube.draft_formats = [];
+    cube.draft_formats.push({ _id: existingFormatID });
+  });
+
+  test('delete existing format', () => {
+    cubefn.deleteDraftFormat(cube, existingFormatID);
+    expect(cube.draft_formats).toHaveLength(0);
+  });
+
+  test('throws error if cube has no formats', () => {
+    delete cube.draft_formats;
+    expect(() => {
+      cubefn.deleteDraftFormat(cube, existingFormatID);
+    }).toThrow();
+  });
+});

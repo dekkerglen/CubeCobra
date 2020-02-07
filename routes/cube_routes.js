@@ -32,8 +32,8 @@ const {
   maybeCards,
   getElo,
   addDraftFormat,
-  editDraftFormat,
-  removeDraftFormat,
+  deleteDraftFormat,
+  updateDraftFormat,
 } = require('../serverjs/cubefn.js');
 const analytics = require('../serverjs/analytics.js');
 const draftutil = require('../dist/utils/draftutil.js');
@@ -198,7 +198,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       });
       message = 'Custom format successfully added.';
     } else {
-      editDraftFormat(cube, req.body.id, {
+      updateDraftFormat(cube, req.body.id, {
         title: req.body.title,
         multiples: req.body.multiples === 'true',
         html: req.body.html,
@@ -3087,7 +3087,7 @@ router.delete('/:cubeId/format/:formatId', ensureAuth, async (req, res) => {
       return res.sendStatus(401);
     }
 
-    removeDraftFormat(cube, req.params.formatId);
+    deleteDraftFormat(cube, req.params.formatId);
 
     await cube.save();
 

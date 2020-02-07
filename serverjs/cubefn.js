@@ -235,7 +235,7 @@ function addDraftFormat(cube, { title, multiples, html, packs }) {
   cube.draft_formats.push({ title, multiples, html, packs });
 }
 
-function editDraftFormat(cube, id, { title, multiples, html, packs }) {
+function updateDraftFormat(cube, id, { title, multiples, html, packs }) {
   if (!cube.draft_formats) {
     throw new Error('Cube has no draft formats');
   }
@@ -246,8 +246,8 @@ function editDraftFormat(cube, id, { title, multiples, html, packs }) {
   cube.draft_formats[index] = { title, multiples, html, packs };
 }
 
-function removeDraftFormat(cube, id) {
-  if (!cube.draft_formats) {
+function deleteDraftFormat(cube, id) {
+  if (!cube.draft_formats || cube.draft_formats.length === 0) {
     throw new Error('Cube has no draft formats');
   }
   const index = getDraftFormatIndex(cube, id);
@@ -259,7 +259,7 @@ function removeDraftFormat(cube, id) {
 
 // returns -1 if format id not found
 function getDraftFormatIndex(cube, id) {
-  if (!cube.draft_formats) {
+  if (!cube.draft_formats || cube.draft_formats.length === 0) {
     throw new Error('Cube has no draft formats');
   }
   if (!id || id == '') {
@@ -399,8 +399,9 @@ const methods = {
   maybeCards,
   getElo,
   addDraftFormat,
-  editDraftFormat,
-  removeDraftFormat,
+  deleteDraftFormat,
+  updateDraftFormat,
+  getDraftFormatIndex,
 };
 
 module.exports = methods;
