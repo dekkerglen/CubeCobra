@@ -1,7 +1,8 @@
 const carddb = require('../../serverjs/cards');
 const fixturesPath = 'fixtures';
 const firstLetterCount = 21;
-const fixtureCardCount = 99;
+const fixtureCardCount = 100;
+const fixtureCardNameCount = 99;
 var placeholderCard = {
   set: '',
   collector_number: '',
@@ -35,10 +36,10 @@ test('initializeCardDb loads files properly', () => {
   return promise.then(function() {
     expect(Object.keys(carddb.cardtree).length).toBe(firstLetterCount);
     expect(Object.keys(carddb.imagedict).length).toBe(fixtureCardCount);
-    expect(Object.keys(carddb.cardimages).length).toBe(fixtureCardCount);
-    expect(carddb.cardnames.length).toBe(fixtureCardCount);
+    expect(Object.keys(carddb.cardimages).length).toBe(fixtureCardNameCount);
+    expect(carddb.cardnames.length).toBe(fixtureCardNameCount);
     expect(Object.keys(carddb.full_names).length).toBe(firstLetterCount);
-    expect(Object.keys(carddb.nameToId).length).toBe(fixtureCardCount);
+    expect(Object.keys(carddb.nameToId).length).toBe(fixtureCardNameCount);
   });
 });
 
@@ -192,11 +193,41 @@ test('allIds correctly maps a cardname to an ID', () => {
   });
 });
 
+test('getMostReasonable correctly gets a card', async () => {
+  expect.assertions(1);
+  await carddb.initializeCardDb(fixturesPath, true);
+  const expected = _RankleMasterofFixtures;
+  const result = carddb.getMostReasonable('Rankle, Master of Pranks');
+  expect(result).toEqual(expected);
+});
+
+test('getMostReasonableById correctly gets a card', async () => {
+  expect.assertions(1);
+  await carddb.initializeCardDb(fixturesPath, true);
+  const expected = _RankleMasterofFixtures;
+  const result = carddb.getMostReasonableById(expected._id);
+  expect(result).toEqual(expected);
+});
+
+test('getMostReasonable correctly gets first printing', async () => {
+  expect.assertions(1);
+  await carddb.initializeCardDb(fixturesPath, true);
+  const result = carddb.getMostReasonable('Sorcerous Spyglass', 'first');
+  expect(result.set).toEqual('xln');
+});
+
+test('getMostReasonable correctly gets most recent printing', async () => {
+  expect.assertions(1);
+  await carddb.initializeCardDb(fixturesPath, true);
+  const result = carddb.getMostReasonable('Sorcerous Spyglass', 'recent');
+  expect(result.set).toEqual('eld');
+});
+
 test('loadJSONFile loads a JSON file into the correct attribute', () => {
   expect.assertions(1);
   const attribute = 'testAttribute';
   return carddb.loadJSONFile(fixturesPath + '/names.json', attribute).then(function() {
-    expect(carddb[attribute].length).toBe(fixtureCardCount);
+    expect(carddb[attribute].length).toBe(fixtureCardNameCount);
   });
 });
 
