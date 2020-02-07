@@ -1812,9 +1812,10 @@ router.post(
   ensureAuth,
   body('name', 'Cube name should be between 5 and 100 characters long.').isLength({ min: 5, max: 100 }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.has_profanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').isAlphanumeric(),
+  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/[A-Za-z0-9]*/),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({ max: 100 }),
   body('urlAlias', 'Custom URL may not use profanity.').custom((value) => !util.has_profanity(value)),
+  jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
 
