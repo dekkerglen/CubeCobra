@@ -179,7 +179,7 @@ router.get('/dashboard', async (req, res) => {
           $in: cubeIds,
         },
       },
-      '_id name owner username date',
+      '_id seats username date',
     )
       .sort({
         date: -1,

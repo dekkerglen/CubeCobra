@@ -225,9 +225,9 @@ async function getElo(cardnames, round) {
     result[cardname] = 1200; // default values
   }
 
-  ratings.forEach(function(item, index) {
-    result[item.name] = round ? Math.round(item.elo) : item.elo;
-  });
+  for(const rating of ratings) {
+    result[rating.name] = round ? Math.round(rating.elo) : rating.elo;
+  }
 
   return result;
 }

@@ -138,7 +138,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
+      return - botRating(botColors, pack[x]);
     });
     arrayShuffle(unratedPicks);
 

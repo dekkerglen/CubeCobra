@@ -1,5 +1,5 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch');``
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
@@ -1138,15 +1138,19 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     }
 
     const deck = new Deck();
-    deck.playerdeck = added;
-    deck.owner = req.user._id;
-    deck.cube = cube._id;
     deck.date = Date.now();
-    deck.bots = [];
-    deck.playersideboard = [];
-    deck.pickOrder = [];
-    deck.newformat = true;
-    deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
+    deck.comments = [];
+    deck.cubename = cube.name;
+    deck.cube = cube._id;
+    deck.seats = [{
+      userid:req.user._id,
+      username:req.user.username,
+      pickOrder: [],
+      deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
+      cols:16,
+      deck:added,
+      sideboard:[]
+    }];
 
     if (!cube.decks) {
       cube.decks = [];
@@ -2238,6 +2242,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const name = JSON.parse(req.body.name);
     const description = sanitize(JSON.parse(req.body.description));
 
+
+    console.log(newdeck);
+
     deck.cards = newdeck.cards;
     deck.playerdeck = newdeck.playerdeck;
     deck.playersideboard = newdeck.playersideboard;
@@ -2271,7 +2278,6 @@ router.post('/submitdeck/:id', async (req, res) => {
 
 
     for (const seat of draft.seats) {
-      console.log(seat);
       deck.seats.push({
         bot: seat.bot,
         userid: seat.userid,
@@ -2296,12 +2302,11 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.owner);
+    const userq = User.findById(deck.seats[0].owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
-    var owner = user ? user.username : 'Anonymous';
     cube.decks.push(deck._id);
 
     if (user) {
@@ -2469,18 +2474,44 @@ router.get('/redraft/:id', async (req, res) => {
     }
 
     const draft = new Draft();
-    draft.bots = base.bots.slice();
-    draft.cube = base.cube.slice();
-    draft.packNumber = 1;
-    draft.pickNumber = 1;
+    draft.cube = srcDraft.cube;
+    draft.seats = srcDraft.seats.slice();
 
     draft.initial_state = srcDraft.initial_state.slice();
-    draft.packs = srcDraft.initial_state.slice();
-    draft.picks = [];
+    draft.unopenedPacks = srcDraft.initial_state.slice();
+    
+    for(let i = 0; i < draft.seats.length; i++) {
+      if(!draft.seats[i].bot) {
+        draft.seats[i].userid = req.user ? req.user._id : null;
+        draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
+      }
 
-    for (let i = 0; i < draft.packs.length; i++) {
-      draft.picks.push([]);
+      draft.seats[i].drafted = [];
+      draft.seats[i].sideboard = [];
+      draft.seats[i].pickorder = [];
+      draft.seats[i].packbacklog = [];
+
+      for(let j = 0; j < 16; j++) {
+        draft.seats[i].drafted.push([]);
+      }
+
+      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
     }
+
+    //add ratings
+    const names = [];
+    //add in details to all cards
+    for (const seat of draft.initial_state) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          names.push(card.details.name);
+        }
+      }
+    }
+    
+    draft.ratings = await getElo(names);
+
+    console.log(names, draft.ratings);
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2497,9 +2528,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const deckOwner = await User.findById(deck.owner);
+    const deckOwner = await User.findById(deck.seats[0].userid);
 
-    if (!req.user || deckOwner._id !== req.user.id) {
+    if (!req.user || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -2584,16 +2615,11 @@ router.get('/deck/:id', async (req, res) => {
       drafter.profileUrl = `/user/view/${deckUser._id}`;
     }
 
-    if (cubeUser) {
-      owner.name = cubeUser.username;
-      owner.id = cubeUser._id;
-      owner.profileUrl = `/user/view/${cubeUser._id}`;
-    }
 
     const reactProps = {
       cube,
       deck,
-      canEdit: req.user ? req.user.id === owner.id : false,
+      canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
       userid: req.user ? req.user.id : null,
     };
 
