@@ -30,6 +30,7 @@ const clientConfig = merge(config, {
     cube_blog: './src/cube_blog.js',
     cube_compare: './src/cube_compare.js',
     cube_deck: './src/cube_deck.js',
+    cube_decks: './src/cube_decks.js',
     cube_deckbuilder: './src/cube_deckbuilder.js',
     cube_draft: './src/cube_draft.js',
     cube_list: './src/cube_list.js',

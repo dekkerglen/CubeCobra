@@ -557,20 +557,21 @@ router.get('/notifications', ensureAuth, async (req, res) => {
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const { userid } = req.params;
-    const { page } = req.params;
     const pagesize = 30;
+
+    const page = parseInt(req.params, 10);
 
     const userq = User.findById(userid).exec();
     const decksq = Deck.find({
       owner: userid,
-    })
+    }, '_id name owner username date')
       .sort({
         date: -1,
       })
       .skip(pagesize * page)
       .limit(pagesize)
       .exec();
-    const numDecksq = await Deck.countDocuments({
+    const numDecksq = Deck.countDocuments({
       owner: userid,
     }).exec();
 

@@ -1,93 +1,68 @@
-/* eslint-disable react/jsx-filename-extension */
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
-const Paginate = ({ pages }) => {
-  const activePage = pages.filter((page) => page.active)[0].content - 1;
-  const cubeId = pages[activePage].url.split('/')[3];
-  const pageLength = pages.length;
+const RealPage = ({ index, active, urlF, onClick }) => (
+  <PaginationItem active={active === index}>
+    <PaginationLink
+      tag="a"
+      href={urlF ? urlF(index) : '#'}
+      data-index={onClick ? index : undefined}
+      onClick={onClick}
+    >
+      {index + 1}
+    </PaginationLink>
+  </PaginationItem>
+);
 
-  const smallPagination = (
-    <>
-      {pages.map((page, idx) => (
-        <PaginationItem active={page.active} key={idx}>
-          <PaginationLink tag="a" href={page.url}>
-            {page.content}
-          </PaginationLink>
-        </PaginationItem>
-      ))}
-    </>
-  );
+RealPage.propTypes = {
+  index: PropTypes.number.isRequired,
+  active: PropTypes.number.isRequired,
+  urlF: PropTypes.func,
+  onClick: PropTypes.func,
+};
+
+RealPage.defaultProps = {
+  urlF: null,
+  onClick: undefined,
+}
+
+const FakePage = ({ text }) => (
+  <PaginationItem disabled>
+    <PaginationLink tag="a">{text}</PaginationLink>
+  </PaginationItem>
+);
+
+FakePage.propTypes = {
+  text: PropTypes.string.isRequired,
+}
+
+const Paginate = ({ count, active, urlF, onClick }) => {
+  const smallPagination = new Array(count).fill(null).map((page, index) => (
+    <RealPage index={index} active={active} urlF={urlF} onClick={onClick} />
+  ));
 
   const bigPagination = (
     <>
-      {activePage > 1 ? (
-        <>
-          <PaginationItem key={1}>
-            <PaginationLink tag="a" href={`/cube/blog/${cubeId}/0`}>
-              1
-            </PaginationLink>
-          </PaginationItem>
-        </>
-      ) : (
-        <></>
+      {active > 1 && (
+        <RealPage index={1} active={active} urlF={urlF} onClick={onClick} />
       )}
-      {activePage > 2 ? (
-        <>
-          <PaginationItem disabled key="elips">
-            <PaginationLink tag="a" href="#">
-              ...
-            </PaginationLink>
-          </PaginationItem>
-        </>
-      ) : (
-        <></>
+      {active > 2 && (
+        <FakePage text="..." />
       )}
-      {activePage === 0 ? (
-        <></>
-      ) : (
-        <PaginationItem key={activePage - 1}>
-          <PaginationLink tag="a" href={`/cube/blog/${cubeId}/${activePage - 1}`}>
-            {activePage}
-          </PaginationLink>
-        </PaginationItem>
+      {active !== 0 && (
+        <RealPage index={active - 1} active={active} urlF={urlF} onClick={onClick} />
       )}
-      <PaginationItem active key={activePage}>
-        <PaginationLink tag="a" href={`/cube/blog/${cubeId}/${activePage}`}>
-          {activePage + 1}
-        </PaginationLink>
-      </PaginationItem>
-      {activePage === pageLength - 1 ? (
-        <></>
-      ) : (
-        <PaginationItem key={activePage + 1}>
-          <PaginationLink tag="a" href={`/cube/blog/${cubeId}/${activePage + 1}`}>
-            {activePage + 2}
-          </PaginationLink>
-        </PaginationItem>
+      <RealPage index={active} active={active} urlF={urlF} onClick={onClick} />
+      {active !== count - 1 && (
+        <RealPage index={active + 1} active={active} urlF={urlF} onClick={onClick} />
       )}
-      {activePage < pageLength - 3 ? (
-        <>
-          <PaginationItem disabled key="elips2">
-            <PaginationLink tag="a" href="#">
-              ...
-            </PaginationLink>
-          </PaginationItem>
-        </>
-      ) : (
-        <></>
+      {active < count - 3 && (
+        <FakePage text="..." />
       )}
-      {activePage < pageLength - 2 ? (
-        <>
-          <PaginationItem disabled={activePage === pageLength - 1} key={pageLength - 1}>
-            <PaginationLink tag="a" href={`/cube/blog/${cubeId}/${pageLength - 1}`}>
-              {pageLength}
-            </PaginationLink>
-          </PaginationItem>
-        </>
-      ) : (
-        <></>
+      {active < count - 2 && (
+        <RealPage index={count - 1} active={active} urlF={urlF} onClick={onClick} />
       )}
     </>
   );
@@ -96,17 +71,41 @@ const Paginate = ({ pages }) => {
     <>
       <hr />
       <Pagination aria-label="Table page" className="mt-3">
-        <PaginationItem disabled={activePage == 0} key="first">
-          <PaginationLink tag="a" previous href={`/cube/blog/${cubeId}/${activePage - 1}`} />
+        <PaginationItem disabled={active === 0}>
+          <PaginationLink
+            tag="a"
+            previous
+            href={urlF ? urlF(active - 1) : '#'}
+            data-index={onClick ? active - 1 : undefined}
+            onClick={onClick}
+          />
         </PaginationItem>
-        {pageLength < 5 ? smallPagination : bigPagination}
-        <PaginationItem disabled={activePage === pageLength - 1} key="last">
-          <PaginationLink tag="a" next href={`/cube/blog/${cubeId}/${activePage + 1}`} />
+        {count < 5 ? smallPagination : bigPagination}
+        <PaginationItem disabled={active === count - 1}>
+          <PaginationLink
+            tag="a"
+            next
+            href={urlF ? urlF(active + 1) : '#'}
+            data-index={onClick ? active + 1 : undefined}
+            onClick={onClick}
+          />
         </PaginationItem>
       </Pagination>
       <hr />
     </>
   );
 };
+
+Paginate.propTypes = {
+  count: PropTypes.number.isRequired,
+  active: PropTypes.number.isRequired,
+  urlF: PropTypes.func,
+  onClick: PropTypes.func,
+}
+
+Paginate.defaultProps = {
+  urlF: null,
+  onClick: undefined,
+}
 
 export default Paginate;
