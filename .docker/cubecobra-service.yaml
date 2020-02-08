@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.19.0 (f63a961c)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: cubecobra
+  name: cubecobra
+spec:
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    io.kompose.service: cubecobra
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.19.0 (f63a961c)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: cubecobra
+  name: cubecobra
+spec:
+  replicas: 1
+  strategy: {}
+  selector:
+    matchLabels:
+      io.kompose.service: cubecobra
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.19.0 (f63a961c)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: cubecobra
+    spec:
+      containers:
+      - args:
+        - bash
+        - -c
+        - npm run setup && node app.js
+        image: localhost:32000/cubecobra
+        name: cubecobra
+        ports:
+        - containerPort: 5000
+        resources: {}
+        volumeMounts:
+          - name: cubecobrasecrets
+            mountPath: "/CubeCobra/cubecobrasecrets"
+        readinessProbe:
+          httpGet:
+            path: '/tos'
+            port: 5000
+        livenessProbe:
+          httpGet:
+            path: '/tos'
+            port: 5000
+      restartPolicy: Always
+      volumes:
+        - name: cubecobrasecrets
+          secret:
+            secretName: cubecobrasecrets
+            items:
+              - key: email.js
+                path: ./email.js
+                mode: 256
+              - key: mongodb.js
+                path: ./mongodb.js
+                mode: 256
+              - key: secrets.js
+                path: ./secrets.js
+                mode: 256
+              - key: tcgplayer.js
+                path: ./tcgplayer.js
+                mode: 256
+status: {}

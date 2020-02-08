@@ -149,6 +149,6 @@ schedule.scheduleJob('0 0 * * *', function(){
 });
 
 // Start server
-http.createServer(app).listen(5000, 'localhost', () => {
+http.createServer(app).listen(5000, secrets.host, () => {
   console.log('server started on port 5000...');
 });
