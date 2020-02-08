@@ -10,32 +10,44 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
     <>
       <Nav tabs fill className="cubenav pt-2">
         <NavItem>
-          <h5 href="#" style={{ color: '#218937' }}>{user.username}</h5>
-          <h6 href="#">
-            {followers} followers
-          </h6>
-          {!following && !canEdit && (<Button color="success" className="rounded-0 w-100" href={`/user/follow/${user._id}`}>Follow</Button>)}
-          {following && !canEdit && (<Button color="danger" outline className="rounded-0 w-100" href={`/user/follow/${user._id}`}>Unfollow</Button>)}
+          <h5 href="#" style={{ color: '#218937' }}>
+            {user.username}
+          </h5>
+          <h6 href="#">{followers} followers</h6>
+          {!following && !canEdit && (
+            <Button color="success" className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
+              Follow
+            </Button>
+          )}
+          {following && !canEdit && (
+            <Button color="danger" outline className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
+              Unfollow
+            </Button>
+          )}
         </NavItem>
         <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'view'} href={`/user/view/${user._id}`}>Cubes</NavLink>
+          <NavLink active={activeLink === 'view'} href={`/user/view/${user._id}`}>
+            Cubes
+          </NavLink>
         </NavItem>
         <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'decks'} href={`/user/decks/${user._id}`}>Decks</NavLink>
+          <NavLink active={activeLink === 'decks'} href={`/user/decks/${user._id}`}>
+            Decks
+          </NavLink>
         </NavItem>
       </Nav>
       {canEdit && (
         <Navbar light className="usercontrols mb-3">
           <Nav navbar>
             <NavItem>
-              <NavLink href="#" data-toggle="modal" data-target="#cubeModal">Create New Cube</NavLink>
+              <NavLink href="#" data-toggle="modal" data-target="#cubeModal">
+                Create New Cube
+              </NavLink>
             </NavItem>
           </Nav>
         </Navbar>
       )}
-      <ErrorBoundary>
-        {children}
-      </ErrorBoundary>
+      <ErrorBoundary>{children}</ErrorBoundary>
     </>
   );
 };

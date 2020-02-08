@@ -2316,9 +2316,12 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const decksq = Deck.find({
-      cube: cube._id,
-    }, '_id name owner username date')
+    const decksq = Deck.find(
+      {
+        cube: cube._id,
+      },
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })

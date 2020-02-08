@@ -563,9 +563,12 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const page = parseInt(req.params.page, 10);
 
     const userq = User.findById(userid, '_id username users_following').lean();
-    const decksq = Deck.find({
-      owner: userid,
-    }, '_id name owner username date')
+    const decksq = Deck.find(
+      {
+        owner: userid,
+      },
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })

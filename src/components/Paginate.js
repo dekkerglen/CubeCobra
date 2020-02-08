@@ -5,12 +5,7 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 const RealPage = ({ index, active, urlF, onClick }) => (
   <PaginationItem active={active === index}>
-    <PaginationLink
-      tag="a"
-      href={urlF ? urlF(index) : '#'}
-      data-index={onClick ? index : undefined}
-      onClick={onClick}
-    >
+    <PaginationLink tag="a" href={urlF ? urlF(index) : '#'} data-index={onClick ? index : undefined} onClick={onClick}>
       {index + 1}
     </PaginationLink>
   </PaginationItem>
@@ -26,7 +21,7 @@ RealPage.propTypes = {
 RealPage.defaultProps = {
   urlF: null,
   onClick: undefined,
-}
+};
 
 const FakePage = ({ text }) => (
   <PaginationItem disabled>
@@ -36,7 +31,7 @@ const FakePage = ({ text }) => (
 
 FakePage.propTypes = {
   text: PropTypes.string.isRequired,
-}
+};
 
 const Paginate = ({ count, active, urlF, onClick }) => {
   const smallPagination = new Array(count).fill(null).map((page, index) => (
@@ -46,25 +41,13 @@ const Paginate = ({ count, active, urlF, onClick }) => {
 
   const bigPagination = (
     <>
-      {active > 1 && (
-        <RealPage index={1} active={active} urlF={urlF} onClick={onClick} />
-      )}
-      {active > 2 && (
-        <FakePage text="..." />
-      )}
-      {active !== 0 && (
-        <RealPage index={active - 1} active={active} urlF={urlF} onClick={onClick} />
-      )}
+      {active > 1 && <RealPage index={1} active={active} urlF={urlF} onClick={onClick} />}
+      {active > 2 && <FakePage text="..." />}
+      {active !== 0 && <RealPage index={active - 1} active={active} urlF={urlF} onClick={onClick} />}
       <RealPage index={active} active={active} urlF={urlF} onClick={onClick} />
-      {active !== count - 1 && (
-        <RealPage index={active + 1} active={active} urlF={urlF} onClick={onClick} />
-      )}
-      {active < count - 3 && (
-        <FakePage text="..." />
-      )}
-      {active < count - 2 && (
-        <RealPage index={count - 1} active={active} urlF={urlF} onClick={onClick} />
-      )}
+      {active !== count - 1 && <RealPage index={active + 1} active={active} urlF={urlF} onClick={onClick} />}
+      {active < count - 3 && <FakePage text="..." />}
+      {active < count - 2 && <RealPage index={count - 1} active={active} urlF={urlF} onClick={onClick} />}
     </>
   );
 
@@ -102,11 +85,11 @@ Paginate.propTypes = {
   active: PropTypes.number.isRequired,
   urlF: PropTypes.func,
   onClick: PropTypes.func,
-}
+};
 
 Paginate.defaultProps = {
   urlF: null,
   onClick: undefined,
-}
+};
 
 export default Paginate;

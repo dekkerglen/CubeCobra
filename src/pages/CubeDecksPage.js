@@ -11,7 +11,9 @@ const CubeDecksPage = ({ cube, cubeID, decks, pages, activePage }) => (
   <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
     {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cubeID}/${i}`} />}
     <Card>
-      <CardHeader><h5 className="mb-0">All Decks</h5></CardHeader>
+      <CardHeader>
+        <h5 className="mb-0">All Decks</h5>
+      </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
           <DeckPreview key={deck._id} deck={deck} />
@@ -25,11 +27,13 @@ const CubeDecksPage = ({ cube, cubeID, decks, pages, activePage }) => (
 CubeDecksPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  decks: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
-}
+};
 
 export default CubeDecksPage;

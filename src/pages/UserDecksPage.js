@@ -11,7 +11,9 @@ const UserDecksPage = ({ user, followers, following, canEdit, decks, pages, acti
   <UserLayout user={user} followers={followers} following={following} canEdit={canEdit} activeLink="decks">
     {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${user._id}/${i}`} />}
     <Card>
-      <CardHeader><h5 className="mb-0">All Decks</h5></CardHeader>
+      <CardHeader>
+        <h5 className="mb-0">All Decks</h5>
+      </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
           <DeckPreview key={deck._id} deck={deck} />
@@ -30,11 +32,13 @@ UserDecksPage.propTypes = {
   followers: PropTypes.number.isRequired,
   following: PropTypes.bool.isRequired,
   canEdit: PropTypes.bool.isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  decks: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
-}
+};
 
 export default UserDecksPage;
