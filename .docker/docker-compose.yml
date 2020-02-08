@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  cubecobra-mongodb:
+    image: 'mongo'
+    volumes:
+      - ./cubecobra-mongodb-volume:/data/db
+    ports:
+      - '27017-27019:27017-27019'
+  cubecobra:
+    build: ..
+    image: ${REPOSITORY}/cubecobra:${TAG}
+    command: bash -c "node force_update.js && node app.js"
+    ports:
+      - "5000:8000"
+    depends_on:
+      - "cubecobra-mongodb"
+
+volumes:
+  cubecobra-mongodb-volume:  

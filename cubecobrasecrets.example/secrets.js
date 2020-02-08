@@ -1,4 +1,6 @@
 module.exports =
 {
-  session:'VALUE'
+  session:'VALUE',
+  host:'localhost',
+  environment:'development'
 }
