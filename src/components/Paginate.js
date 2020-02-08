@@ -40,7 +40,8 @@ FakePage.propTypes = {
 
 const Paginate = ({ count, active, urlF, onClick }) => {
   const smallPagination = new Array(count).fill(null).map((page, index) => (
-    <RealPage index={index} active={active} urlF={urlF} onClick={onClick} />
+    // eslint-disable-next-line react/no-array-index-key
+    <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
   ));
 
   const bigPagination = (

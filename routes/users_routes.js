@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
+const serialize = require('serialize-javascript');
 
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
@@ -559,9 +560,9 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const { userid } = req.params;
     const pagesize = 30;
 
-    const page = parseInt(req.params, 10);
+    const page = parseInt(req.params.page, 10);
 
-    const userq = User.findById(userid).exec();
+    const userq = User.findById(userid, '_id username users_following').lean();
     const decksq = Deck.find({
       owner: userid,
     }, '_id name owner username date')
@@ -570,10 +571,10 @@ router.get('/decks/:userid/:page', async (req, res) => {
       })
       .skip(pagesize * page)
       .limit(pagesize)
-      .exec();
+      .lean();
     const numDecksq = Deck.countDocuments({
       owner: userid,
-    }).exec();
+    });
 
     const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
 
@@ -582,32 +583,22 @@ router.get('/decks/:userid/:page', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const pages = [];
-    for (let i = 0; i < numDecks / pagesize; i++) {
-      if (page === i) {
-        pages.push({
-          url: `/user/decks/${userid}/${i}`,
-          content: i + 1,
-          active: true,
-        });
-      } else {
-        pages.push({
-          url: `/user/decks/${userid}/${i}`,
-          content: i + 1,
-        });
-      }
-    }
+    const followers = user.users_following.length;
+    delete user.users_following;
+
+    const reactProps = {
+      user,
+      canEdit: req.user && user._id.equals(req.user._id),
+      followers,
+      following: req.user && req.user.followed_users.includes(user._id),
+      decks: decks || [],
+      pages: Math.ceil(numDecks / pagesize),
+      activePage: page,
+    };
 
     return res.render('user/user_decks', {
-      user_limited: {
-        username: user.username,
-        email: user.email,
-        about: user.about,
-        id: user._id,
-      },
+      reactProps: serialize(reactProps),
       loginCallback: `/user/decks/${userid}`,
-      decks: decks || [],
-      pages: pages || null,
     });
   } catch (err) {
     console.error(err);
