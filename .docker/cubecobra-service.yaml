@@ -47,7 +47,7 @@ spec:
         - bash
         - -c
         - npm run setup && node app.js
-        image: localhost:32000/cubecobra
+        image: localhost:32000/cubecobra:latest
         name: cubecobra
         ports:
         - containerPort: 5000
