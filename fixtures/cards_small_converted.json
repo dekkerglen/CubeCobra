@@ -1996,7 +1996,7 @@
     "colorcategory": "b",
     "tokens": [
       {
-        "tokenId": "213be25c-88db-440b-83c3-973586a4f320",
+        "tokenId": "36cd5f96-5683-4959-b973-37f3c2fcf9bf",
         "sourceCardId": "85929131-4df6-415c-b592-aefb2943c477"
       }
     ]
@@ -4610,6 +4610,44 @@
     "image_small": "https://img.scryfall.com/cards/small/front/8/4/84128e98-87d6-4c2f-909b-9435a7833e63.jpg?1572482845",
     "image_normal": "https://img.scryfall.com/cards/normal/front/8/4/84128e98-87d6-4c2f-909b-9435a7833e63.jpg?1572482845",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/8/4/84128e98-87d6-4c2f-909b-9435a7833e63.jpg?1572482845",
+    "colorcategory": "c"
+  },
+  {
+    "color_identity": [],
+    "set": "xln",
+    "collector_number": "248",
+    "promo": false,
+    "digital": false,
+    "isToken": false,
+    "border_color": "black",
+    "name": "Sorcerous Spyglass",
+    "name_lower": "sorcerous spyglass",
+    "full_name": "Sorcerous Spyglass [xln-248]",
+    "artist": "Kieran Yanner",
+    "scryfall_uri": "https://scryfall.com/card/xln/248/sorcerous-spyglass?utm_source=api",
+    "rarity": "rare",
+    "oracle_text": "As Sorcerous Spyglass enters the battlefield, look at an opponent's hand, then choose any card name.\nActivated abilities of sources with the chosen name can't be activated unless they're mana abilities.",
+    "_id": "85506a24-8d60-475c-9f43-65994caca7d4",
+    "oracle_id": "b2187f45-80ae-4ac4-9f83-5eb7a00978e2",
+    "cmc": 2,
+    "legalities": {
+      "Legacy": true,
+      "Modern": true,
+      "Standard": true,
+      "Pioneer": true,
+      "Pauper": false
+    },
+    "parsed_cost": [
+      "2"
+    ],
+    "colors": [],
+    "type": "Artifact",
+    "full_art": false,
+    "language": "en",
+    "tcgplayer_id": 142033,
+    "image_small": "https://img.scryfall.com/cards/small/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+    "image_normal": "https://img.scryfall.com/cards/normal/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+    "art_crop": "https://img.scryfall.com/cards/art_crop/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
     "colorcategory": "c"
   }
 ]

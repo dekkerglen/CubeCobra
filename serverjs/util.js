@@ -105,7 +105,9 @@ function newCard(card_details, tags) {
 }
 
 function addCardToCube(cube, card_details, tags) {
-  cube.cards.push(newCard(card_details, tags));
+  const card = newCard(card_details, tags);
+  card.status = cube.defaultStatus || 'Owned';
+  cube.cards.push(card);
 }
 
 function getCardImageURL(card) {
