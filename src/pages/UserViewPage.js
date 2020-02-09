@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+import { Button, Card, CardBody, CardFooter, CardHeader, Col, Row } from 'reactstrap';
 
 import CubePreview from 'components/CubePreview';
 import UserLayout from 'layouts/UserLayout';
@@ -38,6 +38,11 @@ const UserViewPage = ({ user, followers, following, canEdit, cubes }) => (
           </Col>
         </Row>
       </CardBody>
+      {canEdit && (
+        <CardFooter>
+          <Button color="success" href="/user/account">Update</Button>
+        </CardFooter>
+      )}
     </Card>
     <Row>
       {cubes.map((cube) => (
