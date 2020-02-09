@@ -1,15 +1,11 @@
 FROM node:10
 
-RUN npm install -g nodemon
-RUN npm install -g rollup
-RUN mkdir -p /CubeCobra/CubeCobra 
-RUN mkdir -p /CubeCobra/cubecobrasecrets 
+RUN mkdir -p /CubeCobra/CubeCobra && mkdir -p /CubeCobra/cubecobrasecrets 
 WORKDIR /CubeCobra/CubeCobra
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install
+RUN npm install -g nodemon rollup
+COPY package*.json ./
+RUN npm install && npm cache clean --force
 
 COPY ./ ./
 ENV NODE_ENV=production
-RUN npm run setup
-RUN npm run build
+RUN npm run setup && npm run build
