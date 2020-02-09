@@ -96,7 +96,7 @@ const UserAccountPage = ({ user }) => {
               <CSRFForm method="POST" action="/user/updateemail">
                 <FormGroup row>
                   <Label for="email" className="col-sm-4 col-form-Label">New Email:</Label>
-                  <Input className="col-sm-8" id="email" name="email" type="email" />
+                  <Input className="col-sm-8" id="email" name="email" type="email" defaultValue={user.email} />
                 </FormGroup>
                 <FormGroup row>
                   <Label for="emailPassword" className="col-sm-4 col-form-Label">Password:</Label>
