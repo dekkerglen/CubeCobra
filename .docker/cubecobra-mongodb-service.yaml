@@ -60,12 +60,12 @@ spec:
         resources: {}
         volumeMounts:
         - mountPath: /data/db
-          name: cubecobra-mongodb-claim0
+          name: cubecobra-mongodb-claim
       restartPolicy: Always
       volumes:
-      - name: cubecobra-mongodb-claim0
+      - name: cubecobra-mongodb-claim
         persistentVolumeClaim:
-          claimName: cubecobra-mongodb-claim0
+          claimName: cubecobra-mongodb-claim
 status: {}
 ---
 apiVersion: v1
@@ -73,12 +73,12 @@ kind: PersistentVolumeClaim
 metadata:
   creationTimestamp: null
   labels:
-    io.kompose.service: cubecobra-mongodb-claim0
-  name: cubecobra-mongodb-claim0
+    io.kompose.service: cubecobra-mongodb-claim
+  name: cubecobra-mongodb-claim
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 100Mi
+      storage: 5Gi
 status: {}

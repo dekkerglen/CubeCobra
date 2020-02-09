@@ -43,26 +43,30 @@ spec:
         io.kompose.service: cubecobra
     spec:
       containers:
-      - args:
-        - bash
-        - -c
-        - npm run setup && node app.js
-        image: localhost:32000/cubecobra:latest
-        name: cubecobra
-        ports:
-        - containerPort: 5000
-        resources: {}
-        volumeMounts:
-          - name: cubecobrasecrets
-            mountPath: "/CubeCobra/cubecobrasecrets"
-        readinessProbe:
-          httpGet:
-            path: '/tos'
-            port: 5000
-        livenessProbe:
-          httpGet:
-            path: '/tos'
-            port: 5000
+        - image: "localhost:32000/cubecobra:latest"
+          env:
+            - name: NODE_ENV
+              value: "production"
+          args:
+            - bash
+            - -c
+            - node force_update.js && node app.js
+          image: localhost:32000/cubecobra:latest
+          name: cubecobra
+          ports:
+            - containerPort: 5000
+          resources: {}
+          volumeMounts:
+            - name: cubecobrasecrets
+              mountPath: "/CubeCobra/cubecobrasecrets"
+          readinessProbe:
+            httpGet:
+              path: '/tos'
+              port: 5000
+          livenessProbe:
+            httpGet:
+              path: '/tos'
+              port: 5000
       restartPolicy: Always
       volumes:
         - name: cubecobrasecrets
