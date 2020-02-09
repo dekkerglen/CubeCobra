@@ -836,6 +836,7 @@ router.get('/social', ensureAuth, async (req, res) => {
 
     res.render('user/user_social', {
       reactProps: serialize(reactProps),
+      title: 'Social',
       loginCallback: '/user/social',
     });
   } catch (err) {
