@@ -11,7 +11,11 @@ const FollowersModalLink = withModal('a', FollowersModal);
 
 const UserLayout = ({ user, followers, following, canEdit, activeLink, children }) => {
   const numFollowers = followers.length;
-  const followersText = <h6>{numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}</h6>;
+  const followersText = (
+    <h6>
+      {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
+    </h6>
+  );
   return (
     <>
       <Nav tabs fill className="cubenav pt-2">
@@ -23,7 +27,9 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
             <FollowersModalLink href="#" modalProps={{ followers }}>
               {followersText}
             </FollowersModalLink>
-          ) : followersText}
+          ) : (
+            followersText
+          )}
           {!following && !canEdit && (
             <Button color="success" className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
               Follow

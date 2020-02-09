@@ -22,7 +22,7 @@ const generateMeta = (title, description, image, url, width, height) => {
     },
     {
       property: 'og:image:height',
-      content: height ||'',
+      content: height || '',
     },
     {
       property: 'twitter:card',

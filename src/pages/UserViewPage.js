@@ -13,7 +13,14 @@ const UserViewPage = ({ user, followers, following, canEdit, cubes }) => (
         <h5 className="mb-0">About</h5>
       </CardHeader>
       <CardBody>
-        {user.about ? user.about.trim().split(/[\r\n]+/).map((para) => <p>{para}</p>) : <em>This user has not yet filled out their about section.</em>}
+        {user.about ? (
+          user.about
+            .trim()
+            .split(/[\r\n]+/)
+            .map((para) => <p>{para}</p>)
+        ) : (
+          <em>This user has not yet filled out their about section.</em>
+        )}
       </CardBody>
     </Card>
     <Row>

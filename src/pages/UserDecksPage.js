@@ -21,9 +21,7 @@ const UserDecksPage = ({ user, followers, following, canEdit, decks, pages, acti
           ))}
         </CardBody>
       ) : (
-        <CardBody>
-          No decks to show.
-        </CardBody>
+        <CardBody>No decks to show.</CardBody>
       )}
     </Card>
     {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${user._id}/${i}`} />}

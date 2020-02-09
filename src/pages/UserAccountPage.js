@@ -32,7 +32,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
   const handleSubmitImage = useCallback((event) => {
     event.preventDefault();
   }, []);
-  
+
   const result = imageDict[imageValue.toLowerCase()];
   let image;
   if (result) {
