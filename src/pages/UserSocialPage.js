@@ -13,15 +13,19 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers }) => (
         <CardHeader>
           <h5 className="mb-0">Followed Cubes</h5>
         </CardHeader>
-        <CardBody className="p-0">
-          <Row noGutters>
-            {followedCubes.map((cube) => (
-              <Col key={cube._id} xs={12} sm={6}>
-                <CubePreview cube={cube} />
-              </Col>
-            ))}
-          </Row>
-        </CardBody>
+        {followedCubes.length > 0 ? (
+          <CardBody className="p-0">
+            <Row noGutters>
+              {followedCubes.map((cube) => (
+                <Col key={cube._id} xs={12} sm={6}>
+                  <CubePreview cube={cube} />
+                </Col>
+              ))}
+            </Row>
+          </CardBody>
+        ) : (
+          <CardBody>You aren't following any cubes.</CardBody>
+        )}
       </Card>
     </Col>
     <Col xs={6}>
@@ -29,33 +33,39 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers }) => (
         <CardHeader>
           <h5 className="mb-0">Followed Users</h5>
         </CardHeader>
-        <CardBody className="p-0">
-          <Row noGutters>
-            {followedUsers.map((user) => (
-              <Col key={user._id} xs={12} sm={6}>
-                <UserPreview user={user} />
-              </Col>
-            ))}
-          </Row>
-        </CardBody>
+        {followedCubes.length > 0 ? (
+          <CardBody className="p-0">
+            <Row noGutters>
+              {followedUsers.map((user) => (
+                <Col key={user._id} xs={12} sm={6}>
+                  <UserPreview user={user} />
+                </Col>
+              ))}
+            </Row>
+          </CardBody>
+        ) : (
+          <CardBody>You aren't following any users.</CardBody>
+        )}
       </Card>
     </Col>
-    <Col xs={12}>
-      <Card>
-        <CardHeader>
-          <h5 className="mb-0">Followers</h5>
-        </CardHeader>
-        <CardBody className="p-0">
-          <Row noGutters>
-            {followers.map((user) => (
-              <Col key={user._id} xs={6} sm={3}>
-                <UserPreview user={user} />
-              </Col>
-            ))}
-          </Row>
-        </CardBody>
-      </Card>
-    </Col>
+    {followers.length > 0 && (
+      <Col xs={12}>
+        <Card className="mt-3">
+          <CardHeader>
+            <h5 className="mb-0">Followers</h5>
+          </CardHeader>
+          <CardBody className="p-0">
+            <Row noGutters>
+              {followers.map((user) => (
+                <Col key={user._id} xs={6} sm={3}>
+                  <UserPreview user={user} />
+                </Col>
+              ))}
+            </Row>
+          </CardBody>
+        </Card>
+      </Col>
+    )}
   </Row>
 );
 
