@@ -38,9 +38,7 @@ import CubeLayout from 'layouts/CubeLayout';
 
 const FollowersModal = ({ followers, isOpen, toggle }) => (
   <Modal size="lg" isOpen={isOpen} toggle={toggle}>
-    <ModalHeader toggle={toggle}>
-      Followers
-    </ModalHeader>
+    <ModalHeader toggle={toggle}>Followers</ModalHeader>
     <ModalBody>
       <Row className="justify-content-center">
         {followers.map((user) => (
@@ -54,12 +52,14 @@ const FollowersModal = ({ followers, isOpen, toggle }) => (
 );
 
 FollowersModal.propTypes = {
-  followers: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })).isRequired,
+  followers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
-}
+};
 
 const FollowersModalLink = withModal('a', FollowersModal);
 
@@ -347,9 +347,11 @@ CubeOverview.propTypes = {
   userID: PropTypes.string.isRequired,
   loggedIn: PropTypes.bool,
   followed: PropTypes.bool.isRequired,
-  followers: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  })),
+  followers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ),
 };
 
 CubeOverview.defaultProps = {

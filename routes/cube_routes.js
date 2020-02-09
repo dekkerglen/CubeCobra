@@ -426,10 +426,15 @@ router.get('/overview/:id', async (req, res) => {
     const userQ = User.findById(cube.owner).lean();
     const blogsQ = Blog.find({
       cube: cube._id,
-    }).sort('date').lean();
-    const followersQ = User.find({
-      _id: { $in: cube.users_following },
-    }, '_id username image artist users_following').lean();
+    })
+      .sort('date')
+      .lean();
+    const followersQ = User.find(
+      {
+        _id: { $in: cube.users_following },
+      },
+      '_id username image artist users_following',
+    ).lean();
     const priceDictQ = GetPrices([...pids]);
     const [user, blogs, followers, priceDict] = await Promise.all([userQ, blogsQ, followersQ, priceDictQ]);
 
