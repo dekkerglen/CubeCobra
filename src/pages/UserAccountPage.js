@@ -5,14 +5,42 @@ import { Button, Col, FormGroup, Input, Label, Nav, NavItem, NavLink, Row, TabCo
 
 import Query from 'utils/Query';
 
+import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
+import DynamicFlash from 'components/DynamicFlash';
 
 const UserAccountPage = ({ user, defaultNav }) => {
   const [nav, setNav] = useState(defaultNav);
+  const [imageValue, setImageValue] = useState('');
+  const [imageDict, setImageDict] = useState({});
+
+  useEffect(() => {
+    fetch('/cube/api/imagedict').then((response) => response.json()).then((json) => setImageDict(json.dict));
+  }, []);
+
   const handleClickNav = useCallback((event) => {
     event.preventDefault();
     setNav(event.target.getAttribute('data-nav'));
   }, []);
+
+  const handleChangeImage = useCallback((event) => {
+    setImageValue(event.target.value);
+  }, []);
+
+  const result = imageDict[imageValue.toLowerCase()];
+  let image;
+  if (result) {
+    image = {
+      name: imageValue.replace(/ \[[^\]]*\]$/, ''),
+      ...result,
+    };
+  } else {
+    image = {
+      name: user.image_name,
+      uri: user.image,
+      artist: user.artist,
+    }
+  }
 
   useEffect(() => {
     if (nav === 'profile') {
@@ -25,6 +53,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
   return (
     <>
       <h2 className="mt-3">My Account </h2>
+      <DynamicFlash />
       <Row>
         <Col xs={3}>
           <Nav vertical pills>
@@ -60,10 +89,37 @@ const UserAccountPage = ({ user, defaultNav }) => {
                         name="body"
                         defaultValue={user.about}
                       />
-                      <br />
-                      <Button color="success" type="submit">Update</Button>
+                    </dd>
+                    <dt className="col-sm-3">Profile Pic</dt>
+                    <dd className="col-sm-9">
+                      <Row>
+                        <Col xs={6}>
+                          <div className="position-relative">
+                            <img width="100%" src={image.uri} alt={image.name} />
+                            <em className="cube-preview-artist">Art by {image.artist}</em>
+                          </div>
+                        </Col>
+                        <Col xs={6}>
+                          <AutocompleteInput
+                            treeUrl="/cube/api/fullnames"
+                            treePath="cardnames"
+                            type="text"
+                            className="mr-2"
+                            name="remove"
+                            value={imageValue}
+                            onChange={handleChangeImage}
+                            placeholder="Cardname for Image"
+                            autoComplete="off"
+                            data-lpignore
+                          />
+                          {result && (<Input type="hidden" name="image" value={imageValue.toLowerCase()} />)}
+                        </Col>
+                      </Row>
                     </dd>
                   </dl>
+                  <Row noGutters>
+                    <Button className="ml-auto" color="success" type="submit">Update</Button>
+                  </Row>
                 </div>
               </CSRFForm>
             </TabPane>
@@ -111,12 +167,12 @@ const UserAccountPage = ({ user, defaultNav }) => {
 
 UserAccountPage.propTypes = {
   user: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     about: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
+    image_name: PropTypes.string,
+    image: PropTypes.string,
+    artist: PropTypes.string,
     users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
   }).isRequired,
   defaultNav: PropTypes.string.isRequired,
