@@ -29,6 +29,10 @@ const UserAccountPage = ({ user, defaultNav }) => {
     setImageValue(event.target.value);
   }, []);
 
+  const handleSubmitImage = useCallback((event) => {
+    event.preventDefault();
+  }, []);
+  
   const result = imageDict[imageValue.toLowerCase()];
   let image;
   if (result) {
@@ -79,7 +83,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
         <Col xs={9}>
           <TabContent activeTab={nav}>
             <TabPane tabId="profile">
-              <CSRFForm action="/user/updateuserinfo">
+              <CSRFForm method="POST" action="/user/updateuserinfo">
                 <div className="form-group">
                   <dl className="row">
                     <dt className="col-sm-3">Username</dt>
@@ -116,6 +120,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
                             name="remove"
                             value={imageValue}
                             onChange={handleChangeImage}
+                            onSubmit={handleSubmitImage}
                             placeholder="Cardname for Image"
                             autoComplete="off"
                             data-lpignore
@@ -192,7 +197,7 @@ UserAccountPage.propTypes = {
     image_name: PropTypes.string,
     image: PropTypes.string,
     artist: PropTypes.string,
-    users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
+    users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
   }).isRequired,
   defaultNav: PropTypes.string.isRequired,
 };

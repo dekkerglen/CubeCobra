@@ -565,8 +565,8 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     const page = parseInt(req.params.page, 10);
 
-    const userq = User.findById(userid, '_id username users_following').lean();
-    const decksq = Deck.find(
+    const userQ = User.findById(userid, '_id username users_following').lean();
+    const decksQ = Deck.find(
       {
         owner: userid,
       },
@@ -578,18 +578,19 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .skip(pagesize * page)
       .limit(pagesize)
       .lean();
-    const numDecksq = Deck.countDocuments({
+    const numDecksQ = Deck.countDocuments({
       owner: userid,
     });
 
-    const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
+    const [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
 
     if (!user) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const followers = user.users_following.length;
+    const followers = await User.find({ _id: { $in: user.users_following }}, '_id username image artist users_following');
+
     delete user.users_following;
 
     const reactProps = {

@@ -1,11 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Nav, Navbar, NavItem, NavLink } from 'reactstrap';
+import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
 import ErrorBoundary from 'components/ErrorBoundary';
+import FollowersModal from 'components/FollowersModal';
+import withModal from 'components/WithModal';
+
+const FollowersModalLink = withModal('a', FollowersModal);
 
 const UserLayout = ({ user, followers, following, canEdit, activeLink, children }) => {
+  const numFollowers = followers.length;
+  const followersText = <h6>{numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}</h6>;
   return (
     <>
       <Nav tabs fill className="cubenav pt-2">
@@ -13,7 +19,11 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
           <h5 href="#" style={{ color: '#218937' }}>
             {user.username}
           </h5>
-          <h6 href="#">{followers} followers</h6>
+          {numFollowers > 0 ? (
+            <FollowersModalLink href="#" modalProps={{ followers }}>
+              {followersText}
+            </FollowersModalLink>
+          ) : followersText}
           {!following && !canEdit && (
             <Button color="success" className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
               Follow
@@ -37,7 +47,7 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
         </NavItem>
       </Nav>
       {canEdit && (
-        <Navbar light className="usercontrols mb-3">
+        <Navbar light className="usercontrols">
           <Nav navbar>
             <NavItem>
               <NavLink href="#" data-toggle="modal" data-target="#cubeModal">
@@ -47,6 +57,7 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
           </Nav>
         </Navbar>
       )}
+      <Row className="mb-3" />
       <ErrorBoundary>{children}</ErrorBoundary>
     </>
   );
@@ -57,7 +68,7 @@ UserLayout.propTypes = {
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
-  followers: PropTypes.number.isRequired,
+  followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   canEdit: PropTypes.bool,
   activeLink: PropTypes.string.isRequired,
