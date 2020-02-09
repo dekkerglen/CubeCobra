@@ -10,7 +10,7 @@ function ISODateToYYYYMMDD(dateString) {
   return new Date(dateString).toLocaleDateString(locale);
 }
 
-function GetColorIdentity(colors) {
+export function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';
   }
@@ -41,7 +41,7 @@ function GetColorIdentity(colors) {
   }
 }
 
-function GetColorCategory(type, colors) {
+export function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
     return 'Lands';
   }

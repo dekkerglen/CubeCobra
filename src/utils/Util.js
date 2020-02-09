@@ -52,6 +52,12 @@ export function arrayIsSubset(needles, haystack) {
   return needles.every((x) => haystack.includes(x));
 }
 
+export function arraysAreEqualSets(a1, a2) {
+  const set1 = new Set(a1);
+  const set2 = new Set(a2);
+  return a1.every((x) => set2.has(x)) && a2.every((x) => set1.has(x));
+}
+
 export function randomElement(array) {
   const randomIndex = Math.floor(Math.random() * array.length);
   return array[randomIndex];
@@ -143,6 +149,7 @@ export default {
   arrayMove,
   arrayDelete,
   arrayIsSubset,
+  arraysAreEqualSets,
   randomElement,
   fromEntries,
   alphaCompare,
