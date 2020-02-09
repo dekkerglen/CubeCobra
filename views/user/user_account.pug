@@ -1,44 +1,12 @@
-extends user_base
+extends ../layout
 
-block information
-  include ../flash
-  .container
-    form(method='POST', action='/user/updateuserinfo')
-      input(type='hidden', name='_csrf', value=csrfToken)
-      #form-group
-        dl.row
-          dt.col-sm-3 Username
-          dd.col-sm-9
-            input.form-control(name='username' type='text', value=user.username)
-          dt.col-sm-3 Email
-          dd.col-sm-9 #{user.email}
-          dt.col-sm-3 About
-          dd.col-sm-9
-            textarea.form-control(maxlength='2500', placeholder="Describe yourself here... (max length 2500)", name='body')=user.about
-            br
-            input.btn.btn-success(type='submit',value='Update')
+block content
+  include ../dynamic_flash
 
-block changepassword
-  form(method='POST', action='/user/resetpassword')
-    input(type='hidden', name='_csrf', value=csrfToken)
-    .form-group.row
-      label.col-sm-4.col-form-label Old password:
-      input#password.form-control.form-control.col-sm-8(name='password', type='password')
-    .form-group.row
-      label.col-sm-4.col-form-label New Password:
-      input#newPassword.form-control.form-control.col-sm-8(name='password2', type='password')
-    .form-group.row
-      label.col-sm-4.col-form-label Confirm New Password:
-      input#confirmPassword.form-control.form-control.col-sm-8(name='password3', type='password')
-    input.btn.btn-success(type='submit',value='Change Password')
+  #react-root
 
-block changeemail
-  form(method='POST', action='/user/updateemail')
-    input(type='hidden', name='_csrf', value=csrfToken)
-    .form-group.row
-      label.col-sm-4.col-form-label New Email:
-      input#email.form-control.col-sm-8(name='email', type='text')
-    .form-group.row
-      label.col-sm-4.col-form-label Password:
-      input#password.form-control.form-control.col-sm-8(name='password', type='password')
-    input.btn.btn-success(type='submit',value='Update')
+block scripts
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  include ../react
+  script(src='/js/user_account.bundle.js')

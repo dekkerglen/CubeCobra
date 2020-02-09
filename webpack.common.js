@@ -41,6 +41,7 @@ const clientConfig = merge(config, {
     dashboard: './src/dashboard.js',
     notifications: './src/notifications.js',
     topcards: './src/topcards.js',
+    user_account: './src/user_account.js',
     user_decks: './src/user_decks.js',
     user_social: './src/user_social.js',
   },

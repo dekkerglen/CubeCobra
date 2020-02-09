@@ -611,52 +611,21 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
 // account page
 router.get('/account', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'info',
+  const userLimited = {
+    _id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+    about: req.user.about,
+    image: req.user.image,
+    image_name: req.user.image_name,
+    artist: req.user.artist,
+  };
+  res.render('user/user_account', {
+    reactProps: serialize({
       user: userLimited,
-      loginCallback: '/user/account',
-    });
-  });
-});
-
-// account page, password reset
-router.get('/account/changepassword', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'changepw',
-      user: userLimited,
-      loginCallback: '/user/account/changepassword',
-    });
-  });
-});
-
-// account page, password reset
-router.get('/account/updateemail', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'changeemail',
-      user: userLimited,
-      loginCallback: '/user/updateemail',
-    });
+    }),
+    title: 'Account',
+    loginCallback: '/user/account',
   });
 });
 
@@ -669,30 +638,18 @@ router.post('/resetpassword', ensureAuth, (req, res) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    User.findById(req.user._id, (err, user) => {
-      const userLimited = {
-        username: user.username,
-        email: user.email,
-        about: user.about,
-      };
-      res.render('user/user_account', {
-        selected: 'changepw',
-        user: userLimited,
-        errors,
-        loginCallback: '/user/account/changepassword',
-      });
-    });
+    res.redirect('/user/account?nav=password');
   } else {
     User.findById(req.user._id, (err, user) => {
       if (user) {
         bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
           if (!isMatch) {
             req.flash('danger', 'Password is incorrect');
-            return res.redirect('/user/account/changepassword');
+            return res.redirect('/user/account?nav=password');
           }
           if (req.body.password2 !== req.body.password3) {
             req.flash('danger', "New passwords don't match");
-            return res.redirect('/user/account/changepassword');
+            return res.redirect('/user/account?nav=password');
           }
           return bcrypt.genSalt(10, (err3, salt) => {
             bcrypt.hash(req.body.password2, salt, (err4, hash) => {
@@ -704,11 +661,11 @@ router.post('/resetpassword', ensureAuth, (req, res) => {
                   if (err5) {
                     console.error(err5);
                     req.flash('danger', 'Error saving user.');
-                    return res.redirect('/user/account/changepassword');
+                    return res.redirect('/user/account?nav=password');
                   }
 
                   req.flash('success', 'Password updated succesfully');
-                  return res.redirect('/user/account/changepassword');
+                  return res.redirect('/user/account?nav=password');
                 });
               }
             });
@@ -793,14 +750,14 @@ router.post('/updateemail', ensureAuth, (req, res) => {
     (err, user) => {
       if (user) {
         req.flash('danger', 'Email already associated with an existing account.');
-        res.redirect('/user/account/updateemail');
+        res.redirect('/user/account?nav=email');
       } else if (req.user) {
         req.user.email = req.body.email;
         req.user.save((err2) => {
           if (err2) {
             console.error(err2);
             req.flash('danger', 'Error saving user.');
-            res.redirect('/user/account/updateemail');
+            res.redirect('/user/account');
           } else {
             req.flash('success', 'Your profile has been updated.');
             res.redirect('/user/account');
@@ -808,7 +765,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
         });
       } else {
         req.flash('danger', 'Not logged in.');
-        res.redirect('/user/account/updateemail');
+        res.redirect('/user/account?nav=email');
       }
     },
   );
