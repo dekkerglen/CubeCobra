@@ -537,7 +537,7 @@ router.get('/view/:id', async (req, res) => {
     return res.render('user/user_view', {
       reactProps: serialize({
         user,
-        canEdit: req.user && user._id === req.user._id,
+        canEdit: req.user && req.user._id.equals(user._id),
         cubes,
         followers,
         following,
