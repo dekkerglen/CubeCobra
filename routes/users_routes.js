@@ -623,6 +623,7 @@ router.get('/account', ensureAuth, (req, res) => {
   res.render('user/user_account', {
     reactProps: serialize({
       user: userLimited,
+      defaultNav: req.query.nav || 'profile',
     }),
     title: 'Account',
     loginCallback: '/user/account',

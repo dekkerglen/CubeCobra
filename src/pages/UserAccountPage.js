@@ -7,16 +7,13 @@ import Query from 'utils/Query';
 
 import CSRFForm from 'components/CSRFForm';
 
-const UserAccountPage = ({ user }) => {
-  const [nav, setNav] = useState('profile');
+const UserAccountPage = ({ user, defaultNav }) => {
+  const [nav, setNav] = useState(defaultNav);
   const handleClickNav = useCallback((event) => {
     event.preventDefault();
     setNav(event.target.getAttribute('data-nav'));
   }, []);
 
-  useEffect(() => {
-    setNav(Query.get('nav', 'profile'));
-  }, []);
   useEffect(() => {
     if (nav === 'profile') {
       Query.del('nav');
@@ -74,16 +71,16 @@ const UserAccountPage = ({ user }) => {
               <CSRFForm method="POST" action="/user/resetpassword">
                 <FormGroup row>
                   <Label for="password" className="col-sm-4 col-form-Label">Old password:</Label>
-                  <input className="form-control form-control col-sm-8" id="password" name="password" type="password" />
+                  <Input className="col-sm-8" id="currentPassword" name="password" type="password" />
                 </FormGroup>
                 <FormGroup row>
                   <Label for="newPassword" className="col-sm-4 col-form-Label">New Password:</Label>
-                  <input className="form-control form-control col-sm-8" id="newPassword" name="password2" type="password" />
+                  <Input className="col-sm-8" id="newPassword" name="password2" type="password" />
                 </FormGroup>
                 <FormGroup row>
                   <Label for="confirmPassword" className="col-sm-4 col-form-Label">Confirm New Password:</Label>
-                  <input
-                    className="form-control form-control col-sm-8"
+                  <Input
+                    className="col-sm-8"
                     id="confirmPassword"
                     name="password3"
                     type="password"
@@ -122,6 +119,7 @@ UserAccountPage.propTypes = {
     artist: PropTypes.string.isRequired,
     users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
   }).isRequired,
+  defaultNav: PropTypes.string.isRequired,
 };
 
 export default UserAccountPage;
