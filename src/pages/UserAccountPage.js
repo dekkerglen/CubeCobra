@@ -15,7 +15,9 @@ const UserAccountPage = ({ user, defaultNav }) => {
   const [imageDict, setImageDict] = useState({});
 
   useEffect(() => {
-    fetch('/cube/api/imagedict').then((response) => response.json()).then((json) => setImageDict(json.dict));
+    fetch('/cube/api/imagedict')
+      .then((response) => response.json())
+      .then((json) => setImageDict(json.dict));
   }, []);
 
   const handleClickNav = useCallback((event) => {
@@ -39,7 +41,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
       name: user.image_name,
       uri: user.image,
       artist: user.artist,
-    }
+    };
   }
 
   useEffect(() => {
@@ -58,13 +60,19 @@ const UserAccountPage = ({ user, defaultNav }) => {
         <Col xs={3}>
           <Nav vertical pills>
             <NavItem>
-              <NavLink href="#" active={nav === 'profile'} data-nav="profile" onClick={handleClickNav}>Profile</NavLink>
+              <NavLink href="#" active={nav === 'profile'} data-nav="profile" onClick={handleClickNav}>
+                Profile
+              </NavLink>
             </NavItem>
             <NavItem>
-              <NavLink href="#" active={nav === 'password'} data-nav="password" onClick={handleClickNav}>Change Password</NavLink>
+              <NavLink href="#" active={nav === 'password'} data-nav="password" onClick={handleClickNav}>
+                Change Password
+              </NavLink>
             </NavItem>
             <NavItem>
-              <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>Update Email</NavLink>
+              <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>
+                Update Email
+              </NavLink>
             </NavItem>
           </Nav>
         </Col>
@@ -112,13 +120,15 @@ const UserAccountPage = ({ user, defaultNav }) => {
                             autoComplete="off"
                             data-lpignore
                           />
-                          {result && (<Input type="hidden" name="image" value={imageValue.toLowerCase()} />)}
+                          {result && <Input type="hidden" name="image" value={imageValue.toLowerCase()} />}
                         </Col>
                       </Row>
                     </dd>
                   </dl>
                   <Row noGutters>
-                    <Button className="ml-auto" color="success" type="submit">Update</Button>
+                    <Button className="ml-auto" color="success" type="submit">
+                      Update
+                    </Button>
                   </Row>
                 </div>
               </CSRFForm>
@@ -126,36 +136,45 @@ const UserAccountPage = ({ user, defaultNav }) => {
             <TabPane tabId="password">
               <CSRFForm method="POST" action="/user/resetpassword">
                 <FormGroup row>
-                  <Label for="password" className="col-sm-4 col-form-Label">Old password:</Label>
+                  <Label for="password" className="col-sm-4 col-form-Label">
+                    Old password:
+                  </Label>
                   <Input className="col-sm-8" id="currentPassword" name="password" type="password" />
                 </FormGroup>
                 <FormGroup row>
-                  <Label for="newPassword" className="col-sm-4 col-form-Label">New Password:</Label>
+                  <Label for="newPassword" className="col-sm-4 col-form-Label">
+                    New Password:
+                  </Label>
                   <Input className="col-sm-8" id="newPassword" name="password2" type="password" />
                 </FormGroup>
                 <FormGroup row>
-                  <Label for="confirmPassword" className="col-sm-4 col-form-Label">Confirm New Password:</Label>
-                  <Input
-                    className="col-sm-8"
-                    id="confirmPassword"
-                    name="password3"
-                    type="password"
-                  />
+                  <Label for="confirmPassword" className="col-sm-4 col-form-Label">
+                    Confirm New Password:
+                  </Label>
+                  <Input className="col-sm-8" id="confirmPassword" name="password3" type="password" />
                 </FormGroup>
-                <Button color="success" type="submit">Change Password</Button>
+                <Button color="success" type="submit">
+                  Change Password
+                </Button>
               </CSRFForm>
             </TabPane>
             <TabPane tabId="email">
               <CSRFForm method="POST" action="/user/updateemail">
                 <FormGroup row>
-                  <Label for="email" className="col-sm-4 col-form-Label">New Email:</Label>
+                  <Label for="email" className="col-sm-4 col-form-Label">
+                    New Email:
+                  </Label>
                   <Input className="col-sm-8" id="email" name="email" type="email" defaultValue={user.email} />
                 </FormGroup>
                 <FormGroup row>
-                  <Label for="emailPassword" className="col-sm-4 col-form-Label">Password:</Label>
+                  <Label for="emailPassword" className="col-sm-4 col-form-Label">
+                    Password:
+                  </Label>
                   <Input className="col-sm-8" id="emailPassword" name="password" type="password" />
                 </FormGroup>
-                <Button color="success" type="submit">Update</Button>
+                <Button color="success" type="submit">
+                  Update
+                </Button>
               </CSRFForm>
             </TabPane>
           </TabContent>
