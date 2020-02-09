@@ -504,7 +504,7 @@ router.get('/view/:id', async (req, res) => {
   try {
     let user = null;
     try {
-      user = await User.findById(req.params.id, '_id username about users_following').lean();
+      user = await User.findById(req.params.id, '_id username about users_following image_name image artist').lean();
       // eslint-disable-next-line no-empty
     } catch (err) {}
 
@@ -513,7 +513,7 @@ router.get('/view/:id', async (req, res) => {
         {
           username_lower: req.params.id.toLowerCase(),
         },
-        '_id username about users_following',
+        '_id username about users_following image_name image artist',
       ).lean();
       if (!user) {
         req.flash('danger', 'User not found');
