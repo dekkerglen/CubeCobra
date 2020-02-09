@@ -502,34 +502,48 @@ router.get('/logout', (req, res) => {
 
 router.get('/view/:id', async (req, res) => {
   try {
-    let user;
+    let user = null;
     try {
-      user = await User.findById(req.params.id);
-    } catch (err) {
-      user = await User.findOne({
-        username_lower: req.params.id.toLowerCase(),
-      });
+      user = await User.findById(req.params.id, '_id username about users_following').lean();
+      // eslint-disable-next-line no-empty
+    } catch (err) {}
+
+    if (!user) {
+      user = await User.findOne(
+        {
+          username_lower: req.params.id.toLowerCase(),
+        },
+        '_id username about users_following',
+      ).lean();
       if (!user) {
         req.flash('danger', 'User not found');
         return res.status(404).render('misc/404', {});
       }
     }
 
-    const cubes = await Cube.find({
+    const cubesQ = Cube.find({
       owner: user._id,
-    });
+    }).lean();
+    const followersQ = User.find(
+      { _id: { $in: user.users_following } },
+      '_id username image_name image artist users_following',
+    ).lean();
+
+    const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
+
+    const following = req.user ? user.users_following.includes(req.user._id) : false;
+    delete user.users_following;
 
     return res.render('user/user_view', {
-      user_limited: {
-        username: user.username,
-        email: user.email,
-        about: user.about,
-        id: user._id,
-      },
-      cubes,
+      reactProps: serialize({
+        user,
+        canEdit: req.user && user._id === req.user._id,
+        cubes,
+        followers,
+        following,
+      }),
+      title: user.username,
       loginCallback: `/user/view/${req.params.id}`,
-      followers: user.users_following.length,
-      following: req.user ? user.users_following.includes(req.user._id) : false,
     });
   } catch (err) {
     console.error(err);
@@ -589,7 +603,10 @@ router.get('/decks/:userid/:page', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const followers = await User.find({ _id: { $in: user.users_following }}, '_id username image artist users_following');
+    const followers = await User.find(
+      { _id: { $in: user.users_following } },
+      '_id username image_name image artist users_following',
+    );
 
     delete user.users_following;
 
@@ -605,6 +622,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     return res.render('user/user_decks', {
       reactProps: serialize(reactProps),
+      title: user.username,
       loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {

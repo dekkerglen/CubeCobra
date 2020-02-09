@@ -44,6 +44,7 @@ const clientConfig = merge(config, {
     user_account: './src/user_account.js',
     user_decks: './src/user_decks.js',
     user_social: './src/user_social.js',
+    user_view: './src/user_view.js',
   },
   output: {
     filename: '[name].bundle.js',
