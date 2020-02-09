@@ -42,6 +42,7 @@ const clientConfig = merge(config, {
     notifications: './src/notifications.js',
     topcards: './src/topcards.js',
     user_decks: './src/user_decks.js',
+    user_social: './src/user_social.js',
   },
   output: {
     filename: '[name].bundle.js',

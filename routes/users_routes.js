@@ -467,7 +467,7 @@ router.get('/login', (req, res) => {
 // Login post
 router.post('/login', (req, res, next) => {
   const query = {
-    [req.body.username.includes('@') ? 'email' : 'username_lower']: req.body.username,
+    [req.body.username.includes('@') ? 'email' : 'username_lower']: req.body.username.toLowerCase(),
   };
   // find by email
   User.findOne(query, (err, user) => {
@@ -812,6 +812,30 @@ router.post('/updateemail', ensureAuth, (req, res) => {
       }
     },
   );
+});
+
+router.get('/social', ensureAuth, async (req, res) => {
+  try {
+    const followedCubesQ = Cube.find({ _id: { $in: req.user.followed_cubes } }, Cube.PREVIEW_FIELDS).lean();
+    const followedUsersQ = User.find(
+      { _id: { $in: req.user.followed_users } },
+      '_id username image artist users_following',
+    ).lean();
+
+    const [followedCubes, followedUsers] = await Promise.all([followedCubesQ, followedUsersQ]);
+
+    const reactProps = {
+      followedCubes,
+      followedUsers,
+    };
+
+    res.render('user/user_social', {
+      reactProps: serialize(reactProps),
+      loginCallback: '/user/social',
+    });
+  } catch (err) {
+    util.handleRouteError(res, req, err, '/');
+  }
 });
 
 module.exports = router;

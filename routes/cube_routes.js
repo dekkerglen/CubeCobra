@@ -531,6 +531,8 @@ router.get('/blog/:id/:page', async (req, res) => {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(build_id_query(cubeID), Cube.LAYOUT_FIELDS).lean();
 
+    const page = parseInt(req.params.page, 10) || 0;
+
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -551,16 +553,8 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    let blogPage = [];
-    if (blogs.length > 0) {
-      blogs.reverse();
-
-      let page = parseInt(req.params.page, 10);
-      if (Number.isNaN(page)) {
-        page = 0;
-      }
-      blogPage = blogs.slice(page * 10, (page + 1) * 10);
-    }
+    blogs.reverse();
+    const blogPage = blogs.slice(page * 10, (page + 1) * 10);
 
     const reactProps = {
       cube,
