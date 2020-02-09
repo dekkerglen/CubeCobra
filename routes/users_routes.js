@@ -9,6 +9,7 @@ const { body } = require('express-validator');
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
+const carddb = require('../serverjs/cards.js');
 
 // Bring in models
 const User = require('../models/user');
@@ -715,6 +716,14 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     user.username = req.body.username;
     user.username_lower = req.body.username.toLowerCase();
     user.about = req.body.body;
+    if (req.body.image) {
+      const imageData = carddb.imagedict[req.body.image];
+      if (imageData) {
+        user.image = imageData.uri;
+        user.artist = imageData.artist;
+        user.image_name = req.body.image.replace(/ \[[^\]]*\]$/, '');
+      }
+    }
     const userQ = user.save();
     const cubesQ = Cube.updateMany(
       {
