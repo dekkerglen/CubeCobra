@@ -1,4 +1,5 @@
 const express = require('express');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
