@@ -821,12 +821,17 @@ router.get('/social', ensureAuth, async (req, res) => {
       { _id: { $in: req.user.followed_users } },
       '_id username image artist users_following',
     ).lean();
+    const followersQ = User.find(
+      { _id: { $in: req.user.users_following } },
+      '_id username image artist users_following',
+    ).lean();
 
-    const [followedCubes, followedUsers] = await Promise.all([followedCubesQ, followedUsersQ]);
+    const [followedCubes, followedUsers, followers] = await Promise.all([followedCubesQ, followedUsersQ, followersQ]);
 
     const reactProps = {
       followedCubes,
       followedUsers,
+      followers,
     };
 
     res.render('user/user_social', {

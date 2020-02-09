@@ -47,7 +47,7 @@ UserPreview.propTypes = {
   }).isRequired,
 };
 
-const UserSocialPage = ({ followedCubes, followedUsers }) => (
+const UserSocialPage = ({ followedCubes, followedUsers, followers }) => (
   <Row className="mt-3">
     <Col xs={6}>
       <Card>
@@ -81,6 +81,22 @@ const UserSocialPage = ({ followedCubes, followedUsers }) => (
         </CardBody>
       </Card>
     </Col>
+    <Col xs={12}>
+      <Card>
+        <CardHeader>
+          <h5 className="mb-0">Followers</h5>
+        </CardHeader>
+        <CardBody className="p-0">
+          <Row noGutters>
+            {followers.map((user) => (
+              <Col key={user._id} xs={6} sm={3}>
+                <UserPreview user={user} />
+              </Col>
+            ))}
+          </Row>
+        </CardBody>
+      </Card>
+    </Col>
   </Row>
 );
 
@@ -91,6 +107,11 @@ UserSocialPage.propTypes = {
     }),
   ).isRequired,
   followedUsers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  followers: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
     }),
