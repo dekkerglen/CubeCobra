@@ -40,7 +40,9 @@ const UserViewPage = ({ user, followers, following, canEdit, cubes }) => (
       </CardBody>
       {canEdit && (
         <CardFooter>
-          <Button color="success" href="/user/account">Update</Button>
+          <Button color="success" href="/user/account">
+            Update
+          </Button>
         </CardFooter>
       )}
     </Card>
