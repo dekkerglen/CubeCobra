@@ -17,7 +17,7 @@ const UserViewPage = ({ user, followers, following, canEdit, cubes }) => (
           user.about
             .trim()
             .split(/[\r\n]+/)
-            .map((para) => <p>{para}</p>)
+            .map((para) => <p className="my-0">{para}</p>)
         ) : (
           <em>This user has not yet filled out their about section.</em>
         )}
