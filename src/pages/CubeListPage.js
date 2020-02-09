@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
+import { Collapse } from 'reactstrap';
+
 import Filter from 'utils/Filter';
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
@@ -94,7 +96,9 @@ const CubeListPageRaw = ({
                     <DisplayContext.Consumer>
                       {({ showMaybeboard }) => (
                         <MaybeboardContextProvider initialCards={maybe}>
-                          {showMaybeboard && <Maybeboard filter={filter} />}
+                          <Collapse isOpen={showMaybeboard}>
+                            <Maybeboard filter={filter} />
+                          </Collapse>
                         </MaybeboardContextProvider>
                       )}
                     </DisplayContext.Consumer>
