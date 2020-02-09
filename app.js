@@ -9,7 +9,9 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
+// eslint-disable-next-line import/no-unresolved
 const secrets = require('../cubecobrasecrets/secrets');
+// eslint-disable-next-line import/no-unresolved
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
