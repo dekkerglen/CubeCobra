@@ -21,7 +21,7 @@ const CardModalForm = ({ children, ...props }) => {
   const { maybeboard, updateMaybeboardCard } = useContext(MaybeboardContext);
   const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
-  const card = (maybe ? maybeboard[cardIndex] : cube[cardIndex]) || { colors: [], details: {}, tags: [] };
+  const card = (maybe ? maybeboard[cardIndex] : cube.cards[cardIndex]) || { colors: [], details: {}, tags: [] };
 
   const setTagInput = useCallback(
     (value) =>
@@ -135,7 +135,7 @@ const CardModalForm = ({ children, ...props }) => {
 
   const openCardModal = useCallback(
     (newCardIndex, newMaybe) => {
-      const card = newMaybe ? maybeboard[newCardIndex] : cube[newCardIndex];
+      const card = newMaybe ? maybeboard[newCardIndex] : cube.cards[newCardIndex];
       const colors = card.colors || card.details.colors;
       const typeLine = card.type_line || card.details.type;
       const tags = card.tags || [];

@@ -57,7 +57,7 @@ function addCardToCatalog(card, isExtra) {
     if (card.image_flip) {
       cardImages.image_flip = card.image_flip;
     }
-    if (carddb.notPromoOrDigitalCard(card)) {
+    if (carddb.reasonableCard(card)) {
       catalog.cardimages[normalizedName] = cardImages;
     }
   }
