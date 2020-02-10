@@ -425,12 +425,20 @@ router.get('/overview/:id', async (req, res) => {
       }
     }
 
-    const userQ = User.findById(cube.owner);
+    const userQ = User.findById(cube.owner).lean();
     const blogsQ = Blog.find({
       cube: cube._id,
-    }).sort('date');
+    })
+      .sort('date')
+      .lean();
+    const followersQ = User.find(
+      {
+        _id: { $in: cube.users_following },
+      },
+      '_id username image artist users_following',
+    ).lean();
     const priceDictQ = GetPrices([...pids]);
-    const [user, blogs, priceDict] = await Promise.all([userQ, blogsQ, priceDictQ]);
+    const [user, blogs, followers, priceDict] = await Promise.all([userQ, blogsQ, followersQ, priceDictQ]);
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -480,6 +488,8 @@ router.get('/overview/:id', async (req, res) => {
     delete cube.draft_formats;
     delete cube.maybe;
 
+    console.log(followers);
+
     const reactProps = {
       cube,
       cubeID,
@@ -489,6 +499,7 @@ router.get('/overview/:id', async (req, res) => {
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
       followed: user ? user.followed_cubes.includes(cube._id) : false,
+      followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
       pricePurchase: !cube.privatePrices ? totalPricePurchase : null,

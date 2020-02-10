@@ -27,7 +27,6 @@ src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeListNavbar.js
 src/components/CubeOverviewModal.js
-src/components/CubePreview.js
 src/components/CurveAnalysis.js
 src/components/CurveView.js
 src/components/CustomDraftFormatModal.js
