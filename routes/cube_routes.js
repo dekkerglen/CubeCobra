@@ -533,6 +533,8 @@ router.get('/blog/:id/:page', async (req, res) => {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(build_id_query(cubeID), Cube.LAYOUT_FIELDS).lean();
 
+    const page = parseInt(req.params.page, 10) || 0;
+
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -553,38 +555,16 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    const pages = [];
-    let blogPage = [];
-    if (blogs.length > 0) {
-      blogs.reverse();
-
-      let page = parseInt(req.params.page, 10);
-      if (Number.isNaN(page)) {
-        page = 0;
-      }
-      blogPage = blogs.slice(page * 10, (page + 1) * 10);
-      for (let i = 0; i < blogs.length / 10; i += 1) {
-        if (page === i) {
-          pages.push({
-            url: `/cube/blog/${cubeID}/${i}`,
-            content: i + 1,
-            active: true,
-          });
-        } else {
-          pages.push({
-            url: `/cube/blog/${cubeID}/${i}`,
-            content: i + 1,
-          });
-        }
-      }
-    }
+    blogs.reverse();
+    const blogPage = blogs.slice(page * 10, (page + 1) * 10);
 
     const reactProps = {
       cube,
       cubeID,
       canEdit: req.user ? req.user.id === cube.owner : false,
       posts: blogs.length > 0 ? blogPage : blogs,
-      pages: blogs.length > 0 ? pages : null,
+      pages: Math.ceil(blogs.length / 10),
+      activePage: page,
       userid: user._id,
     };
 
@@ -2326,19 +2306,23 @@ router.post('/submitdeck/:id', async (req, res) => {
 router.get('/decks/:cubeid/:page', async (req, res) => {
   try {
     const { cubeid } = req.params;
-    const { page } = req.params;
     const pagesize = 30;
 
-    const cube = await Cube.findOne(build_id_query(cubeid));
+    const page = parseInt(req.params.page, 10);
+
+    const cube = await Cube.findOne(build_id_query(cubeid), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const decksq = Deck.find({
-      cube: cube._id,
-    })
+    const decksq = Deck.find(
+      {
+        cube: cube._id,
+      },
+      '_id name owner username date',
+    )
       .sort({
         date: -1,
       })
@@ -2348,36 +2332,20 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
     const numDecksq = Deck.countDocuments({
       cube: cube._id,
     }).exec();
-    const ownerq = User.findById(cube.owner).exec();
 
-    const [decks, numDecks, owner] = await Promise.all([decksq, numDecksq, ownerq]);
+    const [decks, numDecks] = await Promise.all([decksq, numDecksq]);
 
-    const ownerName = owner ? owner.username : 'unknown';
-
-    const pages = [];
-    for (let i = 0; i < numDecks / pagesize; i++) {
-      if (page === i) {
-        pages.push({
-          url: `/cube/decks/${cubeid}/${i}`,
-          content: i + 1,
-          active: true,
-        });
-      } else {
-        pages.push({
-          url: `/cube/decks/${cubeid}/${i}`,
-          content: i + 1,
-        });
-      }
-    }
+    const reactProps = {
+      cube,
+      cubeID: cubeid,
+      decks,
+      pages: Math.ceil(numDecks / pagesize),
+      activePage: page,
+    };
 
     return res.render('cube/cube_decks', {
-      cube,
-      cube_id: cubeid,
-      owner: ownerName,
-      activeLink: 'playtest',
+      reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft Decks`,
-      decks,
-      pages,
       metadata: generateMeta(
         `Cube Cobra Decks: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,

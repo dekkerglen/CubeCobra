@@ -50,7 +50,6 @@ src/components/MulticoloredAnalysis.js
 src/components/Notification.js
 src/components/PagedList.js
 src/components/PagedTable.js
-src/components/Paginate.js
 src/components/SortCollapse.js
 src/components/SortContext.js
 src/components/SortableTable.js
