@@ -145,7 +145,7 @@ const Maybeboard = ({ filter, ...props }) => {
       if (!addInput.current) return;
       try {
         setLoading(true);
-        const card = await getCard(newValue || addInput.current.value);
+        const card = await getCard(cubeID, newValue || addInput.current.value);
         if (!card) {
           setLoading(false);
           return;

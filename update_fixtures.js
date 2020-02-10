@@ -74,8 +74,6 @@ const success = 0;
 
   await fs.writeFileSync(emptyPath, '{}\n');
 
-  await fs.writeFileSync();
-
   //fixExampleCube();
 
   console.log('Finished');

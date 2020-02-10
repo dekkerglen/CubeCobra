@@ -14,3 +14,13 @@ export const csrfFetch = (resource, init) => {
   };
   return fetch(resource, init);
 };
+
+export const postJson = (resource, body) => {
+  return csrfFetch(resource, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};

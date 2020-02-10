@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
+const { body } = require('express-validator');
 
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
@@ -16,18 +17,25 @@ const Deck = require('../models/deck');
 
 const router = express.Router();
 
-const { ensureAuth, csrfProtection } = require('./middleware');
+const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
-function checkUsernameValid(req) {
-  req.checkBody('username', 'Username is required').notEmpty();
-  req.checkBody('username', 'Username must be between 5 and 24 characters.').isLength({
+const usernameValid = [
+  body('username', 'Username is required').notEmpty(),
+  body('username', 'Username must be between 5 and 24 characters.').isLength({
     min: 5,
     max: 24,
-  });
-  req.checkBody('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i');
-  req.checkBody('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value));
-  return req;
+  }),
+  body('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
+  body('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value)),
+];
+
+function checkPasswordsMatch(value, { req }) {
+  if (value !== req.body.password2) {
+    throw new Error('Password confirmation does not match password');
+  }
+
+  return true;
 }
 
 function addMinutes(date, minutes) {
@@ -164,16 +172,9 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 });
 
 // Lost password submit
-router.post('/lostpassword', (req, res) => {
-  req.checkBody('email', 'Email is required').notEmpty();
-
-  // handle error checks
-  const errors = req.validationErrors();
-
-  if (errors) {
-    res.render('user/lostpassword', {
-      errors,
-    });
+router.post('/lostpassword', [body('email', 'Email is required').isEmail()], flashValidationErrors, (req, res) => {
+  if (!req.validated) {
+    res.render('user/lostpassword');
   } else {
     PasswordReset.deleteOne(
       {
@@ -239,79 +240,79 @@ router.get('/passwordreset/:id', (req, res) => {
   });
 });
 
-router.post('/lostpasswordreset', (req, res) => {
-  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
-    min: 8,
-    max: 24,
-  });
-  const errors = req.validationErrors();
-
-  if (errors) {
-    res.render('user/passwordreset', {
-      errors,
-    });
-  } else {
-    PasswordReset.findOne(
-      {
-        code: req.body.code,
-        email: req.body.email,
-      },
-      (err2, passwordreset) => {
-        if (!passwordreset) {
-          req.flash('danger', 'Incorrect email and recovery code combination.');
-          res.render('user/passwordreset');
-        } else {
-          User.findOne(
-            {
-              email: req.body.email,
-            },
-            (err3, user) => {
-              if (err3) {
-                console.error('Password reset find user error:', err3);
-                res.sendStatus(500);
-                return;
-              }
-              if (!user) {
-                req.flash('danger', 'No user with that email found! Are you sure you created an account?');
-                res.render('user/passwordreset');
-                return;
-              }
-              if (req.body.password2 !== req.body.password) {
-                req.flash('danger', "New passwords don't match");
-                res.render('user/passwordreset');
-                return;
-              }
-              bcrypt.genSalt(10, (err4, salt) => {
-                if (err4) {
-                  console.error('Password reset genSalt error:', err4);
+router.post(
+  '/lostpasswordreset',
+  [
+    body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
+    body('password', 'New passwords must match.').custom(checkPasswordsMatch),
+  ],
+  flashValidationErrors,
+  (req, res) => {
+    if (!req.validated) {
+      res.render('user/passwordreset');
+    } else {
+      PasswordReset.findOne(
+        {
+          code: req.body.code,
+          email: req.body.email,
+        },
+        (err2, passwordreset) => {
+          if (!passwordreset) {
+            req.flash('danger', 'Incorrect email and recovery code combination.');
+            res.render('user/passwordreset');
+          } else {
+            User.findOne(
+              {
+                email: req.body.email,
+              },
+              (err3, user) => {
+                if (err3) {
+                  console.error('Password reset find user error:', err3);
                   res.sendStatus(500);
                   return;
                 }
-                bcrypt.hash(req.body.password2, salt, (err5, hash) => {
-                  if (err5) {
-                    console.error('Password reset hashing error:', err5);
+                if (!user) {
+                  req.flash('danger', 'No user with that email found! Are you sure you created an account?');
+                  res.render('user/passwordreset');
+                  return;
+                }
+                if (req.body.password2 !== req.body.password) {
+                  req.flash('danger', "New passwords don't match");
+                  res.render('user/passwordreset');
+                  return;
+                }
+                bcrypt.genSalt(10, (err4, salt) => {
+                  if (err4) {
+                    console.error('Password reset genSalt error:', err4);
                     res.sendStatus(500);
-                  } else {
-                    user.password = hash;
-                    user.save((err6) => {
-                      if (err6) {
-                        console.error('Password reset user save error:', err6);
-                        return res.sendStatus(500);
-                      }
-
-                      req.flash('success', 'Password updated succesfully');
-                      return res.redirect('/user/login');
-                    });
+                    return;
                   }
+                  bcrypt.hash(req.body.password2, salt, (err5, hash) => {
+                    if (err5) {
+                      console.error('Password reset hashing error:', err5);
+                      res.sendStatus(500);
+                    } else {
+                      user.password = hash;
+                      user.save((err6) => {
+                        if (err6) {
+                          console.error('Password reset user save error:', err6);
+                          return res.sendStatus(500);
+                        }
+
+                        req.flash('success', 'Password updated succesfully');
+                        return res.redirect('/user/login');
+                      });
+                    }
+                  });
                 });
-              });
-            },
-          );
-        }
-      },
-    );
-  }
-});
+              },
+            );
+          }
+        },
+      );
+    }
+  },
+);
 
 // Register form
 router.get('/register', (req, res) => {
@@ -319,120 +320,121 @@ router.get('/register', (req, res) => {
 });
 
 // Register process
-router.post('/register', (req, res) => {
-  const email = req.body.email.toLowerCase();
-  const { username, password } = req.body;
+router.post(
+  '/register',
+  [
+    body('email', 'Email is required').notEmpty(),
+    body('email', 'Email is not valid').isEmail(),
+    body('email', 'Email must be between 5 and 100 characters.').isLength({
+      min: 5,
+      max: 100,
+    }),
+    body('password', 'Password is required').notEmpty(),
+    body('password', 'Password must be between 8 and 24 characters.').isLength({
+      min: 8,
+      max: 24,
+    }),
+    ...usernameValid,
+  ],
+  flashValidationErrors,
+  (req, res) => {
+    const email = req.body.email.toLowerCase();
+    const { username, password } = req.body;
 
-  const attempt = { email, username };
+    const attempt = { email, username };
 
-  req = checkUsernameValid(req);
-  req.checkBody('email', 'Email is required').notEmpty();
-  req.checkBody('email', 'Email is not valid').isEmail();
-  req.checkBody('password', 'Password is required').notEmpty();
-  req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
-
-  req.checkBody('email', 'Email must be between 5 and 100 characters.').isLength({
-    min: 5,
-    max: 100,
-  });
-  req.checkBody('password', 'Password must be between 8 and 24 characters.').isLength({
-    min: 8,
-    max: 24,
-  });
-  const errors = req.validationErrors();
-
-  if (errors) {
-    res.render('user/register', {
-      errors,
-      attempt,
-      user: null,
-    });
-  } else {
-    User.findOne(
-      {
-        username_lower: req.body.username.toLowerCase(),
-      },
-      (err, user) => {
-        if (user) {
-          req.flash('danger', 'Username already taken.');
-          res.render('user/register', {
-            attempt,
-          });
-        } else {
-          // check if user exists
-          User.findOne(
-            {
-              email: req.body.email.toLowerCase(),
-            },
-            (err2, user2) => {
-              if (user2) {
-                req.flash('danger', 'Email already associated with an existing account.');
-                res.render('user/register', {
-                  attempt,
-                });
-              } else {
-                const newUser = new User({
-                  email,
-                  username,
-                  username_lower: username.toLowerCase(),
-                  password,
-                  confirm: 'false',
-                });
-
-                bcrypt.genSalt(10, (err3, salt) => {
-                  bcrypt.hash(newUser.password, salt, (err4, hash) => {
-                    if (err4) {
-                      console.error(err4);
-                    } else {
-                      newUser.password = hash;
-                      newUser.confirmed = 'false';
-                      newUser.save((err5) => {
-                        if (err5) {
-                          console.error(err5);
-                        } else {
-                          // Use Smtp Protocol to send Email
-                          const smtpTransport = mailer.createTransport({
-                            name: 'CubeCobra.com',
-                            secure: true,
-                            service: 'Gmail',
-                            auth: {
-                              user: emailconfig.username,
-                              pass: emailconfig.password,
-                            },
-                          });
-
-                          const mail = {
-                            from: 'Cube Cobra Team <support@cubecobra.com>',
-                            to: email,
-                            subject: 'Confirm Account',
-                            html: `Hi ${newUser.username},</br> Thanks for joining! To confirm your email, click <a href="https://cubecobra.com/user/register/confirm/${newUser._id}">here</a>.`,
-                            text: `Hi ${newUser.username},\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/${newUser._id}`,
-                          };
-
-                          smtpTransport.sendMail(mail, (error) => {
-                            if (error) {
-                              console.error(error);
-                            }
-
-                            smtpTransport.close();
-                          });
-
-                          // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                          req.flash('success', 'Account succesfully created. You are now able to login.');
-                          res.redirect('/user/login');
-                        }
-                      });
-                    }
+    if (req.validated) {
+      res.render('user/passwordreset', {
+        attempt,
+        user: null,
+      });
+    } else {
+      User.findOne(
+        {
+          username_lower: req.body.username.toLowerCase(),
+        },
+        (err, user) => {
+          if (user) {
+            req.flash('danger', 'Username already taken.');
+            res.render('user/register', {
+              attempt,
+            });
+          } else {
+            // check if user exists
+            User.findOne(
+              {
+                email: req.body.email.toLowerCase(),
+              },
+              (err2, user2) => {
+                if (user2) {
+                  req.flash('danger', 'Email already associated with an existing account.');
+                  res.render('user/register', {
+                    attempt,
                   });
-                });
-              }
-            },
-          );
-        }
-      },
-    );
-  }
-});
+                } else {
+                  const newUser = new User({
+                    email,
+                    username,
+                    username_lower: username.toLowerCase(),
+                    password,
+                    confirm: 'false',
+                  });
+
+                  bcrypt.genSalt(10, (err3, salt) => {
+                    bcrypt.hash(newUser.password, salt, (err4, hash) => {
+                      if (err4) {
+                        console.error(err4);
+                      } else {
+                        newUser.password = hash;
+                        newUser.confirmed = 'false';
+                        newUser.save((err5) => {
+                          if (err5) {
+                            console.error(err5);
+                          } else {
+                            // Use Smtp Protocol to send Email
+                            const smtpTransport = mailer.createTransport({
+                              name: 'CubeCobra.com',
+                              secure: true,
+                              service: 'Gmail',
+                              auth: {
+                                user: emailconfig.username,
+                                pass: emailconfig.password,
+                              },
+                            });
+
+                            const mail = {
+                              from: 'Cube Cobra Team <support@cubecobra.com>',
+                              to: email,
+                              subject: 'Confirm Account',
+                              html: `Hi ${newUser.username},</br> Thanks for joining! To confirm your email, click <a href="https://cubecobra.com/user/register/confirm/${newUser._id}">here</a>.`,
+                              text: `Hi ${newUser.username},\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/${newUser._id}`,
+                            };
+
+                            smtpTransport.sendMail(mail, (error) => {
+                              if (error) {
+                                console.error(error);
+                              }
+
+                              smtpTransport.close();
+                            });
+
+                            // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                            req.flash('success', 'Account succesfully created. You are now able to login.');
+                            res.redirect('/user/login');
+                          }
+                        });
+                      }
+                    });
+                  });
+                }
+              },
+            );
+          }
+        },
+      );
+    }
+  },
+);
 
 // Register confirm
 router.get('/register/confirm/:id', (req, res) => {
@@ -665,129 +667,105 @@ router.get('/account/updateemail', ensureAuth, (req, res) => {
   });
 });
 
-router.post('/resetpassword', ensureAuth, (req, res) => {
-  req.checkBody('password2', 'Password must be between 8 and 24 characters.').isLength({
-    min: 8,
-    max: 24,
-  });
-
-  const errors = req.validationErrors();
-
-  if (errors) {
-    User.findById(req.user._id, (err, user) => {
-      const userLimited = {
-        username: user.username,
-        email: user.email,
-        about: user.about,
-      };
-      res.render('user/user_account', {
-        selected: 'changepw',
-        user: userLimited,
-        errors,
-        loginCallback: '/user/account/changepassword',
+router.post(
+  '/resetpassword',
+  ensureAuth,
+  [
+    body('password', 'Password must be between 8 and 24 characters.').isLength({
+      min: 8,
+      max: 24,
+    }),
+  ],
+  flashValidationErrors,
+  (req, res) => {
+    if (!req.validated) {
+      User.findById(req.user._id, (err, user) => {
+        const userLimited = {
+          username: user.username,
+          email: user.email,
+          about: user.about,
+        };
+        res.render('user/user_account', {
+          selected: 'changepw',
+          user: userLimited,
+          loginCallback: '/user/account/changepassword',
+        });
       });
-    });
-  } else {
-    User.findById(req.user._id, (err, user) => {
-      if (user) {
-        bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
-          if (!isMatch) {
-            req.flash('danger', 'Password is incorrect');
-            return res.redirect('/user/account/changepassword');
-          }
-          if (req.body.password2 !== req.body.password3) {
-            req.flash('danger', "New passwords don't match");
-            return res.redirect('/user/account/changepassword');
-          }
-          return bcrypt.genSalt(10, (err3, salt) => {
-            bcrypt.hash(req.body.password2, salt, (err4, hash) => {
-              if (err4) {
-                console.error(err4);
-              } else {
-                user.password = hash;
-                user.save((err5) => {
-                  if (err5) {
-                    console.error(err5);
-                    req.flash('danger', 'Error saving user.');
-                    return res.redirect('/user/account/changepassword');
-                  }
+    } else {
+      User.findById(req.user._id, (err, user) => {
+        if (user) {
+          bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
+            if (!isMatch) {
+              req.flash('danger', 'Password is incorrect');
+              return res.redirect('/user/account/changepassword');
+            }
+            if (req.body.password2 !== req.body.password3) {
+              req.flash('danger', "New passwords don't match");
+              return res.redirect('/user/account/changepassword');
+            }
+            return bcrypt.genSalt(10, (err3, salt) => {
+              bcrypt.hash(req.body.password2, salt, (err4, hash) => {
+                if (err4) {
+                  console.error(err4);
+                } else {
+                  user.password = hash;
+                  user.save((err5) => {
+                    if (err5) {
+                      console.error(err5);
+                      req.flash('danger', 'Error saving user.');
+                      return res.redirect('/user/account/changepassword');
+                    }
 
-                  req.flash('success', 'Password updated succesfully');
-                  return res.redirect('/user/account/changepassword');
-                });
-              }
+                    req.flash('success', 'Password updated succesfully');
+                    return res.redirect('/user/account/changepassword');
+                  });
+                }
+              });
             });
           });
-        });
-      }
-    });
-  }
-});
-
-router.post('/updateuserinfo', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    if (user) {
-      User.findOne(
-        {
-          username_lower: req.body.username.toLowerCase(),
-          _id: {
-            $ne: req.user._id,
-          },
-        },
-        (err2, duplicateUser) => {
-          if (user.username !== req.body.username) {
-            req = checkUsernameValid(req);
-            const errors = req.validationErrors();
-            if (errors) {
-              for (let i = 0; i < errors.length; i++) {
-                req.flash('danger', errors[i].msg);
-              }
-              return res.redirect('/user/account');
-            }
-            if (duplicateUser) {
-              req.flash('danger', 'Username already taken.');
-              return res.redirect('/user/account');
-            }
-            user.username = req.body.username;
-            user.username_lower = req.body.username.toLowerCase();
-            Cube.find(
-              {
-                owner: req.user._id,
-              },
-              (err3, cubes) => {
-                cubes.forEach((item) => {
-                  item.owner_name = req.body.username;
-                  Cube.updateOne(
-                    {
-                      _id: item._id,
-                    },
-                    item,
-                  );
-                });
-              },
-            );
-          }
-
-          user.about = req.body.body;
-
-          const query = {
-            _id: req.user._id,
-          };
-
-          return User.updateOne(query, user, (err3) => {
-            if (err3) {
-              console.error(err3);
-              req.flash('danger', 'Error saving user.');
-              return res.redirect('/user/account');
-            }
-
-            req.flash('success', 'Your profile has been updated.');
-            return res.redirect('/user/account');
-          });
-        },
-      );
+        }
+      });
     }
-  });
+  },
+);
+
+router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationErrors, async (req, res) => {
+  try {
+    const { user } = req;
+    if (!req.validated) {
+      return res.redirect('/user/account');
+    }
+
+    const duplicate = await User.findOne({
+      username_lower: req.body.username.toLowerCase(),
+      _id: {
+        $ne: req.user._id,
+      },
+    });
+    if (duplicate) {
+      req.flash('danger', 'Username already taken.');
+      return res.redirect('/user/account');
+    }
+
+    user.username = req.body.username;
+    user.username_lower = req.body.username.toLowerCase();
+    user.about = req.body.body;
+    const userQ = user.save();
+    const cubesQ = Cube.updateMany(
+      {
+        owner: req.user._id,
+      },
+      {
+        owner_name: req.body.username,
+      },
+    );
+    await Promise.all([userQ, cubesQ]);
+
+    req.flash('success', 'User information updated.');
+    return res.redirect('/user/account');
+  } catch (err) {
+    return util.handleRouteError(res, req, err, '/user/account');
+  }
 });
 
 router.post('/updateemail', ensureAuth, (req, res) => {

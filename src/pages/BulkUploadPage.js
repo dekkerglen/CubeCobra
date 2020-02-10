@@ -26,7 +26,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
       event.preventDefault();
       try {
         setLoading(true);
-        const card = await getCard(newValue || addValue);
+        const card = await getCard(cubeID, newValue || addValue);
         if (!card) {
           return;
         }
@@ -40,7 +40,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost }) => {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput],
+    [addChange, addValue, addInput, cubeID],
   );
 
   return (
