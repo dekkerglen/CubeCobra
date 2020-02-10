@@ -1,0 +1,8 @@
+export const formDataObject = (formElement) => {
+  const inputs = [...formElement.querySelectorAll('[name]')];
+  return Object.fromEntries(
+    inputs.map((input) => [input.name, input.type === 'checkbox' ? input.checked : input.value]),
+  );
+};
+
+export default { formDataObject };
