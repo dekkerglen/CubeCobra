@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
 const { body } = require('express-validator');
+const serialize = require('serialize-javascript');
 
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
