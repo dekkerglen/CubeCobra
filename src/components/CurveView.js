@@ -72,7 +72,6 @@ const CurveView = ({ cards, ...props }) => {
               key={color}
               color={color}
               group={group}
-              primary={color}
             />
           ))}
       </Col>

@@ -10,6 +10,10 @@ function ISODateToYYYYMMDD(dateString) {
   return new Date(dateString).toLocaleDateString(locale);
 }
 
+function removeAdjacentDuplicates(arr) {
+  return arr.filter((x, i) => i === 0 || x !== arr[i - 1]);
+}
+
 export function GetColorIdentity(colors) {
   if (colors.length == 0) {
     return 'Colorless';
@@ -112,7 +116,7 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
-export function getLabels(cube, sort) {
+function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
   }
@@ -165,9 +169,9 @@ export function getLabels(cube, sort) {
     return tags.sort();
   }
   if (sort == 'Date Added') {
-    const daysSet = new Set(cube.map((card) => card.addedTmsp.getDate()));
-    const days = [...daysSet].sort();
-    return days;
+    const dates = cube.map((card) => card.addedTmsp).sort();
+    const days = dates.map((date) => ISODateToYYYYMMDD(date));
+    return removeAdjacentDuplicates(days);
   }
   if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
@@ -495,7 +499,7 @@ export function cardGetLabels(card, sort) {
     } else if (types.includes('Plane')) {
       return ['Plane'];
     } else {
-      const labels = getLabels(null, sort);
+      const labels = getLabelsRaw(null, sort);
       return types.filter((t) => labels.includes(t));
     }
   } else if (sort == 'Tags') {
@@ -505,11 +509,7 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Finish') {
     return [card.finish];
   } else if (sort == 'Date Added') {
-    var day = ISODateToYYYYMMDD(card.addedTmsp);
-    if (day === undefined) {
-      day = 'unknown';
-    }
-    return [day];
+    return [ISODateToYYYYMMDD(card.addedTmsp)];
   } else if (sort == 'Guilds') {
     if (colorIdentity(card).length != 2) {
       return [];
@@ -672,15 +672,22 @@ export function sortIntoGroups(cards, sort) {
   return Object.fromEntries(sortGroupsOrdered(cards, sort));
 }
 
-function formatLabel(label) {
-  if (label instanceof Date) {
+export function formatLabel(label) {
+  if (label === undefined) {
+    return 'unknown';
+  } else if (label instanceof Date) {
     return ISODateToYYYYMMDD(label);
   }
   return label;
 }
 
+// Get labels in string form.
+export function getLabels(cube, sort) {
+  return getLabelsRaw(cube, sort).map(formatLabel);
+}
+
 function sortGroupsOrdered(cards, sort) {
-  const labels = getLabels(cards, sort);
+  const labels = getLabelsRaw(cards, sort);
   const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
