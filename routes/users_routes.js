@@ -8,7 +8,6 @@ const { body } = require('express-validator');
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
-const { serialize } = require('../serverjs/cubefn');
 
 // Bring in models
 const User = require('../models/user');
