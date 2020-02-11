@@ -402,6 +402,19 @@ function filterCard(card, filters, inCube) {
   );
 }
 
+export function filterUsesPrice(filters) {
+  if (Array.isArray(filters)) {
+    if (filters.length === 0) {
+      return true;
+    } else if (filters.length === 1) {
+      return filterUsesPrice(filters[0]);
+    } else {
+      return filters.some((f) => filterUsesPrice(f));
+    }
+  }
+  return !!filters.category.match(/price/);
+}
+
 export function filterCards(cards, filter, inCube) {
   return cards.filter((card) => filterCard(card, filter, inCube));
 }
@@ -692,14 +705,14 @@ function filterApply(card, filter, inCube) {
   }
 
   if (filter.category == 'price') {
-    var price = null;
-    if (card.details.price) {
-      price = card.details.price;
-    } else if (card.details.price_foil) {
-      price = card.details.price_foil;
-    }
-    if (price) {
-      price = parseFloat(price, 10);
+    if (card.details.price === null && card.details.price_foil === null) {
+      // couldn't find price info, so no price available. return false.
+      res = false;
+    } else if (!Number.isFinite(card.details.price) && !Number.isFinite(card.details.price_foil)) {
+      // never added, so can't filter on this basis - return true.
+      res = true;
+    } else {
+      price = card.details.price || card.details.price_foil;
       const arg = parseFloat(filter.arg, 10);
       switch (filter.operand) {
         case ':':
@@ -719,8 +732,6 @@ function filterApply(card, filter, inCube) {
           res = price >= arg;
           break;
       }
-    } else {
-      res = true;
     }
   }
   if (filter.category == 'pricefoil') {
@@ -857,5 +868,6 @@ export default {
   filterCard,
   filterCards,
   filterCardsDetails,
+  filterUsesPrice,
   filterToString,
 };
