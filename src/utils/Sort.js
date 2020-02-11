@@ -165,18 +165,9 @@ export function getLabels(cube, sort) {
     return tags.sort();
   }
   if (sort == 'Date Added') {
-    var days = [],
-      formattedDay;
-    cube.forEach(function(card, index) {
-      formattedDay = ISODateToYYYYMMDD(card.addedTmsp);
-      if (formattedDay === undefined) {
-        formattedDay = 'unknown';
-      }
-      if (!days.includes(formattedDay)) {
-        days.push(formattedDay);
-      }
-    });
-    return days.sort();
+    const daysSet = new Set(cube.map((card) => card.addedTmsp.getDate()));
+    const days = [...daysSet].sort();
+    return days;
   }
   if (sort == 'Status') {
     return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
@@ -681,6 +672,13 @@ export function sortIntoGroups(cards, sort) {
   return Object.fromEntries(sortGroupsOrdered(cards, sort));
 }
 
+function formatLabel(label) {
+  if (label instanceof Date) {
+    return ISODateToYYYYMMDD(label);
+  }
+  return label;
+}
+
 function sortGroupsOrdered(cards, sort) {
   const labels = getLabels(cards, sort);
   const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
@@ -696,7 +694,7 @@ function sortGroupsOrdered(cards, sort) {
       byLabel[label].push(card);
     }
   }
-  return labels.filter((label) => byLabel[label]).map((label) => [label, byLabel[label]]);
+  return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]]);
 }
 
 export function sortDeep(cards, ...sorts) {
