@@ -56,13 +56,14 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    console.log(`Could not find card from id: ${  id}`);
+    console.log(`Could not find card from id: ${id}`);
     details = getPlaceholderCard(id);
   }
 
   if (typeof fields === 'undefined') {
     return details;
-  } if (!Array.isArray(fields)) {
+  }
+  if (!Array.isArray(fields)) {
     fields = fields.split(' ');
   }
 
@@ -74,10 +75,9 @@ function getCardDetails(card) {
     const details = data._carddict[card.cardID];
     card.details = details;
     return details;
-  } 
-    console.log(`Could not find card details: ${  card.cardID}`);
-    return getPlaceholderCard(card.cardID);
-  
+  }
+  console.log(`Could not find card details: ${card.cardID}`);
+  return getPlaceholderCard(card.cardID);
 }
 
 function loadJSONFile(filename, attribute) {
@@ -90,7 +90,7 @@ function loadJSONFile(filename, attribute) {
           console.log('Error parsing json from ', filename, ' : ', e);
           err = e;
         }
-        console.log(`${attribute  } loaded`);
+        console.log(`${attribute} loaded`);
       }
       if (err) {
         reject(err);
@@ -103,7 +103,7 @@ function loadJSONFile(filename, attribute) {
 
 function registerFileWatcher(filename, attribute) {
   fs.watchFile(filename, () => {
-    console.log(`File Changed: ${  filename}`);
+    console.log(`File Changed: ${filename}`);
     loadJSONFile(filename, attribute);
   });
 }

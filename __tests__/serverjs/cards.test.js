@@ -101,7 +101,7 @@ const _RankleMasterofFixtures = {
 
 test('cardFromId returns a well-formed card object', () => {
   expect.assertions(1);
-  const {_id} = _RankleMasterofFixtures;
+  const { _id } = _RankleMasterofFixtures;
   const expected = _RankleMasterofFixtures;
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
@@ -112,7 +112,7 @@ test('cardFromId returns a well-formed card object', () => {
 
 test('cardFromId returns only selected fields', () => {
   expect.assertions(1);
-  const {_id} = _RankleMasterofFixtures;
+  const { _id } = _RankleMasterofFixtures;
   const expected = {
     _id: '93c2c11d-dfc3-4ba9-8c0f-a98114090396',
     name: 'Rankle, Master of Pranks',
@@ -139,7 +139,7 @@ test('cardFromId returns a placeholder card object when given a nonexistent ID',
 
 test('getCardDetails returns a well-formed card object', () => {
   expect.assertions(1);
-  const {_id} = _RankleMasterofFixtures;
+  const { _id } = _RankleMasterofFixtures;
   const expected = _RankleMasterofFixtures;
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
@@ -228,7 +228,7 @@ test('getMostReasonable correctly gets most recent printing', async () => {
 test('loadJSONFile loads a JSON file into the correct attribute', () => {
   expect.assertions(1);
   const attribute = 'testAttribute';
-  return carddb.loadJSONFile(`${fixturesPath  }/names.json`, attribute).then(() => {
+  return carddb.loadJSONFile(`${fixturesPath}/names.json`, attribute).then(() => {
     expect(carddb[attribute].length).toBe(fixtureCardNameCount);
   });
 });
