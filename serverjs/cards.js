@@ -113,7 +113,7 @@ function initializeCardDb(dataRoot, skipWatchers) {
     dataRoot = 'private';
   }
   const promises = [];
-  for (const [filename, attribute] of Object.values(fileToAttribute)) {
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
     const filepath = `${dataRoot}/${filename}`;
     promises.push(loadJSONFile(filepath, attribute));
     if (skipWatchers !== true) {
