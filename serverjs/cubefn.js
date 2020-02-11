@@ -285,7 +285,7 @@ function CSVtoCards(cards, carddb) {
         );
       });
       const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
-      const nonPromo = potentialIds.find(carddb.notPromoOrDigitalId);
+      const nonPromo = potentialIds.find(carddb.reasonableId);
       const first = potentialIds[0];
       card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
       if (maybeboard === 'true') {

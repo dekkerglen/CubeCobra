@@ -283,8 +283,15 @@ class FilterCollapse extends Component {
     this.updateFilters(defaultFilter);
   }
 
-  componentDidUpdate() {
-    Query.set('f', this.state.filterInput);
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.filter !== this.props.filter) {
+      const { filterInput } = this.state;
+      if (filterInput === '') {
+        Query.del('f');
+      } else {
+        Query.set('f', filterInput);
+      }
+    }
   }
 
   toggleAdvanced() {
@@ -330,7 +337,6 @@ class FilterCollapse extends Component {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
-      Query.del('f');
       return;
     }
     const tokens = [];
@@ -371,7 +377,6 @@ class FilterCollapse extends Component {
   handleReset(event) {
     this.setState({ filterInput: '' });
     this.props.setFilter([], '');
-    Query.del('f');
   }
 
   render() {

@@ -120,106 +120,65 @@ class CubeOverviewModal extends Component {
   }
 
   handleChange(e) {
-    switch (e.target.name) {
-      case 'name':
-        var value = e.target.value;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            name: value,
-          },
-        }));
-        break;
-      case 'isListed':
-        var value = e.target.checked;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            isListed: value,
-          },
-        }));
-        break;
-      case 'privatePrices':
-        var value = e.target.checked;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            privatePrices: value,
-          },
-        }));
-        break;
-      case 'urlAlias':
-        var value = e.target.value;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            urlAlias: value,
-          },
-        }));
-        break;
-      case 'overrideCategory':
-        var value = e.target.checked;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            overrideCategory: value,
-          },
-        }));
-        break;
-      case 'category':
-        var value = e.target.value;
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            categoryOverride: value,
-          },
-        }));
-        break;
-      case 'category_prefix':
-        var value = e.target.checked;
-        var id = e.target.value;
-        var prefixes = this.state.cube.categoryPrefixes;
+    const target = e.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
 
-        if (prefixes.includes(id) && !value) {
-          prefixes = prefixes.filter(function(e) {
-            return e !== id;
-          });
-        } else if (!prefixes.includes(id) && value) {
-          prefixes.push(id);
-        }
-        this.setState((prevState) => ({
-          cube: {
-            ...prevState.cube,
-            categoryPrefixes: prefixes,
-          },
-        }));
-        break;
+    if (e.target.name === 'category_prefix') {
+      var id = target.value;
+      var prefixes = this.state.cube.categoryPrefixes;
+
+      if (prefixes.includes(id) && !value) {
+        prefixes = prefixes.filter(function(e) {
+          return e !== id;
+        });
+      } else if (!prefixes.includes(id) && value) {
+        prefixes.push(id);
+      }
+      this.setState((prevState) => ({
+        cube: {
+          ...prevState.cube,
+          categoryPrefixes: prefixes,
+        },
+      }));
+    } else {
+      this.setState((prevState) => ({
+        cube: {
+          ...prevState.cube,
+          [target.name]: value,
+        },
+      }));
     }
   }
 
   async handleApply(event) {
     event.preventDefault();
 
-    var cube = this.state.cube;
+    const cube = { ...this.state.cube };
     cube.tags = this.state.tags.map((tag) => tag.text);
     cube.descriptionhtml = cube.raw_desc;
-    await csrfFetch('/cube/api/editoverview', {
+    const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
       headers: {
         'Content-Type': 'application/json',
       },
-    })
-      .then((response) => {
-        if (response.status == 200) {
-          this.props.onCubeUpdate(this.state.cube);
-          this.close();
-        } else {
-          this.error(response.statusText);
-          this.close();
+    });
+    const json = await response.json();
+    if (response.ok) {
+      this.props.onCubeUpdate({
+        ...this.state.cube,
+        descriptionhtml: json.descriptionhtml,
+      });
+    } else {
+      if (json.message) {
+        this.error(json.message);
+      } else if (json.errors) {
+        for (const error of json.errors) {
+          this.error(error);
         }
-      })
-      .catch((err) => this.error(err));
+      }
+    }
+    this.close();
   }
 
   render() {
@@ -255,32 +214,15 @@ class CubeOverviewModal extends Component {
                 <div className="form-check">
                   <input
                     className="form-check-input"
-                    name="isListed"
-                    type="checkbox"
-                    checked={cube.isListed}
-                    onChange={this.handleChange}
-                  />
-                  <label className="form-check-label">Is Listed</label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    name="privatePrices"
-                    type="checkbox"
-                    checked={cube.privatePrices}
-                    onChange={this.handleChange}
-                  />
-                  <label className="form-check-label">Hide Total Price</label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
+                    id="overrideCategory"
                     name="overrideCategory"
                     type="checkbox"
                     checked={cube.overrideCategory}
                     onChange={this.handleChange}
                   />
-                  <label className="form-check-label">Override Cube Category</label>
+                  <label className="form-check-label" for="overrideCategory">
+                    Override Cube Category
+                  </label>
                 </div>
                 <br />
 
@@ -310,7 +252,7 @@ class CubeOverviewModal extends Component {
                           <Label check>
                             <Input
                               type="radio"
-                              name="category"
+                              name="categoryOverride"
                               value={label}
                               disabled={cube.overrideCategory ? false : true}
                               checked={cube.categoryOverride == label}
@@ -329,13 +271,16 @@ class CubeOverviewModal extends Component {
                           <input
                             className="form-check-input"
                             name="category_prefix"
+                            id={`categoryPrefix${label}`}
                             value={label}
                             type="checkbox"
                             checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
                             onChange={this.handleChange}
                             disabled={cube.overrideCategory ? false : true}
                           />
-                          <label className="form-check-label">{label}</label>
+                          <label className="form-check-label" for={`categoryPrefix${label}`}>
+                            {label}
+                          </label>
                         </div>
                       ),
                     )}

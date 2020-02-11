@@ -12,10 +12,10 @@ import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
 import DisplayContext from './DisplayContext';
 
-export const getCard = async (name, setAlerts) => {
+export const getCard = async (cubeID, name, setAlerts) => {
   if (name && name.length > 0) {
     const normalized = encodeName(name);
-    const response = await fetch(`/cube/api/getcard/${normalized}`);
+    const response = await fetch(`/cube/api/getcardforcube/${cubeID}/${normalized}`);
     if (!response.ok) {
       const message = `Couldn't get card: ${response.status}.`;
       if (setAlerts) {
@@ -40,7 +40,7 @@ export const getCard = async (name, setAlerts) => {
   }
 };
 
-const EditCollapse = ({ cubeID, ...props }) => {
+const EditCollapse = ({ ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
 
@@ -55,7 +55,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
     addChange,
     setChanges,
   } = useContext(ChangelistContext);
-  const { cube } = useContext(CubeContext);
+  const { cube, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
 
   const changelistForm = useRef();
@@ -72,7 +72,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
     async (event, newValue) => {
       event.preventDefault();
       try {
-        const card = await getCard(newValue || addValue, setAlerts);
+        const card = await getCard(cubeID, newValue || addValue, setAlerts);
         if (!card) {
           return;
         }
@@ -84,7 +84,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
         console.error(e);
       }
     },
-    [addChange, addValue, addInputRef],
+    [addChange, addValue, addInputRef, cubeID],
   );
 
   const handleRemoveReplace = useCallback(
@@ -92,7 +92,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = cube.find(
+        const cardOut = cube.cards.find(
           (card) =>
             card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
             !changes.some(
@@ -109,7 +109,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
           return;
         }
         if (replace) {
-          const cardIn = await getCard(addValue, setAlerts);
+          const cardIn = await getCard(cubeID, addValue, setAlerts);
           if (!cardIn) {
             return;
           }
@@ -126,7 +126,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
         console.error(e);
       }
     },
-    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, changes],
+    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, cubeID, changes],
   );
 
   const handleDiscardAll = useCallback((event) => {

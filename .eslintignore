@@ -27,7 +27,6 @@ src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeListNavbar.js
 src/components/CubeOverviewModal.js
-src/components/CubePreview.js
 src/components/CurveAnalysis.js
 src/components/CurveView.js
 src/components/CustomDraftFormatModal.js
@@ -50,7 +49,6 @@ src/components/MulticoloredAnalysis.js
 src/components/Notification.js
 src/components/PagedList.js
 src/components/PagedTable.js
-src/components/Paginate.js
 src/components/SortCollapse.js
 src/components/SortContext.js
 src/components/SortableTable.js

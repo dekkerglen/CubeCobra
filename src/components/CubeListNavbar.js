@@ -397,7 +397,7 @@ const CubeListNavbar = ({
           </Nav>
         </Collapse>
       </Navbar>
-      {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
+      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse
         defaultFilterText={defaultFilterText}

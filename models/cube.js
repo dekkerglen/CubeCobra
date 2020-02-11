@@ -105,10 +105,21 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
+  defaultStatus: {
+    type: String,
+    default: 'Owned',
+  },
+  defaultPrinting: {
+    type: String,
+    // Values: first, recent
+    default: 'recent',
+  },
 });
 
 const Cube = mongoose.model('Cube', cubeSchema);
 
-Cube.LAYOUT_FIELDS = 'owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+Cube.LAYOUT_FIELDS = '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+Cube.PREVIEW_FIELDS =
+  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name';
 
 module.exports = Cube;
