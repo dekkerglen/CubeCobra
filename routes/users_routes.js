@@ -3,11 +3,14 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
+const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
+const serialize = require('serialize-javascript');
 
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
+const carddb = require('../serverjs/cards.js');
 
 // Bring in models
 const User = require('../models/user');
@@ -500,34 +503,48 @@ router.get('/logout', (req, res) => {
 
 router.get('/view/:id', async (req, res) => {
   try {
-    let user;
+    let user = null;
     try {
-      user = await User.findById(req.params.id);
-    } catch (err) {
-      user = await User.findOne({
-        username_lower: req.params.id.toLowerCase(),
-      });
+      user = await User.findById(req.params.id, '_id username about users_following image_name image artist').lean();
+      // eslint-disable-next-line no-empty
+    } catch (err) {}
+
+    if (!user) {
+      user = await User.findOne(
+        {
+          username_lower: req.params.id.toLowerCase(),
+        },
+        '_id username about users_following image_name image artist',
+      ).lean();
       if (!user) {
         req.flash('danger', 'User not found');
         return res.status(404).render('misc/404', {});
       }
     }
 
-    const cubes = await Cube.find({
+    const cubesQ = Cube.find({
       owner: user._id,
-    });
+    }).lean();
+    const followersQ = User.find(
+      { _id: { $in: user.users_following } },
+      '_id username image_name image artist users_following',
+    ).lean();
+
+    const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
+
+    const following = req.user ? user.users_following.includes(req.user._id) : false;
+    delete user.users_following;
 
     return res.render('user/user_view', {
-      user_limited: {
-        username: user.username,
-        email: user.email,
-        about: user.about,
-        id: user._id,
-      },
-      cubes,
+      reactProps: serialize({
+        user,
+        canEdit: req.user && req.user._id.equals(user._id),
+        cubes,
+        followers,
+        following,
+      }),
+      title: user.username,
       loginCallback: `/user/view/${req.params.id}`,
-      followers: user.users_following.length,
-      following: req.user ? user.users_following.includes(req.user._id) : false,
     });
   } catch (err) {
     console.error(err);
@@ -563,8 +580,8 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     const page = parseInt(req.params.page, 10);
 
-    const userq = User.findById(userid, '_id username users_following').lean();
-    const decksq = Deck.find(
+    const userQ = User.findById(userid, '_id username users_following').lean();
+    const decksQ = Deck.find(
       {
         owner: userid,
       },
@@ -576,18 +593,22 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .skip(pagesize * page)
       .limit(pagesize)
       .lean();
-    const numDecksq = Deck.countDocuments({
+    const numDecksQ = Deck.countDocuments({
       owner: userid,
     });
 
-    const [user, decks, numDecks] = await Promise.all([userq, decksq, numDecksq]);
+    const [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
 
     if (!user) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const followers = user.users_following.length;
+    const followers = await User.find(
+      { _id: { $in: user.users_following } },
+      '_id username image_name image artist users_following',
+    );
+
     delete user.users_following;
 
     const reactProps = {
@@ -602,6 +623,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     return res.render('user/user_decks', {
       reactProps: serialize(reactProps),
+      title: user.username,
       loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {
@@ -612,52 +634,22 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
 // account page
 router.get('/account', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'info',
+  const userLimited = {
+    _id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+    about: req.user.about,
+    image: req.user.image,
+    image_name: req.user.image_name,
+    artist: req.user.artist,
+  };
+  res.render('user/user_account', {
+    reactProps: serialize({
       user: userLimited,
-      loginCallback: '/user/account',
-    });
-  });
-});
-
-// account page, password reset
-router.get('/account/changepassword', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'changepw',
-      user: userLimited,
-      loginCallback: '/user/account/changepassword',
-    });
-  });
-});
-
-// account page, password reset
-router.get('/account/updateemail', ensureAuth, (req, res) => {
-  User.findById(req.user._id, (err, user) => {
-    const userLimited = {
-      username: user.username,
-      email: user.email,
-      about: user.about,
-      id: user._id,
-    };
-    res.render('user/user_account', {
-      selected: 'changeemail',
-      user: userLimited,
-      loginCallback: '/user/updateemail',
-    });
+      defaultNav: req.query.nav || 'profile',
+    }),
+    title: 'Account',
+    loginCallback: '/user/account',
   });
 });
 
@@ -682,7 +674,7 @@ router.post(
         res.render('user/user_account', {
           selected: 'changepw',
           user: userLimited,
-          loginCallback: '/user/account/changepassword',
+          loginCallback: '/user/account?nav=password',
         });
       });
     } else {
@@ -691,11 +683,11 @@ router.post(
           bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
             if (!isMatch) {
               req.flash('danger', 'Password is incorrect');
-              return res.redirect('/user/account/changepassword');
+              return res.redirect('/user/account?nav=password');
             }
             if (req.body.password2 !== req.body.password3) {
               req.flash('danger', "New passwords don't match");
-              return res.redirect('/user/account/changepassword');
+              return res.redirect('/user/account?nav=password');
             }
             return bcrypt.genSalt(10, (err3, salt) => {
               bcrypt.hash(req.body.password2, salt, (err4, hash) => {
@@ -707,11 +699,11 @@ router.post(
                     if (err5) {
                       console.error(err5);
                       req.flash('danger', 'Error saving user.');
-                      return res.redirect('/user/account/changepassword');
+                      return res.redirect('/user/account?nav=password');
                     }
 
                     req.flash('success', 'Password updated succesfully');
-                    return res.redirect('/user/account/changepassword');
+                    return res.redirect('/user/account?nav=password');
                   });
                 }
               });
@@ -744,6 +736,14 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     user.username = req.body.username;
     user.username_lower = req.body.username.toLowerCase();
     user.about = req.body.body;
+    if (req.body.image) {
+      const imageData = carddb.imagedict[req.body.image];
+      if (imageData) {
+        user.image = imageData.uri;
+        user.artist = imageData.artist;
+        user.image_name = req.body.image.replace(/ \[[^\]]*\]$/, '');
+      }
+    }
     const userQ = user.save();
     const cubesQ = Cube.updateMany(
       {
@@ -770,14 +770,14 @@ router.post('/updateemail', ensureAuth, (req, res) => {
     (err, user) => {
       if (user) {
         req.flash('danger', 'Email already associated with an existing account.');
-        res.redirect('/user/account/updateemail');
+        res.redirect('/user/account?nav=email');
       } else if (req.user) {
         req.user.email = req.body.email;
         req.user.save((err2) => {
           if (err2) {
             console.error(err2);
             req.flash('danger', 'Error saving user.');
-            res.redirect('/user/account/updateemail');
+            res.redirect('/user/account');
           } else {
             req.flash('success', 'Your profile has been updated.');
             res.redirect('/user/account');
@@ -785,7 +785,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
         });
       } else {
         req.flash('danger', 'Not logged in.');
-        res.redirect('/user/account/updateemail');
+        res.redirect('/user/account?nav=email');
       }
     },
   );
@@ -813,6 +813,7 @@ router.get('/social', ensureAuth, async (req, res) => {
 
     res.render('user/user_social', {
       reactProps: serialize(reactProps),
+      title: 'Social',
       loginCallback: '/user/social',
     });
   } catch (err) {
