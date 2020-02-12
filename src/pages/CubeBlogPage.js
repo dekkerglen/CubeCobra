@@ -115,7 +115,7 @@ DeleteBlogModal.propTypes = {
   }).isRequired,
 };
 
-const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn }) => {
+const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid, loggedIn }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
   const [editHtml, setEditHtml] = useState('');
@@ -164,7 +164,7 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, posts, userid, loggedIn })
         </Collapse>
       </Navbar>
       <DynamicFlash />
-      {pages && pages.length > 1 && <Paginate pages={pages} />}
+      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cubeID}/${i}`} />}
       {posts.map((post) => (
         <BlogPost
           key={post._id}
@@ -193,7 +193,8 @@ CubeBlogPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
-  pages: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  pages: PropTypes.number.isRequired,
+  activePage: PropTypes.number.isRequired,
   posts: PropTypes.arrayOf(
     PropTypes.shape({
       html: PropTypes.string.isRequired,

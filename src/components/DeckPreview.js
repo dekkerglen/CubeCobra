@@ -33,7 +33,7 @@ DeckPreview.propTypes = {
     name: PropTypes.string.isRequired,
     owner: PropTypes.string,
     username: PropTypes.string,
-    date: PropTypes.number.isRequired,
+    date: PropTypes.instanceOf(Date).isRequired,
   }).isRequired,
 };
 

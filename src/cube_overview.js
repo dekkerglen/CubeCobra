@@ -10,6 +10,8 @@ import {
   CardFooter,
   CardText,
   Col,
+  Modal,
+  ModalHeader,
   Nav,
   Navbar,
   NavbarToggler,
@@ -18,6 +20,7 @@ import {
   Row,
   UncontrolledAlert,
   UncontrolledCollapse,
+  ModalBody,
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
@@ -25,11 +28,42 @@ import { csrfFetch } from 'utils/CSRF';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import CubeOverviewModal from 'components/CubeOverviewModal';
+import CubeSettingsModal from 'components/CubeSettingsModal';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
+import UserPreview from 'components/UserPreview';
+import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
+
+const FollowersModal = ({ followers, isOpen, toggle }) => (
+  <Modal size="lg" isOpen={isOpen} toggle={toggle}>
+    <ModalHeader toggle={toggle}>Followers</ModalHeader>
+    <ModalBody>
+      <Row className="justify-content-center">
+        {followers.map((user) => (
+          <Col key={user._id} xs={6} sm={4} lg={3}>
+            <UserPreview user={user} />
+          </Col>
+        ))}
+      </Row>
+    </ModalBody>
+  </Modal>
+);
+
+FollowersModal.propTypes = {
+  followers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
+const FollowersModalLink = withModal('a', FollowersModal);
+const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 
 class CubeOverview extends Component {
   constructor(props) {
@@ -37,6 +71,7 @@ class CubeOverview extends Component {
 
     this.follow = this.follow.bind(this);
     this.unfollow = this.unfollow.bind(this);
+    this.addAlert = this.addAlert.bind(this);
     this.error = this.error.bind(this);
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
     this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
@@ -64,16 +99,14 @@ class CubeOverview extends Component {
     }));
   }
 
-  error(message) {
+  addAlert(color, message) {
     this.setState(({ alerts }) => ({
-      alerts: [
-        ...alerts,
-        {
-          color: 'danger',
-          message,
-        },
-      ],
+      alerts: [...alerts, { color, message }],
     }));
+  }
+
+  error(message) {
+    this.addAlert('danger', message);
   }
 
   follow() {
@@ -113,8 +146,11 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn } = this.props;
+    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn, followers } = this.props;
     const { cube, deleteConfirm, alerts, followed } = this.state;
+    const { addAlert, onCubeUpdate } = this;
+
+    const numFollowers = followers.length;
 
     return (
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="overview">
@@ -132,6 +168,11 @@ class CubeOverview extends Component {
             />
             <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
               <Nav navbar>
+                <NavItem>
+                  <CubeSettingsModalLink cube={cube} modalProps={{ addAlert, onCubeUpdate }}>
+                    Edit Settings
+                  </CubeSettingsModalLink>
+                </NavItem>
                 <NavItem>
                   <NavLink href="#" data-toggle="modal" data-target="#deleteCubeModal">
                     Delete Cube
@@ -154,8 +195,10 @@ class CubeOverview extends Component {
             <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2 text-muted">
-                  {(cube.users_following ? cube.users_following : []).length} followers
+                <h6 className="card-subtitle mb-2">
+                  <FollowersModalLink href="#" modalProps={{ followers }}>
+                    {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
+                  </FollowersModalLink>
                 </h6>
               </CardHeader>
               <div className="position-relative">
@@ -181,16 +224,20 @@ class CubeOverview extends Component {
                 </h6>
                 {!cube.privatePrices && (
                   <Row noGutters className="mb-1">
-                    <TextBadge name="Owned" className="mr-2">
-                      <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
-                        ${Math.round(priceOwned).toLocaleString()}
-                      </Tooltip>
-                    </TextBadge>
-                    <TextBadge name="Buy">
-                      <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
-                        ${Math.round(pricePurchase).toLocaleString()}
-                      </Tooltip>
-                    </TextBadge>
+                    {Number.isFinite(priceOwned) && (
+                      <TextBadge name="Owned" className="mr-2">
+                        <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                          ${Math.round(priceOwned).toLocaleString()}
+                        </Tooltip>
+                      </TextBadge>
+                    )}
+                    {Number.isFinite(pricePurchase) && (
+                      <TextBadge name="Buy">
+                        <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                          ${Math.round(pricePurchase).toLocaleString()}
+                        </Tooltip>
+                      </TextBadge>
+                    )}
                   </Row>
                 )}
                 {admin && (
@@ -296,8 +343,8 @@ CubeOverview.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
-  priceOwned: PropTypes.number.isRequired,
-  pricePurchase: PropTypes.number.isRequired,
+  priceOwned: PropTypes.number,
+  pricePurchase: PropTypes.number,
   owner: PropTypes.string.isRequired,
   admin: PropTypes.bool,
   cube: PropTypes.shape({
@@ -311,12 +358,20 @@ CubeOverview.propTypes = {
   userID: PropTypes.string.isRequired,
   loggedIn: PropTypes.bool,
   followed: PropTypes.bool.isRequired,
+  followers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ),
 };
 
 CubeOverview.defaultProps = {
+  priceOwned: null,
+  pricePurchase: null,
   admin: false,
   canEdit: false,
   loggedIn: false,
+  followers: [],
 };
 
 const wrapper = document.getElementById('react-root');

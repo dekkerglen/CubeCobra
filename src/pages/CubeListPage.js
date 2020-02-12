@@ -55,14 +55,14 @@ const CubeListPageRaw = ({
     }
   }, [cubeView]);
 
-  const defaultTagSet = new Set([].concat(...cube.map((card) => card.tags)));
+  const defaultTagSet = new Set([].concat(...cube.cards.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
   }));
 
   const filteredCards = useMemo(() => {
-    return filter.length > 0 ? cube.filter((card) => Filter.filterCard(card, filter)) : cube;
+    return filter.length > 0 ? cube.cards.filter((card) => Filter.filterCard(card, filter)) : cube.cards;
   }, [filter, cube]);
 
   return (
