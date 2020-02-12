@@ -1,5 +1,20 @@
 webpack.*.js
 
+models/blog.js
+models/card.js
+models/cardrating.js
+models/deck.js
+models/draft.js
+models/passwordreset.js
+models/user.js
+public/js/autocard.js
+public/js/index.js
+public/js/toolbar.js
+serverjs/cards.js
+serverjs/cubefn.js
+serverjs/prices.js
+serverjs/updatecards.js
+serverjs/util.js
 src/components/AgeText.js
 src/components/AspectRatioBox.js
 src/components/AutocardListItem.js
