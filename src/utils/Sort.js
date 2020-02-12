@@ -1,4 +1,4 @@
-import { alphaCompare } from './Util';
+import { alphaCompare, fromEntries } from './Util';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -678,7 +678,7 @@ export function cardIsLabel(card, label, sort) {
 }
 
 export function sortIntoGroups(cards, sort) {
-  return Object.fromEntries(sortGroupsOrdered(cards, sort));
+  return fromEntries(sortGroupsOrdered(cards, sort));
 }
 
 function sortGroupsOrdered(cards, sort) {
