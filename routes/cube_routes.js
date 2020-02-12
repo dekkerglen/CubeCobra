@@ -38,7 +38,6 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 
-carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
 const { addPrices, GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');

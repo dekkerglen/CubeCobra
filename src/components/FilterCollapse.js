@@ -280,7 +280,7 @@ class FilterCollapse extends Component {
   componentDidMount() {
     const defaultFilter = Query.get('f', '');
     this.setState({ filterInput: defaultFilter });
-    this.updateFilters(defaultFilter);
+    // this.updateFilters(defaultFilter);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -404,6 +404,7 @@ class FilterCollapse extends Component {
                     id="filterInput"
                     name="filterInput"
                     placeholder={'name:"Ambush Viper"'}
+                    disabled={loading}
                     valid={filterInput.length > 0 && valid}
                     invalid={filterInput.length > 0 && !valid}
                     value={this.state.filterInput}
