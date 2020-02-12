@@ -10,8 +10,6 @@ import {
   CardFooter,
   CardText,
   Col,
-  Modal,
-  ModalHeader,
   Nav,
   Navbar,
   NavbarToggler,
@@ -20,7 +18,6 @@ import {
   Row,
   UncontrolledAlert,
   UncontrolledCollapse,
-  ModalBody,
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
@@ -31,36 +28,11 @@ import CubeOverviewModal from 'components/CubeOverviewModal';
 import CubeSettingsModal from 'components/CubeSettingsModal';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import FollowersModal from 'components/FollowersModal';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import UserPreview from 'components/UserPreview';
 import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
-
-const FollowersModal = ({ followers, isOpen, toggle }) => (
-  <Modal size="lg" isOpen={isOpen} toggle={toggle}>
-    <ModalHeader toggle={toggle}>Followers</ModalHeader>
-    <ModalBody>
-      <Row className="justify-content-center">
-        {followers.map((user) => (
-          <Col key={user._id} xs={6} sm={4} lg={3}>
-            <UserPreview user={user} />
-          </Col>
-        ))}
-      </Row>
-    </ModalBody>
-  </Modal>
-);
-
-FollowersModal.propTypes = {
-  followers: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
