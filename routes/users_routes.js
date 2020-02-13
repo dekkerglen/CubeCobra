@@ -523,6 +523,9 @@ router.get('/view/:id', async (req, res) => {
 
     const cubesQ = Cube.find({
       owner: user._id,
+      ...(req.user && req.user._id.equals(user._id) ? {} : {
+        isListed: true,
+      })
     }).lean();
     const followersQ = User.find(
       { _id: { $in: user.users_following } },
