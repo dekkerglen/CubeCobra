@@ -5,7 +5,6 @@ const passport = require('passport');
 const mailer = require('nodemailer');
 const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
-const serialize = require('serialize-javascript');
 
 // eslint-disable-next-line import/no-unresolved
 const emailconfig = require('../../cubecobrasecrets/email');
@@ -346,8 +345,8 @@ router.post(
 
     const attempt = { email, username };
 
-    if (req.validated) {
-      res.render('user/passwordreset', {
+    if (!req.validated) {
+      res.render('user/register', {
         attempt,
         user: null,
       });
