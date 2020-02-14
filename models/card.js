@@ -21,8 +21,4 @@ let cardSchema = mongoose.Schema({
   cubes: [String], //this is a list of cube ids
 });
 
-cardSchema.index({
-  total: -1,
-});
-
 let Card = (module.exports = mongoose.model('Card', cardSchema));
