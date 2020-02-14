@@ -32,22 +32,61 @@ function sortLimit(arr, k, keyF) {
 }
 
 async function matchingCards(filter) {
-  const cards = carddb.allCards().filter((card) => !card.digital);
+  let cards = carddb.allCards().filter((card) => !card.digital);
+  cards = Filter.filterCardsDetails(cards, filter);
   if (filter.length > 0) {
-    // In the first pass, cards don't have prices, and so match all price filters.
-    // In the seoncd pass, we add prices.
-    if (Filter.filterUsesPrice(filter)) {
-      const firstPass = Filter.filterCardsDetails(cards, filter);
-      const withPrices = await addPrices(firstPass);
+    // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
+    // In the seoncd pass, we add that information.
+    if (Filter.filterUses(filter, 'elo') || Filter.filterUses(filter, 'picks')) {
+      const names = cards.map(({ name }) => name);
+      const ratings = await CardRating.find({
+        name: {
+          $in: names,
+        },
+      }).lean();
+      const ratingDict = new Map(ratings.map((r) => [r.name, r]));
+      cards = cards.map((card) => {
+        const rating = ratingDict.get(card.name);
+        return {
+          ...card,
+          elo: rating ? rating.elo : null,
+          picks: rating ? rating.picks : null,
+        };
+      });
+      cards = Filter.filterCardsDetails(cards, filter);
+    }
+    if (Filter.filterUses(filter, 'price') || Filter.filterUses(filter, 'price_foil')) {
+      const withPrices = await addPrices(cards);
       // null is a magic value that causes price filtering to always fail.
-      const withNullPrices = withPrices.map(({ price, price_foil, ...card }) => ({
+      cards = withPrices.map(({ price, price_foil, ...card }) => ({
         ...card,
         price: price || null,
         price_foil: price_foil || null, // eslint-disable-line camelcase
       }));
-      return Filter.filterCardsDetails(withNullPrices, filter);
+      cards = Filter.filterCardsDetails(cards, filter);
     }
-    return Filter.filterCardsDetails(cards, filter);
+    if (Filter.filterUses(filter, 'cubes')) {
+      console.log('cubes', cards.length);
+      const names = cards.map(({ name }) => name.toLowerCase());
+      const cardDatas = await Card.find(
+        {
+          cardName: {
+            $in: names.map((name) => name.toLowerCase()),
+          },
+        },
+        'cardName cubes',
+      ).lean();
+
+      const cardDataDict = new Map(cardDatas.map((c) => [c.cardName, c]));
+      cards = cards.map((card) => {
+        const cardData = cardDataDict.get(card.name.toLowerCase());
+        return {
+          ...card,
+          cubes: cardData ? cardData.cubes.length : null,
+        };
+      });
+      cards = Filter.filterCardsDetails(cards, filter);
+    }
   }
   return cards;
 }
@@ -68,6 +107,9 @@ function makeFilter(filterText) {
     filter: valid ? [Filter.parseTokens(tokens)] : [],
   };
 }
+
+/* This is a Bayesian adjustment to the rating like IMDB does. */
+const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
 
 async function topCards(filter) {
   const cards = await matchingCards(filter);
@@ -106,15 +148,13 @@ async function topCards(filter) {
   const fullData = versions.map((v) => {
     const rating = ratingDict.get(v.name);
     const card = cardDataDict.get(v.name.toLowerCase());
-    /* This is a Bayesian adjustment to the rating like IMDB does. */
-    const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
     const qualifies = rating && typeof rating.picks !== 'undefined' && rating.picks > MIN_PICKS;
     return [
       v.name,
       v.image_normal,
       v.image_flip || null,
       qualifies && rating.value ? adjust(rating) : null,
-      rating && typeof rating.picks !== 'undefined' ? rating.picks : null,
+      rating && typeof rating.picks !== 'undefined' ? rating.picks : 0,
       qualifies && rating.elo ? rating.elo : null,
       card ? card.cubes.length : null,
     ];

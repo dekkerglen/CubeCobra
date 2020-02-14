@@ -40,6 +40,8 @@ const categoryMap = new Map([
   ['artist', 'artist'],
   ['is', 'is'],
   ['elo', 'elo'],
+  ['picks', 'picks'],
+  ['cubes', 'cubes'],
 ]);
 
 const operators = ['>=', '<=', '<', '>', ':', '!=', '='];
@@ -390,6 +392,9 @@ function filterCard(card, filters, inCube) {
     }
     return filterCard(card, filters[0], inCube);
   }
+  if (filters.length === 0) {
+    return true;
+  }
   if (filters.type == 'or') {
     return (
       (filters[0].type == 'token' ? filterApply(card, filters[0], inCube) : filterCard(card, filters[0], inCube)) ||
@@ -402,17 +407,17 @@ function filterCard(card, filters, inCube) {
   );
 }
 
-export function filterUsesPrice(filters) {
+export function filterUses(filters, name) {
   if (Array.isArray(filters)) {
     if (filters.length === 0) {
       return true;
     } else if (filters.length === 1) {
-      return filterUsesPrice(filters[0]);
+      return filterUses(filters[0], name);
     } else {
-      return filters.some((f) => filterUsesPrice(f));
+      return filters.some((f) => filterUses(f, name));
     }
   }
-  return !!filters.category.match(/price/);
+  return filters.category === name;
 }
 
 export function filterCards(cards, filter, inCube) {
@@ -454,6 +459,42 @@ function arrayContainsOtherArray(arr1, arr2) {
   return arr2.every((v) => arr1.includes(v));
 }
 
+function testNumeric(filter, value, arg) {
+  switch (filter.operand) {
+    case ':':
+    case '=':
+      return arg == value;
+    case '<':
+      return value < arg;
+    case '>':
+      return value > arg;
+    case '<=':
+      return value <= arg;
+    case '>=':
+      return value >= arg;
+    default:
+      return false;
+  }
+}
+
+function testArray(filter, value) {
+  switch (filter.operand) {
+    case ':':
+    case '=':
+      return areArraysEqualSets(value, filter.arg);
+    case '<':
+      return arrayContainsOtherArray(filter.arg, value) && value.length < filter.arg.length;
+    case '>':
+      return arrayContainsOtherArray(value, filter.arg) && value.length > filter.arg.length;
+    case '<=':
+      return arrayContainsOtherArray(filter.arg, value);
+    case '>=':
+      return arrayContainsOtherArray(value, filter.arg);
+    default:
+      return false;
+  }
+}
+
 function filterApply(card, filter, inCube) {
   let res = null;
   if (filter.operand === '!=') {
@@ -465,12 +506,13 @@ function filterApply(card, filter, inCube) {
   if (typeof inCube === 'undefined') {
     inCube = true;
   }
-  let cmc = inCube ? card.cmc : card.details.cmc;
+
+  let cmc = inCube ? card.cmc || card.details.cmc : card.details.cmc;
   // NOTE: color naming is confusing:
   // colors = colors in mana cost
   // color_identity = (Commander style) colors anywhere on card
   // card.colors is an override for card.details.color_identity
-  const color_identity = inCube ? card.colors : card.details.color_identity;
+  const color_identity = inCube ? card.colors || card.details.color_identity : card.details.color_identity;
 
   if (filter.category == 'name') {
     res = card.details.name_lower.indexOf(normalizeName(filter.arg)) > -1;
@@ -481,106 +523,33 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'color' && card.details.colors !== undefined) {
     const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-            res = !card.details.colors.length;
-          } else {
-            res = areArraysEqualSets(card.details.colors, filter.arg);
-          }
-          break;
-        case '<':
-          res =
-            arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length < filter.arg.length;
-          break;
-        case '>':
-          res =
-            arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length > filter.arg.length;
-          break;
-        case '<=':
-          res =
-            arrayContainsOtherArray(filter.arg, card.details.colors) && card.details.colors.length <= filter.arg.length;
-          break;
-        case '>=':
-          res =
-            arrayContainsOtherArray(card.details.colors, filter.arg) && card.details.colors.length >= filter.arg.length;
-          break;
+      if ([':', '='].includes(filter.operand) && filter.arg.length == 1 && filter.arg[0] == 'C') {
+        res = card.details.colors.length === 0;
+      } else {
+        res = testArray(filter, card.details.colors);
       }
     } else {
       // check for how many colors in identity
       const num_colors = card.details.colors.length;
       const filter_num = parseInt(filter.arg[0], 10);
-
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = num_colors == filter_num;
-          break;
-        case '<':
-          res = num_colors < filter_num;
-          break;
-        case '>':
-          res = num_colors > filter_num;
-          break;
-        case '<=':
-          res = num_colors <= filter_num;
-          break;
-        case '>=':
-          res = num_colors >= filter_num;
-          break;
-      }
+      res = testNumeric(filter, num_colors, filter_num);
     }
   }
   if (filter.category == 'identity' && color_identity !== undefined) {
     const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
       // handle args that are colors: e.g ci:wu, ci>wu
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          if (filter.arg.length == 1 && filter.arg[0] == 'C') {
-            res = color_identity.length === 0;
-          } else {
-            res = areArraysEqualSets(color_identity, filter.arg);
-          }
-          break;
-        case '<':
-          res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length < filter.arg.length;
-          break;
-        case '>':
-          res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length > filter.arg.length;
-          break;
-        case '<=':
-          res = arrayContainsOtherArray(filter.arg, color_identity) && color_identity.length <= filter.arg.length;
-          break;
-        case '>=':
-          res = arrayContainsOtherArray(color_identity, filter.arg) && color_identity.length >= filter.arg.length;
-          break;
+      const value = card.colors || card.details.color_identity;
+      if ([':', '='].includes(filter.operand) && filter.arg.length == 1 && filter.arg[0] == 'C') {
+        res = value.length === 0;
+      } else {
+        res = testArray(filter, color_identity);
       }
     } else {
       // check for how many colors in identity
       const num_colors = color_identity.length;
       const filter_num = parseInt(filter.arg[0], 10);
-
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = num_colors == filter_num;
-          break;
-        case '<':
-          res = num_colors < filter_num;
-          break;
-        case '>':
-          res = num_colors > filter_num;
-          break;
-        case '<=':
-          res = num_colors <= filter_num;
-          break;
-        case '>=':
-          res = num_colors >= filter_num;
-          break;
-      }
+      res = testNumeric(filter, num_colors, filter_num);
     }
   }
   if (filter.category == 'mana' && card.details.parsed_cost) {
@@ -589,24 +558,7 @@ function filterApply(card, filter, inCube) {
   if (filter.category == 'cmc' && cmc !== undefined) {
     const arg = parseInt(filter.arg, 10);
     cmc = parseInt(cmc, 10);
-    switch (filter.operand) {
-      case ':':
-      case '=':
-        res = arg == cmc;
-        break;
-      case '<':
-        res = cmc < arg;
-        break;
-      case '>':
-        res = cmc > arg;
-        break;
-      case '<=':
-        res = cmc <= arg;
-        break;
-      case '>=':
-        res = cmc >= arg;
-        break;
-    }
+    res = testNumeric(filter, cmc, arg);
   }
   if (filter.category == 'type' && card.details.type) {
     if (card.details.type.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
@@ -622,72 +574,21 @@ function filterApply(card, filter, inCube) {
     if (card.details.power) {
       const cardPower = parseInt(card.details.power, 10);
       const arg = parseInt(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = arg == cardPower;
-          break;
-        case '<':
-          res = cardPower < arg;
-          break;
-        case '>':
-          res = cardPower > arg;
-          break;
-        case '<=':
-          res = cardPower <= arg;
-          break;
-        case '>=':
-          res = cardPower >= arg;
-          break;
-      }
+      res = testNumeric(filter, cardPower, arg);
     }
   }
   if (filter.category == 'toughness') {
     if (card.details.toughness) {
       const cardToughness = parseInt(card.details.toughness, 10);
       const arg = parseInt(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = arg == cardToughness;
-          break;
-        case '<':
-          res = cardToughness < arg;
-          break;
-        case '>':
-          res = cardToughness > arg;
-          break;
-        case '<=':
-          res = cardToughness <= arg;
-          break;
-        case '>=':
-          res = cardToughness >= arg;
-          break;
-      }
+      res = testNumeric(filter, cardToughness, arg);
     }
   }
   if (filter.category == 'loyalty') {
     if (card.details.loyalty) {
       const cardLoyalty = parseInt(card.details.loyalty, 10);
       const arg = parseInt(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = cardLoyalty == arg;
-          break;
-        case '<':
-          res = cardLoyalty < arg;
-          break;
-        case '>':
-          res = cardLoyalty > arg;
-          break;
-        case '<=':
-          res = cardLoyalty <= arg;
-          break;
-        case '>=':
-          res = cardLoyalty >= arg;
-          break;
-      }
+      res = testNumeric(filter, cardLoyalty, arg);
     }
   }
   if (filter.category == 'tag') {
@@ -712,101 +613,58 @@ function filterApply(card, filter, inCube) {
       // never added, so can't filter on this basis - return true.
       res = true;
     } else {
-      price = card.details.price || card.details.price_foil;
+      const price = card.details.price || card.details.price_foil;
       const arg = parseFloat(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = arg == price;
-          break;
-        case '<':
-          res = price < arg;
-          break;
-        case '>':
-          res = price > arg;
-          break;
-        case '<=':
-          res = price <= arg;
-          break;
-        case '>=':
-          res = price >= arg;
-          break;
-      }
+      res = testNumeric(filter, price, arg);
     }
   }
   if (filter.category == 'pricefoil') {
-    var price = card.details.price_foil || null;
-    if (price) {
-      price = parseFloat(price, 10);
+    if (card.details.price_foil === null) {
+      res = false;
+    } else if (!Number.isFinite(card.details.price_foil)) {
       const arg = parseFloat(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = arg == price;
-          break;
-        case '<':
-          res = price < arg;
-          break;
-        case '>':
-          res = price > arg;
-          break;
-        case '<=':
-          res = price <= arg;
-          break;
-        case '>=':
-          res = price >= arg;
-          break;
-      }
+      res = testNumeric(filter, card.details.price_foil, arg);
     } else {
       res = true;
     }
   }
   if (filter.category == 'rarity') {
     const { rarity } = card.details;
-    switch (filter.operand) {
-      case ':':
-      case '=':
-        res = rarity == filter.arg;
-        break;
-      case '<':
-        res = rarity_order.indexOf(rarity) < rarity_order.indexOf(filter.arg);
-        break;
-      case '>':
-        res = rarity_order.indexOf(rarity) > rarity_order.indexOf(filter.arg);
-        break;
-      case '<=':
-        res = rarity_order.indexOf(rarity) <= rarity_order.indexOf(filter.arg);
-        break;
-      case '>=':
-        res = rarity_order.indexOf(rarity) >= rarity_order.indexOf(filter.arg);
-        break;
-    }
+    const rarityNum = rarity_order.indexOf(rarity);
+    const argNum = rarity_order.indexOf(filter.arg);
+    res = testNumeric(filter, rarityNum, argNum);
   }
   if (filter.category == 'artist') {
     res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
   if (filter.category == 'elo') {
-    if (card.details.elo) {
-      const elo = parseInt(card.details.elo, 10);
+    if (card.details.elo === undefined) {
+      res = true;
+    } else if (card.details.elo === null) {
+      res = false;
+    } else if (Number.isFinite(card.details.elo)) {
       const arg = parseInt(filter.arg, 10);
-      switch (filter.operand) {
-        case ':':
-        case '=':
-          res = arg == elo;
-          break;
-        case '<':
-          res = elo < arg;
-          break;
-        case '>':
-          res = elo > arg;
-          break;
-        case '<=':
-          res = elo <= arg;
-          break;
-        case '>=':
-          res = elo >= arg;
-          break;
-      }
+      res = testNumeric(filter, card.details.elo, arg);
+    }
+  }
+  if (filter.category == 'picks') {
+    if (card.details.picks === undefined) {
+      res = true;
+    } else if (card.details.picks === null) {
+      res = false;
+    } else if (Number.isFinite(card.details.picks)) {
+      const arg = parseInt(filter.arg, 10);
+      res = testNumeric(filter, card.details.picks, arg);
+    }
+  }
+  if (filter.category == 'cubes') {
+    if (card.details.cubes === undefined) {
+      res = true;
+    } else if (card.details.cubes === null) {
+      res = false;
+    } else if (Number.isFinite(card.details.cubes)) {
+      const arg = parseInt(filter.arg, 10);
+      res = testNumeric(filter, card.details.cubes, arg);
     }
   }
   if (filter.category == 'is') {
@@ -868,6 +726,6 @@ export default {
   filterCard,
   filterCards,
   filterCardsDetails,
-  filterUsesPrice,
+  filterUses,
   filterToString,
 };
