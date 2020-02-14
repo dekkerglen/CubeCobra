@@ -1,5 +1,6 @@
 const express = require('express');
 const quickselect = require('quickselect');
+const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
@@ -50,23 +51,6 @@ async function matchingCards(filter) {
     return Filter.filterCardsDetails(cards, filter);
   }
   return cards;
-}
-
-function makeFilter(filterText) {
-  if (!filterText || filterText.trim() === '') {
-    return {
-      err: false,
-      filter: [],
-    };
-  }
-
-  const tokens = [];
-  const valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
-
-  return {
-    err: !valid,
-    filter: valid ? [Filter.parseTokens(tokens)] : [],
-  };
 }
 
 async function topCards(filter) {
@@ -139,7 +123,7 @@ function shuffle(a) {
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
+    const { err, filter } = Filter.makeFilter(req.query.f);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -163,16 +147,21 @@ router.get('/api/topcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
+    const { err, filter } = Filter.makeFilter(req.query.f);
 
     if (err) {
       req.flash('Invalid filter.');
     }
 
     const { data, names } = await topCards(filter, res);
+
+    const reactProps = {
+      defaultNumResults: names.length,
+      defaultData: data,
+      defaultFilterText: req.query.f,
+    };
     res.render('tool/topcards', {
-      numResults: names.length,
-      data,
+      reactProps: serialize(reactProps),
       title: 'Top Cards',
     });
   } catch (err) {
