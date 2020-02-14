@@ -2749,7 +2749,6 @@ router.get(
     const cardIds = carddb.allIds(carddb.cardFromId(req.params.id));
     // eslint-disable-next-line prefer-object-spread
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
-    // eslint-disable-next-line camelcase
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
     const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
     const [priceDict, eloDict] = await [GetPrices(tcg), getElo(names, true)];
