@@ -495,7 +495,7 @@ router.get('/overview/:id', async (req, res) => {
       canEdit: user && user._id.equals(cube.owner),
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
-      followed: (user && user.followed_cubes) ? user.followed_cubes.includes(cube._id) : false,
+      followed: user && user.followed_cubes ? user.followed_cubes.includes(cube._id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
