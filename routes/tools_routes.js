@@ -81,20 +81,21 @@ async function topCards(filter) {
     .sort('-elo')
     .limit(MAX_RESULTS)
     .lean();
-  const cardDataQ = Card.aggregate().match(
-    filter.length === 0
-      ? {}
-      : {
-          cardName: {
-            $in: names.map((name) => name.toLowerCase()),
+  const cardDataQ = Card.aggregate()
+    .match(
+      filter.length === 0
+        ? {}
+        : {
+            cardName: {
+              $in: names.map((name) => name.toLowerCase()),
+            },
           },
-        },
-    'cardName cubes',
-  )
+      'cardName cubes',
+    )
     .addFields({
       cubesLength: {
-        $size: "$cubes"
-      }
+        $size: '$cubes',
+      },
     })
     .sort({ cubesLength: -1 })
     .limit(4 * MAX_RESULTS);
