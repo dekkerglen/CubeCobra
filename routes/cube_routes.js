@@ -2777,8 +2777,8 @@ router.get(
 
 router.post(
   '/api/getversions',
-  body([], 'Body must be an array').isArray(),
-  body('*', 'Each ID must be 36 characters').isLength({ min: 36, max: 36 }),
+  body([], 'Body must be an array.').isArray(),
+  body('*', 'Each ID must be a valid UUID.').isUUID(4),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
