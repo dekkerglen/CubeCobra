@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { cardsAreEquivalent } from 'utils/Card';
+import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { arrayMove } from 'utils/Util';
 
@@ -14,8 +14,8 @@ const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [cardIndex, setCardIndex] = useState(null);
   const [maybe, setMaybe] = useState(false);
-  const [versions, setVersions] = useState([]);
-  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [versionDict, setVersionDict] = useState({});
+  const [versionsLoading, setVersionsLoading] = useState(true);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
@@ -23,6 +23,23 @@ const CardModalForm = ({ children, ...props }) => {
   const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
   const card = (maybe ? maybeboard[cardIndex] : cube.cards[cardIndex]) || { colors: [], details: {}, tags: [] };
+
+  useEffect(() => {
+    const wrapper = async () => {
+      const allIds = [...cube.cards, ...cube.maybe].map(({ cardID }) => cardID);
+      const response = await csrfFetch(`/cube/api/getversions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(allIds),
+      });
+      const json = await response.json();
+      setVersionDict(json.dict || {});
+      setVersionsLoading(false);
+    };
+    wrapper();
+  }, [cube]);
 
   const setTagInput = useCallback(
     (value) =>
@@ -142,8 +159,6 @@ const CardModalForm = ({ children, ...props }) => {
       const tags = card.tags || [];
       setCardIndex(newCardIndex);
       setMaybe(!!newMaybe);
-      setVersions([card.details]);
-      setVersionsLoading(true);
       setFormValues({
         version: card.cardID,
         status: card.status,
@@ -160,18 +175,25 @@ const CardModalForm = ({ children, ...props }) => {
         colorG: colors.includes('G'),
       });
       setIsOpen(true);
-      const response = await fetch(`/cube/api/getversions/${card.cardID}`);
-      const json = await response.json();
-      setVersions(json.cards);
-      setVersionsLoading(false);
     },
     [cube, maybeboard],
   );
 
   const closeCardModal = useCallback(() => setIsOpen(false));
 
+  const versions = card.details.name ? versionDict[normalizeName(card.details.name)] || [card.details] : [];
   const details = versions.find((version) => version._id === formValues.version) || card.details;
-  const renderCard = { ...card, details };
+  const renderCard = {
+    ...card,
+    details: {
+      ...card.details,
+      image_normal: details.image_normal,
+      image_flip: details.image_flip,
+      price: details.price,
+      price_foil: details.price_foil,
+      elo: details.elo,
+    },
+  };
   return (
     <CardModalContext.Provider value={openCardModal}>
       {children}

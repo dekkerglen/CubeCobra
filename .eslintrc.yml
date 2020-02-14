@@ -21,7 +21,7 @@ rules:
   no-param-reassign: off
   no-underscore-dangle:
     - error
-    - allow: ['_id']
+    - allow: ['_id', 'tcgplayer_id']
   camelcase:
     - error
     - properties: never

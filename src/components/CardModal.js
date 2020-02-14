@@ -88,13 +88,10 @@ const CardModal = ({
                   loading={versionsLoading}
                   spinnerSize="sm"
                 >
-                  {versions.map((version) => {
-                    const name = version.full_name
-                      .toUpperCase()
-                      .substring(version.full_name.indexOf('[') + 1, version.full_name.indexOf(']'));
+                  {versions.map(({ _id, version }) => {
                     return (
-                      <option key={version._id} value={version._id}>
-                        {name}
+                      <option key={_id} value={_id}>
+                        {version}
                       </option>
                     );
                   })}

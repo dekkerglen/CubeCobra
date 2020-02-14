@@ -5,7 +5,7 @@ import { Spinner } from 'reactstrap';
 import { fromEntries } from '../utils/Util';
 
 const withLoading = (Tag, handlers) => {
-  const LoadingWrapped = ({ loading, spinnerSize, ...props }) => {
+  const LoadingWrapped = ({ loading, spinnerSize, opacity, ...props }) => {
     const [stateLoading, setLoading] = useState(false);
 
     const wrappedHandlers = useMemo(
@@ -27,8 +27,8 @@ const withLoading = (Tag, handlers) => {
 
     return (
       <div className="d-flex justify-content-center align-items-center flex-grow-1">
-        {renderLoading && <Spinner size={spinnerSize} className="position-absolute" />}
-        <Tag {...props} {...wrappedHandlers} disabled={renderLoading} />
+        {renderLoading && <Spinner size={spinnerSize} className="position-absolute" style={{ opacity: 0.7 }} />}
+        <Tag disabled={renderLoading} {...props} {...wrappedHandlers} />
       </div>
     );
   };
