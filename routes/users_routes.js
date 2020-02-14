@@ -345,8 +345,8 @@ router.post(
 
     const attempt = { email, username };
 
-    if (req.validated) {
-      res.render('user/passwordreset', {
+    if (!req.validated) {
+      res.render('user/register', {
         attempt,
         user: null,
       });
