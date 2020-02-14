@@ -85,7 +85,7 @@ async function GetPrices(card_ids) {
       chunks.map((chunk) =>
         fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {
           headers: {
-            Authorization: ' Bearer ' + access_token,
+            Authorization: 'Bearer ' + access_token,
           },
         })
           .then(checkStatus)
@@ -94,7 +94,7 @@ async function GetPrices(card_ids) {
       ),
     );
     for (response of responses) {
-      if (!response.success) {
+      if (!response || !response.success) {
         continue;
       }
       for (item of response.results) {

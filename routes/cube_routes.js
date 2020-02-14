@@ -38,7 +38,6 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
 
-carddb.initializeCardDb();
 const util = require('../serverjs/util.js');
 const { addPrices, GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
@@ -488,14 +487,12 @@ router.get('/overview/:id', async (req, res) => {
     delete cube.draft_formats;
     delete cube.maybe;
 
-    console.log(followers);
-
     const reactProps = {
       cube,
       cubeID,
       userID: user ? user._id : null,
       loggedIn: !!user,
-      canEdit: user && user.id === cube.owner,
+      canEdit: user && user._id.equals(cube.owner),
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
       followed: user ? user.followed_cubes.includes(cube._id) : false,
@@ -1914,7 +1911,7 @@ router.post(
     }
 
     // cube tags
-    cube.tags = updatedCube.tags.map((tag) => tag.text);
+    cube.tags = updatedCube.tags;
 
     await cube.save();
     return res.status(200).send({

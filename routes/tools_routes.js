@@ -36,9 +36,18 @@ async function matchingCards(filter) {
   if (filter.length > 0) {
     // In the first pass, cards don't have prices, and so match all price filters.
     // In the seoncd pass, we add prices.
-    const firstPass = Filter.filterCardsDetails(cards, filter);
-    const withPrices = await addPrices(firstPass);
-    return Filter.filterCardsDetails(withPrices, filter);
+    if (Filter.filterUsesPrice(filter)) {
+      const firstPass = Filter.filterCardsDetails(cards, filter);
+      const withPrices = await addPrices(firstPass);
+      // null is a magic value that causes price filtering to always fail.
+      const withNullPrices = withPrices.map(({ price, price_foil, ...card }) => ({
+        ...card,
+        price: price || null,
+        price_foil: price_foil || null, // eslint-disable-line camelcase
+      }));
+      return Filter.filterCardsDetails(withNullPrices, filter);
+    }
+    return Filter.filterCardsDetails(cards, filter);
   }
   return cards;
 }

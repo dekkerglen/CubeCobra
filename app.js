@@ -1,17 +1,22 @@
 const express = require('express');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const expressValidator = require('express-validator');
 const session = require('express-session');
 const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
-var schedule = require('node-schedule');
+const schedule = require('node-schedule');
+// eslint-disable-next-line import/no-unresolved
 const secrets = require('../cubecobrasecrets/secrets');
+// eslint-disable-next-line import/no-unresolved
 const mongosecrets = require('../cubecobrasecrets/mongodb');
-var updatedb = require('./serverjs/updatecards.js');
+const updatedb = require('./serverjs/updatecards.js');
+const carddb = require('./serverjs/cards.js');
+
+carddb.initializeCardDb();
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
@@ -121,7 +126,7 @@ app.use((req, res) => {
   res.status(404).render('misc/404', {});
 });
 
-schedule.scheduleJob('0 0 * * *', function() {
+schedule.scheduleJob('0 0 * * *', () => {
   console.log('Starting midnight cardbase update...');
   updatedb.updateCardbase();
 });
