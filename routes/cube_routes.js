@@ -2684,7 +2684,6 @@ router.get(
   '/api/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting');
-    console.log(cube.defaultPrinting);
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card && !card.error) {
       return res.status(200).send({
