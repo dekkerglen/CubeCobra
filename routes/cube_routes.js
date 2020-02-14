@@ -2482,9 +2482,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const deckOwner = await User.findById(deck.owner);
+    const deckOwner = await User.findById(deck.owner).lean();
 
-    if (!req.user || deckOwner._id !== req.user.id) {
+    if (!req.user || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -2500,7 +2500,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
