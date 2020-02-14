@@ -90,7 +90,6 @@ async function topCards(filter) {
               $in: names.map((name) => name.toLowerCase()),
             },
           },
-      'cardName cubes',
     )
     .addFields({
       cubesLength: {
@@ -98,7 +97,8 @@ async function topCards(filter) {
       },
     })
     .sort({ cubesLength: -1 })
-    .limit(4 * MAX_RESULTS);
+    .limit(4 * MAX_RESULTS)
+    .project('cardName cubesLength');
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 
@@ -117,7 +117,7 @@ async function topCards(filter) {
       qualifies && rating.value ? adjust(rating) : null,
       rating && rating.picks !== undefined ? rating.picks : null,
       qualifies && rating.elo ? rating.elo : null,
-      card ? card.cubes.length : null,
+      card ? card.cubesLength : null,
     ];
   });
   /* Sort by number of picks for limit. */
