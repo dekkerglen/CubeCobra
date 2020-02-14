@@ -177,11 +177,11 @@ const convertedExampleAdventureCardAdventure = {
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   artist: 'Gabor Szikszai',
   border_color: 'black',
-  cmc: 0, // Adventures do not have cmc
+  cmc: 0, // Adventures don't have cmc
   collector_number: '155',
-  color_identity: ['G'],
+  color_identity: [], // Adventure's don't have color identitty
   colorcategory: 'g',
-  colors: [], // Adventures do not have colors, they use the main cards colors
+  colors: ['G'], // Adventures do not have colors, they use the main cards colors
   digital: false,
   full_art: false,
   full_name: 'Welcome Home [eld-155]',
@@ -189,12 +189,13 @@ const convertedExampleAdventureCardAdventure = {
   image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   isToken: false,
   language: 'en',
-  legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+  // ADventure's don't have legalities
+  legalities: { Legacy: false, Modern: false, Standard: false, Pauper: false, Pioneer: false },
   name: 'Welcome Home',
   name_lower: 'welcome home',
   oracle_text:
     'Create three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
-  parsed_cost: ['g', 'g', '5'],
+  parsed_cost: [], // Adventure's don't have parsed cost
   promo: false,
   rarity: 'uncommon',
   scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
@@ -203,15 +204,15 @@ const convertedExampleAdventureCardAdventure = {
   type: 'Sorcery — Adventure',
 };
 
-const convertFnToAttribute = {
-  convertName: 'name',
-  convertId: '_id',
-  convertLegalities: 'legalities',
-  convertType: 'type',
-  convertColors: 'colors',
-  convertParsedCost: 'parsed_cost',
-  convertCmc: 'cmc',
-};
+const fnToAttributeTable = [
+  ['convertName', 'name'],
+  ['convertId', '_id'],
+  ['convertLegalities', 'legalities'],
+  ['convertType', 'type'],
+  ['convertColors', 'colors'],
+  ['convertParsedCost', 'parsed_cost'],
+  ['convertCmc', 'cmc'],
+];
 
 beforeEach(() => {
   rimraf.sync('private-test');
@@ -340,15 +341,6 @@ test('convertCard returns a correctly converted card object', () => {
   expect(result).toEqual(convertedExampleCard);
 });
 
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleCard);
-    expect(result).toBe(convertedExampleCard[attribute]);
-  });
-}
-
 test('convertCard returns a correctly converted double-faced card', () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, false);
   expect(result).toEqual(convertedExampleDoubleFacedCard);
@@ -359,34 +351,32 @@ test('convertCard returns a correctly converted double-faced card flip face obje
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
 
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a double-faced card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
-    expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
-  });
-}
-
 test('convertCard returns a correctly converted Adventure card object', () => {
   const result = updatecards.convertCard(examplecards.exampleAdventureCard, false);
   expect(result).toEqual(convertedExampleAdventureCard);
 });
 
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts an Adventure card's creature " + attribute, () => {
+describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribute) => {
+  test('for standard card', () => {
+    const result = updatecards[convertFn](examplecards.exampleCard);
+    expect(result).toEqual(convertedExampleCard[attribute]);
+  });
+
+  test('for a double-faced card', () => {
+    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
+    expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace[attribute]);
+  });
+
+  test("for Adventure card's creature", () => {
     const result = updatecards[convertFn](examplecards.exampleAdventureCard, false);
-    expect(result).toBe(convertedExampleAdventureCard[attribute]);
+    expect(result).toEqual(convertedExampleAdventureCard[attribute]);
   });
-}
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts an Adventure card's Adventure  " + attribute, () => {
+
+  test("for Adventure card's Adventure", () => {
     const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
-    expect(result).toBe(convertedExampleAdventureCardAdventure[attribute]);
+    expect(result).toEqual(convertedExampleAdventureCardAdventure[attribute]);
   });
-}
+});
 
 describe('convertName', () => {
   test('handles ampersands', () => {
