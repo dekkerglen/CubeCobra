@@ -15,6 +15,7 @@ const CardModalForm = ({ children, ...props }) => {
   const [cardIndex, setCardIndex] = useState(null);
   const [maybe, setMaybe] = useState(false);
   const [versions, setVersions] = useState([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
@@ -134,7 +135,7 @@ const CardModalForm = ({ children, ...props }) => {
   }, [card, addChange]);
 
   const openCardModal = useCallback(
-    (newCardIndex, newMaybe) => {
+    async (newCardIndex, newMaybe) => {
       const card = newMaybe ? maybeboard[newCardIndex] : cube.cards[newCardIndex];
       const colors = card.colors || card.details.colors;
       const typeLine = card.type_line || card.details.type;
@@ -142,6 +143,7 @@ const CardModalForm = ({ children, ...props }) => {
       setCardIndex(newCardIndex);
       setMaybe(!!newMaybe);
       setVersions([card.details]);
+      setVersionsLoading(true);
       setFormValues({
         version: card.cardID,
         status: card.status,
@@ -158,11 +160,10 @@ const CardModalForm = ({ children, ...props }) => {
         colorG: colors.includes('G'),
       });
       setIsOpen(true);
-      fetch(`/cube/api/getversions/${card.cardID}`)
-        .then((response) => response.json())
-        .then((json) => {
-          setVersions(json.cards);
-        });
+      const response = await fetch(`/cube/api/getversions/${card.cardID}`);
+      const json = await response.json();
+      setVersions(json.cards);
+      setVersionsLoading(false);
     },
     [cube, maybeboard],
   );
@@ -180,6 +181,7 @@ const CardModalForm = ({ children, ...props }) => {
         card={renderCard}
         maybe={maybe}
         versions={versions}
+        versionsLoading={versionsLoading}
         toggle={closeCardModal}
         isOpen={isOpen}
         disabled={!canEdit}

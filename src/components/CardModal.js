@@ -24,11 +24,15 @@ import FoilCardImage from 'components/FoilCardImage';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
+import withLoading from 'components/WithLoading';
+
+const LoadingCustomInput = withLoading(CustomInput, []);
 
 const CardModal = ({
   card,
   maybe,
   versions,
+  versionsLoading,
   toggle,
   disabled,
   values,
@@ -75,12 +79,14 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Version (Set and #)</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput
+                <LoadingCustomInput
                   type="select"
                   name="version"
                   id="cardModalVersion"
                   value={values.version}
                   onChange={onChange}
+                  loading={versionsLoading}
+                  spinnerSize="sm"
                 >
                   {versions.map((version) => {
                     const name = version.full_name
@@ -92,7 +98,7 @@ const CardModal = ({
                       </option>
                     );
                   })}
-                </CustomInput>
+                </LoadingCustomInput>
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
