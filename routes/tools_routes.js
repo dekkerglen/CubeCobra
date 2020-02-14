@@ -17,7 +17,7 @@ const router = express.Router();
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 500;
+const MAX_RESULTS = 300;
 
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
@@ -92,7 +92,7 @@ async function topCards(filter) {
     'cardName cubes',
   )
     .sort('-cubes')
-    .limit(4 * MAX_RESULTS)
+    .limit(3 * MAX_RESULTS)
     .lean();
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
