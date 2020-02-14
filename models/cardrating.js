@@ -12,4 +12,8 @@ cardRatingSchema.index({
   name: 1,
 });
 
+cardRatingSchema.index({
+  elo: -1,
+});
+
 let CardRating = (module.exports = mongoose.model('CardRating', cardRatingSchema));
