@@ -17,7 +17,7 @@ const router = express.Router();
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 1000;
+const MAX_RESULTS = 500;
 
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
@@ -69,19 +69,31 @@ async function topCards(filter) {
     return nonPromo || possible[0];
   });
 
-  const ratingsQ = CardRating.find({
-    name: {
-      $in: names,
-    },
-  });
+  const ratingsQ = CardRating.find(
+    filter.length === 0
+      ? {}
+      : {
+          name: {
+            $in: names,
+          },
+        },
+  )
+    .sort('-elo')
+    .limit(MAX_RESULTS)
+    .lean();
   const cardDataQ = Card.find(
-    {
-      cardName: {
-        $in: names.map((name) => name.toLowerCase()),
-      },
-    },
+    filter.length === 0
+      ? {}
+      : {
+          cardName: {
+            $in: names.map((name) => name.toLowerCase()),
+          },
+        },
     'cardName cubes',
-  );
+  )
+    .sort('-cubes')
+    .limit(4 * MAX_RESULTS)
+    .lean();
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 
