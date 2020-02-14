@@ -21,12 +21,13 @@ rules:
   no-param-reassign: off
   no-underscore-dangle:
     - error
-    - allow: ['_id', 'tcgplayer_id']
+    - allow: ['_id']
   camelcase:
     - error
     - properties: never
       ignoreDestructuring: true
       ignoreImports: true
+      allow: ['tcgplayer_id']
   no-plusplus:
     - error
     - allowForLoopAfterthoughts: true

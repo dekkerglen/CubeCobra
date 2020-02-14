@@ -332,6 +332,7 @@ ListViewRow.propTypes = {
       version: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  versionsLoading: PropTypes.bool.isRequired,
   checked: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   addAlert: PropTypes.func.isRequired,
