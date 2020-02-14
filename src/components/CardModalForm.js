@@ -152,7 +152,7 @@ const CardModalForm = ({ children, ...props }) => {
   }, [card, addChange]);
 
   const openCardModal = useCallback(
-    async (newCardIndex, newMaybe) => {
+    (newCardIndex, newMaybe) => {
       const card = newMaybe ? maybeboard[newCardIndex] : cube.cards[newCardIndex];
       const colors = card.colors || card.details.colors;
       const typeLine = card.type_line || card.details.type;
