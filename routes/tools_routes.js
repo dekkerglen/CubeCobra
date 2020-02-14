@@ -17,7 +17,7 @@ const router = express.Router();
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 500;
+const MAX_RESULTS = 400;
 
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
@@ -81,19 +81,24 @@ async function topCards(filter) {
     .sort('-elo')
     .limit(MAX_RESULTS)
     .lean();
-  const cardDataQ = Card.find(
-    filter.length === 0
-      ? {}
-      : {
-          cardName: {
-            $in: names.map((name) => name.toLowerCase()),
+  const cardDataQ = Card.aggregate()
+    .match(
+      filter.length === 0
+        ? {}
+        : {
+            cardName: {
+              $in: names.map((name) => name.toLowerCase()),
+            },
           },
-        },
-    'cardName cubes',
-  )
-    .sort('-cubes')
+    )
+    .addFields({
+      cubesLength: {
+        $size: '$cubes',
+      },
+    })
+    .sort({ cubesLength: -1 })
     .limit(4 * MAX_RESULTS)
-    .lean();
+    .project('cardName cubesLength');
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 
@@ -112,7 +117,7 @@ async function topCards(filter) {
       qualifies && rating.value ? adjust(rating) : null,
       rating && rating.picks !== undefined ? rating.picks : null,
       qualifies && rating.elo ? rating.elo : null,
-      card ? card.cubes.length : null,
+      card ? card.cubesLength : null,
     ];
   });
   /* Sort by number of picks for limit. */
