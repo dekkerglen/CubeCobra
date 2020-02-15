@@ -148,11 +148,11 @@ async function addNotification(user, from, url, text) {
 }
 
 function wrapAsyncApi(route) {
-  return (...args) => {
+  return (req, res, next) => {
     try {
-      return route(...args);
+      return route(req, res, next);
     } catch (err) {
-      console.error(err);
+      req.logger.error(err);
       res.status(500).send({
         success: 'false',
         message: 'Internal server error',
@@ -161,8 +161,8 @@ function wrapAsyncApi(route) {
   };
 }
 
-function handleRouteError(res, req, err, reroute) {
-  console.error(err);
+function handleRouteError(req, res, err, reroute) {
+  req.logger.error(err);
   req.flash('danger', err.message);
   res.redirect(reroute);
 }

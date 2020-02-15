@@ -9,6 +9,10 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
+const winston = require('winston');
+const morgan = require('morgan');
+const uuid = require('uuid/v4');
+const tmp = require('tmp');
 // eslint-disable-next-line import/no-unresolved
 const secrets = require('../cubecobrasecrets/secrets');
 // eslint-disable-next-line import/no-unresolved
@@ -16,18 +20,41 @@ const mongosecrets = require('../cubecobrasecrets/mongodb');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
+const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
+const combinedFile = tmp.fileSync({ prefix: `node-combined-${process.pid}-`, postfix: '.log', discardDescriptor: true });
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  exitOnError: false,
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log` 
+    // - Write all logs error (and below) to `error.log`.
+    //
+    new winston.transports.File({ filename: errorFile.name, level: 'error' }),
+    new winston.transports.File({ filename: combinedFile.name }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
+}
+
 carddb.initializeCardDb();
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
 const db = mongoose.connection;
 db.once('open', () => {
-  console.log('connected to nodecube db');
+  logger.info('Connected to Mongo.');
 });
 
 // Check for db errors
 db.on('error', (err) => {
-  console.log(err);
+  logger.error(err);
 });
 
 // Init app
@@ -45,6 +72,22 @@ const store = new MongoDBStore(
     }
   },
 );
+
+// error handling
+app.use((req, res, next) => {
+  req.uuid = uuid();
+  req.logger = logger.child({
+    requestId: req.uuid,
+  });
+  next();
+});
+
+morgan.token('uuid', (req) => req.uuid);
+app.use(morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
+  stream: {
+    write: (message) => logger.info(message.trim()),
+  },
+}))
 
 // upload file middleware
 app.use(fileUpload());

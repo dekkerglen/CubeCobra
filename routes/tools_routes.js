@@ -155,7 +155,7 @@ router.get('/api/topcards', async (req, res) => {
       data,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     res.status(500).send({
       success: 'false',
     });
@@ -182,7 +182,7 @@ router.get('/topcards', async (req, res) => {
       title: 'Top Cards',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     res.sendStatus(500);
   }
 });
@@ -226,7 +226,7 @@ router.get('/card/:id', async (req, res) => {
       related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     req.flash('danger', err.message);
     return res.redirect('/404');
   }
