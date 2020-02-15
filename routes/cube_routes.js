@@ -1563,6 +1563,10 @@ router.post('/startdraft/:id', async (req, res) => {
       cards: parseInt(req.body.cards, 10),
     };
 
+    if (params.seats < 2) {
+      throw new Error('Must have at least 2 seats.');
+    }
+
     // setup draft
     const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
     if (draftcards.length === 0) {
@@ -3122,17 +3126,23 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
   }
 });
 
-router.post('/defaultdraftformat/:id', ensureAuth, async (req, res) => {
+router.post('/:id/defaultdraftformat/:formatId', ensureAuth, async (req, res) => {
   try {
-    const cubeid = req.params.id.split(';')[0];
-    const id = parseInt(req.params.id.split(';')[1], 10);
+    const cubeid = req.params.id;
+    const formatId = parseInt(req.params.formatId, 10);
 
     const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id >= cube.draft_formats.length) {
+    if (
+      !cube ||
+      cube.owner !== req.user.id ||
+      !Number.isInteger(formatId) ||
+      formatId >= cube.draft_formats.length ||
+      formatId < -1
+    ) {
       return res.sendStatus(401);
     }
 
-    cube.defaultDraftFormat = id;
+    cube.defaultDraftFormat = formatId;
 
     await cube.save();
     return res.status(200).send({

@@ -325,7 +325,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/defaultdraftformat/${cubeID};${formatIndex}`, {
+        const response = await csrfFetch(`/cube/${cubeID}/defaultdraftformat/${formatIndex}`, {
           method: 'POST',
         });
 
@@ -333,17 +333,11 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
 
         const json = await response.json();
         if (json.success !== 'true') throw Error();
-        addAlert({
-          color: 'success',
-          message: 'Format successfully set as default.',
-        });
+        addAlert('success', 'Format successfully set as default.');
         setDefaultDraftFormat(formatIndex);
       } catch (err) {
         console.error(err);
-        addAlert({
-          color: 'danger',
-          message: 'Failed to set format as default.',
-        });
+        addAlert('danger', 'Failed to set format as default.');
       }
     },
     [addAlert, cubeID],
