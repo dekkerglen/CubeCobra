@@ -12,10 +12,7 @@ export const Alerts = ({ alerts, ...props }) =>
 const useAlerts = () => {
   const [alerts, setAlerts] = useState([]);
 
-  const addAlert = useCallback(
-    (color, message) => setAlerts((oldAlerts) => [...oldAlerts, { color, message }]),
-    [],
-  );
+  const addAlert = useCallback((color, message) => setAlerts((oldAlerts) => [...oldAlerts, { color, message }]), []);
 
   return { addAlert, alerts };
 };
