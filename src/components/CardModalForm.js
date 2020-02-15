@@ -150,32 +150,29 @@ const CardModalForm = ({ children, ...props }) => {
     setIsOpen(false);
   }, [card, addChange]);
 
-  const openCardModal = useCallback(
-    (newCard, newMaybe) => {
-      const colors = card.colors || card.details.colors;
-      const typeLine = card.type_line || card.details.type;
-      const tags = card.tags || [];
-      setCard(newCard);
-      setMaybe(!!newMaybe);
-      setFormValues({
-        version: card.cardID,
-        status: card.status,
-        finish: card.finish,
-        cmc: card.cmc,
-        type_line: typeLine,
-        imgUrl: card.imgUrl,
-        tags: tags.map((tag) => ({ id: tag, text: tag })),
-        tagInput: '',
-        colorW: colors.includes('W'),
-        colorU: colors.includes('U'),
-        colorB: colors.includes('B'),
-        colorR: colors.includes('R'),
-        colorG: colors.includes('G'),
-      });
-      setIsOpen(true);
-    },
-    [],
-  );
+  const openCardModal = useCallback((newCard, newMaybe) => {
+    const colors = card.colors || card.details.colors;
+    const typeLine = card.type_line || card.details.type;
+    const tags = card.tags || [];
+    setCard(newCard);
+    setMaybe(!!newMaybe);
+    setFormValues({
+      version: card.cardID,
+      status: card.status,
+      finish: card.finish,
+      cmc: card.cmc,
+      type_line: typeLine,
+      imgUrl: card.imgUrl,
+      tags: tags.map((tag) => ({ id: tag, text: tag })),
+      tagInput: '',
+      colorW: colors.includes('W'),
+      colorU: colors.includes('U'),
+      colorB: colors.includes('B'),
+      colorR: colors.includes('R'),
+      colorG: colors.includes('G'),
+    });
+    setIsOpen(true);
+  }, []);
 
   const closeCardModal = useCallback(() => setIsOpen(false));
 
