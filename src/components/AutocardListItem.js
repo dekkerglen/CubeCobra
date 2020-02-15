@@ -18,9 +18,9 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
-      openCardModal(card.index);
+      openCardModal(card);
     },
-    [card.index, openCardModal],
+    [card, openCardModal],
   );
   const handleAuxClick = useCallback(
     (event) => {

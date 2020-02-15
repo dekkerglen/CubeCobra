@@ -29,7 +29,7 @@ const MaybeboardListItem = ({ card, className }) => {
   const [loading, setLoading] = useState(false);
 
   const handleEdit = useCallback(() => {
-    openCardModal(card.index, true);
+    openCardModal(card, true);
   }, [card, openCardModal]);
 
   const handleAdd = useCallback(

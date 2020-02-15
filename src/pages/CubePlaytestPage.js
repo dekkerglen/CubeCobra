@@ -172,7 +172,7 @@ CustomDraftCard.propTypes = {
 const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
   return (
-    <Card className="mt-3">
+    <Card className="mb-3">
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>Standard draft</CardTitleH5>
@@ -303,7 +303,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
+        const response = await csrfFetch(`/cube/format/remove/${cubeID}/${formatIndex}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw Error();
@@ -311,17 +311,11 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
         const json = await response.json();
         if (json.success !== 'true') throw Error();
 
-        addAlert({
-          color: 'success',
-          message: 'Format successfully deleted.',
-        });
-        setFormats(formats.filter(({ index }) => index !== formatIndex));
+        addAlert('success', 'Format successfully deleted.');
+        setFormats(formats.filter((format, index) => index !== formatIndex));
       } catch (err) {
         console.error(err);
-        addAlert({
-          color: 'danger',
-          message: 'Failed to delete format.',
-        });
+        addAlert('danger', 'Failed to delete format.');
       }
     },
     [addAlert, cubeID, formats],
@@ -374,14 +368,14 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
 
   const StandardDraftFormatCard = () => (
     <StandardDraftCard
-      className="mt-3"
+      className="mb-3"
       onSetDefaultFormat={handleSetDefaultFormat}
       defaultDraftFormat={defaultDraftFormat}
     />
   );
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
-      <Navbar light expand className="usercontrols">
+      <Navbar light expand className="usercontrols mb-3">
         <Nav navbar>
           <NavItem>
             <NavLink onClick={handleCreateFormat} className="clickable">
@@ -393,12 +387,12 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
           </NavItem>
         </Nav>
       </Navbar>
-      <DynamicFlash className="mt-3 mb-0" />
+      <DynamicFlash />
       <Alerts alerts={alerts} />
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
-          <SamplePackCard className="mt-3" />
+          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
+          <SamplePackCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
           {defaultDraftFormat === -1 && <StandardDraftFormatCard />}
@@ -410,7 +404,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
               onSetDefaultFormat={handleSetDefaultFormat}
               onEditFormat={handleEditFormat}
               defaultDraftFormat={defaultDraftFormat}
-              className="mt-3"
+              className="mb-3"
             />
           ))}
           {defaultDraftFormat !== -1 && <StandardDraftFormatCard />}
