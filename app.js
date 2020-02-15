@@ -1,6 +1,17 @@
 // Load Environment Variables
 require('dotenv').config();
 
+// eslint-disable-next-line no-unused-vars
+let apm;
+if (process.env.APM_SERVER_URL) {
+  apm = require('elastic-apm-node').start({
+    // Use if APM Server requires a token
+    secretToken: process.env.APM_SECRET_TOKEN,
+    // Set custom APM Server URL (default: http://localhost:8200)
+    serverUrl: process.env.APM_SERVER_URL,
+  });
+}
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
