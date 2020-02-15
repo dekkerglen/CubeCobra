@@ -381,7 +381,7 @@ const ListView = ({ cards }) => {
     (event) => {
       const value = event.target.checked;
       const index = parseInt(event.target.getAttribute('data-index'), 10);
-      if (Number.isInteger(value)) {
+      if (Number.isInteger(index)) {
         let newChecked = checked;
         if (value) {
           if (!newChecked.includes(index)) {
