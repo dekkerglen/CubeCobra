@@ -68,7 +68,7 @@ if (NODE_ENV === 'production') {
   CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
 }
 
-const { ensureAuth, csrfProtection, jsonValidationErrors } = require('./middleware');
+const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors } = require('./middleware');
 
 router.use(csrfProtection);
 
@@ -984,15 +984,11 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   }
 });
 
-router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
+router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (cube.owner !== req.user.id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect(`/cube/list/${req.params.id}`);
-    }
-    if (!Number.isInteger(req.body.cubeid)) {
-      req.flash('danger', 'Error: Provided ID is not in correct format.');
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
