@@ -22,6 +22,7 @@ const carddb = require('./serverjs/cards.js');
 
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 const combinedFile = tmp.fileSync({ prefix: `node-combined-${process.pid}-`, postfix: '.log', discardDescriptor: true });
+console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
 const logger = winston.createLogger({
   level: 'info',
@@ -46,7 +47,11 @@ if (process.env.NODE_ENV !== 'production') {
 carddb.initializeCardDb();
 
 // Connect db
-mongoose.connect(mongosecrets.connectionString);
+mongoose.connect(mongosecrets.connectionString, {
+  useCreateIndex: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 const db = mongoose.connection;
 db.once('open', () => {
   logger.info('Connected to Mongo.');
