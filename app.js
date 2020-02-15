@@ -22,11 +22,21 @@ const carddb = require('./serverjs/cards.js');
 
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 const combinedFile = tmp.fileSync({ prefix: `node-combined-${process.pid}-`, postfix: '.log', discardDescriptor: true });
-console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
-const logger = winston.createLogger({
+const errorStackTracerFormat = winston.format(info => {
+  if (info.meta && info.meta instanceof Error) {
+    info.message = `${info.message} ${info.meta.stack}`;
+  }
+  return info;
+});
+
+winston.configure({
   level: 'info',
-  format: winston.format.json(),
+  format: winston.format.combine(
+    winston.format.splat(), // Necessary to produce the 'meta' property
+    errorStackTracerFormat(),
+    winston.format.simple()
+  ),
   exitOnError: false,
   transports: [
     //
@@ -39,10 +49,12 @@ const logger = winston.createLogger({
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
+  winston.add(new winston.transports.Console({
     format: winston.format.simple(),
   }));
 }
+
+winston.info(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
 carddb.initializeCardDb();
 
@@ -54,12 +66,12 @@ mongoose.connect(mongosecrets.connectionString, {
 });
 const db = mongoose.connection;
 db.once('open', () => {
-  logger.info('Connected to Mongo.');
+  winston.info('Connected to Mongo.');
 });
 
 // Check for db errors
 db.on('error', (err) => {
-  logger.error(err);
+  winston.error(err);
 });
 
 // Init app
@@ -73,7 +85,7 @@ const store = new MongoDBStore(
   },
   (err) => {
     if (err) {
-      console.log(`store failed to connect to mongoDB:\n${err}`);
+      winston.error('store failed to connect to mongoDB', err);
     }
   },
 );
@@ -81,7 +93,7 @@ const store = new MongoDBStore(
 // error handling
 app.use((req, res, next) => {
   req.uuid = uuid();
-  req.logger = logger.child({
+  req.logger = winston.child({
     requestId: req.uuid,
   });
   next();
@@ -90,7 +102,7 @@ app.use((req, res, next) => {
 morgan.token('uuid', (req) => req.uuid);
 app.use(morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
   stream: {
-    write: (message) => logger.info(message.trim()),
+    write: (message) => winston.info(message.trim()),
   },
 }))
 
@@ -175,11 +187,11 @@ app.use((req, res) => {
 });
 
 schedule.scheduleJob('0 0 * * *', () => {
-  console.log('Starting midnight cardbase update...');
+  winston.info('Starting midnight cardbase update...');
   updatedb.updateCardbase();
 });
 
 // Start server
 http.createServer(app).listen(5000, 'localhost', () => {
-  console.log('server started on port 5000...');
+  winston.info('server started on port 5000...');
 });
