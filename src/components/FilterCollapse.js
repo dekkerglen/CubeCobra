@@ -277,12 +277,6 @@ class FilterCollapse extends Component {
     this.handleReset = this.handleReset.bind(this);
   }
 
-  componentDidMount() {
-    const defaultFilter = Query.get('f', '');
-    this.setState({ filterInput: defaultFilter });
-    // this.updateFilters(defaultFilter);
-  }
-
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.filter !== this.props.filter) {
       const { filterInput } = this.state;

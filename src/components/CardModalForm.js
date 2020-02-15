@@ -12,20 +12,19 @@ import MaybeboardContext from 'components/MaybeboardContext';
 
 const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cardIndex, setCardIndex] = useState(null);
+  const [card, setCard] = useState({ colors: [], details: {}, tags: [] });
   const [maybe, setMaybe] = useState(false);
   const [versionDict, setVersionDict] = useState({});
   const [versionsLoading, setVersionsLoading] = useState(true);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
-  const { maybeboard, updateMaybeboardCard } = useContext(MaybeboardContext);
+  const { updateMaybeboardCard } = useContext(MaybeboardContext);
   const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
-
-  const card = (maybe ? maybeboard[cardIndex] : cube.cards[cardIndex]) || { colors: [], details: {}, tags: [] };
 
   useEffect(() => {
     const wrapper = async () => {
+      if (!cube) return;
       const allIds = [...cube.cards, ...(cube.maybe || [])].map(({ cardID }) => cardID);
       const response = await csrfFetch(`/cube/api/getversions`, {
         method: 'POST',
@@ -114,7 +113,7 @@ const CardModalForm = ({ children, ...props }) => {
             ...updated,
             details: cardJson.card,
           };
-          updateCubeCard(cardIndex, newCard);
+          updateCubeCard(card.index, newCard);
           setIsOpen(false);
         }
       } else {
@@ -152,12 +151,11 @@ const CardModalForm = ({ children, ...props }) => {
   }, [card, addChange]);
 
   const openCardModal = useCallback(
-    (newCardIndex, newMaybe) => {
-      const card = newMaybe ? maybeboard[newCardIndex] : cube.cards[newCardIndex];
+    (newCard, newMaybe) => {
       const colors = card.colors || card.details.colors;
       const typeLine = card.type_line || card.details.type;
       const tags = card.tags || [];
-      setCardIndex(newCardIndex);
+      setCard(newCard);
       setMaybe(!!newMaybe);
       setFormValues({
         version: card.cardID,
@@ -176,7 +174,7 @@ const CardModalForm = ({ children, ...props }) => {
       });
       setIsOpen(true);
     },
-    [cube, maybeboard],
+    [],
   );
 
   const closeCardModal = useCallback(() => setIsOpen(false));
