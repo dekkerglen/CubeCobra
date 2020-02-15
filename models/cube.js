@@ -77,6 +77,10 @@ const cubeSchema = mongoose.Schema({
       color: String,
     },
   ],
+  defaultDraftFormat: {
+    type: Number,
+    default: -1,
+  },
   decks: [String],
   numDecks: Number,
   description: String,

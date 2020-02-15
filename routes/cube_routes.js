@@ -3216,7 +3216,7 @@ router.get(
 
     return res.status(200).send({
       seed: req.params.seed,
-      pack: result.pack.map((card) => card.name),
+      pack: result.pack.map((card) => card.details.name),
     });
   }),
 );

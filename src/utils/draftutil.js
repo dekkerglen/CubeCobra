@@ -1,3 +1,6 @@
+import seedrandom from 'seedrandom';
+import shuffleSeed from 'shuffle-seed';
+
 import { filterCards, operatorsRegex, parseTokens, tokenizeInput, verifyTokens, filterToString } from './Filter';
 import { arrayShuffle } from './Util';
 
@@ -54,11 +57,11 @@ export function parseDraftFormat(packsJSON, splitter = ',') {
 }
 
 // standard draft has no duplicates
-function standardDraft(cards, probabilistic = false) {
+function standardDraft(cards, seed = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = arrayShuffle(cards);
+  cards = shuffleSeed.shuffle(cards, seed);
   return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
@@ -83,7 +86,11 @@ function standardDraftAsfan(cards) {
   };
 }
 
-function customDraft(cards, duplicates = false) {
+function customDraft(cards, duplicates = false, seed = false) {
+  if (!seed) {
+    seed = Date.now().toString();
+  }
+  rng = seedrandom(seed);
   return function(cardFilters) {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
@@ -95,7 +102,7 @@ function customDraft(cards, duplicates = false) {
     const messages = [];
     if (cardFilters.length > 0) {
       do {
-        index = Math.floor(Math.random() * cardFilters.length);
+        index = Math.floor(rng() * cardFilters.length);
         const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
@@ -111,7 +118,7 @@ function customDraft(cards, duplicates = false) {
       throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
-    index = Math.floor(Math.random() * validCards.length);
+    index = Math.floor(rng() * validCards.length);
 
     // slice out the first card with the index, or error out
     const card = validCards[index];
@@ -241,23 +248,17 @@ function createPacks(draft, format, seats, nextCardFn) {
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(draft, format, cards, bots, seats) {
+export function populateDraft(draft, format, cards, bots, seats, seed = false) {
   let nextCardFn = null;
 
   if (cards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
-  if (bots.length === 0) {
-    throw new Error('Unable to create draft: no bots.');
-  }
-  if (seats < 2) {
-    throw new Error(`Unable to create draft: invalid seats: ${seats}`);
-  }
 
   if (format.custom === true) {
-    nextCardFn = customDraft(cards, format.multiples);
+    nextCardFn = customDraft(cards, format.multiples, seed);
   } else {
-    nextCardFn = standardDraft(cards);
+    nextCardFn = standardDraft(cards, seed);
   }
 
   const result = createPacks(draft, format, seats, nextCardFn);
