@@ -3091,10 +3091,22 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
   try {
     const { cubeid, index } = req.params;
     const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || !req.user._id.equals(cube.owner) || index < 0 || index >= cube.draft_formats.length) {
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'No such cube.',
+      });
+    }
+    if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
         success: 'false',
-        message: 'Invalid request.',
+        message: 'Not authorized.',
+      });
+    }
+    if (index < 0 || index >= cube.draft_formats.length) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid request format.',
       });
     }
 
