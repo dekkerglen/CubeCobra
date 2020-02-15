@@ -1,3 +1,16 @@
+// eslint-disable-next-line import/no-unresolved,import/order
+const secrets = require('../cubecobrasecrets/secrets');
+
+// eslint-disable-next-line no-unused-vars
+let apm;
+if (secrets.apmServerUrl) {
+  apm = require('elastic-apm-node').start({
+  // Use if APM Server requires a token
+    secretToken: secrets.apmSecretToken,
+    // Set custom APM Server URL (default: http://localhost:8200)
+    serverUrl: secrets.apmServerUrl,
+  })
+}
 const express = require('express');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
@@ -9,8 +22,6 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
-// eslint-disable-next-line import/no-unresolved
-const secrets = require('../cubecobrasecrets/secrets');
 // eslint-disable-next-line import/no-unresolved
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 const updatedb = require('./serverjs/updatecards.js');

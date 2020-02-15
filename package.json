@@ -33,6 +33,7 @@
     "connect-mongodb-session": "^2.2.0",
     "core-js-pure": "^3.6.3",
     "csurf": "^1.10.0",
+    "elastic-apm-node": "^3.3.0",
     "event-stream": "^4.0.1",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.6",
