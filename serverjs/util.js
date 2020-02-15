@@ -91,10 +91,10 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 }
 
-function newCard(card_details, tags) {
+function newCard(card_details, tags, defaultStatus = 'Owned') {
   return {
     tags: Array.isArray(tags) ? tags : [],
-    status: 'Owned',
+    status: defaultStatus,
     colors: card_details.color_identity,
     cmc: card_details.cmc,
     cardID: card_details._id,
@@ -105,8 +105,7 @@ function newCard(card_details, tags) {
 }
 
 function addCardToCube(cube, card_details, tags) {
-  const card = newCard(card_details, tags);
-  card.status = cube.defaultStatus || 'Owned';
+  const card = newCard(card_details, tags, cube.defaultStatus || 'Owned');
   cube.cards.push(card);
 }
 
