@@ -85,6 +85,7 @@ const MaybeboardListItem = ({ card, className }) => {
       card={card}
       data-index={card.index}
       onClick={handleEdit}
+      role="button"
     >
       <div className="name">{card.details.name}</div>
       {canEdit &&
