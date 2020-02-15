@@ -2583,7 +2583,9 @@ router.get('/deck/:id', async (req, res) => {
         const botDeck = [];
         for (const card of deck.cards[i]) {
           if (!card[0].cardID && !carddb.cardFromId(card[0].cardID).error) {
-            req.logger.error(`${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`);
+            req.logger.error(
+              `${req.params.id}: Could not find seat ${botDecks.length + 1}, pick ${botDeck.length + 1}`,
+            );
           } else {
             const details = carddb.cardFromId(card[0].cardID);
             botDeck.push(details);

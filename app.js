@@ -21,7 +21,11 @@ const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
-const combinedFile = tmp.fileSync({ prefix: `node-combined-${process.pid}-`, postfix: '.log', discardDescriptor: true });
+const combinedFile = tmp.fileSync({
+  prefix: `node-combined-${process.pid}-`,
+  postfix: '.log',
+  discardDescriptor: true,
+});
 
 const errorStackTracerFormat = winston.format((info) => {
   if (info.error && info.error.stack) {
@@ -36,12 +40,12 @@ winston.configure({
   format: winston.format.combine(
     winston.format.splat(), // Necessary to produce the 'meta' property
     errorStackTracerFormat(),
-    winston.format.simple()
+    winston.format.simple(),
   ),
   exitOnError: false,
   transports: [
     //
-    // - Write to all logs with level `info` and below to `combined.log` 
+    // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
     new winston.transports.File({ filename: errorFile.name, level: 'error' }),
@@ -50,9 +54,11 @@ winston.configure({
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  winston.add(new winston.transports.Console({
-    format: winston.format.simple(),
-  }));
+  winston.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+  );
 }
 
 winston.info(`Logging to ${errorFile.name} and ${combinedFile.name}`);
@@ -101,11 +107,13 @@ app.use((req, res, next) => {
 });
 
 morgan.token('uuid', (req) => req.uuid);
-app.use(morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
-  stream: {
-    write: (message) => winston.info(message.trim()),
-  },
-}))
+app.use(
+  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
+    stream: {
+      write: (message) => winston.info(message.trim()),
+    },
+  }),
+);
 
 // upload file middleware
 app.use(fileUpload());
