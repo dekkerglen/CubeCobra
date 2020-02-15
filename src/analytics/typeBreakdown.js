@@ -1,13 +1,14 @@
 import { GetColorIdentity } from 'utils/Sort';
+import { fromEntries } from 'utils/Util';
 
 async function typeBreakdown(cards) {
-  const TypeByColor = Object.fromEntries(
+  const TypeByColor = fromEntries(
     ['Creatures', 'Enchantments', 'Lands', 'Planeswalkers', 'Instants', 'Sorceries', 'Artifacts', 'Total'].map(
       (header) => [
         header,
         {
           label: header,
-          ...Object.fromEntries(
+          ...fromEntries(
             ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multicolored', 'Total'].map((color) => [
               color,
               { asfan: 0, count: 0 },

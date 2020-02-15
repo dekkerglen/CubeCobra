@@ -502,7 +502,7 @@ router.get('/overview/:id', async (req, res) => {
       canEdit: user && user._id.equals(cube.owner),
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
-      followed: user ? user.followed_cubes.includes(cube._id) : false,
+      followed: user && user.followed_cubes ? user.followed_cubes.includes(cube._id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
@@ -2375,9 +2375,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const deckOwner = await User.findById(deck.owner);
+    const deckOwner = await User.findById(deck.owner).lean();
 
-    if (!req.user || deckOwner._id !== req.user.id) {
+    if (!req.user || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -2393,7 +2393,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2577,7 +2577,6 @@ router.get(
   '/api/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting');
-    console.log(cube.defaultPrinting);
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card && !card.error) {
       return res.status(200).send({

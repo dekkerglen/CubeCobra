@@ -859,6 +859,23 @@ export function filterToString(filters) {
   return s.join(sep);
 }
 
+export function makeFilter(filterText) {
+  if (!filterText || filterText.trim() === '') {
+    return {
+      err: false,
+      filter: [],
+    };
+  }
+
+  const tokens = [];
+  const valid = tokenizeInput(filterText, tokens) && verifyTokens(tokens);
+
+  return {
+    err: !valid,
+    filter: valid ? [parseTokens(tokens)] : [],
+  };
+}
+
 export default {
   operators,
   operatorsRegex,
@@ -870,4 +887,5 @@ export default {
   filterCardsDetails,
   filterUsesPrice,
   filterToString,
+  makeFilter,
 };
