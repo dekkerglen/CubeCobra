@@ -1,6 +1,6 @@
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
@@ -3087,23 +3087,25 @@ router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
+router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), async (req, res) => {
   try {
-    const cubeid = req.params.id.split(';')[0];
-    const id = parseInt(req.params.id.split(';')[1], 10);
-
+    const { cubeid, index } = req.params;
     const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id < 0 || id >= cube.draft_formats.length) {
-      return res.sendStatus(401);
+    if (!cube || !req.user._id.equals(cube.owner) || index < 0 || index >= cube.draft_formats.length) {
+      return res.status(401).send({
+        success: 'false',
+        message: 'Invalid request.',
+      });
     }
 
-    cube.draft_formats.splice(id, 1);
+    cube.draft_formats.splice(index, 1);
 
-    await Cube.save();
+    await cube.save();
     return res.status(200).send({
       success: 'true',
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting format.',
