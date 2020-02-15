@@ -939,7 +939,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       title: `${abbreviate(cube.name)} - Sample Pack`,
       pack: pack.pack,
       seed: pack.seed,
-      cubeID: req.params.id,
+      cube_id: req.params.id,
       activeLink: 'playtest',
       metadata: generateMeta(
         'Cube Cobra Sample Pack',
