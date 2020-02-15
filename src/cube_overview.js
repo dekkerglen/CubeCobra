@@ -314,7 +314,7 @@ class CubeOverview extends Component {
 CubeOverview.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-  }).isRequired,
+  }),
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
   owner: PropTypes.string.isRequired,
@@ -338,6 +338,7 @@ CubeOverview.propTypes = {
 };
 
 CubeOverview.defaultProps = {
+  post: null,
   priceOwned: null,
   pricePurchase: null,
   admin: false,
