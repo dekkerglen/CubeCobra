@@ -844,6 +844,7 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: user._id.equals(cube.owner),
       decks,
       draftFormats,
+      defaultFormat: cube.defaultDraftFormat,
     };
 
     return res.render('cube/cube_playtest', {
@@ -3111,6 +3112,30 @@ router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
   }
 });
 
+router.post('/defaultdraftformat/:id', ensureAuth, async (req, res) => {
+  try {
+    const cubeid = req.params.id.split(';')[0];
+    const id = parseInt(req.params.id.split(';')[1], 10);
+
+    const cube = await Cube.findOne(build_id_query(cubeid));
+    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id >= cube.draft_formats.length) {
+      return res.sendStatus(401);
+    }
+
+    cube.defaultDraftFormat = id;
+
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error saving default draft format.',
+    });
+  }
+});
+
 router.post(
   '/api/savesorts/:id',
   ensureAuth,
@@ -3216,7 +3241,7 @@ router.get(
 
     return res.status(200).send({
       seed: req.params.seed,
-      pack: result.pack.map((card) => card.details.name),
+      pack: result.pack.map((card) => card.name),
     });
   }),
 );

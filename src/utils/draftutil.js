@@ -90,7 +90,7 @@ function customDraft(cards, duplicates = false, seed = false) {
   if (!seed) {
     seed = Date.now().toString();
   }
-  rng = seedrandom(seed);
+  const rng = seedrandom(seed);
   return function(cardFilters) {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');

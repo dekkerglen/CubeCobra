@@ -333,14 +333,13 @@ const methods = {
       seed = Date.now().toString();
     }
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
-    const formatId = cube.defaultFormatId || -1;
+    const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
     const draft = new Draft();
     populateDraft(draft, format, cube.cards, 0, 1, seed);
-    console.warn(draft);
     return {
       seed,
-      pack: draft.packs[0][0]
+      pack: draft.packs[0][0].map((card) => card.details),
     };
   },
   generate_short_id,
