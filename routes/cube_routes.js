@@ -1,6 +1,6 @@
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
@@ -68,7 +68,7 @@ if (NODE_ENV === 'production') {
   CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
 }
 
-const { ensureAuth, csrfProtection, jsonValidationErrors } = require('./middleware');
+const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors } = require('./middleware');
 
 router.use(csrfProtection);
 
@@ -495,7 +495,7 @@ router.get('/overview/:id', async (req, res) => {
       canEdit: user && user._id.equals(cube.owner),
       owner: user ? user.username : 'unknown',
       post: blogs ? blogs[0] : null,
-      followed: user ? user.followed_cubes.includes(cube._id) : false,
+      followed: user && user.followed_cubes ? user.followed_cubes.includes(cube._id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
@@ -939,7 +939,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       title: `${abbreviate(cube.name)} - Sample Pack`,
       pack: pack.pack,
       seed: pack.seed,
-      cubeID: req.params.id,
+      cube_id: req.params.id,
       activeLink: 'playtest',
       metadata: generateMeta(
         'Cube Cobra Sample Pack',
@@ -984,15 +984,11 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   }
 });
 
-router.post('/importcubetutor/:id', ensureAuth, async (req, res) => {
+router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id));
     if (cube.owner !== req.user.id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect(`/cube/list/${req.params.id}`);
-    }
-    if (!Number.isInteger(req.body.cubeid)) {
-      req.flash('danger', 'Error: Provided ID is not in correct format.');
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
@@ -2482,9 +2478,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const deckOwner = await User.findById(deck.owner);
+    const deckOwner = await User.findById(deck.owner).lean();
 
-    if (!req.user || deckOwner._id !== req.user.id) {
+    if (!req.user || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -2500,7 +2496,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS);
+    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2684,7 +2680,6 @@ router.get(
   '/api/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting');
-    console.log(cube.defaultPrinting);
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card && !card.error) {
       return res.status(200).send({
@@ -3088,23 +3083,37 @@ router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.delete('/format/remove/:id', ensureAuth, async (req, res) => {
+router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), async (req, res) => {
   try {
-    const cubeid = req.params.id.split(';')[0];
-    const id = parseInt(req.params.id.split(';')[1], 10);
-
+    const { cubeid, index } = req.params;
     const cube = await Cube.findOne(build_id_query(cubeid));
-    if (!cube || cube.owner !== req.user.id || !Number.isInteger(id) || id < 0 || id >= cube.draft_formats.length) {
-      return res.sendStatus(401);
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'No such cube.',
+      });
+    }
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(401).send({
+        success: 'false',
+        message: 'Not authorized.',
+      });
+    }
+    if (index < 0 || index >= cube.draft_formats.length) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid request format.',
+      });
     }
 
-    cube.draft_formats.splice(id, 1);
+    cube.draft_formats.splice(index, 1);
 
-    await Cube.save();
+    await cube.save();
     return res.status(200).send({
       success: 'true',
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting format.',

@@ -4,27 +4,17 @@ p
 	a New Features:
 p
 	ul
-		li Added a button to clone cubes.
-		li Draft bot improvements, now only use Elo and modified land and color priority.
-		li Elo for cards can be viewing on card modal.
-		li Added Elo as a sort and filter.
-		li Added Elo to card pages.
-		li Styling improvements for prices and Elo.
-		li Cube prices improved.
-		li Small UI Improvements to custom draft formats.
-		li Added Proxied as a card status.
-		li Card list item color tweaked.
-		li Mayboard items added to CSV import/export.
-		li Updated group modal with single card modal changes. (tagging w/o clicking tab is the important change)
-		li Added creature/noncreature as a sort.
-		li Group modals now dismiss when the last card is removed.
-		li Improved compressed view.
+		li Cards with proxied status no longer contribute to owned price.
+		li All cards will now be displayed on top cards regardless of prescence of data, but data may be blank.
+		li Foil overlay tweaked per user feedback.
+		li Added Commander as a cube type.
+		li Non-english scryfall IDs now redirect to english version for card analytics.
 p
 	a Bugfixes:
 	ul
-		li Fixed an issue where editing a custom format loads incorrect state.
-		li Fixed an issue where editing cube tags would cause a crash.
-		li Fixed several issues with server-side rendering.
-		li Fixed an issue with faulty autocard on top cards.
-		li Fixed several issues related to maybeboard.
-		li Fixed a bug where importing with csv would remove all cube images.
+		li Fixed an issue with cube overview image not being able to be set.
+		li Fixed an issue where certain cube's overview would not load.
+		li Fixed autocard on dashboard.
+		li Fixed an issue where using select all does not apply filter.
+		li Fixed a warning in Cube Playtest Page.
+		li Fixed custom draft format sorting issue.
