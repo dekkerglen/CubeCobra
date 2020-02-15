@@ -74,7 +74,7 @@
     "tmp": "^0.1.0",
     "uuid": "^3.4.0",
     "website-scraper": "^4.0.1",
-    "winston": "^3.2.1",
+    "winston": "git://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
     "zlib": "^1.0.5"
   },
   "devDependencies": {

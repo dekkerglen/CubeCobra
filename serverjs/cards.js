@@ -56,7 +56,7 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    winston.error('Could not find card from id: ' + id);
+    winston.error(null, { error: new Error('Could not find card from id: ' + id) });
     details = getPlaceholderCard(id);
   }
 
@@ -75,7 +75,7 @@ function getCardDetails(card) {
     card.details = details;
     return details;
   } else {
-    winston.error('Could not find card details: ' + card.cardID, new Error());
+    winston.error(null, { error: new Error('Could not find card details: ' + card.cardID) });
     return getPlaceholderCard(card.cardID);
   }
 }

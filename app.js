@@ -23,9 +23,10 @@ const carddb = require('./serverjs/cards.js');
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 const combinedFile = tmp.fileSync({ prefix: `node-combined-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 
-const errorStackTracerFormat = winston.format(info => {
-  if (info.meta && info.meta instanceof Error) {
-    info.message = `${info.message} ${info.meta.stack}`;
+const errorStackTracerFormat = winston.format((info) => {
+  if (info.error && info.error.stack) {
+    info.message = info.message ? `${info.message}: ${info.error.stack}` : `${info.error.stack}`;
+    delete info.error;
   }
   return info;
 });
