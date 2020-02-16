@@ -1,4 +1,5 @@
 let mongoose = require('mongoose');
+let cardSchema = require('./cardSchema');
 
 //this pattern lets us define comment recursively
 var Comment = new mongoose.Schema();
@@ -22,24 +23,24 @@ Comment.add({
 
 //data for each seat, human or bot
 const SeatDeck = {
-  bot: [], //null bot value means human player
+  bot: [String], //null bot value means human player
   userid: String,
   username: String,
-  pickorder: [],
+  pickorder: [cardSchema],
   name: String,
   description: {
     type: String,
     default: 'No description available.',
   },
   cols: Number,
-  deck: [[]],
-  sideboard: [[]],
+  deck: [[cardSchema]],
+  sideboard: [[cardSchema]],
 };
 
 // Deck schema
 let deckSchema = mongoose.Schema({
   cube: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     index: true,
   },
   date: {
@@ -51,7 +52,7 @@ let deckSchema = mongoose.Schema({
     default: [],
   },
   draft: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     default: '',
   },
   cubename: {
