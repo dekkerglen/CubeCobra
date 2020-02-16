@@ -6,24 +6,6 @@ var Util = require('./Util.js');
 require('./Card.js');
 var Filter = require('./Filter.js');
 
-function arrayShuffle(array) {
-  let currentIndex = array.length;
-  let temporaryValue;
-  let randomIndex; // While there remain elements to shuffle...
-
-  while (currentIndex !== 0) {
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1; // And swap it with the current element.
-
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
-
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
@@ -81,7 +63,7 @@ function standardDraft(cards, probabilistic = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = arrayShuffle(cards);
+  cards = Util.arrayShuffle(cards);
   return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {

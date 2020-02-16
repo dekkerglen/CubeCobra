@@ -1,4 +1,4 @@
-import { csrfFetch } from './CSRF';
+import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle } from './Util';
 
 let draft = null;
@@ -154,7 +154,7 @@ function passPack() {
   if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
     //splice the first pack out
     for (const seat of draft.seats) {
-      seat.packbacklog.splice(0, 1)[0];
+      seat.packbacklog.splice(0, 1);
     }
 
     if (draft.unopenedPacks[0].length > 0) {
@@ -220,12 +220,11 @@ async function finish() {
     }
   }
 
-  const temp = JSON.parse(JSON.stringify(draft));
 
   //save draft. if we fail, we fail
   await csrfFetch('/cube/api/draftpick/' + draft.cube, {
     method: 'POST',
-    body: JSON.stringify(temp),
+    body: JSON.stringify(draft),
     headers: {
       'Content-Type': 'application/json',
     },

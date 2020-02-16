@@ -2,7 +2,6 @@ const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
-``;
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
