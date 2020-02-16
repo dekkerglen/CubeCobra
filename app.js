@@ -55,11 +55,7 @@ winston.configure({
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  winston.add(
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    }),
-  );
+  winston.add(new winston.transports.Console());
 }
 
 if (secrets.loggly) {
@@ -102,7 +98,7 @@ const store = new MongoDBStore(
   },
   (err) => {
     if (err) {
-      winston.error('store failed to connect to mongoDB', err);
+      winston.error('Store failed to connect to mongoDB.', { error: err });
     }
   },
 );
