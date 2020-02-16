@@ -11,7 +11,7 @@ async function GetToken() {
     //TODO: check if token is expired, if so, fetch a new one
     return token.access_token;
   } else {
-    winston.info(Date.now().toString(), 'Fetching fresh TCGPlayer token.');
+    winston.info('Fetching fresh TCGPlayer token.');
 
     const body = new url.URLSearchParams({
       grant_type: 'client_credentials',
@@ -26,7 +26,7 @@ async function GetToken() {
     try {
       token = await response.json();
       token.expires = Tomorrow();
-      winston.info(token.expires.toString(), 'token expiration');
+      winston.info(`${token.expires} token expiration`);
       return token.access_token;
     } catch (e) {
       return;
