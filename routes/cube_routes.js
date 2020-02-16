@@ -800,8 +800,7 @@ router.get('/playtest/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const userq = User.findById(cube.owner).exec();
-    const decksq = Deck.find(
+    const decks = await Deck.find(
       {
         cube: cube._id,
       },
@@ -812,8 +811,6 @@ router.get('/playtest/:id', async (req, res) => {
       })
       .limit(10)
       .exec();
-
-    const [user, decks] = await Promise.all([userq, decksq]);
 
     delete cube.cards;
     delete cube.decks;
@@ -831,7 +828,7 @@ router.get('/playtest/:id', async (req, res) => {
     const reactProps = {
       cube,
       cubeID: req.params.id,
-      canEdit: user._id.equals(cube.owner),
+      canEdit: req.user._id.equals(cube.owner),
       decks,
       draftFormats,
     };
