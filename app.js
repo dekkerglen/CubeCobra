@@ -61,7 +61,7 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
-winston.info(`Logging to ${errorFile.name} and ${combinedFile.name}`);
+console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString, {
