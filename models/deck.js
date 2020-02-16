@@ -40,7 +40,7 @@ const SeatDeck = {
 // Deck schema
 let deckSchema = mongoose.Schema({
   cube: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     index: true,
   },
   date: {
@@ -52,7 +52,7 @@ let deckSchema = mongoose.Schema({
     default: [],
   },
   draft: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     default: '',
   },
   cubename: {
