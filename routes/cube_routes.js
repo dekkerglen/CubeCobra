@@ -881,7 +881,7 @@ router.get('/playtest/:id', async (req, res) => {
 
 router.get('/analysis/:id', async (req, res) => {
   try {
-    const fields = 'cards name owner defaultDraftFormat draft_formats';
+    const fields = 'cards name owner defaultDraftFormat draft_formats card_count type';
     const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
 
     if (!cube) {

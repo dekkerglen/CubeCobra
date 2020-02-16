@@ -23,6 +23,7 @@ import averageCmc from 'analytics/averageCmc';
 import colorCount from 'analytics/colorCount';
 import colorCurve from 'analytics/colorCurve';
 import inclusiveColorCount from 'analytics/inclusiveColorCount';
+import tagCount from 'analytics/tagCount';
 import tagCloud from 'analytics/tagCloud';
 import tokenGrid from 'analytics/tokenGrid';
 import typeBreakdown from 'analytics/typeBreakdown';
@@ -45,6 +46,7 @@ class CubeAnalysisPage extends Component {
         inclusiveColorCount: { fn: inclusiveColorCount, title: 'Inclusive Color Counts' },
         tokenGrid: { fn: tokenGrid, title: 'Tokens' },
         tagCloud: { fn: tagCloud, title: 'Tag Cloud' },
+        tagCount: { fn: tagCount, title: 'Tag Counts' },
       },
       analyticsOrder: [
         'curve',
@@ -55,6 +57,7 @@ class CubeAnalysisPage extends Component {
         'inclusiveColorCount',
         'tokenGrid',
         'tagCloud',
+        'tagCount',
       ],
       filter: [],
       cardsWithAsfan: null,
