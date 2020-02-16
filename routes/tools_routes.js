@@ -67,7 +67,6 @@ async function matchingCards(filter) {
       cards = Filter.filterCardsDetails(cards, filter);
     }
     if (Filter.filterUses(filter, 'cubes')) {
-      console.log('cubes', cards.length);
       const names = cards.map(({ name }) => name.toLowerCase());
       const cardDatas = await Card.find(
         {
