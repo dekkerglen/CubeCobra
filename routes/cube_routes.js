@@ -166,6 +166,17 @@ router.get('/clone/:id', async (req, res) => {
     cube = setCubeType(cube, carddb);
     await cube.save();
 
+    const newOwnerq = User.findById(req.user);
+    const sourceOwnerq = User.findById(source.owner);
+    const [newOwner, sourceOwner] = await Promise.all([newOwnerq, sourceOwnerq]);
+
+    await util.addNotification(
+      sourceOwner,
+      newOwner,
+      `/cube/view/${cube._id}`,
+      `${user.username} made a cube by cloning yours: ${cube.name}`,
+    );
+
     req.flash('success', 'Cube Cloned');
     return res.redirect(`/cube/overview/${cube.shortID}`);
   } catch (err) {
