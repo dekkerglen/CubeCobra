@@ -2109,18 +2109,15 @@ router.get(
 
 router.post(
   '/api/saveshowtagcolors',
+  ensureAuth,
+  body('show_tag_colors').toBoolean(),
+  jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    if (req.user) {
-      req.user.hide_tag_colors = !req.body.show_tag_colors;
-      await req.user.save();
+    req.user.hide_tag_colors = !req.body.show_tag_colors;
+    await req.user.save();
 
-      return res.status(200).send({
-        success: 'true',
-      });
-    }
-
-    return res.status(401).send({
-      success: 'false',
+    return res.status(200).send({
+      success: 'true',
     });
   }),
 );
