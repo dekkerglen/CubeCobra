@@ -1632,6 +1632,11 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     req.body.blog = sanitize(req.body.blog);
     let cube = await Cube.findOne(build_id_query(req.params.id));
 
+    if (!req.user._id.equals(cube.owner)) {
+      req.flash('danger', 'Only cube owner may edit.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
 
