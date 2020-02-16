@@ -3,6 +3,7 @@ const path = require('path');
 const https = require('https');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
+const winston = require('winston');
 const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
@@ -78,8 +79,7 @@ function writeFile(filepath, data) {
   return new Promise((resolve, reject) => {
     fs.writeFile(filepath, data, 'utf8', (err) => {
       if (err) {
-        console.log(`An error occured while writing ${filepath}`);
-        console.log(err);
+        winston.error(`An error occured while writing ${filepath}`, { error: err });
         reject(err);
       } else {
         resolve(data);
@@ -582,7 +582,7 @@ function convertParsedCost(card, isExtra = false) {
       .split('}{')
       .reverse();
   } else {
-    console.log('Error converting parsed colors: (isExtra:', isExtra, ')', card.name);
+    winston.error('Error converting parsed colors: (isExtra:', isExtra, ')', card.name);
   }
 
   if (parsedCost) {
@@ -596,7 +596,7 @@ function convertParsedCost(card, isExtra = false) {
 function convertColors(card, isExtra = false) {
   if (isExtra) {
     if (typeof card.card_faces === 'undefined' || card.card_faces.length < 2) {
-      console.log('Error converting colors: (isExtra:', isExtra, ')', card.name);
+      winston.error('Error converting colors: (isExtra:', isExtra, ')', card.name);
       return [];
     }
     // special case: Adventure faces currently do not have colors on Scryfall (but probably should)
@@ -626,8 +626,8 @@ function convertColors(card, isExtra = false) {
     return Array.from(card.card_faces[0].colors);
   }
 
-  console.log('Error converting colors: (isExtra:', isExtra, ')', card.name);
-  console.log(card);
+  winston.error('Error converting colors: (isExtra:', isExtra, ')', card.name);
+  winston.error(card);
   return [];
 }
 
@@ -790,7 +790,7 @@ function writeCatalog(basePath = 'private') {
   pendingWrites.push(writeFile(path.join(basePath, 'cardimages.json'), JSON.stringify(catalog.cardimages)));
   const allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(() => {
-    console.log('All JSON files saved.');
+    winston.info('All JSON files saved.');
   });
   return allWritesPromise;
 }
@@ -812,7 +812,7 @@ async function saveAllCards(basePath = 'private', defaultPath = null, allPath = 
       .on('close', resolve),
   );
 
-  console.log('Creating language mappings...');
+  winston.info('Creating language mappings...');
   await new Promise((resolve) =>
     fs
       .createReadStream(allPath || path.resolve(basePath, 'all-cards.json'))
@@ -831,10 +831,10 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
 
   await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
-  console.log('Updating cardbase, this might take a little while...');
+  winston.info('Updating cardbase, this might take a little while...');
   await saveAllCards(basePath, defaultPath, allPath);
 
-  console.log('Finished cardbase update...');
+  winston.info('Finished cardbase update...');
 }
 
 module.exports = {
