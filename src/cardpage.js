@@ -2,19 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
-import {
-  Card,
-  CardHeader,
-  Row,
-  Col,
-  CardBody,
-  Table,
-  Nav,
-  NavItem,
-  NavLink,
-  TabContent,
-  TabPane,
-} from 'reactstrap';
+import { Card, CardHeader, Row, Col, CardBody, Table, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import ImageFallback from 'components/ImageFallback';
 import ButtonLink from 'components/ButtonLink';
