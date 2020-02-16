@@ -91,7 +91,7 @@ async function GetPrices(card_ids) {
         })
           .then(checkStatus)
           .then((response) => response.json())
-          .catch((err) => winston.error('TCGPlayer request failed.', err)),
+          .catch((err) => winston.error('TCGPlayer request failed.', { error: err })),
       ),
     );
     for (response of responses) {

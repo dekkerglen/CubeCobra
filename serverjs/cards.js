@@ -87,7 +87,7 @@ function loadJSONFile(filename, attribute) {
         try {
           data[attribute] = JSON.parse(contents);
         } catch (e) {
-          winston.error('Error parsing json from ', filename, ' : ', e);
+          winston.error(`Error parsing json from ${filename}.`, { error: e });
           err = e;
         }
       }
@@ -171,7 +171,7 @@ function getMostReasonable(cardName, printing = 'recent') {
 function getMostReasonableById(id, printing = 'recent') {
   const card = cardFromId(id);
   if (card.error) {
-    winston.info('Error finding most reasonable for id:', id);
+    winston.info(`Error finding most reasonable for id ${id}`);
     return getPlaceholderCard(0);
   }
   return getMostReasonable(card.name, printing);
