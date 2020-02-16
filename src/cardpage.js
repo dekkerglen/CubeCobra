@@ -47,7 +47,18 @@ class CardPage extends Component {
     return (
       <Card>
         <CardHeader>
-          <h4>{card.name}</h4>
+          <h4>
+            {card.name}
+            <div className="float-right">
+              <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
+                <span className="d-none d-sm-inline">View on Scryfall</span>
+                <span className="d-sm-none">Scryfall</span>
+              </ButtonLink>
+              <ButtonLink className="mx-2" color="secondary" href={getTCGLink({ details: card })}>
+                Buy
+              </ButtonLink>
+            </div>
+          </h4>
         </CardHeader>
         <CardBody>
           <Row>
@@ -156,15 +167,6 @@ class CardPage extends Component {
             </Row>
           </TabPane>
         </TabContent>
-        <CardFooter>
-          <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
-            <span className="d-none d-sm-inline">View on Scryfall</span>
-            <span className="d-sm-none">Scryfall</span>
-          </ButtonLink>
-          <ButtonLink className="mx-2" color="secondary" href={getTCGLink({ details: card })}>
-            Buy
-          </ButtonLink>
-        </CardFooter>
       </Card>
     );
   }
