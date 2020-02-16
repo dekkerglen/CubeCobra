@@ -63,8 +63,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 winston.info(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
-carddb.initializeCardDb();
-
 // Connect db
 mongoose.connect(mongosecrets.connectionString, {
   useCreateIndex: true,
@@ -200,7 +198,9 @@ schedule.scheduleJob('0 0 * * *', () => {
   updatedb.updateCardbase();
 });
 
-// Start server
-http.createServer(app).listen(5000, 'localhost', () => {
-  winston.info('server started on port 5000...');
+// Start server after carddb is initialized.
+carddb.initializeCardDb().then(() => {
+  http.createServer(app).listen(5000, 'localhost', () => {
+    winston.info('Server started on port 5000...');
+  });
 });
