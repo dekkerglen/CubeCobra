@@ -2719,19 +2719,12 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cards = [];
-    const tcg = [];
-    const names = [];
-    for (const id of carddb.allIds(carddb.cardFromId(req.params.id))) {
-      const card = carddb.cardFromId(id);
-      cards.push(card);
-      if (card.tcgplayer_id) {
-        tcg.push(card.tcgplayer_id);
-      }
-      names.push(card.name);
-    }
-    const priceDict = await GetPrices(tcg);
-    const eloDict = await getElo(names, true);
+    const cardIds = carddb.allIds(carddb.cardFromId(req.params.id));
+    // eslint-disable-next-line prefer-object-spread
+    const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
+    const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
+    const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
+    const [priceDict, eloDict] = await [GetPrices(tcg), getElo(names, true)];
     for (const card of cards) {
       if (card.tcgplayer_id) {
         const cardPriceData = priceDict[card.tcgplayer_id];
@@ -2756,31 +2749,35 @@ router.get(
 
 router.post(
   '/api/getversions',
+  body([], 'Body must be an array.').isArray(),
+  body('*', 'Each ID must be a valid UUID.').isUUID(4),
+  jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const cards = {};
+    const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
+    const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
+    const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
+    const allVersionsFlat = [].concat(...allVersions);
+    const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
+    const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
+    const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
+    const result = Object.fromEntries(
+      allVersions.map((versions, index) => [
+        cardutil.normalizeName(allDetails[index].name),
+        versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({
+          _id,
+          version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
+          image_normal,
+          image_flip,
+          price: priceDict[tcgplayer_id],
+          price_foil: priceDict[`${tcgplayer_id}_foil`],
+          elo: eloDict[cardutil.normalizeName(name)],
+        })),
+      ]),
+    );
 
-    for (const cardid of req.body) {
-      cards[cardid] = [];
-      carddb.nameToId[
-        carddb
-          .cardFromId(cardid)
-          .name.toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-      ].forEach((id) => {
-        const card = carddb.cardFromId(id);
-        cards[cardid].push({
-          id,
-          version: card.full_name
-            .toUpperCase()
-            .substring(carddb.cardFromId(id).full_name.indexOf('[') + 1, card.full_name.indexOf(']')),
-          img: card.image_normal,
-        });
-      });
-    }
     return res.status(200).send({
       success: 'true',
-      dict: cards,
+      dict: result,
     });
   }),
 );

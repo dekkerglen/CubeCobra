@@ -27,6 +27,7 @@ rules:
     - properties: never
       ignoreDestructuring: true
       ignoreImports: true
+      allow: ['tcgplayer_id']
   no-plusplus:
     - error
     - allowForLoopAfterthoughts: true
