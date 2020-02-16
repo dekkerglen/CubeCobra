@@ -48,12 +48,7 @@ router.use(csrfProtection);
 
 router.get('/notification/:index', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     if (req.params.index > user.notifications.length) {
       req.flash('danger', 'Not Found');
@@ -75,12 +70,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
 router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     user.notifications = [];
     await user.save();
@@ -103,29 +93,22 @@ router.get('/lostpassword', (req, res) => {
 
 router.get('/follow/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const userq = User.findById(req.user._id).exec();
-    const otherq = User.findById(req.params.id).exec();
-
-    const [user, other] = await Promise.all([userq, otherq]);
+    const { user } = req;
+    const other = await User.findById(req.params.id).exec();
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    if (!other.users_following.includes(user._id)) {
-      other.users_following.push(user._id);
+    if (!other.users_following.includes(user.id)) {
+      other.users_following.push(user.id);
     }
-    if (!user.followed_users.includes(other._id)) {
-      user.followed_users.push(other._id);
+    if (!user.followed_users.includes(other.id)) {
+      user.followed_users.push(other.id);
     }
 
-    await util.addNotification(other, user, `/user/view/${user._id}`, `${user.username} has followed you!`);
+    await util.addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
 
     await Promise.all([user.save(), other.save()]);
 
@@ -140,27 +123,16 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
 router.get('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const userq = User.findById(req.user._id).exec();
-    const otherq = User.findById(req.params.id).exec();
-
-    const [user, other] = await Promise.all([userq, otherq]);
+    const { user } = req;
+    const other = await User.findById(req.params.id).exec();
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    while (other.users_following.includes(user._id)) {
-      other.users_following.splice(other.users_following.indexOf(user._id), 1);
-    }
-    while (user.followed_users.includes(other._id)) {
-      user.followed_users.splice(user.followed_users.indexOf(other._id), 1);
-    }
+    other.users_following = other.users_following.filter((id) => !other._id.equals(id));
+    user.followed_users = user.followed_users.filter((id) => id !== req.params.id);
 
     await Promise.all([user.save(), other.save()]);
 
@@ -536,7 +508,7 @@ router.get('/view/:id', async (req, res) => {
 
     const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
 
-    const following = req.user ? user.users_following.includes(req.user._id) : false;
+    const following = req.user ? user.users_following.includes(req.user.id) : false;
     delete user.users_following;
 
     return res.render('user/user_view', {
@@ -562,14 +534,8 @@ router.get('/decks/:userid', (req, res) => {
 
 router.get('/notifications', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      res.redirect('/404');
-    }
-
     return res.render('user/notifications', {
-      notifications: user.old_notifications,
+      notifications: req.user.old_notifications,
     });
   } catch (err) {
     console.error(err);
@@ -619,7 +585,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       user,
       canEdit: req.user && user._id.equals(req.user._id),
       followers,
-      following: req.user && req.user.followed_users.includes(user._id),
+      following: req.user && req.user.followed_users.includes(user.id),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,

@@ -34,16 +34,10 @@ router.get('/explore', async (req, res) => {
   const recentsq = Cube.find({
     $or: [
       {
-        $and: [
-          {
-            card_count: {
-              $gt: 200,
-            },
-          },
-          {
-            isListed: true,
-          },
-        ],
+        card_count: {
+          $gt: 200,
+        },
+        isListed: true,
       },
       {
         owner: userID,
@@ -128,11 +122,7 @@ router.get('/random', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    if (!req.user) {
-      return res.redirect('/landing');
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!user) {
       return res.redirect('/landing');
     }
@@ -213,7 +203,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
   try {
     const pagesize = 30;
     const { page } = req.params;
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!user) {
       return res.redirect('/landing');
     }
