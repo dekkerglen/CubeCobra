@@ -294,10 +294,12 @@ router.get('/landing', async (req, res) => {
 router.post('/advanced_search', (req, res) => {
   let url = '/search/';
   if (req.body.name && req.body.name.length > 0) {
-    url += `name${req.body.nameType}${req.body.name};`;
+    const encoded = encodeURIComponent(req.body.name);
+    url += `name${req.body.nameType}${encoded};`;
   }
   if (req.body.owner && req.body.owner.length > 0) {
-    url += `owner_name${req.body.ownerType}${req.body.owner};`;
+    const encoded = encodeURIComponent(req.body.owner);
+    url += `owner_name${req.body.ownerType}${encoded};`;
   }
   res.redirect(url);
 });
