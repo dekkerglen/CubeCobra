@@ -12,7 +12,6 @@ const Seat = {
   packbacklog: [[cardSchema]],
 };
 
-
 // Cube schema
 let draftSchema = mongoose.Schema({
   cube: mongoose.Schema.Types.ObjectId,

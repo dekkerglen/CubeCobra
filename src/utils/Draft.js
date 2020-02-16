@@ -220,7 +220,6 @@ async function finish() {
     }
   }
 
-
   //save draft. if we fail, we fail
   await csrfFetch('/cube/api/draftpick/' + draft.cube, {
     method: 'POST',

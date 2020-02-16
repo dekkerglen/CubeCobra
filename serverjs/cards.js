@@ -56,8 +56,8 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-  //the reason we do this, is if we accidentally pass an object here, we may be able to extrapolate some context
-    console.log(`Could not find card from id: ${Json.stringify(id,null,2)}`);
+    //the reason we do this, is if we accidentally pass an object here, we may be able to extrapolate some context
+    console.log(`Could not find card from id: ${Json.stringify(id, null, 2)}`);
     details = getPlaceholderCard(id);
   }
 

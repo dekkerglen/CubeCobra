@@ -81,7 +81,7 @@ async function buildDeck(cards, bot) {
     if (bot) {
       return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
     } else {
-      return (elos[b.details.name] - elos[a.details.name]);
+      return elos[b.details.name] - elos[a.details.name];
     }
   };
 
