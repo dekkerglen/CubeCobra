@@ -1,17 +1,22 @@
 const express = require('express');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const expressValidator = require('express-validator');
 const session = require('express-session');
 const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
-var schedule = require('node-schedule');
+const schedule = require('node-schedule');
+// eslint-disable-next-line import/no-unresolved
 const secrets = require('../cubecobrasecrets/secrets');
+// eslint-disable-next-line import/no-unresolved
 const mongosecrets = require('../cubecobrasecrets/mongodb');
-var updatedb = require('./serverjs/updatecards.js');
+const updatedb = require('./serverjs/updatecards.js');
+const carddb = require('./serverjs/cards.js');
+
+carddb.initializeCardDb();
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString);
@@ -28,7 +33,8 @@ db.on('error', (err) => {
 // Init app
 const app = express();
 
-const store = new MongoDBStore({
+const store = new MongoDBStore(
+  {
     uri: mongosecrets.connectionString,
     databaseName: mongosecrets.dbname,
     collection: 'session_data',
@@ -64,10 +70,7 @@ app.set('view engine', 'pug');
 // Set Public Folder
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'dist')));
-app.use(
-  '/jquery-ui',
-  express.static(`${__dirname}/node_modules/jquery-ui-dist/`),
-);
+app.use('/jquery-ui', express.static(`${__dirname}/node_modules/jquery-ui-dist/`));
 
 const sessionOptions = {
   secret: secrets.session,
@@ -96,26 +99,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Express validator middleware
-app.use(
-  expressValidator({
-    errorFormatter(param, msg, value) {
-      const namespace = param.split('.');
-      const root = namespace.shift();
-      let formParam = root;
-
-      while (namespace.length) {
-        formParam += `[${namespace.shift()}]`;
-      }
-      return {
-        param: formParam,
-        msg,
-        value,
-      };
-    },
-  }),
-);
-
 // Passport config and middleware
 require('./config/passport')(passport);
 
@@ -143,8 +126,8 @@ app.use((req, res) => {
   res.status(404).render('misc/404', {});
 });
 
-schedule.scheduleJob('0 0 * * *', function(){
-  console.log("Starting midnight cardbase update...");
+schedule.scheduleJob('0 0 * * *', () => {
+  console.log('Starting midnight cardbase update...');
   updatedb.updateCardbase();
 });
 

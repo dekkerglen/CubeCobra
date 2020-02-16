@@ -1,10 +1,12 @@
 extends ../layout
 
 block content
-  include ../flash
-  input(type='hidden', id='topcardsNumResults', value=numResults)
-  input(type='hidden', id='topcards', value=JSON.stringify(data))
+  include ../dynamic_flash
   #react-root
+
+block scripts
   include ../react
-  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  script(src='/js/autocard.js', async)
   script(src='/js/topcards.bundle.js')

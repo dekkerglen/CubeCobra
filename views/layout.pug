@@ -93,9 +93,8 @@ html(lang='en')
 								.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
 									a.dropdown-item(href="/user/view/"+user.id) Your Profile
 									a.dropdown-item(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+									a.dropdown-item(href='/user/social') Social
 									a.dropdown-item(href='/user/account') Account Information
-									a.dropdown-item(href='/user/account/changepassword') Change Password
-									a.dropdown-item(href='/user/account/updateemail') Update Email
 									a.dropdown-item(href='/user/logout') Logout
 
 						else
@@ -143,10 +142,10 @@ html(lang='en')
 						.modal-body
 							.form-group
 								label.col-form-label Username or Email Address:
-								input#username.form-control(name='username', type='text')
+								input#username.form-control(name='username', type='text', autocomplete='username')
 							.form-group
 								label.col-form-label Password:
-								input#password.form-control(name='password', type='password')
+								input#password.form-control(name='password', type='password', autocomplete='current-password')
 							a(href='/user/lostpassword') Forgot password?
 							if loginCallback
 								input(type='hidden', name='loginCallback', value=loginCallback)     

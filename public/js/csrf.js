@@ -8,7 +8,7 @@ window.getCsrfToken = () => {
 window.csrfFetch = (resource, init) => {
   init.credentials = init.credentials || 'same-origin';
   init.headers = Object.assign(init.headers || {}, {
-    'CSRF-Token': getCsrfToken(),
+    'CSRF-Token': window.getCsrfToken(),
   });
   return fetch(resource, init);
 };

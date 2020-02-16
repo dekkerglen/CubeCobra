@@ -156,7 +156,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
         const json = await response.json();
         if (json.success === 'true') {
           // Make shallow copy of each card.
-          const updatedCards = cardIndices.map((index) => ({ ...cube[index] }));
+          const updatedCards = cardIndices.map((index) => ({ ...cube.cards[index] }));
           for (const card of updatedCards) {
             updated.status && (card.status = updated.status);
             updated.finish && (card.finish = updated.finish);
@@ -193,7 +193,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
       event.preventDefault();
       addChanges(
         cardIndices.map((index) => ({
-          remove: cube[index],
+          remove: cube.cards[index],
         })),
       );
       close();
@@ -201,7 +201,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     [addChanges, cardIndices, cube, close],
   );
 
-  const cards = cardIndices.map((index) => cube[index]);
+  const cards = cardIndices.map((index) => cube.cards[index]);
   const setCards = useCallback((cards) => setCardIndices(cards.map((card) => card.index)));
 
   const contextChildren = (

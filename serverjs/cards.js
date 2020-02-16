@@ -134,39 +134,47 @@ function unloadCardDb() {
   }
 }
 
-function notPromoOrDigitalId(id) {
-  return notPromoOrDigitalCard(cardFromId(id));
+function reasonableCard(card) {
+  return (
+    !card.promo &&
+    !card.digital &&
+    card.border_color !== 'gold' &&
+    card.language === 'en' &&
+    card.tcgplayer_id &&
+    card.set !== 'myb'
+  );
 }
 
-function notPromoOrDigitalCard(card) {
-  return !card.promo && !card.digital && card.border_color != 'gold' && card.language == 'en' && card.tcgplayer_id;
-}
-
-function getMostReasonable(cardName) {
-  const ids = getIdsFromName(cardName);
-  if (typeof ids === 'undefined' || ids.length == 0) {
-    return getMostReasonableById(cardName);
-  }
-
-  for (const id of ids) {
-    if (notPromoOrDigitalId(id)) {
-      return cardFromId(id);
-    }
-  }
-  return cardFromId(ids[0]);
-}
-
-function getMostReasonableById(id) {
-  let card = cardFromId(id);
-  if (card.error) {
-    console.log('Error finding most reasonable for id:', id);
-    return getPlaceholderCard(0);
-  }
-  return getMostReasonable(card.name);
+function reasonableId(id) {
+  return reasonableCard(cardFromId(id));
 }
 
 function getIdsFromName(name) {
   return data.nameToId[cardutil.normalizeName(name)];
+}
+
+// Printing = 'recent' or 'first'
+function getMostReasonable(cardName, printing = 'recent') {
+  const ids = [...getIdsFromName(cardName)];
+  if (typeof ids === 'undefined' || ids.length === 0) {
+    // eslint-disable-next-line no-use-before-define
+    return getMostReasonableById(cardName, printing);
+  }
+
+  // Ids are stored in reverse chronological order, so reverse if we want first printing.
+  if (printing !== 'recent') {
+    ids.reverse();
+  }
+  return cardFromId(ids.find(reasonableId) || ids[0]);
+}
+
+function getMostReasonableById(id, printing = 'recent') {
+  const card = cardFromId(id);
+  if (card.error) {
+    console.log('Error finding most reasonable for id:', id);
+    return getPlaceholderCard(0);
+  }
+  return getMostReasonable(card.name, printing);
 }
 
 function getEnglishVersion(id) {
@@ -185,8 +193,8 @@ data.getPlaceholderCard = getPlaceholderCard;
 data.unloadCardDb = unloadCardDb;
 data.getMostReasonable = getMostReasonable;
 data.getMostReasonableById = getMostReasonableById;
-data.notPromoOrDigitalId = notPromoOrDigitalId;
-data.notPromoOrDigitalCard = notPromoOrDigitalCard;
+data.reasonableId = reasonableId;
+data.reasonableCard = reasonableCard;
 
 // deprecated: use card.name_lower or cardutil.normalizeName
 data.normalizedName = (card) => cardutil.normalizeName(card.name);

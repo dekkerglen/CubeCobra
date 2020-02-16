@@ -12,16 +12,14 @@ import MaybeboardContext from 'components/MaybeboardContext';
 
 const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cardIndex, setCardIndex] = useState(null);
+  const [card, setCard] = useState({ colors: [], details: {}, tags: [] });
   const [maybe, setMaybe] = useState(false);
   const [versions, setVersions] = useState([]);
   const [formValues, setFormValues] = useState({ tags: [] });
 
   const { addChange } = useContext(ChangelistContext);
-  const { maybeboard, updateMaybeboardCard } = useContext(MaybeboardContext);
-  const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
-
-  const card = (maybe ? maybeboard[cardIndex] : cube[cardIndex]) || { colors: [], details: {}, tags: [] };
+  const { updateMaybeboardCard } = useContext(MaybeboardContext);
+  const { canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
   const setTagInput = useCallback(
     (value) =>
@@ -96,7 +94,7 @@ const CardModalForm = ({ children, ...props }) => {
             ...updated,
             details: cardJson.card,
           };
-          updateCubeCard(cardIndex, newCard);
+          updateCubeCard(card.index, newCard);
           setIsOpen(false);
         }
       } else {
@@ -133,39 +131,35 @@ const CardModalForm = ({ children, ...props }) => {
     setIsOpen(false);
   }, [card, addChange]);
 
-  const openCardModal = useCallback(
-    (newCardIndex, newMaybe) => {
-      const card = newMaybe ? maybeboard[newCardIndex] : cube[newCardIndex];
-      const colors = card.colors || card.details.colors;
-      const typeLine = card.type_line || card.details.type;
-      const tags = card.tags || [];
-      setCardIndex(newCardIndex);
-      setMaybe(!!newMaybe);
-      setVersions([card.details]);
-      setFormValues({
-        version: card.cardID,
-        status: card.status,
-        finish: card.finish,
-        cmc: card.cmc,
-        type_line: typeLine,
-        imgUrl: card.imgUrl,
-        tags: tags.map((tag) => ({ id: tag, text: tag })),
-        tagInput: '',
-        colorW: colors.includes('W'),
-        colorU: colors.includes('U'),
-        colorB: colors.includes('B'),
-        colorR: colors.includes('R'),
-        colorG: colors.includes('G'),
+  const openCardModal = useCallback((card, newMaybe) => {
+    const colors = card.colors || card.details.colors;
+    const typeLine = card.type_line || card.details.type;
+    const tags = card.tags || [];
+    setCard(card);
+    setMaybe(!!newMaybe);
+    setVersions([card.details]);
+    setFormValues({
+      version: card.cardID,
+      status: card.status,
+      finish: card.finish,
+      cmc: card.cmc,
+      type_line: typeLine,
+      imgUrl: card.imgUrl,
+      tags: tags.map((tag) => ({ id: tag, text: tag })),
+      tagInput: '',
+      colorW: colors.includes('W'),
+      colorU: colors.includes('U'),
+      colorB: colors.includes('B'),
+      colorR: colors.includes('R'),
+      colorG: colors.includes('G'),
+    });
+    setIsOpen(true);
+    fetch(`/cube/api/getversions/${card.cardID}`)
+      .then((response) => response.json())
+      .then((json) => {
+        setVersions(json.cards);
       });
-      setIsOpen(true);
-      fetch(`/cube/api/getversions/${card.cardID}`)
-        .then((response) => response.json())
-        .then((json) => {
-          setVersions(json.cards);
-        });
-    },
-    [cube, maybeboard],
-  );
+  }, []);
 
   const closeCardModal = useCallback(() => setIsOpen(false));
 

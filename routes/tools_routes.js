@@ -1,5 +1,6 @@
 const express = require('express');
 const quickselect = require('quickselect');
+const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
@@ -13,10 +14,10 @@ const Cube = require('../models/cube');
 
 const router = express.Router();
 
-/* Minimum number of picks to show up in Top Cards list. */
+/* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 1000;
+const MAX_RESULTS = 400;
 
 /* Gets k sorted minimum elements of arr. */
 /* Modifies arr. */
@@ -36,28 +37,20 @@ async function matchingCards(filter) {
   if (filter.length > 0) {
     // In the first pass, cards don't have prices, and so match all price filters.
     // In the seoncd pass, we add prices.
-    const firstPass = Filter.filterCardsDetails(cards, filter);
-    const withPrices = await addPrices(firstPass);
-    return Filter.filterCardsDetails(withPrices, filter);
+    if (Filter.filterUsesPrice(filter)) {
+      const firstPass = Filter.filterCardsDetails(cards, filter);
+      const withPrices = await addPrices(firstPass);
+      // null is a magic value that causes price filtering to always fail.
+      const withNullPrices = withPrices.map(({ price, price_foil, ...card }) => ({
+        ...card,
+        price: price || null,
+        price_foil: price_foil || null, // eslint-disable-line camelcase
+      }));
+      return Filter.filterCardsDetails(withNullPrices, filter);
+    }
+    return Filter.filterCardsDetails(cards, filter);
   }
   return cards;
-}
-
-function makeFilter(filterText) {
-  if (!filterText || filterText.trim() === '') {
-    return {
-      err: false,
-      filter: [],
-    };
-  }
-
-  const tokens = [];
-  const valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
-
-  return {
-    err: !valid,
-    filter: valid ? [Filter.parseTokens(tokens)] : [],
-  };
 }
 
 async function topCards(filter) {
@@ -72,23 +65,40 @@ async function topCards(filter) {
   }
   const names = [...nameMap.keys()];
   const versions = [...nameMap.values()].map((possible) => {
-    const nonPromo = possible.find((card) => carddb.notPromoOrDigitalCard(card));
+    const nonPromo = possible.find((card) => carddb.reasonableCard(card));
     return nonPromo || possible[0];
   });
 
-  const ratingsQ = CardRating.find({
-    name: {
-      $in: names,
-    },
-  });
-  const cardDataQ = Card.find(
-    {
-      cardName: {
-        $in: names.map((name) => name.toLowerCase()),
+  const ratingsQ = CardRating.find(
+    filter.length === 0
+      ? {}
+      : {
+          name: {
+            $in: names,
+          },
+        },
+  )
+    .sort('-elo')
+    .limit(MAX_RESULTS)
+    .lean();
+  const cardDataQ = Card.aggregate()
+    .match(
+      filter.length === 0
+        ? {}
+        : {
+            cardName: {
+              $in: names.map((name) => name.toLowerCase()),
+            },
+          },
+    )
+    .addFields({
+      cubesLength: {
+        $size: '$cubes',
       },
-    },
-    'cardName cubes',
-  );
+    })
+    .sort({ cubesLength: -1 })
+    .limit(4 * MAX_RESULTS)
+    .project('cardName cubesLength');
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 
@@ -99,19 +109,19 @@ async function topCards(filter) {
     const card = cardDataDict.get(v.name.toLowerCase());
     /* This is a Bayesian adjustment to the rating like IMDB does. */
     const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-    const qualifies = rating && typeof rating.picks !== 'undefined' && rating.picks > MIN_PICKS;
+    const qualifies = rating && rating.picks !== undefined && rating.picks > MIN_PICKS;
     return [
       v.name,
       v.image_normal,
       v.image_flip || null,
       qualifies && rating.value ? adjust(rating) : null,
-      rating && typeof rating.picks !== 'undefined' ? rating.picks : null,
+      rating && rating.picks !== undefined ? rating.picks : null,
       qualifies && rating.elo ? rating.elo : null,
-      card ? card.cubes.length : null,
+      card ? card.cubesLength : null,
     ];
   });
   /* Sort by number of picks for limit. */
-  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[4] === null ? -1 : x[4]));
+  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[5] === null ? 1 : -x[5]));
   return {
     ratings,
     versions,
@@ -130,7 +140,7 @@ function shuffle(a) {
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
+    const { err, filter } = Filter.makeFilter(req.query.f);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -154,16 +164,21 @@ router.get('/api/topcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
+    const { err, filter } = Filter.makeFilter(req.query.f);
 
     if (err) {
       req.flash('Invalid filter.');
     }
 
     const { data, names } = await topCards(filter, res);
+
+    const reactProps = {
+      defaultNumResults: names.length,
+      defaultData: data,
+      defaultFilterText: req.query.f,
+    };
     res.render('tool/topcards', {
-      numResults: names.length,
-      data,
+      reactProps: serialize(reactProps),
       title: 'Top Cards',
     });
   } catch (err) {

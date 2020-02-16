@@ -241,7 +241,7 @@ const CubeListNavbar = ({
         if (cards.length === 0) {
           setSelectEmptyModalOpen(true);
         } else if (cards.length === 1) {
-          openCardModal(cards[0].index);
+          openCardModal(cards[0]);
         } else if (cards.length > 1) {
           openGroupModal();
         }
@@ -364,7 +364,7 @@ const CubeListNavbar = ({
           </Nav>
         </Collapse>
       </Navbar>
-      {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
+      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse
         defaultFilterText={defaultFilterText}

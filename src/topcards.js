@@ -4,7 +4,9 @@ import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
 import { encodeName } from 'utils/Card';
+import { makeFilter } from 'utils/Filter';
 
+import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
 import SortableTable from 'components/SortableTable';
@@ -16,10 +18,10 @@ class TopCards extends Component {
   constructor(props) {
     super(props);
 
-    const { defaultData, defaultNumResults } = props;
+    const { defaultData, defaultNumResults, defaultFilterText } = props;
 
     this.state = {
-      filter: [],
+      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) || [],
       data: defaultData || [],
       numResults: defaultNumResults || 0,
     };
@@ -43,6 +45,7 @@ class TopCards extends Component {
   }
 
   render() {
+    const { defaultFilterText } = this.props;
     const { data, filter, numResults } = this.state;
 
     const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
@@ -65,12 +68,14 @@ class TopCards extends Component {
           <h4 className="mx-3 mb-3">Top Cards</h4>
           <FilterCollapse
             isOpen
+            defaultFilterText={defaultFilterText}
             filter={filter}
             setFilter={this.setFilter}
             numCards={numResults}
             numShown={data.length}
           />
         </div>
+        <DynamicFlash />
         <SortableTable
           sorts={{
             Rating: (row) => row[3],
@@ -97,14 +102,13 @@ class TopCards extends Component {
 TopCards.propTypes = {
   defaultData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
   defaultNumResults: PropTypes.number.isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
 };
 
-const data = JSON.parse(document.getElementById('topcards').value);
-const numResults = parseInt(document.getElementById('topcardsNumResults').value, 10);
 const wrapper = document.getElementById('react-root');
 const element = (
-  <ErrorBoundary>
-    <TopCards defaultData={data} defaultNumResults={numResults} />
+  <ErrorBoundary className="mt-3">
+    <TopCards {...window.reactProps} />
   </ErrorBoundary>
 );
 if (wrapper) {
