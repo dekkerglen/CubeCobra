@@ -1791,10 +1791,10 @@ router.post(
     const post = await Blog.findById(req.body.id);
     const { user } = req;
 
-    if (!user) {
+    if (!user._id.equals(post.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Unauthorized',
+        message: 'Only post owner may edit',
       });
     }
 
