@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import {
   Card,
   CardHeader,
-  CardFooter,
   Row,
   Col,
   CardBody,
