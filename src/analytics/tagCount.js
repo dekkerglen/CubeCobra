@@ -10,7 +10,12 @@ async function tagCloud(cards) {
       }
     }),
   );
-  const rows = Object.keys(tags).map((tag) => ({ tag, asfan: tags[tag].asfan.toFixed(2), key: tag, count: tags[tag].count }));
+  const rows = Object.keys(tags).map((tag) => ({
+    tag,
+    asfan: tags[tag].asfan.toFixed(2),
+    key: tag,
+    count: tags[tag].count,
+  }));
   return {
     type: 'table',
     description:
@@ -23,8 +28,8 @@ async function tagCloud(cards) {
           { header: 'Count', key: 'count' },
         ],
         rows,
-      }
-    ]
+      },
+    ],
   };
 }
 
