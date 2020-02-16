@@ -10,6 +10,7 @@ const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
 const winston = require('winston');
+const { Loggly } = require('winston-loggly-bulk');
 const morgan = require('morgan');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
@@ -57,6 +58,17 @@ if (process.env.NODE_ENV !== 'production') {
   winston.add(
     new winston.transports.Console({
       format: winston.format.simple(),
+    }),
+  );
+}
+
+if (secrets.loggly) {
+  winston.add(
+    new Loggly({
+      token: secrets.loggly.token,
+      subdomain: secrets.loggly.subdomain,
+      tags: ['Winston-NodeJS'],
+      json: true,
     }),
   );
 }
