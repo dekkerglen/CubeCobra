@@ -485,7 +485,7 @@ router.get('/overview/:id', async (req, res) => {
       owner: owner ? owner.username : 'unknown',
       ownerID: owner ? owner._id : null,
       post: blogs ? blogs[0] : null,
-      followed: owner && owner.followed_cubes ? owner.followed_cubes.includes(cube._id) : false,
+      followed: owner && owner.followed_cubes ? owner.followed_cubes.includes(cube.id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
