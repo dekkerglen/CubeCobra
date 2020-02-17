@@ -189,6 +189,11 @@ const specialCaseCardsList = {
       tokenId: 'bd05e304-1a16-436d-a05c-4a38a839759b',
     },
   ],
+  "Jace, Vryn's Prodigy": [
+    {
+      tokenId: '458e37b1-a849-41ae-b63c-3e09ffd814e4',
+    },
+  ],
   "Legion's Landing": [
     {
       tokenId: '09293ae7-0629-417b-9eda-9bd3f6d8e118',
