@@ -1713,7 +1713,8 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         newMaybe.splice(maybeIndex, 1);
       }
     }
-    cube.cards = [...cube.cards.filter((card, index) => !removes.has(index)), ...newCards];
+    // Remove all invalid cards.
+    cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
     cube.maybe = newMaybe;
 
     const blogpost = new Blog();
