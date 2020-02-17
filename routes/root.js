@@ -326,7 +326,7 @@ router.get('/search/:id', (req, res) => {
   const terms = [];
 
   function regexEscape(input) {
-    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, "\\$&");
+    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
   }
   rawQueries.forEach((searchExpression) => {
     let field;
