@@ -1021,9 +1021,13 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
         const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
         const selected = matchingSet || nonPromo || potentialIds[0];
         const details = carddb.cardFromId(selected);
-        added.push(details);
-        util.addCardToCube(cube, details, card.tags);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          added.push(details);
+          util.addCardToCube(cube, details, card.tags);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${card.name}\n`;
+        }
       } else {
         missing += `${card.name}\n`;
       }
@@ -1040,7 +1044,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
-    if (missing.length === 0) {
+    if (missing.length > 0) {
       const reactProps = {
         cubeID: req.params.id,
         missing,
@@ -2659,7 +2663,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting').lean();
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
-    if (card && !card.error) {
+    if (card) {
       return res.status(200).send({
         success: 'true',
         card,
@@ -2675,7 +2679,7 @@ router.get(
   '/api/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
     const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-    const img = carddb.imagedict[reasonable.name];
+    const img = reasonable ? carddb.imagedict[reasonable.name] : null;
     if (!img) {
       return res.status(200).send({
         success: 'false',
