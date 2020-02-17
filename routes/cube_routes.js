@@ -332,7 +332,7 @@ router.post(
     }
 
     const { user } = req;
-    cube.users_following = cube.users_following.filter((id) => !cube._id.equals(id));
+    cube.users_following = cube.users_following.filter((id) => !req.user._id.equals(id));
     user.followed_cubes = user.followed_cubes.filter((id) => id !== req.params.id);
 
     await Promise.all([user.save(), cube.save()]);
@@ -414,7 +414,6 @@ router.get('/overview/:id', async (req, res) => {
       }
     }
 
-    const ownerQ = User.findById(cube.owner).lean();
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -427,7 +426,7 @@ router.get('/overview/:id', async (req, res) => {
       '_id username image artist users_following',
     ).lean();
     const priceDictQ = GetPrices([...pids]);
-    const [owner, blogs, followers, priceDict] = await Promise.all([ownerQ, blogsQ, followersQ, priceDictQ]);
+    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -482,10 +481,10 @@ router.get('/overview/:id', async (req, res) => {
       cubeID,
       loggedIn: !!req.user,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      owner: owner ? owner.username : 'unknown',
-      ownerID: owner ? owner._id : null,
+      owner: cube.owner_name || 'unknown',
+      ownerID: cube.owner || null,
       post: blogs ? blogs[0] : null,
-      followed: owner && owner.followed_cubes ? owner.followed_cubes.includes(cube.id) : false,
+      followed: req.user && cube.users_following ? cube.users_following.includes(req.user.id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
