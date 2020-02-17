@@ -1275,10 +1275,15 @@ async function bulkUpload(req, res, list, cube) {
   let changelog = '';
   for (let i = 0; i < cards.length; i++) {
     const item = cards[i].toLowerCase().trim();
-    if (/([0-9]+x )(.*)/.test(item)) {
-      const count = parseInt(item.substring(0, item.indexOf('x')), 10);
+    const numericMatch = item.match(/([0-9]+)x? (.*)/);
+    console.warn(numericMatch);
+    if (numericMatch) {
+      let count = parseInt(numericMatch[1], 10);
+      if (!Number.isInteger(count)) {
+        count = 1;
+      }
       for (let j = 0; j < count; j++) {
-        cards.push(item.substring(item.indexOf('x') + 1));
+        cards.push(numericMatch[2]);
       }
     } else {
       let selected;
