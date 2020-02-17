@@ -1,6 +1,6 @@
 const fs = require('fs');
-const path = require('path');
-const https = require('https');
+const path = require('path'); // eslint-disable-line import/no-extraneous-dependencies
+const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 const cardutil = require('../dist/utils/Card.js');

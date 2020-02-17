@@ -2,7 +2,7 @@ const fs = require('fs');
 const util = require('./util.js');
 const cardutil = require('../dist/utils/Card.js');
 
-var data = {
+const data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
@@ -12,7 +12,8 @@ var data = {
   english: {},
   _carddict: {},
 };
-var fileToAttribute = {
+
+const fileToAttribute = {
   'carddict.json': '_carddict',
   'cardtree.json': 'cardtree',
   'names.json': 'cardnames',
@@ -24,9 +25,9 @@ var fileToAttribute = {
 };
 
 function getPlaceholderCard(_id) {
-  //placeholder card if we don't find the one due to a scryfall ID update bug
+  // placeholder card if we don't find the one due to a scryfall ID update bug
   return {
-    _id: _id,
+    _id,
     set: '',
     collector_number: '',
     promo: false,
@@ -55,13 +56,14 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    console.log('Could not find card from id: ' + id);
+    console.log(`Could not find card from id: ${id}`);
     details = getPlaceholderCard(id);
   }
 
   if (typeof fields === 'undefined') {
     return details;
-  } else if (!Array.isArray(fields)) {
+  }
+  if (!Array.isArray(fields)) {
     fields = fields.split(' ');
   }
 
@@ -70,18 +72,17 @@ function cardFromId(id, fields) {
 
 function getCardDetails(card) {
   if (data._carddict[card.cardID]) {
-    var details = data._carddict[card.cardID];
+    const details = data._carddict[card.cardID];
     card.details = details;
     return details;
-  } else {
-    console.log('Could not find card details: ' + card.cardID);
-    return getPlaceholderCard(card.cardID);
   }
+  console.log(`Could not find card details: ${card.cardID}`);
+  return getPlaceholderCard(card.cardID);
 }
 
 function loadJSONFile(filename, attribute) {
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, 'utf8', function(err, contents) {
+    fs.readFile(filename, 'utf8', (err, contents) => {
       if (!err) {
         try {
           data[attribute] = JSON.parse(contents);
@@ -89,7 +90,7 @@ function loadJSONFile(filename, attribute) {
           console.log('Error parsing json from ', filename, ' : ', e);
           err = e;
         }
-        console.log(attribute + ' loaded');
+        console.log(`${attribute} loaded`);
       }
       if (err) {
         reject(err);
@@ -101,8 +102,8 @@ function loadJSONFile(filename, attribute) {
 }
 
 function registerFileWatcher(filename, attribute) {
-  fs.watchFile(filename, (curr, prev) => {
-    console.log('File Changed: ' + filename);
+  fs.watchFile(filename, () => {
+    console.log(`File Changed: ${filename}`);
     loadJSONFile(filename, attribute);
   });
 }
@@ -111,12 +112,9 @@ function initializeCardDb(dataRoot, skipWatchers) {
   if (dataRoot === undefined) {
     dataRoot = 'private';
   }
-  var promises = [],
-    filepath,
-    attribute;
-  for (var filename in fileToAttribute) {
-    filepath = dataRoot + '/' + filename;
-    attribute = fileToAttribute[filename];
+  const promises = [];
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
+    const filepath = `${dataRoot}/${filename}`;
     promises.push(loadJSONFile(filepath, attribute));
     if (skipWatchers !== true) {
       registerFileWatcher(filepath, attribute);
@@ -126,9 +124,7 @@ function initializeCardDb(dataRoot, skipWatchers) {
 }
 
 function unloadCardDb() {
-  var attribute;
-  for (var filename in fileToAttribute) {
-    attribute = fileToAttribute[filename];
+  for (const attribute of Object.values(fileToAttribute)) {
     delete data[attribute];
   }
 }
