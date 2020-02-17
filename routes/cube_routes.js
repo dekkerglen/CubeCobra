@@ -881,7 +881,7 @@ router.get('/analysis/:id', async (req, res) => {
             addedTmsp: new Date(),
             imgUrl: undefined,
             finish: 'Non-foil',
-            details: { ...tokenDetails },
+            details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
           };
         }
       }
