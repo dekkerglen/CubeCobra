@@ -324,6 +324,10 @@ router.get('/search/:id', (req, res) => {
   let page = parseInt(rawSplit[1], 10);
   let query = {};
   const terms = [];
+
+  function regexEscape(input) {
+    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, "\\$&");
+  }
   rawQueries.forEach((searchExpression) => {
     let field;
     let filter;
@@ -332,11 +336,12 @@ router.get('/search/:id', (req, res) => {
 
     if (searchExpression.includes('=')) {
       [field, filter] = searchExpression.split('=');
-      searchRegex = new RegExp(`^${filter}$`, 'i');
+      const escapedFilter = regexEscape(filter);
+      searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
       expressionTerm = 'is exactly';
     } else if (searchExpression.includes('~')) {
       [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(filter, 'i');
+      searchRegex = new RegExp(regexEscape(filter), 'i');
       expressionTerm = 'contains';
     }
 
