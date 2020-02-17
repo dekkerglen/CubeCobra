@@ -227,6 +227,7 @@ class CubeOverview extends Component {
                 )}
               </CardBody>
               {loggedIn &&
+                !canEdit &&
                 (followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
