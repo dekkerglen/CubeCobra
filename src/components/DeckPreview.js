@@ -35,7 +35,7 @@ const DeckPreview = ({ deck }) => {
 DeckPreview.propTypes = {
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(something),
+    seats: PropTypes.arrayOf(PropTypes.object),
     date: PropTypes.date,
   }).isRequired,
 };
