@@ -114,7 +114,7 @@ const CustomDraftCard = ({ format, onEditFormat, onDeleteFormat, ...props }) => 
           />
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -176,7 +176,7 @@ const StandardDraftCard = () => {
           </LabelRow>
           <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id="seats" defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>

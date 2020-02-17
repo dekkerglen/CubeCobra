@@ -1,12 +1,12 @@
 const generateMeta = require('../../serverjs/meta');
 
 test('generateMeta returns the expected object', () => {
-  const title = 'the title',
-    description = 'the description',
-    image = 'a real image url',
-    url = 'a real og url',
-    width = 69,
-    height = 420;
+  const title = 'the title';
+  const description = 'the description';
+  const image = 'a real image url';
+  const url = 'a real og url';
+  const width = 69;
+  const height = 420;
   const expected = [
     {
       property: 'og:title',
@@ -26,11 +26,11 @@ test('generateMeta returns the expected object', () => {
     },
     {
       property: 'og:image:width',
-      content: width ? width : '',
+      content: width || '',
     },
     {
       property: 'og:image:height',
-      content: height ? height : '',
+      content: height || '',
     },
     {
       property: 'twitter:card',
