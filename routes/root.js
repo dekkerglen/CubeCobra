@@ -325,7 +325,10 @@ router.get('/search/:id', (req, res) => {
   let query = {};
   const terms = [];
 
-  function regexEscape(input) {
+  // input is the search string from a user -- should be treated as a string literal, rather than
+  // a regex with special characters.  This method escapes any characters which could be considered
+  // special characters by the regex, like . and *
+  function escapeRegexLiteral(input) {
     return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
   }
   rawQueries.forEach((searchExpression) => {
@@ -336,12 +339,12 @@ router.get('/search/:id', (req, res) => {
 
     if (searchExpression.includes('=')) {
       [field, filter] = searchExpression.split('=');
-      const escapedFilter = regexEscape(filter);
+      const escapedFilter = escapeRegexLiteral(filter);
       searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
       expressionTerm = 'is exactly';
     } else if (searchExpression.includes('~')) {
       [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(regexEscape(filter), 'i');
+      searchRegex = new RegExp(escapeRegexLiteral(filter), 'i');
       expressionTerm = 'contains';
     }
 
