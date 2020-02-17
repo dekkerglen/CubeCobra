@@ -869,21 +869,24 @@ router.get('/analysis/:id', async (req, res) => {
         card.type_line = card.details.type;
       }
       if (card.details.tokens) {
-        for (const element of card.details.tokens) {
+        card.details.tokens = card.details.tokens.map((element) => {
           const tokenDetails = carddb.cardFromId(element.tokenId);
-          element.token = {
-            tags: [],
-            status: 'Not Owned',
-            colors: tokenDetails.color_identity,
-            cmc: tokenDetails.cmc,
-            cardID: tokenDetails._id,
-            type_line: tokenDetails.type,
-            addedTmsp: new Date(),
-            imgUrl: undefined,
-            finish: 'Non-foil',
-            details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
+          return {
+            ...element,
+            token: {
+              tags: [],
+              status: 'Not Owned',
+              colors: tokenDetails.color_identity,
+              cmc: tokenDetails.cmc,
+              cardID: tokenDetails._id,
+              type_line: tokenDetails.type,
+              addedTmsp: new Date(),
+              imgUrl: undefined,
+              finish: 'Non-foil',
+              details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
+            },
           };
-        }
+        });
       }
     }
     cube.cards = await addPrices(cube.cards);
