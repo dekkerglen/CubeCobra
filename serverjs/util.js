@@ -111,6 +111,7 @@ function addCardToCube(cube, card_details, tags) {
   }
 
   const card = newCard(card_details, tags, cube.defaultStatus || 'Owned');
+  console.log(card);
   cube.cards.push(card);
 }
 

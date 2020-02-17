@@ -24,7 +24,6 @@ src/components/ButtonLink.js
 src/components/CSRFForm.js
 src/components/CardModal.js
 src/components/CardModalContext.js
-src/components/CardModalForm.js
 src/components/CardStack.js
 src/components/Changelist.js
 src/components/ChangelistContext.js

@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
@@ -42,38 +43,73 @@ const CardModalForm = ({ children, ...props }) => {
 
   const setTagInput = useCallback(
     (value) =>
-      setFormValues((formValues) => ({
-        ...formValues,
+      setFormValues((currentValues) => ({
+        ...currentValues,
         tagInput: value,
       })),
     [],
   );
 
   const setTags = useCallback((tagF) => {
-    setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
+    setFormValues(({ tags, ...currentValues }) => ({ ...currentValues, tags: tagF(tags) }));
   }, []);
-  const addTag = useCallback((tag) => {
-    setTags((tags) => [...tags, tag]);
-    setTagInput('');
-  }, []);
+  const addTag = useCallback(
+    (tag) => {
+      setTags((tags) => [...tags, tag]);
+      setTagInput('');
+    },
+    [setTags, setTagInput],
+  );
   const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }), [addTag]);
-  const deleteTag = useCallback((tagIndex) => {
-    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
-  }, []);
-  const reorderTag = useCallback((tag, currIndex, newIndex) => {
-    setTags((tags) => arrayMove(tags, currIndex, newIndex));
-  }, []);
+  const deleteTag = useCallback(
+    (tagIndex) => {
+      setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
+    },
+    [setTags],
+  );
+  const reorderTag = useCallback(
+    (tag, currIndex, newIndex) => {
+      setTags((tags) => arrayMove(tags, currIndex, newIndex));
+    },
+    [setTags],
+  );
 
   const handleChange = useCallback((event) => {
-    const target = event.target;
+    const { target } = event;
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
-    const name = target.name;
+    const { name } = target;
 
-    setFormValues((formValues) => ({
-      ...formValues,
+    setFormValues((currentValues) => ({
+      ...currentValues,
       [name]: value,
     }));
   }, []);
+
+  const openCardModal = useCallback((newCard, newMaybe) => {
+    const colors = newCard.colors || newCard.details.colors;
+    const typeLine = newCard.type_line || newCard.details.type;
+    const tags = newCard.tags || [];
+    setCard(newCard);
+    setMaybe(!!newMaybe);
+    setFormValues({
+      version: newCard.newCardID,
+      status: newCard.status,
+      finish: newCard.finish,
+      cmc: newCard.cmc || newCard.details.cmc,
+      type_line: typeLine,
+      imgUrl: newCard.imgUrl,
+      tags: tags.map((tag) => ({ id: tag, text: tag })),
+      tagInput: '',
+      colorW: colors.includes('W'),
+      colorU: colors.includes('U'),
+      colorB: colors.includes('B'),
+      colorR: colors.includes('R'),
+      colorG: colors.includes('G'),
+    });
+    setIsOpen(true);
+  }, []);
+
+  const closeCardModal = useCallback(() => setIsOpen(false), []);
 
   const saveChanges = useCallback(async () => {
     const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
@@ -141,7 +177,7 @@ const CardModalForm = ({ children, ...props }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [card, formValues, updateCubeCard, updateMaybeboardCard]);
+  }, [card, maybe, cubeID, formValues, updateCubeCard, updateMaybeboardCard, closeCardModal]);
 
   const queueRemoveCard = useCallback(() => {
     addChange({
@@ -149,32 +185,6 @@ const CardModalForm = ({ children, ...props }) => {
     });
     setIsOpen(false);
   }, [card, addChange]);
-
-  const openCardModal = useCallback((newCard, newMaybe) => {
-    const colors = card.colors || card.details.colors;
-    const typeLine = card.type_line || card.details.type;
-    const tags = card.tags || [];
-    setCard(newCard);
-    setMaybe(!!newMaybe);
-    setFormValues({
-      version: card.cardID,
-      status: card.status,
-      finish: card.finish,
-      cmc: card.cmc,
-      type_line: typeLine,
-      imgUrl: card.imgUrl,
-      tags: tags.map((tag) => ({ id: tag, text: tag })),
-      tagInput: '',
-      colorW: colors.includes('W'),
-      colorU: colors.includes('U'),
-      colorB: colors.includes('B'),
-      colorR: colors.includes('R'),
-      colorG: colors.includes('G'),
-    });
-    setIsOpen(true);
-  }, []);
-
-  const closeCardModal = useCallback(() => setIsOpen(false));
 
   const versions = card.details.name ? versionDict[normalizeName(card.details.name)] || [card.details] : [];
   const details = versions.find((version) => version._id === formValues.version) || card.details;
@@ -211,6 +221,14 @@ const CardModalForm = ({ children, ...props }) => {
       />
     </CardModalContext.Provider>
   );
+};
+
+CardModalForm.propTypes = {
+  children: PropTypes.node,
+};
+
+CardModalForm.defaultProps = {
+  children: false,
 };
 
 export default CardModalForm;

@@ -1288,32 +1288,27 @@ async function bulkUpload(req, res, list, cube) {
       let selected;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
-        if (
-          carddb.nameToId[
-            item
-              .toLowerCase()
-              .substring(0, item.indexOf('('))
-              .trim()
-          ]
-        ) {
-          const name = item
-            .toLowerCase()
-            .substring(0, item.indexOf('('))
-            .trim();
+        const name = item.substring(0, item.indexOf('('));
+        const potentialIds = carddb.getIdsFromName(name);
+        if (potentialIds && potentialIds.length > 0) {
           const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
           // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          const potentialIds = carddb.nameToId[name];
-          selected = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          selected = matching || potentialIds[0];
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item.toLowerCase().trim(), cube.defaultPrinting);
+        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
-        util.addCardToCube(cube, details);
-        added.push(details);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          util.addCardToCube(cube, details);
+          added.push(details);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${item}\n`;
+        }
       } else {
         missing += `${item}\n`;
       }
