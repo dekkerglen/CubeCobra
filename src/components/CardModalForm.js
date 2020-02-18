@@ -151,18 +151,18 @@ const CardModalForm = ({ children, ...props }) => {
   }, [card, addChange]);
 
   const openCardModal = useCallback((newCard, newMaybe) => {
-    const colors = card.colors || card.details.colors;
-    const typeLine = card.type_line || card.details.type;
-    const tags = card.tags || [];
+    const colors = newCard.colors || newCard.details.colors;
+    const typeLine = newCard.type_line || newCard.details.type;
+    const tags = newCard.tags || [];
     setCard(newCard);
     setMaybe(!!newMaybe);
     setFormValues({
-      version: card.cardID,
-      status: card.status,
-      finish: card.finish,
-      cmc: card.cmc,
+      version: newCard.cardID,
+      status: newCard.status,
+      finish: newCard.finish,
+      cmc: newCard.cmc,
       type_line: typeLine,
-      imgUrl: card.imgUrl,
+      imgUrl: newCard.imgUrl,
       tags: tags.map((tag) => ({ id: tag, text: tag })),
       tagInput: '',
       colorW: colors.includes('W'),

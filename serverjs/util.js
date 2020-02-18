@@ -105,6 +105,11 @@ function newCard(card_details, tags, defaultStatus = 'Owned') {
 }
 
 function addCardToCube(cube, card_details, tags) {
+  if (card_details.error) {
+    console.error('Attempted to add invalid card to cube.');
+    return;
+  }
+
   const card = newCard(card_details, tags, cube.defaultStatus || 'Owned');
   cube.cards.push(card);
 }

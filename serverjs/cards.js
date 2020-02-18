@@ -150,14 +150,16 @@ function getIdsFromName(name) {
 
 // Printing = 'recent' or 'first'
 function getMostReasonable(cardName, printing = 'recent') {
-  const ids = [...getIdsFromName(cardName)];
-  if (typeof ids === 'undefined' || ids.length === 0) {
+  let ids = getIdsFromName(cardName);
+  if (ids === undefined || ids.length === 0) {
+    // Try getting it by ID in case this is an ID.
     // eslint-disable-next-line no-use-before-define
     return getMostReasonableById(cardName, printing);
   }
 
   // Ids are stored in reverse chronological order, so reverse if we want first printing.
   if (printing !== 'recent') {
+    ids = [...ids];
     ids.reverse();
   }
   return cardFromId(ids.find(reasonableId) || ids[0]);
@@ -167,7 +169,7 @@ function getMostReasonableById(id, printing = 'recent') {
   const card = cardFromId(id);
   if (card.error) {
     console.log('Error finding most reasonable for id:', id);
-    return getPlaceholderCard(0);
+    return null;
   }
   return getMostReasonable(card.name, printing);
 }

@@ -1023,9 +1023,13 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
         const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
         const selected = matchingSet || nonPromo || potentialIds[0];
         const details = carddb.cardFromId(selected);
-        added.push(details);
-        util.addCardToCube(cube, details, card.tags);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          added.push(details);
+          util.addCardToCube(cube, details, card.tags);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${card.name}\n`;
+        }
       } else {
         missing += `${card.name}\n`;
       }
@@ -1042,7 +1046,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
-    if (missing.length === 0) {
+    if (missing.length > 0) {
       const reactProps = {
         cubeID: req.params.id,
         missing,
@@ -1286,32 +1290,27 @@ async function bulkUpload(req, res, list, cube) {
       let selected;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
-        if (
-          carddb.nameToId[
-            item
-              .toLowerCase()
-              .substring(0, item.indexOf('('))
-              .trim()
-          ]
-        ) {
-          const name = item
-            .toLowerCase()
-            .substring(0, item.indexOf('('))
-            .trim();
+        const name = item.substring(0, item.indexOf('('));
+        const potentialIds = carddb.getIdsFromName(name);
+        if (potentialIds && potentialIds.length > 0) {
           const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
           // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          const potentialIds = carddb.nameToId[name];
-          selected = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          selected = matching || potentialIds[0];
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item.toLowerCase().trim(), cube.defaultPrinting);
+        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
-        util.addCardToCube(cube, details);
-        added.push(details);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          util.addCardToCube(cube, details);
+          added.push(details);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${item}\n`;
+        }
       } else {
         missing += `${item}\n`;
       }
@@ -1711,7 +1710,8 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         newMaybe.splice(maybeIndex, 1);
       }
     }
-    cube.cards = [...cube.cards.filter((card, index) => !removes.has(index)), ...newCards];
+    // Remove all invalid cards.
+    cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
     cube.maybe = newMaybe;
 
     const blogpost = new Blog();
@@ -2661,7 +2661,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting').lean();
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
-    if (card && !card.error) {
+    if (card) {
       return res.status(200).send({
         success: 'true',
         card,
@@ -2677,7 +2677,7 @@ router.get(
   '/api/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
     const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-    const img = carddb.imagedict[reasonable.name];
+    const img = reasonable ? carddb.imagedict[reasonable.name] : null;
     if (!img) {
       return res.status(200).send({
         success: 'false',
