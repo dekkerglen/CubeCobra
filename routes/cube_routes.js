@@ -332,7 +332,7 @@ router.post(
     }
 
     const { user } = req;
-    cube.users_following = cube.users_following.filter((id) => !cube._id.equals(id));
+    cube.users_following = cube.users_following.filter((id) => !req.user._id.equals(id));
     user.followed_cubes = user.followed_cubes.filter((id) => id !== req.params.id);
 
     await Promise.all([user.save(), cube.save()]);
@@ -414,7 +414,6 @@ router.get('/overview/:id', async (req, res) => {
       }
     }
 
-    const userQ = User.findById(cube.owner).lean();
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -427,7 +426,7 @@ router.get('/overview/:id', async (req, res) => {
       '_id username image artist users_following',
     ).lean();
     const priceDictQ = GetPrices([...pids]);
-    const [user, blogs, followers, priceDict] = await Promise.all([userQ, blogsQ, followersQ, priceDictQ]);
+    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -480,12 +479,12 @@ router.get('/overview/:id', async (req, res) => {
     const reactProps = {
       cube,
       cubeID,
-      userID: user ? user._id : null,
-      loggedIn: !!user,
-      canEdit: user && user._id.equals(cube.owner),
-      owner: user ? user.username : 'unknown',
+      loggedIn: !!req.user,
+      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
+      owner: cube.owner_name || 'unknown',
+      ownerID: cube.owner || null,
       post: blogs ? blogs[0] : null,
-      followed: user && user.followed_cubes ? user.followed_cubes.includes(cube._id) : false,
+      followed: req.user && cube.users_following ? cube.users_following.includes(req.user.id) : false,
       followers,
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
@@ -828,7 +827,7 @@ router.get('/playtest/:id', async (req, res) => {
     const reactProps = {
       cube,
       cubeID: req.params.id,
-      canEdit: req.user._id.equals(cube.owner),
+      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       decks,
       draftFormats,
     };
@@ -869,21 +868,24 @@ router.get('/analysis/:id', async (req, res) => {
         card.type_line = card.details.type;
       }
       if (card.details.tokens) {
-        for (const element of card.details.tokens) {
+        card.details.tokens = card.details.tokens.map((element) => {
           const tokenDetails = carddb.cardFromId(element.tokenId);
-          element.token = {
-            tags: [],
-            status: 'Not Owned',
-            colors: tokenDetails.color_identity,
-            cmc: tokenDetails.cmc,
-            cardID: tokenDetails._id,
-            type_line: tokenDetails.type,
-            addedTmsp: new Date(),
-            imgUrl: undefined,
-            finish: 'Non-foil',
-            details: { ...tokenDetails },
+          return {
+            ...element,
+            token: {
+              tags: [],
+              status: 'Not Owned',
+              colors: tokenDetails.color_identity,
+              cmc: tokenDetails.cmc,
+              cardID: tokenDetails._id,
+              type_line: tokenDetails.type,
+              addedTmsp: new Date(),
+              imgUrl: undefined,
+              finish: 'Non-foil',
+              details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
+            },
           };
-        }
+        });
       }
     }
     cube.cards = await addPrices(cube.cards);
@@ -1021,9 +1023,13 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
         const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
         const selected = matchingSet || nonPromo || potentialIds[0];
         const details = carddb.cardFromId(selected);
-        added.push(details);
-        util.addCardToCube(cube, details, card.tags);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          added.push(details);
+          util.addCardToCube(cube, details, card.tags);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${card.name}\n`;
+        }
       } else {
         missing += `${card.name}\n`;
       }
@@ -1040,7 +1046,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
-    if (missing.length === 0) {
+    if (missing.length > 0) {
       const reactProps = {
         cubeID: req.params.id,
         missing,
@@ -1078,7 +1084,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
 
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
@@ -1109,27 +1115,29 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
       } else {
-        let selected;
+        let selected = null;
         // does not have set info
         const normalizedName = cardutil.normalizeName(item);
         const potentialIds = carddb.getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
-          // TODO: change this to grab a version that exists in the cube
-          for (let k = 0; k < cube.cards.length; i++) {
-            if (carddb.cardFromId(cube.cards[k].cardID).name_lower === normalizedName) {
-              selected = cube.cards[k];
-              selected.details = carddb.cardFromId(cube.cards[k].cardID);
-            }
-          }
-          if (!selected) {
-            // TODO: get most reasonable card?
-            selected = { cardID: potentialIds[0] };
-            selected.details = carddb.cardFromId(potentialIds[0]);
+          const inCube = cube.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
+          if (inCube) {
+            selected = {
+              ...inCube,
+              details: carddb.cardFromId(inCube.cardID),
+            };
+          } else {
+            const reasonableId = carddb.getMostReasonable(normalizedName, cube.defaultPrinting)._id;
+            const selectedId = reasonableId || potentialIds[0];
+            selected = {
+              cardID: selectedId,
+              details: carddb.cardFromId(selectedId),
+            };
           }
         }
         if (selected) {
           // push into correct column.
-          let column = Math.min(7, selected.details.cmc);
+          let column = Math.min(7, selected.cmc !== undefined ? selected.cmc : selected.details.cmc);
           if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
@@ -1149,17 +1157,20 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.newformat = true;
     deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-    cube.decks.push(deck._id);
-
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
-    await Promise.all([cube.save(), deck.save()]);
+    await deck.save();
+    await Cube.updateOne(
+      {
+        _id: cube._id,
+      },
+      {
+        $inc: {
+          numDecks: 1,
+        },
+        $push: {
+          decks: deck._id,
+        },
+      },
+    );
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
@@ -1284,32 +1295,27 @@ async function bulkUpload(req, res, list, cube) {
       let selected;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
-        if (
-          carddb.nameToId[
-            item
-              .toLowerCase()
-              .substring(0, item.indexOf('('))
-              .trim()
-          ]
-        ) {
-          const name = item
-            .toLowerCase()
-            .substring(0, item.indexOf('('))
-            .trim();
+        const name = item.substring(0, item.indexOf('('));
+        const potentialIds = carddb.getIdsFromName(name);
+        if (potentialIds && potentialIds.length > 0) {
           const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
           // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          const potentialIds = carddb.nameToId[name];
-          selected = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+          selected = matching || potentialIds[0];
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item.toLowerCase().trim(), cube.defaultPrinting);
+        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
-        util.addCardToCube(cube, details);
-        added.push(details);
-        changelog += addCardHtml(details);
+        if (!details.error) {
+          util.addCardToCube(cube, details);
+          added.push(details);
+          changelog += addCardHtml(details);
+        } else {
+          missing += `${item}\n`;
+        }
       } else {
         missing += `${item}\n`;
       }
@@ -1709,7 +1715,8 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         newMaybe.splice(maybeIndex, 1);
       }
     }
-    cube.cards = [...cube.cards.filter((card, index) => !removes.has(index)), ...newCards];
+    // Remove all invalid cards.
+    cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
     cube.maybe = newMaybe;
 
     const blogpost = new Blog();
@@ -2661,7 +2668,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting').lean();
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
-    if (card && !card.error) {
+    if (card) {
       return res.status(200).send({
         success: 'true',
         card,
@@ -2677,7 +2684,7 @@ router.get(
   '/api/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
     const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-    const img = carddb.imagedict[reasonable.name];
+    const img = reasonable ? carddb.imagedict[reasonable.name] : null;
     if (!img) {
       return res.status(200).send({
         success: 'false',
@@ -2762,7 +2769,7 @@ router.post(
     const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
     const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
     const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
-    const result = Object.fromEntries(
+    const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
         versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({

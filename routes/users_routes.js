@@ -131,7 +131,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    other.users_following = other.users_following.filter((id) => !other._id.equals(id));
+    other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
     user.followed_users = user.followed_users.filter((id) => id !== req.params.id);
 
     await Promise.all([user.save(), other.save()]);

@@ -92,6 +92,18 @@ test('addCardToCube adds a well-formed object', () => {
   expect(result.imgUrl).toBe(undefined);
 });
 
+test('addCardToCube declines to add invalid card', () => {
+  var testCube = {
+    cards: [],
+  };
+  var initialLength = testCube.cards.length;
+  const testCard = {
+    error: true,
+  };
+  util.addCardToCube(testCube, testCard);
+  expect(testCube.cards.length).toBe(initialLength);
+});
+
 test('addCardToCube allows custom tags', () => {
   var testCube = {
     cards: [],
