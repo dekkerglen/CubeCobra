@@ -1084,7 +1084,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
 
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
@@ -1115,27 +1115,29 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
       } else {
-        let selected;
+        let selected = null;
         // does not have set info
         const normalizedName = cardutil.normalizeName(item);
         const potentialIds = carddb.getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
-          // TODO: change this to grab a version that exists in the cube
-          for (let k = 0; k < cube.cards.length; i++) {
-            if (carddb.cardFromId(cube.cards[k].cardID).name_lower === normalizedName) {
-              selected = cube.cards[k];
-              selected.details = carddb.cardFromId(cube.cards[k].cardID);
+          const inCube = cube.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
+          if (inCube) {
+            selected = {
+              ...inCube,
+              details: carddb.cardFromId(inCube.cardID),
+            };
+          } else {
+            const reasonableId = carddb.getMostReasonable(normalizedName, cube.defaultPrinting)._id;
+            const selectedId = reasonableId || potentialIds[0];
+            selected = {
+              cardID: selectedId,
+              details: carddb.cardFromId(selectedId),
             }
-          }
-          if (!selected) {
-            // TODO: get most reasonable card?
-            selected = { cardID: potentialIds[0] };
-            selected.details = carddb.cardFromId(potentialIds[0]);
           }
         }
         if (selected) {
           // push into correct column.
-          let column = Math.min(7, selected.details.cmc);
+          let column = Math.min(7, selected.cmc !== undefined ? selected.cmc : selected.details.cmc);
           if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
@@ -1155,17 +1157,17 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.newformat = true;
     deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-    cube.decks.push(deck._id);
-
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
-    await Promise.all([cube.save(), deck.save()]);
+    await deck.save();
+    await Cube.updateOne({
+      _id: cube._id,
+    }, {
+      $inc: {
+        numDecks: 1,
+      },
+      $push: {
+        decks: deck._id,
+      },
+    });
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
