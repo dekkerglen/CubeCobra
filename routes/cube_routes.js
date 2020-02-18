@@ -80,7 +80,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       return res.redirect(`/user/view/${req.user.id}`);
     }
 
-    if (util.has_profanity(req.body.name)) {
+    if (util.hasProfanity(req.body.name)) {
       req.flash('danger', 'Cube name should not use profanity.');
       return res.redirect(`/user/view/${req.user.id}`);
     }
@@ -1827,10 +1827,10 @@ router.post(
   '/api/editoverview',
   ensureAuth,
   body('name', 'Cube name should be between 5 and 100 characters long.').isLength({ min: 5, max: 100 }),
-  body('name', 'Cube name may not use profanity.').custom((value) => !util.has_profanity(value)),
+  body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
   body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/[A-Za-z0-9]*/),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({ max: 100 }),
-  body('urlAlias', 'Custom URL may not use profanity.').custom((value) => !util.has_profanity(value)),
+  body('urlAlias', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
