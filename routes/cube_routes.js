@@ -2762,7 +2762,7 @@ router.post(
     const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
     const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
     const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
-    const result = Object.fromEntries(
+    const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
         versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({
