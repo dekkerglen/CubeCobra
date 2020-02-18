@@ -11,6 +11,7 @@
             "hooks/*": ["./src/hooks/*"],
             "layouts/*": ["./src/layouts/*"],
             "pages/*": ["./src/pages/*"],
+            "parsing/*": ["./src/parsing/*"],
             "utils/*": ["./src/utils/*"]
         }
     },

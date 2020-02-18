@@ -18,6 +18,9 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
+import { tokenize } from 'parsing/parsingUtils';
+import filterParser from 'parsing/filterParser';
+
 import Filter from '../utils/Filter';
 import Query from '../utils/Query';
 import { fromEntries } from '../utils/Util';
@@ -335,6 +338,9 @@ class FilterCollapse extends Component {
     }
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    filterParser.input = tokenize(filterInput);
+    const parsed = filterParser.filter();
+    console.log(parsed);
     if (!valid) return;
 
     if (tokens.length > 0) {
