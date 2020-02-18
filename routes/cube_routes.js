@@ -1132,7 +1132,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
             selected = {
               cardID: selectedId,
               details: carddb.cardFromId(selectedId),
-            }
+            };
           }
         }
         if (selected) {
@@ -1158,16 +1158,19 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
 
     await deck.save();
-    await Cube.updateOne({
-      _id: cube._id,
-    }, {
-      $inc: {
-        numDecks: 1,
+    await Cube.updateOne(
+      {
+        _id: cube._id,
       },
-      $push: {
-        decks: deck._id,
+      {
+        $inc: {
+          numDecks: 1,
+        },
+        $push: {
+          decks: deck._id,
+        },
       },
-    });
+    );
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
