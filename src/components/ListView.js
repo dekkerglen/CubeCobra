@@ -69,6 +69,7 @@ const defaultVersions = (card) => {
 };
 
 const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAlert }) => {
+  // FIXME: This state should just be managed in the card object.
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
   const [values, setValues] = useState({
     ...card,
