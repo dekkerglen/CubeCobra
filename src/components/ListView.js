@@ -115,7 +115,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
             // changed version
             const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
             const getJson = await getResponse.json();
-            updateCubeCard(card.index, { ...newCard, details: getJson.card });
+            updateCubeCard(card.index, { ...newCard, details: { ...newCard.details, ...getJson.card } });
           }
         }
       } catch (err) {

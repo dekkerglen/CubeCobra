@@ -111,7 +111,10 @@ const CardModalForm = ({ children, ...props }) => {
           const newCard = {
             ...card,
             ...updated,
-            details: cardJson.card,
+            details: {
+              ...card.details,
+              ...cardJson.card,
+            },
           };
           updateCubeCard(card.index, newCard);
           setIsOpen(false);
