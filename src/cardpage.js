@@ -70,9 +70,8 @@ class CardPage extends Component {
             </Col>
             <Col className="breakdown" xs="12" sm="8">
               <p>
-                Played in &nbsp;
-                {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>
-                &nbsp;Cubes total.
+                Played in {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>{' '}
+                Cubes total.
               </p>
               <Row>
                 <Col xs="12" sm="6" md="6" lg="6">
