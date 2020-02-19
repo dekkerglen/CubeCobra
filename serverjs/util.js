@@ -106,7 +106,7 @@ function newCard(card_details, tags, defaultStatus = 'Owned') {
 
 function addCardToCube(cube, card_details, tags) {
   if (card_details.error) {
-    console.error('Attempted to add invalid card to cube.');
+    winston.error('Attempted to add invalid card to cube.');
     return;
   }
 
