@@ -1146,13 +1146,14 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     const deck = new Deck();
     deck.playerdeck = added;
     deck.owner = req.user._id;
+    deck.username = req.user.username;
     deck.cube = cube._id;
     deck.date = Date.now();
     deck.bots = [];
     deck.playersideboard = [];
     deck.pickOrder = [];
     deck.newformat = true;
-    deck.name = `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`;
+    deck.name = 'Uploaded deck';
 
     await deck.save();
     await Cube.updateOne(
