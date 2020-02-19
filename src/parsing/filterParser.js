@@ -19,13 +19,13 @@ export function getFilterParser() {
   const rules = [];
   const conditions = [];
   
-  rules.push(new Rule({ name: 'halfPositiveIntegerValue', definition: consumeRegex("-\\d+|\\d+(\\.(0|5))?|\\.(0|5)") }));
+  rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex("\\d+(\\.(0|5))?|\\.(0|5)") }));
   
   conditions.push(createCondition(
     'cmc',
-    'c(ost|mc)',
+    'cmc',
     ':|=|<=?|>=?',
-    'halfPositiveIntegerValue',
+    'positiveHalfIntegerValue',
     this
   ));
   

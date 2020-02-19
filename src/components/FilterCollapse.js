@@ -19,7 +19,8 @@ import {
 } from 'reactstrap';
 
 import { tokenize } from 'parsing/parsingUtils';
-import filterParser from 'parsing/filterParser';
+import getFilterParser from 'parsing/filterParser';
+import getVisitorForParser from 'parsing/filterVisitor';
 
 import Filter from '../utils/Filter';
 import Query from '../utils/Query';
@@ -338,9 +339,14 @@ class FilterCollapse extends Component {
     }
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
-    filterParser.input = tokenize(filterInput);
+    const tokenized = tokenize(filterInput);
+    const filterParser = getFilterParser();
+    filterParser.input = tokenized;
     const parsed = filterParser.filter();
     console.log(parsed);
+    const visitor = getVisitorForParser(filterParser);
+    const newFilters = visitor.filter(parsed);
+    console.log(newFilters, newFilters({cmc: 3.5}));
     if (!valid) return;
 
     if (tokens.length > 0) {
