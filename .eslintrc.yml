@@ -14,8 +14,7 @@ settings:
     webpack:
       config: webpack.dev.js
 rules:
-  # prettier/prettier:
-  # - error
+  prettier/prettier: error
   no-console: off
   global-require: off
   no-param-reassign: off
@@ -50,3 +49,6 @@ overrides:
       no-restricted-imports:
         - error
         - patterns: ['./*', '../*']
+  - files: ['routes/**', 'serverjs/**']
+    rules:
+      no-console: error
