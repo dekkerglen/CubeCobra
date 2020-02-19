@@ -55,6 +55,8 @@ winston.configure({
   ],
 });
 
+console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
+
 if (secrets.loggly) {
   winston.add(
     new Loggly({
@@ -64,9 +66,8 @@ if (secrets.loggly) {
       json: true,
     }),
   );
+  console.log(`Logging to Loggly @ https://${secrets.loggly.subdomain}.loggly.com.`);
 }
-
-console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
 // Connect db
 mongoose.connect(mongosecrets.connectionString, {
