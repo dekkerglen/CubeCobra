@@ -563,6 +563,7 @@ router.get('/blog/:id/:page', async (req, res) => {
       pages: Math.ceil(blogs.length / 10),
       activePage: page,
       userid: user._id,
+      loggedIn: !!req.user,
     };
 
     return res.render('cube/cube_blog', {
