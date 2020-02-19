@@ -51,12 +51,9 @@ winston.configure({
     //
     new winston.transports.File({ filename: errorFile.name, level: 'error' }),
     new winston.transports.File({ filename: combinedFile.name }),
+    new winston.transports.Console(),
   ],
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  winston.add(new winston.transports.Console());
-}
 
 if (secrets.loggly) {
   winston.add(
