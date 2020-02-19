@@ -55,15 +55,18 @@ function botRating(botColors, card) {
 
   if (isLand) {
     if (subset) {
-      // if fetches don't have the color identity override, they get lumped into this category
       rating *= 1.4;
-    } else if (overlap || isFetch) {
+    } else if (isFetch) {
+      rating *= 1.3;
+    } else if (overlap) {
       rating *= 1.2;
     } else {
       rating *= 1.1;
     }
   } else if (subset) {
     rating *= 1.3;
+  } else if (colors.length == 0) {
+    rating *= 1.2;
   } else if (overlap) {
     rating *= 1.1;
   }
