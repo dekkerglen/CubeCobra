@@ -127,7 +127,7 @@ app.use((req, res, next) => {
 
 morgan.token('uuid', (req) => req.uuid);
 app.use(
-  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
+  morgan('[:date[iso]] :remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
     stream: {
       write: (message) => winston.info(message.trim()),
     },
