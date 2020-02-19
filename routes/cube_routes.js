@@ -1540,10 +1540,7 @@ router.get('/download/plaintext/:id', async (req, res) => {
 
 router.post('/startdraft/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(
-      buildIdQuery(req.params.id),
-      '_id name draft_formats card_count type cards',
-    ).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards').lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
