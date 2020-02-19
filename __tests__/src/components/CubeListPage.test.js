@@ -8,6 +8,7 @@ import exampleCube from '../../../fixtures/examplecube';
 import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
+import { fromEntries } from 'utils/Util';
 
 const cube = {
   ...exampleCube,
@@ -23,7 +24,7 @@ const element = () => (
         matcher: '/cube/api/getversions',
         response: {
           success: 'true',
-          dict: Object.fromEntries(
+          dict: fromEntries(
             exampleCardsFull.map((card) => [
               card.cardID,
               [

@@ -68,7 +68,6 @@ async function matchingCards(filter) {
       cards = Filter.filterCardsDetails(cards, filter);
     }
     if (Filter.filterUses(filter, 'cubes')) {
-      console.log('cubes', cards.length);
       const names = cards.map(({ name }) => name.toLowerCase());
       const cardDatas = await Card.find(
         {
@@ -196,7 +195,7 @@ router.get('/api/topcards', async (req, res) => {
       data,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     res.status(500).send({
       success: 'false',
     });
@@ -223,7 +222,7 @@ router.get('/topcards', async (req, res) => {
       title: 'Top Cards',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     res.sendStatus(500);
   }
 });
@@ -277,7 +276,7 @@ router.get('/card/:id', async (req, res) => {
       ),
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     req.flash('danger', err.message);
     return res.redirect('/404');
   }

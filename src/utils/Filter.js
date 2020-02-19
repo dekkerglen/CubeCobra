@@ -165,7 +165,7 @@ export function tokenizeInput(filterText, tokens) {
   token.arg = simplifyArg(token.arg, token.category);
   if (token.operand && token.category && token.arg) {
     // replace any escaped quotes with normal quotes
-    if (parens) token.arg = token.arg.replace(/\\"/g, '"');
+    if (parens && typeof token.arg === 'string') token.arg = token.arg.replace(/\\"/g, '"');
     tokens.push(token);
     return tokenizeInput(filterText, tokens);
   }
