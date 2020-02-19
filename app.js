@@ -36,6 +36,13 @@ const errorStackTracerFormat = winston.format((info) => {
   return info;
 });
 
+const timestamped = winston.format((info) => {
+  if (info.message) {
+    info.message = `[${new Date(Date.now()).toISOString()}] ${info.message}`;
+  }
+  return info;
+});
+
 winston.configure({
   level: 'info',
   format: winston.format.combine(
@@ -51,7 +58,14 @@ winston.configure({
     //
     new winston.transports.File({ filename: errorFile.name, level: 'error' }),
     new winston.transports.File({ filename: combinedFile.name }),
-    new winston.transports.Console(),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.splat(), // Necessary to produce the 'meta' property
+        errorStackTracerFormat(),
+        timestamped(),
+        winston.format.simple(),
+      ),
+    }),
   ],
 });
 
@@ -127,7 +141,7 @@ app.use((req, res, next) => {
 
 morgan.token('uuid', (req) => req.uuid);
 app.use(
-  morgan('[:date[iso]] :remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
+  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
     stream: {
       write: (message) => winston.info(message.trim()),
     },
