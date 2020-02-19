@@ -43,21 +43,23 @@ const timestamped = winston.format((info) => {
   return info;
 });
 
+const textFormat = winston.format.combine(
+  winston.format.splat(), // Necessary to produce the 'meta' property
+  errorStackTracerFormat(),
+  winston.format.simple(),
+);
+
 winston.configure({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.splat(), // Necessary to produce the 'meta' property
-    errorStackTracerFormat(),
-    winston.format.simple(),
-  ),
+  format: winston.format.json(),
   exitOnError: false,
   transports: [
     //
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: errorFile.name, level: 'error' }),
-    new winston.transports.File({ filename: combinedFile.name }),
+    new winston.transports.File({ filename: errorFile.name, level: 'error', format: textFormat }),
+    new winston.transports.File({ filename: combinedFile.name, format: textFormat }),
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.splat(), // Necessary to produce the 'meta' property
@@ -130,7 +132,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// error handling
+// per-request logging configuration
 app.use((req, res, next) => {
   req.uuid = uuid();
   req.logger = winston.child({
