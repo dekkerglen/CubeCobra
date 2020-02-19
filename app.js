@@ -11,7 +11,7 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
 const winston = require('winston');
 const { Loggly } = require('winston-loggly-bulk');
-const morgan = require('morgan');
+const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 // eslint-disable-next-line import/no-unresolved
@@ -36,16 +36,36 @@ const errorStackTracerFormat = winston.format((info) => {
   return info;
 });
 
-const timestamped = winston.format((info) => {
+const timestampedFormat = winston.format((info) => {
   if (info.message) {
     info.message = `[${new Date(Date.now()).toISOString()}] ${info.message}`;
   }
   return info;
 });
 
-const textFormat = winston.format.combine(
-  winston.format.splat(), // Necessary to produce the 'meta' property
+const linearFormat = winston.format((info) => {
+  if (info.type === 'request') {
+    // :remote-addr :uuid :method :url :status :res[content-length] - :response-time ms
+    const length = info.length === undefined ? '-' : info.length;
+    info.message = `${info.remoteAddr} ${info.requestId} ${info.method} ${info.path} ${info.status} ${length} ${info.elapsed}ms`;
+    delete info.remoteAddr;
+    delete info.requestId;
+    delete info.method;
+    delete info.path;
+    delete info.status;
+    delete info.length;
+    delete info.elapsed;
+  }
+  delete info.type;
+  return info;
+});
+
+const textFormat = winston.format.combine(linearFormat(), errorStackTracerFormat(), winston.format.simple());
+
+const consoleFormat = winston.format.combine(
+  linearFormat(),
   errorStackTracerFormat(),
+  timestampedFormat(),
   winston.format.simple(),
 );
 
@@ -60,14 +80,7 @@ winston.configure({
     //
     new winston.transports.File({ filename: errorFile.name, level: 'error', format: textFormat }),
     new winston.transports.File({ filename: combinedFile.name, format: textFormat }),
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.splat(), // Necessary to produce the 'meta' property
-        errorStackTracerFormat(),
-        timestamped(),
-        winston.format.simple(),
-      ),
-    }),
+    new winston.transports.Console({ format: consoleFormat }),
   ],
 });
 
@@ -141,14 +154,23 @@ app.use((req, res, next) => {
   next();
 });
 
-morgan.token('uuid', (req) => req.uuid);
-app.use(
-  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
-    stream: {
-      write: (message) => winston.info(message.trim()),
-    },
-  }),
-);
+app.use((req, res, next) => {
+  res.startTime = Date.now();
+  onFinished(res, (err, finalRes) => {
+    req.logger.log({
+      level: 'info',
+      type: 'request',
+      remoteAddr: req.ip,
+      requestId: req.uuid,
+      method: req.method,
+      path: req.path,
+      status: finalRes.statusCode,
+      length: finalRes.getHeader('content-length'),
+      elapsed: Date.now() - finalRes.startTime,
+    });
+  });
+  next();
+});
 
 // upload file middleware
 app.use(fileUpload());
