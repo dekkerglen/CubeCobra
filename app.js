@@ -47,8 +47,10 @@ const linearFormat = winston.format((info) => {
     delete info.status;
     delete info.length;
     delete info.elapsed;
-  } else if (info.error && info.error.stack) {
-    info.message = info.message ? `${info.message}: ${info.error.stack}` : `${info.error.stack}`;
+  } else if (info.error) {
+    info.message = info.message
+      ? `${info.message}: ${info.error.message}: ${info.error.stack}`
+      : `${info.error.message}: ${info.error.stack}`;
     delete info.error;
   }
   delete info.type;
@@ -244,12 +246,7 @@ app.use((req, res) => {
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  req.logger.log({
-    level: 'error',
-    type: 'error',
-    message: err.message,
-    stack: err.stack,
-  });
+  req.logger.error(null, { error: err });
   if (!res.statusCode) {
     res.status(500);
   }
