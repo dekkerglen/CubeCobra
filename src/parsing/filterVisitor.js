@@ -1,5 +1,5 @@
 function getOriginalString(ctx) {
-  const tokens = []
+  const tokens = [];
   for (const unorderedTokens of Object.values(ctx)) {
     tokens.push(...unorderedTokens);
   }
@@ -20,7 +20,7 @@ export function getVisitorFromParser(parser) {
       const { children } = ctx.children.$condition[0];
       const filters = children.$value.map((valueCtx, i) => {
         const negation = children.$negation[i].children;
-        const negated = Object.keys(negation).length !== 0
+        const negated = Object.keys(negation).length !== 0;
         const field = getOriginalString(children.$field[i].children);
         const operation = getOriginalString(children.$operation[i].children);
         const vChildren = valueCtx.children;
@@ -35,7 +35,7 @@ export function getVisitorFromParser(parser) {
     // eslint-disable-next-line class-methods-use-this
     positiveHalfIntegerValue(ctx) {
       const value = parseFloat(getOriginalString(ctx), 10);
-      console.log("Value is: ", value);
+      console.log('Value is: ', value);
       return (operator, fieldValue) => {
         switch (operator) {
           case ':':
@@ -43,7 +43,7 @@ export function getVisitorFromParser(parser) {
           default:
             throw new Error(`Unrecognized operator ${operator}`);
         }
-      }
+      };
     }
   }
 
