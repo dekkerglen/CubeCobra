@@ -72,9 +72,9 @@ class CardPage extends Component {
             </Col>
             <Col className="breakdown" xs="12" sm="8">
               <p>
-                Played in
+                Played in &nbsp;
                 {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>
-                Cubes total.
+                &nbsp;Cubes total.
               </p>
               <Row>
                 <Col xs="12" sm="6" md="6" lg="6">
@@ -201,13 +201,8 @@ CardPage.propTypes = {
   cubes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
-const data = JSON.parse(document.getElementById('data').value);
-const card = JSON.parse(document.getElementById('card').value);
-const prices = JSON.parse(document.getElementById('prices').value);
-const cubes = JSON.parse(document.getElementById('cubes').value);
-const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
-const element = <CardPage data={data} card={card} prices={prices} related={related} cubes={cubes} />;
+const element = <CardPage {...window.reactProps} />;
 if (wrapper) {
   ReactDOM.render(element, wrapper);
 }
