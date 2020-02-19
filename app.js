@@ -46,6 +46,21 @@ const store = new MongoDBStore(
   },
 );
 
+// request timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(60 * 1000, () => {
+    const err = new Error('Request Timeout');
+    err.status = 408;
+    next(err);
+  });
+  res.setTimeout(60 * 1000, () => {
+    const err = new Error('Service Unavailable');
+    err.status = 503;
+    next(err);
+  });
+  next();
+})
+
 // upload file middleware
 app.use(fileUpload());
 
