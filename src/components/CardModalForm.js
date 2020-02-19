@@ -186,7 +186,6 @@ const CardModalForm = ({ children, ...props }) => {
       image_flip: details.image_flip,
       price: details.price,
       price_foil: details.price_foil,
-      elo: details.elo,
     },
   };
   return (
