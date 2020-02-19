@@ -74,17 +74,17 @@ class CubeCompareNavbar extends Component {
                 <NavItem>
                   <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
                     Sort
-                </NavLink>
+                  </NavLink>
                 </NavItem>
                 <NavItem>
                   <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
                     Filter
-                </NavLink>
+                  </NavLink>
                 </NavItem>
                 <NavItem>
                   <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
                     View Tag Colors
-                </NavLink>
+                  </NavLink>
                 </NavItem>
               </Nav>
             </Collapse>
