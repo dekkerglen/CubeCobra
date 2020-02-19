@@ -1458,7 +1458,7 @@ function writeCard(req, res, card, maybe) {
     res.write(tag);
   });
   res.write('"\r\n');
-};
+}
 
 router.get('/download/csv/:id', async (req, res) => {
   try {
