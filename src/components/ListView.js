@@ -69,6 +69,7 @@ const defaultVersions = (card) => {
 };
 
 const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAlert }) => {
+  // FIXME: This state should just be managed in the card object.
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
   const [values, setValues] = useState({
     ...card,
@@ -115,7 +116,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
             // changed version
             const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
             const getJson = await getResponse.json();
-            updateCubeCard(card.index, { ...newCard, details: getJson.card });
+            updateCubeCard(card.index, { ...newCard, details: { ...newCard.details, ...getJson.card } });
           }
         }
       } catch (err) {
