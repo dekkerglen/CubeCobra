@@ -126,15 +126,13 @@ router.post('/add', ensureAuth, async (req, res) => {
 
 router.get('/clone/:id', async (req, res) => {
   try {
-    const { user } = req;
-
-    if (!user) {
+    if (!req.user) {
       req.flash('danger', 'Please log on to clone this cube.');
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
     const cubes = await Cube.find({
-      owner: user._id,
+      owner: req.user._id,
     }).lean();
 
     if (cubes.length >= 24) {
@@ -159,21 +157,19 @@ router.get('/clone/:id', async (req, res) => {
     cube.image_name = source.image_name;
     cube.image_artist = source.image_artist;
     cube.description = source.description;
-    cube.owner_name = user.username;
+    cube.owner_name = req.user.username;
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     cube = setCubeType(cube, carddb);
     await cube.save();
 
-    const newOwnerq = User.findById(req.user);
-    const sourceOwnerq = User.findById(source.owner);
-    const [newOwner, sourceOwner] = await Promise.all([newOwnerq, sourceOwnerq]);
+    const sourceOwner = await User.findById(source.owner);
 
     await util.addNotification(
       sourceOwner,
-      newOwner,
+      req.user,
       `/cube/view/${cube._id}`,
-      `${user.username} made a cube by cloning yours: ${cube.name}`,
+      `${req.user.username} made a cube by cloning yours: ${cube.name}`,
     );
 
     req.flash('success', 'Cube Cloned');
@@ -1428,6 +1424,42 @@ router.get('/download/cubecobra/:id', async (req, res) => {
   }
 });
 
+function writeCard(req, res, card, maybe) {
+  if (!card.type_line) {
+    card.type_line = carddb.cardFromId(card.cardID).type;
+  }
+  let { name } = carddb.cardFromId(card.cardID);
+  while (name.includes('"')) {
+    name = name.replace('"', '-quote-');
+  }
+  while (name.includes('-quote-')) {
+    name = name.replace('-quote-', '""');
+  }
+  let { imgUrl } = card;
+  if (imgUrl) {
+    imgUrl = `"${imgUrl}"`;
+  } else {
+    imgUrl = '';
+  }
+  res.write(`"${name}",`);
+  res.write(`${card.cmc},`);
+  res.write(`"${card.type_line.replace('—', '-')}",`);
+  res.write(`${card.colors.join('')},`);
+  res.write(`"${carddb.cardFromId(card.cardID).set}",`);
+  res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`${card.status},`);
+  res.write(`${card.finish},`);
+  res.write(`${maybe},`);
+  res.write(`${imgUrl},"`);
+  card.tags.forEach((tag, tagIndex) => {
+    if (tagIndex !== 0) {
+      res.write(', ');
+    }
+    res.write(tag);
+  });
+  res.write('"\r\n');
+};
+
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
@@ -1436,46 +1468,11 @@ router.get('/download/csv/:id', async (req, res) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
-    const writeCard = (card, maybe) => {
-      if (!card.type_line) {
-        card.type_line = carddb.cardFromId(card.cardID).type;
-      }
-      let { name } = carddb.cardFromId(card.cardID);
-      while (name.includes('"')) {
-        name = name.replace('"', '-quote-');
-      }
-      while (name.includes('-quote-')) {
-        name = name.replace('-quote-', '""');
-      }
-      let { imgUrl } = card;
-      if (imgUrl) {
-        imgUrl = `"${imgUrl}"`;
-      } else {
-        imgUrl = '';
-      }
-      res.write(`"${name}",`);
-      res.write(`${card.cmc},`);
-      res.write(`"${card.type_line.replace('—', '-')}",`);
-      res.write(`${card.colors.join('')},`);
-      res.write(`"${carddb.cardFromId(card.cardID).set}",`);
-      res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
-      res.write(`${card.status},`);
-      res.write(`${card.finish},`);
-      res.write(`${maybe},`);
-      res.write(`${imgUrl},"`);
-      card.tags.forEach((tag, tagIndex) => {
-        if (tagIndex !== 0) {
-          res.write(', ');
-        }
-        res.write(tag);
-      });
-      res.write('"\r\n');
-    };
     for (const card of cube.cards) {
-      return writeCard(card, false);
+      writeCard(req, res, card, false);
     }
     for (const card of cube.maybe) {
-      return writeCard(card, true);
+      writeCard(req, res, card, true);
     }
     return res.end();
   } catch (err) {
