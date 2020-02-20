@@ -3029,8 +3029,9 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
-      res.redirect(`/cube/overview/${req.params.id}`);
+      return res.redirect(`/cube/overview/${req.params.id}`);
     }
+    
     await Cube.deleteOne(build_id_query(req.params.id));
 
     req.flash('success', 'Cube Removed');
