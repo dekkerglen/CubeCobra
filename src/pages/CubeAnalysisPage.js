@@ -22,6 +22,7 @@ import MagicMarkdown from 'components/MagicMarkdown';
 import averageCmc from 'analytics/averageCmc';
 import colorCount from 'analytics/colorCount';
 import colorCurve from 'analytics/colorCurve';
+import eloCurve from 'analytics/eloCurve';
 import inclusiveColorCount from 'analytics/inclusiveColorCount';
 import tagCount from 'analytics/tagCount';
 import tagCloud from 'analytics/tagCloud';
@@ -47,6 +48,7 @@ class CubeAnalysisPage extends Component {
         tokenGrid: { fn: tokenGrid, title: 'Tokens' },
         tagCloud: { fn: tagCloud, title: 'Tag Cloud' },
         tagCount: { fn: tagCount, title: 'Tag Counts' },
+        eloCurve: { fn: eloCurve, title: 'Elo Curve' },
       },
       analyticsOrder: [
         'curve',
@@ -58,6 +60,7 @@ class CubeAnalysisPage extends Component {
         'tokenGrid',
         'tagCloud',
         'tagCount',
+        'eloCurve',
       ],
       filter: [],
       cardsWithAsfan: null,

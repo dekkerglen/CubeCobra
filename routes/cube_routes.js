@@ -860,6 +860,7 @@ router.get('/analysis/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
+    const names = new Set();
     for (const card of cube.cards) {
       card.details = {
         ...carddb.cardFromId(card.cardID),
@@ -888,8 +889,15 @@ router.get('/analysis/:id', async (req, res) => {
           };
         });
       }
+      names.add(card.details.name);
     }
     cube.cards = await addPrices(cube.cards);
+    const eloDict = await getElo([...names], true);
+    for (const card of cube.cards) {
+      if (eloDict[card.details.name]) {
+        card.details.elo = eloDict[card.details.name];
+      }
+    }
 
     const reactProps = {
       cube,

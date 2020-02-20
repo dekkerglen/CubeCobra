@@ -20,7 +20,7 @@ async function colorCurve(cards) {
     }
     const category = curve[colorCategory];
     // Giving raw count instead of asfan currently.
-    const asfan = 1;
+    const asfan = card.asfan;
     if (category) {
       let cmc = Math.floor(getCmc(card));
       if (cmc >= 9) {
@@ -77,7 +77,7 @@ async function colorCurve(cards) {
           display: true,
           scaleLabel: {
             display: true,
-            labelString: 'Count',
+            labelString: 'Expected Opened',
           },
         },
       ],
@@ -86,7 +86,7 @@ async function colorCurve(cards) {
   return {
     type: 'chart',
     description:
-      'Count of cards at each CMC by color identity. Click the labels to filter the datasets. Lands are omitted for the curve chart.',
+      'Expected number of cards a player will open each draft at each CMC by color identity. Click the labels to filter the datasets. Lands are omitted for the curve chart.',
     chartType: 'bar',
     datasets,
     options,
