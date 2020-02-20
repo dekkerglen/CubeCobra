@@ -2731,7 +2731,7 @@ router.get(
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
     const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
-    const [priceDict, eloDict] = await [GetPrices(tcg), getElo(names, true)];
+    const [priceDict, eloDict] = await Promise.all([GetPrices(tcg), getElo(names, true)]);
     for (const card of cards) {
       if (card.tcgplayer_id) {
         const cardPriceData = priceDict[card.tcgplayer_id];
