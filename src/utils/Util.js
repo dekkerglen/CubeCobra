@@ -78,7 +78,7 @@ export function stdDevOf(data) {
 
 export function weightedMedianOf(data) {
   data = [...data].sort(([a], [b]) => a - b);
-  const halfWeight = (data.reduce(([, a], [, b]) => a + b, 0) || 2) / 2;
+  const halfWeight = (data.reduce((a, [, b]) => a + b, 0) || 2) / 2;
   let totalWeight = 0;
   let prevValue = 0;
   for (const [value, weight] of data) {
@@ -95,12 +95,12 @@ export function weightedMedianOf(data) {
 }
 
 export function weightedMeanOf(data) {
-  const totalWeight = data.reduce(([, a], [, b]) => a + b, 0) || 1;
+  const totalWeight = data.reduce((a, [, b]) => a + b, 0) || 1;
   return data.reduce((a, [value, weight]) => a + value * weight, 0) / totalWeight;
 }
 
 export function weightedStdDevOf(data) {
-  const totalWeight = data.reduce(([, a], [, b]) => a + b, 0) || 1;
+  const totalWeight = data.reduce((a, [, b]) => a + b, 0) || 1;
   const mean = weightedMeanOf(data);
   return Math.sqrt(data.reduce((sum, [value, weight]) => sum + weight * (mean - value) ** 2, 0) / totalWeight);
 }

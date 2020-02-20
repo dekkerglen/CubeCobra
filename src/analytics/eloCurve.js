@@ -1,19 +1,28 @@
 import { weightedMedianOf, weightedMeanOf, weightedStdDevOf } from 'utils/Util';
 
 async function eloCurve(cards) {
+  const generateRandomly = false;
+  if (generateRandomly) {
+    cards = cards.map((card) => {
+      card = { ...card };
+      card.details.elo = Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random()) * 165 + 1500;
+      return card;
+    });
+  }
   const elos = cards
-    .map((card) => [card.details.elo, card.details.asfan])
+    .map((card) => [card.details.elo, card.asfan])
     .filter(([a, b]) => a !== undefined && a !== null && b !== undefined && b !== null);
-  const median = weightedMedianOf(elos);
-  const mean = weightedMeanOf(elos);
-  const stdDev = weightedStdDevOf(elos);
+  console.log(elos);
+  const median = Math.round(weightedMedianOf(elos));
+  const mean = Math.round(weightedMeanOf(elos));
+  const stdDev = Math.round(weightedStdDevOf(elos));
 
   const buckets = [];
   const labels = [];
   const minElo = 0;
   const maxElo = 2250;
-  const bucketSize = 50;
-  const numBuckets = Math.trunc((maxElo - minElo) / bucketSize);
+  const bucketSize = Math.trunc(stdDev / 4);
+  const numBuckets = Math.ceil((maxElo - minElo) / bucketSize);
   for (let i = 0; i < numBuckets; i++) {
     buckets.push(0);
     labels.push(`${minElo + i * bucketSize}-${minElo + (i + 1) * bucketSize - 1}`);
