@@ -48,24 +48,24 @@ function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
   const colors = card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
+  const colorless = colors.length === 0;
   const overlap = botColors.some((c) => colors.includes(c));
   const typeLine = card.type_line || card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = fetchLands.includes(card.details.name);
 
   if (isLand) {
-    if (subset) {
-      // if fetches don't have the color identity override, they get lumped into this category
-      rating *= 1.4;
-    } else if (overlap || isFetch) {
-      rating *= 1.2;
-    } else {
-      rating *= 1.1;
+    if (subset || (overlap && isFetch)) {
+      rating += 300;
+    } else if (overlap) {
+      rating += 150;
     }
   } else if (subset) {
-    rating *= 1.3;
+    rating += 225;
+  } else if (colorless) {
+    rating += 150;
   } else if (overlap) {
-    rating *= 1.1;
+    rating += 75;
   }
 
   return rating;
