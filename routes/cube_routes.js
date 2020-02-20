@@ -1124,7 +1124,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
               details: carddb.cardFromId(inCube.cardID),
             };
           } else {
-            const reasonableId = carddb.getMostReasonable(normalizedName, cube.defaultPrinting)._id;
+            const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
+            const reasonableId = reasonableCard ? reasonableCard._id : null;
             const selectedId = reasonableId || potentialIds[0];
             selected = {
               cardID: selectedId,
