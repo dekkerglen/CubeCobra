@@ -31,41 +31,39 @@ function arrangePicks(picks) {
   draft.picks[0] = [...picks];
 }
 
-const fetchLands = [
-  'Arid Mesa',
-  'Bloodstained Mire',
-  'Flooded Strand',
-  'Marsh Flats',
-  'Misty Rainforest',
-  'Polluted Delta',
-  'Scalding Tarn',
-  'Verdant Catacombs',
-  'Windswept Heath',
-  'Wooded Foothills',
-];
+const fetchLands = {
+  'Arid Mesa': ['W', 'R'],
+  'Bloodstained Mire': ['B', 'R'],
+  'Flooded Strand': ['W', 'U'],
+  'Marsh Flats': ['W', 'B'],
+  'Misty Rainforest': ['U', 'G'],
+  'Polluted Delta': ['U', 'B'],
+  'Scalding Tarn': ['U', 'R'],
+  'Verdant Catacombs': ['B', 'G'],
+  'Windswept Heath': ['W', 'G'],
+  'Wooded Foothills': ['R', 'G'],
+};
 
 function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
-  const colors = card.colors || card.details.color_identity;
+  const colors = fetchLands[card.details.name] || card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
   const colorless = colors.length === 0;
   const overlap = botColors.some((c) => colors.includes(c));
   const typeLine = card.type_line || card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = fetchLands.includes(card.details.name);
+  const isFetch = !!fetchLands[card.details.name];
 
   if (isLand) {
     if (subset || (overlap && isFetch)) {
-      rating += 300;
+      rating *= 1.2;
     } else if (overlap) {
-      rating += 150;
+      rating *= 1.1;
     }
-  } else if (subset) {
-    rating += 225;
-  } else if (colorless) {
-    rating += 150;
+  } else if (subset || colorless) {
+    rating *= 1.15;
   } else if (overlap) {
-    rating += 75;
+    rating *= 1.05;
   }
 
   return rating;
