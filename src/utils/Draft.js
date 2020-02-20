@@ -47,8 +47,8 @@ const fetchLands = {
 function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
   const colors = fetchLands[card.details.name] || card.colors || card.details.color_identity;
-  const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
   const colorless = colors.length === 0;
+  const subset = arrayIsSubset(colors, botColors) && !colorless;
   const overlap = botColors.some((c) => colors.includes(c));
   const typeLine = card.type_line || card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
@@ -56,6 +56,7 @@ function botRating(botColors, card) {
 
   if (isLand) {
     if (subset || (overlap && isFetch)) {
+      // For an average-ish Elo of 1300, this boosts by 260 points.
       rating *= 1.2;
     } else if (overlap) {
       rating *= 1.1;
