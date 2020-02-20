@@ -4,11 +4,13 @@ import {
   resolveGrammar,
   validateGrammar,
   Alternation,
+  EOF,
   Flat,
   NonTerminal,
   Option,
   Repetition,
   Rule,
+  Terminal,
 } from 'chevrotain';
 
 import { consumeWord, consumeRegex, tokenTypes } from 'parsing/parsingUtils';
@@ -54,6 +56,7 @@ export function getFilterParser() {
           ],
           name: '$condition',
         }),
+        new Terminal({ terminalType: EOF }),
       ],
     }),
   );
@@ -65,43 +68,12 @@ export function getFilterParser() {
     tokenTypes: Object.values(tokenTypes),
     grammarName: 'FilterParser',
   });
-  console.log(rules);
+
   return generateParserFactory({
     name: 'FilterParser',
     rules,
     tokenVocabulary: Object.values(tokenTypes),
   })(Object.values(tokenTypes), { skipValidations: true });
 }
-export default getFilterParser;
 
-// HalfPositiveIntegerValue
-// this.OR(
-//   [
-//     {
-//       ALT: () => {
-//         this.AT_LEAST_ONE(() => number(this), { LABEL: 'integer' });
-//         this.OPTION(() => {
-//           this.OR(
-//             [
-//               { ALT: () => consumeWord('.5') },
-//               { ALT: () => consumeWord('.0') }
-//             ],
-//             { NAME: 'fraction' }
-//           );
-//         });
-//       }
-//     },
-//     {
-//       ALT: () => {
-//         this.OR(
-//           [
-//             { ALT: () => consumeWord('.5') },
-//             { ALT: () => consumeWord('.0') }
-//           ],
-//           { NAME: 'fraction' }
-//         );
-//       }
-//     },
-//   ],
-//   { NAME: 'value' }
-// );
+export default getFilterParser;

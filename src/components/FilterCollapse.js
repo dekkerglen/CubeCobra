@@ -343,10 +343,12 @@ class FilterCollapse extends Component {
     const filterParser = getFilterParser();
     filterParser.input = tokenized;
     const parsed = filterParser.filter();
-    console.log(parsed);
-    const visitor = getVisitorForParser(filterParser);
-    const newFilters = visitor.filter(parsed);
-    console.log(newFilters, newFilters({ cmc: 3.5 }));
+    console.log("Parsed: ", parsed);
+    if (parsed) {
+      const visitor = getVisitorForParser(filterParser);
+      const newFilters = visitor.filter(parsed);
+      console.log("Matches: ", newFilters({ cmc: 3.5 }));
+    }
     if (!valid) return;
 
     if (tokens.length > 0) {

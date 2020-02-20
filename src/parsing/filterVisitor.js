@@ -4,11 +4,10 @@ function getOriginalString(ctx) {
     tokens.push(...unorderedTokens);
   }
   tokens.sort((a, b) => a.startOffset - b.startOffset);
-  console.log(tokens);
   return tokens.map((token) => token.image).join('');
 }
 
-export function getVisitorFromParser(parser) {
+export function getFilterVisitorFromParser(parser) {
   const BaseCstVisitor = parser.getBaseCstVisitorConstructorWithDefaults();
   class FilterVisitor extends BaseCstVisitor {
     constructor() {
@@ -25,7 +24,6 @@ export function getVisitorFromParser(parser) {
         const operation = getOriginalString(children.$operation[i].children);
         const vChildren = valueCtx.children;
         const value = this.visit(Object.values(vChildren)[0]);
-        console.log(negated, value, operation, field);
         // TODO: Correctly lookup field
         return (card) => (negated ? !value(operation, card[field]) : value(operation, card[field]));
       });
@@ -35,11 +33,19 @@ export function getVisitorFromParser(parser) {
     // eslint-disable-next-line class-methods-use-this
     positiveHalfIntegerValue(ctx) {
       const value = parseFloat(getOriginalString(ctx), 10);
-      console.log('Value is: ', value);
       return (operator, fieldValue) => {
         switch (operator) {
           case ':':
+          case '=':
             return value === fieldValue;
+          case '<':
+            return fieldValue < value;
+          case '<=':
+            return fieldValue <= value;
+          case '>':
+            return fieldValue > value;
+          case '>=':
+            return fieldValue >= value;
           default:
             throw new Error(`Unrecognized operator ${operator}`);
         }
@@ -50,4 +56,4 @@ export function getVisitorFromParser(parser) {
   return new FilterVisitor();
 }
 
-export default getVisitorFromParser;
+export default getFilterVisitorFromParser;
