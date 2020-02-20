@@ -1,4 +1,5 @@
 const shuffleSeed = require('shuffle-seed');
+const winston = require('winston');
 
 const adminname = 'Dekkaru';
 
@@ -105,6 +106,11 @@ function newCard(card_details, tags, defaultStatus = 'Owned') {
 }
 
 function addCardToCube(cube, card_details, tags) {
+  if (card_details.error) {
+    winston.error('Attempted to add invalid card to cube.');
+    return;
+  }
+
   const card = newCard(card_details, tags, cube.defaultStatus || 'Owned');
   cube.cards.push(card);
 }
@@ -147,11 +153,11 @@ async function addNotification(user, from, url, text) {
 }
 
 function wrapAsyncApi(route) {
-  return (...args) => {
+  return (req, res, next) => {
     try {
-      return route(...args);
+      return route(req, res, next);
     } catch (err) {
-      console.error(err);
+      req.logger.error(`Error handling ${req.path}.`, { error: err });
       res.status(500).send({
         success: 'false',
         message: 'Internal server error',
@@ -160,8 +166,8 @@ function wrapAsyncApi(route) {
   };
 }
 
-function handleRouteError(res, req, err, reroute) {
-  console.error(err);
+function handleRouteError(req, res, err, reroute) {
+  req.logger.error(`Error handling ${req.path}.`, { error: err });
   req.flash('danger', err.message);
   res.redirect(reroute);
 }

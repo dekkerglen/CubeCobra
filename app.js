@@ -9,6 +9,11 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
+const winston = require('winston');
+const { Loggly } = require('winston-loggly-bulk');
+const morgan = require('morgan');
+const uuid = require('uuid/v4');
+const tmp = require('tmp');
 // eslint-disable-next-line import/no-unresolved
 const secrets = require('../cubecobrasecrets/secrets');
 // eslint-disable-next-line import/no-unresolved
@@ -16,18 +21,82 @@ const mongosecrets = require('../cubecobrasecrets/mongodb');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
-carddb.initializeCardDb();
+const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
+const combinedFile = tmp.fileSync({
+  prefix: `node-combined-${process.pid}-`,
+  postfix: '.log',
+  discardDescriptor: true,
+});
+
+const errorStackTracerFormat = winston.format((info) => {
+  if (info.error && info.error.stack) {
+    info.message = info.message ? `${info.message}: ${info.error.stack}` : `${info.error.stack}`;
+    delete info.error;
+  }
+  return info;
+});
+
+const timestamped = winston.format((info) => {
+  if (info.message) {
+    info.message = `[${new Date(Date.now()).toISOString()}] ${info.message}`;
+  }
+  return info;
+});
+
+winston.configure({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.splat(), // Necessary to produce the 'meta' property
+    errorStackTracerFormat(),
+    winston.format.simple(),
+  ),
+  exitOnError: false,
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log`
+    // - Write all logs error (and below) to `error.log`.
+    //
+    new winston.transports.File({ filename: errorFile.name, level: 'error' }),
+    new winston.transports.File({ filename: combinedFile.name }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.splat(), // Necessary to produce the 'meta' property
+        errorStackTracerFormat(),
+        timestamped(),
+        winston.format.simple(),
+      ),
+    }),
+  ],
+});
+
+console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
+
+if (secrets.loggly) {
+  winston.add(
+    new Loggly({
+      token: secrets.loggly.token,
+      subdomain: secrets.loggly.subdomain,
+      tags: ['Winston-NodeJS'],
+      json: true,
+    }),
+  );
+  console.log(`Logging to Loggly @ https://${secrets.loggly.subdomain}.loggly.com.`);
+}
 
 // Connect db
-mongoose.connect(mongosecrets.connectionString);
+mongoose.connect(mongosecrets.connectionString, {
+  useCreateIndex: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 const db = mongoose.connection;
 db.once('open', () => {
-  console.log('connected to nodecube db');
+  winston.info('Connected to Mongo.');
 });
 
 // Check for db errors
 db.on('error', (err) => {
-  console.log(err);
+  winston.error(err);
 });
 
 // Init app
@@ -41,9 +110,42 @@ const store = new MongoDBStore(
   },
   (err) => {
     if (err) {
-      console.log(`store failed to connect to mongoDB:\n${err}`);
+      winston.error('Store failed to connect to mongoDB.', { error: err });
     }
   },
+);
+
+// request timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(60 * 1000, () => {
+    const err = new Error('Request Timeout');
+    err.status = 408;
+    next(err);
+  });
+  res.setTimeout(60 * 1000, () => {
+    const err = new Error('Service Unavailable');
+    err.status = 503;
+    next(err);
+  });
+  next();
+});
+
+// error handling
+app.use((req, res, next) => {
+  req.uuid = uuid();
+  req.logger = winston.child({
+    requestId: req.uuid,
+  });
+  next();
+});
+
+morgan.token('uuid', (req) => req.uuid);
+app.use(
+  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
+    stream: {
+      write: (message) => winston.info(message.trim()),
+    },
+  }),
 );
 
 // upload file middleware
@@ -127,11 +229,13 @@ app.use((req, res) => {
 });
 
 schedule.scheduleJob('0 0 * * *', () => {
-  console.log('Starting midnight cardbase update...');
+  winston.info('Starting midnight cardbase update...');
   updatedb.updateCardbase();
 });
 
-// Start server
-http.createServer(app).listen(5000, 'localhost', () => {
-  console.log('server started on port 5000...');
+// Start server after carddb is initialized.
+carddb.initializeCardDb().then(() => {
+  http.createServer(app).listen(5000, 'localhost', () => {
+    winston.info('Server started on port 5000...');
+  });
 });
