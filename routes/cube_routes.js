@@ -1290,7 +1290,7 @@ async function bulkUpload(req, res, list, cube) {
         cards.push(item.substring(item.indexOf('x') + 1));
       }
     } else {
-      let selected;
+      let selected = null;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
         const name = item.substring(0, item.indexOf('('));
@@ -1303,7 +1303,8 @@ async function bulkUpload(req, res, list, cube) {
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
+        const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
+        selected = selectedCard ? selectedCard._id : null;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
