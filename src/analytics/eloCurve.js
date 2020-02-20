@@ -12,7 +12,6 @@ async function eloCurve(cards) {
   const elos = cards
     .map((card) => [card.details.elo, card.asfan])
     .filter(([a, b]) => a !== undefined && a !== null && b !== undefined && b !== null);
-  console.log(elos);
   const median = Math.round(weightedMedianOf(elos));
   const mean = Math.round(weightedMeanOf(elos));
   const stdDev = Math.round(weightedStdDevOf(elos));
