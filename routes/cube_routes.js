@@ -1285,7 +1285,6 @@ async function bulkUpload(req, res, list, cube) {
   for (let i = 0; i < cards.length; i++) {
     const item = cards[i].toLowerCase().trim();
     const numericMatch = item.match(/([0-9]+)x? (.*)/);
-    console.warn(numericMatch);
     if (numericMatch) {
       let count = parseInt(numericMatch[1], 10);
       if (!Number.isInteger(count)) {
