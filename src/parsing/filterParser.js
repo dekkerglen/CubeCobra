@@ -16,11 +16,15 @@ import {
 import { consumeWord, consumeRegex, tokenTypes } from 'parsing/parsingUtils';
 
 const fieldsMap = {};
+const conditions = [];
 
 const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
   fieldsMap[abbrvRegex] = field;
-  return new Flat({
+  conditions.push(new NonTerminal( { nonTerminalName: `${field}Condition` }));
+  return new Rule({
+    name: `${field}Condition`,
     definition: [
+      new Option({ definition: [...consumeWord('-')], name: '$negation' }),
       new Alternation({
         definition: [new Flat({ definition: consumeRegex(abbrvRegex), name: '$field' })],
         name: 'field',
@@ -39,11 +43,13 @@ const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
 
 export function getFilterParser() {
   const rules = [];
-  const conditions = [];
 
   rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex('\\d+(\\.(0|5))?|\\.(0|5)') }));
+  rules.push(new Rule({ name: 'halfIntegerValue', definition: consumeRegex('-\\d+|\\d+(\\.(0|5))?|\\.(0|5)') }));
 
-  conditions.push(createCondition('cmc', 'cmc', ':|=|<=?|>=?', 'positiveHalfIntegerValue', this));
+  rules.push(createCondition('cmc', 'c(mc)?', ':|=|<=?|>=?', 'positiveHalfIntegerValue', this));
+  rules.push(createCondition('power', 'p(ow(er)?)?', ':|=|<=?|>=?', 'halfIntegerValue', this));
+  rules.push(createCondition('toughness', 't(ough(ness)?)?', ':|=|<=?|>=?', 'halfIntegerValue', this));
 
   rules.push(
     new Rule({
@@ -51,10 +57,8 @@ export function getFilterParser() {
       definition: [
         new Repetition({
           definition: [
-            new Option({ definition: [...consumeWord('-')], name: '$negation' }),
-            new Alternation({ definition: conditions }),
+            new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) }),
           ],
-          name: '$condition',
         }),
         new Terminal({ terminalType: EOF }),
       ],
@@ -69,6 +73,8 @@ export function getFilterParser() {
     grammarName: 'FilterParser',
   });
 
+  console.log(rules);
+
   return generateParserFactory({
     name: 'FilterParser',
     rules,
@@ -76,4 +82,6 @@ export function getFilterParser() {
   })(Object.values(tokenTypes), { skipValidations: true });
 }
 
-export default getFilterParser;
+const FilterParser = getFilterParser();
+
+export default FilterParser;

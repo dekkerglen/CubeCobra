@@ -19,7 +19,7 @@ import {
 } from 'reactstrap';
 
 import { tokenize } from 'parsing/parsingUtils';
-import getFilterParser from 'parsing/filterParser';
+import FilterParser from 'parsing/filterParser';
 import getVisitorForParser from 'parsing/filterVisitor';
 
 import Filter from '../utils/Filter';
@@ -340,12 +340,11 @@ class FilterCollapse extends Component {
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     const tokenized = tokenize(filterInput);
-    const filterParser = getFilterParser();
-    filterParser.input = tokenized;
-    const parsed = filterParser.filter();
+    FilterParser.input = tokenized;
+    const parsed = FilterParser.filter();
     console.log("Parsed: ", parsed);
     if (parsed) {
-      const visitor = getVisitorForParser(filterParser);
+      const visitor = getVisitorForParser(FilterParser);
       const newFilters = visitor.filter(parsed);
       console.log("Matches: ", newFilters({ cmc: 3.5 }));
     }
