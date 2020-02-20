@@ -110,7 +110,6 @@ const convertedExampleDoubleFacedCardFlipFace = {
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   cmc: 0,
-  language: 'en',
   legalities: {
     Legacy: false,
     Modern: false,
@@ -225,16 +224,16 @@ afterEach(() => {
 
 test('updateCardbase creates the expected files', () => {
   expect.assertions(8);
-  var noopPromise = new Promise((resolve, reject) => {
+  const noopPromise = new Promise((resolve) => {
     process.nextTick(() => {
       resolve();
     });
   });
-  var downloadMock = jest.fn();
+  const downloadMock = jest.fn();
   downloadMock.mockReturnValue(noopPromise);
-  var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
+  const initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -243,14 +242,14 @@ test('updateCardbase creates the expected files', () => {
     expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
     expect(fs.existsSync('private-test/english.json')).toBe(true);
     expect(fs.existsSync('private-test/full_names.json')).toBe(true);
+    updatecards.downloadDefaultCards = initialDownloadDefaultCards;
   });
-  updatecards.downloadDefaultCards = initialDownloadDefaultCards;
 });
 
 test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
   const card = convertedExampleCard;
   updatecards.addCardToCatalog(card);
-  var catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
   const normalizedName = cardutil.normalizeName(card.name);
   const expectedImagedictStructure = {
@@ -276,7 +275,7 @@ test("addCardToCatalog successfully adds a card's information to the internal st
 test("addCardToCatalog successfully adds a double-faced card's information to the internal structures", () => {
   const card = convertedExampleDoubleFacedCardFlipFace;
   updatecards.addCardToCatalog(card, true);
-  var catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   const normalizedFullName = card.full_name
     .toLowerCase()
     .normalize('NFD')
@@ -303,14 +302,14 @@ test('addLanguageMapping successfully adds a language mapping to the internal st
   updatecards.addCardToCatalog(card);
   updatecards.addLanguageMapping(examplecards.exampleForeignCard);
 
-  const catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   expect(Object.keys(catalog.english).length).toBe(1);
   expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id);
 });
 
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(7);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
@@ -324,7 +323,7 @@ test('initializeCatalog clears the updatecards structures', () => {
 
 test('saveAllCards creates the expected files', () => {
   expect.assertions(8);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -380,42 +379,42 @@ describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribu
 
 describe('convertName', () => {
   test('handles ampersands', () => {
-    let card = { name: 'Kharis & the Beholder', layout: '' };
+    const card = { name: 'Kharis & the Beholder', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis & the Beholder');
   });
   test('handles double quotes', () => {
-    let card = { name: 'Kharis "The Beholder"', layout: '' };
+    const card = { name: 'Kharis "The Beholder"', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis "The Beholder"');
   });
   test('handles single quotes', () => {
-    let card = { name: "Kharis 'The Beholder'", layout: '' };
+    const card = { name: "Kharis 'The Beholder'", layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe("Kharis 'The Beholder'");
   });
   test('handles angle brackets', () => {
-    let card = { name: 'Kharis <The Beholder>', layout: '' };
+    const card = { name: 'Kharis <The Beholder>', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis <The Beholder>');
   });
   test('handles question mark', () => {
-    let card = { name: 'Question Elemental?', layout: '' };
+    const card = { name: 'Question Elemental?', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Question Elemental?');
   });
   test('handles multi-face (first face)', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const card = { name: 'Kharis // The Beholder', layout: 'flip' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis');
   });
   test('handles multi-face (second face)', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const card = { name: 'Kharis // The Beholder', layout: 'flip' };
     const result = updatecards.convertName(card, true);
     expect(result).toBe('The Beholder');
   });
   test('handles split card', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'split' };
+    const card = { name: 'Kharis // The Beholder', layout: 'split' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis // The Beholder');
   });

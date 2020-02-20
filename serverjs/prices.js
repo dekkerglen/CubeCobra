@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const url = require('url');
+const winston = require('winston');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 
 var token = null;
@@ -10,7 +11,7 @@ async function GetToken() {
     //TODO: check if token is expired, if so, fetch a new one
     return token.access_token;
   } else {
-    console.log(Date(Date.now()).toString(), 'fetching fresh token');
+    winston.info('Fetching fresh TCGPlayer token.');
 
     const body = new url.URLSearchParams({
       grant_type: 'client_credentials',
@@ -25,7 +26,7 @@ async function GetToken() {
     try {
       token = await response.json();
       token.expires = Tomorrow();
-      console.log(token.expires.toString(), 'token expiration');
+      winston.info(`${token.expires} token expiration`);
       return token.access_token;
     } catch (e) {
       return;
@@ -90,7 +91,7 @@ async function GetPrices(card_ids) {
         })
           .then(checkStatus)
           .then((response) => response.json())
-          .catch((err) => console.error('TCGPlayer request failed', err)),
+          .catch((err) => winston.error('TCGPlayer request failed.', { error: err })),
       ),
     );
     for (response of responses) {
@@ -114,7 +115,7 @@ async function GetPrices(card_ids) {
     }
     return price_dict;
   } catch (err) {
-    console.error(err);
+    winston.error(err);
     return price_dict;
   }
 }

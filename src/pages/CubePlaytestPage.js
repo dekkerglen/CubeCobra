@@ -114,7 +114,7 @@ const CustomDraftCard = ({ format, onEditFormat, onDeleteFormat, ...props }) => 
           />
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -176,7 +176,7 @@ const StandardDraftCard = () => {
           </LabelRow>
           <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id="seats" defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -300,18 +300,22 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
-      <Navbar light expand className="usercontrols mb-3">
-        <Nav navbar>
-          <NavItem>
-            <NavLink onClick={handleCreateFormat} className="clickable">
-              Create Custom Draft
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
-          </NavItem>
-        </Nav>
-      </Navbar>
+      {canEdit ? (
+        <Navbar light expand className="usercontrols mb-3">
+          <Nav navbar>
+            <NavItem>
+              <NavLink onClick={handleCreateFormat} className="clickable">
+                Create Custom Draft
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
+            </NavItem>
+          </Nav>
+        </Navbar>
+      ) : (
+        <Row className="mb-3" />
+      )}
       <DynamicFlash />
       <Alerts alerts={alerts} />
       <Row className="justify-content-center">
