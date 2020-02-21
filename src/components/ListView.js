@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { Form, Input } from 'reactstrap';
 
-import { cardsAreEquivalent } from 'utils/Card';
+import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { getLabels, sortDeep } from 'utils/Sort';
 
@@ -58,7 +58,18 @@ const LoadingInput = withLoading(Input, ['onBlur']);
 const LoadingInputChange = withLoading(Input, ['onChange']);
 const LoadingTagInput = withLoading(TagInput, ['handleInputBlur']);
 
-const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
+const defaultVersions = (card) => {
+  const fullName = card.details.full_name;
+  return [
+    {
+      ...card.details,
+      version: fullName.toUpperCase().substring(fullName.indexOf('[') + 1, fullName.indexOf(']')),
+    },
+  ];
+};
+
+const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAlert }) => {
+  // FIXME: This state should just be managed in the card object.
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
   const [values, setValues] = useState({
     ...card,
@@ -105,7 +116,7 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
             // changed version
             const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
             const getJson = await getResponse.json();
-            updateCubeCard(card.index, { ...newCard, details: getJson.card });
+            updateCubeCard(card.index, { ...newCard, details: { ...newCard.details, ...getJson.card } });
           }
         }
       } catch (err) {
@@ -189,7 +200,6 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
             updatedCard[name] = value;
           }
 
-          // TODO: Apply some kind of loading indicator to the element.
           await syncCard(updatedCard);
           setValues(updateF);
         } catch (err) {
@@ -255,11 +265,11 @@ const ListViewRow = ({ card, versions, checked, onCheck, addAlert }) => {
           type="select"
           style={{ maxWidth: '6rem' }}
           className="w-100"
-          disabled={versions.length === 0}
+          loading={versionsLoading ? true : null}
         >
-          {versions.map((version) => (
-            <option key={version.id} value={version.id}>
-              {version.version}
+          {versions.map(({ _id, version }) => (
+            <option key={_id} value={_id}>
+              {version}
             </option>
           ))}
         </LoadingInputChange>
@@ -319,10 +329,11 @@ ListViewRow.propTypes = {
   }).isRequired,
   versions: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
+      _id: PropTypes.string.isRequired,
       version: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  versionsLoading: PropTypes.bool.isRequired,
   checked: PropTypes.bool.isRequired,
   onCheck: PropTypes.func.isRequired,
   addAlert: PropTypes.func.isRequired,
@@ -330,8 +341,10 @@ ListViewRow.propTypes = {
 
 const ListView = ({ cards }) => {
   const [versionDict, setVersionDict] = useState({});
+  const [versionsLoading, setVersionsLoading] = useState(false);
   const [checked, setChecked] = useState([]);
 
+  const { cube } = useContext(CubeContext);
   const { setGroupModalCards } = useContext(GroupModalContext);
   const { primary, secondary } = useContext(SortContext);
 
@@ -339,28 +352,26 @@ const ListView = ({ cards }) => {
 
   useEffect(() => {
     const wrapper = async () => {
-      const knownIds = new Set(Object.keys(versionDict));
-      const currentIds = cards.map((card) => card.cardID);
-      const newIds = currentIds.filter((id) => !knownIds.has(id));
-      if (newIds.length > 0) {
-        const response = await csrfFetch('/cube/api/getversions', {
-          method: 'POST',
-          body: JSON.stringify(newIds),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          console.error(response);
-          return;
-        }
-
-        const json = await response.json();
-        setVersionDict((current) => ({ ...current, ...json.dict }));
+      setVersionsLoading(true);
+      const response = await csrfFetch('/cube/api/getversions', {
+        method: 'POST',
+        body: JSON.stringify(cube.cards.map(({ cardID }) => cardID)),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        console.error(response);
+        return;
       }
+
+      const json = await response.json();
+      setVersionsLoading(false);
+      setVersionDict((current) => ({ ...current, ...json.dict }));
     };
     wrapper();
-  }, [cards, versionDict]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCheckAll = useCallback(
     (event) => {
@@ -381,7 +392,7 @@ const ListView = ({ cards }) => {
     (event) => {
       const value = event.target.checked;
       const index = parseInt(event.target.getAttribute('data-index'), 10);
-      if (Number.isInteger(value)) {
+      if (Number.isInteger(index)) {
         let newChecked = checked;
         if (value) {
           if (!newChecked.includes(index)) {
@@ -407,7 +418,8 @@ const ListView = ({ cards }) => {
         <ListViewRow
           key={card._id}
           card={card}
-          versions={versionDict[card.cardID] || []}
+          versions={versionDict[normalizeName(card.details.name)] || defaultVersions(card)}
+          versionsLoading={versionsLoading}
           checked={checked.includes(card.index)}
           onCheck={handleCheck}
           addAlert={addAlert}
