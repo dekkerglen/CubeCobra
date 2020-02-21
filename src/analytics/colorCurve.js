@@ -20,7 +20,7 @@ async function colorCurve(cards) {
     }
     const category = curve[colorCategory];
     // Giving raw count instead of asfan currently.
-    const asfan = card.asfan;
+    const { asfan } = card;
     if (category) {
       let cmc = Math.floor(getCmc(card));
       if (cmc >= 9) {
