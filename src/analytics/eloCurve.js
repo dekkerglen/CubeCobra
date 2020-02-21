@@ -1,7 +1,7 @@
 import { getWeightedDatasetFor, getOptionsForChart } from 'analytics/analyticsHelpers';
 
 async function eloCurve(cards) {
-  const generateRandomly = true;
+  const generateRandomly = false;
   if (generateRandomly) {
     cards = cards.map((card) => {
       card = { ...card };
