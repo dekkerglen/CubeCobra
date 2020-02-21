@@ -79,7 +79,7 @@ function botPicks() {
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < botPack.length; cardIndex++) {
-      if (draft.ratings[botPack[cardIndex].details.name]) {
+      if (draft.ratings && draft.ratings[botPack[cardIndex].details.name]) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
