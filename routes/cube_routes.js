@@ -417,11 +417,7 @@ router.get('/overview/:id', async (req, res) => {
       },
       '_id username image artist users_following',
     ).lean();
-    const [blogs, followers, [cardDetails, allVersionsDetails]] = await Promise.all([
-      blogsQ,
-      followersQ,
-      cardDetailsQ,
-    ]);
+    const [blogs, followers, [cardDetails, allVersionsDetails]] = await Promise.all([blogsQ, followersQ, cardDetailsQ]);
     cube.cards = cardDetails;
     const allVersionsLookup = {};
     for (const card of allVersionsDetails) {
@@ -1163,32 +1159,34 @@ async function bulkUpload(req, res, list, cube) {
       cube.maybe.push(...newMaybe);
       added.concat(newCards, newMaybe);
     } else {
-      let selected;
-      if (/(.*)( \((.*)\))/.test(item)) {
-        // has set info
-        const name = item.substring(0, item.indexOf('('));
-        const potentialIds = carddb.getIdsFromName(name);
-        if (potentialIds && potentialIds.length > 0) {
-          const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
-          // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
-          selected = matching || potentialIds[0];
+      for (const item of cards) {
+        let selected;
+        if (/(.*)( \((.*)\))/.test(item)) {
+          // has set info
+          const name = item.substring(0, item.indexOf('('));
+          const potentialIds = carddb.getIdsFromName(name);
+          if (potentialIds && potentialIds.length > 0) {
+            const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
+            // if we've found a match, and it DOES need to be parsed with cubecobra syntax
+            const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+            selected = matching || potentialIds[0];
+          }
+        } else {
+          // does not have set info
+          selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
         }
-      } else {
-        // does not have set info
-        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
-      }
-      if (selected) {
-        const details = carddb.cardFromId(selected);
-        if (!details.error) {
-          util.addCardToCube(cube, details);
-          added.push(details);
-          changelog += addCardHtml(details);
+        if (selected) {
+          const details = carddb.cardFromId(selected);
+          if (!details.error) {
+            util.addCardToCube(cube, details);
+            added.push(details);
+            changelog += addCardHtml(details);
+          } else {
+            missing += `${item}\n`;
+          }
         } else {
           missing += `${item}\n`;
         }
-      } else {
-        missing += `${item}\n`;
       }
     }
   }
@@ -1284,9 +1282,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     }
     return updateCubeAndBlog(req, res, cube, changelog, added, missing, carddb);
   } catch (err) {
-    console.log(err);
-    req.flash('danger', 'Error making bulk replacement');
-    return res.redirect(`/cube/list/${req.params.id}`);
+    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 });
 
@@ -1306,7 +1302,7 @@ router.get('/download/cubecobra/:id', async (req, res) => {
   }
 });
 
-function writeCard(req, res, card, maybe) {
+function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
@@ -1351,10 +1347,10 @@ router.get('/download/csv/:id', async (req, res) => {
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
     for (const card of cube.cards) {
-      writeCard(req, res, card, false);
+      writeCard(res, card, false);
     }
     for (const card of cube.maybe) {
-      writeCard(req, res, card, true);
+      writeCard(res, card, true);
     }
     return res.end();
   } catch (err) {
