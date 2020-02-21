@@ -191,6 +191,11 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.body.html = sanitize(req.body.html);
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!req.user._id.equals(cube.owner)) {
+      req.flash('danger', 'Formats can only be changed by cube owner.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
     let message = '';
     if (req.body.id === '-1') {
       if (!cube.draft_formats) {
@@ -237,13 +242,6 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
 
-    let cube = await Cube.findOne(build_id_query(req.params.id));
-
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
-
-    await cube.save();
     const { user } = req;
 
     if (req.body.id && req.body.id.length > 0) {
@@ -263,11 +261,20 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       req.flash('success', 'Blog update successful');
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
+
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+
     // post new blog
     if (!user._id.equals(cube.owner)) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
+
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    await cube.save();
 
     const blogpost = new Blog();
     blogpost.html = req.body.html;
@@ -1066,10 +1073,9 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
         blogpost: blogpost.toObject(),
       };
       return res.render('cube/bulk_upload', {
-        reactHTML:
-          NODE_ENV === 'production'
-            ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-            : undefined,
+        reactHTML: BulkUploadPage
+          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
         reactProps: serialize(reactProps),
         cube,
         cubeID: req.params.id,
@@ -1139,7 +1145,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
               details: carddb.cardFromId(inCube.cardID),
             };
           } else {
-            const reasonableId = carddb.getMostReasonable(normalizedName, cube.defaultPrinting)._id;
+            const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
+            const reasonableId = reasonableCard ? reasonableCard._id : null;
             const selectedId = reasonableId || potentialIds[0];
             selected = {
               cardID: selectedId,
@@ -1251,10 +1258,9 @@ async function bulkUploadCSV(req, res, cards, cube) {
       blogpost: blogpost.toObject(),
     };
     return res.render('cube/bulk_upload', {
-      reactHTML:
-        NODE_ENV === 'production'
-          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-          : undefined,
+      reactHTML: BulkUploadPage
+        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+        : undefined,
       reactProps: serialize(reactProps),
       cube,
       cubeID: req.params.id,
@@ -1299,13 +1305,17 @@ async function bulkUpload(req, res, list, cube) {
   let changelog = '';
   for (let i = 0; i < cards.length; i++) {
     const item = cards[i].toLowerCase().trim();
-    if (/([0-9]+x )(.*)/.test(item)) {
-      const count = parseInt(item.substring(0, item.indexOf('x')), 10);
+    const numericMatch = item.match(/([0-9]+)x? (.*)/);
+    if (numericMatch) {
+      let count = parseInt(numericMatch[1], 10);
+      if (!Number.isInteger(count)) {
+        count = 1;
+      }
       for (let j = 0; j < count; j++) {
-        cards.push(item.substring(item.indexOf('x') + 1));
+        cards.push(numericMatch[2]);
       }
     } else {
-      let selected;
+      let selected = null;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
         const name = item.substring(0, item.indexOf('('));
@@ -1318,7 +1328,8 @@ async function bulkUpload(req, res, list, cube) {
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
+        const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
+        selected = selectedCard ? selectedCard._id : null;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
@@ -1488,8 +1499,10 @@ router.get('/download/csv/:id', async (req, res) => {
     for (const card of cube.cards) {
       writeCard(req, res, card, false);
     }
-    for (const card of cube.maybe) {
-      writeCard(req, res, card, true);
+    if (Array.isArray(cube.maybe)) {
+      for (const card of cube.maybe) {
+        writeCard(req, res, card, true);
+      }
     }
     return res.end();
   } catch (err) {
@@ -2747,7 +2760,7 @@ router.get(
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
     const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
-    const [priceDict, eloDict] = await [GetPrices(tcg), getElo(names, true)];
+    const [priceDict, eloDict] = await Promise.all([GetPrices(tcg), getElo(names, true)]);
     for (const card of cards) {
       if (card.tcgplayer_id) {
         const cardPriceData = priceDict[card.tcgplayer_id];
@@ -2773,7 +2786,7 @@ router.get(
 router.post(
   '/api/getversions',
   body([], 'Body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').isUUID(4),
+  body('*', 'Each ID must be a valid UUID.').matches(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
@@ -3046,7 +3059,7 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
-      res.redirect(`/cube/overview/${req.params.id}`);
+      return res.redirect(`/cube/overview/${req.params.id}`);
     }
     await Cube.deleteOne(build_id_query(req.params.id));
 
