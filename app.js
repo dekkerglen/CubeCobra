@@ -236,10 +236,6 @@ app.use('/user', users);
 app.use('/dev', devs);
 app.use('/tool', tools);
 
-app.get('/500', (req, res, next) => {
-  next(new Error('Test error'));
-});
-
 app.use((req, res) => {
   res.status(404).render('misc/404', {});
 });
