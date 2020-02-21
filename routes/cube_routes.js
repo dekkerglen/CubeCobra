@@ -1480,8 +1480,10 @@ router.get('/download/csv/:id', async (req, res) => {
     for (const card of cube.cards) {
       writeCard(req, res, card, false);
     }
-    for (const card of cube.maybe) {
-      writeCard(req, res, card, true);
+    if (Array.isArray(cube.maybe)) {
+      for (const card of cube.maybe) {
+        writeCard(req, res, card, true);
+      }
     }
     return res.end();
   } catch (err) {
