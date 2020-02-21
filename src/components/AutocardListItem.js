@@ -38,6 +38,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
       onAuxClick={noCardModal ? undefined : handleAuxClick}
       onClick={noCardModal ? undefined : handleClick}
       inModal={inModal}
+      role="button"
     >
       {name}
       {children}
