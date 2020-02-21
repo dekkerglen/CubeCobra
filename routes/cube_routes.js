@@ -189,6 +189,11 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.body.html = sanitize(req.body.html);
 
     const cube = await Cube.findOne(build_id_query(req.params.id));
+    if (!req.user._id.equals(cube.owner)) {
+      req.flash('danger', 'Formats can only be changed by cube owner.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
     let message = '';
     if (req.body.id === '-1') {
       if (!cube.draft_formats) {
@@ -235,13 +240,6 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
 
-    let cube = await Cube.findOne(build_id_query(req.params.id));
-
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
-
-    await cube.save();
     const { user } = req;
 
     if (req.body.id && req.body.id.length > 0) {
@@ -261,11 +259,20 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       req.flash('success', 'Blog update successful');
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
+
+    let cube = await Cube.findOne(build_id_query(req.params.id));
+
     // post new blog
     if (!user._id.equals(cube.owner)) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
+
+    cube.date_updated = Date.now();
+    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube = setCubeType(cube, carddb);
+
+    await cube.save();
 
     const blogpost = new Blog();
     blogpost.html = req.body.html;
@@ -2756,7 +2763,7 @@ router.get(
 router.post(
   '/api/getversions',
   body([], 'Body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').isUUID(4),
+  body('*', 'Each ID must be a valid UUID.').matches(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
@@ -3029,7 +3036,7 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
-      res.redirect(`/cube/overview/${req.params.id}`);
+      return res.redirect(`/cube/overview/${req.params.id}`);
     }
     await Cube.deleteOne(build_id_query(req.params.id));
 
