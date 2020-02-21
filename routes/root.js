@@ -266,9 +266,9 @@ router.get('/dashboard/decks/:page', async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-  const cubeq = Cube.countDocuments().exec();
-  const deckq = Deck.countDocuments().exec();
-  const userq = User.countDocuments().exec();
+  const cubeq = Cube.estimatedDocumentCount().exec();
+  const deckq = Deck.estimatedDocumentCount().exec();
+  const userq = User.estimatedDocumentCount().exec();
 
   const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
 
