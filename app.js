@@ -212,6 +212,11 @@ app.get('*', (req, res, next) => {
   next();
 });
 
+app.post('*', (req, res, next) => {
+  res.locals.user = req.user || null;
+  next();
+});
+
 // Route files; they manage their own CSRF protection
 const cubes = require('./routes/cube_routes');
 const users = require('./routes/users_routes');

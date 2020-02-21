@@ -1051,10 +1051,9 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
         blogpost: blogpost.toObject(),
       };
       return res.render('cube/bulk_upload', {
-        reactHTML:
-          NODE_ENV === 'production'
-            ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-            : undefined,
+        reactHTML: BulkUploadPage
+          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
         reactProps: serialize(reactProps),
         cube,
         cubeID: req.params.id,
@@ -1236,10 +1235,9 @@ async function bulkUploadCSV(req, res, cards, cube) {
       blogpost: blogpost.toObject(),
     };
     return res.render('cube/bulk_upload', {
-      reactHTML:
-        NODE_ENV === 'production'
-          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-          : undefined,
+      reactHTML: BulkUploadPage
+        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+        : undefined,
       reactProps: serialize(reactProps),
       cube,
       cubeID: req.params.id,
