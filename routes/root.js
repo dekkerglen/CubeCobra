@@ -194,7 +194,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -260,7 +260,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -284,10 +284,12 @@ router.get('/landing', async (req, res) => {
 router.post('/advanced_search', (req, res) => {
   let url = '/search/';
   if (req.body.name && req.body.name.length > 0) {
-    url += `name${req.body.nameType}${req.body.name};`;
+    const encoded = encodeURIComponent(req.body.name);
+    url += `name${req.body.nameType}${encoded};`;
   }
   if (req.body.owner && req.body.owner.length > 0) {
-    url += `owner_name${req.body.ownerType}${req.body.owner};`;
+    const encoded = encodeURIComponent(req.body.owner);
+    url += `owner_name${req.body.ownerType}${encoded};`;
   }
   res.redirect(url);
 });
@@ -312,6 +314,13 @@ router.get('/search/:id', (req, res) => {
   let page = parseInt(rawSplit[1], 10);
   let query = {};
   const terms = [];
+
+  // input is the search string from a user -- should be treated as a string literal, rather than
+  // a regex with special characters.  This method escapes any characters which could be considered
+  // special characters by the regex, like . and *
+  function escapeRegexLiteral(input) {
+    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+  }
   rawQueries.forEach((searchExpression) => {
     let field;
     let filter;
@@ -320,11 +329,12 @@ router.get('/search/:id', (req, res) => {
 
     if (searchExpression.includes('=')) {
       [field, filter] = searchExpression.split('=');
-      searchRegex = new RegExp(`^${filter}$`, 'i');
+      const escapedFilter = escapeRegexLiteral(filter);
+      searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
       expressionTerm = 'is exactly';
     } else if (searchExpression.includes('~')) {
       [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(filter, 'i');
+      searchRegex = new RegExp(escapeRegexLiteral(filter), 'i');
       expressionTerm = 'contains';
     }
 

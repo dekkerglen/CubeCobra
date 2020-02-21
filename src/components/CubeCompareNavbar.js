@@ -66,35 +66,37 @@ class CubeCompareNavbar extends Component {
             </li>
           </ul>
         </div>
-        <Navbar expand="md" light className="usercontrols">
-          <NavbarToggler onClick={this.toggle} />
-          <Collapse isOpen={this.state.isOpen} navbar>
-            <Nav navbar>
-              <NavItem>
-                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
-                  Sort
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
-                  Filter
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
-                  View Tag Colors
-                </NavLink>
-              </NavItem>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <SortCollapse isOpen={openCollapse === 'sort'} />
-        <FilterCollapse
-          filter={filter}
-          setFilter={setFilter}
-          numCards={cards.length}
-          isOpen={this.props.openCollapse === 'filter'}
-        />
+        <div className="usercontrols">
+          <Navbar expand="md" light>
+            <NavbarToggler onClick={this.toggle} />
+            <Collapse isOpen={this.state.isOpen} navbar>
+              <Nav navbar>
+                <NavItem>
+                  <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
+                    Sort
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
+                    Filter
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
+                    View Tag Colors
+                  </NavLink>
+                </NavItem>
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <SortCollapse isOpen={openCollapse === 'sort'} />
+          <FilterCollapse
+            filter={filter}
+            setFilter={setFilter}
+            numCards={cards.length}
+            isOpen={this.props.openCollapse === 'filter'}
+          />
+        </div>
         <TagColorsModal
           canEdit={false}
           isOpen={this.state.tagColorsModalOpen}
