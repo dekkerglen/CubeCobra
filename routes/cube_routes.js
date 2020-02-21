@@ -1586,13 +1586,13 @@ router.post('/startdraft/:id', async (req, res) => {
       throw new Error('Could not create draft: no cards');
     }
     // ensure that cards have details
-    draftcards.forEach((card, index) => {
+    for(const card of draftcards) {
       card.details = carddb.cardFromId(card.cardID);
-    });
+    }
 
-    let bots = draftutil.getDraftBots(params);
-    let format = draftutil.getDraftFormat(params, cube);
-    let draft = new Draft();
+    const bots = draftutil.getDraftBots(params);
+    const format = draftutil.getDraftFormat(params, cube);
+    const draft = new Draft();
     draftutil.populateDraft(
       draft,
       format,
@@ -1603,9 +1603,9 @@ router.post('/startdraft/:id', async (req, res) => {
     );
     draft.cube = cube._id;
 
-    //add ratings
+    // add ratings
     const names = [];
-    //add in details to all cards
+    // add in details to all cards
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
@@ -2298,11 +2298,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 router.post('/submitdeck/:id', async (req, res) => {
   try {
     //req.body contains a draft
-    var draftid = req.body.body;
+    const draftid = req.body.body;
     const draft = await Draft.findById(draftid);
     const cube = await Cube.findOne(build_id_query(draft.cube));
 
-    var deck = new Deck();
+    const deck = new Deck();
     deck.cube = draft.cube;
     deck.date = Date.now();
     deck.comments = [];
@@ -2316,7 +2316,7 @@ router.post('/submitdeck/:id', async (req, res) => {
         userid: seat.userid,
         username: seat.name,
         pickorder: seat.pickorder,
-        name: 'Draft of ' + cube.name,
+        name: `Draft of ${cube.name}`,
         description: '',
         cols: 16,
         deck: seat.drafted,
@@ -3127,11 +3127,10 @@ router.post(
 
     if (draft) {
       let picks = draft.seats[0].length;
-      let picknum = 1;
       let packnum = 1;
       while (picks > draft.initial_state[packnum - 1].length) {
         picks -= draft.initial_state[packnum - 1].length;
-        packnum++;
+        packnum += 1;
       }
 
       rating.name = req.body.pick;
