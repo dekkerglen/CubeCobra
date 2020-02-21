@@ -7,6 +7,7 @@ export function getWeightedDatasetFor({
   bucketSize = null,
   dataSetLabel = 'Cards',
   dataSetColor = '#000000',
+  roundBucket = true,
   round = true,
 }) {
   data = data.filter(([a, b]) => a !== undefined && a !== null && b !== undefined && b !== null);
@@ -17,11 +18,13 @@ export function getWeightedDatasetFor({
   const buckets = [];
   const labels = [];
   if (bucketSize == null) {
-    bucketSize = stdDev / 4;
+    bucketSize = Math.min(median / 2, stdDev / 4);
   }
-  bucketSize = Math.trunc(bucketSize);
-  if (bucketSize === 0) {
-    bucketSize = 1;
+  if (roundBucket) {
+    bucketSize = Math.trunc(bucketSize);
+  }
+  if (bucketSize < (roundBucket ? 1 : 0.01)) {
+    bucketSize = roundBucket ? 1 : 0.01;
   }
   if (round) {
     median = Math.round(median);
@@ -35,13 +38,24 @@ export function getWeightedDatasetFor({
 
   const numBuckets = Math.ceil((maxValue - minValue) / bucketSize);
   buckets.push(0);
-  labels.push(`Less than ${minValue + bucketSize}`);
+  const firstBucketValue = minValue + bucketSize;
+  if (roundBucket) {
+    labels.push(`Less than ${firstBucketValue}`);
+  } else {
+    labels.push(`Less than ${firstBucketValue.toFixed(2)}`);
+  }
   for (let i = 1; i < numBuckets - 1; i++) {
     buckets.push(0);
-    if (bucketSize === 1) {
-      labels.push(`${minValue + i * bucketSize}`);
+    let minBucketValue = minValue + i * bucketSize;
+    let maxBucketValue = minBucketValue + bucketSize - (roundBucket ? 1 : 0.01);
+    if (!roundBucket) {
+      minBucketValue = minBucketValue.toFixed(2);
+      maxBucketValue = maxBucketValue.toFixed(2);
+    }
+    if (bucketSize === 1 && roundBucket) {
+      labels.push(minBucketValue);
     } else {
-      labels.push(`${minValue + i * bucketSize}-${minValue + (i + 1) * bucketSize - 1}`);
+      labels.push(`${minBucketValue}-${maxBucketValue}`);
     }
   }
   buckets.push(0);

@@ -6,12 +6,12 @@ async function priceCurve(cards) {
   const { labels, dataset, stats } = getWeightedDatasetFor({
     data: prices,
     minValue: 0,
-    maxValue: 31,
-    bucketSize: 1,
+    maxValue: 20,
+    roundBucket: false,
     round: false,
   });
 
-  const options = getOptionsForChart({ xAxisLabel: 'Elo' });
+  const options = getOptionsForChart({ xAxisLabel: 'Price' });
   return {
     type: 'chart',
     chartType: 'bar',
