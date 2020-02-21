@@ -1,12 +1,3 @@
-function getOriginalString(ctx) {
-  const tokens = [];
-  for (const unorderedTokens of Object.values(ctx)) {
-    tokens.push(...unorderedTokens);
-  }
-  tokens.sort((a, b) => a.startOffset - b.startOffset);
-  return tokens.map((token) => token.image).join('');
-}
-
 function defaultValueOperatorFor(value) {
   return (operator, fieldValue) => {
     switch (operator) {

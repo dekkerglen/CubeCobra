@@ -9,17 +9,26 @@ import {
   Terminal,
 } from 'chevrotain';
 
-export const tokenTypes = {};
+export const TOKEN_TYPES = {};
+
+export function getOriginalString(ctx) {
+  const tokens = [];
+  for (const unorderedTokens of Object.values(ctx)) {
+    tokens.push(...unorderedTokens);
+  }
+  tokens.sort((a, b) => a.startOffset - b.startOffset);
+  return tokens.map((token) => token.image).join('');
+}
 
 export function getTokenType(c) {
-  if (!tokenTypes[c]) {
+  if (!TOKEN_TYPES[c]) {
     if ('{}()[]?>*+-\\^$|'.includes(c)) {
-      tokenTypes[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(`\\${c}`) });
+      TOKEN_TYPES[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(`\\${c}`) });
     } else {
-      tokenTypes[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(c) });
+      TOKEN_TYPES[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(c) });
     }
   }
-  return tokenTypes[c];
+  return TOKEN_TYPES[c];
 }
 
 export function tokenize(input) {
@@ -45,10 +54,8 @@ export function consumeNumber() {
   return consumeOneOf('1234567890');
 }
 
-// Prepopulate the tokenTypes cache.
-consumeLetter();
-consumeNumber();
-consumeOneOf('{}()[]?<>*+-\\^$|:= ');
+// Initialize the TOKEN_TYPES to be non-empty
+consumeWord(' ');
 
 // Requires the left hand side of alternation(|) be wrapped in parentheses
 export function consumeRegex(regex) {
@@ -181,12 +188,13 @@ export function consumeRegex(regex) {
 }
 
 export default {
-  getTokenType,
-  tokenize,
+  TOKEN_TYPES,
   consumeWord,
   consumeOneOf,
   consumeLetter,
   consumeNumber,
   consumeRegex,
-  tokenTypes,
+  getOriginalString,
+  getTokenType,
+  tokenize,
 };

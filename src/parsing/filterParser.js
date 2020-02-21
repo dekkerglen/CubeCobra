@@ -13,35 +13,35 @@ import {
   Terminal,
 } from 'chevrotain';
 
-import { consumeWord, consumeRegex, tokenTypes } from 'parsing/parsingUtils';
+import { TOKEN_TYPES, consumeWord, consumeRegex } from 'parsing/parsingHelpers';
 
-const fieldsMap = {};
-const conditions = [];
-
-const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
-  fieldsMap[abbrvRegex] = field;
-  conditions.push(new NonTerminal( { nonTerminalName: `${field}Condition` }));
-  return new Rule({
-    name: `${field}Condition`,
-    definition: [
-      new Option({ definition: [...consumeWord('-')], name: '$negation' }),
-      new Alternation({
-        definition: [new Flat({ definition: consumeRegex(abbrvRegex), name: '$field' })],
-        name: 'field',
-      }),
-      new Alternation({
-        definition: [new Flat({ definition: consumeRegex(operatorRegex), name: '$operation' })],
-        name: 'operation',
-      }),
-      new Alternation({
-        definition: [new Flat({ definition: [new NonTerminal({ nonTerminalName: valueType })], name: '$value' })],
-        name: 'value',
-      }),
-    ],
-  });
-};
+const FIELDS_MAP = {};
 
 export function getFilterParser() {
+  const conditions = [];
+  
+  const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
+    FIELDS_MAP[abbrvRegex] = field;
+    conditions.push(new NonTerminal( { nonTerminalName: `${field}Condition` }));
+    return new Rule({
+      name: `${field}Condition`,
+      definition: [
+        new Option({ definition: [...consumeWord('-')], name: '$negation' }),
+        new Alternation({
+          definition: [new Flat({ definition: consumeRegex(abbrvRegex), name: '$field' })],
+          name: 'field',
+        }),
+        new Alternation({
+          definition: [new Flat({ definition: consumeRegex(operatorRegex), name: '$operation' })],
+          name: 'operation',
+        }),
+        new Alternation({
+          definition: [new Flat({ definition: [new NonTerminal({ nonTerminalName: valueType })], name: '$value' })],
+          name: 'value',
+        }),
+      ],
+    });
+  };
   const rules = [];
 
   rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex('\\d+(\\.(0|5))?|\\.(0|5)') }));
@@ -69,7 +69,7 @@ export function getFilterParser() {
   resolveGrammar({ rules });
   validateGrammar({
     rules,
-    tokenTypes: Object.values(tokenTypes),
+    TOKEN_TYPES: Object.values(TOKEN_TYPES),
     grammarName: 'FilterParser',
   });
 
@@ -78,10 +78,11 @@ export function getFilterParser() {
   return generateParserFactory({
     name: 'FilterParser',
     rules,
-    tokenVocabulary: Object.values(tokenTypes),
-  })(Object.values(tokenTypes), { skipValidations: true });
+    tokenVocabulary: Object.values(TOKEN_TYPES),
+  })(Object.values(TOKEN_TYPES), { skipValidations: true });
 }
 
+getFilterParser();
 const FilterParser = getFilterParser();
 
 export default FilterParser;
