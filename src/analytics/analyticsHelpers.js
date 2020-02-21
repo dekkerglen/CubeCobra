@@ -1,5 +1,39 @@
 import { weightedMedianOf, weightedMeanOf, weightedStdDevOf } from 'utils/Util';
 
+export const colorCombinations = [
+  [],
+  ['W'],
+  ['U'],
+  ['B'],
+  ['R'],
+  ['G'],
+  ['W', 'U'],
+  ['U', 'B'],
+  ['B', 'R'],
+  ['R', 'G'],
+  ['G', 'W'],
+  ['W', 'B'],
+  ['U', 'R'],
+  ['B', 'G'],
+  ['R', 'W'],
+  ['G', 'U'],
+  ['G', 'W', 'U'],
+  ['W', 'U', 'B'],
+  ['U', 'B', 'R'],
+  ['B', 'R', 'G'],
+  ['R', 'G', 'W'],
+  ['R', 'W', 'B'],
+  ['G', 'U', 'R'],
+  ['W', 'B', 'G'],
+  ['U', 'R', 'W'],
+  ['B', 'G', 'U'],
+  ['U', 'B', 'R', 'G'],
+  ['B', 'R', 'G', 'W'],
+  ['R', 'G', 'W', 'U'],
+  ['G', 'W', 'U', 'B'],
+  ['W', 'U', 'B', 'R'],
+  ['W', 'U', 'B', 'R', 'G'],
+];
 export function getWeightedDatasetFor({
   data,
   minValue = 0,
@@ -113,4 +147,4 @@ export function getOptionsForChart({ xAxisLabel, yAxisLabel = 'Expected Opened' 
   };
 }
 
-export default { getWeightedDatasetFor, getOptionsForChart };
+export default { getWeightedDatasetFor, getOptionsForChart, colorCombinations };

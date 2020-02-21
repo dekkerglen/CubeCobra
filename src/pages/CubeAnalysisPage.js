@@ -24,6 +24,7 @@ import colorCount from 'analytics/colorCount';
 import colorCurve from 'analytics/colorCurve';
 import eloCurve from 'analytics/eloCurve';
 import inclusiveColorCount from 'analytics/inclusiveColorCount';
+import exclusiveColorCount from 'analytics/exclusiveColorCount';
 import priceCurve from 'analytics/priceCurve';
 import tagCount from 'analytics/tagCount';
 import tagCloud from 'analytics/tagCloud';
@@ -46,6 +47,7 @@ class CubeAnalysisPage extends Component {
         typeBreakdownCount: { fn: typeBreakdownCount, title: 'Type Breakdown Counts' },
         colorCount: { fn: colorCount, title: 'Color Counts' },
         inclusiveColorCount: { fn: inclusiveColorCount, title: 'Inclusive Color Counts' },
+        exclusiveColorCount: { fn: exclusiveColorCount, title: 'Exclusive Color Counts' },
         tokenGrid: { fn: tokenGrid, title: 'Tokens' },
         tagCloud: { fn: tagCloud, title: 'Tag Cloud' },
         tagCount: { fn: tagCount, title: 'Tag Counts' },
@@ -59,6 +61,7 @@ class CubeAnalysisPage extends Component {
         'typeBreakdownCount',
         'colorCount',
         'inclusiveColorCount',
+        'exclusiveColorCount',
         'tokenGrid',
         'tagCloud',
         'tagCount',
