@@ -1130,7 +1130,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
               details: carddb.cardFromId(inCube.cardID),
             };
           } else {
-            const reasonableId = carddb.getMostReasonable(normalizedName, cube.defaultPrinting)._id;
+            const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
+            const reasonableId = reasonableCard ? reasonableCard._id : null;
             const selectedId = reasonableId || potentialIds[0];
             selected = {
               cardID: selectedId,
@@ -1295,7 +1296,7 @@ async function bulkUpload(req, res, list, cube) {
         cards.push(item.substring(item.indexOf('x') + 1));
       }
     } else {
-      let selected;
+      let selected = null;
       if (/(.*)( \((.*)\))/.test(item)) {
         // has set info
         const name = item.substring(0, item.indexOf('('));
@@ -1308,7 +1309,8 @@ async function bulkUpload(req, res, list, cube) {
         }
       } else {
         // does not have set info
-        selected = carddb.getMostReasonable(item, cube.defaultPrinting)._id;
+        const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
+        selected = selectedCard ? selectedCard._id : null;
       }
       if (selected) {
         const details = carddb.cardFromId(selected);
