@@ -48,12 +48,7 @@ router.use(csrfProtection);
 
 router.get('/notification/:index', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     if (req.params.index > user.notifications.length) {
       req.flash('danger', 'Not Found');
@@ -65,7 +60,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     return res.redirect(notification.url);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -75,12 +70,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
 router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
     user.notifications = [];
     await user.save();
@@ -89,7 +79,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
       success: 'true',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -103,35 +93,28 @@ router.get('/lostpassword', (req, res) => {
 
 router.get('/follow/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const userq = User.findById(req.user._id).exec();
-    const otherq = User.findById(req.params.id).exec();
-
-    const [user, other] = await Promise.all([userq, otherq]);
+    const { user } = req;
+    const other = await User.findById(req.params.id).exec();
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    if (!other.users_following.includes(user._id)) {
-      other.users_following.push(user._id);
+    if (!other.users_following.includes(user.id)) {
+      other.users_following.push(user.id);
     }
-    if (!user.followed_users.includes(other._id)) {
-      user.followed_users.push(other._id);
+    if (!user.followed_users.includes(other.id)) {
+      user.followed_users.push(other.id);
     }
 
-    await util.addNotification(other, user, `/user/view/${user._id}`, `${user.username} has followed you!`);
+    await util.addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
 
     await Promise.all([user.save(), other.save()]);
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -140,33 +123,22 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
 router.get('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.user._id) {
-      req.flash('danger', 'Not Authorized');
-      return res.status(401).render('misc/404', {});
-    }
-
-    const userq = User.findById(req.user._id).exec();
-    const otherq = User.findById(req.params.id).exec();
-
-    const [user, other] = await Promise.all([userq, otherq]);
+    const { user } = req;
+    const other = await User.findById(req.params.id).exec();
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
     }
 
-    while (other.users_following.includes(user._id)) {
-      other.users_following.splice(other.users_following.indexOf(user._id), 1);
-    }
-    while (user.followed_users.includes(other._id)) {
-      user.followed_users.splice(user.followed_users.indexOf(other._id), 1);
-    }
+    other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
+    user.followed_users = user.followed_users.filter((id) => id !== req.params.id);
 
     await Promise.all([user.save(), other.save()]);
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -190,7 +162,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
 
         passwordReset.save((err2) => {
           if (err2) {
-            console.error(err2);
+            req.logger.error(err2);
           } else {
             // Use Smtp Protocol to send Email
             const smtpTransport = mailer.createTransport({
@@ -215,7 +187,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
 
             smtpTransport.sendMail(mail, (err3) => {
               if (err3) {
-                console.error(err3);
+                req.logger.error(err3);
               }
 
               smtpTransport.close();
@@ -269,7 +241,7 @@ router.post(
               },
               (err3, user) => {
                 if (err3) {
-                  console.error('Password reset find user error:', err3);
+                  req.logger.error('Password reset find user error:', err3);
                   res.sendStatus(500);
                   return;
                 }
@@ -285,19 +257,19 @@ router.post(
                 }
                 bcrypt.genSalt(10, (err4, salt) => {
                   if (err4) {
-                    console.error('Password reset genSalt error:', err4);
+                    req.logger.error('Password reset genSalt error:', err4);
                     res.sendStatus(500);
                     return;
                   }
                   bcrypt.hash(req.body.password2, salt, (err5, hash) => {
                     if (err5) {
-                      console.error('Password reset hashing error:', err5);
+                      req.logger.error('Password reset hashing error:', err5);
                       res.sendStatus(500);
                     } else {
                       user.password = hash;
                       user.save((err6) => {
                         if (err6) {
-                          console.error('Password reset user save error:', err6);
+                          req.logger.error('Password reset user save error:', err6);
                           return res.sendStatus(500);
                         }
 
@@ -385,13 +357,13 @@ router.post(
                   bcrypt.genSalt(10, (err3, salt) => {
                     bcrypt.hash(newUser.password, salt, (err4, hash) => {
                       if (err4) {
-                        console.error(err4);
+                        req.logger.error(err4);
                       } else {
                         newUser.password = hash;
                         newUser.confirmed = 'false';
                         newUser.save((err5) => {
                           if (err5) {
-                            console.error(err5);
+                            req.logger.error(err5);
                           } else {
                             // Use Smtp Protocol to send Email
                             const smtpTransport = mailer.createTransport({
@@ -414,7 +386,7 @@ router.post(
 
                             smtpTransport.sendMail(mail, (error) => {
                               if (error) {
-                                console.error(error);
+                                req.logger.error(error);
                               }
 
                               smtpTransport.close();
@@ -523,6 +495,11 @@ router.get('/view/:id', async (req, res) => {
 
     const cubesQ = Cube.find({
       owner: user._id,
+      ...(req.user && req.user._id.equals(user._id)
+        ? {}
+        : {
+            isListed: true,
+          }),
     }).lean();
     const followersQ = User.find(
       { _id: { $in: user.users_following } },
@@ -531,7 +508,7 @@ router.get('/view/:id', async (req, res) => {
 
     const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
 
-    const following = req.user ? user.users_following.includes(req.user._id) : false;
+    const following = req.user ? user.users_following.includes(req.user.id) : false;
     delete user.users_following;
 
     return res.render('user/user_view', {
@@ -546,7 +523,7 @@ router.get('/view/:id', async (req, res) => {
       loginCallback: `/user/view/${req.params.id}`,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -557,17 +534,11 @@ router.get('/decks/:userid', (req, res) => {
 
 router.get('/notifications', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      res.redirect('/404');
-    }
-
     return res.render('user/notifications', {
-      notifications: user.old_notifications,
+      notifications: req.user.old_notifications,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -614,7 +585,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       user,
       canEdit: req.user && user._id.equals(req.user._id),
       followers,
-      following: req.user && req.user.followed_users.includes(user._id),
+      following: req.user && req.user.followed_users.includes(user.id),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,
@@ -626,7 +597,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -691,12 +662,12 @@ router.post(
             return bcrypt.genSalt(10, (err3, salt) => {
               bcrypt.hash(req.body.password2, salt, (err4, hash) => {
                 if (err4) {
-                  console.error(err4);
+                  req.logger.error(err4);
                 } else {
                   user.password = hash;
                   user.save((err5) => {
                     if (err5) {
-                      console.error(err5);
+                      req.logger.error(err5);
                       req.flash('danger', 'Error saving user.');
                       return res.redirect('/user/account?nav=password');
                     }
@@ -757,7 +728,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     req.flash('success', 'User information updated.');
     return res.redirect('/user/account');
   } catch (err) {
-    return util.handleRouteError(res, req, err, '/user/account');
+    return util.handleRouteError(req, res, err, '/user/account');
   }
 });
 
@@ -774,7 +745,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
         req.user.email = req.body.email;
         req.user.save((err2) => {
           if (err2) {
-            console.error(err2);
+            req.logger.error(err2);
             req.flash('danger', 'Error saving user.');
             res.redirect('/user/account');
           } else {
@@ -816,7 +787,7 @@ router.get('/social', ensureAuth, async (req, res) => {
       loginCallback: '/user/social',
     });
   } catch (err) {
-    util.handleRouteError(res, req, err, '/');
+    util.handleRouteError(req, res, err, '/');
   }
 });
 

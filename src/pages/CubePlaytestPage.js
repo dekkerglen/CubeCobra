@@ -114,7 +114,7 @@ const CustomDraftCard = ({ format, onEditFormat, onDeleteFormat, ...props }) => 
           />
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -158,7 +158,7 @@ CustomDraftCard.propTypes = {
 const StandardDraftCard = () => {
   const { cubeID } = useContext(CubeContext);
   return (
-    <Card className="mt-3">
+    <Card className="mb-3">
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>Standard draft</CardTitleH5>
@@ -176,7 +176,7 @@ const StandardDraftCard = () => {
           </LabelRow>
           <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
             <Input type="select" name="seats" id="seats" defaultValue="8">
-              {rangeOptions(4, 11)}
+              {rangeOptions(4, 17)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -274,7 +274,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/format/remove/${cubeID};${formatIndex}`, {
+        const response = await csrfFetch(`/cube/format/remove/${cubeID}/${formatIndex}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw Error();
@@ -282,17 +282,11 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
         const json = await response.json();
         if (json.success !== 'true') throw Error();
 
-        addAlert({
-          color: 'success',
-          message: 'Format successfully deleted.',
-        });
-        setFormats(formats.filter(({ index }) => index !== formatIndex));
+        addAlert('success', 'Format successfully deleted.');
+        setFormats(formats.filter((format, index) => index !== formatIndex));
       } catch (err) {
         console.error(err);
-        addAlert({
-          color: 'danger',
-          message: 'Failed to delete format.',
-        });
+        addAlert('danger', 'Failed to delete format.');
       }
     },
     [addAlert, cubeID, formats],
@@ -306,24 +300,28 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
-      <Navbar light expand className="usercontrols">
-        <Nav navbar>
-          <NavItem>
-            <NavLink onClick={handleCreateFormat} className="clickable">
-              Create Custom Draft
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
-          </NavItem>
-        </Nav>
-      </Navbar>
-      <DynamicFlash className="mt-3 mb-0" />
+      {canEdit ? (
+        <Navbar light expand className="usercontrols mb-3">
+          <Nav navbar>
+            <NavItem>
+              <NavLink onClick={handleCreateFormat} className="clickable">
+                Create Custom Draft
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
+            </NavItem>
+          </Nav>
+        </Navbar>
+      ) : (
+        <Row className="mb-3" />
+      )}
+      <DynamicFlash />
       <Alerts alerts={alerts} />
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mt-3" />}
-          <SamplePackCard className="mt-3" />
+          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
+          <SamplePackCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
           {formatsSorted.map((format) => (
@@ -332,10 +330,10 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
               format={format}
               onDeleteFormat={handleDeleteFormat}
               onEditFormat={handleEditFormat}
-              className="mt-3"
+              className="mb-3"
             />
           ))}
-          <StandardDraftCard className="mt-3" />
+          <StandardDraftCard className="mb-3" />
         </Col>
       </Row>
       <CustomDraftFormatModal

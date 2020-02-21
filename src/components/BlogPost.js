@@ -50,15 +50,7 @@ class BlogPost extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.focused) {
-      var $container = $('html,body');
-      var $scrollTo = $('.comment-highlighted');
-
-      $container.animate(
-        { scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0 },
-        300,
-      );
-    }
+    // FIXME: Restore scrolling to highlighted comment.
   }
 
   render() {
@@ -124,7 +116,7 @@ class BlogPost extends React.Component {
             </CommentEntry>
           </CardBody>
         )}
-        {post.comments.length > 0 && (
+        {post.comments && post.comments.length > 0 && (
           <CardBody className=" px-4 pt-2 pb-0 border-top">
             <CommentsSection
               expanded={this.state.childExpanded}
