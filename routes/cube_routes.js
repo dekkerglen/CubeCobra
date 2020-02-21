@@ -2297,7 +2297,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
 router.post('/submitdeck/:id', async (req, res) => {
   try {
-    //req.body contains a draft
+    // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid);
     const cube = await Cube.findOne(build_id_query(draft.cube));
@@ -2521,9 +2521,9 @@ router.get('/redraft/:id', async (req, res) => {
       draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
     }
 
-    //add ratings
+    // add ratings
     const names = [];
-    //add in details to all cards
+    // add in details to all cards
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {

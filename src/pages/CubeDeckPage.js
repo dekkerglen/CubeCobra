@@ -26,7 +26,7 @@ import DeckCard from 'components/DeckCard';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const CubeDeckPage = ({ cube, deck, canEdit }) => {
+const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
   const [seatIndex, setSeatIndex] = useState(0);
   const handleChangeSeat = (event) => {
     const target = event.target;
@@ -80,7 +80,7 @@ const CubeDeckPage = ({ cube, deck, canEdit }) => {
         <DynamicFlash />
         <Row className="mt-3">
           <Col>
-            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id} />
+            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id} userid={userid} />
           </Col>
         </Row>
       </DisplayContextProvider>

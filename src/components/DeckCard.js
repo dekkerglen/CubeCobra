@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, ListGroupItem, Row, CardText } from 'reactstrap';
@@ -9,9 +9,7 @@ import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
 
-const AutocardItem = withAutocard(ListGroupItem);
-
-const DeckStacksStatic = ({ cards, ...props }) => (
+const DeckStacksStatic = ({ cards }) => (
   <CardBody className="pt-0 border-bottom">
     {cards.map((row, index) => (
       <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
@@ -50,7 +48,7 @@ DeckStacksStatic.defaultProps = {
   subtitle: false,
 };
 
-const DeckCard = ({ seat, comments, deckid }) => {
+const DeckCard = ({ seat, comments, deckid, userid }) => {
   const [commentList, setCommentList] = useState(comments);
   const [childExpanded, setChildCollapse] = useState(false);
 
@@ -78,7 +76,7 @@ const DeckCard = ({ seat, comments, deckid }) => {
   const stackedDeck = [seat.deck.slice(0, 8), seat.deck.slice(8, 16)];
   const stackedSideboard = [seat.sideboard.slice(0, 16)];
   let sbCount = 0;
-  for (var col of stackedSideboard[0]) {
+  for (const col of stackedSideboard[0]) {
     sbCount += col.length;
   }
   if (sbCount <= 0) {
@@ -114,7 +112,7 @@ const DeckCard = ({ seat, comments, deckid }) => {
           <h4 className="mb-0 mr-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <a href={'/user/view/' + seat.userid}>{seat.username}</a> : 'Anonymous'}
+              Drafted by {seat.userid ? <a href={`/user/view/${seat.userid}`}>{seat.username}</a> : 'Anonymous'}
             </h6>
           )}
         </CardTitle>
@@ -160,6 +158,20 @@ const DeckCard = ({ seat, comments, deckid }) => {
       )}
     </Card>
   );
+};
+
+DeckCard.propTypes = {
+  seat: PropTypes.shape({
+    description: PropTypes.string,
+    deck: PropTypes.array,
+    sideboard: PropTypes.array,
+    username: PropTypes.string,
+    userid: PropTypes.string,
+    bot: PropTypes.array,
+    name: PropTypes.string,
+  }),
+  deckid: propTypes.string,
+  comments: propTypes.array,
 };
 
 export default DeckCard;
