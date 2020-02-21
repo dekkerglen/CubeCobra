@@ -13,27 +13,35 @@ import {
   Terminal,
 } from 'chevrotain';
 
-import { TOKEN_TYPES, consumeWord, consumeRegex } from 'parsing/parsingHelpers';
+import { TOKEN_TYPES, consumeOneOf, consumeRegex, consumeWord } from 'parsing/parsingHelpers';
 
-const FIELDS_MAP = {};
+export const FIELDS_MAP = {};
+
+const ALL_OPERATORS = [':', '=', '<', '<=', '>', '>='];
 
 export function getFilterParser() {
   const conditions = [];
 
-  const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
-    FIELDS_MAP[abbrvRegex] = field;
-    conditions.push(new NonTerminal({ nonTerminalName: `${field}Condition` }));
+  const createCondition = (field, abbrvs, operators, valueType) => {
+    for (const abbrv of abbrvs) {
+      if (FIELDS_MAP[abbrv] && FIELDS_MAP[abbrv] !== field) {
+        throw new Error(`Trying to map multiple fields (${FIELDS_MAP[abbrv]} and ${field}) to abbreviation ${abbrv}`);
+      }
+      FIELDS_MAP[abbrv] = field;
+    }
+    const sanitizedField = field.replace(/\./g, '_');
+    conditions.push(new NonTerminal({ nonTerminalName: `${sanitizedField}Condition` }));
     return new Rule({
-      name: `${field}Condition`,
+      name: `${sanitizedField}Condition`,
       definition: [
         new Option({ definition: [...consumeWord('-')], name: '$negation' }),
         new Alternation({
-          definition: [new Flat({ definition: consumeRegex(abbrvRegex), name: '$field' })],
+          definition: [new Flat({ definition: consumeOneOf(abbrvs), name: '$field' })],
           name: 'field',
         }),
         new Alternation({
-          definition: [new Flat({ definition: consumeRegex(operatorRegex), name: '$operation' })],
-          name: 'operation',
+          definition: [new Flat({ definition: consumeOneOf(operators), name: '$operator' })],
+          name: 'operator',
         }),
         new Alternation({
           definition: [new Flat({ definition: [new NonTerminal({ nonTerminalName: valueType })], name: '$value' })],
@@ -47,9 +55,9 @@ export function getFilterParser() {
   rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex('\\d+(\\.(0|5))?|\\.(0|5)') }));
   rules.push(new Rule({ name: 'halfIntegerValue', definition: consumeRegex('-\\d+|\\d+(\\.(0|5))?|\\.(0|5)') }));
 
-  rules.push(createCondition('cmc', 'c(mc)?', ':|=|<=?|>=?', 'positiveHalfIntegerValue', this));
-  rules.push(createCondition('power', 'p(ow(er)?)?', ':|=|<=?|>=?', 'halfIntegerValue', this));
-  rules.push(createCondition('toughness', 't(ough(ness)?)?', ':|=|<=?|>=?', 'halfIntegerValue', this));
+  rules.push(createCondition('cmc', ['c', 'cmc', 'cost'], ALL_OPERATORS, 'positiveHalfIntegerValue', this));
+  rules.push(createCondition('power', ['p', 'pow', 'power'], ALL_OPERATORS, 'halfIntegerValue', this));
+  rules.push(createCondition('toughness', ['t', 'tough', 'toughness'], ALL_OPERATORS, 'halfIntegerValue', this));
 
   rules.push(
     new Rule({
@@ -71,8 +79,6 @@ export function getFilterParser() {
     grammarName: 'FilterParser',
   });
 
-  console.log(rules);
-
   return generateParserFactory({
     name: 'FilterParser',
     rules,
@@ -80,7 +86,6 @@ export function getFilterParser() {
   })(Object.values(TOKEN_TYPES), { skipValidations: true });
 }
 
-getFilterParser();
 const FilterParser = getFilterParser();
 
 export default FilterParser;

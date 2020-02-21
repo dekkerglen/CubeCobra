@@ -42,9 +42,39 @@ export function consumeWord(word) {
 }
 
 export function consumeOneOf(words) {
-  return new Alternation({
-    definition: Array.prototype.map.call(words, (w) => new Flat({ definition: consumeWord(w) })),
-  });
+  const trie = {};
+  for (const word of words) {
+    let currentLevel = trie;
+    for (const c of word) {
+      if (!currentLevel[c]) {
+        currentLevel[c] = {};
+      }
+      currentLevel = currentLevel[c];
+    }
+    currentLevel.EndWord = true;
+  }
+
+  const consumeTrie = (currentLevel, word) => {
+    const keys = Object.keys(currentLevel);
+    if (keys.length === 1) {
+      const key = keys[0];
+      if (key === 'EndWord') {
+        return consumeWord(word);
+      }
+      return consumeTrie(currentLevel[key], word + key);
+    }
+    const alternation = new Alternation({
+      definition: keys
+        .filter((c) => c !== 'EndWord')
+        .map((c) => new Flat({ definition: consumeTrie(currentLevel[c], c === 'EndWord' ? '' : c) })),
+    });
+    if (currentLevel.EndWord) {
+      return [...consumeWord(word), new Option({ definition: [alternation] })];
+    }
+    return [...consumeWord(word), alternation];
+  };
+
+  return consumeTrie(trie, '');
 }
 
 export function consumeLetter() {
@@ -141,10 +171,10 @@ export function consumeRegex(regex) {
           }
           switch (regex[i + 1]) {
             case 'a':
-              operations.push(consumeLetter());
+              operations.push(...consumeLetter());
               break;
             case 'd':
-              operations.push(consumeNumber());
+              operations.push(...consumeNumber());
               break;
             case '(':
             case ')':

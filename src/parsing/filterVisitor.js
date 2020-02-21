@@ -1,3 +1,4 @@
+import { FIELDS_MAP } from 'parsing/filterParser';
 import { getOriginalString } from 'parsing/parsingHelpers';
 
 function defaultValueOperatorFor(value) {
@@ -38,12 +39,16 @@ export function getFilterVisitorFromParser(parser) {
             ...rules.map((rule) => {
               const negation = rule.children.$negation[0].children;
               const negated = Object.keys(negation).length !== 0;
-              const field = getOriginalString(rule.children.$field[0].children);
-              const operation = getOriginalString(rule.children.$operation[0].children);
+              const fieldAbbrv = getOriginalString(rule.children.$field[0].children);
+              const operator = getOriginalString(rule.children.$operator[0].children);
               const vChildren = rule.children.$value[0].children;
               const value = this.visit(Object.values(vChildren)[0]);
+              const field = FIELDS_MAP[fieldAbbrv];
+              if (!field) {
+                throw new Error(`No matching field for abbreviation ${fieldAbbrv}`);
+              }
               // TODO: Correctly lookup field
-              return (card) => (negated ? !value(operation, card[field]) : value(operation, card[field]));
+              return (card) => (negated ? !value(operator, card[field]) : value(operator, card[field]));
             }),
           );
         }
