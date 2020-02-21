@@ -1586,7 +1586,7 @@ router.post('/startdraft/:id', async (req, res) => {
       throw new Error('Could not create draft: no cards');
     }
     // ensure that cards have details
-    for(const card of draftcards) {
+    for (const card of draftcards) {
       card.details = carddb.cardFromId(card.cardID);
     }
 
