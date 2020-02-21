@@ -20,7 +20,7 @@ You will need start a MongoDB background process. Refer to the official document
 
 VSCode (not required): https://code.visualstudio.com/
 
-### Clone Project
+### Initial Set Up
 
 Clone the project into a folder of your choice. 
 
@@ -39,6 +39,11 @@ cd CubeCobra/..
 ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
 ```
 
+In a separate terminal window, make sure your MongoDB database instance is up and running
+```sh
+sudo mongod
+```
+If you get an error such as "Data directory /data/db not found", you can fix this simply by going to your root directory `cd /` and creating those directories `sudo mkdir -p data/db`
 
 Then, run the following commands in the root of the cloned repository:
 
@@ -69,6 +74,14 @@ Then you can start the program like so:
 You can now open up a browser and connect to the app through: http://localhost:8080. Despite the fact that node says it is running on port 5000, you should use port 8080 to connect.
 
 Nodemon will restart the application anytime there is a change to a source file.
+
+After these initial set up steps, you can start up your development environment by opening two terminals and running one of the following commands in each:
+```sh
+sudo mongod
+```
+```sh
+npm start
+```
 
 ### Running tests
 
