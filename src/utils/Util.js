@@ -73,7 +73,7 @@ export function meanOf(data) {
 
 export function stdDevOf(data) {
   const mean = meanOf(data);
-  return Math.sqrt(data.reduce((sum, a) => sum + (mean - a) ** 2, 0) / data.length);
+  return Math.sqrt(data.reduce((sum, a) => sum + (mean - a) ** 2, 0) / (data.length - 1));
 }
 
 export function weightedMedianOf(data) {
@@ -102,7 +102,11 @@ export function weightedMeanOf(data) {
 export function weightedStdDevOf(data) {
   const totalWeight = data.reduce((a, [, b]) => a + b, 0) || 1;
   const mean = weightedMeanOf(data);
-  return Math.sqrt(data.reduce((sum, [value, weight]) => sum + weight * (mean - value) ** 2, 0) / totalWeight);
+  return Math.sqrt(
+    (data.reduce((sum, [value, weight]) => sum + weight * (mean - value) ** 2, 0) * data.length) /
+      (data.length - 1) /
+      totalWeight,
+  );
 }
 
 export function randomElement(array) {

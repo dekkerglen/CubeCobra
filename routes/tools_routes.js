@@ -57,7 +57,8 @@ async function matchingCards(filter) {
       cards = Filter.filterCardsDetails(cards, filter);
     }
     if (Filter.filterUses(filter, 'price') || Filter.filterUses(filter, 'price_foil')) {
-      const withPrices = await addPrices(cards);
+      const withPricesPre = await addPrices(cards.map((card) => ({ details: card })));
+      const withPrices = withPricesPre.map((card) => card.details);
       // null is a magic value that causes price filtering to always fail.
       cards = withPrices.map(({ price, price_foil, ...card }) => ({
         ...card,

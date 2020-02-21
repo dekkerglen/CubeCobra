@@ -741,7 +741,7 @@ router.get('/list/:id', async (req, res) => {
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo(cardNames, true);
-    const [priceDict, eloDict] = Promise.all([priceDictQ, eloDictQ]);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
     for (const card of cards) {
       if (card.details.tcgplayer_id) {
         if (priceDict[card.details.tcgplayer_id]) {

@@ -24,6 +24,7 @@ import colorCount from 'analytics/colorCount';
 import colorCurve from 'analytics/colorCurve';
 import eloCurve from 'analytics/eloCurve';
 import inclusiveColorCount from 'analytics/inclusiveColorCount';
+import priceCurve from 'analytics/priceCurve';
 import tagCount from 'analytics/tagCount';
 import tagCloud from 'analytics/tagCloud';
 import tokenGrid from 'analytics/tokenGrid';
@@ -49,6 +50,7 @@ class CubeAnalysisPage extends Component {
         tagCloud: { fn: tagCloud, title: 'Tag Cloud' },
         tagCount: { fn: tagCount, title: 'Tag Counts' },
         eloCurve: { fn: eloCurve, title: 'Elo Curve' },
+        priceCurve: { fn: priceCurve, title: 'Pricing Curve' },
       },
       analyticsOrder: [
         'curve',
@@ -61,6 +63,7 @@ class CubeAnalysisPage extends Component {
         'tagCloud',
         'tagCount',
         'eloCurve',
+        'priceCurve',
       ],
       filter: [],
       cardsWithAsfan: null,
