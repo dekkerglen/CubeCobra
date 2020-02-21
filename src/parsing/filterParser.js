@@ -19,10 +19,10 @@ const FIELDS_MAP = {};
 
 export function getFilterParser() {
   const conditions = [];
-  
+
   const createCondition = (field, abbrvRegex, operatorRegex, valueType) => {
     FIELDS_MAP[abbrvRegex] = field;
-    conditions.push(new NonTerminal( { nonTerminalName: `${field}Condition` }));
+    conditions.push(new NonTerminal({ nonTerminalName: `${field}Condition` }));
     return new Rule({
       name: `${field}Condition`,
       definition: [
@@ -56,9 +56,7 @@ export function getFilterParser() {
       name: 'filter',
       definition: [
         new Repetition({
-          definition: [
-            new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) }),
-          ],
+          definition: [new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) })],
         }),
         new Terminal({ terminalType: EOF }),
       ],
@@ -69,7 +67,7 @@ export function getFilterParser() {
   resolveGrammar({ rules });
   validateGrammar({
     rules,
-    TOKEN_TYPES: Object.values(TOKEN_TYPES),
+    tokenTypes: Object.values(TOKEN_TYPES),
     grammarName: 'FilterParser',
   });
 

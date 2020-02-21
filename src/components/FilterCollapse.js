@@ -18,7 +18,7 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import { tokenize } from 'parsing/parsingUtils';
+import { tokenize } from 'parsing/parsingHelpers';
 import FilterParser from 'parsing/filterParser';
 import getVisitorForParser from 'parsing/filterVisitor';
 
@@ -342,11 +342,11 @@ class FilterCollapse extends Component {
     const tokenized = tokenize(filterInput);
     FilterParser.input = tokenized;
     const parsed = FilterParser.filter();
-    console.log("Parsed: ", parsed);
+    console.log('Parsed: ', parsed);
     if (parsed) {
       const visitor = getVisitorForParser(FilterParser);
       const newFilters = visitor.filter(parsed);
-      console.log("Matches: ", newFilters({ cmc: 3.5 }));
+      console.log('Matches: ', newFilters({ cmc: 3.5 }));
     }
     if (!valid) return;
 

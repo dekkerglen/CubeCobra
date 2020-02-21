@@ -2,6 +2,7 @@ import {
   createTokenInstance,
   createToken,
   Alternation,
+  EOF,
   Flat,
   Option,
   Repetition,
@@ -9,7 +10,7 @@ import {
   Terminal,
 } from 'chevrotain';
 
-export const TOKEN_TYPES = {};
+export const TOKEN_TYPES = { EOF };
 
 export function getOriginalString(ctx) {
   const tokens = [];
@@ -53,9 +54,6 @@ export function consumeLetter() {
 export function consumeNumber() {
   return consumeOneOf('1234567890');
 }
-
-// Initialize the TOKEN_TYPES to be non-empty
-consumeWord(' ');
 
 // Requires the left hand side of alternation(|) be wrapped in parentheses
 export function consumeRegex(regex) {
