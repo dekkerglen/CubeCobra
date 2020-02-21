@@ -57,7 +57,7 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    winston.error(null, { error: new Error(`Could not find card from id: ${Json.stringify(id, null, 2)}`) });
+    winston.error(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
