@@ -306,7 +306,7 @@ export function populateDraft(draft, format, cards, bots, seats, user) {
   return draft;
 }
 
-function calculateAsfans(format, cards) {
+export function calculateAsfans(format, cards) {
   let nextCardFn = null;
 
   cards.forEach((card) => {

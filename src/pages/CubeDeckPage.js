@@ -12,26 +12,20 @@ import {
   Row,
   Label,
   Input,
-  ListGroup,
   ListGroupItem,
 } from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
-import { getCardColorClass } from 'components/TagContext';
 import withAutocard from 'components/WithAutocard';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
 
-const AutocardItem = withAutocard(ListGroupItem);
-
 const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
   const [seatIndex, setSeatIndex] = useState(0);
   const handleChangeSeat = (event) => {
-    const target = event.target;
-    const value = target.value;
-    setSeatIndex(value);
+    setSeatIndex(event.target.value);
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -90,14 +84,26 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
 
 CubeDeckPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
-  deck: PropTypes.shape({}).isRequired,
+  deck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    seat: PropTypes.shape({
+      description: PropTypes.string.isRequired,
+      deck: PropTypes.array.isRequired,
+      sideboard: PropTypes.array.isRequired,
+      username: PropTypes.string.isRequired,
+      userid: PropTypes.string.isRequired,
+      bot: PropTypes.array.isRequired,
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+    userid: PropTypes.string.isRequired,
+    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
   canEdit: PropTypes.bool,
+  userid: PropTypes.string.isRequired,
 };
 
 CubeDeckPage.defaultProps = {
   canEdit: false,
-  cards: null,
-  sideboard: [],
 };
 
 export default CubeDeckPage;
