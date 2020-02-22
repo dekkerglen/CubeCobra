@@ -110,8 +110,6 @@ async function buildDeck(cards, bot) {
   for (const card of side) {
     sideboard[Math.min(card.cmc, 7)].push(card);
   }
-
-  console.log(sideboard);
   return {
     deck,
     sideboard,
@@ -264,69 +262,3 @@ async function update(deck) {
     process.exit();
   });
 })();
-
-/*
-//data for each seat, human or bot
-const SeatDeck = {
-  bot: [], //null bot value means human player
-  userid: String,
-  username: String,
-  pickorder: [],
-  name: String,
-  description: {
-    type: String,
-    default: 'No description available.',
-  },
-  cols: Number,
-  deck: [[]],
-  sideboard: [[]],
-};
-
-// Deck schema
-let deckSchema = mongoose.Schema({
-  cube: {
-    type: String,
-    index: true,
-  },
-  date: {
-    type: Date,
-    index: true,
-  },
-  comments: {
-    type: [Comment],
-    default: [],
-  },
-  draft: {
-    type: String,
-    default: '',
-  },
-  cubename: {
-    type: String,
-    default: 'Cube',
-  },
-
-  //new format, will convert to
-  seats: [SeatDeck],
-
-  //deprecated
-  owner: String,
-  name: String,
-  description: {
-    type: String,
-    default: 'No description available.',
-  },
-  username: {
-    type: String,
-    default: 'User',
-  },
-  cols: Number,
-  playerdeck: [[]],
-  playersideboard: [[]],
-  bots: [[]],
-  cards: [[]],
-  newformat: {
-    type: Boolean,
-    default: false,
-  },
-});
-*/
