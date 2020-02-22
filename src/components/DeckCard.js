@@ -38,8 +38,6 @@ const DeckStacksStatic = ({ cards }) => (
 );
 
 DeckStacksStatic.propTypes = {
-  title: PropTypes.node.isRequired,
-  subtitle: PropTypes.node,
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
@@ -168,7 +166,7 @@ DeckCard.propTypes = {
     userid: PropTypes.string.isRequired,
     bot: PropTypes.array.isRequired,
     name: PropTypes.string.isRequired,
-  }),
+  }).isRequired,
   userid: PropTypes.string.isRequired,
   deckid: PropTypes.string.isRequired,
   comments: PropTypes.arrayOf(PropTypes.object).isRequired,
