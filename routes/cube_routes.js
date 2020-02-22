@@ -2233,7 +2233,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     await deck.save();
 
-    req.flash('success', 'Deck saved succesfully');
+    req.flash('success', 'Deck saved successfully');
     return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(res, req, err, '/404');
