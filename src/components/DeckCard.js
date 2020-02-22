@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, ListGroupItem, Row, CardText } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'reactstrap';
 
 import FoilCardImage from 'components/FoilCardImage';
-import withAutocard from 'components/WithAutocard';
 import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
@@ -162,16 +161,17 @@ const DeckCard = ({ seat, comments, deckid, userid }) => {
 
 DeckCard.propTypes = {
   seat: PropTypes.shape({
-    description: PropTypes.string,
-    deck: PropTypes.array,
-    sideboard: PropTypes.array,
-    username: PropTypes.string,
-    userid: PropTypes.string,
-    bot: PropTypes.array,
-    name: PropTypes.string,
+    description: PropTypes.string.isRequired,
+    deck: PropTypes.array.isRequired,
+    sideboard: PropTypes.array.isRequired,
+    username: PropTypes.string.isRequired,
+    userid: PropTypes.string.isRequired,
+    bot: PropTypes.array.isRequired,
+    name: PropTypes.string.isRequired,
   }),
-  deckid: propTypes.string,
-  comments: propTypes.array,
+  userid: PropTypes.string.isRequired,
+  deckid: PropTypes.string.isRequired,
+  comments: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default DeckCard;
