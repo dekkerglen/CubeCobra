@@ -1,24 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Col,
-  Collapse,
-  Nav,
-  Navbar,
-  NavbarToggler,
-  NavItem,
-  NavLink,
-  Row,
-  Label,
-  Input,
-  ListGroupItem,
-} from 'reactstrap';
+import { Col, Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Row, Label, Input } from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
-import withAutocard from 'components/WithAutocard';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
 
@@ -46,8 +33,8 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
-              {deck.seats.map((seat, index) => (
-                <option key={index} value={index}>
+              {deck.seats.map((seat) => (
+                <option key={seats.name} value={index}>
                   {seat.username ? seat.username : seat.name}
                 </option>
               ))}
@@ -86,7 +73,7 @@ CubeDeckPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-    seat: PropTypes.shape({
+    seats: PropTypes.arrayOf({
       description: PropTypes.string.isRequired,
       deck: PropTypes.array.isRequired,
       sideboard: PropTypes.array.isRequired,
@@ -96,6 +83,7 @@ CubeDeckPage.propTypes = {
       name: PropTypes.string.isRequired,
     }).isRequired,
     userid: PropTypes.string.isRequired,
+    cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   canEdit: PropTypes.bool,

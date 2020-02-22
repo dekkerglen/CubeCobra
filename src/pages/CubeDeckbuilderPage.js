@@ -173,7 +173,7 @@ CubeDeckbuilderPage.propTypes = {
   basics: PropTypes.objectOf(PropTypes.object).isRequired,
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
-  initialDeck: PropTypes.object.isRequired,
+  initialDeck: PropTypes.shape({}).isRequired,
 };
 
 export default CubeDeckbuilderPage;
