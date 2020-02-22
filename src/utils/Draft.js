@@ -1,5 +1,5 @@
 import { csrfFetch } from 'utils/CSRF';
-import { arrayIsSubset, arrayShuffle } from './Util';
+import { arrayIsSubset, arrayShuffle } from 'utils/Util';
 
 let draft = null;
 
@@ -77,17 +77,16 @@ function botRating(botColors, card) {
   return rating;
 }
 
+function sortFn(a, b) {
+  if (bot) {
+    return botRating(bot, b) - botRating(bot, a);
+  }
+  return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+}
+
 async function buildDeck(cards, bot) {
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
-
-  const sortFn = function(a, b) {
-    if (bot) {
-      return botRating(bot, b) - botRating(bot, a);
-    } else {
-      return (draft.ratings[b.details.name] = draft.ratings[a.details.name]);
-    }
-  };
 
   nonlands.sort(sortFn);
   lands.sort(sortFn);
@@ -142,8 +141,7 @@ function botPicks() {
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    const pick = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
-    draft.seats[botIndex].pickorder.push(pick);
+    draft.seats[botIndex].pickorder.push(draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0]);
   }
 }
 
@@ -165,8 +163,7 @@ function passPack() {
   } else if (draft.unopenedPacks[0].length % 2 === 0) {
     // pass left
     for (let i = 0; i < draft.seats.length; i++) {
-      const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
-      draft.seats[(i + 1) % draft.seats.length].packbacklog.push(pack);
+      draft.seats[(i + 1) % draft.seats.length].packbacklog.push(draft.seats[i].packbacklog.splice(0, 1)[0]);
     }
   } else {
     // pass right
