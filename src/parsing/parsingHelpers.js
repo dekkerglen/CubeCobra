@@ -26,7 +26,7 @@ export function getOriginalString(ctx) {
 }
 
 const CATEGORIES = [];
-const CATEGORY_PREFIX = 'cat_';
+export const CATEGORY_PREFIX = 'cat_';
 
 function categoryToString(category) {
   const sorted = [...category].sort(
@@ -60,7 +60,7 @@ function findCategories(charCode) {
   return categories;
 }
 
-const TOKEN_PREFIX = 'token_';
+export const TOKEN_PREFIX = 'token_';
 
 function getTokenType(c) {
   if (!TOKEN_TYPES[c]) {
@@ -210,6 +210,8 @@ export function consumeRegex(regex) {
 }
 
 export default {
+  CATEGORY_PREFIX,
+  TOKEN_PREFIX,
   TOKEN_TYPES,
   consumeWord,
   consumeOneOf,
