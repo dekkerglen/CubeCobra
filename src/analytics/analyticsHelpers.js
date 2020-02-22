@@ -93,7 +93,12 @@ export function getWeightedDatasetFor({
     }
   }
   buckets.push(0);
-  labels.push(`${(numBuckets - 1) * bucketSize + minValue} or More`);
+  const lastBucketValue = (numBuckets - 1) * bucketSize + minValue;
+  if (roundBucket) {
+    labels.push(`${lastBucketValue} or More`);
+  } else {
+    labels.push(`${lastBucketValue.toFixed(2)} or More`);
+  }
 
   for (const [value, weight] of data) {
     const bucket = Math.max(Math.min(Math.trunc((value - minValue) / bucketSize), numBuckets - 1), 0);

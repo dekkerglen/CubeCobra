@@ -1,8 +1,7 @@
 import { getWeightedDatasetFor, getOptionsForChart } from 'analytics/analyticsHelpers';
 
 async function priceCurve(cards) {
-  const prices = cards.map((card) => [card.price, card.asfan]).filter(([price]) => price > 0.001);
-  console.log(prices);
+  const prices = cards.map((card) => [card.price, 1]).filter(([price]) => price > 0.001);
   const { labels, dataset, stats } = getWeightedDatasetFor({
     data: prices,
     minValue: 0,
