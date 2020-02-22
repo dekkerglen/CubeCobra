@@ -215,14 +215,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       };
       message = 'Custom format successfully edited.';
     }
-    // check pack formats are sane
-    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
-    if (draftcards.length === 0) {
-      throw new Error('Could not create draft: no cards');
-    }
-    // test format for errors
-    const format = draftutil.parseDraftFormat(req.body.format);
-    draftutil.checkFormat(format, draftcards);
 
     await cube.save();
     req.flash('success', message);
@@ -1584,6 +1576,11 @@ router.post('/startdraft/:id', async (req, res) => {
       cards: parseInt(req.body.cards, 10),
     };
 
+    // insert card details everywhere that needs them
+    for (const card of cube.cards) {
+      card.details = carddb.cardFromId(card.cardID);
+    }
+
     // setup draft
 
     const bots = draftutil.getDraftBots(params);
@@ -2554,7 +2551,7 @@ router.get('/redraft/:id', async (req, res) => {
 
 router.get('/deckbuilder/:id', async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const deck = await Deck.findById(req.params.id).lean();
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
@@ -2568,16 +2565,18 @@ router.get('/deckbuilder/:id', async (req, res) => {
     }
 
     // add images to cards
-    for (const cardOrStack of deck.cards) {
-      if (Array.isArray(cardOrStack)) {
-        for (const card of cardOrStack) {
-          card.details = carddb.cardFromId(card.cardID);
+    for (const seat of deck.seats) {
+      for (const collection of [seat.deck, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
         }
-      } else {
-        cardOrStack.details = carddb.cardFromId(cardOrStack);
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
       }
     }
-
     const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {

@@ -105,7 +105,7 @@ function customDraft(cards, duplicates = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -310,7 +310,7 @@ export function calculateAsfans(format, cards) {
   return createPacks({}, format, 1, nextCardFn);
 }
 
-function checkFormat(format, cards) {
+export function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
     const messages = [];
@@ -318,7 +318,7 @@ function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
-        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
