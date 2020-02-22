@@ -47,8 +47,18 @@ export function getFilterVisitorFromParser(parser) {
               if (!field) {
                 throw new Error(`No matching field for abbreviation ${fieldAbbrv}`);
               }
+              if (!value) {
+                throw new Error(`ValueType for ${field} not implemented yet`);
+              }
               // TODO: Correctly lookup field
-              return (card) => (negated ? !value(operator, card[field]) : value(operator, card[field]));
+              return (card) => {
+                const fieldValue = field.split('.').reduce((obj, fieldName) => obj[fieldName], card);
+                const result = value(operator, fieldValue);
+                if (negated) {
+                  return !result;
+                }
+                return result;
+              };
             }),
           );
         }
@@ -65,6 +75,13 @@ export function getFilterVisitorFromParser(parser) {
     // eslint-disable-next-line class-methods-use-this
     halfIntegerValue(ctx) {
       const value = parseFloat(getOriginalString(ctx), 10);
+      return defaultValueOperatorFor(value);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    dollarValue(ctx) {
+      const originalString = getOriginalString(ctx).replace('$', '');
+      const value = parseFloat(originalString, 10);
       return defaultValueOperatorFor(value);
     }
   }

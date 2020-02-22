@@ -9,6 +9,7 @@ import {
   NonTerminal,
   Option,
   Repetition,
+  RepetitionMandatory,
   Rule,
   Terminal,
 } from 'chevrotain';
@@ -54,10 +55,80 @@ export function getFilterParser() {
 
   rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex('\\d+(\\.(0|5))?|\\.(0|5)') }));
   rules.push(new Rule({ name: 'halfIntegerValue', definition: consumeRegex('-\\d+|\\d+(\\.(0|5))?|\\.(0|5)') }));
+  rules.push(new Rule({ name: 'integerValue', definition: consumeRegex('\\d+') }));
+  rules.push(new Rule({ name: 'dollarValue', definition: consumeRegex('\\$?\\d+(\\.\\d\\d?)?') }));
+  rules.push(new Rule({ name: 'finishValue', definition: consumeOneOf(['Foil', 'Non-foil']) }));
+  rules.push(new Rule({ name: 'statusValue', definition: consumeOneOf(['Owned', 'Not Owned', 'Premium Owned']) }));
+  rules.push(new Rule({ name: 'isValue', definition: consumeOneOf('gold', 'hybrid', 'phyrexian') }));
+  rules.push(
+    new Rule({
+      name: 'colorCombinationValue',
+      definition: [new RepetitionMandatory({ definition: consumeOneOf('WUBRGCwubrgc') })],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'manaCostValue',
+      definition: [
+        new RepetitionMandatory({ definition: consumeRegex('(\\d|\\{(W|U|B|R|G|C)(/(W|U|B|R|G|C|P|2))?\\})+') }),
+      ],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'setValue',
+      definition: [
+        new RepetitionMandatory({
+          definition: consumeOneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'),
+        }),
+      ],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'rarityValue',
+      definition: consumeOneOf([
+        'Mythic',
+        'mythic',
+        'm',
+        'Common',
+        'common',
+        'c',
+        'Rare',
+        'rare',
+        'r',
+        'Uncommon',
+        'uncommon',
+        'u',
+        'Special',
+        'special',
+        's',
+      ]),
+    }),
+  );
 
-  rules.push(createCondition('cmc', ['c', 'cmc', 'cost'], ALL_OPERATORS, 'positiveHalfIntegerValue', this));
-  rules.push(createCondition('power', ['p', 'pow', 'power'], ALL_OPERATORS, 'halfIntegerValue', this));
-  rules.push(createCondition('toughness', ['t', 'tough', 'toughness'], ALL_OPERATORS, 'halfIntegerValue', this));
+  rules.push(createCondition('details.mana', ['m', 'mana'], ['=', ':'], 'manaCostValue'));
+  rules.push(createCondition('cmc', ['cmc', 'cost'], ALL_OPERATORS, 'positiveHalfIntegerValue'));
+  rules.push(createCondition('details.color', ['c', 'color'], ALL_OPERATORS, 'colorCombinationValue'));
+  rules.push(createCondition('color', ['ci', 'id', 'identity'], ALL_OPERATORS, 'colorCombinationValue'));
+  // rules.push(createCondition('type_line', ['t', 'type'], [':', '='], 'stringValue'));
+  // rules.push(createCondition('details.oracle', ['o', 'oracle'], [':', '='], 'stringValue'));
+  rules.push(createCondition('set', ['s', 'set'], ['=', ':'], 'setValue'));
+  rules.push(createCondition('power', ['pow', 'power'], ALL_OPERATORS, 'halfIntegerValue'));
+  rules.push(createCondition('toughness', ['tough', 'toughness'], ALL_OPERATORS, 'halfIntegerValue'));
+  // rules.push(createCondition('tags', ['tag'], [':'], 'stringValue'));
+  rules.push(createCondition('finish', ['fin', 'finish'], [':', '='], 'finishValue'));
+  rules.push(createCondition('price', ['p', 'price'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(createCondition('details.price', ['np', 'pn', 'normal', 'normalprice'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(createCondition('details.foil_price', ['fp', 'pf', 'foil', 'foilprice'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(createCondition('status', ['stat', 'status'], ['=', ':'], 'statusValue'));
+  rules.push(createCondition('details.rarity', ['r', 'rar', 'rarity'], ALL_OPERATORS, 'rarityValue'));
+  rules.push(createCondition('details.loyalty', ['l', 'loy', 'loyal', 'loyalty'], ALL_OPERATORS, 'integerValue'));
+  // rules.push(createCondition('details.artist', ['a', 'art', 'artist'], [':', '='], 'stringValue'));
+  rules.push(createCondition('details.is', ['is'], [':'], 'isValue'));
+  rules.push(createCondition('details.elo', ['elo'], ALL_OPERATORS, 'integerValue'));
+  rules.push(createCondition('details.picks', ['picks'], ALL_OPERATORS, 'integerValue'));
+  rules.push(createCondition('details.cubes', ['cubes'], ALL_OPERATORS, 'integerValue'));
 
   rules.push(
     new Rule({

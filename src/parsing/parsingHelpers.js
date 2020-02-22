@@ -183,6 +183,12 @@ export function consumeRegex(regex) {
             case '|':
             case '\\':
             case '.':
+            case '$':
+            case '^':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
               operations.push(new Terminal({ terminalType: getTokenType(regex[i + 1]) }));
               break;
             default:

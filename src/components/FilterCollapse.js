@@ -281,7 +281,7 @@ class FilterCollapse extends Component {
     this.handleReset = this.handleReset.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (prevProps.filter !== this.props.filter) {
       const { filterInput } = this.state;
       if (filterInput === '') {
@@ -346,7 +346,7 @@ class FilterCollapse extends Component {
     if (parsed) {
       const visitor = getVisitorForParser(FilterParser);
       const newFilters = visitor.filter(parsed);
-      console.log('Matches: ', newFilters({ cmc: 3.5 }));
+      console.log('Matches: ', newFilters({ cmc: 3.5, power: 2, toughness: 1, details: { price: 0.44, foil_price: 4.96 }, price: 4.96 }));
     }
     if (!valid) return;
 

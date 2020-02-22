@@ -25,22 +25,16 @@ export function GetColorIdentity(colors) {
     switch (colors[0]) {
       case 'W':
         return 'White';
-        break;
       case 'U':
         return 'Blue';
-        break;
       case 'B':
         return 'Black';
-        break;
       case 'R':
         return 'Red';
-        break;
       case 'G':
         return 'Green';
-        break;
       case 'C':
         return 'Colorless';
-        break;
     }
   }
 }
