@@ -1573,6 +1573,10 @@ router.post('/startdraft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    if (cube.cards.length === 0) {
+      throw new Error('Could not create draft: no cards');
+    }
+
     const params = {
       id: parseInt(req.body.id, 10), // < 0 is standard draft, otherwise custom draft
       seats: parseInt(req.body.seats, 10),
@@ -1581,26 +1585,22 @@ router.post('/startdraft/:id', async (req, res) => {
     };
 
     // setup draft
-    const draftcards = cube.cards.map((card) => Object.assign(card, { details: carddb.cardFromId(card.cardID) }));
-    if (draftcards.length === 0) {
-      throw new Error('Could not create draft: no cards');
-    }
-    // ensure that cards have details
-    for (const card of draftcards) {
-      card.details = carddb.cardFromId(card.cardID);
-    }
 
     const bots = draftutil.getDraftBots(params);
     const format = draftutil.getDraftFormat(params, cube);
+
     const draft = new Draft();
-    draftutil.populateDraft(
-      draft,
+    const populated = draftutil.populateDraft(
       format,
-      draftcards,
+      cube.cards,
       bots,
       params.seats,
       req.user ? req.user : { username: 'Anonymous' },
     );
+
+    draft.initial_state = populated.initial_state;
+    draft.unopenedPacks = populated.unopenedPacks;
+    draft.seats = populated.seats;
     draft.cube = cube._id;
 
     // add ratings
@@ -1609,7 +1609,7 @@ router.post('/startdraft/:id', async (req, res) => {
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
-          names.push(card.details.name);
+          names.push(carddb.cardFromId(card.cardID).name);
         }
       }
     }
@@ -1625,21 +1625,10 @@ router.post('/startdraft/:id', async (req, res) => {
 
 router.get('/draft/:id', async (req, res) => {
   try {
-    const draft = await Draft.findById(req.params.id);
+    const draft = await Draft.findById(req.params.id).lean();
     if (!draft) {
       req.flash('danger', 'Draft not found');
       return res.status(404).render('misc/404', {});
-    }
-
-    const names = new Set();
-    // add in details to all cards
-    for (const seat of draft.packs) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
-          names.add(card.details.name);
-        }
-      }
     }
 
     const cube = await Cube.findOne(build_id_query(draft.cube)).lean();
@@ -1653,6 +1642,30 @@ router.get('/draft/:id', async (req, res) => {
     if (!user) {
       req.flash('danger', 'Owner not found');
       return res.status(404).render('misc/404', {});
+    }
+
+    // insert card details everywhere that needs them
+    for (const seat of draft.unopenedPacks) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
+      }
+    }
+
+    for (const seat of draft.seats) {
+      console.log(seat);
+      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+        console.log(collection);
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
     }
 
     const reactProps = {
@@ -2600,7 +2613,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const deck = await Deck.findById(req.params.id).lean();
 
     if (!deck) {
       req.flash('danger', 'Deck not found');
@@ -2625,6 +2638,19 @@ router.get('/deck/:id', async (req, res) => {
       drafter.name = deckUser.username;
       drafter.id = deckUser._id;
       drafter.profileUrl = `/user/view/${deckUser._id}`;
+    }
+
+    for (const seat of deck.seats) {
+      for (const collection of [seat.deck, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
     }
 
     const reactProps = {

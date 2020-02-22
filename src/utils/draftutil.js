@@ -238,22 +238,11 @@ function createPacks(draft, format, seats, nextCardFn) {
   }
   return { ok, messages };
 }
-/*
-  //new format, will convert to
-  seats: [Seat],
-  unopenedPacks: [[]],
 
-  const Seat = {
-    bot: [], //null bot value means human player
-    name: String,
-    userid: String,
-    drafted: [[]], //organized draft picks
-    pickorder: [],
-    packbacklog: [[]],
-  };
-  */
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(draft, format, cards, bots, seats, user) {
+export function populateDraft(format, cards, bots, seats, user) {
+  const draft = {};
+
   let nextCardFn = null;
 
   if (cards.length === 0) {
@@ -283,8 +272,8 @@ export function populateDraft(draft, format, cards, bots, seats, user) {
   }
 
   draft.seats = [];
-  draft.unopenedPacks = [];
-  for (let i = 0; i < draft.initial_state.length; i++) {
+  draft.unopenedPacks = draft.initial_state.slice();
+  for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
       bot: i == 0 ? null : bots[i - 1],
       name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1][0] + ', ' + bots[i - 1][1],
@@ -298,7 +287,6 @@ export function populateDraft(draft, format, cards, bots, seats, user) {
       seat.drafted.push([]);
     }
 
-    draft.unopenedPacks.push(draft.initial_state[i].slice());
     seat.packbacklog.push(draft.unopenedPacks[i].pop());
     draft.seats.push(seat);
   }
@@ -350,10 +338,12 @@ var draftutil = {
   populateDraft,
 };
 
-exports.default = draftutil;
-exports.calculateAsfans = calculateAsfans;
-exports.checkFormat = checkFormat;
-exports.getDraftBots = getDraftBots;
-exports.getDraftFormat = getDraftFormat;
-exports.parseDraftFormat = parseDraftFormat;
-exports.populateDraft = populateDraft;
+if (exports) {
+  exports.default = draftutil;
+  exports.calculateAsfans = calculateAsfans;
+  exports.checkFormat = checkFormat;
+  exports.getDraftBots = getDraftBots;
+  exports.getDraftFormat = getDraftFormat;
+  exports.parseDraftFormat = parseDraftFormat;
+  exports.populateDraft = populateDraft;
+}

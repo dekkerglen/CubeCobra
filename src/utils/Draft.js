@@ -137,7 +137,7 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, botPack[y]) - botRating(botColors, botPack[x]);
+      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
     });
     arrayShuffle(unratedPicks);
 
@@ -202,25 +202,24 @@ async function pick(cardIndex) {
 }
 
 async function finish() {
-  //build bot decks
+  // build bot decks
+  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.bot));
+  const decks = await Promise.all(decksPromise);
+
   for (let i = 0; i < draft.seats.length; i++) {
     if (draft.seats[i].bot) {
-      const res = await buildDeck(draft.seats[i].pickorder, draft.seats[i].bot);
-      draft.seats[i].drafted = res.deck;
-      draft.seats[i].sideboard = res.sideboard;
+      draft.seats[i].drafted = decks[i].deck;
+      draft.seats[i].sideboard = decks[i].sideboard;
 
       draft.seats[i].name = 'Bot ' + (i + 1) + ': ' + draft.seats[i].bot[0] + ', ' + draft.seats[i].bot[1];
-      draft.seats[i].description =
-        'This deck was drafted by a bot with color preference for ' +
-        draft.seats[i].bot[0] +
-        ' and ' +
-        draft.seats[i].bot[1] +
-        '.';
+      draft.seats[
+        i
+      ].description = `This deck was drafted by a bot with color preference for ${draft.seats[i].bot[0]} and ${draft.seats[i].bot[1]}.`;
     }
   }
 
-  //save draft. if we fail, we fail
-  await csrfFetch('/cube/api/draftpick/' + draft.cube, {
+  // save draft. if we fail, we fail
+  await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify(draft),
     headers: {

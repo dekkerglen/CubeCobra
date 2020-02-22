@@ -24,6 +24,8 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
     [isOpen],
   );
 
+  console.log(deck);
+
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>
@@ -33,8 +35,8 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
-              {deck.seats.map((seat) => (
-                <option key={seats.name} value={index}>
+              {deck.seats.map((seat, index) => (
+                <option key={seat.userid || seat.bot} value={index}>
                   {seat.username ? seat.username : seat.name}
                 </option>
               ))}
@@ -73,21 +75,22 @@ CubeDeckPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf({
-      description: PropTypes.string.isRequired,
-      deck: PropTypes.array.isRequired,
-      sideboard: PropTypes.array.isRequired,
-      username: PropTypes.string.isRequired,
-      userid: PropTypes.string.isRequired,
-      bot: PropTypes.array.isRequired,
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-    userid: PropTypes.string.isRequired,
+    seats: PropTypes.arrayOf(
+      PropTypes.shape({
+        description: PropTypes.string.isRequired,
+        deck: PropTypes.array.isRequired,
+        sideboard: PropTypes.array.isRequired,
+        username: PropTypes.string.isRequired,
+        userid: PropTypes.string,
+        bot: PropTypes.array,
+        name: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   canEdit: PropTypes.bool,
-  userid: PropTypes.string.isRequired,
+  userid: PropTypes.string,
 };
 
 CubeDeckPage.defaultProps = {

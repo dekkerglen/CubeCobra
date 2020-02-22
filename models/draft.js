@@ -20,7 +20,7 @@ let draftSchema = mongoose.Schema({
 
   //new format, will convert to
   seats: [Seat],
-  unopenedPacks: [[cardSchema]],
+  unopenedPacks: [[[cardSchema]]],
 
   //deprecated
   picks: [[]],
