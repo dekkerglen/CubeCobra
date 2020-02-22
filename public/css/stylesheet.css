@@ -287,9 +287,7 @@
 	border: 1px solid #ced4da;
 }
 
-#autocard_popup_info,
-#autocard_popup2,
-#autocard_popup {
+#autocardPopup {
 	position: absolute;
 	pointer-events: none;
 	user-drag: none;
@@ -298,28 +296,17 @@
 	-webkit-user-drag: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
-}
-
-#autocard_popup_info {
-	background-color: #f8f9fa;
-	border-bottom-left-radius: 10px;
-	border-bottom-right-radius: 10px;
-	padding-top: 10px;
-	padding-bottom: 2px;
-}
-
-/* removes white corners from popup */
-#autocard_popup2,
-#autocard_popup {
 	border-radius: 10px;
 	overflow: hidden;
-	background: #fff;
+}
+
+.autocard-background {
+	background-color: #f8f9fa;
+	background-clip: content-box;
 }
 
 @media (max-width: 767.98px) {
-	#autocard_popup_info,
-	#autocard_popup2,
-	#autocard_popup {
+	#autocardPopup {
 		display: none !important;
 	}
 }
