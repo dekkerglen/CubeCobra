@@ -1,10 +1,8 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var Util = require('./Util.js');
+var Util = require('utils/Util.js');
 require('./Card.js');
-var Filter = require('./Filter.js');
+var Filter = require('utils/Filter.js');
 
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
@@ -327,23 +325,4 @@ export function checkFormat(format, cards) {
     return { ok: messages.length === 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
-}
-
-var draftutil = {
-  calculateAsfans,
-  checkFormat,
-  getDraftBots,
-  getDraftFormat,
-  parseDraftFormat,
-  populateDraft,
-};
-
-if (exports) {
-  exports.default = draftutil;
-  exports.calculateAsfans = calculateAsfans;
-  exports.checkFormat = checkFormat;
-  exports.getDraftBots = getDraftBots;
-  exports.getDraftFormat = getDraftFormat;
-  exports.parseDraftFormat = parseDraftFormat;
-  exports.populateDraft = populateDraft;
 }
