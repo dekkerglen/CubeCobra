@@ -53,10 +53,10 @@ export function getFilterParser() {
   };
   const rules = [];
 
-  rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex('\\d+(\\.(0|5))?|\\.(0|5)') }));
-  rules.push(new Rule({ name: 'halfIntegerValue', definition: consumeRegex('-\\d+|\\d+(\\.(0|5))?|\\.(0|5)') }));
-  rules.push(new Rule({ name: 'integerValue', definition: consumeRegex('\\d+') }));
-  rules.push(new Rule({ name: 'dollarValue', definition: consumeRegex('\\$?\\d+(\\.\\d\\d?)?') }));
+  rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex(/\d+(\.(0|5))?|\.(0|5)/) }));
+  rules.push(new Rule({ name: 'halfIntegerValue', definition: consumeRegex(/-\d+|\d+(\.(0|5))?|\.(0|5)/) }));
+  rules.push(new Rule({ name: 'integerValue', definition: consumeRegex(/\d+/) }));
+  rules.push(new Rule({ name: 'dollarValue', definition: consumeRegex(/\$?\d+(\.\d\d?)?/) }));
   rules.push(new Rule({ name: 'finishValue', definition: consumeOneOf(['Foil', 'Non-foil']) }));
   rules.push(new Rule({ name: 'statusValue', definition: consumeOneOf(['Owned', 'Not Owned', 'Premium Owned']) }));
   rules.push(new Rule({ name: 'isValue', definition: consumeOneOf('gold', 'hybrid', 'phyrexian') }));
@@ -70,7 +70,7 @@ export function getFilterParser() {
     new Rule({
       name: 'manaCostValue',
       definition: [
-        new RepetitionMandatory({ definition: consumeRegex('(\\d|\\{(W|U|B|R|G|C)(/(W|U|B|R|G|C|P|2))?\\})+') }),
+        new RepetitionMandatory({ definition: consumeRegex(/(\d|\{[WUBRGCPwubrgcp2](\/[WUBRGCPwubrgcp2])?\})+/) }),
       ],
     }),
   );
@@ -129,13 +129,21 @@ export function getFilterParser() {
   rules.push(createCondition('details.elo', ['elo'], ALL_OPERATORS, 'integerValue'));
   rules.push(createCondition('details.picks', ['picks'], ALL_OPERATORS, 'integerValue'));
   rules.push(createCondition('details.cubes', ['cubes'], ALL_OPERATORS, 'integerValue'));
-
+  rules.push(
+    new Rule({
+      name: 'condition',
+      definition: [new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) })],
+    }),
+  );
   rules.push(
     new Rule({
       name: 'filter',
       definition: [
-        new Repetition({
-          definition: [new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) })],
+        new Option({
+          definition: [
+            new NonTerminal({ nonTerminalName: 'condition' }),
+            new Repetition({ definition: [...consumeRegex(/\s+/), new NonTerminal({ nonTerminalName: 'condition' })] }),
+          ],
         }),
         new Terminal({ terminalType: EOF }),
       ],

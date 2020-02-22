@@ -4,11 +4,15 @@ import {
   Alternation,
   EOF,
   Flat,
+  Lexer,
   Option,
   Repetition,
   RepetitionMandatory,
   Terminal,
 } from 'chevrotain';
+import { RegExpParser, BaseRegExpVisitor } from 'regexp-to-ast';
+
+const regexpParser = new RegExpParser();
 
 export const TOKEN_TYPES = { EOF };
 
@@ -21,15 +25,69 @@ export function getOriginalString(ctx) {
   return tokens.map((token) => token.image).join('');
 }
 
-export function getTokenType(c) {
+const CATEGORIES = [];
+const CATEGORY_PREFIX = 'cat_';
+
+function categoryToString(category) {
+  const sorted = [...category].sort(
+    (a, b) => (a.from === undefined ? a : a.from) - (b.from === undefined ? b : b.from),
+  );
+  return sorted.reduce((str, c) => `${str}_${c.from === undefined ? c : `${c.from}t${c.to}`}`, CATEGORY_PREFIX);
+}
+
+function findCategories(charCode) {
+  const categories = [];
+  for (const category of CATEGORIES) {
+    let matches = true;
+    for (const charRange of category) {
+      if (charRange.from !== undefined) {
+        if (charRange.from <= charCode && charCode <= charRange.to) {
+          matches = false;
+          break;
+        }
+      } else if (charRange === charCode) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      const name = categoryToString(category);
+      if (TOKEN_TYPES[name]) {
+        categories.push(TOKEN_TYPES(name));
+      }
+    }
+  }
+  return categories;
+}
+
+const TOKEN_PREFIX = 'token_';
+
+function getTokenType(c) {
   if (!TOKEN_TYPES[c]) {
+    const charCode = c.charCodeAt();
+    const categories = findCategories(charCode);
+    const name = `${TOKEN_PREFIX}${charCode}`;
     if ('{}()[]?>*+-\\^$|'.includes(c)) {
-      TOKEN_TYPES[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(`\\${c}`) });
+      TOKEN_TYPES[c] = createToken({ name, pattern: new RegExp(`\\${c}`), label: c, categories });
     } else {
-      TOKEN_TYPES[c] = createToken({ name: `token_${c.charCodeAt()}`, pattern: new RegExp(c) });
+      TOKEN_TYPES[c] = createToken({ name, pattern: new RegExp(c), label: c, categories });
     }
   }
   return TOKEN_TYPES[c];
+}
+
+export function getCategory(ranges) {
+  const name = categoryToString(ranges);
+  if (!TOKEN_TYPES[name]) {
+    CATEGORIES.push(ranges);
+    TOKEN_TYPES[name] = createToken({ name, pattern: Lexer.IGNORE });
+    for (const [tokenName, tokenType] of Object.entries(TOKEN_TYPES)) {
+      if (tokenType.startsWith(TOKEN_PREFIX)) {
+        const categories = findCategories(String.fromCharCode(tokenName.substring(TOKEN_PREFIX.length)));
+        tokenType.CATEGORIES = categories;
+      }
+    }
+  }
 }
 
 export function tokenize(input) {
@@ -77,157 +135,86 @@ export function consumeOneOf(words) {
   return consumeTrie(trie, '');
 }
 
-export function consumeLetter() {
-  return consumeOneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+function handleQuantifier(operations, quantifier) {
+  if (!quantifier) {
+    return operations;
+  }
+  if (quantifier.atLeast === 0 && quantifier.atMost === Infinity) {
+    return [new Repetition({ definition: operations })];
+  }
+  if (quantifier.atLeast === 1 && quantifier.atMost === Infinity) {
+    return [new RepetitionMandatory({ definition: operations })];
+  }
+  if (quantifier.atLeast === 0 && quantifier.atMost === 1) {
+    return [new Option({ definition: operations })];
+  }
+  throw new Error(`Unsupported quantifier type ${quantifier}`);
 }
 
-export function consumeNumber() {
-  return consumeOneOf('1234567890');
-}
+class RegexpVisitor extends BaseRegExpVisitor {
+  visitPattern(node) {
+    return this.visitDisjunction(node.value);
+  }
 
-// Requires the left hand side of alternation(|) be wrapped in parentheses
-export function consumeRegex(regex) {
-  const consumeRegexInternal = (startIndex, inGroup) => {
-    let lastGroup = null;
-    let operations = [];
-    let internalCall = null;
-    for (let i = startIndex; i < regex.length; i++) {
-      switch (regex[i]) {
-        case '(':
-          internalCall = consumeRegexInternal(i + 1, true);
-          lastGroup = internalCall.operations;
-          i = internalCall.endIndex;
-          break;
-        case ')':
-          if (inGroup) {
-            if (lastGroup) {
-              operations.push(...lastGroup);
-              lastGroup = null;
-            }
-            return { endIndex: i, operations };
-          }
-          throw new Error(`No matching open parentheses for closed paren at ${i} in "${regex}"`);
-        case '*':
-          if (lastGroup !== null) {
-            operations.push(new Repetition({ definition: lastGroup }));
-            lastGroup = null;
-          } else if (operations.length > 0) {
-            operations[operations.length - 1] = new Repetition({ definition: [operations[operations.length - 1]] });
-          } else {
-            throw new Error(`Nothing to repeat for * in "${regex}" at position ${i}`);
-          }
-          break;
-        case '+':
-          if (lastGroup !== null) {
-            operations.push(new RepetitionMandatory({ definition: lastGroup }));
-            lastGroup = null;
-          } else if (operations.length > 0) {
-            operations[operations.length - 1] = new RepetitionMandatory({
-              definition: [operations[operations.length - 1]],
-            });
-          } else {
-            throw new Error(`Nothing to repeat for + in "${regex}" at position ${i}`);
-          }
-          break;
-        case '?':
-          if (lastGroup !== null) {
-            operations.push(new Option({ definition: lastGroup }));
-            lastGroup = null;
-          } else if (operations.length > 0) {
-            operations[operations.length - 1] = new Option({ definition: [operations[operations.length - 1]] });
-          } else {
-            throw new Error(`Nothing to repeat for * in "${regex}" at position ${i}`);
-          }
-          break;
-        case '|':
-          if (lastGroup) {
-            operations.push(...lastGroup);
-            lastGroup = null;
-          }
-          if (operations.length === 0) {
-            throw new Error(`Nothing to alternate for | in "${regex}" at position ${i}`);
-          }
-          internalCall = consumeRegexInternal(i + 1, inGroup);
-          operations = [
-            new Alternation({
-              definition: [
-                new Flat({ definition: [...operations] }),
-                new Flat({ definition: internalCall.operations }),
-              ],
-            }),
-          ];
-          i = internalCall.endIndex;
-          if (i < regex.length && regex[i] === ')') {
-            i -= 1;
-          }
-          break;
-        case '\\':
-          if (regex.length <= i + 1) {
-            throw new Error(`\\ is not escaping anything in "${regex}" at position ${i}`);
-          }
-          if (lastGroup !== null) {
-            operations.push(...lastGroup);
-            lastGroup = null;
-          }
-          switch (regex[i + 1]) {
-            case 'a':
-              operations.push(...consumeLetter());
-              break;
-            case 'd':
-              operations.push(...consumeNumber());
-              break;
-            case '(':
-            case ')':
-            case '*':
-            case '+':
-            case '|':
-            case '\\':
-            case '.':
-            case '$':
-            case '^':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-              operations.push(new Terminal({ terminalType: getTokenType(regex[i + 1]) }));
-              break;
-            default:
-              throw new Error(`Invalid escape sequence in "${regex}" at position ${i}`);
-          }
-          i += 1;
-          break;
-        default:
-          if (lastGroup !== null) {
-            operations.push(...lastGroup);
-            lastGroup = null;
-          }
-          operations.push(new Terminal({ terminalType: getTokenType(regex[i]) }));
-          break;
+  visitDisjunction(node) {
+    if (node.value.length === 1) {
+      return this.visitAlternative(node.value[0]);
+    }
+    return [new Alternation({ definition: node.value.map((a) => new Flat({ definition: this.visitAlternative(a) })) })];
+  }
+
+  visitAlternative(node) {
+    return node.value
+      .filter((n) => n.type === 'Character' || n.type === 'Set' || n.type === 'Group')
+      .reduce((operations, n) => operations.concat(this[`visit${n.type}`](n)), []);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  visitCharacter(node) {
+    return handleQuantifier(consumeWord(String.fromCharCode(node.value)), node.quantifier);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  visitSet(node) {
+    if (node.complement) {
+      const tokenType = getCategory(node.value);
+      return handleQuantifier([new Terminal({ terminalType: tokenType })]);
+    }
+    const charsInRanges = new Set();
+    for (const charCode of node.value) {
+      if (charCode.from !== undefined) {
+        for (let c = charCode.from; c <= charCode.to; c++) {
+          charsInRanges.add(c);
+        }
+      } else {
+        charsInRanges.add(charCode);
       }
     }
-    if (inGroup) {
-      throw new Error(`Unterminated paren in "${regex}"`);
-    }
-    if (lastGroup) {
-      operations.push(...lastGroup);
-    }
-    if (operations.length === 0) {
-      throw new Error(`No group found to consume in ${regex}`);
-    }
-    return { endIndex: regex.length, operations };
-  };
+    const charsList = [...charsInRanges].map((c) => String.fromCharCode(c));
+    return handleQuantifier(
+      [new Alternation({ definition: charsList.map((c) => new Flat({ definition: consumeWord(c) })) })],
+      node.quantifier,
+    );
+  }
 
-  const { operations } = consumeRegexInternal(0, false);
-  return operations;
+  visitGroup(node) {
+    return handleQuantifier(this.visitDisjunction(node.value), node.quantifier);
+  }
+}
+
+const regexpVisitor = new RegexpVisitor();
+
+export function consumeRegex(regex) {
+  const regexpAst = regexpParser.pattern(regex.toString());
+  return regexpVisitor.visitPattern(regexpAst);
 }
 
 export default {
   TOKEN_TYPES,
   consumeWord,
   consumeOneOf,
-  consumeLetter,
-  consumeNumber,
   consumeRegex,
+  getCategory,
   getOriginalString,
   getTokenType,
   tokenize,
