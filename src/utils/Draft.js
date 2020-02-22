@@ -149,35 +149,33 @@ function botPicks() {
 
 function passPack() {
   botPicks();
-  //check if pack is done
+  // check if pack is done
   if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
-    //splice the first pack out
+    // splice the first pack out
     for (const seat of draft.seats) {
       seat.packbacklog.splice(0, 1);
     }
 
     if (draft.unopenedPacks[0].length > 0) {
-      //give new pack
+      // give new pack
       for (let i = 0; i < draft.seats.length; i++) {
         draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
       }
     }
+  } else if (draft.unopenedPacks[0].length % 2 == 0) {
+    // pass left
+    for (let i = 0; i < draft.seats.length; i++) {
+      const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
+      draft.seats[(i + 1) % draft.seats.length].packbacklog.push(pack);
+    }
   } else {
-    if (draft.unopenedPacks[0].length % 2 == 0) {
-      //pass left
-      for (let i = 0; i < draft.seats.length; i++) {
-        const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
-        draft.seats[(i + 1) % draft.seats.length].packbacklog.push(pack);
-      }
-    } else {
-      //pass right
-      for (let i = draft.seats.length - 1; i >= 0; i--) {
-        const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
-        if (i == 0) {
-          draft.seats[draft.seats.length - 1].packbacklog.push(pack);
-        } else {
-          draft.seats[i - 1].packbacklog.push(pack);
-        }
+    // pass right
+    for (let i = draft.seats.length - 1; i >= 0; i--) {
+      const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
+      if (i == 0) {
+        draft.seats[draft.seats.length - 1].packbacklog.push(pack);
+      } else {
+        draft.seats[i - 1].packbacklog.push(pack);
       }
     }
   }
@@ -185,7 +183,7 @@ function passPack() {
 
 async function pick(cardIndex) {
   const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
-  const pack = draft.seats[0].packbacklog[0];
+  const pack_from = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
   passPack();
   await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
@@ -193,7 +191,7 @@ async function pick(cardIndex) {
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: pack.map((c) => c.details.name),
+      pack: pack_from.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -211,7 +209,7 @@ async function finish() {
       draft.seats[i].drafted = decks[i].deck;
       draft.seats[i].sideboard = decks[i].sideboard;
 
-      draft.seats[i].name = 'Bot ' + (i + 1) + ': ' + draft.seats[i].bot[0] + ', ' + draft.seats[i].bot[1];
+      draft.seats[i].name = `Bot ${i + 1}: ${draft.seats[i].bot[0]}, ${draft.seats[i].bot[1]}`;
       draft.seats[
         i
       ].description = `This deck was drafted by a bot with color preference for ${draft.seats[i].bot[0]} and ${draft.seats[i].bot[1]}.`;

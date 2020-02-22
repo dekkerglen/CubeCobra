@@ -1654,9 +1654,7 @@ router.get('/draft/:id', async (req, res) => {
     }
 
     for (const seat of draft.seats) {
-      console.log(seat);
       for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        console.log(collection);
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);

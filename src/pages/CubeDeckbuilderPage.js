@@ -173,7 +173,19 @@ CubeDeckbuilderPage.propTypes = {
   basics: PropTypes.objectOf(PropTypes.object).isRequired,
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
-  initialDeck: PropTypes.shape({}).isRequired,
+  initialDeck: PropTypes.shape({
+    seats: PropTypes.arrayOf(
+      PropTypes.shape({
+        description: PropTypes.string.isRequired,
+        deck: PropTypes.array.isRequired,
+        sideboard: PropTypes.array.isRequired,
+        username: PropTypes.string.isRequired,
+        userid: PropTypes.string,
+        bot: PropTypes.array,
+        name: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
 };
 
 export default CubeDeckbuilderPage;

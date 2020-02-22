@@ -95,6 +95,7 @@ CubeDeckPage.propTypes = {
 
 CubeDeckPage.defaultProps = {
   canEdit: false,
+  userid: null,
 };
 
 export default CubeDeckPage;
