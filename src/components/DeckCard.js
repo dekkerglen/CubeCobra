@@ -41,10 +41,6 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-DeckStacksStatic.defaultProps = {
-  subtitle: false,
-};
-
 const DeckCard = ({ seat, comments, deckid, userid }) => {
   const [commentList, setCommentList] = useState(comments);
   const [childExpanded, setChildCollapse] = useState(false);

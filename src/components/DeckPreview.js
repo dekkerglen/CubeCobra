@@ -36,7 +36,7 @@ DeckPreview.propTypes = {
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     seats: PropTypes.arrayOf(PropTypes.object),
-    date: PropTypes.Date,
+    date: PropTypes.instanceOf(Date),
   }).isRequired,
 };
 

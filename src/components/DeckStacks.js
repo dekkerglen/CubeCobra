@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
+import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
 

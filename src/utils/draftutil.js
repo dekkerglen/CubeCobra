@@ -350,9 +350,9 @@ var draftutil = {
   populateDraft,
 };
 
+exports.default = draftutil;
 exports.calculateAsfans = calculateAsfans;
 exports.checkFormat = checkFormat;
-exports.default = draftutil;
 exports.getDraftBots = getDraftBots;
 exports.getDraftFormat = getDraftFormat;
 exports.parseDraftFormat = parseDraftFormat;
