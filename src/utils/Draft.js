@@ -21,12 +21,12 @@ function pack() {
 
 function packPickNumber() {
   let picks = draft.seats[0].length;
-  let picknum = 1;
   let packnum = 1;
   while (picks > draft.initial_state[packnum - 1].length) {
     picks -= draft.initial_state[packnum - 1].length;
-    packnum++;
+    packnum += 1;
   }
+  const picknum = picks;
   return [packnum, picknum];
 }
 
@@ -81,7 +81,7 @@ async function buildDeck(cards, bot) {
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
-  const sort_fn = function(a, b) {
+  const sortFn = function(a, b) {
     if (bot) {
       return botRating(bot, b) - botRating(bot, a);
     } else {
@@ -89,8 +89,8 @@ async function buildDeck(cards, bot) {
     }
   };
 
-  nonlands.sort(sort_fn);
-  lands.sort(sort_fn);
+  nonlands.sort(sortFn);
+  lands.sort(sortFn);
 
   const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
   const side = nonlands.slice(23).concat(lands.slice(17));
@@ -124,12 +124,12 @@ async function buildDeck(cards, bot) {
 function botPicks() {
   // make bots take one pick out of active packs
   for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
-    const pack = draft.seats[botIndex].packbacklog[0];
+    const packFrom = draft.seats[botIndex].packbacklog[0];
     const botColors = draft.seats[botIndex].bot;
     const ratedPicks = [];
     const unratedPicks = [];
-    for (let cardIndex = 0; cardIndex < pack.length; cardIndex++) {
-      if (draft.ratings && draft.ratings[pack[cardIndex].details.name]) {
+    for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
+      if (draft.ratings && draft.ratings[packFrom[cardIndex].details.name]) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -137,12 +137,12 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, pack[y]) - botRating(botColors, pack[x]);
+      return botRating(botColors, packFrom[y]) - botRating(botColors, packFrom[x]);
     });
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    pick = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+    const pick = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
     draft.seats[botIndex].pickorder.push(pick);
   }
 }
@@ -162,7 +162,7 @@ function passPack() {
         draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
       }
     }
-  } else if (draft.unopenedPacks[0].length % 2 == 0) {
+  } else if (draft.unopenedPacks[0].length % 2 === 0) {
     // pass left
     for (let i = 0; i < draft.seats.length; i++) {
       const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
@@ -171,11 +171,11 @@ function passPack() {
   } else {
     // pass right
     for (let i = draft.seats.length - 1; i >= 0; i--) {
-      const pack = draft.seats[i].packbacklog.splice(0, 1)[0];
-      if (i == 0) {
-        draft.seats[draft.seats.length - 1].packbacklog.push(pack);
+      const packFrom = draft.seats[i].packbacklog.splice(0, 1)[0];
+      if (i === 0) {
+        draft.seats[draft.seats.length - 1].packbacklog.push(packFrom);
       } else {
-        draft.seats[i - 1].packbacklog.push(pack);
+        draft.seats[i - 1].packbacklog.push(packFrom);
       }
     }
   }
@@ -183,7 +183,7 @@ function passPack() {
 
 async function pick(cardIndex) {
   const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
-  const pack_from = draft.seats[0].packbacklog[0];
+  const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
   passPack();
   await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
@@ -191,7 +191,7 @@ async function pick(cardIndex) {
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: pack_from.map((c) => c.details.name),
+      pack: packFrom.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
