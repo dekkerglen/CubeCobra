@@ -77,16 +77,19 @@ function botRating(botColors, card) {
   return rating;
 }
 
-function sortFn(a, b) {
-  if (bot) {
-    return botRating(bot, b) - botRating(bot, a);
-  }
-  return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+function getSortFn(bot) {
+  return (a, b) => {
+    if (bot) {
+      return botRating(bot, b) - botRating(bot, a);
+    }
+    return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+  };
 }
 
 async function buildDeck(cards, bot) {
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+  const sortFn = getSortFn(bot);
 
   nonlands.sort(sortFn);
   lands.sort(sortFn);
