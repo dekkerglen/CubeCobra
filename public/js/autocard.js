@@ -13,20 +13,6 @@ function getTagColorClass(tag) {
   }
 }
 
-function getElementPosition(el) {
-  var l = 0,
-    t = 0;
-  while (el.offsetParent) {
-    l += el.offsetLeft;
-    t += el.offsetTop;
-    el = el.offsetParent;
-  }
-  return {
-    left: l,
-    top: t,
-  };
-}
-
 const autocardEnterListeners = new Map();
 const autocardLeaveListeners = new Map();
 function autocard_init(classname) {
@@ -78,21 +64,26 @@ document.onmousemove = function(e) {
 
   if (rightPixelSpace > leftPixelSpace) {
     // display on right
-    autocardPopup.style.left = 5 + x_offset + 'px';
+    autocardPopup.style.left = Math.max(self.pageXOffset, 5 + x_offset) + 'px';
     autocardPopup.style.right = null;
   } else {
     // display on left
-    autocardPopup.style.right = window.innerWidth + 5 - x_offset + 'px';
+    autocardPopup.style.right = Math.max(window.innerWidth + 5 - x_offset, 0) + 'px';
     autocardPopup.style.left = null;
   }
-  if (bottomPixelSpace > topPixelSpace) {
-    // display on bottom
-    autocardPopup.style.top = 5 + y_offset + 'px';
+  if (autocardPopup.offsetHeight > window.innerHeight) {
+    autocardPopup.style.top = self.pageYOffset + 'px';
     autocardPopup.style.bottom = null;
   } else {
-    // display on top
-    autocardPopup.style.bottom = window.innerHeight + 5 - y_offset + 'px';
-    autocardPopup.style.top = null;
+    if (bottomPixelSpace > topPixelSpace) {
+      // display on bottom
+      autocardPopup.style.top = 5 + y_offset + 'px';
+      autocardPopup.style.bottom = null;
+    } else {
+      // display on top
+      autocardPopup.style.bottom = window.innerHeight + 5 - y_offset + 'px';
+      autocardPopup.style.top = null;
+    }
   }
 };
 
