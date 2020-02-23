@@ -9,7 +9,7 @@ let Draft = require('../../../models/draft');
 const carddb = require('../../../serverjs/cards');
 
 import Filter from '../../../src/utils/Filter';
-import methods from '../../../src/utils/draftutil';
+import { getDraftBots, getDraftFormat, populateDraft } from '../../../src/utils/draftutil';
 
 import { expectOperator } from '../../helpers';
 
@@ -18,7 +18,7 @@ describe('getDraftBots', () => {
     const params = {
       seats: 5,
     };
-    const result = methods.getDraftBots(params);
+    const result = getDraftBots(params);
     expect(result.length).toBe(params.seats - 1);
   });
 
@@ -27,7 +27,7 @@ describe('getDraftBots', () => {
     const params = {
       seats: 2,
     };
-    const result = methods.getDraftBots(params);
+    const result = getDraftBots(params);
 
     expect(result[0].length).toBe(2);
     expect(allColors.includes(result[0][0])).toBe(true);
@@ -46,7 +46,7 @@ describe('getDraftFormat', () => {
       packs: 3,
       cards: 2,
     };
-    const format = methods.getDraftFormat(params, exampleCube);
+    const format = getDraftFormat(params, exampleCube);
     let expected_format = [
       ['*', '*'], // pack 1 (* is any card)
       ['*', '*'], // pack 2
@@ -118,7 +118,7 @@ describe('getDraftFormat', () => {
         // NOTE: Because format array als incudes properties (which we aren't testing in this test)
         // we need to convert to json to compare safely.
         // See https://github.com/facebook/jest/issues/8475
-        let formatJSON = JSON.stringify(methods.getDraftFormat(params, exampleCube));
+        let formatJSON = JSON.stringify(getDraftFormat(params, exampleCube));
         let expectedJSON = JSON.stringify(expected);
         expect(formatJSON).toEqual(expectedJSON);
       });
@@ -126,13 +126,13 @@ describe('getDraftFormat', () => {
       test(`returned has correct multiples value`, () => {
         exampleCube.draft_formats[params.id].packs = packsFormat;
         exampleCube.draft_formats[params.id].multiples = multiples;
-        expect(methods.getDraftFormat(params, exampleCube).multiples).toEqual(multiples);
+        expect(getDraftFormat(params, exampleCube).multiples).toEqual(multiples);
       });
 
       test(`returned format is marked as custom`, () => {
         exampleCube.draft_formats[params.id].packs = packsFormat;
         exampleCube.draft_formats[params.id].multiples = multiples;
-        expect(methods.getDraftFormat(params, exampleCube).custom).toEqual(true);
+        expect(getDraftFormat(params, exampleCube).custom).toEqual(true);
       });
     });
   });
@@ -152,7 +152,7 @@ describe('populateDraft', () => {
     cards = [];
     bots = ['fakebot'];
     expect(() => {
-      methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+      populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
     }).toThrow(/no cards/);
   });
 
@@ -160,7 +160,7 @@ describe('populateDraft', () => {
     cards = ['mockcard'];
     bots = [];
     expect(() => {
-      methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+      populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
     }).toThrow(/no bots/);
   });
 
@@ -168,13 +168,13 @@ describe('populateDraft', () => {
     cards = ['mockcards'];
     bots = ['mockbot'];
     expect(() => {
-      methods.populateDraft(format, cards, bots, 1, { username: 'user', _id: 0 });
+      populateDraft(format, cards, bots, 1, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
     expect(() => {
-      methods.populateDraft(format, cards, bots, null, { username: 'user', _id: 0 });
+      populateDraft(format, cards, bots, null, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
     expect(() => {
-      methods.populateDraft(format, cards, bots, -1, { username: 'user', _id: 0 });
+      populateDraft(format, cards, bots, -1, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
   });
 
@@ -194,8 +194,8 @@ describe('populateDraft', () => {
     it('sets the intitial state of the draft', () => {
       cards = exampleCube.cards.slice();
       bots = ['mockbot'];
-      format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
-      methods.populateDraft(format, cards, bots, 8, { username: 'user', _id: 0 });
+      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
+      populateDraft(format, cards, bots, 8, { username: 'user', _id: 0 });
       expect(draft.pickNumber).toEqual(1);
       expect(draft.packNumber).toEqual(1);
       expect(draft).toHaveProperty('packs');
@@ -213,9 +213,9 @@ describe('populateDraft', () => {
       bots = ['mockbot'];
       seats = 8;
       // cube only contains 65 cards, so 8 * 1 * 15 = 120, should run out if multiples = false
-      format = methods.getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
+      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
       expect(() => {
-        methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
 
@@ -225,9 +225,9 @@ describe('populateDraft', () => {
       seats = 8;
       // cube only contains 65 cards, so 8 * 2 * 5 = 80, should run out if multiples = false
       exampleCube.draft_formats[0].packs = '[["*","*","*","*","*"],["*","*","*","*","*"]]';
-      format = methods.getDraftFormat({ id: 0 }, exampleCube);
+      format = getDraftFormat({ id: 0 }, exampleCube);
       expect(() => {
-        methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
 
@@ -237,15 +237,15 @@ describe('populateDraft', () => {
       seats = 6;
       // cube only contains 65 cards, so 6 * 5 = 30 > 13 blue cards, should run out if multiples = false
       exampleCube.draft_formats[0].packs = '[["c>=u","c>=u","c:u","c:u","c:u"],["*"]]';
-      format = methods.getDraftFormat({ id: 0 }, exampleCube);
+      format = getDraftFormat({ id: 0 }, exampleCube);
       format.multiples = true;
       expect(() => {
-        methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).not.toThrow(/not enough cards/);
       // note: because multiples true, cards not "used up" for next check
       format.multiples = false;
       expect(() => {
-        methods.populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
   });
