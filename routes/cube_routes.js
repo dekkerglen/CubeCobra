@@ -1600,7 +1600,7 @@ router.get('/draft/:id', async (req, res) => {
     for (const seat of draft.packs) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal name color_identity');
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
           names.add(card.details.name);
         }
       }
