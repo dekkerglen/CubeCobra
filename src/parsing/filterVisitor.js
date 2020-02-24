@@ -73,11 +73,44 @@ export function getFilterVisitorFromParser(parser) {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    integerValue(ctx) {
+      const value = parseFloat(getOriginalString(ctx), 10);
+      return defaultValueOperatorFor(value);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     dollarValue(ctx) {
       const originalString = getOriginalString(ctx).replace('$', '');
       const value = parseFloat(originalString, 10);
       return defaultValueOperatorFor(value);
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    finishValue(ctx) {
+      const originalString = getOriginalString(ctx);
+      return defaultValueOperatorFor(originalString);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    statusValue(ctx) {
+      const originalString = getOriginalString(ctx);
+      return defaultValueOperatorFor(originalString);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    isValue(ctx) {}
+
+    // eslint-disable-next-line class-methods-use-this
+    colorCombinationValue(ctx) {}
+
+    // eslint-disable-next-line class-methods-use-this
+    manaCostValue(ctx) {}
+
+    // eslint-disable-next-line class-methods-use-this
+    setValue(ctx) {}
+
+    // eslint-disable-next-line class-methods-use-this
+    stringValue(ctx) {}
   }
 
   return new FilterVisitor();
