@@ -159,7 +159,7 @@ function wrapAsyncApi(route) {
       return route(req, res, next);
     } catch (err) {
       req.logger.error(null, { error: err });
-      res.status(500).send({
+      return res.status(500).send({
         success: 'false',
         message: 'Internal server error',
       });
