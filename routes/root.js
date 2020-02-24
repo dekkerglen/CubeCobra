@@ -167,7 +167,7 @@ router.get('/dashboard', async (req, res) => {
           $in: cubeIds,
         },
       },
-      '_id name owner username date',
+      '_id seats username date',
     )
       .sort({
         date: -1,
@@ -194,7 +194,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -260,15 +260,15 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
 
 router.get('/landing', async (req, res) => {
-  const cubeq = Cube.countDocuments().exec();
-  const deckq = Deck.countDocuments().exec();
-  const userq = User.countDocuments().exec();
+  const cubeq = Cube.estimatedDocumentCount().exec();
+  const deckq = Deck.estimatedDocumentCount().exec();
+  const userq = User.estimatedDocumentCount().exec();
 
   const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
 

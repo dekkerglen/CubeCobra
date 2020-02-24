@@ -48,6 +48,7 @@
     "node-fetch": "^2.6.0",
     "node-schedule": "^1.3.2",
     "nodemailer": "^6.3.1",
+    "on-finished": "^2.3.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "prop-types": "^15.7.2",
@@ -70,7 +71,11 @@
     "serialize-javascript": "^2.1.2",
     "serve-favicon": "^2.5.0",
     "shuffle-seed": "^1.1.6",
+    "tmp": "^0.1.0",
+    "uuid": "^3.4.0",
     "website-scraper": "^4.0.1",
+    "winston": "git://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
+    "winston-loggly-bulk": "^3.0.1",
     "zlib": "^1.0.5"
   },
   "devDependencies": {

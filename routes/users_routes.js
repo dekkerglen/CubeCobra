@@ -60,7 +60,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     return res.redirect(notification.url);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -79,7 +79,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
       success: 'true',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -114,7 +114,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -138,7 +138,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
     });
@@ -162,7 +162,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
 
         passwordReset.save((err2) => {
           if (err2) {
-            console.error(err2);
+            req.logger.error(err2);
           } else {
             // Use Smtp Protocol to send Email
             const smtpTransport = mailer.createTransport({
@@ -187,7 +187,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
 
             smtpTransport.sendMail(mail, (err3) => {
               if (err3) {
-                console.error(err3);
+                req.logger.error(err3);
               }
 
               smtpTransport.close();
@@ -241,7 +241,7 @@ router.post(
               },
               (err3, user) => {
                 if (err3) {
-                  console.error('Password reset find user error:', err3);
+                  req.logger.error('Password reset find user error:', err3);
                   res.sendStatus(500);
                   return;
                 }
@@ -257,23 +257,23 @@ router.post(
                 }
                 bcrypt.genSalt(10, (err4, salt) => {
                   if (err4) {
-                    console.error('Password reset genSalt error:', err4);
+                    req.logger.error('Password reset genSalt error:', err4);
                     res.sendStatus(500);
                     return;
                   }
                   bcrypt.hash(req.body.password2, salt, (err5, hash) => {
                     if (err5) {
-                      console.error('Password reset hashing error:', err5);
+                      req.logger.error('Password reset hashing error:', err5);
                       res.sendStatus(500);
                     } else {
                       user.password = hash;
                       user.save((err6) => {
                         if (err6) {
-                          console.error('Password reset user save error:', err6);
+                          req.logger.error('Password reset user save error:', err6);
                           return res.sendStatus(500);
                         }
 
-                        req.flash('success', 'Password updated succesfully');
+                        req.flash('success', 'Password updated successfully');
                         return res.redirect('/user/login');
                       });
                     }
@@ -357,13 +357,13 @@ router.post(
                   bcrypt.genSalt(10, (err3, salt) => {
                     bcrypt.hash(newUser.password, salt, (err4, hash) => {
                       if (err4) {
-                        console.error(err4);
+                        req.logger.error(err4);
                       } else {
                         newUser.password = hash;
                         newUser.confirmed = 'false';
                         newUser.save((err5) => {
                           if (err5) {
-                            console.error(err5);
+                            req.logger.error(err5);
                           } else {
                             // Use Smtp Protocol to send Email
                             const smtpTransport = mailer.createTransport({
@@ -386,14 +386,14 @@ router.post(
 
                             smtpTransport.sendMail(mail, (error) => {
                               if (error) {
-                                console.error(error);
+                                req.logger.error(error);
                               }
 
                               smtpTransport.close();
                             });
 
                             // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                            req.flash('success', 'Account succesfully created. You are now able to login.');
+                            req.flash('success', 'Account successfully created. You are now able to login.');
                             res.redirect('/user/login');
                           }
                         });
@@ -523,7 +523,7 @@ router.get('/view/:id', async (req, res) => {
       loginCallback: `/user/view/${req.params.id}`,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -538,7 +538,7 @@ router.get('/notifications', ensureAuth, async (req, res) => {
       notifications: req.user.old_notifications,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -597,7 +597,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -662,17 +662,17 @@ router.post(
             return bcrypt.genSalt(10, (err3, salt) => {
               bcrypt.hash(req.body.password2, salt, (err4, hash) => {
                 if (err4) {
-                  console.error(err4);
+                  req.logger.error(err4);
                 } else {
                   user.password = hash;
                   user.save((err5) => {
                     if (err5) {
-                      console.error(err5);
+                      req.logger.error(err5);
                       req.flash('danger', 'Error saving user.');
                       return res.redirect('/user/account?nav=password');
                     }
 
-                    req.flash('success', 'Password updated succesfully');
+                    req.flash('success', 'Password updated successfully');
                     return res.redirect('/user/account?nav=password');
                   });
                 }
@@ -728,7 +728,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     req.flash('success', 'User information updated.');
     return res.redirect('/user/account');
   } catch (err) {
-    return util.handleRouteError(res, req, err, '/user/account');
+    return util.handleRouteError(req, res, err, '/user/account');
   }
 });
 
@@ -745,7 +745,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
         req.user.email = req.body.email;
         req.user.save((err2) => {
           if (err2) {
-            console.error(err2);
+            req.logger.error(err2);
             req.flash('danger', 'Error saving user.');
             res.redirect('/user/account');
           } else {
@@ -787,7 +787,7 @@ router.get('/social', ensureAuth, async (req, res) => {
       loginCallback: '/user/social',
     });
   } catch (err) {
-    util.handleRouteError(res, req, err, '/');
+    util.handleRouteError(req, res, err, '/');
   }
 });
 

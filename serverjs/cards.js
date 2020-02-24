@@ -1,4 +1,5 @@
 const fs = require('fs');
+const winston = require('winston');
 const util = require('./util.js');
 const cardutil = require('../dist/utils/Card.js');
 
@@ -56,7 +57,7 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    console.log(`Could not find card from id: ${id}`);
+    winston.error(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
@@ -76,7 +77,7 @@ function getCardDetails(card) {
     card.details = details;
     return details;
   }
-  console.log(`Could not find card details: ${card.cardID}`);
+  winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
   return getPlaceholderCard(card.cardID);
 }
 
@@ -87,10 +88,9 @@ function loadJSONFile(filename, attribute) {
         try {
           data[attribute] = JSON.parse(contents);
         } catch (e) {
-          console.log('Error parsing json from ', filename, ' : ', e);
+          winston.error(`Error parsing json from ${filename}.`, { error: e });
           err = e;
         }
-        console.log(`${attribute} loaded`);
       }
       if (err) {
         reject(err);
@@ -103,12 +103,13 @@ function loadJSONFile(filename, attribute) {
 
 function registerFileWatcher(filename, attribute) {
   fs.watchFile(filename, () => {
-    console.log(`File Changed: ${filename}`);
+    winston.info(`File Changed: ${filename}`);
     loadJSONFile(filename, attribute);
   });
 }
 
 function initializeCardDb(dataRoot, skipWatchers) {
+  winston.info('Loading carddb...');
   if (dataRoot === undefined) {
     dataRoot = 'private';
   }
@@ -120,7 +121,7 @@ function initializeCardDb(dataRoot, skipWatchers) {
       registerFileWatcher(filepath, attribute);
     }
   }
-  return Promise.all(promises);
+  return Promise.all(promises).then(() => winston.info('Finished loading carddb.'));
 }
 
 function unloadCardDb() {
@@ -168,7 +169,7 @@ function getMostReasonable(cardName, printing = 'recent') {
 function getMostReasonableById(id, printing = 'recent') {
   const card = cardFromId(id);
   if (card.error) {
-    console.log('Error finding most reasonable for id:', id);
+    winston.info(`Error finding most reasonable for id ${id}`);
     return null;
   }
   return getMostReasonable(card.name, printing);

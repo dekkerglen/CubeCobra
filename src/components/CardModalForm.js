@@ -111,7 +111,10 @@ const CardModalForm = ({ children, ...props }) => {
           const newCard = {
             ...card,
             ...updated,
-            details: cardJson.card,
+            details: {
+              ...card.details,
+              ...cardJson.card,
+            },
           };
           updateCubeCard(card.index, newCard);
           setIsOpen(false);
@@ -186,7 +189,6 @@ const CardModalForm = ({ children, ...props }) => {
       image_flip: details.image_flip,
       price: details.price,
       price_foil: details.price_foil,
-      elo: details.elo,
     },
   };
   return (
