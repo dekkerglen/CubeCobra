@@ -1625,7 +1625,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(draft.cube)).lean();
+    const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2305,7 +2305,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid);
-    const cube = await Cube.findOne(build_id_query(draft.cube));
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
     const deck = new Deck();
     deck.cube = draft.cube;
