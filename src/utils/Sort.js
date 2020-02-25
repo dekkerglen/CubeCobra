@@ -727,3 +727,16 @@ export function countGroup(group) {
   }
   return group.length;
 }
+
+export function downloadSort(cards) {
+  var exportCards = [];
+  cards = sortDeep(cards, 'Color Category', 'CMC');
+  cards.forEach((colorGroup) => {
+    colorGroup[1].forEach((cmc) => {
+      cmc[1].forEach((card) => {
+        exportCards.push(card);
+      });
+    });
+  });
+  return exportCards;
+}

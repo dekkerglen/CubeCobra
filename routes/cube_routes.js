@@ -36,6 +36,7 @@ const {
 } = require('../serverjs/cubefn.js');
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
+const sortutil = require('../dist/utils/Sort.js')
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -1478,11 +1479,18 @@ function writeCard(req, res, card, maybe) {
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    for (const card of cube.cards) {
+      const { name } = carddb.cardFromId(card.cardID);
+      card.details = {};
+      card.details.name = name;
+    }
+    cube.cards = sortutil.downloadSort(cube.cards);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
+
     for (const card of cube.cards) {
       writeCard(req, res, card, false);
     }
