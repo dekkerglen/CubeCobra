@@ -8,8 +8,9 @@ import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
+import DeckPicksModal from 'components/DeckPicksModal';
 
-const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
+const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
   const [seatIndex, setSeatIndex] = useState(0);
   const handleChangeSeat = (event) => {
     setSeatIndex(event.target.value);
@@ -24,7 +25,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
     [isOpen],
   );
 
-  console.log(deck);
+  console.log(draft);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
@@ -36,7 +37,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
             </Label>
             <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
               {deck.seats.map((seat, index) => (
-                <option key={seat.userid || seat.bot} value={index}>
+                <option key={/* eslint-disable-line react/no-array-index-key */ index} value={index}>
                   {seat.username ? seat.username : seat.name}
                 </option>
               ))}
@@ -50,6 +51,11 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid }) => {
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                 </NavItem>
               )}
+              {(deck.seats[seatIndex].pickorder && deck.seats[seatIndex].pickorder.length > 0) &&
+              <NavItem>
+                <DeckPicksModal deck={deck} seatIndex={seatIndex} draft={draft}/>
+              </NavItem>
+              }
               <NavItem>
                 <NavLink href={`/cube/redraft/${deck._id}`}>Redraft</NavLink>
               </NavItem>

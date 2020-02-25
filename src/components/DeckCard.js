@@ -160,12 +160,16 @@ DeckCard.propTypes = {
     sideboard: PropTypes.array.isRequired,
     username: PropTypes.string.isRequired,
     userid: PropTypes.string.isRequired,
-    bot: PropTypes.array.isRequired,
+    bot: PropTypes.array,
     name: PropTypes.string.isRequired,
   }).isRequired,
-  userid: PropTypes.string.isRequired,
+  userid: PropTypes.string,
   deckid: PropTypes.string.isRequired,
   comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
+DeckCard.defaultProps = {
+  userid: null,
 };
 
 export default DeckCard;
