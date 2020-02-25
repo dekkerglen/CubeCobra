@@ -730,7 +730,7 @@ export function countGroup(group) {
 
 export function downloadSort(cards) {
   var exportCards = [];
-  cards = sortDeep(cards, 'Color Category', 'CMC');
+  cards = sortDeep(cards, 'Color', 'CMC');
   cards.forEach((colorGroup) => {
     colorGroup[1].forEach((cmc) => {
       cmc[1].forEach((card) => {
