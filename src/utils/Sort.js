@@ -731,9 +731,9 @@ export function countGroup(group) {
 export function downloadSort(cards) {
   var exportCards = [];
   cards = sortDeep(cards, 'Color', 'CMC');
-  cards.forEach((colorGroup) => {
-    colorGroup[1].forEach((cmc) => {
-      cmc[1].forEach((card) => {
+  cards.forEach((firstGroup) => {
+    firstGroup[1].forEach((secondGroup) => {
+      secondGroup[1].forEach((card) => {
         exportCards.push(card);
       });
     });
