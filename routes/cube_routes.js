@@ -1480,7 +1480,7 @@ router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
     for (const card of cube.cards) {
-      var details = carddb.cardFromId(card.cardID);
+      const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
     cube.cards = sortutil.sortForCSVDownload(cube.cards);
