@@ -99,8 +99,6 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
     row.splice(startCut, row.length - startCut);
   }
 
-  console.log(view);
-
   return (
     <Card>
       <CardHeader>
