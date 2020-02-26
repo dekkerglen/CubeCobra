@@ -341,11 +341,11 @@ class FilterCollapse extends Component {
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     const tokenized = tokenize(filterInput.trim());
     FilterParser.input = tokenized;
-    const parsed = FilterParser.filter();
+    const parsed = FilterParser.parse();
     console.log('Parsed: ', parsed);
     if (parsed) {
       const visitor = getVisitorForParser(FilterParser);
-      const newFilters = visitor.filter(parsed);
+      const newFilters = visitor.parse(parsed);
       console.log(
         'Matches: ',
         newFilters({ cmc: 3.5, power: 2, toughness: 1, details: { price: 0.44, foil_price: 4.96 }, price: 4.96 }),

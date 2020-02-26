@@ -65,18 +65,17 @@ export function getFilterParser() {
     return new Rule({
       name: `${sanitizedField}Condition`,
       definition: [
-        new Option({ definition: [...consumeWord('-')], name: '$negation' }),
         new Alternation({
           definition: [new Flat({ definition: consumeOneOf(abbrvs), name: '$field' })],
-          name: 'field',
+          name: '$fieldWrapper',
         }),
         new Alternation({
           definition: [new Flat({ definition: consumeOneOf(operators), name: '$operator' })],
-          name: 'operator',
+          name: '$operatorWrapper',
         }),
         new Alternation({
           definition: [new Flat({ definition: [new NonTerminal({ nonTerminalName: valueType })], name: '$value' })],
-          name: 'value',
+          name: '$valueWrapper',
         }),
       ],
     });
@@ -120,7 +119,7 @@ export function getFilterParser() {
   rules.push(
     new Rule({
       name: 'stringValue',
-      definition: consumeRegex(/[^"'\s][^\s]*|"([^"\\]|\\['n"])*"|'([^'\\]|\\['n"])*'/),
+      definition: consumeRegex(/[^"'\s]+|"([^"\\]|\\['n"])*"|'([^'\\]|\\['n"])*'/),
     }),
   );
   // alphanumeric sequence
@@ -130,6 +129,36 @@ export function getFilterParser() {
       definition: [new RepetitionMandatory({ definition: consumeOneOf('abcdefghijklmnopqrstuvwxyz') })],
     }),
   );
+  rules.push(
+    new Rule({
+      name: 'colorSymbols',
+      definition: [new RepetitionMandatory({ definition: consumeOneOf('wubrgc') })],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'colorCombinationNames1',
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(0, 8)) })],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'colorCombinationNames2',
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(8, 16)) })],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'colorCombinationNames3',
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(16, 24)) })],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'colorCombinationNames4',
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(24)) })],
+    }),
+  );
   // repetition of color letters or a color combination as defined in COLOR_COMBINATIONS.
   rules.push(
     new Rule({
@@ -137,9 +166,14 @@ export function getFilterParser() {
       definition: [
         new Alternation({
           definition: [
-            new RepetitionMandatory({ definition: consumeOneOf('wubrgc') }),
-            new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS)) }),
+            new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorSymbols' })] }),
+            new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames1' })] }),
+            new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames2' })] }),
+            new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames3' })] }),
+            new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames4' })] }),
           ],
+          // Some color combination names have a prefix that is a valid color combination
+          ignoreAmbiguities: true,
         }),
       ],
     }),
@@ -157,8 +191,17 @@ export function getFilterParser() {
   rules.push(createCondition('tags', ['tag'], [':'], 'stringValue'));
   rules.push(createCondition('finish', ['fin', 'finish'], [':', '='], 'finishValue'));
   rules.push(createCondition('price', ['p', 'price'], ALL_OPERATORS, 'dollarValue'));
-  rules.push(createCondition('details.price', ['np', 'pn', 'normal', 'normalprice'], ALL_OPERATORS, 'dollarValue'));
-  rules.push(createCondition('details.foil_price', ['fp', 'pf', 'foil', 'foilprice'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(
+    createCondition(
+      'details.price',
+      ['np', 'pn', 'normal', 'normalprice', 'pricenormal'],
+      ALL_OPERATORS,
+      'dollarValue',
+    ),
+  );
+  rules.push(
+    createCondition('details.foil_price', ['fp', 'pf', 'foil', 'pricefoil', 'foilprice'], ALL_OPERATORS, 'dollarValue'),
+  );
   rules.push(createCondition('status', ['stat', 'status'], ['=', ':'], 'statusValue'));
   rules.push(createCondition('details.rarity', ['r', 'rar', 'rarity'], ALL_OPERATORS, 'rarityValue'));
   rules.push(createCondition('details.loyalty', ['l', 'loy', 'loyal', 'loyalty'], ALL_OPERATORS, 'integerValue'));
@@ -168,11 +211,29 @@ export function getFilterParser() {
   rules.push(createCondition('details.picks', ['picks'], ALL_OPERATORS, 'integerValue'));
   rules.push(createCondition('details.cubes', ['cubes'], ALL_OPERATORS, 'integerValue'));
 
-  // One of the above defined conditions.
+  // One of the above defined conditions or a nested filter
   rules.push(
     new Rule({
-      name: 'condition',
-      definition: [new Alternation({ definition: conditions.map((c) => new Flat({ definition: [c] })) })],
+      name: 'clause',
+      definition: [
+        new Option({ definition: consumeWord('-'), name: '$negation' }),
+        new Alternation({
+          definition: [
+            new Flat({
+              definition: [...consumeWord('('), new NonTerminal({ nonTerminalName: 'filter' }), ...consumeWord(')')],
+            }),
+            new Flat({
+              definition: [
+                new Alternation({
+                  definition: conditions.map((c) => new Flat({ definition: [c] })),
+                  name: '$conditionWrapper',
+                }),
+              ],
+              name: '$condition',
+            }),
+          ],
+        }),
+      ],
     }),
   );
   rules.push(
@@ -183,29 +244,53 @@ export function getFilterParser() {
         // Assumes string is trimmed at ends.
         new Option({
           definition: [
-            new NonTerminal({ nonTerminalName: 'condition' }),
-            new Repetition({ definition: [...consumeRegex(/\s+/), new NonTerminal({ nonTerminalName: 'condition' })] }),
+            new NonTerminal({ nonTerminalName: 'clause' }),
+            new Repetition({
+              definition: [
+                ...consumeRegex(/\s+/),
+                new Option({
+                  definition: [
+                    new Alternation({
+                      definition: [new Flat({ definition: consumeOneOf(['and', 'or']), name: '$connector' })],
+                      name: '$connectorWrapper',
+                    }),
+                    ...consumeRegex(/\s+/),
+                  ],
+                }),
+                new NonTerminal({ nonTerminalName: 'clause' }),
+              ],
+            }),
           ],
         }),
         // Guarantee we consume the whole string.
-        new Terminal({ terminalType: EOF }),
       ],
+    }),
+  );
+  rules.push(
+    new Rule({
+      name: 'parse',
+      definition: [new NonTerminal({ nonTerminalName: 'filter' }), new Terminal({ terminalType: EOF })],
     }),
   );
 
   assignOccurrenceIndices({ rules });
   resolveGrammar({ rules });
-  validateGrammar({
+  const errors = validateGrammar({
     rules,
+    maxLookahead: 7,
     tokenTypes: Object.values(TOKEN_TYPES),
     grammarName: 'FilterParser',
   });
+
+  if (errors && errors.length > 0) {
+    throw new Error(errors.join('\n'));
+  }
 
   return generateParserFactory({
     name: 'FilterParser',
     rules,
     tokenVocabulary: Object.values(TOKEN_TYPES),
-  })(Object.values(TOKEN_TYPES), { skipValidations: true });
+  })({ dynamicTokensEnabled: true, maxLookahead: 7, skipValidations: true });
 }
 
 const FilterParser = getFilterParser();

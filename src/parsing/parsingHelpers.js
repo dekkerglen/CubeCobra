@@ -28,7 +28,7 @@ export function getOriginalString(ctx) {
 const CATEGORIES = [];
 export const CATEGORY_PREFIX = 'cat_';
 
-function categoryToString(category) {
+function nameForCategory(category) {
   const sorted = [...category].sort(
     (a, b) => (a.from === undefined ? a : a.from) - (b.from === undefined ? b : b.from),
   );
@@ -51,9 +51,9 @@ function findCategories(charCode) {
       }
     }
     if (matches) {
-      const name = categoryToString(category);
+      const name = nameForCategory(category);
       if (TOKEN_TYPES[name]) {
-        categories.push(TOKEN_TYPES(name));
+        categories.push(TOKEN_TYPES[name]);
       }
     }
   }
@@ -66,6 +66,7 @@ function getTokenType(c) {
   if (!TOKEN_TYPES[c]) {
     const charCode = c.charCodeAt();
     const categories = findCategories(charCode);
+    // const name = `${TOKEN_PREFIX}${charCode >= 97 && charCode <= 122 ? c : charCode}`;
     const name = `${TOKEN_PREFIX}${charCode}`;
     if ('{}()[]?>*+-\\^$|'.includes(c)) {
       TOKEN_TYPES[c] = createToken({ name, pattern: new RegExp(`\\${c}`), label: c, categories });
@@ -76,18 +77,19 @@ function getTokenType(c) {
   return TOKEN_TYPES[c];
 }
 
-export function getCategory(ranges) {
-  const name = categoryToString(ranges);
+export function categoryFor(ranges) {
+  const name = nameForCategory(ranges);
   if (!TOKEN_TYPES[name]) {
     CATEGORIES.push(ranges);
     TOKEN_TYPES[name] = createToken({ name, pattern: Lexer.IGNORE });
     for (const [tokenName, tokenType] of Object.entries(TOKEN_TYPES)) {
-      if (tokenType.startsWith(TOKEN_PREFIX)) {
-        const categories = findCategories(String.fromCharCode(tokenName.substring(TOKEN_PREFIX.length)));
+      if (tokenType.name.startsWith(TOKEN_PREFIX)) {
+        const categories = findCategories(tokenName.charCodeAt());
         tokenType.CATEGORIES = categories;
       }
     }
   }
+  return TOKEN_TYPES[name];
 }
 
 export function tokenize(input) {
@@ -127,7 +129,9 @@ export function consumeOneOf(words) {
         .map((c) => new Flat({ definition: consumeTrie(currentLevel[c], c === 'EndWord' ? '' : c) })),
     });
     if (currentLevel.EndWord) {
-      return [...consumeWord(word), new Option({ definition: [alternation] })];
+      const copy = { ...currentLevel };
+      delete copy.EndWord;
+      return [...consumeWord(word), new Option({ definition: consumeTrie(copy, '') })];
     }
     return [...consumeWord(word), alternation];
   };
@@ -177,7 +181,7 @@ class RegexpVisitor extends BaseRegExpVisitor {
   // eslint-disable-next-line class-methods-use-this
   visitSet(node) {
     if (node.complement) {
-      const tokenType = getCategory(node.value);
+      const tokenType = categoryFor(node.value);
       return handleQuantifier([new Terminal({ terminalType: tokenType })]);
     }
     const charsInRanges = new Set();
@@ -216,7 +220,7 @@ export default {
   consumeWord,
   consumeOneOf,
   consumeRegex,
-  getCategory,
+  categoryFor,
   getOriginalString,
   getTokenType,
   tokenize,
