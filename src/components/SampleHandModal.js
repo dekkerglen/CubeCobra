@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 
 import FoilCardImage from 'components/FoilCardImage';
+import PropTypes from 'prop-types';
 import { encodeName } from 'utils/Card';
 import { arrayShuffle } from 'utils/Util';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button, Col, Row } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader, Button, Col, Row, NavLink } from 'reactstrap';
 
 class SampleHandModal extends Component {
   constructor(props) {
@@ -71,9 +72,9 @@ class SampleHandModal extends Component {
 
     return (
       <>
-        <a className="nav-link clickable" onClick={this.open}>
+        <NavLink className="nav-link" href="#" onClick={this.open}>
           Sample Hand
-        </a>
+        </NavLink>
 
         <Modal size="lg" isOpen={isOpen} toggle={this.close}>
           <ModalHeader toggle={this.close}>Sample Hand</ModalHeader>
@@ -104,5 +105,25 @@ class SampleHandModal extends Component {
     );
   }
 }
+
+SampleHandModal.propTypes = {
+  deck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    seats: PropTypes.arrayOf(
+      PropTypes.shape({
+        description: PropTypes.string.isRequired,
+        deck: PropTypes.array.isRequired,
+        sideboard: PropTypes.array.isRequired,
+        username: PropTypes.string.isRequired,
+        userid: PropTypes.string,
+        bot: PropTypes.array,
+        name: PropTypes.string.isRequired,
+        pickorder: PropTypes.array.isRequired,
+      }),
+    ).isRequired,
+    cube: PropTypes.string.isRequired,
+    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+};
 
 export default SampleHandModal;
