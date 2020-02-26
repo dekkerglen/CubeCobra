@@ -51,8 +51,8 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={view} onChange={handleChangeView}>
-              <option value={'deck'}>{'Deck View'}</option>
-              <option value={'picks'}>{'Pick by Pick Breakdown'}</option>
+              <option value="deck">'Deck View'</option>
+              <option value="picks">Pick by Pick Breakdown</option>
             </Input>
           </div>
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -113,6 +113,7 @@ CubeDeckPage.propTypes = {
   }).isRequired,
   canEdit: PropTypes.bool,
   userid: PropTypes.string,
+  draft: PropTypes.shape({}).isRequired,
 };
 
 CubeDeckPage.defaultProps = {

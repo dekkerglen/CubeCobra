@@ -113,7 +113,7 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
           )}
         </CardTitle>
       </CardHeader>
-      {view == 'picks' ? (
+      {view === 'picks' ? (
         <CardBody>
           <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
         </CardBody>
@@ -177,10 +177,30 @@ DeckCard.propTypes = {
   userid: PropTypes.string,
   deckid: PropTypes.string.isRequired,
   comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  view: PropTypes.string,
+  draft: PropTypes.shape({}).isRequired,
+  deck: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    seats: PropTypes.arrayOf(
+      PropTypes.shape({
+        description: PropTypes.string.isRequired,
+        deck: PropTypes.array.isRequired,
+        sideboard: PropTypes.array.isRequired,
+        username: PropTypes.string.isRequired,
+        userid: PropTypes.string,
+        bot: PropTypes.array,
+        name: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    cube: PropTypes.string.isRequired,
+    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  seatIndex: propTypes.number.isRequired,
 };
 
 DeckCard.defaultProps = {
   userid: null,
+  view: 'deck',
 };
 
 export default DeckCard;
