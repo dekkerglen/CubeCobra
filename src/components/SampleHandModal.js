@@ -43,6 +43,7 @@ class SampleHandModal extends Component {
 
   draw() {
     const { hand, pool } = this.state;
+    const newPool = [...pool];
     if (pool.length > 0) {
       hand.push(pool.splice(0, 1)[0]);
 
