@@ -35,8 +35,8 @@ class DecksPickBreakdown extends Component {
 
   render() {
     const { index } = this.state;
-    const seat = this.props.deck.seats[this.props.seatIndex];
     const { draft, seatIndex, deck } = this.props;
+    const seat = deck.seats[seatIndex];
 
     const cardsInPack = [];
 
@@ -107,7 +107,7 @@ class DecksPickBreakdown extends Component {
           <h4>{`Pack ${pack + 1}: Pick ${picks + 1}`}</h4>
           <Row noGutters>
             {cardsInPack.map((card, cardindex) => (
-              <Col /* eslint-disable-line react/no-array-index-key */ key={cardindex} xs={4} sm={2}>
+              <Col key={/* eslint-disable-line react/no-array-index-key */ cardindex} xs={4} sm={2}>
                 <a href={`/tool/card/${encodeName(card.details.name)}`}>
                   <FoilCardImage autocard data-in-modal card={card} className="clickable" />
                 </a>
