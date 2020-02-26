@@ -2630,6 +2630,8 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const draft = await Draft.findById(deck.draft).lean();
+
     const drafter = {
       name: 'Anonymous',
       id: null,
@@ -2660,6 +2662,7 @@ router.get('/deck/:id', async (req, res) => {
     const reactProps = {
       cube,
       deck,
+      draft,
       canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
       userid: req.user ? req.user.id : null,
     };
