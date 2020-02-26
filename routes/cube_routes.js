@@ -36,6 +36,7 @@ const {
 } = require('../serverjs/cubefn.js');
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
+const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -1478,11 +1479,17 @@ function writeCard(req, res, card, maybe) {
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    for (const card of cube.cards) {
+      const details = carddb.cardFromId(card.cardID);
+      card.details = details;
+    }
+    cube.cards = sortutil.sortForCSVDownload(cube.cards);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
+
     for (const card of cube.cards) {
       writeCard(req, res, card, false);
     }
@@ -2621,6 +2628,8 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const draft = await Draft.findById(deck.draft).lean();
+
     const drafter = {
       name: 'Anonymous',
       id: null,
@@ -2651,6 +2660,7 @@ router.get('/deck/:id', async (req, res) => {
     const reactProps = {
       cube,
       deck,
+      draft,
       canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
       userid: req.user ? req.user.id : null,
     };
