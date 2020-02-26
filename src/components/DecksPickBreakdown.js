@@ -4,11 +4,11 @@ import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import withAutocard from 'components/WithAutocard';
 import PropTypes from 'prop-types';
-import FoilCardImage from './FoilCardImage';
-
-const AutocardItem = withAutocard(ListGroupItem);
+import FoilCardImage from 'components/FoilCardImage';
 import { encodeName } from 'utils/Card';
 import { getCardColorClass } from 'components/TagContext';
+
+const AutocardItem = withAutocard(ListGroupItem);
 
 class DecksPickBreakdown extends Component {
   constructor(props) {
@@ -22,15 +22,15 @@ class DecksPickBreakdown extends Component {
     };
   }
 
-  click(event) {
-    this.setPickIndex(event.target.getAttribute('index'));
-  }
-
   setPickIndex(index) {
     console.log(`Setting index to ${index}`);
     this.setState({
-      index: index,
+      index,
     });
+  }
+
+  click(event) {
+    this.setPickIndex(event.target.getAttribute('index'));
   }
 
   render() {
@@ -42,7 +42,7 @@ class DecksPickBreakdown extends Component {
 
     let start = 0;
     let end = draft.initial_state[0][0].length;
-    let picks = parseInt(index);
+    let picks = parseInt(index, 10);
     let pack = 0;
     let current = seatIndex;
     const picksList = [];
