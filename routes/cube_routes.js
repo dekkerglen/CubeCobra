@@ -2629,7 +2629,7 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    let draft;
+    let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft).lean();
     }
