@@ -23,8 +23,10 @@ class SampleHandModal extends Component {
   }
 
   refresh() {
+    const { deck } = this.props;
+
     const pool = [];
-    for (const col of this.props.deck) {
+    for (const col of deck) {
       for (const card of col) {
         pool.push(card);
       }
@@ -39,7 +41,7 @@ class SampleHandModal extends Component {
   }
 
   draw() {
-    let { hand, pool } = this.state;
+    const { hand, pool } = this.state;
     if (pool.length > 0) {
       hand.push(pool.splice(0, 1)[0]);
 
@@ -65,11 +67,11 @@ class SampleHandModal extends Component {
   }
 
   render() {
-    const { isOpen, hand, pool } = this.state;
+    const { isOpen, hand } = this.state;
 
     return (
       <>
-        <a className="nav-link" href="#" onClick={this.open}>
+        <a className="nav-link clickable" onClick={this.open}>
           Sample Hand
         </a>
 
