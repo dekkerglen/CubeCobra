@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import withAutocard from 'components/WithAutocard';
+import PropTypes from 'prop-types';
 import FoilCardImage from './FoilCardImage';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -57,7 +58,7 @@ class DecksPickBreakdown extends Component {
 
     for (let i = start + picks; i < end; i += 1) {
       cardsInPack.push(deck.seats[current].pickorder[i]);
-      if (pack % 2 == 0) {
+      if (pack % 2 === 0) {
         current += 1;
         current %= draft.initial_state.length;
       } else {
@@ -120,7 +121,9 @@ class DecksPickBreakdown extends Component {
 }
 
 DecksPickBreakdown.propTypes = {
-  draft: PropTypes.shape({}).isRequired,
+  draft: PropTypes.shape({
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
+  }).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     seats: PropTypes.arrayOf(
@@ -132,6 +135,7 @@ DecksPickBreakdown.propTypes = {
         userid: PropTypes.string,
         bot: PropTypes.array,
         name: PropTypes.string.isRequired,
+        pickorder: PropTypes.array.isRequired,
       }),
     ).isRequired,
     cube: PropTypes.string.isRequired,
