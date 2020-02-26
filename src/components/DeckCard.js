@@ -168,7 +168,7 @@ DeckCard.propTypes = {
     deck: PropTypes.array.isRequired,
     sideboard: PropTypes.array.isRequired,
     username: PropTypes.string.isRequired,
-    userid: PropTypes.string.isRequired,
+    userid: PropTypes.string,
     bot: PropTypes.array,
     name: PropTypes.string.isRequired,
   }).isRequired,

@@ -80,9 +80,6 @@ class DecksPickBreakdown extends Component {
       }
     }
 
-    console.log(picksList);
-    console.log(index);
-
     return (
       <Row>
         <Col xs={12} sm={3}>
