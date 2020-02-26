@@ -728,15 +728,15 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function downloadSort(cards) {
+export function sortForCSVDownload(cards) {
   var exportCards = [];
   cards = sortDeep(cards, 'Color', 'CMC');
-  cards.forEach((firstGroup) => {
-    firstGroup[1].forEach((secondGroup) => {
-      secondGroup[1].forEach((card) => {
+  for (const firstGroup of cards) {
+    for (const secondGroup of firstGroup[1]) {
+      for (const card of secondGroup[1]) {
         exportCards.push(card);
-      });
-    });
-  });
+      }
+    }
+  }
   return exportCards;
 }
