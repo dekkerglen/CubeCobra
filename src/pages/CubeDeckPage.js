@@ -8,12 +8,17 @@ import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
-import DeckPicksModal from 'components/DeckPicksModal';
 
 const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
   const [seatIndex, setSeatIndex] = useState(0);
+  const [view, setView] = useState('deck');
+
   const handleChangeSeat = (event) => {
     setSeatIndex(event.target.value);
+  };
+
+  const handleChangeView = (event) => {
+    setView(event.target.value);
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -24,8 +29,6 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
     },
     [isOpen],
   );
-
-  console.log(draft);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
@@ -43,6 +46,15 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
               ))}
             </Input>
           </div>
+          <div className="view-style-select px-2">
+            <Label className="sr-only" for="viewSelect">
+              Cube View Style
+            </Label>
+            <Input type="select" id="viewSelect" value={view} onChange={handleChangeView}>
+              <option value={'deck'}>{'Deck View'}</option>
+              <option value={'picks'}>{'Pick by Pick Breakdown'}</option>
+            </Input>
+          </div>
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
           <Collapse isOpen={isOpen} navbar>
             <Nav navbar>
@@ -51,11 +63,6 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                 </NavItem>
               )}
-              {(deck.seats[seatIndex].pickorder && deck.seats[seatIndex].pickorder.length > 0) &&
-              <NavItem>
-                <DeckPicksModal deck={deck} seatIndex={seatIndex} draft={draft}/>
-              </NavItem>
-              }
               <NavItem>
                 <NavLink href={`/cube/redraft/${deck._id}`}>Redraft</NavLink>
               </NavItem>
@@ -69,7 +76,16 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
         <DynamicFlash />
         <Row className="mt-3">
           <Col>
-            <DeckCard seat={deck.seats[seatIndex]} comments={deck.comments} deckid={deck._id} userid={userid} />
+            <DeckCard
+              seat={deck.seats[seatIndex]}
+              comments={deck.comments}
+              deckid={deck._id}
+              userid={userid}
+              deck={deck}
+              seatIndex={seatIndex}
+              draft={draft}
+              view={view}
+            />
           </Col>
         </Row>
       </DisplayContextProvider>

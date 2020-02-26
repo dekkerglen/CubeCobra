@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'reactstrap';
 
 import FoilCardImage from 'components/FoilCardImage';
+import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
@@ -41,7 +42,7 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DeckCard = ({ seat, comments, deckid, userid }) => {
+const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view }) => {
   const [commentList, setCommentList] = useState(comments);
   const [childExpanded, setChildCollapse] = useState(false);
 
@@ -98,6 +99,8 @@ const DeckCard = ({ seat, comments, deckid, userid }) => {
     row.splice(startCut, row.length - startCut);
   }
 
+  console.log(view);
+
   return (
     <Card>
       <CardHeader>
@@ -110,20 +113,28 @@ const DeckCard = ({ seat, comments, deckid, userid }) => {
           )}
         </CardTitle>
       </CardHeader>
-      <Row className="mt-3">
-        <Col>
-          <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(seat.deck.flat().flat())} />
-        </Col>
-      </Row>
-      {stackedSideboard && stackedSideboard.length > 0 && (
-        <Row>
-          <Col>
-            <CardBody className="border-bottom">
-              <h4>Sideboard</h4>
-            </CardBody>
-            <DeckStacksStatic cards={stackedSideboard} title="Sideboard" />
-          </Col>
-        </Row>
+      {view == 'picks' ? (
+        <CardBody>
+          <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+        </CardBody>
+      ) : (
+        <>
+          <Row className="mt-3">
+            <Col>
+              <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(seat.deck.flat().flat())} />
+            </Col>
+          </Row>
+          {stackedSideboard && stackedSideboard.length > 0 && (
+            <Row>
+              <Col>
+                <CardBody className="border-bottom">
+                  <h4>Sideboard</h4>
+                </CardBody>
+                <DeckStacksStatic cards={stackedSideboard} title="Sideboard" />
+              </Col>
+            </Row>
+          )}
+        </>
       )}
       <CardBody>
         <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
