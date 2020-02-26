@@ -21,14 +21,14 @@ function pack() {
 
 function packPickNumber() {
   let picks = draft.seats[0].pickorder.length;
-  let pack = 0;
+  let packnum = 0;
 
-  while (draft.initial_state[0][pack] && picks >= draft.initial_state[0][pack].length) {
-    picks -= draft.initial_state[0][pack].length;
-    pack += 1;
+  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
+    picks -= draft.initial_state[0][packnum].length;
+    packnum += 1;
   }
 
-  return [pack + 1, picks + 1];
+  return [packnum + 1, picks + 1];
 }
 
 function arrangePicks(picks) {
