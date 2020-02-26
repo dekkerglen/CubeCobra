@@ -74,7 +74,6 @@ function binaryInsert(value, array, startVal, endVal) {
   }
 
   if (value < array[start]) {
-    //! !
     array.splice(start, 0, value);
     return;
   }
@@ -206,23 +205,23 @@ const exports = {
     let i = 0;
     let p = '';
     let s = true;
-    for (let l of text) {
-      if (l === '"') {
+    for (let character of text) {
+      if (character === '"') {
         s = !s;
         if (p === '"') {
           ret[i] += '"';
-          l = '-';
+          character = '-';
         } else if (p === '') {
-          l = '-';
+          character = '-';
         }
-      } else if (s && l === ',') {
+      } else if (s && character === ',') {
         // not sure what's going on here...
         // eslint-disable-next-line
         l = ret[++i] = '';
       } else {
-        ret[i] += l;
+        ret[i] += character;
       }
-      p = l;
+      p = character;
     }
     return ret;
   },
