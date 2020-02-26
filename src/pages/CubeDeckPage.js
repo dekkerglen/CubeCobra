@@ -40,7 +40,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
             </Label>
             <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
               {deck.seats.map((seat, index) => (
-                <option key={/* eslint-disable-line react/no-array-index-key */ index} value={index}>
+                <option key={`seat${index}`} value={index}>
                   {seat.username ? seat.username : seat.name}
                 </option>
               ))}
