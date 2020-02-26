@@ -676,3 +676,9 @@ img.mana-symbol {
 	vertical-align: top;
 	line-height: 0.9;	
 }
+
+.sevenCol {
+	width: calc(100% / 7); 
+	flex: calc(100% / 7) 0 0;
+	flex-grow: 0;
+}

@@ -37,6 +37,10 @@ class DecksPickBreakdown extends Component {
     const { draft, seatIndex, deck } = this.props;
     const seat = deck.seats[seatIndex];
 
+    if (!draft) {
+      return <h4>This deck does not have a related draft log.</h4>;
+    }
+
     const cardsInPack = [];
 
     let start = 0;
