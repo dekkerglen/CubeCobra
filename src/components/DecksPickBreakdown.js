@@ -23,7 +23,6 @@ class DecksPickBreakdown extends Component {
   }
 
   setPickIndex(index) {
-    console.log(`Setting index to ${index}`);
     this.setState({
       index,
     });
