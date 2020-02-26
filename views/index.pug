@@ -80,7 +80,7 @@ block content
 				.card-body
 					if decks.length > 0
 						each deck, i in decks
-							a(href='/cube/deck/'+deck._id) #{deck.name}
+							a(href='/cube/deck/'+deck._id) #{deck.seats[0].name}
 							br
 			br
 		.col-lg-6.col-md-6.col-sm-12.col-xs-12

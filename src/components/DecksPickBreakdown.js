@@ -80,6 +80,9 @@ class DecksPickBreakdown extends Component {
       }
     }
 
+    console.log(picksList);
+    console.log(index);
+
     return (
       <Row>
         <Col xs={12} sm={3}>
@@ -89,14 +92,18 @@ class DecksPickBreakdown extends Component {
               <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
               {list.map((card) => (
                 <AutocardItem
-                  key={card.listindex}
+                  key={card.index}
                   card={card}
                   className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
                   data-in-modal
                   onClick={this.click}
                   index={card.index}
                 >
-                  {card.index === index ? <strong>{card.details.name}</strong> : <>{card.details.name}</>}
+                  {parseInt(card.index, 10) === parseInt(index, 10) ? (
+                    <strong>{card.details.name}</strong>
+                  ) : (
+                    <>{card.details.name}</>
+                  )}
                 </AutocardItem>
               ))}
             </ListGroup>

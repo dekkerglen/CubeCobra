@@ -51,7 +51,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={view} onChange={handleChangeView}>
-              <option value="deck">'Deck View'</option>
+              <option value="deck">Deck View</option>
               <option value="picks">Pick by Pick Breakdown</option>
             </Input>
           </div>
