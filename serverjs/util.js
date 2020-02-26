@@ -217,7 +217,7 @@ const exports = {
       } else if (s && character === ',') {
         // not sure what's going on here...
         // eslint-disable-next-line
-        l = ret[++i] = '';
+        character = ret[++i] = '';
       } else {
         ret[i] += character;
       }
