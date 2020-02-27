@@ -118,8 +118,6 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     [saveForm],
   );
 
-  console.log(deck);
-
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
       <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
