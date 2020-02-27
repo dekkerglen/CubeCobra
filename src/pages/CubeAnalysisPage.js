@@ -27,11 +27,14 @@ import tokenGrid from 'analytics/tokenGrid';
 import typeBreakdown from 'analytics/typeBreakdown';
 import typeBreakdownCount from 'analytics/typeBreakdownCount';
 
+const ANALYTIC_NAV_QUERY = 'nav';
+const FORMAT_ID_QUERY = 'formatId';
+
 class CubeAnalysisPage extends Component {
   constructor(props) {
     super(props);
 
-    const { defaultFormatId, defaultNav } = this.props;
+    const { cube, defaultFormatId, defaultNav } = this.props;
 
     this.state = {
       data: { type: 'none' },
@@ -58,7 +61,7 @@ class CubeAnalysisPage extends Component {
       filter: [],
       cardsWithAsfan: null,
       filteredWithAsfan: null,
-      formatId: defaultFormatId || -1,
+      formatId: defaultFormatId || cube.defaultDraftFormat,
       nav: defaultNav || 'curve',
     };
     const { analytics, nav } = this.state;
@@ -78,10 +81,14 @@ class CubeAnalysisPage extends Component {
   componentDidMount() {
     this.updateAsfan();
 
-    const { nav } = this.state;
-    const newNav = Query.get('nav', nav);
+    const { nav, formatId } = this.state;
+    const newNav = Query.get(ANALYTIC_NAV_QUERY, nav);
     if (newNav !== nav) {
       this.handleNav(newNav);
+    }
+    const newFormatId = Query.get(FORMAT_ID_QUERY, formatId);
+    if (newFormatId !== formatId) {
+      this.setFormat(newFormatId);
     }
   }
 
@@ -90,10 +97,11 @@ class CubeAnalysisPage extends Component {
   }
 
   setFormat(formatId) {
-    if (formatId === -1) {
-      Query.del('formatId');
+    const { cube } = this.props;
+    if (formatId === cube.defaultDraftFormat) {
+      Query.del(FORMAT_ID_QUERY);
     } else {
-      Query.set('formatId', formatId);
+      Query.set(FORMAT_ID_QUERY, formatId);
     }
     this.setState({ formatId }, this.updateAsfan);
   }
@@ -136,10 +144,10 @@ class CubeAnalysisPage extends Component {
   handleNav(nav) {
     const { analytics, analyticsOrder } = this.state;
     if (nav === analyticsOrder[0] || !analytics[nav]) {
-      Query.del('nav');
+      Query.del(ANALYTIC_NAV_QUERY);
       [nav] = analyticsOrder;
     } else {
-      Query.set('nav', nav);
+      Query.set(ANALYTIC_NAV_QUERY, nav);
     }
     this.setState({ nav }, this.updateData);
   }
@@ -205,6 +213,7 @@ CubeAnalysisPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({})),
     draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    defaultDraftFormat: PropTypes.number,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultNav: PropTypes.string,

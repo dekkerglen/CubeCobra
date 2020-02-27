@@ -827,12 +827,11 @@ router.get('/playtest/:id', async (req, res) => {
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       decks,
       draftFormats,
-      defaultFormat: cube.defaultDraftFormat,
     };
 
     return res.render('cube/cube_playtest', {
       reactHTML: CubePlaytestPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Playtest`,

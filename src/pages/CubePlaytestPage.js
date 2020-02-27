@@ -112,7 +112,9 @@ const CustomDraftCard = ({
     <Card {...props}>
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
-          <CardTitleH5>{format.title} (custom draft)</CardTitleH5>
+          <CardTitleH5>
+            {format.title} (Custom Draft) {defaultDraftFormat === index && '(Default Format)'}
+          </CardTitleH5>
         </CardHeader>
         <CardBody>
           <div
@@ -175,7 +177,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
     <Card className="mb-3">
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
-          <CardTitleH5>Standard draft</CardTitleH5>
+          <CardTitleH5>Standard Draft</CardTitleH5>
         </CardHeader>
         <CardBody>
           <LabelRow htmlFor="packs" label="Number of Packs">
@@ -271,15 +273,13 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
-const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultFormat }) => {
+const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
-  const [defaultDraftFormat, setDefaultDraftFormat] = useState(
-    defaultFormat === undefined || defaultFormat === null ? -1 : defaultFormat,
-  );
+  const [defaultDraftFormat, setDefaultDraftFormat] = useState(cube.defaultDraftFormat ?? -1);
 
   const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
 
@@ -312,7 +312,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
         if (json.success !== 'true') throw Error();
 
         addAlert('success', 'Format successfully deleted.');
-        setFormats(formats.filter((format, index) => index !== formatIndex));
+        setFormats(formats.filter((_, index) => index !== formatIndex));
       } catch (err) {
         console.error(err);
         addAlert('danger', 'Failed to delete format.');
@@ -422,6 +422,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats, defaultF
 CubePlaytestPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object),
+    defaultDraftFormat: PropTypes.number,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
@@ -431,11 +432,6 @@ CubePlaytestPage.propTypes = {
       title: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  defaultFormat: PropTypes.number,
-};
-
-CubePlaytestPage.defaultProps = {
-  defaultFormat: null,
 };
 
 export default CubePlaytestPage;
