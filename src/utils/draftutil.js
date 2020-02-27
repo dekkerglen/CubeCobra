@@ -1,6 +1,6 @@
 'use strict';
 const seedrandom = require('seedrandom');
-const shuffleSeed = requires('shuffle-seed');
+const shuffleSeed = require('shuffle-seed');
 
 const Util = require('utils/Util.js');
 require('./Card.js');
