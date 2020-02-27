@@ -273,7 +273,7 @@ router.post(
                           return res.sendStatus(500);
                         }
 
-                        req.flash('success', 'Password updated succesfully');
+                        req.flash('success', 'Password updated successfully');
                         return res.redirect('/user/login');
                       });
                     }
@@ -393,7 +393,7 @@ router.post(
                             });
 
                             // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                            req.flash('success', 'Account succesfully created. You are now able to login.');
+                            req.flash('success', 'Account successfully created. You are now able to login.');
                             res.redirect('/user/login');
                           }
                         });
@@ -672,7 +672,7 @@ router.post(
                       return res.redirect('/user/account?nav=password');
                     }
 
-                    req.flash('success', 'Password updated succesfully');
+                    req.flash('success', 'Password updated successfully');
                     return res.redirect('/user/account?nav=password');
                   });
                 }

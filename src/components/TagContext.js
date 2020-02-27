@@ -14,7 +14,7 @@ export class TagContextProvider extends Component {
     super(props);
 
     this.state = {
-      tagColors: [...this.props.defaultTagColors],
+      tagColors: this.props.defaultTagColors ? [...this.props.defaultTagColors] : [],
       showTagColors: !!this.props.defaultShowTagColors,
       tags: [...(this.props.defaultTags || [])],
     };

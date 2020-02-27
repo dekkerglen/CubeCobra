@@ -6,7 +6,6 @@ import { Col, Nav, NavLink, Row } from 'reactstrap';
 import CubeLayout from 'layouts/CubeLayout';
 
 import Query from 'utils/Query';
-
 import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
 import Filter from 'utils/Filter';
 
