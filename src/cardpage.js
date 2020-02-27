@@ -2,20 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
-import {
-  Card,
-  CardHeader,
-  CardFooter,
-  Row,
-  Col,
-  CardBody,
-  Table,
-  Nav,
-  NavItem,
-  NavLink,
-  TabContent,
-  TabPane,
-} from 'reactstrap';
+import { Card, CardHeader, Row, Col, CardBody, Table, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import ImageFallback from 'components/ImageFallback';
 import ButtonLink from 'components/ButtonLink';
@@ -47,7 +34,18 @@ class CardPage extends Component {
     return (
       <Card>
         <CardHeader>
-          <h4>{card.name}</h4>
+          <h4>
+            {card.name}
+            <div className="float-right">
+              <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
+                <span className="d-none d-sm-inline">View on Scryfall</span>
+                <span className="d-sm-none">Scryfall</span>
+              </ButtonLink>
+              <ButtonLink className="mx-2" color="secondary" href={getTCGLink({ details: card })}>
+                Buy
+              </ButtonLink>
+            </div>
+          </h4>
         </CardHeader>
         <CardBody>
           <Row>
@@ -72,8 +70,7 @@ class CardPage extends Component {
             </Col>
             <Col className="breakdown" xs="12" sm="8">
               <p>
-                Played in
-                {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>
+                Played in {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span>{' '}
                 Cubes total.
               </p>
               <Row>
@@ -156,15 +153,6 @@ class CardPage extends Component {
             </Row>
           </TabPane>
         </TabContent>
-        <CardFooter>
-          <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
-            <span className="d-none d-sm-inline">View on Scryfall</span>
-            <span className="d-sm-none">Scryfall</span>
-          </ButtonLink>
-          <ButtonLink className="mx-2" color="secondary" href={getTCGLink({ details: card })}>
-            Buy
-          </ButtonLink>
-        </CardFooter>
       </Card>
     );
   }
@@ -201,13 +189,8 @@ CardPage.propTypes = {
   cubes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
-const data = JSON.parse(document.getElementById('data').value);
-const card = JSON.parse(document.getElementById('card').value);
-const prices = JSON.parse(document.getElementById('prices').value);
-const cubes = JSON.parse(document.getElementById('cubes').value);
-const related = JSON.parse(document.getElementById('related').value);
 const wrapper = document.getElementById('react-root');
-const element = <CardPage data={data} card={card} prices={prices} related={related} cubes={cubes} />;
+const element = <CardPage {...window.reactProps} />;
 if (wrapper) {
   ReactDOM.render(element, wrapper);
 }

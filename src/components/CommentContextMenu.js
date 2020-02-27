@@ -16,7 +16,6 @@ class BlogContextMenu extends React.Component {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen,
     });
-    updateBlog();
   }
 
   render() {

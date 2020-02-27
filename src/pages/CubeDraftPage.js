@@ -177,7 +177,6 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
     },
     [pack, picks, update],
   );
-
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
       <DisplayContextProvider>

@@ -119,7 +119,7 @@ router.post('/blogpost', ensureAuth, async (req, res) => {
       success: 'false',
       message: err,
     });
-    console.error(err);
+    req.logger.error(err);
   }
 });
 

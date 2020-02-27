@@ -1,14 +1,16 @@
-import seedrandom from 'seedrandom';
-import shuffleSeed from 'shuffle-seed';
+'use strict';
+const seedrandom = require('seedrandom');
+const shuffleSeed = requires('shuffle-seed');
 
-import { filterCards, operatorsRegex, parseTokens, tokenizeInput, verifyTokens, filterToString } from './Filter';
-import { arrayShuffle } from './Util';
+const Util = require('utils/Util.js');
+require('./Card.js');
+const Filter = require('utils/Filter.js');
 
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
-  return filterCards(cards, filter, true);
+  return Filter.filterCards(cards, filter, true);
 }
 
 function makeFilter(filterText) {
@@ -18,10 +20,10 @@ function makeFilter(filterText) {
 
   let tokens = [];
   let valid = false;
-  valid = tokenizeInput(filterText, tokens) && verifyTokens(tokens);
+  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
 
   // backwards compatibilty: treat as tag
-  if (!valid || !operatorsRegex.test(filterText)) {
+  if (!valid || !Filter.operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
@@ -29,13 +31,13 @@ function makeFilter(filterText) {
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
     tokens = [];
-    valid = tokenizeInput(tagfilterText, tokens) && verifyTokens(tokens);
+    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
   }
 
   if (!valid) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  return [parseTokens(tokens)];
+  return [Filter.parseTokens(tokens)];
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
@@ -107,7 +109,7 @@ function customDraft(cards, duplicates = false, seed = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -183,7 +185,7 @@ export function getDraftBots(params) {
     colors.push('R');
     colors.push('G');
   }
-  colors = arrayShuffle(colors);
+  colors = Util.arrayShuffle(colors);
   for (let i = 0; i < params.seats - 1; i++) {
     const colorcombo = [colors.pop(), colors.pop()];
     draftbots.push(colorcombo);
@@ -216,14 +218,14 @@ export function getDraftFormat(params, cube) {
 function createPacks(draft, format, seats, nextCardFn) {
   let ok = true;
   let messages = [];
-  draft.picks = [];
-  draft.packs = [];
+  draft.initial_state = [];
+
   for (let seat = 0; seat < seats; seat++) {
-    draft.picks.push([]);
-    draft.packs.push([]);
+    draft.initial_state.push([]);
+
     for (let packNum = 0; packNum < format.length; packNum++) {
-      draft.packs[seat].push([]);
-      const pack = [];
+      draft.initial_state[seat].push([]);
+      let pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
         const result = nextCardFn(format[packNum][cardNum]);
         if (result.messages && result.messages.length > 0) {
@@ -235,20 +237,16 @@ function createPacks(draft, format, seats, nextCardFn) {
           ok = false;
         }
       }
-      if (!format.custom) {
-        // Shuffle the cards in the pack.
-        draft.packs[seat][packNum] = arrayShuffle(pack);
-      } else {
-        // Knowing what slots cards come from can be important.
-        draft.packs[seat][packNum] = pack;
-      }
+      draft.initial_state[seat][packNum] = pack;
     }
   }
   return { ok, messages };
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(draft, format, cards, bots, seats, seed = false) {
+export function populateDraft(format, cards, bots, seats, user, seed = false) {
+  const draft = {};
+
   let nextCardFn = null;
 
   if (cards.length === 0) {
@@ -271,11 +269,37 @@ export function populateDraft(draft, format, cards, bots, seats, seed = false) {
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
-  // initial draft state
-  draft.initial_state = draft.packs.slice();
-  draft.pickNumber = 1;
-  draft.packNumber = 1;
-  draft.bots = bots;
+  draft.seats = [];
+  draft.unopenedPacks = [];
+
+  // deep clone packs
+  for (let i = 0; i < draft.initial_state.length; i++) {
+    draft.unopenedPacks.push([]);
+    for (let j = 0; j < draft.initial_state[i].length; j++) {
+      draft.unopenedPacks[i].push([]);
+      for (let k = 0; k < draft.initial_state[i][j].length; k++) {
+        draft.unopenedPacks[i][j].push(draft.initial_state[i][j][k]);
+      }
+    }
+  }
+
+  for (let i = 0; i < draft.initial_state.length; i += 1) {
+    const seat = {
+      bot: i == 0 ? null : bots[i - 1],
+      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1][0] + ', ' + bots[i - 1][1],
+      userid: i == 0 ? user._id : null,
+      drafted: [], //organized draft picks
+      pickorder: [],
+      packbacklog: [],
+    };
+
+    for (let j = 0; j < 16; j++) {
+      seat.drafted.push([]);
+    }
+
+    seat.packbacklog.push(draft.unopenedPacks[i].pop());
+    draft.seats.push(seat);
+  }
 
   return draft;
 }
@@ -304,7 +328,7 @@ export function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
-        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
@@ -314,12 +338,3 @@ export function checkFormat(format, cards) {
   };
   return createPacks({}, format, 1, checkFn);
 }
-
-export default {
-  calculateAsfans,
-  checkFormat,
-  getDraftBots,
-  getDraftFormat,
-  parseDraftFormat,
-  populateDraft,
-};

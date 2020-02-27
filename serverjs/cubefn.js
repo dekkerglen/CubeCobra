@@ -223,9 +223,13 @@ async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
   const result = {};
 
-  ratings.forEach(function(item, index) {
-    result[item.name] = round ? Math.round(item.elo) : item.elo;
-  });
+  for (const cardname of cardnames) {
+    result[cardname] = 1200; // default values
+  }
+
+  for (const rating of ratings) {
+    result[rating.name] = round ? Math.round(rating.elo) : rating.elo;
+  }
 
   return result;
 }
@@ -335,8 +339,7 @@ const methods = {
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = new Draft();
-    populateDraft(draft, format, cube.cards, 0, 1, seed);
+    populateDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
       pack: draft.packs[0][0].map((card) => card.details),
