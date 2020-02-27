@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
+import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 
-import AgeText from 'components/AgeText';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 
 const DeckPreview = ({ deck }) => {
@@ -26,7 +26,7 @@ const DeckPreview = ({ deck }) => {
         ) : (
           'Anonymous'
         )}{' '}
-        - <AgeText date={date} />
+        - <TimeAgo date={date} />
       </h6>
     </div>
   );
