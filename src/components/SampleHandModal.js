@@ -44,12 +44,12 @@ class SampleHandModal extends Component {
   draw() {
     const { hand, pool } = this.state;
     const newPool = [...pool];
-    if (pool.length > 0) {
-      hand.push(pool.splice(0, 1)[0]);
+    if (newPool.length > 0) {
+      hand.push(newPool.splice(0, 1)[0]);
 
       this.setState({
         hand,
-        pool,
+        newPool,
       });
     }
   }
@@ -82,7 +82,11 @@ class SampleHandModal extends Component {
           <ModalBody className="p-4">
             <Row>
               {hand.map((card, cardindex) => (
-                <Col key={/* eslint-disable-line react/no-array-index-key */ cardindex} xs={4} className="col-seventh p-1">
+                <Col
+                  key={/* eslint-disable-line react/no-array-index-key */ cardindex}
+                  xs={4}
+                  className="col-seventh p-1"
+                >
                   <a href={`/tool/card/${encodeName(card.details.name)}`}>
                     <FoilCardImage autocard data-in-modal card={card} className="clickable" />
                   </a>
