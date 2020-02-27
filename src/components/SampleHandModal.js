@@ -49,7 +49,7 @@ class SampleHandModal extends Component {
 
       this.setState({
         hand,
-        newPool,
+        pool: newPool,
       });
     }
   }
