@@ -90,12 +90,12 @@ class BlogPost extends React.Component {
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
           {post.changelist && post.html ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
               </Col>
-              <Col className="col-9">
+              <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                 </CardBody>

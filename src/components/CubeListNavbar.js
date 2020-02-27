@@ -64,7 +64,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           <Button color="success" type="submit">
             Upload
           </Button>
-          <Button color="secondary" onclick={toggle}>
+          <Button color="secondary" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>

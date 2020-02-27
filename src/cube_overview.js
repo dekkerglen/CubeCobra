@@ -216,7 +216,7 @@ class CubeOverview extends Component {
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
-                    action={`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}${cube._id}`}
+                    action={`/cube/${cube.isFeatured ? 'unfeature/' : 'feature/'}${cube._id}`}
                     className="mt-2"
                   >
                     <Button color="success" type="submit">

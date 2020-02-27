@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
+import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
 
@@ -9,8 +9,8 @@ import CardStack from 'components/CardStack';
 import DraggableCard from 'components/DraggableCard';
 
 const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
-  <Card {...props}>
-    <CardHeader>
+  <>
+    <CardHeader {...props}>
       <CardTitle className="mb-0 d-flex flex-row align-items-end">
         <h4 className="mb-0 mr-auto">{title}</h4>
         <h6 className="mb-0 font-weight-normal d-none d-sm-block">{subtitle}</h6>
@@ -40,7 +40,7 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
         </Row>
       ))}
     </CardBody>
-  </Card>
+  </>
 );
 
 DeckStacks.propTypes = {
