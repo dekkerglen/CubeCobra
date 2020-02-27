@@ -19,6 +19,8 @@ import { TOKEN_TYPES, consumeOneOf, consumeRegex, consumeWord } from 'parsing/pa
 export const FIELDS_MAP = {};
 
 export const COLOR_COMBINATIONS = {
+  c: '',
+  brown: '',
   colorless: '',
   white: 'w',
   blue: 'u',
@@ -45,6 +47,7 @@ export const COLOR_COMBINATIONS = {
   abzan: 'gbw',
   jeskai: 'wru',
   sultai: 'ugb',
+  rainbow: 'wubrg',
 };
 
 const ALL_OPERATORS = [':', '=', '<', '<=', '>', '>='];
@@ -132,7 +135,7 @@ export function getFilterParser() {
   rules.push(
     new Rule({
       name: 'colorSymbols',
-      definition: [new RepetitionMandatory({ definition: consumeOneOf('wubrgc') })],
+      definition: consumeRegex(/[wubrg]+/),
     }),
   );
   rules.push(
