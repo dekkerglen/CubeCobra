@@ -176,9 +176,13 @@ test('getBasics returns the expected set of basic lands', () => {
   for (const name of basicLands) {
     mockCarddict[mockNameToId[name.toLowerCase()]] = landsfixture.exampleBasics[name.toLowerCase()];
     exampleLand = landsfixture.exampleBasics[name.toLowerCase()];
+    const details = JSON.parse(JSON.stringify(exampleLand));
     expectedLandObject = {
       // copy necessary because getBasics modifies carddb (bad)
-      details: JSON.parse(JSON.stringify(exampleLand)),
+      type_line: details.type,
+      cmc: 0,
+      cardID: mockNameToId[name.toLowerCase()][0],
+      details,
     };
     expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
     expected[name] = expectedLandObject;

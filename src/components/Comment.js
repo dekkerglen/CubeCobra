@@ -100,8 +100,6 @@ class Comment extends React.Component {
   }
 
   toggleChildCollapse() {
-    console.log('toggle');
-    console.log(this.state);
     this.setState({
       childExpanded: !this.state.childExpanded,
     });
