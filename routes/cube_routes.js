@@ -2542,11 +2542,10 @@ router.get('/redraft/:id', async (req, res) => {
 
     // add ratings
     const names = [];
-    // add in details to all cards
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
-          names.push(card.details.name);
+          names.push(carddb.cardFromId(card.cardID).name);
         }
       }
     }
@@ -2634,7 +2633,10 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const draft = await Draft.findById(deck.draft).lean();
+    let draft = null;
+    if (deck.draft) {
+      draft = await Draft.findById(deck.draft).lean();
+    }
 
     const drafter = {
       name: 'Anonymous',
