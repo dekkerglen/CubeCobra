@@ -676,3 +676,10 @@ img.mana-symbol {
 	vertical-align: top;
 	line-height: 0.9;	
 }
+
+@media (min-width: 768px) {
+	.col-seventh {
+		flex: 0 0 calc(100% / 7);
+		max-width: calc(100% / 7);
+	}
+}
