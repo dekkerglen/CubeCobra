@@ -8,6 +8,7 @@ import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
+import SampleHandModal from 'components/SampleHandModal';
 
 const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
   const [seatIndex, setSeatIndex] = useState(0);
@@ -58,6 +59,9 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
           <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
           <Collapse isOpen={isOpen} navbar>
             <Nav navbar>
+              <NavItem>
+                <SampleHandModal deck={deck.seats[seatIndex].deck} />
+              </NavItem>
               {canEdit && (
                 <NavItem>
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
