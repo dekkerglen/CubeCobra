@@ -154,7 +154,7 @@ test('getBasics returns the expected set of basic lands', () => {
       // copy necessary because getBasics modifies carddb (bad)
       type_line: details.type,
       cmc: 0,
-      cardID: mockNameToId[name.toLowerCase()],
+      cardID: mockNameToId[name.toLowerCase()][0],
       details,
     };
     expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
