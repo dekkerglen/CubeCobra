@@ -1,5 +1,5 @@
 import React from 'react';
-import TimeAgo from 'react-timeago'
+import TimeAgo from 'react-timeago';
 
 class DeckPreview extends React.Component {
   constructor(props) {

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import TimeAgo from 'react-timeago'
+import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 
 import useKeyHandlers from 'hooks/UseKeyHandlers';

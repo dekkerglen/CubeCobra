@@ -1,5 +1,5 @@
 import React from 'react';
-import TimeAgo from 'react-timeago'
+import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from './CommentsSection';
