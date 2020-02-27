@@ -81,7 +81,7 @@ class SampleHandModal extends Component {
           <ModalBody className="p-4">
             <Row>
               {hand.map((card, cardindex) => (
-                <Col key={/* eslint-disable-line react/no-array-index-key */ cardindex} xs={4} className="sevenCol p-1">
+                <Col key={/* eslint-disable-line react/no-array-index-key */ cardindex} xs={4} className="col-seventh p-1">
                   <a href={`/tool/card/${encodeName(card.details.name)}`}>
                     <FoilCardImage autocard data-in-modal card={card} className="clickable" />
                   </a>

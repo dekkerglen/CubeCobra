@@ -678,7 +678,7 @@ img.mana-symbol {
 }
 
 @media (min-width: 768px) {
-	.sevenCol {
+	.col-seventh {
 		flex: 0 0 calc(100% / 7);
 		max-width: calc(100% / 7);
 	}
