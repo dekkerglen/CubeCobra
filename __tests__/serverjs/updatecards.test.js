@@ -110,7 +110,6 @@ const convertedExampleDoubleFacedCardFlipFace = {
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   cmc: 0,
-  language: 'en',
   legalities: {
     Legacy: false,
     Modern: false,
@@ -177,11 +176,11 @@ const convertedExampleAdventureCardAdventure = {
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   artist: 'Gabor Szikszai',
   border_color: 'black',
-  cmc: 0, // Adventures do not have cmc
+  cmc: 0, // Adventures don't have cmc
   collector_number: '155',
-  color_identity: ['G'],
+  color_identity: [], // Adventure's don't have color identitty
   colorcategory: 'g',
-  colors: [], // Adventures do not have colors, they use the main cards colors
+  colors: ['G'], // Adventures do not have colors, they use the main cards colors
   digital: false,
   full_art: false,
   full_name: 'Welcome Home [eld-155]',
@@ -189,12 +188,13 @@ const convertedExampleAdventureCardAdventure = {
   image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   isToken: false,
   language: 'en',
-  legalities: { Legacy: true, Modern: true, Standard: true, Pauper: false },
+  // ADventure's don't have legalities
+  legalities: { Legacy: false, Modern: false, Standard: false, Pauper: false, Pioneer: false },
   name: 'Welcome Home',
   name_lower: 'welcome home',
   oracle_text:
     'Create three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
-  parsed_cost: ['g', 'g', '5'],
+  parsed_cost: [], // Adventure's don't have parsed cost
   promo: false,
   rarity: 'uncommon',
   scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
@@ -203,15 +203,15 @@ const convertedExampleAdventureCardAdventure = {
   type: 'Sorcery — Adventure',
 };
 
-const convertFnToAttribute = {
-  convertName: 'name',
-  convertId: '_id',
-  convertLegalities: 'legalities',
-  convertType: 'type',
-  convertColors: 'colors',
-  convertParsedCost: 'parsed_cost',
-  convertCmc: 'cmc',
-};
+const fnToAttributeTable = [
+  ['convertName', 'name'],
+  ['convertId', '_id'],
+  ['convertLegalities', 'legalities'],
+  ['convertType', 'type'],
+  ['convertColors', 'colors'],
+  ['convertParsedCost', 'parsed_cost'],
+  ['convertCmc', 'cmc'],
+];
 
 beforeEach(() => {
   rimraf.sync('private-test');
@@ -224,16 +224,16 @@ afterEach(() => {
 
 test('updateCardbase creates the expected files', () => {
   expect.assertions(8);
-  var noopPromise = new Promise((resolve, reject) => {
+  const noopPromise = new Promise((resolve) => {
     process.nextTick(() => {
       resolve();
     });
   });
-  var downloadMock = jest.fn();
+  const downloadMock = jest.fn();
   downloadMock.mockReturnValue(noopPromise);
-  var initialDownloadDefaultCards = updatecards.downloadDefaultCards;
+  const initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -242,14 +242,14 @@ test('updateCardbase creates the expected files', () => {
     expect(fs.existsSync('private-test/nameToId.json')).toBe(true);
     expect(fs.existsSync('private-test/english.json')).toBe(true);
     expect(fs.existsSync('private-test/full_names.json')).toBe(true);
+    updatecards.downloadDefaultCards = initialDownloadDefaultCards;
   });
-  updatecards.downloadDefaultCards = initialDownloadDefaultCards;
 });
 
 test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
   const card = convertedExampleCard;
   updatecards.addCardToCatalog(card);
-  var catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
   const normalizedName = cardutil.normalizeName(card.name);
   const expectedImagedictStructure = {
@@ -275,7 +275,7 @@ test("addCardToCatalog successfully adds a card's information to the internal st
 test("addCardToCatalog successfully adds a double-faced card's information to the internal structures", () => {
   const card = convertedExampleDoubleFacedCardFlipFace;
   updatecards.addCardToCatalog(card, true);
-  var catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   const normalizedFullName = card.full_name
     .toLowerCase()
     .normalize('NFD')
@@ -302,14 +302,14 @@ test('addLanguageMapping successfully adds a language mapping to the internal st
   updatecards.addCardToCatalog(card);
   updatecards.addLanguageMapping(examplecards.exampleForeignCard);
 
-  const catalog = updatecards.catalog;
+  const { catalog } = updatecards;
   expect(Object.keys(catalog.english).length).toBe(1);
   expect(catalog.english[examplecards.exampleForeignCard.id]).toBe(card._id);
 });
 
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(7);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
@@ -323,7 +323,7 @@ test('initializeCatalog clears the updatecards structures', () => {
 
 test('saveAllCards creates the expected files', () => {
   expect.assertions(8);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(function() {
+  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -340,15 +340,6 @@ test('convertCard returns a correctly converted card object', () => {
   expect(result).toEqual(convertedExampleCard);
 });
 
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleCard);
-    expect(result).toBe(convertedExampleCard[attribute]);
-  });
-}
-
 test('convertCard returns a correctly converted double-faced card', () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, false);
   expect(result).toEqual(convertedExampleDoubleFacedCard);
@@ -359,73 +350,71 @@ test('convertCard returns a correctly converted double-faced card flip face obje
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
 });
 
-var attribute;
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts a double-faced card's " + attribute, () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
-    expect(result).toBe(convertedExampleDoubleFacedCardFlipFace[attribute]);
-  });
-}
-
 test('convertCard returns a correctly converted Adventure card object', () => {
   const result = updatecards.convertCard(examplecards.exampleAdventureCard, false);
   expect(result).toEqual(convertedExampleAdventureCard);
 });
 
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts an Adventure card's creature " + attribute, () => {
+describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribute) => {
+  test('for standard card', () => {
+    const result = updatecards[convertFn](examplecards.exampleCard);
+    expect(result).toEqual(convertedExampleCard[attribute]);
+  });
+
+  test('for a double-faced card', () => {
+    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
+    expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace[attribute]);
+  });
+
+  test("for Adventure card's creature", () => {
     const result = updatecards[convertFn](examplecards.exampleAdventureCard, false);
-    expect(result).toBe(convertedExampleAdventureCard[attribute]);
+    expect(result).toEqual(convertedExampleAdventureCard[attribute]);
   });
-}
-for (var convertFn in convertFnToAttribute) {
-  attribute = convertFnToAttribute[convertFn];
-  test(convertFn + " properly converts an Adventure card's Adventure  " + attribute, () => {
+
+  test("for Adventure card's Adventure", () => {
     const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
-    expect(result).toBe(convertedExampleAdventureCardAdventure[attribute]);
+    expect(result).toEqual(convertedExampleAdventureCardAdventure[attribute]);
   });
-}
+});
 
 describe('convertName', () => {
   test('handles ampersands', () => {
-    let card = { name: 'Kharis & the Beholder', layout: '' };
+    const card = { name: 'Kharis & the Beholder', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis & the Beholder');
   });
   test('handles double quotes', () => {
-    let card = { name: 'Kharis "The Beholder"', layout: '' };
+    const card = { name: 'Kharis "The Beholder"', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis "The Beholder"');
   });
   test('handles single quotes', () => {
-    let card = { name: "Kharis 'The Beholder'", layout: '' };
+    const card = { name: "Kharis 'The Beholder'", layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe("Kharis 'The Beholder'");
   });
   test('handles angle brackets', () => {
-    let card = { name: 'Kharis <The Beholder>', layout: '' };
+    const card = { name: 'Kharis <The Beholder>', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis <The Beholder>');
   });
   test('handles question mark', () => {
-    let card = { name: 'Question Elemental?', layout: '' };
+    const card = { name: 'Question Elemental?', layout: '' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Question Elemental?');
   });
   test('handles multi-face (first face)', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const card = { name: 'Kharis // The Beholder', layout: 'flip' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis');
   });
   test('handles multi-face (second face)', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'flip' };
+    const card = { name: 'Kharis // The Beholder', layout: 'flip' };
     const result = updatecards.convertName(card, true);
     expect(result).toBe('The Beholder');
   });
   test('handles split card', () => {
-    let card = { name: 'Kharis // The Beholder', layout: 'split' };
+    const card = { name: 'Kharis // The Beholder', layout: 'split' };
     const result = updatecards.convertName(card);
     expect(result).toBe('Kharis // The Beholder');
   });

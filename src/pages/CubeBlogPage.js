@@ -165,18 +165,22 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
       </Navbar>
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cubeID}/${i}`} />}
-      {posts.map((post) => (
-        <BlogPost
-          key={post._id}
-          post={post}
-          canEdit={canEdit}
-          userid={userid}
-          loggedIn={loggedIn}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
-      ))}
-      {pages && pages.length > 1 && <Paginate pages={pages} />}
+      {posts.length > 0 ? (
+        posts.map((post) => (
+          <BlogPost
+            key={post._id}
+            post={post}
+            canEdit={canEdit}
+            userid={userid}
+            loggedIn={loggedIn}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
+        ))
+      ) : (
+        <h5>No blog posts for this cube.</h5>
+      )}
+      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cubeID}/${i}`} />}
       <EditBlogModal
         isOpen={editOpen}
         toggle={toggleEdit}

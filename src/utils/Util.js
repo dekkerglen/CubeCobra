@@ -79,6 +79,10 @@ export function alphaCompare(a, b) {
 
 export function cmcColumn(card) {
   let cmc = Object.prototype.hasOwnProperty.call(card, 'cmc') ? card.cmc : card.details.cmc;
+  // double equals also handles undefined
+  if (cmc == null) {
+    cmc = 0;
+  }
   if (!Number.isFinite(cmc)) {
     cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc, 10);
   }

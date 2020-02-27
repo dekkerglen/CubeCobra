@@ -1,4 +1,4 @@
-import { alphaCompare } from './Util';
+import { alphaCompare, fromEntries } from './Util';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -669,7 +669,7 @@ export function cardIsLabel(card, label, sort) {
 }
 
 export function sortIntoGroups(cards, sort) {
-  return Object.fromEntries(sortGroupsOrdered(cards, sort));
+  return fromEntries(sortGroupsOrdered(cards, sort));
 }
 
 export function formatLabel(label) {
@@ -726,4 +726,17 @@ export function countGroup(group) {
     return counts.reduce((a, b) => a + b, 0);
   }
   return group.length;
+}
+
+export function sortForCSVDownload(cards) {
+  var exportCards = [];
+  cards = sortDeep(cards, 'Color', 'CMC');
+  for (const firstGroup of cards) {
+    for (const secondGroup of firstGroup[1]) {
+      for (const card of secondGroup[1]) {
+        exportCards.push(card);
+      }
+    }
+  }
+  return exportCards;
 }

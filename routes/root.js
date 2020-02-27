@@ -34,16 +34,10 @@ router.get('/explore', async (req, res) => {
   const recentsq = Cube.find({
     $or: [
       {
-        $and: [
-          {
-            card_count: {
-              $gt: 200,
-            },
-          },
-          {
-            isListed: true,
-          },
-        ],
+        card_count: {
+          $gt: 200,
+        },
+        isListed: true,
       },
       {
         owner: userID,
@@ -128,11 +122,7 @@ router.get('/random', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    if (!req.user) {
-      return res.redirect('/landing');
-    }
-
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!user) {
       return res.redirect('/landing');
     }
@@ -177,7 +167,7 @@ router.get('/dashboard', async (req, res) => {
           $in: cubeIds,
         },
       },
-      '_id name owner username date',
+      '_id seats username date',
     )
       .sort({
         date: -1,
@@ -204,7 +194,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
@@ -213,7 +203,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
   try {
     const pagesize = 30;
     const { page } = req.params;
-    const user = await User.findById(req.user._id);
+    const { user } = req;
     if (!user) {
       return res.redirect('/landing');
     }
@@ -270,15 +260,15 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    console.error(err);
+    req.logger.error(err);
     return res.status(500).send(err);
   }
 });
 
 router.get('/landing', async (req, res) => {
-  const cubeq = Cube.countDocuments().exec();
-  const deckq = Deck.countDocuments().exec();
-  const userq = User.countDocuments().exec();
+  const cubeq = Cube.estimatedDocumentCount().exec();
+  const deckq = Deck.estimatedDocumentCount().exec();
+  const userq = User.estimatedDocumentCount().exec();
 
   const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
 
@@ -294,10 +284,12 @@ router.get('/landing', async (req, res) => {
 router.post('/advanced_search', (req, res) => {
   let url = '/search/';
   if (req.body.name && req.body.name.length > 0) {
-    url += `name${req.body.nameType}${req.body.name};`;
+    const encoded = encodeURIComponent(req.body.name);
+    url += `name${req.body.nameType}${encoded};`;
   }
   if (req.body.owner && req.body.owner.length > 0) {
-    url += `owner_name${req.body.ownerType}${req.body.owner};`;
+    const encoded = encodeURIComponent(req.body.owner);
+    url += `owner_name${req.body.ownerType}${encoded};`;
   }
   res.redirect(url);
 });
@@ -322,6 +314,13 @@ router.get('/search/:id', (req, res) => {
   let page = parseInt(rawSplit[1], 10);
   let query = {};
   const terms = [];
+
+  // input is the search string from a user -- should be treated as a string literal, rather than
+  // a regex with special characters.  This method escapes any characters which could be considered
+  // special characters by the regex, like . and *
+  function escapeRegexLiteral(input) {
+    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+  }
   rawQueries.forEach((searchExpression) => {
     let field;
     let filter;
@@ -330,11 +329,12 @@ router.get('/search/:id', (req, res) => {
 
     if (searchExpression.includes('=')) {
       [field, filter] = searchExpression.split('=');
-      searchRegex = new RegExp(`^${filter}$`, 'i');
+      const escapedFilter = escapeRegexLiteral(filter);
+      searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
       expressionTerm = 'is exactly';
     } else if (searchExpression.includes('~')) {
       [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(filter, 'i');
+      searchRegex = new RegExp(escapeRegexLiteral(filter), 'i');
       expressionTerm = 'contains';
     }
 

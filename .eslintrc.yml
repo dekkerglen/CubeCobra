@@ -14,19 +14,19 @@ settings:
     webpack:
       config: webpack.dev.js
 rules:
-  # prettier/prettier:
-  # - error
+  prettier/prettier: error
   no-console: off
   global-require: off
   no-param-reassign: off
   no-underscore-dangle:
     - error
-    - allow: ['_id']
+    - allow: ['_id', '_carddict']
   camelcase:
     - error
     - properties: never
       ignoreDestructuring: true
       ignoreImports: true
+      allow: ['tcgplayer_id']
   no-plusplus:
     - error
     - allowForLoopAfterthoughts: true
@@ -49,3 +49,6 @@ overrides:
       no-restricted-imports:
         - error
         - patterns: ['./*', '../*']
+  - files: ['routes/**', 'serverjs/**']
+    rules:
+      no-console: error

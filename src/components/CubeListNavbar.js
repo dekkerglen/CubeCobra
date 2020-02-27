@@ -64,7 +64,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           <Button color="success" type="submit">
             Upload
           </Button>
-          <Button color="secondary" onclick={toggle}>
+          <Button color="secondary" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -241,7 +241,7 @@ const CubeListNavbar = ({
         if (cards.length === 0) {
           setSelectEmptyModalOpen(true);
         } else if (cards.length === 1) {
-          openCardModal(cards[0].index);
+          openCardModal(cards[0]);
         } else if (cards.length > 1) {
           openGroupModal();
         }

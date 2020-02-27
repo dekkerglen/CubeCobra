@@ -118,7 +118,7 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, priceOwned, pricePurchase, owner, admin, cubeID, canEdit, userID, loggedIn, followers } = this.props;
+    const { post, priceOwned, pricePurchase, admin, cubeID, canEdit, owner, ownerID, loggedIn, followers } = this.props;
     const { cube, deleteConfirm, alerts, followed } = this.state;
     const { addAlert, onCubeUpdate } = this;
 
@@ -190,7 +190,7 @@ class CubeOverview extends Component {
                 <h6 className="mb-2">
                   <i>
                     Designed by
-                    <a href={`/user/view/${owner}`}> {owner}</a>
+                    <a href={`/user/view/${ownerID}`}> {owner}</a>
                   </i>{' '}
                   • <a href={`/cube/rss/${cube._id}`}>RSS</a>
                 </h6>
@@ -216,7 +216,7 @@ class CubeOverview extends Component {
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
-                    action={`/cube/${cube.isFeatured ? 'unfeature' : 'feature'}${cube._id}`}
+                    action={`/cube/${cube.isFeatured ? 'unfeature/' : 'feature/'}${cube._id}`}
                     className="mt-2"
                   >
                     <Button color="success" type="submit">
@@ -227,6 +227,7 @@ class CubeOverview extends Component {
                 )}
               </CardBody>
               {loggedIn &&
+                !canEdit &&
                 (followed ? (
                   <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                     Unfollow
@@ -264,7 +265,7 @@ class CubeOverview extends Component {
             </Card>
           </Col>
         </Row>
-        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={userID} loggedIn={loggedIn} />}
+        {post && <BlogPost key={post._id} post={post} canEdit={false} userid={owner} loggedIn={loggedIn} />}
         <div
           className="modal fade"
           id="deleteCubeModal"
@@ -314,10 +315,9 @@ class CubeOverview extends Component {
 CubeOverview.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-  }).isRequired,
+  }),
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
-  owner: PropTypes.string.isRequired,
   admin: PropTypes.bool,
   cube: PropTypes.shape({
     _id: PropTypes.string.isRequired,
@@ -327,7 +327,8 @@ CubeOverview.propTypes = {
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
-  userID: PropTypes.string.isRequired,
+  owner: PropTypes.string.isRequired,
+  ownerID: PropTypes.string.isRequired,
   loggedIn: PropTypes.bool,
   followed: PropTypes.bool.isRequired,
   followers: PropTypes.arrayOf(
@@ -338,6 +339,7 @@ CubeOverview.propTypes = {
 };
 
 CubeOverview.defaultProps = {
+  post: null,
   priceOwned: null,
   pricePurchase: null,
   admin: false,
