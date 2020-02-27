@@ -1,9 +1,9 @@
 import React from 'react';
+import TimeAgo from 'react-timeago'
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from './CommentsSection';
 import CommentEntry from './CommentEntry';
-import AgeText from './AgeText';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -84,7 +84,7 @@ class BlogPost extends React.Component {
               <a href={'/cube/overview/' + post.cube}>{post.cubename}</a>
             )}
             {' - '}
-            <AgeText date={post.date} />
+            <TimeAgo date={post.date} />
           </h6>
         </CardHeader>
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
