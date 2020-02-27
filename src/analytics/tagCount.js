@@ -10,12 +10,14 @@ async function tagCloud(cards) {
       }
     }),
   );
-  const rows = Object.keys(tags).map((tag) => ({
-    tag,
-    asfan: tags[tag].asfan.toFixed(2),
-    key: tag,
-    count: tags[tag].count,
-  }));
+  const rows = Object.keys(tags)
+    .map((tag) => ({
+      tag,
+      asfan: tags[tag].asfan.toFixed(2),
+      key: tag,
+      count: tags[tag].count,
+    }))
+    .sort((a, b) => b.asfan - a.asfan);
   return {
     type: 'table',
     description:
