@@ -29,6 +29,8 @@ async function downloadRatings(url, basePath = 'private', defaultPath = null) {
 async function saveCardRating(cardRating) {
   const existing = (await CardRating.findOne({ name: cardRating.name })) || new CardRating();
   existing.elo = cardRating.elo;
+  existing.picks = cardRating.picks;
+  existing.value = cardRating.value;
   await existing.save();
 }
 
