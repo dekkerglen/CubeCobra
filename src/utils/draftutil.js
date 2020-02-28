@@ -251,14 +251,12 @@ function assignBotColors(initialState, botCount, seats) {
         : card.details.color_identity !== undefined
         ? card.details.color_identity
         : 0;
-    Card.COLOR_COMBINATIONS.forEach(
-      (combination, idx) => {
-        if (Util.arraysAreEqualSets(combination, cardColors)) {
-          colorCounts[idx].elo += elo * (1 + cardColors.length / 5);
-          colorCounts[idx].count += 1;
-        }
-      },
-    );
+    Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
+      if (Util.arraysAreEqualSets(combination, cardColors)) {
+        colorCounts[idx].elo += elo * (1 + cardColors.length / 5);
+        colorCounts[idx].count += 1;
+      }
+    });
   }
 
   const monoColorCounts = {};
