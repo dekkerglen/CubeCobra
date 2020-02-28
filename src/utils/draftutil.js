@@ -1,5 +1,7 @@
 'use strict';
 
+var Card = require('utils/Card.js');
+var Draft = require('utils/Draft.js');
 var Util = require('utils/Util.js');
 require('./Card.js');
 var Filter = require('utils/Filter.js');
@@ -57,7 +59,7 @@ export function parseDraftFormat(packsJSON, splitter = ',') {
 }
 
 // standard draft has no duplicates
-function standardDraft(cards, probabilistic = false) {
+function standardDraft(cards) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
@@ -237,6 +239,102 @@ function createPacks(draft, format, seats, nextCardFn) {
   return { ok, messages };
 }
 
+function assignBotColors(initialState, botCount, seats) {
+  const colorCounts = Card.COLOR_COMBINATIONS.map(() => ({ elo: 0, count: 0 }));
+  const cards = initialState.flat(3);
+
+  for (const card of cards) {
+    const elo = card.details.elo;
+    const cardColors =
+      card.colors !== undefined
+        ? card.colors
+        : card.details.color_identity !== undefined
+        ? card.details.color_identity
+        : 0;
+    Card.COLOR_COMBINATIONS.forEach(
+      (combination, idx) => {
+        if (Util.arraysAreEqualSets(combination, cardColors)) {
+          colorCounts[idx].elo += elo * (1 + cardColors.length / 5);
+          colorCounts[idx].count += 1;
+        }
+      },
+    );
+  }
+
+  const monoColorCounts = {};
+  Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
+    if (combination.length === 1) {
+      monoColorCounts[combination[0]] = colorCounts[idx].count;
+    }
+  });
+
+  const validCombinations = Card.COLOR_COMBINATIONS.filter((combination, idx) => {
+    if (combination.length <= 1) {
+      return false;
+    }
+    if (colorCounts[idx].count > 0) {
+      return true;
+    }
+    if (combination.length === 2) {
+      return monoColorCounts[combination[0]] > 0 && monoColorCounts[combination[1]] > 0;
+    }
+    return false;
+  });
+
+  const seatsRating = (seatColors) => {
+    let count = 0;
+    const colorSeatCount = Card.COLOR_COMBINATIONS.map(() => 0);
+    Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
+      if (seatColors.some((colors) => Util.arrayIsSubset(combination, colors))) {
+        count += colorCounts[idx].count;
+      }
+      for (const colors of seatColors) {
+        if (Util.arrayIsSubset(combination, colors)) {
+          colorSeatCount[idx] += 1;
+        }
+      }
+    });
+    let totalF = 0;
+    const fValues = seatColors.map((colors) => {
+      let f = 0;
+      Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
+        if (Util.arrayIsSubset(combination, colors)) {
+          // Guaranteed non-zero since this was count of ways we can reach this point.
+          f += colorCounts[idx].elo / colorSeatCount[idx];
+        }
+      });
+      f /= colors.length;
+      totalF += f;
+      return f;
+    });
+    const minF = Math.min(...fValues);
+    return count * totalF * minF;
+  };
+  const ITERATIONS = 1000;
+  // Any prefix of this maximizes the minimum number of occurences of each color.
+  const COLOR_COMBINATION_ORDER = ['WU', 'BR', 'GW', 'UB', 'RG', 'WB', 'UR', 'BG', 'RW', 'GU']
+    .map((c) => c.split(''))
+    .filter((c) => validCombinations.some((vc) => Util.arraysAreEqualSets(c, vc)));
+  let bestSeats = [];
+  for (let i = 0; i < seats; i++) {
+    bestSeats.push(COLOR_COMBINATION_ORDER[i % COLOR_COMBINATION_ORDER.length]);
+  }
+  let maxRating = seatsRating(bestSeats);
+  for (let i = 0; i < ITERATIONS; i++) {
+    const currentSeats = [];
+    const combinations = Util.arrayShuffle([...validCombinations]);
+    for (let i = 0; i < seats; i++) {
+      currentSeats.push(combinations[i % combinations.length]);
+    }
+    const rating = seatsRating(currentSeats);
+    if (rating > maxRating) {
+      bestSeats = currentSeats;
+      maxRating = rating;
+    }
+  }
+  return bestSeats.slice(0, botCount);
+}
+
 // NOTE: format is an array with extra attributes, see getDraftFormat()
 export function populateDraft(format, cards, bots, seats, user) {
   const draft = {};
@@ -282,6 +380,8 @@ export function populateDraft(format, cards, bots, seats, user) {
       }
     }
   }
+
+  bots = assignBotColors(draft.initial_state, bots.length, seats);
 
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {

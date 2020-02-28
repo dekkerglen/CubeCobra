@@ -1,5 +1,40 @@
 import { arraysEqual } from 'utils/Util';
 
+export const COLOR_COMBINATIONS = [
+  [],
+  ['W'],
+  ['U'],
+  ['B'],
+  ['R'],
+  ['G'],
+  ['W', 'U'],
+  ['U', 'B'],
+  ['B', 'R'],
+  ['R', 'G'],
+  ['G', 'W'],
+  ['W', 'B'],
+  ['U', 'R'],
+  ['B', 'G'],
+  ['R', 'W'],
+  ['G', 'U'],
+  ['G', 'W', 'U'],
+  ['W', 'U', 'B'],
+  ['U', 'B', 'R'],
+  ['B', 'R', 'G'],
+  ['R', 'G', 'W'],
+  ['R', 'W', 'B'],
+  ['G', 'U', 'R'],
+  ['W', 'B', 'G'],
+  ['U', 'R', 'W'],
+  ['B', 'G', 'U'],
+  ['U', 'B', 'R', 'G'],
+  ['B', 'R', 'G', 'W'],
+  ['R', 'G', 'W', 'U'],
+  ['G', 'W', 'U', 'B'],
+  ['W', 'U', 'B', 'R'],
+  ['W', 'U', 'B', 'R', 'G'],
+];
+
 export function normalizeName(name) {
   return name
     .trim()
@@ -32,4 +67,4 @@ export function getCmc(card) {
   return card.cmc !== undefined ? card.cmc : card.details.cmc;
 }
 
-export default { normalizeName, encodeName, decodeName, cardsAreEquivalent, getCmc };
+export default { COLOR_COMBINATIONS, normalizeName, encodeName, decodeName, cardsAreEquivalent, getCmc };

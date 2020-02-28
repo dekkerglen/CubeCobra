@@ -1583,9 +1583,16 @@ router.post('/startdraft/:id', async (req, res) => {
       cards: parseInt(req.body.cards, 10),
     };
 
+    const nameSet = new Set();
     // insert card details everywhere that needs them
     for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
+      nameSet.add(card.details.name);
+    }
+
+    const eloDict = await getElo([...nameSet]);
+    for (const card of cube.cards) {
+      card.details.elo = eloDict[card.details.name] || 0;
     }
 
     // setup draft

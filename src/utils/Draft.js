@@ -227,4 +227,4 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, botRating, pick, finish };
