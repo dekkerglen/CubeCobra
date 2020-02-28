@@ -282,4 +282,18 @@ router.get('/card/:id', async (req, res) => {
   }
 });
 
+router.get('/api/cardratings', async (req, res) => {
+  try {
+    res.status(200).send({
+      success: 'true',
+      data: await CardRating.find({}).lean(),
+    });
+  } catch (err) {
+    req.logger.error(err);
+    res.status(500).send({
+      success: 'false',
+    });
+  }
+});
+
 module.exports = router;
