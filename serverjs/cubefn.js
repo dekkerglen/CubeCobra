@@ -237,7 +237,7 @@ const methods = {
         }
       }
     }
-    
+
     return res;
   },
   cardsAreEquivalent,
