@@ -1,7 +1,5 @@
 const sanitizeHtml = require('sanitize-html');
-const serialize = require('serialize-javascript');
 
-const Blog = require('../models/blog');
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 
@@ -304,35 +302,32 @@ function CSVtoCards(cards, carddb) {
   return { newCards, newMaybe, missing };
 }
 
-// prices should be the prices module with the GetPrices function.
+// prices should be the prices module with the getPrices function.
 // elo should be in the form { round: bool }.
 // requested details is a string to pass to carddb.cardFromId.
-async function populateCardDetails(cardLists, carddb, { GetPrices = null, elo = null, requested_details = undefined }) {
+async function populateCardDetails(cardLists, carddb, { getPrices = null, elo = null, requestedDetails = undefined }) {
   const pids = new Set();
   const cardNames = new Set();
-  const lists = cardLists.map((list) => [...list]);
-  for (const cards of lists) {
-    for (const card of cards) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID, requested_details),
-      };
-      if (!card.type_line) {
-        card.type_line = card.details.type;
-      }
-      if (GetPrices && card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      if (elo !== null) {
-        cardNames.add(card.details.name);
-      }
+  const lists = cardLists.map((list) => list.map((card) => {
+    // We don't want to modify the cards passed in or the card objects in the carddb.
+    card = { ...card, details: { ...carddb.cardFromId(card.cardID, requestedDetails) } };
+    if (!card.type_line) {
+      card.type_line = card.details.type;
     }
-  }
-  if (GetPrices !== null || elo !== null) {
-    const queries = [GetPrices !== null && GetPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
+    if (getPrices && card.details.tcgplayer_id) {
+      pids.add(card.details.tcgplayer_id);
+    }
+    if (elo !== null) {
+      cardNames.add(card.details.name);
+    }
+    return card;
+  }));
+  if (getPrices !== null || elo !== null) {
+    const queries = [getPrices !== null && getPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
     const [priceDict, eloDict] = await Promise.all(queries);
     for (const cards of lists) {
       for (const card of cards) {
-        if (GetPrices !== null && card.details.tcgplayer_id) {
+        if (getPrices !== null && card.details.tcgplayer_id) {
           if (priceDict[card.details.tcgplayer_id]) {
             card.details.price = priceDict[card.details.tcgplayer_id];
           }
