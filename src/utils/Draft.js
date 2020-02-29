@@ -115,7 +115,7 @@ async function buildDeck(cards, bot) {
     deck[index].push(card);
   }
   for (const card of side) {
-    sideboard[Math.min(card.cmc, 7)].push(card);
+    sideboard[Math.min(card.cmc || 0, 7)].push(card);
   }
 
   return {
