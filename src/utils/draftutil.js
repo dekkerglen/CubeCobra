@@ -240,94 +240,89 @@ function createPacks(draft, format, seats, nextCardFn) {
 }
 
 function assignBotColors(initialState, botCount, seats) {
-  const colorCounts = Card.COLOR_COMBINATIONS.map(() => ({ elo: 0, count: 0 }));
+  const ITERATIONS = 1000;
+
+  const colorCounts = Util.fromEntries(Card.COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
   const cards = initialState.flat(3);
 
   for (const card of cards) {
     const elo = card.details.elo;
-    const cardColors =
+    const cardColorSet =
       card.colors !== undefined
         ? card.colors
         : card.details.color_identity !== undefined
         ? card.details.color_identity
-        : 0;
-    Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
-      if (Util.arraysAreEqualSets(combination, cardColors)) {
-        colorCounts[idx].elo += elo * (1 + cardColors.length / 5);
-        colorCounts[idx].count += 1;
-      }
-    });
+        : [];
+    // Colorless will be null since it is recorded as 'C' not ''.
+    const cardColorsNormalized = Card.COLOR_COMBINATIONS.find((colors) =>
+      Util.arraysAreEqualSets(colors, cardColorSet),
+    );
+    // We can skip colorless since it would just apply to every seat.
+    if (cardColorsNormalized) {
+      const cardColors = cardColorsNormalized.join('');
+      colorCounts[cardColors].elo += elo * (0.75 + 0.25 * cardColors.length);
+      colorCounts[cardColors].count += 1;
+    }
   }
 
-  const monoColorCounts = {};
-  Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
-    if (combination.length === 1) {
-      monoColorCounts[combination[0]] = colorCounts[idx].count;
-    }
-  });
-
-  const validCombinations = Card.COLOR_COMBINATIONS.filter((combination, idx) => {
-    if (combination.length <= 1) {
-      return false;
-    }
-    if (colorCounts[idx].count > 0) {
-      return true;
-    }
-    if (combination.length === 2) {
-      return monoColorCounts[combination[0]] > 0 && monoColorCounts[combination[1]] > 0;
-    }
-    return false;
-  });
+  const validCombinations = Util.fromEntries(
+    Object.entries(colorCounts).map(([comb, { count }]) => [
+      comb,
+      (comb.length > 1 && count > 0) ||
+        (comb.length == 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
+    ]),
+  );
+  const validCombinationArray = Object.keys(validCombinations).filter((c) => validCombinations[c]);
 
   const seatsRating = (seatColors) => {
-    let count = 0;
-    const colorSeatCount = Card.COLOR_COMBINATIONS.map(() => 0);
-    Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
-      if (seatColors.some((colors) => Util.arrayIsSubset(combination, colors))) {
-        count += colorCounts[idx].count;
-      }
+    const seatColorCounts = Util.fromEntries(
+      Object.entries(colorCounts).map(([c, colorCount]) => [c, { ...colorCount, seatCount: 0 }]),
+    );
+    let includedCount = 0;
+    for (const [combination, { count }] of Object.entries(colorCounts)) {
+      let included = false;
+      const combinationArray = combination.split('');
       for (const colors of seatColors) {
-        if (Util.arrayIsSubset(combination, colors)) {
-          colorSeatCount[idx] += 1;
+        if (combinationArray.length <= colors.length && Util.arrayIsSubset(combinationArray, colors)) {
+          seatColorCounts[combination].seatCount += 1;
+          included = true;
         }
       }
-    });
-    let totalF = 0;
+      if (included) {
+        includedCount += count;
+      }
+    }
     const fValues = seatColors.map((colors) => {
       let f = 0;
-      Card.COLOR_COMBINATIONS.forEach((combination, idx) => {
-        if (Util.arrayIsSubset(combination, colors)) {
-          // Guaranteed non-zero since this was count of ways we can reach this point.
-          f += colorCounts[idx].elo / colorSeatCount[idx];
+      for (const [comb, { elo, seatCount }] of Object.entries(seatColorCounts)) {
+        if (seatCount > 0 && comb.length <= colors.length && Util.arrayIsSubset(comb.split(''), colors)) {
+          f += elo / seatCount;
         }
-      });
+      }
       f /= colors.length;
-      totalF += f;
       return f;
     });
-    const minF = Math.min(...fValues);
-    return count * totalF * minF;
+    return includedCount * Math.min(...fValues);
   };
-  const ITERATIONS = 1000;
-  // Any prefix of this maximizes the minimum number of occurences of each color.
-  const COLOR_COMBINATION_ORDER = ['WU', 'BR', 'GW', 'UB', 'RG', 'WB', 'UR', 'BG', 'RW', 'GU']
-    .map((c) => c.split(''))
-    .filter((c) => validCombinations.some((vc) => Util.arraysAreEqualSets(c, vc)));
-  let bestSeats = [];
-  for (let i = 0; i < seats; i++) {
-    bestSeats.push(COLOR_COMBINATION_ORDER[i % COLOR_COMBINATION_ORDER.length]);
-  }
-  let maxRating = seatsRating(bestSeats);
-  for (let i = 0; i < ITERATIONS; i++) {
-    const currentSeats = [];
-    const combinations = Util.arrayShuffle([...validCombinations]);
+  const seatsAndRatingFrom = (combOrder) => {
+    let seatColors = [];
     for (let i = 0; i < seats; i++) {
-      currentSeats.push(combinations[i % combinations.length]);
+      seatColors.push(combOrder[i % combOrder.length]);
     }
-    const rating = seatsRating(currentSeats);
-    if (rating > maxRating) {
-      bestSeats = currentSeats;
-      maxRating = rating;
+    return [seatColors, seatsRating(seatColors)];
+  };
+
+  // Any prefix of this maximizes the minimum number of occurences of each color.
+  const initialOrder = ['WU', 'BR', 'GW', 'UB', 'RG', 'WB', 'UR', 'BG', 'RW', 'GU']
+    .filter((c) => validCombinations[c])
+    .map((c) => c.split(''));
+  let [bestSeats, bestRating] = seatsAndRatingFrom(initialOrder);
+  for (let i = 0; i < ITERATIONS; i++) {
+    // We're okay mutating this so we don't need to make a copy.
+    const combinations = Util.arrayShuffle(validCombinationArray);
+    const [currentSeats, rating] = seatsAndRatingFrom(combinations);
+    if (rating > bestRating) {
+      [bestSeats, bestRating] = [currentSeats, rating];
     }
   }
   return bestSeats.slice(0, botCount);

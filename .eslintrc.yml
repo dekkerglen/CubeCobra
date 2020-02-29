@@ -9,15 +9,17 @@ plugins:
   - jest
   - prettier
   - react-hooks
+  - babel
+parser: 'babel-eslint'
 settings:
   import/resolver:
     webpack:
       config: webpack.dev.js
 rules:
   prettier/prettier: error
-  no-console: off
-  global-require: off
-  no-param-reassign: off
+  no-console: 0
+  global-require: 0
+  no-param-reassign: 0
   no-underscore-dangle:
     - error
     - allow: ['_id', '_carddict']

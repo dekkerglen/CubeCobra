@@ -54,7 +54,7 @@ const fetchLands = {
 
 function botRating(botColors, card) {
   let rating = draft.ratings[card.details.name];
-  const colors = fetchLands[card.details.name] || card.colors || card.details.color_identity;
+  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
   const subset = arrayIsSubset(colors, botColors) && !colorless;
   const overlap = botColors.some((c) => colors.includes(c));
@@ -63,11 +63,14 @@ function botRating(botColors, card) {
   const isFetch = !!fetchLands[card.details.name];
 
   if (isLand) {
-    if (subset || (overlap && isFetch)) {
-      // For an average-ish Elo of 1300, this boosts by 260 points.
+    if (subset) {
+      // For an average-ish Elo of 1300, this boosts by 260 points for a 2 color card.
+      // Would be good if we could detect 5 color lands here and adjust appropriately.
+      rating *= 1 + colors.length / 10;
+    } else if (overlap && isFetch) {
       rating *= 1.2;
     } else if (overlap) {
-      rating *= 1.1;
+      rating *= 1 + colors.length / 20;
     }
   } else if (subset || colorless) {
     rating *= 1.15;
