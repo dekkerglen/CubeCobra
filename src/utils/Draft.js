@@ -57,25 +57,53 @@ function botRating(botColors, card) {
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
   const subset = arrayIsSubset(colors, botColors) && !colorless;
+  const contains = arrayIsSubset(botColors, colors);
   const overlap = botColors.some((c) => colors.includes(c));
   const typeLine = card.type_line || card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
 
+  // If you add x to a rating you roughly increase the estimated odds of getting
+  // picked by a factor of (50 * 10**(x/400) - 50) percent
   if (isLand) {
-    if (subset) {
-      // For an average-ish Elo of 1300, this boosts by 260 points for a 2 color card.
+    if ((subset || contains) && isFetch) {
+      // Increase odds of picking by roughly 175%
+      rating += 261;
+    } else if (subset || contains) {
       // Would be good if we could detect 5 color lands here and adjust appropriately.
-      rating *= 1 + colors.length / 10;
+      switch (colors.length) {
+        case 1:
+          // Increase odds of picking by roughly 90%
+          rating += 179;
+          break;
+        case 2:
+          // Increase odds of picking by roughly 150%
+          rating += 241;
+          break;
+        default:
+          // Increase odds of picking by roughly 200%
+          rating += 280;
+          break;
+      }
     } else if (overlap && isFetch) {
-      rating *= 1.2;
-    } else if (overlap) {
-      rating *= 1 + colors.length / 20;
+      // Increase odds of picking by roughly 125%
+      rating += 218;
+    } else if (overlap || colorless) {
+      // Increase odds of picking by roughly 30%
+      rating += 82;
     }
-  } else if (subset || colorless) {
-    rating *= 1.15;
+  } else if (colorless) {
+    // Increase odds of picking by roughly 125%
+    rating += 218;
+  } else if (subset) {
+    // Increase odds of picking by roughly 100%
+    rating += 191;
+  } else if (contains) {
+    // Increase odds of picking by roughly 50%
+    rating += 120;
   } else if (overlap) {
-    rating *= 1.05;
+    // Increase odds of picking by roughly 20%
+    rating += 58;
   }
 
   return rating;
@@ -111,14 +139,14 @@ async function buildDeck(cards, bot) {
   }
 
   for (const card of main) {
-    let index = Math.min(card.cmc || 0, 7);
+    let index = Math.min(card.cmc ?? 0, 7);
     if (!card.type_line.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
   }
   for (const card of side) {
-    sideboard[Math.min(card.cmc, 7)].push(card);
+    sideboard[Math.min(card.cmc ?? 0, 7)].push(card);
   }
 
   return {

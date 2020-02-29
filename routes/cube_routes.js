@@ -3197,8 +3197,8 @@ router.post(
         // Expected performance for pick.
         const expectedA = 1 / (1 + 10 ** (diff / 400));
         const expectedB = 1 - expectedA;
-        const adjustmentA = 2 * (1 - expectedA);
-        const adjustmentB = 2 * (0 - expectedB);
+        const adjustmentA = 50 * (1 - expectedA);
+        const adjustmentB = 50 * (0 - expectedB);
         rating.elo += adjustmentA;
         other.elo += adjustmentB;
       }
