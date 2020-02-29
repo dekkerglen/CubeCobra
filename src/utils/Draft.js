@@ -111,7 +111,7 @@ async function buildDeck(cards, bot) {
   }
 
   for (const card of main) {
-    let index = Math.min(card.cmc, 7);
+    let index = Math.min(card.cmc || 0, 7);
     if (!card.type_line.toLowerCase().includes('creature')) {
       index += 8;
     }
