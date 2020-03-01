@@ -272,7 +272,9 @@ function assignBotColors(initialState, botCount, seats) {
         (comb.length == 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
     ]),
   );
-  const validCombinationArray = Object.keys(validCombinations).filter((c) => validCombinations[c]).map((c) => c.split(''));
+  const validCombinationArray = Object.keys(validCombinations)
+    .filter((c) => validCombinations[c])
+    .map((c) => c.split(''));
 
   const seatsRating = (seatColors) => {
     const seatColorCounts = Util.fromEntries(
