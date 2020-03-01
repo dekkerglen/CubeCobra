@@ -286,7 +286,7 @@ router.get('/api/cardratings', async (req, res) => {
   try {
     res.status(200).send({
       success: 'true',
-      data: await CardRating.find({}).lean(),
+      data: (await CardRating.find({}).lean()).map(({ name, elo, value, picks }) => ({ name, elo, value, picks })),
     });
   } catch (err) {
     req.logger.error(err);
