@@ -443,7 +443,7 @@ router.get('/overview/:id', async (req, res) => {
 
       if (allVersionsLookup[card.cardID]) {
         const allPrices = allVersionsLookup[card.cardID]
-          .reduce((lst, { price, price_foil }) => lst.concat([price, price_foil]), [])
+          .reduce((lst, { price, priceFoil }) => lst.concat([price, priceFoil]), [])
           .filter((p) => p && p > 0.001);
         if (allPrices.length > 0) {
           totalPricePurchase += Math.min(...allPrices) || 0;

@@ -308,20 +308,22 @@ function CSVtoCards(cards, carddb) {
 async function populateCardDetails(cardLists, carddb, { getPrices = null, elo = null, requestedDetails = undefined }) {
   const pids = new Set();
   const cardNames = new Set();
-  const lists = cardLists.map((list) => list.map((card) => {
-    // We don't want to modify the cards passed in or the card objects in the carddb.
-    card = { ...card, details: { ...carddb.cardFromId(card.cardID, requestedDetails) } };
-    if (!card.type_line) {
-      card.type_line = card.details.type;
-    }
-    if (getPrices && card.details.tcgplayer_id) {
-      pids.add(card.details.tcgplayer_id);
-    }
-    if (elo !== null) {
-      cardNames.add(card.details.name);
-    }
-    return card;
-  }));
+  const lists = cardLists.map((list) =>
+    list.map((card) => {
+      // We don't want to modify the cards passed in or the card objects in the carddb.
+      card = { ...card, details: { ...carddb.cardFromId(card.cardID, requestedDetails) } };
+      if (!card.type_line) {
+        card.type_line = card.details.type;
+      }
+      if (getPrices && card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      if (elo !== null) {
+        cardNames.add(card.details.name);
+      }
+      return card;
+    }),
+  );
   if (getPrices !== null || elo !== null) {
     const queries = [getPrices !== null && getPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
     const [priceDict, eloDict] = await Promise.all(queries);
