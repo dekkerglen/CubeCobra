@@ -272,7 +272,7 @@ function assignBotColors(initialState, botCount, seats) {
         (comb.length == 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
     ]),
   );
-  const validCombinationArray = Object.keys(validCombinations).filter((c) => validCombinations[c]);
+  const validCombinationArray = Object.keys(validCombinations).filter((c) => validCombinations[c]).map((c) => c.split(''));
 
   const seatsRating = (seatColors) => {
     const seatColorCounts = Util.fromEntries(
@@ -379,7 +379,7 @@ export function populateDraft(format, cards, bots, seats, user) {
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
       bot: i == 0 ? null : bots[i - 1],
-      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1][0] + ', ' + bots[i - 1][1],
+      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1].join(', '),
       userid: i == 0 ? user._id : null,
       drafted: [], //organized draft picks
       pickorder: [],
