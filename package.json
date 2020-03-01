@@ -64,6 +64,7 @@
     "react-sortable-hoc": "^1.10.1",
     "react-tag-input": "^6.4.1",
     "react-tagcloud": "^2.0.0",
+    "react-timeago": "^4.4.0",
     "reactstrap": "^8.0.1",
     "regexp-to-ast": "^0.5.0",
     "request": "^2.88.0",
