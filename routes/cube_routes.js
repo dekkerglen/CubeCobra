@@ -3202,8 +3202,10 @@ router.post(
         packnum += 1;
       }
 
-      rating.name = req.body.pick;
-      rating.elo = ELO_BASE + ELO_RANGE / 2;
+      if (!rating.elo) {
+        rating.name = req.body.pick;
+        rating.elo = ELO_BASE + ELO_RANGE / 2;
+      }
 
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));

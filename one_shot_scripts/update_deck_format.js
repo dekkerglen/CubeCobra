@@ -39,81 +39,86 @@ function botRating(botColors, card, rating) {
 }
 
 async function buildDeck(cards, bot) {
-  //cards will be a list of cardids
+  try {
+    //cards will be a list of cardids
 
-  cards = cards.map((id) => {
-    if (Array.isArray(id)) {
-      if (id.length <= 0) {
-        const details = carddb.getPlaceholderCard('');
-        return {
-          tags: [],
-          colors: details.colors,
-          cardID: details._id,
-          cmc: details.cmc,
-          type_line: details.type,
-          details: details,
-        };
+    cards = cards.map((id) => {
+      if (Array.isArray(id)) {
+        if (id.length <= 0) {
+          const details = carddb.getPlaceholderCard('');
+          return {
+            tags: [],
+            colors: details.colors,
+            cardID: details._id,
+            cmc: details.cmc,
+            type_line: details.type,
+            details: details,
+          };
+        }
+        if (id[0].cardID) {
+          id = id[0].cardID;
+        } else {
+          id = id[0];
+        }
+      } else if (id.cardID) {
+        id = id.cardID;
       }
-      if (id[0].cardID) {
-        id = id[0].cardID;
+      const details = carddb.cardFromId(id);
+      return {
+        tags: [],
+        colors: details.colors,
+        cardID: details._id,
+        cmc: details.cmc,
+        type_line: details.type,
+        details: details,
+      };
+    });
+
+    const elos = await cubefn.getElo(cards.map((card) => card.details.name));
+    const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
+    const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+
+    sort_fn = function(a, b) {
+      if (bot) {
+        return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
       } else {
-        id = id[0];
+        return elos[b.details.name] - elos[a.details.name];
       }
-    } else if (id.cardID) {
-      id = id.cardID;
-    }
-    const details = carddb.cardFromId(id);
-    return {
-      tags: [],
-      colors: details.colors,
-      cardID: details._id,
-      cmc: details.cmc,
-      type_line: details.type,
-      details: details,
     };
-  });
 
-  const elos = await cubefn.getElo(cards.map((card) => card.details.name));
-  const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+    nonlands.sort(sort_fn);
+    lands.sort(sort_fn);
 
-  sort_fn = function(a, b) {
-    if (bot) {
-      return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
-    } else {
-      return elos[b.details.name] - elos[a.details.name];
+    const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
+    const side = nonlands.slice(23).concat(lands.slice(17));
+
+    const deck = [];
+    const sideboard = [];
+    for (let i = 0; i < 16; i += 1) {
+      deck.push([]);
+      if (i < 8) {
+        sideboard.push([]);
+      }
     }
-  };
 
-  nonlands.sort(sort_fn);
-  lands.sort(sort_fn);
-
-  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
-  const side = nonlands.slice(23).concat(lands.slice(17));
-
-  const deck = [];
-  const sideboard = [];
-  for (let i = 0; i < 16; i += 1) {
-    deck.push([]);
-    if (i < 8) {
-      sideboard.push([]);
+    for (const card of main) {
+      let index = Math.min(card.cmc, 7);
+      if (!card.type_line.toLowerCase().includes('creature')) {
+        index += 8;
+      }
+      deck[index].push(card);
     }
-  }
-
-  for (const card of main) {
-    let index = Math.min(card.cmc, 7);
-    if (!card.type_line.toLowerCase().includes('creature')) {
-      index += 8;
+    for (const card of side) {
+      sideboard[Math.min(card.cmc, 7)].push(card);
     }
-    deck[index].push(card);
+    return {
+      deck,
+      sideboard,
+    };
+  } catch (err) {
+    console.error(err);
+    return { deck: [], sideboard: [] };
   }
-  for (const card of side) {
-    sideboard[Math.min(card.cmc, 7)].push(card);
-  }
-  return {
-    deck,
-    sideboard,
-  };
 }
 
 async function update(deck) {
@@ -232,7 +237,7 @@ async function update(deck) {
     }
   }
 
-  return deck.save();
+  return Deck.updateOne({ _id: deck._id }, deck);
 }
 
 (async () => {
@@ -241,7 +246,9 @@ async function update(deck) {
   var i = 0;
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
     const count = await Deck.countDocuments();
-    const cursor = Deck.find().cursor();
+    const cursor = Deck.find()
+      .lean()
+      .cursor();
 
     //batch them in 100
     for (var i = 0; i < count; i += batch_size) {
@@ -254,7 +261,11 @@ async function update(deck) {
           }
         }
       }
-      await Promise.all(decks.map((deck) => update(deck)));
+      try {
+        await Promise.all(decks.map((deck) => update(deck)));
+      } catch (err) {
+        console.error(err);
+      }
       console.log('Finished: ' + Math.min(count, i + batch_size) + ' of ' + count + ' decks');
     }
     mongoose.disconnect();

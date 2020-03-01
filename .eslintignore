@@ -13,7 +13,6 @@ public/js/toolbar.js
 serverjs/cubefn.js
 serverjs/prices.js
 serverjs/util.js
-src/components/AgeText.js
 src/components/AspectRatioBox.js
 src/components/AutocardListItem.js
 src/components/AutocompleteInput.js
