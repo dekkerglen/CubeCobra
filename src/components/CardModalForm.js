@@ -58,9 +58,9 @@ const CardModalForm = ({ children, ...props }) => {
   }, []);
   const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }), [addTag]);
   const deleteTag = useCallback((tagIndex) => {
-    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
+    setTags((tags) => tags.filter((_, i) => i !== tagIndex));
   }, []);
-  const reorderTag = useCallback((tag, currIndex, newIndex) => {
+  const reorderTag = useCallback((_, currIndex, newIndex) => {
     setTags((tags) => arrayMove(tags, currIndex, newIndex));
   }, []);
 

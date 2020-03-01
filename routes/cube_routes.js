@@ -722,36 +722,41 @@ router.get('/list/:id', async (req, res) => {
 
     const pids = new Set();
     const cardNames = [];
-    const { cards } = cube;
-    cards.forEach((card, index) => {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
-      card.index = index;
-      if (!card.type_line) {
-        card.type_line = card.details.type;
-      }
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      cardNames.push(card.details.name);
-    });
+    const addDetails = async (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+        cardNames.push(card.details.name);
+      });
 
-    const priceDict = await GetPrices([...pids]);
-    const eloDict = await getElo(cardNames, true);
-    for (const card of cards) {
-      if (card.details.tcgplayer_id) {
-        if (priceDict[card.details.tcgplayer_id]) {
-          card.details.price = priceDict[card.details.tcgplayer_id];
+      const priceDict = await GetPrices([...pids]);
+      const eloDict = await getElo(cardNames, true);
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
         }
-        if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-          card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
         }
       }
-      if (eloDict[card.details.name]) {
-        card.details.elo = eloDict[card.details.name];
-      }
-    }
+      return cards;
+    };
+    const cardsQ = await addDetails(cube.cards);
+    const maybeQ = await addDetails(cube.maybe);
+    [cube.cards, cube.maybe] = await Promise.all([cardsQ, maybeQ]);
 
     const reactProps = {
       cube,
@@ -762,12 +767,12 @@ router.get('/list/:id', async (req, res) => {
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
-      maybe: maybeCards(cube, carddb),
+      maybe: cube.maybe,
     };
 
     return res.render('cube/cube_list', {
       reactHTML: CubeListPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
