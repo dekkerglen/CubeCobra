@@ -16,13 +16,25 @@ const regexpParser = new RegExpParser();
 
 export const TOKEN_TYPES = { EOF };
 
-export function getOriginalString(ctx) {
+function collectTokens(ctx) {
   const tokens = [];
   for (const unorderedTokens of Object.values(ctx)) {
-    tokens.push(...unorderedTokens);
+    for (const unorderedToken of unorderedTokens) {
+      if (unorderedToken.children) {
+        tokens.push(...collectTokens(unorderedToken.children));
+      } else {
+        tokens.push(unorderedToken);
+      }
+    }
   }
-  tokens.sort((a, b) => a.startOffset - b.startOffset);
-  return tokens.map((token) => token.image).join('');
+  return tokens;
+}
+
+export function getOriginalString(ctx) {
+  return collectTokens(ctx)
+    .sort((a, b) => a.startOffset - b.startOffset)
+    .map(({ image }) => image)
+    .join('');
 }
 
 const CATEGORIES = [];
@@ -182,7 +194,7 @@ class RegexpVisitor extends BaseRegExpVisitor {
   visitSet(node) {
     if (node.complement) {
       const tokenType = categoryFor(node.value);
-      return handleQuantifier([new Terminal({ terminalType: tokenType })]);
+      return handleQuantifier([new Terminal({ terminalType: tokenType })], node.quantifier);
     }
     const charsInRanges = new Set();
     for (const charCode of node.value) {

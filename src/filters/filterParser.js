@@ -16,9 +16,11 @@ import {
 
 import { TOKEN_TYPES, consumeOneOf, consumeRegex, consumeWord } from 'parsing/parsingHelpers';
 
+import { CARD_CATEGORIES } from 'utils/Card';
+
 export const FIELDS_MAP = {};
 
-export const COLOR_COMBINATIONS = {
+export const COLOR_COMBINATION_NAMES = {
   c: '',
   brown: '',
   colorless: '',
@@ -50,7 +52,7 @@ export const COLOR_COMBINATIONS = {
   rainbow: 'wubrg',
 };
 
-const ALL_OPERATORS = [':', '=', '<', '<=', '>', '>='];
+export const ALL_OPERATORS = [':', '=', '!=', '<', '<=', '>', '>='];
 
 export function getFilterParser() {
   const conditions = [];
@@ -85,6 +87,8 @@ export function getFilterParser() {
   };
   const rules = [];
 
+  // integer followed by some number of a color, 2, or p, optionally followed by / and another one wrapped in curly brackets.
+  rules.push(new Rule({ name: 'manaCostValue', definition: consumeRegex(/(\d|\{[wubrgcp2](\/[wubrgcp2])?\})+/) }));
   // A non-negative integer that can also end with .0 or .5 in which case the integer part is optional.
   rules.push(new Rule({ name: 'positiveHalfIntegerValue', definition: consumeRegex(/\d+(\.(0|5))?|\.(0|5)/) }));
   // Same but allowing for pure integers to be negative
@@ -96,12 +100,12 @@ export function getFilterParser() {
   // foil or non-foil. We assume the input string is lowercase.
   rules.push(new Rule({ name: 'finishValue', definition: consumeOneOf(['foil', 'non-foil']) }));
   // either gold, hybrid, or phyrexian.
-  rules.push(new Rule({ name: 'isValue', definition: consumeOneOf('gold', 'hybrid', 'phyrexian') }));
+  rules.push(new Rule({ name: 'isValue', definition: consumeOneOf(CARD_CATEGORIES) }));
   // either owned, 'not owned', or 'premium owned' and can use double quotes.
   rules.push(
     new Rule({
       name: 'statusValue',
-      definition: consumeOneOf(['owned', '"not owned"', "'not owned'", '"premium owned"', "'premium owned'"]),
+      definition: consumeRegex(/owned|proxied|'(not owned|premium owned)'|"(not owned|premium owned)"/),
     }),
   );
   // common, uncommon, rare, mythic, special or their starting character.
@@ -111,20 +115,14 @@ export function getFilterParser() {
       definition: consumeOneOf(['mythic', 'm', 'common', 'c', 'rare', 'r', 'uncommon', 'u', 'special', 's']),
     }),
   );
-  // integer followed by some number of a color, 2, or p, optionally followed by / and another one wrapped in curly brackets.
-  rules.push(
-    new Rule({
-      name: 'manaCostValue',
-      definition: [new RepetitionMandatory({ definition: consumeRegex(/(\d|\{[wubrgcp2](\/[wubrgcp2])?\})+/) })],
-    }),
-  );
   // String literal. Allows whitespace if wrapped in quotes. Only allowed escape sequences are \' \" and \n
   rules.push(
     new Rule({
       name: 'stringValue',
-      definition: consumeRegex(/[^"'\s]+|"([^"\\]|\\['n"])*"|'([^'\\]|\\['n"])*'/),
+      definition: consumeRegex(/([^"'\s\\]|\\[\\'n"])([^\s\\]|\\[\\'n"])*|"([^"\\]|\\[\\'n"])*"|'([^'\\]|\\[\\'n"])*'/),
     }),
   );
+  rules.push(new Rule({ name: 'stringSetValue', definition: [new NonTerminal({ nonTerminalName: 'stringValue' })] }));
   // alphanumeric sequence
   rules.push(
     new Rule({
@@ -141,25 +139,25 @@ export function getFilterParser() {
   rules.push(
     new Rule({
       name: 'colorCombinationNames1',
-      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(0, 8)) })],
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATION_NAMES).slice(0, 8)) })],
     }),
   );
   rules.push(
     new Rule({
       name: 'colorCombinationNames2',
-      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(8, 16)) })],
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATION_NAMES).slice(8, 16)) })],
     }),
   );
   rules.push(
     new Rule({
       name: 'colorCombinationNames3',
-      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(16, 24)) })],
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATION_NAMES).slice(16, 24)) })],
     }),
   );
   rules.push(
     new Rule({
       name: 'colorCombinationNames4',
-      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATIONS).slice(24)) })],
+      definition: [new Flat({ definition: consumeOneOf(Object.keys(COLOR_COMBINATION_NAMES).slice(24)) })],
     }),
   );
   // repetition of color letters or a color combination as defined in COLOR_COMBINATIONS.
@@ -174,6 +172,7 @@ export function getFilterParser() {
             new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames2' })] }),
             new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames3' })] }),
             new Flat({ definition: [new NonTerminal({ nonTerminalName: 'colorCombinationNames4' })] }),
+            new Flat({ definition: consumeRegex(/\d+/) }),
           ],
           // Some color combination names have a prefix that is a valid color combination
           ignoreAmbiguities: true,
@@ -182,37 +181,29 @@ export function getFilterParser() {
     }),
   );
 
-  rules.push(createCondition('details.mana', ['m', 'mana'], ['=', ':'], 'manaCostValue'));
-  rules.push(createCondition('cmc', ['cmc', 'cost'], ALL_OPERATORS, 'positiveHalfIntegerValue'));
-  rules.push(createCondition('details.color', ['c', 'color'], ALL_OPERATORS, 'colorCombinationValue'));
-  rules.push(createCondition('color', ['ci', 'id', 'identity'], ALL_OPERATORS, 'colorCombinationValue'));
-  rules.push(createCondition('type_line', ['t', 'type'], [':', '='], 'stringValue'));
-  rules.push(createCondition('details.oracle', ['o', 'oracle'], [':', '='], 'stringValue'));
-  rules.push(createCondition('set', ['s', 'set'], ['=', ':'], 'setValue'));
-  rules.push(createCondition('power', ['pow', 'power'], ALL_OPERATORS, 'halfIntegerValue'));
-  rules.push(createCondition('toughness', ['tough', 'toughness'], ALL_OPERATORS, 'halfIntegerValue'));
-  rules.push(createCondition('tags', ['tag'], [':'], 'stringValue'));
-  rules.push(createCondition('finish', ['fin', 'finish'], [':', '='], 'finishValue'));
+  // rules.push(createCondition('details.parsed_cost', ['m', 'mana', 'cost'], ['=', ':'], 'manaCostValue'));
+  rules.push(createCondition('cmc', ['cmc'], ALL_OPERATORS, 'positiveHalfIntegerValue'));
+  rules.push(createCondition('details.colors', ['c', 'color'], ALL_OPERATORS, 'colorCombinationValue'));
+  rules.push(createCondition('colors', ['ci', 'id', 'identity'], ALL_OPERATORS, 'colorCombinationValue'));
+  rules.push(createCondition('type_line', ['t', 'type'], [':', '=', '!='], 'stringValue'));
+  rules.push(createCondition('details.oracle_text', ['o', 'oracle'], [':', '=', '!='], 'stringValue'));
+  rules.push(createCondition('details.set', ['s', 'set'], [':', '=', '!='], 'setValue'));
+  rules.push(createCondition('details.power', ['pow', 'power'], ALL_OPERATORS, 'halfIntegerValue'));
+  rules.push(createCondition('details.toughness', ['tough', 'toughness'], ALL_OPERATORS, 'halfIntegerValue'));
+  rules.push(createCondition('tags', ['tag'], [':'], 'stringSetValue'));
+  rules.push(createCondition('finish', ['fin', 'finish'], [':', '=', '!='], 'finishValue'));
   rules.push(createCondition('price', ['p', 'price'], ALL_OPERATORS, 'dollarValue'));
-  rules.push(
-    createCondition(
-      'details.price',
-      ['np', 'pn', 'normal', 'normalprice', 'pricenormal'],
-      ALL_OPERATORS,
-      'dollarValue',
-    ),
-  );
-  rules.push(
-    createCondition('details.foil_price', ['fp', 'pf', 'foil', 'pricefoil', 'foilprice'], ALL_OPERATORS, 'dollarValue'),
-  );
-  rules.push(createCondition('status', ['stat', 'status'], ['=', ':'], 'statusValue'));
+  rules.push(createCondition('details.price', ['np', 'normal', 'normalprice'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(createCondition('details.price_foil', ['fp', 'foil', 'foilprice'], ALL_OPERATORS, 'dollarValue'));
+  rules.push(createCondition('status', ['stat', 'status'], [':', '=', '!='], 'statusValue'));
   rules.push(createCondition('details.rarity', ['r', 'rar', 'rarity'], ALL_OPERATORS, 'rarityValue'));
   rules.push(createCondition('details.loyalty', ['l', 'loy', 'loyal', 'loyalty'], ALL_OPERATORS, 'integerValue'));
-  rules.push(createCondition('details.artist', ['a', 'art', 'artist'], [':', '='], 'stringValue'));
+  rules.push(createCondition('details.artist', ['a', 'art', 'artist'], ALL_OPERATORS, 'stringValue'));
   rules.push(createCondition('details', ['is'], [':'], 'isValue'));
   rules.push(createCondition('details.elo', ['elo'], ALL_OPERATORS, 'integerValue'));
-  rules.push(createCondition('details.picks', ['picks'], ALL_OPERATORS, 'integerValue'));
-  rules.push(createCondition('details.cubes', ['cubes'], ALL_OPERATORS, 'integerValue'));
+  // rules.push(createCondition('details.picks', ['picks'], ALL_OPERATORS, 'integerValue'));
+  // rules.push(createCondition('details.cubes', ['cubes'], ALL_OPERATORS, 'integerValue'));
+  rules.push(createCondition('details.name_lower', ['n', 'name'], ALL_OPERATORS, 'stringValue'));
 
   // One of the above defined conditions or a nested filter
   rules.push(

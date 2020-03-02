@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from 'utils/Filter';
-import Query from 'utils/Query';
-
 import CardModalForm from 'components/CardModalForm';
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
@@ -12,6 +9,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortContextProvider } from 'components/SortContext';
 import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
+
+import Query from 'utils/Query';
 
 const deduplicateTags = (tagColors) => {
   const used = new Set();
@@ -44,7 +43,7 @@ const CubeComparePage = ({
     id: tag,
     text: tag,
   }));
-  const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+  const filteredCards = filter !== null ? cards.filter(filter) : cards;
   return (
     <SortContextProvider defaultSorts={defaultSorts}>
       <DisplayContextProvider>

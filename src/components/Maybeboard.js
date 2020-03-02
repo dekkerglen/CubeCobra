@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
-import Filter from 'utils/Filter';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import CardModalContext from 'components/CardModalContext';
@@ -183,9 +182,7 @@ const Maybeboard = ({ filter, ...props }) => {
   const maybeboardIndex = useMemo(() => maybeboard.map((card, index) => ({ ...card, index })), [maybeboard]);
 
   const filteredMaybeboard = useMemo(() => {
-    return filter && filter.length > 0
-      ? maybeboardIndex.filter((card) => Filter.filterCard(card, filter))
-      : maybeboardIndex;
+    return filter !== null ? maybeboardIndex.filter(filter) : maybeboardIndex;
   }, [filter, maybeboardIndex]);
 
   return (
@@ -228,7 +225,7 @@ const Maybeboard = ({ filter, ...props }) => {
       {maybeboard.length === 0 ? (
         <h5 className="mt-3">
           No cards in maybeboard
-          {filter && filter.length > 0 ? ' matching filter.' : '.'}
+          {filter ? ' matching filter.' : '.'}
         </h5>
       ) : (
         <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
@@ -239,7 +236,11 @@ const Maybeboard = ({ filter, ...props }) => {
 };
 
 Maybeboard.propTypes = {
-  filter: PropTypes.arrayOf(PropTypes.array).isRequired,
+  filter: PropTypes.arrayOf(PropTypes.array),
+};
+
+Maybeboard.defaultProps = {
+  filter: null,
 };
 
 export default Maybeboard;

@@ -67,7 +67,7 @@ const serverConfig = merge(config, {
     'pages/DashboardPage': './src/pages/DashboardPage.js',
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
-    'utils/Filter': './src/utils/Filter.js',
+    'filters/filter': './src/filters/filter.js',
     'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',
   },

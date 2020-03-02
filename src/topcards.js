@@ -3,14 +3,15 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
-import { encodeName } from 'utils/Card';
-import { makeFilter } from 'utils/Filter';
-
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
 import SortableTable from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
+
+import { makeFilter } from 'filters/filter';
+
+import { encodeName } from 'utils/Card';
 
 const AutocardA = withAutocard('a');
 
@@ -21,7 +22,7 @@ class TopCards extends Component {
     const { defaultData, defaultNumResults, defaultFilterText } = props;
 
     this.state = {
-      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) || [],
+      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) ?? null,
       data: defaultData || [],
       numResults: defaultNumResults || 0,
     };

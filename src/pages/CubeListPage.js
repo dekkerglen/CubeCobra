@@ -1,10 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from 'utils/Filter';
-import LocalStorage from 'utils/LocalStorage';
-import Query from 'utils/Query';
-
 import CardModalForm from 'components/CardModalForm';
 import { ChangelistContextProvider } from 'components/ChangelistContext';
 import ClientOnly from 'components/ClientOnly';
@@ -22,7 +18,11 @@ import { SortContextProvider } from 'components/SortContext';
 import TableView from 'components/TableView';
 import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
+
 import CubeLayout from 'layouts/CubeLayout';
+
+import LocalStorage from 'utils/LocalStorage';
+import Query from 'utils/Query';
 
 const CubeListPageRaw = ({
   maybe,
@@ -36,7 +36,7 @@ const CubeListPageRaw = ({
 
   const [cubeView, setCubeView] = useState(defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
-  const [filter, setFilter] = useState([]);
+  const [filter, setFilter] = useState(null);
 
   useEffect(() => {
     const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);
@@ -62,7 +62,7 @@ const CubeListPageRaw = ({
   }));
 
   const filteredCards = useMemo(() => {
-    return filter.length > 0 ? cube.cards.filter((card) => Filter.filterCard(card, filter)) : cube.cards;
+    return filter !== null ? cube.cards.filter(filter) : cube.cards;
   }, [filter, cube]);
 
   return (

@@ -18,16 +18,13 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import { tokenize } from 'parsing/parsingHelpers';
-import FilterParser from 'parsing/filterParser';
-import getVisitorForParser from 'parsing/filterVisitor';
+import { makeFilter } from 'filters/filter';
 
-import Filter from '../utils/Filter';
-import Query from '../utils/Query';
-import { fromEntries } from '../utils/Util';
+import Query from 'utils/Query';
+import { fromEntries } from 'utils/Util';
 
-import { ColorChecksAddon } from './ColorCheck';
-import LoadingButton from './LoadingButton';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import LoadingButton from 'components/LoadingButton';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -334,32 +331,16 @@ class FilterCollapse extends Component {
   async updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
-      this.props.setFilter([], '');
+      this.props.setFilter(null, '');
       return;
     }
-    const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
-    const tokenized = tokenize(filterInput.trim());
-    FilterParser.input = tokenized;
-    const parsed = FilterParser.parse();
-    console.log('Parsed: ', parsed);
-    if (parsed) {
-      const visitor = getVisitorForParser(FilterParser);
-      const newFilters = visitor.parse(parsed);
-      console.log(
-        'Matches: ',
-        newFilters({ cmc: 3.5, power: 2, toughness: 1, details: { price: 0.44, foil_price: 4.96 }, price: 4.96 }),
-      );
-    }
-    if (!valid) return;
+    const { err, filter } = makeFilter(filterInput);
+    if (err) return;
 
-    if (tokens.length > 0) {
-      const filters = [Filter.parseTokens(tokens)];
-      // TODO: Copy to advanced filter boxes.
-      this.setState({ loading: true });
-      await this.props.setFilter(filters, filterInput);
-      this.setState({ loading: false });
-    }
+    // TODO: Copy to advanced filter boxes.
+    this.setState({ loading: true });
+    await this.props.setFilter(() => filter, filterInput);
+    this.setState({ loading: false });
   }
 
   handleChange(event) {
@@ -384,16 +365,15 @@ class FilterCollapse extends Component {
     }
   }
 
-  handleReset(event) {
+  handleReset() {
     this.setState({ filterInput: '' });
-    this.props.setFilter([], '');
+    this.props.setFilter(null, '');
   }
 
   render() {
     const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
     const { loading, filterInput, advancedOpen } = this.state;
-    const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    const { err } = makeFilter(filterInput);
     const appliedText =
       'Filters applied' +
       (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '') +
@@ -415,8 +395,8 @@ class FilterCollapse extends Component {
                     name="filterInput"
                     placeholder={'name:"Ambush Viper"'}
                     disabled={loading}
-                    valid={filterInput.length > 0 && valid}
-                    invalid={filterInput.length > 0 && !valid}
+                    valid={filterInput.length > 0 && !err}
+                    invalid={filterInput.length > 0 && err}
                     value={this.state.filterInput}
                     onChange={this.handleChange}
                     onKeyDown={this.handleKeyDown}

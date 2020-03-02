@@ -1,4 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
+import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -590,14 +591,11 @@ export function cardGetLabels(card, sort) {
     }
     return [];
   } else if (sort == 'Manacost Type') {
-    if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
+    if (CARD_CATEGORY_DETECTORS.gold(card.details)) {
       return ['Gold'];
-    } else if (
-      card.details.colors.length > 1 &&
-      card.details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
-    ) {
+    } else if (CARD_CATEGORY_DETECTORS.hybrid(card.details)) {
       return ['Hybrid'];
-    } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
+    } else if (CARD_CATEGORY_DETECTORS.phyrexian(card.details)) {
       return ['Phyrexian'];
     }
     return [];

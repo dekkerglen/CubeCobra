@@ -3,11 +3,14 @@ import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row } from 'reactstrap';
 
-import CubeLayout from 'layouts/CubeLayout';
-
-import Query from 'utils/Query';
-import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
-import Filter from 'utils/Filter';
+import averageCmc from 'analytics/averageCmc';
+import colorCount from 'analytics/colorCount';
+import colorCurve from 'analytics/colorCurve';
+import inclusiveColorCount from 'analytics/inclusiveColorCount';
+import tagCloud from 'analytics/tagCloud';
+import tokenGrid from 'analytics/tokenGrid';
+import typeBreakdown from 'analytics/typeBreakdown';
+import typeBreakdownCount from 'analytics/typeBreakdownCount';
 
 import CardGrid from 'components/analytics/CardGrid';
 import Chart from 'components/analytics/Chart';
@@ -18,14 +21,10 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import MagicMarkdown from 'components/MagicMarkdown';
 
-import averageCmc from 'analytics/averageCmc';
-import colorCount from 'analytics/colorCount';
-import colorCurve from 'analytics/colorCurve';
-import inclusiveColorCount from 'analytics/inclusiveColorCount';
-import tagCloud from 'analytics/tagCloud';
-import tokenGrid from 'analytics/tokenGrid';
-import typeBreakdown from 'analytics/typeBreakdown';
-import typeBreakdownCount from 'analytics/typeBreakdownCount';
+import CubeLayout from 'layouts/CubeLayout';
+
+import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
+import Query from 'utils/Query';
 
 class CubeAnalysisPage extends Component {
   constructor(props) {
@@ -119,8 +118,7 @@ class CubeAnalysisPage extends Component {
       this.updateAsfan();
       return;
     }
-    const filteredWithAsfan =
-      filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
+    const filteredWithAsfan = filter !== null ? cardsWithAsfan.filter(filter) : cardsWithAsfan;
     this.setState({ filteredWithAsfan }, this.updateData);
   }
 

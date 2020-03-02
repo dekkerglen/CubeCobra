@@ -1,41 +1,39 @@
 'use strict';
 
-var Util = require('utils/Util.js');
-require('./Card.js');
-var Filter = require('utils/Filter.js');
+const Filter = require('filters/filter.js');
+
+require('utils/Card.js');
+const Util = require('utils/Util.js');
 
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
-  return Filter.filterCards(cards, filter, true);
+  return cards.filter(filter);
 }
 
 function makeFilter(filterText) {
   if (!filterText || filterText === '' || filterText == '*') {
-    return [null];
+    return null;
   }
 
-  let tokens = [];
-  let valid = false;
-  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
+  let { filter, err } = Filter.makeFilter(filterText)
 
   // backwards compatibilty: treat as tag
-  if (!valid || !Filter.operatorsRegex.test(filterText)) {
-    let tagfilterText = filterText;
+  if (err || !Filter.operatorsRegex.test(filterText)) {
+    let tagFilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
-      tagfilterText = `"${filterText}"`;
+      tagFilterText = `"${filterText}"`;
     }
-    tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
-    tokens = [];
-    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
+    tagFilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
+    ({ filter, err } = makeFilter(tagFilterText));
   }
 
-  if (!valid) {
+  if (err) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  return [Filter.parseTokens(tokens)];
+  return filter;
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates

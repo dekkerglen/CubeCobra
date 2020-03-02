@@ -61,7 +61,7 @@ function cardFromId(id, fields) {
     details = getPlaceholderCard(id);
   }
 
-  if (typeof fields === 'undefined') {
+  if (typeof fields === 'undefined' || fields === null) {
     return details;
   }
   if (!Array.isArray(fields)) {
@@ -131,14 +131,7 @@ function unloadCardDb() {
 }
 
 function reasonableCard(card) {
-  return (
-    !card.promo &&
-    !card.digital &&
-    card.border_color !== 'gold' &&
-    card.language === 'en' &&
-    card.tcgplayer_id &&
-    card.set !== 'myb'
-  );
+  return cardutil.CARD_CATEGORY_DETECTORS.reasonable(card);
 }
 
 function reasonableId(id) {
