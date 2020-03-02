@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from 'utils/Draft';
-import Location from 'utils/DraftLocation';
+import Draft from 'draft/Draft';
+import Location from 'draft/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 
 import CSRFForm from 'components/CSRFForm';
@@ -35,7 +35,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const canDrop = (source, target) => {
+const canDrop = (_, target) => {
   return target.type === Location.PICKS;
 };
 

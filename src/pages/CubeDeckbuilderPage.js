@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Location from 'utils/DraftLocation';
+import Location from 'draft/DraftLocation';
 import { sortDeck } from 'utils/Util';
 
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';

@@ -1,29 +1,25 @@
-'use strict';
-
-var Card = require('utils/Card.js');
-var Draft = require('utils/Draft.js');
-var Util = require('utils/Util.js');
-require('./Card.js');
-var Filter = require('utils/Filter.js');
+import { COLOR_COMBINATIONS } from 'utils/Card';
+import { arrayIsSubset, arraysAreEqualSets, arrayShuffle, fromEntries } from 'utils/Util';
+import { filterCards, filterToString, operatorsRegex, parseTokens, tokenizeInput, verifyTokens } from 'utils/Filter';
 
 function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
-  return Filter.filterCards(cards, filter, true);
+  return filterCards(cards, filter, true);
 }
 
 function makeFilter(filterText) {
-  if (!filterText || filterText === '' || filterText == '*') {
+  if (!filterText || filterText === '' || filterText === '*') {
     return [null];
   }
 
   let tokens = [];
   let valid = false;
-  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
+  valid = tokenizeInput(filterText, tokens) && verifyTokens(tokens);
 
   // backwards compatibilty: treat as tag
-  if (!valid || !Filter.operatorsRegex.test(filterText)) {
+  if (!valid || !operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
@@ -31,17 +27,17 @@ function makeFilter(filterText) {
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
     tokens = [];
-    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
+    valid = tokenizeInput(tagfilterText, tokens) && verifyTokens(tokens);
   }
 
   if (!valid) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  return [Filter.parseTokens(tokens)];
+  return [parseTokens(tokens)];
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
-   a data structure: 
+   a data structure:
 
       [pack][card in pack][token,token...]
 */
@@ -63,7 +59,7 @@ function standardDraft(cards) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = Util.arrayShuffle(cards);
+  cards = arrayShuffle(cards);
   return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
@@ -89,7 +85,7 @@ function standardDraftAsfan(cards) {
 }
 
 function customDraft(cards, duplicates = false) {
-  return function(cardFilters) {
+  return (cardFilters) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
@@ -103,16 +99,16 @@ function customDraft(cards, duplicates = false) {
         index = Math.floor(Math.random() * cardFilters.length);
         const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
-        if (validCards.length == 0) {
+        if (validCards.length === 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
-      } while (validCards.length == 0 && cardFilters.length > 0);
+      } while (validCards.length === 0 && cardFilters.length > 0);
     }
 
-    if (validCards.length == 0) {
+    if (validCards.length === 0) {
       throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
@@ -170,26 +166,6 @@ function customDraftAsfan(cards, duplicates = false) {
   };
 }
 
-export function getDraftBots(params) {
-  const botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
-  const draftbots = [];
-  let colors = [];
-  for (let i = 0; i < botcolors; i++) {
-    colors.push('W');
-    colors.push('U');
-    colors.push('B');
-    colors.push('R');
-    colors.push('G');
-  }
-  colors = Util.arrayShuffle(colors);
-  for (let i = 0; i < params.seats - 1; i++) {
-    const colorcombo = [colors.pop(), colors.pop()];
-    draftbots.push(colorcombo);
-  }
-  // TODO: order the bots to avoid same colors next to each other
-  return draftbots;
-}
-
 export function getDraftFormat(params, cube) {
   let format;
   if (params.id >= 0) {
@@ -221,7 +197,7 @@ function createPacks(draft, format, seats, nextCardFn) {
 
     for (let packNum = 0; packNum < format.length; packNum++) {
       draft.initial_state[seat].push([]);
-      let pack = [];
+      const pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
         const result = nextCardFn(format[packNum][cardNum]);
         if (result.messages && result.messages.length > 0) {
@@ -242,21 +218,14 @@ function createPacks(draft, format, seats, nextCardFn) {
 function assignBotColors(initialState, botCount, seats) {
   const ITERATIONS = 1000;
 
-  const colorCounts = Util.fromEntries(Card.COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
+  const colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
   const cards = initialState.flat(3);
 
   for (const card of cards) {
-    const elo = card.details.elo;
-    const cardColorSet =
-      card.colors !== undefined
-        ? card.colors
-        : card.details.color_identity !== undefined
-        ? card.details.color_identity
-        : [];
+    const { elo } = card.details;
+    const cardColorSet = card.colors ?? card.details.color_identity ?? [];
     // Colorless will be null since it is recorded as 'C' not ''.
-    const cardColorsNormalized = Card.COLOR_COMBINATIONS.find((colors) =>
-      Util.arraysAreEqualSets(colors, cardColorSet),
-    );
+    const cardColorsNormalized = COLOR_COMBINATIONS.find((colors) => arraysAreEqualSets(colors, cardColorSet));
     // We can skip colorless since it would just apply to every seat.
     if (cardColorsNormalized) {
       const cardColors = cardColorsNormalized.join('');
@@ -265,11 +234,11 @@ function assignBotColors(initialState, botCount, seats) {
     }
   }
 
-  const validCombinations = Util.fromEntries(
+  const validCombinations = fromEntries(
     Object.entries(colorCounts).map(([comb, { count }]) => [
       comb,
       (comb.length > 1 && count > 0) ||
-        (comb.length == 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
+        (comb.length === 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
     ]),
   );
   const validCombinationArray = Object.keys(validCombinations)
@@ -277,7 +246,7 @@ function assignBotColors(initialState, botCount, seats) {
     .map((c) => c.split(''));
 
   const seatsRating = (seatColors) => {
-    const seatColorCounts = Util.fromEntries(
+    const seatColorCounts = fromEntries(
       Object.entries(colorCounts).map(([c, colorCount]) => [c, { ...colorCount, seatCount: 0 }]),
     );
     let includedCount = 0;
@@ -285,7 +254,7 @@ function assignBotColors(initialState, botCount, seats) {
       let included = false;
       const combinationArray = combination.split('');
       for (const colors of seatColors) {
-        if (combinationArray.length <= colors.length && Util.arrayIsSubset(combinationArray, colors)) {
+        if (combinationArray.length <= colors.length && arrayIsSubset(combinationArray, colors)) {
           seatColorCounts[combination].seatCount += 1;
           included = true;
         }
@@ -297,7 +266,7 @@ function assignBotColors(initialState, botCount, seats) {
     const fValues = seatColors.map((colors) => {
       let f = 0;
       for (const [comb, { elo, seatCount }] of Object.entries(seatColorCounts)) {
-        if (seatCount > 0 && comb.length <= colors.length && Util.arrayIsSubset(comb.split(''), colors)) {
+        if (seatCount > 0 && comb.length <= colors.length && arrayIsSubset(comb.split(''), colors)) {
           f += elo / seatCount;
         }
       }
@@ -307,7 +276,7 @@ function assignBotColors(initialState, botCount, seats) {
     return includedCount * Math.min(...fValues);
   };
   const seatsAndRatingFrom = (combOrder) => {
-    let seatColors = [];
+    const seatColors = [];
     for (let i = 0; i < seats; i++) {
       seatColors.push(combOrder[i % combOrder.length]);
     }
@@ -321,7 +290,7 @@ function assignBotColors(initialState, botCount, seats) {
   let [bestSeats, bestRating] = seatsAndRatingFrom(initialOrder);
   for (let i = 0; i < ITERATIONS; i++) {
     // We're okay mutating this so we don't need to make a copy.
-    const combinations = Util.arrayShuffle(validCombinationArray);
+    const combinations = arrayShuffle(validCombinationArray);
     const [currentSeats, rating] = seatsAndRatingFrom(combinations);
     if (rating > bestRating) {
       [bestSeats, bestRating] = [currentSeats, rating];
@@ -331,7 +300,7 @@ function assignBotColors(initialState, botCount, seats) {
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(format, cards, bots, seats, user) {
+export function populateDraft(format, cards, botCount, seats, user) {
   const draft = {};
 
   let nextCardFn = null;
@@ -339,7 +308,7 @@ export function populateDraft(format, cards, bots, seats, user) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
-  if (bots.length === 0) {
+  if (botCount === 0) {
     throw new Error('Unable to create draft: no bots.');
   }
   if (seats < 2) {
@@ -376,14 +345,14 @@ export function populateDraft(format, cards, bots, seats, user) {
     }
   }
 
-  bots = assignBotColors(draft.initial_state, bots.length, seats);
+  const bots = assignBotColors(draft.initial_state, botCount, seats);
 
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
-      bot: i == 0 ? null : bots[i - 1],
-      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1].join(', '),
-      userid: i == 0 ? user._id : null,
-      drafted: [], //organized draft picks
+      bot: i === 0 ? null : bots[i - 1],
+      name: i === 0 ? user.username : `Bot ${i}: ${bots[i - 1].join(', ')}`,
+      userid: i === 0 ? user._id : null,
+      drafted: [], // organized draft picks
       pickorder: [],
       packbacklog: [],
     };
@@ -423,7 +392,7 @@ export function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
-        messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
