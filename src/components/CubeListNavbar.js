@@ -358,7 +358,11 @@ const CubeListNavbar = ({
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem
+                  href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}
+                >
+                  Comma-Separated (.csv)
+                </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
               </DropdownMenu>
