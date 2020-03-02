@@ -1,5 +1,5 @@
 import { COLOR_COMBINATIONS } from 'utils/Card';
-import { arrayIsSubset, arraysAreEqualSets, arrayShuffle, fromEntries } from 'utils/Util';
+import { arrayIsSubset, arraysAreEqualSets, arrayShuffle, fromEntries, stdDevOf, meanOf } from 'utils/Util';
 import { filterCards, filterToString, operatorsRegex, parseTokens, tokenizeInput, verifyTokens } from 'utils/Filter';
 
 function matchingCards(cards, filter) {
@@ -273,7 +273,7 @@ function assignBotColors(initialState, botCount, seats) {
       f /= colors.length;
       return f;
     });
-    return includedCount * Math.min(...fValues);
+    return (includedCount * Math.min(...fValues) * meanOf(fValues)) / stdDevOf(fValues);
   };
   const seatsAndRatingFrom = (combOrder) => {
     const seatColors = [];
