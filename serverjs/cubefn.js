@@ -3,13 +3,13 @@ const Cube = require('../models/cube');
 const CardRating = require('../models/cardrating');
 const util = require('./util');
 
-function get_cube_id(cube) {
+function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;
   if (cube.shortID) return cube.shortID;
   return cube._id;
 }
 
-function build_id_query(id) {
+function buildIdQuery(id) {
   if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
     return {
       _id: id,
@@ -27,11 +27,11 @@ function build_id_query(id) {
   };
 }
 
-async function generate_short_id() {
-  let cubes = await Cube.find({}, ['shortID', 'urlAlias']);
+async function generateShortId() {
+  const cubes = await Cube.find({}, ['shortID', 'urlAlias']);
 
-  const short_ids = cubes.map((cube) => cube.shortID);
-  const url_aliases = cubes.map((cube) => cube.urlAlias);
+  const shortIds = cubes.map((cube) => cube.shortID);
+  const urlAliases = cubes.map((cube) => cube.urlAlias);
 
   const ids = cubes.map((cube) => util.fromBase36(cube.shortID));
   let max = Math.max(...ids);
@@ -40,15 +40,16 @@ async function generate_short_id() {
     max = 0;
   }
 
-  let new_id = '';
-  while (true) {
-    max++;
-    new_id = util.toBase36(max);
+  let newId = '';
+  let isGoodId = false;
+  while (!isGoodId) {
+    max += 1;
+    newId = util.toBase36(max);
 
-    if (!util.hasProfanity(new_id) && !short_ids.includes(new_id) && !url_aliases.includes(new_id)) break;
+    isGoodId = !util.has_profanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
   }
 
-  return new_id;
+  return newId;
 }
 
 function intToLegality(val) {
@@ -86,16 +87,16 @@ function legalityToInt(legality) {
 }
 
 function cardsAreEquivalent(card, details) {
-  if (card.cardID != details.cardID) {
+  if (card.cardID !== details.cardID) {
     return false;
   }
-  if (card.status != details.status) {
+  if (card.status !== details.status) {
     return false;
   }
-  if (card.cmc != details.cmc) {
+  if (card.cmc !== details.cmc) {
     return false;
   }
-  if (card.type_line && details.type_line && card.type_line != details.type_line) {
+  if (card.type_line && details.type_line && card.type_line !== details.type_line) {
     return false;
   }
   if (!util.arraysEqual(card.tags, details.tags)) {
@@ -104,7 +105,7 @@ function cardsAreEquivalent(card, details) {
   if (!util.arraysEqual(card.colors, details.colors)) {
     return false;
   }
-  if (card.finish && details.finish && card.finish != details.finish) {
+  if (card.finish && details.finish && card.finish !== details.finish) {
     return false;
   }
 
@@ -113,48 +114,31 @@ function cardsAreEquivalent(card, details) {
 
 function cardHtml(card) {
   if (card.image_flip) {
-    return (
-      '<a class="dynamic-autocard" card="' +
-      card.image_normal +
-      '" card_flip="' +
-      card.image_flip +
-      '">' +
-      card.name +
-      '</a>'
-    );
-  } else {
-    return '<a class="dynamic-autocard" card="' + card.image_normal + '">' + card.name + '</a>';
+    return `<a class="dynamic-autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
   }
+  return `<a class="dynamic-autocard" card="${card.image_normal}">${card.name}</a>`;
 }
 
 function addCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
+  return `<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-success">+</span> ${cardHtml(
+    card,
+  )}<br/>`;
 }
 
 function removeCardHtml(card) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ' +
-    cardHtml(card) +
-    '<br/>'
-  );
+  return `<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-danger">-</span> ${cardHtml(
+    card,
+  )}<br/>`;
 }
 
 function replaceCardHtml(oldCard, newCard) {
-  return (
-    '<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ' +
-    cardHtml(oldCard) +
-    ' &gt; ' +
-    cardHtml(newCard) +
-    '<br/>'
-  );
+  return `<span style="font-family: &quot;Lucida Console&quot;, Monaco, monospace;" class="badge badge-primary">→</span> ${cardHtml(
+    oldCard,
+  )} &gt; ${cardHtml(newCard)}<br/>`;
 }
 
 function abbreviate(name) {
-  return name.length < 20 ? name : name.slice(0, 20) + '…';
+  return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
 function insertComment(comments, position, comment) {
@@ -162,54 +146,54 @@ function insertComment(comments, position, comment) {
     comment.index = comments.length;
     comments.push(comment);
     return comment;
-  } else {
-    return insertComment(comments[position[0]].comments, position.slice(1), comment);
   }
+  return insertComment(comments[position[0]].comments, position.slice(1), comment);
 }
 
 function getOwnerFromComment(comments, position) {
   if (position.length <= 0) {
     return '';
-  } else if (position.length == 1) {
-    return comments[position[0]].owner;
-  } else {
-    return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
   }
+  if (position.length === 1) {
+    return comments[position[0]].owner;
+  }
+  return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
 }
 
 function saveEdit(comments, position, comment) {
-  if (position.length == 1) {
+  if (position.length === 1) {
     comments[position[0]] = comment;
   } else if (position.length > 1) {
     saveEdit(comments[position[0]].comments, position.slice(1), comment);
   }
 }
-function build_tag_colors(cube) {
-  let tag_colors = cube.tag_colors;
-  let tags = tag_colors.map((item) => item.tag);
-  let not_found = tag_colors.map((item) => item.tag);
 
-  cube.cards.forEach(function(card, index) {
-    card.tags.forEach(function(tag, index) {
+function buildTagColors(cube) {
+  let { tag_colors: tagColor } = cube;
+  const tags = tagColor.map((item) => item.tag);
+  const notFound = tagColor.map((item) => item.tag);
+
+  for (const card of cube.cards) {
+    for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
-        tag_colors.push({
+        tagColor.push({
           tag,
           color: null,
         });
         tags.push(tag);
       }
-      if (not_found.includes(tag)) not_found.splice(not_found.indexOf(tag), 1);
-    });
-  });
+      if (notFound.includes(tag)) notFound.splice(notFound.indexOf(tag), 1);
+    }
+  }
 
-  let tmp = [];
-  tag_colors.forEach(function(item, index) {
-    if (!not_found.includes(item.tag)) tmp.push(item);
-  });
-  tag_colors = tmp;
+  const tmp = [];
+  for (const color of tagColor) {
+    if (!notFound.includes(color.tag)) tmp.push(color);
+  }
+  tagColor = tmp;
 
-  return tag_colors;
+  return tagColor;
 }
 
 function maybeCards(cube, carddb) {
@@ -233,16 +217,16 @@ async function getElo(cardnames, round) {
 }
 
 const methods = {
-  getBasics: function(carddb) {
+  getBasics(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
     const set = 'unh';
     const res = {};
-    names.forEach(function(name, index) {
+    for (const name of names) {
       let found = false;
       const options = carddb.nameToId[name.toLowerCase()];
-      options.forEach(function(option, index2) {
+      for (const option of options) {
         const card = carddb.cardFromId(option);
-        if (!found && card.set.toLowerCase() == set) {
+        if (!found && card.set.toLowerCase() === set) {
           found = true;
           res[name] = {
             cardID: option,
@@ -251,23 +235,23 @@ const methods = {
             details: card,
           };
         }
-      });
-    });
+      }
+    }
 
     return res;
   },
-  cardsAreEquivalent: cardsAreEquivalent,
-  setCubeType: function(cube, carddb) {
+  cardsAreEquivalent,
+  setCubeType(cube, carddb) {
     let pauper = true;
     let type = legalityToInt('Standard');
-    cube.cards.forEach(function(card, index) {
+    for (const card of cube.cards) {
       if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
         pauper = false;
       }
       while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
         type -= 1;
       }
-    });
+    }
 
     cube.type = intToLegality(type);
     if (pauper) {
@@ -276,7 +260,7 @@ const methods = {
     cube.card_count = cube.cards.length;
     return cube;
   },
-  sanitize: function(html) {
+  sanitize(html) {
     return sanitizeHtml(html, {
       allowedTags: [
         'div',
@@ -299,7 +283,7 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  addAutocard: function(src, carddb, cube) {
+  addAutocard(src, carddb, cube) {
     while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
       const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
       let mid = cardname;
@@ -309,32 +293,25 @@ const methods = {
         if (cube && cube.cards) {
           const allIds = cube.cards.map((card) => card.cardID);
           const matchingNameIds = allIds.filter((id) => possible.includes(id));
-          cardID = matchingNameIds[0];
+          [cardID] = matchingNameIds;
         }
         if (!cardID) {
-          cardID = possible[0];
+          [cardID] = possible;
         }
         const card = carddb.cardFromId(cardID);
         if (card.image_flip) {
-          mid =
-            '<a class="autocard" card="' +
-            card.image_normal +
-            '" card_flip="' +
-            card.image_flip +
-            '">' +
-            card.name +
-            '</a>';
+          mid = `<a class="autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
         } else {
-          mid = '<a class="autocard" card="' + card.image_normal + '">' + card.name + '</a>';
+          mid = `<a class="autocard" card="${card.image_normal}">${card.name}</a>`;
         }
       }
-      //front + autocard + back
+      // front + autocard + back
       src = src.substring(0, src.indexOf('[[')) + mid + src.substring(src.indexOf(']]') + 2);
     }
     return src;
   },
   generatePack: async (cubeId, carddb, seed) => {
-    const cube = await Cube.findOne(build_id_query(cubeId));
+    const cube = await Cube.findOne(buildIdQuery(cubeId));
     if (!seed) {
       seed = Date.now().toString();
     }
@@ -349,9 +326,9 @@ const methods = {
       pack,
     };
   },
-  generate_short_id,
-  build_id_query,
-  get_cube_id,
+  generateShortId,
+  buildIdQuery,
+  getCubeId,
   intToLegality,
   legalityToInt,
   addCardHtml,
@@ -361,7 +338,7 @@ const methods = {
   insertComment,
   getOwnerFromComment,
   saveEdit,
-  build_tag_colors,
+  buildTagColors,
   maybeCards,
   getElo,
 };

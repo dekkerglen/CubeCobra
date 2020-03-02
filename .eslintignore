@@ -10,7 +10,6 @@ models/user.js
 public/js/autocard.js
 public/js/index.js
 public/js/toolbar.js
-serverjs/cubefn.js
 serverjs/prices.js
 src/components/AspectRatioBox.js
 src/components/AutocardListItem.js
