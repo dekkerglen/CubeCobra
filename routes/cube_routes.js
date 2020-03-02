@@ -1483,7 +1483,7 @@ router.get('/download/csv/:id', async (req, res) => {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
-    cube.cards = sortutil.sortForCSVDownload(cube.cards);
+    cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');

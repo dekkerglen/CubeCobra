@@ -35,6 +35,7 @@ import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
+import SortContext from './SortContext';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
 import withModal from './WithModal';
@@ -212,6 +213,7 @@ const CubeListNavbar = ({
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
+  const { primary, secondary, tertiary } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
@@ -356,7 +358,7 @@ const CubeListNavbar = ({
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}>Comma-Separated (.csv)</DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
               </DropdownMenu>
