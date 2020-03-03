@@ -46,7 +46,7 @@ async function generateShortId() {
     max += 1;
     newId = util.toBase36(max);
 
-    isGoodId = !util.has_profanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
+    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
   }
 
   return newId;
