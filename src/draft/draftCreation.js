@@ -1,5 +1,5 @@
-import { COLOR_COMBINATIONS } from 'utils/Card';
-import { arrayIsSubset, arraysAreEqualSets, arrayShuffle, fromEntries, stdDevOf, meanOf } from 'utils/Util';
+import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP } from 'utils/Card';
+import { arraysAreEqualSets, arrayShuffle, fromEntries, stdDevOf, meanOf } from 'utils/Util';
 import { filterCards, filterToString, operatorsRegex, parseTokens, tokenizeInput, verifyTokens } from 'utils/Filter';
 
 function matchingCards(cards, filter) {
@@ -216,64 +216,108 @@ function createPacks(draft, format, seats, nextCardFn) {
 }
 
 function assignBotColors(initialState, botCount, seats) {
-  const ITERATIONS = 1000;
+  // Seems to converge to a good result reasonably well and takes about
+  //   350ms to run on a local machine with 13 seats.
+  //   Assuming every mono color and pair are available to choose there
+  //     are 6435 possible assignments for 8 seats, if you add 5 3+ color
+  //     combinations that grows to 125,970 which is infeasible.
+  //   Looking at gradient descent and similar optimization algorithms,
+  //   and they could help, but they require transorming the problem to
+  //   be differentiable or smooth which can be difficult and there's
+  //   little guarantee they'd find the global max, especially since we
+  //   need it along the boundary.
+  const ITERATIONS = 10000;
+  // Think of these as scaling how much of the cards available to a seat
+  //   they can reasonably use.
+  const SEAT_COLORS_MULTIPLIERS = [1, 1, 1 / 1.6, 1 / 2.5, 1 / 3.4, 1 / 4.4];
+  // Increase the desirability of cards with more colors in their identity.
+  //   Translates to roughly increases of 20%, 0%, 50%, 80%, 125%, 200% for 0,1,2,3,4,5 colors respectively.
+  const CARD_COLORS_INCREMENT = [58, 0, 120, 166, 218, 280];
 
-  const colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
+  let colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
   const cards = initialState.flat(3);
 
   for (const card of cards) {
     const { elo } = card.details;
     const cardColorSet = card.colors ?? card.details.color_identity ?? [];
-    // Colorless will be null since it is recorded as 'C' not ''.
-    const cardColorsNormalized = COLOR_COMBINATIONS.find((colors) => arraysAreEqualSets(colors, cardColorSet));
-    // We can skip colorless since it would just apply to every seat.
-    if (cardColorsNormalized) {
-      const cardColors = cardColorsNormalized.join('');
-      colorCounts[cardColors].elo += elo * (0.75 + 0.25 * cardColors.length);
-      colorCounts[cardColors].count += 1;
-    }
+    // Colorless will be null since it is recorded as 'C' not '' so we normalize it to [].
+    // We don't currently guarantee order of colors in saved cards
+    // so we do have to do set comparisons here.
+    const cardColors = (
+      COLOR_COMBINATIONS.find(
+        (colors) => colors.length === cardColorSet.length && arraysAreEqualSets(colors, cardColorSet),
+      ) ?? []
+    ).join('');
+    colorCounts[cardColors].elo += elo ?? 0;
+    colorCounts[cardColors].count += 1;
+  }
+  // Cut out all the color combinations that don't contribute any value
+  // and increase the value of each card by the additive increment from above.
+  colorCounts = fromEntries(
+    Object.entries(colorCounts)
+      .filter(([, { elo }]) => elo > 0)
+      .map(([colors, { elo, count }]) => [colors, { elo: elo + CARD_COLORS_INCREMENT[colors.length] * count, count }]),
+  );
+
+  // We allow playing any combination with at least 1 color
+  //   and at least one card with exactly that color identity.
+  //   We also allow running a pair if there are mono color cards
+  //   of both the colors that make up the pair.
+  let validCombinationArray = Object.keys(colorCounts).filter(
+    (comb) =>
+      comb.length > 0 &&
+      ((colorCounts[comb]?.elo ?? 0) > 0 ||
+        (comb.length === 2 && (colorCounts[comb[0]]?.elo ?? 0) > 0 && (colorCounts[comb[1]]?.elo ?? 0) > 0)),
+  );
+  if (validCombinationArray.length === 0) {
+    // There are no non-empty color combinations with cards in them
+    //   so everything must be colorless so that's the only valid combination.
+    validCombinationArray = [[]];
   }
 
-  const validCombinations = fromEntries(
-    Object.entries(colorCounts).map(([comb, { count }]) => [
-      comb,
-      (comb.length > 1 && count > 0) ||
-        (comb.length === 2 && colorCounts[comb[0]].count > 0 && colorCounts[comb[1]].count > 0),
-    ]),
-  );
-  const validCombinationArray = Object.keys(validCombinations)
-    .filter((c) => validCombinations[c])
-    .map((c) => c.split(''));
-
   const seatsRating = (seatColors) => {
-    const seatColorCounts = fromEntries(
-      Object.entries(colorCounts).map(([c, colorCount]) => [c, { ...colorCount, seatCount: 0 }]),
-    );
+    const seatColorValues = {};
     let includedCount = 0;
-    for (const [combination, { count }] of Object.entries(colorCounts)) {
-      let included = false;
-      const combinationArray = combination.split('');
-      for (const colors of seatColors) {
-        if (combinationArray.length <= colors.length && arrayIsSubset(combinationArray, colors)) {
-          seatColorCounts[combination].seatCount += 1;
-          included = true;
-        }
-      }
-      if (included) {
+    for (const [combination, { count, elo }] of Object.entries(colorCounts)) {
+      const includedInCount = seatColors.reduce(
+        (c, colors) => (c + COLOR_INCLUSION_MAP[colors][combination] ? 1 : 0),
+        0,
+      );
+      if (includedInCount > 0) {
+        // The card is desired by includedInCount different seats
+        // so it's value will get split between them.
+        seatColorValues[combination] = elo / includedInCount;
         includedCount += count;
       }
     }
-    const fValues = seatColors.map((colors) => {
-      let f = 0;
-      for (const [comb, { elo, seatCount }] of Object.entries(seatColorCounts)) {
-        if (seatCount > 0 && comb.length <= colors.length && arrayIsSubset(comb.split(''), colors)) {
-          f += elo / seatCount;
-        }
-      }
-      f /= colors.length;
-      return f;
-    });
-    return (includedCount * Math.min(...fValues) * meanOf(fValues)) / stdDevOf(fValues);
+    // Sum of the elo each combination colors provides to the seat
+    // scaled by the amount of an indiviudal card they can utilize
+    // given how many colors they are playing.
+    const fValues = seatColors.map(
+      (colors) =>
+        COLOR_INCLUSION_MAP[colors].includes.reduce((f, comb) => f + seatColorValues[comb]?.elo ?? 0, 0) *
+        SEAT_COLORS_MULTIPLIERS[colors.length],
+    );
+    // Final rating is linear in:
+    //   the number of cards at least one seat has the colors to play
+    //     which is better thought of as the percentage of cards in the
+    //     packs playable by at least 1 seat, but since the total number
+    //     of cards in packs is constant relative to color assignments
+    //     it wouldn't change which is the maximum to divide by it so in
+    //     the name of speed we leave it off.
+    //   the minimum value of cards available to a seat. We use the minimum here
+    //     in an attempt to maximize the power level available to each seat.
+    const minF = Math.min(...fValues);
+    const stdDevF = stdDevOf(fValues);
+    //   and the the inverse of the percentage of the minimum available value
+    //     relative to stdDev which is used to discourage having a wide range of
+    //     available values. This should help correct for cubes where some colors
+    //     are better than others by encouraging more bots to play those colors.
+    const invRelStdDevF = minF / stdDevF;
+    // We use a product to combine them so we don't have to normalize their
+    //   magnitudes relative to each other.
+    const rating = includedCount * minF * invRelStdDevF;
+    return rating;
   };
   const seatsAndRatingFrom = (combOrder) => {
     const seatColors = [];
@@ -284,19 +328,22 @@ function assignBotColors(initialState, botCount, seats) {
   };
 
   // Any prefix of this maximizes the minimum number of occurences of each color.
-  const initialOrder = ['WU', 'BR', 'GW', 'UB', 'RG', 'WB', 'UR', 'BG', 'RW', 'GU']
-    .filter((c) => validCombinations[c])
-    .map((c) => c.split(''));
+  //   We use this as an initial seed since it's a relatively safe guess
+  //   at being decent in most cubes.
+  //   We do ally colors first since they've historically had the most support.
+  const initialOrder = ['WU', 'BR', 'GW', 'UB', 'RG', 'WB', 'UR', 'BG', 'RW', 'GU'];
   let [bestSeats, bestRating] = seatsAndRatingFrom(initialOrder);
   for (let i = 0; i < ITERATIONS; i++) {
     // We're okay mutating this so we don't need to make a copy.
-    const combinations = arrayShuffle(validCombinationArray);
-    const [currentSeats, rating] = seatsAndRatingFrom(combinations);
+    arrayShuffle(validCombinationArray);
+    const [currentSeats, rating] = seatsAndRatingFrom(validCombinationArray);
     if (rating > bestRating) {
       [bestSeats, bestRating] = [currentSeats, rating];
     }
   }
-  return bestSeats.slice(0, botCount);
+  // Return just the bot assignments, humans will have to figure out what's
+  //   open on their own.
+  return bestSeats.slice(0, botCount).map((c) => c.split(''));
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()

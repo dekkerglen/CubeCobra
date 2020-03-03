@@ -1,4 +1,4 @@
-import { arraysEqual } from 'utils/Util';
+import { arraysEqual, fromEntries, arrayIsSubset } from 'utils/Util';
 
 export const COLOR_COMBINATIONS = [
   [],
@@ -34,6 +34,16 @@ export const COLOR_COMBINATIONS = [
   ['W', 'U', 'B', 'R'],
   ['W', 'U', 'B', 'R', 'G'],
 ];
+
+export const COLOR_INCLUSION_MAP = fromEntries(
+  COLOR_COMBINATIONS.map((colors) => [
+    colors.join(''),
+    fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), arrayIsSubset(comb, colors)])),
+  ]),
+);
+for (const colorsIncluded of Object.values(COLOR_INCLUSION_MAP)) {
+  colorsIncluded.includes = Object.keys(colorsIncluded).filter((c) => colorsIncluded[c]);
+}
 
 export function normalizeName(name) {
   return name
