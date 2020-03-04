@@ -1,0 +1,55 @@
+\documentclass[oneside,12pt]{amsart}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{amssymb}
+\usepackage[natbibapa]{apacite}
+\usepackage{enumerate}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{placeins}
+\usepackage{url}
+
+\newtheorem*{definition}{Definition}
+\newtheorem*{remark}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{conjecture}{Conjecture}[section]
+
+\title{Optimality of Draft Bot Strategies}
+\author{ruler501}
+\date{\today}
+
+%\everymath{\displaystyle}
+\begin{document}
+
+\begin{abstract}
+    We seek to formalize the notion of an optimal draft starting from the
+    notion that it should ensure all players have pools which can produce
+    roughly equal power level decks. We then expand on the notion of
+    optimality to introduce algorithms for the bots to follow to maximize
+    the optimality of the resultant pools from the draft.
+\end{abstract}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+    \subsection{Current Algorithms}
+        The first step to assessing power level is to create a concept of card power
+        level. CubeCobra currently has a system for this based on the ELO rating
+        system traditionally used for chess \citenum{WikiELO}. In this system we
+        assess picks as pairwise competitions
+
+\section{A Formal Definition of Optimality}
+
+\section{Proposal for Better Color Assignment}
+
+\section{Proposal for Live Adjustment of Color Assignments}
+
+\bibliographystyle{apacite}
+\bibliography{draftbots}
+\end{document}
