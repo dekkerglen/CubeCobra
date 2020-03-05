@@ -728,13 +728,15 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(cards) {
+export function sortForCSVDownload(cards, primary, secondary, tertiary) {
   var exportCards = [];
-  cards = sortDeep(cards, 'Color', 'CMC');
+  cards = sortDeep(cards, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
-      for (const card of secondGroup[1]) {
-        exportCards.push(card);
+      for (const thirdGroup of secondGroup[1]) {
+        for (const card of thirdGroup[1]) {
+          exportCards.push(card);
+        }
       }
     }
   }
