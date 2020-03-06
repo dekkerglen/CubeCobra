@@ -5,11 +5,11 @@ const secrets = require('../cubecobrasecrets/secrets');
 let apm;
 if (secrets.apmServerUrl) {
   apm = require('elastic-apm-node').start({
-  // Use if APM Server requires a token
+    // Use if APM Server requires a token
     secretToken: secrets.apmSecretToken,
     // Set custom APM Server URL (default: http://localhost:8200)
     serverUrl: secrets.apmServerUrl,
-  })
+  });
 }
 const express = require('express');
 // eslint-disable-next-line import/no-extraneous-dependencies
