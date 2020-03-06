@@ -1,5 +1,5 @@
 import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP } from 'utils/Card';
-import { arraysAreEqualSets, arrayShuffle, fromEntries, stdDevOf, meanOf } from 'utils/Util';
+import { arraysAreEqualSets, arrayShuffle, fromEntries, stdDevOf } from 'utils/Util';
 import { filterCards, filterToString, operatorsRegex, parseTokens, tokenizeInput, verifyTokens } from 'utils/Filter';
 
 function matchingCards(cards, filter) {
