@@ -50,6 +50,8 @@ const fetchLands = {
   'Verdant Catacombs': ['B', 'G'],
   'Windswept Heath': ['W', 'G'],
   'Wooded Foothills': ['R', 'G'],
+  'Prismatic Vista': ['W', 'U', 'B', 'R', 'G'],
+  'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
 };
 
 function botRating(botColors, card) {
