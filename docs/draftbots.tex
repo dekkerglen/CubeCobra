@@ -17,6 +17,8 @@
 \newtheorem{corollary}{Corollary}[section]
 \newtheorem{conjecture}{Conjecture}[section]
 
+\DeclareMathOperator{\elo}{Elo}
+
 \title{Optimality of Draft Bot Strategies}
 \author{ruler501}
 \date{\today}
@@ -27,8 +29,8 @@
 \begin{abstract}
     We seek to formalize the notion of an optimal draft starting from the
     notion that it should ensure all players have pools which can produce
-    roughly equal power level decks. We then expand on the notion of
-    optimality to introduce algorithms for the bots to follow to maximize
+    roughly equal power level decks. We then ecpand on the notion of
+    optimality to introduce algorithms for the bots to follow to macimize
     the optimality of the resultant pools from the draft.
 \end{abstract}
 
@@ -42,7 +44,19 @@
         The first step to assessing power level is to create a concept of card power
         level. CubeCobra currently has a system for this based on the ELO rating
         system traditionally used for chess \citenum{WikiELO}. In this system we
-        assess picks as pairwise competitions
+        assign each card $c_i \in Cards$ a time-parametrized rating
+        $elo_t: Cards \to \mathbb R$  for the which the following holds.
+        \begin{equation}\label{eqn:ZeroSumElo}
+            \forall t \in \mathbb R, \sum_{c_i \in Cards} \elo_t(c_i) = C
+        \end{equation}
+        From this value we define the quality of a card, $\operatorname{Q}_t: Cards \to \mathbb R^+$ to be:
+        \begin{equation}\label{eqn:LogisticEloQuality}
+            \operatorname{Q}_t(c_i) = 10^{\frac{\elo_t(c_i)}{400}}
+        \end{equation}
+        We define the predicted probability of $c_i$ being picked over $c_j$ to be
+        assess picks as pairwise competitions where picking $c_i$ from $\{c_1,...,c_n\}$
+        is seen as $c_i$ winning a head to head competition against each of the other
+        members of the pack.
 
 \section{A Formal Definition of Optimality}
 
