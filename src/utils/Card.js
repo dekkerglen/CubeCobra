@@ -14,7 +14,9 @@ export const CARD_CATEGORY_DETECTORS = {
     details.border_color !== 'gold' &&
     details.language === 'en' &&
     details.tcgplayer_id &&
-    details.set !== 'myb',
+    details.set !== 'myb' &&
+    details.set !== 'mb1' &&
+    details.collector_number.indexOf('★') === -1,
   // Others from Scryfall:
   //   commander, reserved, reprint, new, old, hires, foil,
   //   spotlight, unique, bikeland, cycleland, bicycleland,

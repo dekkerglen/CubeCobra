@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
-const { generate_short_id } = require('../serverjs/cubefn.js');
+const { generateShortId } = require('../serverjs/cubefn.js');
 
 (async () => {
   mongoose.connect(config.database).then(async (db) => {
     let cubes = await Cube.find({ shortID: null }, ['_id', 'shortID']);
     for (let i = 0; i < cubes.length; i++) {
       let cube = cubes[i];
-      let short_id = await generate_short_id();
+      let short_id = await generateShortId();
       console.log(
         'Generated short ID ' + short_id + ' for cube ' + cube._id + '. ' + (cubes.length - i - 1) + ' cubes left.',
       );
