@@ -20,9 +20,9 @@ const {
   setCubeType,
   cardsAreEquivalent,
   getBasics,
-  generate_short_id,
-  build_id_query,
-  get_cube_id,
+  generateShortId,
+  buildIdQuery,
+  getCubeId,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -30,7 +30,7 @@ const {
   insertComment,
   getOwnerFromComment,
   saveEdit,
-  build_tag_colors,
+  buildTagColors,
   maybeCards,
   getElo,
 } = require('../serverjs/cubefn.js');
@@ -99,7 +99,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       return res.redirect(`/user/view/${req.user.id}`);
     }
 
-    const shortID = await generate_short_id();
+    const shortID = await generateShortId();
     let cube = new Cube();
     cube.shortID = shortID;
     cube.name = req.body.name;
@@ -144,9 +144,9 @@ router.get('/clone/:id', async (req, res) => {
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
-    const source = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const source = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    const shortID = await generate_short_id();
+    const shortID = await generateShortId();
     let cube = new Cube();
     cube.shortID = shortID;
     cube.name = `Clone of ${source.name}`;
@@ -189,7 +189,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
     req.body.html = sanitize(req.body.html);
 
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Formats can only be changed by cube owner.');
       return res.redirect(`/cube/list/${req.params.id}`);
@@ -253,7 +253,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/blog/${req.params.id}`);
     }
 
-    let cube = await Cube.findOne(build_id_query(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     // post new blog
     if (!user._id.equals(cube.owner)) {
@@ -292,7 +292,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const { user } = req;
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).send({
@@ -319,7 +319,7 @@ router.post(
   '/unfollow/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findById(build_id_query(req.params.id), 'users_following');
+    const cube = await Cube.findById(buildIdQuery(req.params.id), 'users_following');
     if (!cube) {
       req.flash('danger', 'Cube not found');
       res.status(404).send({
@@ -347,7 +347,7 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/overview/${req.params.id}`);
     }
 
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect(`/cube/overview/${req.params.id}`);
@@ -371,7 +371,7 @@ router.post('/unfeature/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/overview/${req.params.id}`);
     }
 
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect(`/cube/overview/${req.params.id}`);
@@ -390,7 +390,7 @@ router.post('/unfeature/:id', ensureAuth, async (req, res) => {
 router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
-    const cube = await Cube.findOne(build_id_query(cubeID)).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
 
     const admin = util.isAdmin(req.user);
     if (!cube) {
@@ -524,7 +524,7 @@ router.get('/blog/:id', (req, res) => {
 router.get('/blog/:id/:page', async (req, res) => {
   try {
     const cubeID = req.params.id;
-    const cube = await Cube.findOne(build_id_query(cubeID), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeID), Cube.LAYOUT_FIELDS).lean();
 
     const page = parseInt(req.params.page, 10) || 0;
 
@@ -582,7 +582,7 @@ router.get('/rss/:id', async (req, res) => {
   try {
     const split = req.params.id.split(';');
     const cubeID = split[0];
-    const cube = await Cube.findOne(build_id_query(cubeID)).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
     const blogs = await Blog.find({
       cube: cube._id,
     })
@@ -626,8 +626,8 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const { idA } = req.params;
     const { idB } = req.params;
 
-    const cubeAq = Cube.findOne(build_id_query(idA)).lean();
-    const cubeBq = Cube.findOne(build_id_query(idB)).lean();
+    const cubeAq = Cube.findOne(buildIdQuery(idA)).lean();
+    const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
@@ -714,7 +714,7 @@ router.get('/list/:id', async (req, res) => {
   try {
     const fields =
       'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes';
-    const cube = await Cube.findOne(build_id_query(req.params.id), fields).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -794,7 +794,7 @@ router.get('/list/:id', async (req, res) => {
 
 router.get('/playtest/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -855,7 +855,7 @@ router.get('/playtest/:id', async (req, res) => {
 
 router.get('/analysis/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -922,7 +922,7 @@ router.get('/samplepack/:id', (req, res) => {
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
     return res.render('cube/cube_samplepack', {
@@ -977,7 +977,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
 router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${req.params.id}`);
@@ -1085,7 +1085,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
 
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
@@ -1388,7 +1388,7 @@ async function bulkUpload(req, res, list, cube) {
 
 router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -1413,7 +1413,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
     const items = req.files.document.data.toString('utf8'); // the uploaded file object
 
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -1431,7 +1431,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
 router.get('/download/cubecobra/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -1483,12 +1483,12 @@ function writeCard(req, res, card, maybe) {
 
 router.get('/download/csv/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     for (const card of cube.cards) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
-    cube.cards = sortutil.sortForCSVDownload(cube.cards);
+    cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
@@ -1511,7 +1511,7 @@ router.get('/download/csv/:id', async (req, res) => {
 
 router.get('/download/forge/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1532,7 +1532,7 @@ router.get('/download/forge/:id', async (req, res) => {
 
 router.get('/download/xmage/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1551,7 +1551,7 @@ router.get('/download/xmage/:id', async (req, res) => {
 
 router.get('/download/plaintext/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -1567,10 +1567,7 @@ router.get('/download/plaintext/:id', async (req, res) => {
 
 router.post('/startdraft/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(
-      build_id_query(req.params.id),
-      '_id name draft_formats card_count type cards',
-    ).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards').lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1640,7 +1637,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(draft.cube)).lean();
+    const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1677,7 +1674,7 @@ router.get('/draft/:id', async (req, res) => {
 
     const reactProps = {
       cube,
-      cubeID: get_cube_id(cube),
+      cubeID: getCubeId(cube),
       initialDraft: draft,
     };
 
@@ -1704,7 +1701,7 @@ router.get('/draft/:id', async (req, res) => {
 router.post('/edit/:id', ensureAuth, async (req, res) => {
   try {
     req.body.blog = sanitize(req.body.blog);
-    let cube = await Cube.findOne(build_id_query(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Only cube owner may edit.');
@@ -1921,7 +1918,7 @@ router.post(
 
     if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias !== cube.urlAlias) {
       updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
-      const taken = await Cube.findOne(build_id_query(updatedCube.urlAlias));
+      const taken = await Cube.findOne(buildIdQuery(updatedCube.urlAlias));
 
       if (taken) {
         return res.status(400).send({
@@ -1998,7 +1995,7 @@ router.post(
   body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       return res.status(404).send({
         success: 'false',
@@ -2169,7 +2166,7 @@ router.get('/api/fullnames', (req, res) => {
 router.get(
   '/api/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const cardnames = [];
     for (const card of cube.cards) {
@@ -2202,7 +2199,7 @@ router.post(
 router.post(
   '/api/savetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
@@ -2222,16 +2219,16 @@ router.post(
 router.get(
   '/api/cubetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    const tagColors = build_tag_colors(cube);
+    const tagColors = buildTagColors(cube);
     const tags = tagColors.map((item) => item.tag);
 
     // this is for the case of cube compare
-    const cubeB = await Cube.findOne(build_id_query(req.query.b_id)).lean();
+    const cubeB = await Cube.findOne(buildIdQuery(req.query.b_id)).lean();
 
     if (cubeB) {
-      const bTagColors = build_tag_colors(cubeB);
+      const bTagColors = buildTagColors(cubeB);
       for (const bTag of bTagColors) {
         if (!tags.includes(bTag.tag)) {
           tagColors.push(bTag);
@@ -2258,7 +2255,7 @@ router.get(
     cardname = cardutil.decodeName(cardname);
     cardname = cardutil.normalizeName(cardname);
 
-    const cube = await Cube.findOne(build_id_query(cubeid)).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeid)).lean();
 
     for (const card of cube.cards) {
       if (carddb.cardFromId(card.cardID).name_lower === cardname) {
@@ -2278,7 +2275,7 @@ router.get(
 router.get(
   '/api/cubelist/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
@@ -2320,7 +2317,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid);
-    const cube = await Cube.findOne(build_id_query(draft.cube));
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
     const deck = new Deck();
     deck.cube = draft.cube;
@@ -2385,7 +2382,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     const page = parseInt(req.params.page, 10);
 
-    const cube = await Cube.findOne(build_id_query(cubeid), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeid), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2588,7 +2585,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
+
+    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2597,7 +2595,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
     const reactProps = {
       cube,
-      cubeID: get_cube_id(cube),
+      cubeID: getCubeId(cube),
       initialDeck: deck,
       basics: getBasics(carddb),
     };
@@ -2628,7 +2626,7 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const cube = await Cube.findOne(build_id_query(deck.cube), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
@@ -2693,7 +2691,7 @@ router.get('/deck/:id', async (req, res) => {
 router.get(
   '/api/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id), 'defaultPrinting').lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), 'defaultPrinting').lean();
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card) {
       return res.status(200).send({
@@ -2839,7 +2837,7 @@ router.post(
         message: 'Failed input validation',
       });
     }
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
@@ -2907,7 +2905,7 @@ router.post(
       });
     }
 
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       return res.status(404).send({
         success: 'false',
@@ -2964,7 +2962,7 @@ router.get(
   '/api/maybe/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     return res.status(200).send({
       success: 'true',
       maybe: maybeCards(cube, carddb),
@@ -2976,7 +2974,7 @@ router.post(
   '/api/maybe/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
@@ -3009,7 +3007,7 @@ router.post(
   '/api/maybe/update/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
@@ -3055,13 +3053,13 @@ router.post(
 
 router.post('/remove/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${req.params.id}`);
     }
-    await Cube.deleteOne(build_id_query(req.params.id));
+    await Cube.deleteOne(buildIdQuery(req.params.id));
 
     req.flash('success', 'Cube Removed');
     return res.redirect('/dashboard');
@@ -3097,7 +3095,7 @@ router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
 router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), async (req, res) => {
   try {
     const { cubeid, index } = req.params;
-    const cube = await Cube.findOne(build_id_query(cubeid));
+    const cube = await Cube.findOne(buildIdQuery(cubeid));
     if (!cube) {
       return res.status(404).send({
         success: 'false',
@@ -3136,7 +3134,7 @@ router.post(
   '/api/savesorts/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(build_id_query(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(404).send({
