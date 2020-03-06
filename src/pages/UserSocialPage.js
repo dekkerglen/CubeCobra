@@ -33,7 +33,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers }) => (
         <CardHeader>
           <h5 className="mb-0">Followed Users</h5>
         </CardHeader>
-        {followedCubes.length > 0 ? (
+        {followedUsers.length > 0 ? (
           <CardBody className="p-0">
             <Row noGutters>
               {followedUsers.map((user) => (

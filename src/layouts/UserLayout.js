@@ -36,7 +36,7 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
             </Button>
           )}
           {following && !canEdit && (
-            <Button color="danger" outline className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
+            <Button color="danger" outline className="rounded-0 w-100" href={`/user/unfollow/${user._id}`}>
               Unfollow
             </Button>
           )}
