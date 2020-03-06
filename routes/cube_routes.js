@@ -34,7 +34,7 @@ const {
   maybeCards,
   getElo,
 } = require('../serverjs/cubefn.js');
-const draftCreation = require('../dist/draft/draftCreation.js');
+const draftCreation = require('../dist/drafting/draftCreation.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');

@@ -6,7 +6,7 @@ import { Col, Nav, NavLink, Row } from 'reactstrap';
 import CubeLayout from 'layouts/CubeLayout';
 
 import Query from 'utils/Query';
-import { getDraftFormat, calculateAsfans } from 'draft/draftCreation';
+import { getDraftFormat, calculateAsfans } from 'drafting/draftCreation';
 import Filter from 'utils/Filter';
 
 import CardGrid from 'components/analytics/CardGrid';

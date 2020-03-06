@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from 'draft/Draft';
-import Location from 'draft/DraftLocation';
+import Draft from 'drafting/Draft';
+import Location from 'drafting/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 
 import CSRFForm from 'components/CSRFForm';
