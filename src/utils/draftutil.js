@@ -17,7 +17,7 @@ function makeFilter(filterText) {
     return null;
   }
 
-  let { filter, err } = Filter.makeFilter(filterText)
+  let { filter, err } = Filter.makeFilter(filterText);
 
   // backwards compatibilty: treat as tag
   if (err || !Filter.operatorsRegex.test(filterText)) {
