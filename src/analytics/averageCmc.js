@@ -1,5 +1,5 @@
 import { propertyForCard } from 'utils/Card';
-import { GetColorCategory } from 'utils/Sort';
+import { GetColorIdentity } from 'utils/Sort';
 
 async function averageCmc(cards) {
   const ColorCounts = {
@@ -9,7 +9,7 @@ async function averageCmc(cards) {
     Red: { label: '{r}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
     Green: { label: '{g}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
     Colorless: { label: '{c}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
-    Multi: { label: '{m}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
+    Multicolored: { label: '{m}', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
     Total: { label: 'Total', asfan: 0, count: 0, totalAsfan: 0, totalCount: 0 },
   };
 
@@ -17,9 +17,9 @@ async function averageCmc(cards) {
     const typeLine = propertyForCard(card, 'type_line');
     if (!typeLine.toLowerCase().includes('land')) {
       const { asfan } = card;
-      const colorCat = GetColorCategory(typeLine, propertyForCard(card, 'color_identity'));
-      const cmc = propertyForCard(card, 'cmc');
+      const colorCat = GetColorIdentity(propertyForCard(card, 'color_identity'));
       if (ColorCounts[colorCat]) {
+        const cmc = propertyForCard(card, 'cmc');
         ColorCounts[colorCat].count += cmc;
         ColorCounts.Total.count += cmc;
         ColorCounts[colorCat].totalCount += 1;

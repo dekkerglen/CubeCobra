@@ -14,8 +14,11 @@ async function colorCurve(cards) {
   };
 
   for (const card of cards) {
-    const typeLine = propertyForCard(card, 'type_line');
-    if (typeLine.toLowerCase().indexOf('land') !== -1) {
+    if (
+      !propertyForCard(card, 'type_line')
+        .toLowerCase()
+        .includes('land')
+    ) {
       const colors = propertyForCard(card, 'color_identity');
       const colorCategory = GetColorIdentity(colors);
       const category = curve[colorCategory];

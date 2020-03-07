@@ -1196,7 +1196,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
     const name = split[0];
     const maybeboard = split[8];
     const set = split[4].toUpperCase();
-    const collector_number = split[5].toUpperCase();
+    const collectorNumber = split[5].toUpperCase();
     const card = {
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
@@ -1213,7 +1213,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
       // First, try to find the correct set.
       const matchingSetAndNumber = potentialIds.find((id) => {
         const potential = carddb.cardFromId(id);
-        return potential.set.toUpperCase() === set && potential.collector_number.toUpperCase === collector_number;
+        return potential.set.toUpperCase() === set && potential.collector_number.toUpperCase === collectorNumber;
       });
       const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
       const nonPromo = potentialIds.find(carddb.reasonableId);
@@ -1449,22 +1449,21 @@ function writeCard(req, res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  const type_line = cardutil.propertyForCard({ ...card, details }, 'type_line');
+  const typeLine = cardutil.propertyForCard({ ...card, details }, 'type_line');
   const colors = cardutil.propertyForCard({ ...card, details }, 'color_identity');
-  let { name, set, collector_number } = details;
-  name = name.replace(/"/g, '""');
+  const { name, set, collector_number: collectorNumber } = details;
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
   }
-  res.write(`"${name}",`);
+  res.write(`"${name.replace(/"/g, '""')}",`);
   res.write(`${card.cmc},`);
-  res.write(`"${type_line.replace('—', '-')}",`);
+  res.write(`"${typeLine.replace('—', '-')}",`);
   res.write(`${colors.join('')},`);
   res.write(`"${set}",`);
-  res.write(`"${collector_number}",`);
+  res.write(`"${collectorNumber}",`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
@@ -3023,8 +3022,8 @@ router.post(
       });
     }
     const newVersion = updated.cardID && updated.cardID !== card.cardID;
-    for (const field in Object.keys(updated)) {
-      if (!Object.prototype.hasOwnProperty.call(updated, key)) {
+    for (const field of Object.keys(updated)) {
+      if (Object.prototype.hasOwnProperty.call(updated, field)) {
         card[field] = updated[field];
       }
     }

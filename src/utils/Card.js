@@ -4,6 +4,7 @@ const CUBE_CARD_PROPERTIES = {
   color_identity: ['colors', 'details.color_identity', 'details.color'],
   colors: ['details.colors'],
   imgUrl: ['imgUrl', 'details.image_normal'],
+  type_line: ['type_line', 'details.type'],
   // Not overridable yet.
   price: ['price', 'details.price', 'details.price_foil'],
 };

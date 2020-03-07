@@ -1,4 +1,4 @@
-import { normalizeName } from './Card';
+import { normalizeName, propertyForCard } from './Card';
 import { cardIsLabel } from './Sort';
 
 const rarity_order = ['common', 'uncommon', 'rare', 'mythic'];
@@ -427,7 +427,7 @@ export function filterCards(cards, filter, inCube) {
 export function filterCardsDetails(cardsDetails, filter) {
   const cards = cardsDetails.map((details) => ({ details }));
   const filtered = filterCards(cards, filter, /* inCube */ false);
-  return filtered.map((card) => card.details);
+  return filtered.map((card) => propertyForCard(card, 'details'));
 }
 
 function areArraysEqualSets(a1, a2) {
@@ -507,30 +507,30 @@ function filterApply(card, filter, inCube) {
     inCube = true;
   }
 
-  let cmc = inCube ? card.cmc || card.details.cmc : card.details.cmc;
+  let cmc = propertyForCard(card, 'cmc');
   // NOTE: color naming is confusing:
   // colors = colors in mana cost
   // color_identity = (Commander style) colors anywhere on card
-  // card.colors is an override for card.details.color_identity
-  const color_identity = inCube ? card.colors || card.details.color_identity : card.details.color_identity;
+  // propertyForCard(card, 'colors') is an override for propertyForCard(card, 'color_identity')
+  const color_identity = propertyForCard(card, 'color_identity');
 
   if (filter.category == 'name') {
-    res = card.details.name_lower.indexOf(normalizeName(filter.arg)) > -1;
+    res = propertyForCard(card, 'name_lower').indexOf(normalizeName(filter.arg)) > -1;
   }
-  if (filter.category == 'oracle' && card.details.oracle_text) {
-    res = card.details.oracle_text.toLowerCase().indexOf(filter.arg) > -1;
+  if (filter.category == 'oracle' && propertyForCard(card, 'oracle_text')) {
+    res = propertyForCard(card, 'oracle_text').toLowerCase().indexOf(filter.arg) > -1;
   }
-  if (filter.category == 'color' && card.details.colors !== undefined) {
+  if (filter.category == 'color' && propertyForCard(card, 'colors') !== undefined) {
     const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
       if ([':', '='].includes(filter.operand) && filter.arg.length == 1 && filter.arg[0] == 'C') {
-        res = card.details.colors.length === 0;
+        res = propertyForCard(card, 'colors').length === 0;
       } else {
-        res = testArray(filter, card.details.colors);
+        res = testArray(filter, propertyForCard(card, 'colors'));
       }
     } else {
       // check for how many colors in identity
-      const num_colors = card.details.colors.length;
+      const num_colors = propertyForCard(card, 'colors').length;
       const filter_num = parseInt(filter.arg[0], 10);
       res = testNumeric(filter, num_colors, filter_num);
     }
@@ -539,7 +539,7 @@ function filterApply(card, filter, inCube) {
     const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
     if (!is_number) {
       // handle args that are colors: e.g ci:wu, ci>wu
-      const value = card.colors || card.details.color_identity;
+      const value = propertyForCard(card, 'colors') || propertyForCard(card, 'color_identity');
       if ([':', '='].includes(filter.operand) && filter.arg.length == 1 && filter.arg[0] == 'C') {
         res = value.length === 0;
       } else {
@@ -552,119 +552,120 @@ function filterApply(card, filter, inCube) {
       res = testNumeric(filter, num_colors, filter_num);
     }
   }
-  if (filter.category == 'mana' && card.details.parsed_cost) {
-    res = areArraysEqualSets(card.details.parsed_cost, filter.arg);
+  if (filter.category == 'mana' && propertyForCard(card, 'parsed_cost')) {
+    res = areArraysEqualSets(propertyForCard(card, 'parsed_cost'), filter.arg);
   }
   if (filter.category == 'cmc' && cmc !== undefined) {
     const arg = parseInt(filter.arg, 10);
     cmc = parseInt(cmc, 10);
     res = testNumeric(filter, cmc, arg);
   }
-  if (filter.category == 'type' && card.details.type) {
-    if (card.details.type.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
+  const typeLine = propertyForCard(card, 'type_line');
+  if (filter.category == 'type' && propertyForCard(card, 'type_line')) {
+    if (propertyForCard(card, 'type_line').toLowerCase().includes(filter.arg.toLowerCase())) {
       res = true;
     }
   }
-  if (filter.category == 'set' && card.details.set) {
-    if (card.details.set.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
+  if (filter.category == 'set' && propertyForCard(card, 'set')) {
+    if (propertyForCard(card, 'set').toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
       res = true;
     }
   }
   if (filter.category == 'power') {
-    if (card.details.power) {
-      const cardPower = parseInt(card.details.power, 10);
+    if (propertyForCard(card, 'power')) {
+      const cardPower = parseInt(propertyForCard(card, 'power'), 10);
       const arg = parseInt(filter.arg, 10);
       res = testNumeric(filter, cardPower, arg);
     }
   }
   if (filter.category == 'toughness') {
-    if (card.details.toughness) {
-      const cardToughness = parseInt(card.details.toughness, 10);
+    if (propertyForCard(card, 'toughness')) {
+      const cardToughness = parseInt(propertyForCard(card, 'toughness'), 10);
       const arg = parseInt(filter.arg, 10);
       res = testNumeric(filter, cardToughness, arg);
     }
   }
   if (filter.category == 'loyalty') {
-    if (card.details.loyalty) {
-      const cardLoyalty = parseInt(card.details.loyalty, 10);
+    if (propertyForCard(card, 'loyalty')) {
+      const cardLoyalty = parseInt(propertyForCard(card, 'loyalty'), 10);
       const arg = parseInt(filter.arg, 10);
       res = testNumeric(filter, cardLoyalty, arg);
     }
   }
   if (filter.category == 'tag') {
     res =
-      card.tags &&
-      card.tags.some((element) => {
+      propertyForCard(card, 'tags') &&
+      propertyForCard(card, 'tags').some((element) => {
         return element.toLowerCase() == filter.arg.toLowerCase();
       });
   }
   if (filter.category == 'finish') {
-    res = card.finish && card.finish.toLowerCase() === filter.arg.toLowerCase();
+    res = propertyForCard(card, 'finish') && propertyForCard(card, 'finish').toLowerCase() === filter.arg.toLowerCase();
   }
   if (filter.category == 'status') {
-    res = card.status && card.status.toLowerCase() == filter.arg.toLowerCase();
+    res = propertyForCard(card, 'status') && propertyForCard(card, 'status').toLowerCase() == filter.arg.toLowerCase();
   }
 
   if (filter.category == 'price') {
-    if (card.details.price === null && card.details.price_foil === null) {
+    if (propertyForCard(card, 'price') === null && propertyForCard(card, 'price_foil') === null) {
       // couldn't find price info, so no price available. return false.
       res = false;
-    } else if (!Number.isFinite(card.details.price) && !Number.isFinite(card.details.price_foil)) {
+    } else if (!Number.isFinite(propertyForCard(card, 'price')) && !Number.isFinite(propertyForCard(card, 'price_foil'))) {
       // never added, so can't filter on this basis - return true.
       res = true;
     } else {
-      const price = card.details.price || card.details.price_foil;
+      const price = propertyForCard(card, 'price') || propertyForCard(card, 'price_foil');
       const arg = parseFloat(filter.arg, 10);
       res = testNumeric(filter, price, arg);
     }
   }
   if (filter.category == 'pricefoil') {
-    if (card.details.price_foil === null) {
+    if (propertyForCard(card, 'price_foil') === null) {
       res = false;
-    } else if (!Number.isFinite(card.details.price_foil)) {
+    } else if (!Number.isFinite(propertyForCard(card, 'price_foil'))) {
       const arg = parseFloat(filter.arg, 10);
-      res = testNumeric(filter, card.details.price_foil, arg);
+      res = testNumeric(filter, propertyForCard(card, 'price_foil'), arg);
     } else {
       res = true;
     }
   }
   if (filter.category == 'rarity') {
-    const { rarity } = card.details;
+    const { rarity } = propertyForCard(card, 'details');
     const rarityNum = rarity_order.indexOf(rarity);
     const argNum = rarity_order.indexOf(filter.arg);
     res = testNumeric(filter, rarityNum, argNum);
   }
   if (filter.category == 'artist') {
-    res = card.details.artist.toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
+    res = propertyForCard(card, 'artist').toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
   }
   if (filter.category == 'elo') {
-    if (card.details.elo === undefined) {
+    if (propertyForCard(card, 'elo') === undefined) {
       res = true;
-    } else if (card.details.elo === null) {
+    } else if (propertyForCard(card, 'elo') === null) {
       res = false;
-    } else if (Number.isFinite(card.details.elo)) {
+    } else if (Number.isFinite(propertyForCard(card, 'elo'))) {
       const arg = parseInt(filter.arg, 10);
-      res = testNumeric(filter, card.details.elo, arg);
+      res = testNumeric(filter, propertyForCard(card, 'elo'), arg);
     }
   }
   if (filter.category == 'picks') {
-    if (card.details.picks === undefined) {
+    if (propertyForCard(card, 'picks') === undefined) {
       res = true;
-    } else if (card.details.picks === null) {
+    } else if (propertyForCard(card, 'picks') === null) {
       res = false;
-    } else if (Number.isFinite(card.details.picks)) {
+    } else if (Number.isFinite(propertyForCard(card, 'picks'))) {
       const arg = parseInt(filter.arg, 10);
-      res = testNumeric(filter, card.details.picks, arg);
+      res = testNumeric(filter, propertyForCard(card, 'picks'), arg);
     }
   }
   if (filter.category == 'cubes') {
-    if (card.details.cubes === undefined) {
+    if (propertyForCard(card, 'cubes') === undefined) {
       res = true;
-    } else if (card.details.cubes === null) {
+    } else if (propertyForCard(card, 'cubes') === null) {
       res = false;
-    } else if (Number.isFinite(card.details.cubes)) {
+    } else if (Number.isFinite(propertyForCard(card, 'cubes'))) {
       const arg = parseInt(filter.arg, 10);
-      res = testNumeric(filter, card.details.cubes, arg);
+      res = testNumeric(filter, propertyForCard(card, 'cubes'), arg);
     }
   }
   if (filter.category == 'is') {
