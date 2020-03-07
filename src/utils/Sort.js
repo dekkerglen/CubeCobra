@@ -383,7 +383,7 @@ function price_bucket_label(index) {
 }
 
 function cmcToNumber(card) {
-  const cmc = propertyForCard(card, 'cmc')
+  const cmc = propertyForCard(card, 'cmc');
   if (isNaN(cmc)) {
     return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
   }
@@ -433,7 +433,9 @@ export function cardGetLabels(card, sort) {
     if (propertyForCard(card, 'colors').length === 0) {
       return ['Colorless'];
     }
-    return propertyForCard(card, 'colors').map((c) => COLOR_MAP[c]).filter((c) => c);
+    return propertyForCard(card, 'colors')
+      .map((c) => COLOR_MAP[c])
+      .filter((c) => c);
   }
   if (sort == '4+ Color') {
     if (propertyForCard(card, 'color_identity').length < 4) {
@@ -442,7 +444,9 @@ export function cardGetLabels(card, sort) {
     if (propertyForCard(card, 'color_identity').length === 5) {
       return ['Five Color'];
     }
-    return [...'WUBRG'].filter((c) => !propertyForCard(card, 'color_identity').includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    return [...'WUBRG']
+      .filter((c) => !propertyForCard(card, 'color_identity').includes(c))
+      .map((c) => `Non-${COLOR_MAP[c]}`);
   }
   if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
@@ -583,7 +587,10 @@ export function cardGetLabels(card, sort) {
     }
     return [];
   } else if (sort == 'Manacost Type') {
-    if (propertyForCard(card, 'colors').length > 1 && propertyForCard(card, 'parsed_cost').every((symbol) => !symbol.includes('-'))) {
+    if (
+      propertyForCard(card, 'colors').length > 1 &&
+      propertyForCard(card, 'parsed_cost').every((symbol) => !symbol.includes('-'))
+    ) {
       return ['Gold'];
     } else if (
       propertyForCard(card, 'colors').length > 1 &&
@@ -632,7 +639,10 @@ export function cardGetLabels(card, sort) {
         return [price_bucket_label(price_buckets.length)];
       } else {
         for (let i = 1; i < price_buckets.length; i++) {
-          if (propertyForCard(card, 'price_foil') >= price_buckets[i - 1] && propertyForCard(card, 'price_foil') < price_buckets[i]) {
+          if (
+            propertyForCard(card, 'price_foil') >= price_buckets[i - 1] &&
+            propertyForCard(card, 'price_foil') < price_buckets[i]
+          ) {
             return [price_bucket_label(i)];
           }
         }

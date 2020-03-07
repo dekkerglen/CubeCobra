@@ -518,7 +518,10 @@ function filterApply(card, filter, inCube) {
     res = propertyForCard(card, 'name_lower').indexOf(normalizeName(filter.arg)) > -1;
   }
   if (filter.category == 'oracle' && propertyForCard(card, 'oracle_text')) {
-    res = propertyForCard(card, 'oracle_text').toLowerCase().indexOf(filter.arg) > -1;
+    res =
+      propertyForCard(card, 'oracle_text')
+        .toLowerCase()
+        .indexOf(filter.arg) > -1;
   }
   if (filter.category == 'color' && propertyForCard(card, 'colors') !== undefined) {
     const is_number = filter.arg.length == 1 && parseInt(filter.arg[0], 10) >= 0;
@@ -562,12 +565,20 @@ function filterApply(card, filter, inCube) {
   }
   const typeLine = propertyForCard(card, 'type_line');
   if (filter.category == 'type' && propertyForCard(card, 'type_line')) {
-    if (propertyForCard(card, 'type_line').toLowerCase().includes(filter.arg.toLowerCase())) {
+    if (
+      propertyForCard(card, 'type_line')
+        .toLowerCase()
+        .includes(filter.arg.toLowerCase())
+    ) {
       res = true;
     }
   }
   if (filter.category == 'set' && propertyForCard(card, 'set')) {
-    if (propertyForCard(card, 'set').toLowerCase().indexOf(filter.arg.toLowerCase()) > -1) {
+    if (
+      propertyForCard(card, 'set')
+        .toLowerCase()
+        .indexOf(filter.arg.toLowerCase()) > -1
+    ) {
       res = true;
     }
   }
@@ -610,7 +621,10 @@ function filterApply(card, filter, inCube) {
     if (propertyForCard(card, 'price') === null && propertyForCard(card, 'price_foil') === null) {
       // couldn't find price info, so no price available. return false.
       res = false;
-    } else if (!Number.isFinite(propertyForCard(card, 'price')) && !Number.isFinite(propertyForCard(card, 'price_foil'))) {
+    } else if (
+      !Number.isFinite(propertyForCard(card, 'price')) &&
+      !Number.isFinite(propertyForCard(card, 'price_foil'))
+    ) {
       // never added, so can't filter on this basis - return true.
       res = true;
     } else {
@@ -636,7 +650,10 @@ function filterApply(card, filter, inCube) {
     res = testNumeric(filter, rarityNum, argNum);
   }
   if (filter.category == 'artist') {
-    res = propertyForCard(card, 'artist').toLowerCase().indexOf(filter.arg.toLowerCase()) > -1;
+    res =
+      propertyForCard(card, 'artist')
+        .toLowerCase()
+        .indexOf(filter.arg.toLowerCase()) > -1;
   }
   if (filter.category == 'elo') {
     if (propertyForCard(card, 'elo') === undefined) {
