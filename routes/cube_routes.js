@@ -1196,7 +1196,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
     const maybeboard = split[8];
     const card = {
       name,
-      cmc: split[1],
+      cmc: split[1] || 0,
       type_line: split[2].replace('-', '—'),
       colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
       set: split[4].toUpperCase(),

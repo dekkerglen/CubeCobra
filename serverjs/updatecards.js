@@ -535,7 +535,7 @@ function convertCmc(card, isExtra) {
   if (isExtra) {
     return 0;
   }
-  return card.cmc;
+  return card.cmc || 0;
 }
 
 function convertLegalities(card, isExtra) {
