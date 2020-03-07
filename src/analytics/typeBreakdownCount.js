@@ -1,5 +1,6 @@
 import { GetColorIdentity } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
+import { propertyForCard } from 'utils/Card';
 
 async function typeBreakdownCount(cards) {
   const TypeByColor = fromEntries(
@@ -19,8 +20,8 @@ async function typeBreakdownCount(cards) {
     ),
   );
   for (const card of cards) {
-    const asfan = card.asfan || 15 / cards.length;
-    const colorCategory = GetColorIdentity(card.colors);
+    const { asfan } = card;
+    const colorCategory = GetColorIdentity(propertyForCard(card, 'color_identity'));
 
     TypeByColor.Total[colorCategory].count += 1;
     TypeByColor.Total[colorCategory].asfan += asfan;
@@ -28,22 +29,23 @@ async function typeBreakdownCount(cards) {
     TypeByColor.Total.Total.asfan += asfan;
 
     let type = null;
-    if (card.details.type.toLowerCase().includes('creature')) {
+    const typeLine = propertyForCard(card, 'type_line').toLowerCase();
+    if (typeLine.includes('creature')) {
       type = TypeByColor.Creatures;
-    } else if (card.details.type.toLowerCase().includes('enchantment')) {
+    } else if (typeLine.includes('enchantment')) {
       type = TypeByColor.Enchantments;
-    } else if (card.details.type.toLowerCase().includes('land')) {
+    } else if (typeLine.includes('land')) {
       type = TypeByColor.Lands;
-    } else if (card.details.type.toLowerCase().includes('planeswalker')) {
+    } else if (typeLine.includes('planeswalker')) {
       type = TypeByColor.Planeswalkers;
-    } else if (card.details.type.toLowerCase().includes('instant')) {
+    } else if (typeLine.includes('instant')) {
       type = TypeByColor.Instants;
-    } else if (card.details.type.toLowerCase().includes('sorcery')) {
+    } else if (typeLine.includes('sorcery')) {
       type = TypeByColor.Sorceries;
-    } else if (card.details.type.toLowerCase().includes('artifact')) {
+    } else if (typeLine.includes('artifact')) {
       type = TypeByColor.Artifacts;
     } else {
-      console.warn(`Unrecognized type: ${card.details.type} from ${card.details.name}`);
+      console.warn(`Unrecognized type: ${typeLine} from ${propertyForCard(card, 'name')}`);
     }
     if (type) {
       type[colorCategory].count += 1;

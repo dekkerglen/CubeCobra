@@ -1,9 +1,6 @@
-const compareCards = (x, y) => {
-  if (x.details.name === y.details.name) {
-    return 0;
-  }
-  return x.details.name < y.details.name ? -1 : 1;
-};
+import { propertyForCard } from 'utils/Card';
+
+const compareCards = (x, y) => propertyForCard(x, 'name').localeCompare(propertyForCard(y, 'name'));
 
 const compareTokens = (x, y) => compareCards(x.token, y.token);
 
@@ -13,7 +10,7 @@ const sortCards = (cards) => [...cards].sort(compareCards);
 const dedupeCards = (cards) => {
   const map = new Map();
   for (const card of [...cards].reverse()) {
-    map.set(card.details.name, card);
+    map.set(propertyForCard(card, 'name'), card);
   }
   return [...map.values()];
 };

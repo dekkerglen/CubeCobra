@@ -1,4 +1,5 @@
 import { arrayIsSubset } from 'utils/Util';
+import { propertyForCard } from 'utils/Card';
 
 async function inclusiveColorCount(cards) {
   const colorCombinations = [
@@ -41,8 +42,8 @@ async function inclusiveColorCount(cards) {
   let totalAsfan = 0;
   for (const card of cards) {
     // Hack until asfan can be properly added to cards
-    const asfan = card.asfan || 15 / cards.length;
-    const cardColors = card.colors || card.details.colors || [];
+    const { asfan } = card;
+    const cardColors = propertyForCard(card, 'color_identity');
 
     totalCount += 1;
     totalAsfan += asfan;

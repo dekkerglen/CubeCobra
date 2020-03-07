@@ -77,6 +77,17 @@ export function alphaCompare(a, b) {
   return textA.localeCompare(textB);
 }
 
+export function findProperty(obj, ...paths) {
+  let value;
+  for (const path of paths) {
+    value = path.split('.').reduce((o, prop) => o?.[prop], obj);
+    if (value !== null && typeof value !== 'undefined') {
+      break;
+    }
+  }
+  return value;
+}
+
 export function cmcColumn(card) {
   let cmc = Object.prototype.hasOwnProperty.call(card, 'cmc') ? card.cmc : card.details.cmc;
   // double equals also handles undefined

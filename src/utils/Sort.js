@@ -1,4 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
+import { propertyForCard } from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -25,22 +26,16 @@ export function GetColorIdentity(colors) {
     switch (colors[0]) {
       case 'W':
         return 'White';
-        break;
       case 'U':
         return 'Blue';
-        break;
       case 'B':
         return 'Black';
-        break;
       case 'R':
         return 'Red';
-        break;
       case 'G':
         return 'Green';
-        break;
       case 'C':
         return 'Colorless';
-        break;
     }
   }
 }
@@ -159,8 +154,8 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort == 'Tags') {
     var tags = [];
-    cube.forEach(function(card, index) {
-      card.tags.forEach(function(tag, index2) {
+    cube.forEach(function(card) {
+      propertyForCard(card, 'tags').forEach(function(tag) {
         if (tag.length > 0 && !tags.includes(tag)) {
           tags.push(tag);
         }
@@ -169,7 +164,7 @@ function getLabelsRaw(cube, sort) {
     return tags.sort();
   }
   if (sort == 'Date Added') {
-    const dates = cube.map((card) => card.addedTmsp).sort();
+    const dates = cube.map((card) => propertyForCard(card, 'addedTmsp')).sort();
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
     return removeAdjacentDuplicates(days);
   }
@@ -186,16 +181,16 @@ function getLabelsRaw(cube, sort) {
   } else if (sort == 'Set') {
     var sets = [];
     cube.forEach(function(card, index) {
-      if (!sets.includes(card.details.set.toUpperCase())) {
-        sets.push(card.details.set.toUpperCase());
+      if (!sets.includes(propertyForCard(card, 'set').toUpperCase())) {
+        sets.push(propertyForCard(card, 'set').toUpperCase());
       }
     });
     return sets.sort();
   } else if (sort == 'Artist') {
     var artists = [];
     cube.forEach(function(card, index) {
-      if (!artists.includes(card.details.artist)) {
-        artists.push(card.details.artist);
+      if (!artists.includes(propertyForCard(card, 'artist'))) {
+        artists.push(propertyForCard(card, 'artist'));
       }
     });
     return artists.sort();
@@ -206,7 +201,7 @@ function getLabelsRaw(cube, sort) {
   } else if (sort == 'Subtype') {
     const types = new Set();
     for (const card of cube) {
-      const split = card.type_line.split(/[-–—]/);
+      const split = propertyForCard(card, 'type_line').split(/[-–—]/);
       if (split.length > 1) {
         const subtypes = split[1].trim().split(' ');
         subtypes.filter((x) => x.trim()).forEach((subtype) => types.add(subtype.trim()));
@@ -260,10 +255,10 @@ function getLabelsRaw(cube, sort) {
     return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pauper'];
   } else if (sort == 'Power') {
     var items = [];
-    cube.forEach(function(card, index) {
-      if (card.details.power) {
-        if (!items.includes(card.details.power)) {
-          items.push(card.details.power);
+    cube.forEach(function(card) {
+      if (propertyForCard(card, 'power')) {
+        if (!items.includes(propertyForCard(card, 'power'))) {
+          items.push(propertyForCard(card, 'power'));
         }
       }
     });
@@ -285,10 +280,10 @@ function getLabelsRaw(cube, sort) {
     });
   } else if (sort == 'Toughness') {
     var items = [];
-    cube.forEach(function(card, index) {
-      if (card.details.toughness) {
-        if (!items.includes(card.details.toughness)) {
-          items.push(card.details.toughness);
+    cube.forEach(function(card) {
+      if (propertyForCard(card, 'toughness')) {
+        if (!items.includes(propertyForCard(card, 'toughness'))) {
+          items.push(propertyForCard(card, 'toughness'));
         }
       }
     });
@@ -310,10 +305,10 @@ function getLabelsRaw(cube, sort) {
     });
   } else if (sort == 'Loyalty') {
     var items = [];
-    cube.forEach(function(card, index) {
-      if (card.details.loyalty) {
-        if (!items.includes(card.details.loyalty)) {
-          items.push(card.details.loyalty);
+    cube.forEach(function(card) {
+      if (propertyForCard(card, 'loyalty')) {
+        if (!items.includes(propertyForCard(card, 'loyalty'))) {
+          items.push(propertyForCard(card, 'loyalty'));
         }
       }
     });
@@ -348,15 +343,15 @@ function getLabelsRaw(cube, sort) {
     return ['All'];
   } else if (sort == 'Elo') {
     var items = [];
-    cube.forEach(function(card, index) {
-      if (card.details.elo) {
-        const bucket = getEloBucket(card.details.elo);
+    cube.forEach((card) => {
+      if (propertyForCard(card, 'elo')) {
+        const bucket = getEloBucket(propertyForCard(card, 'elo'));
         if (!items.includes(bucket)) {
           items.push(bucket);
         }
       }
     });
-    return items.sort(function(x, y) {
+    return items.sort((x, y) => {
       if (x > y) {
         return 1;
       } else if (y > x) {
@@ -388,7 +383,7 @@ function price_bucket_label(index) {
 }
 
 function cmcToNumber(card) {
-  const cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
+  const cmc = propertyForCard(card, 'cmc')
   if (isNaN(cmc)) {
     return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
   }
@@ -427,35 +422,27 @@ const WEDGE_MAP = {
   URG: 'Temur',
 };
 
-function colorIdentity(card) {
-  return card.colors || card.details.color_identity;
-}
-
-function typeLine(card) {
-  return card.type_line || card.details.type;
-}
-
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    return [GetColorCategory(typeLine(card), colorIdentity(card))];
+    return [GetColorCategory(propertyForCard(card, 'type_line'), propertyForCard(card, 'color_identity'))];
   }
   if (sort == 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card))];
+    return [GetColorIdentity(propertyForCard(card, 'color_identity'))];
   }
   if (sort == 'Color') {
-    if (card.details.colors.length === 0) {
+    if (propertyForCard(card, 'colors').length === 0) {
       return ['Colorless'];
     }
-    return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
+    return propertyForCard(card, 'colors').map((c) => COLOR_MAP[c]).filter((c) => c);
   }
   if (sort == '4+ Color') {
-    if (colorIdentity(card).length < 4) {
+    if (propertyForCard(card, 'color_identity').length < 4) {
       return [];
     }
-    if (colorIdentity(card).length === 5) {
+    if (propertyForCard(card, 'color_identity').length === 5) {
       return ['Five Color'];
     }
-    return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    return [...'WUBRG'].filter((c) => !propertyForCard(card, 'color_identity').includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
   }
   if (sort == 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
@@ -479,7 +466,7 @@ export function cardGetLabels(card, sort) {
     // Round to half-integer.
     return [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
   } else if (sort == 'Supertype' || sort == 'Type') {
-    const split = typeLine(card).split(/[-–—]/);
+    const split = propertyForCard(card, 'type_line').split(/[-–—]/);
     let types = null;
     if (split.length > 1) {
       types = split[0]
@@ -488,7 +475,7 @@ export function cardGetLabels(card, sort) {
         .map((x) => x.trim())
         .filter((x) => x);
     } else {
-      types = typeLine(card)
+      types = propertyForCard(card, 'type_line')
         .trim()
         .split(' ')
         .map((x) => x.trim())
@@ -503,35 +490,35 @@ export function cardGetLabels(card, sort) {
       return types.filter((t) => labels.includes(t));
     }
   } else if (sort == 'Tags') {
-    return card.tags;
+    return propertyForCard(card, 'tags');
   } else if (sort == 'Status') {
-    return [card.status];
+    return [propertyForCard(card, 'status')];
   } else if (sort == 'Finish') {
-    return [card.finish];
+    return [propertyForCard(card, 'finish')];
   } else if (sort == 'Date Added') {
-    return [ISODateToYYYYMMDD(card.addedTmsp)];
+    return [ISODateToYYYYMMDD(propertyForCard(card, 'addedTmsp'))];
   } else if (sort == 'Guilds') {
-    if (colorIdentity(card).length != 2) {
+    if (propertyForCard(card, 'color_identity').length != 2) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => propertyForCard(card, 'color_identity').includes(c)).join('');
       return [GUILD_MAP[ordered]];
     }
   } else if (sort == 'Shards / Wedges') {
-    if (colorIdentity(card).length != 3) {
+    if (propertyForCard(card, 'color_identity').length != 3) {
       return [];
     } else {
-      const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
+      const ordered = [...'WUBRG'].filter((c) => propertyForCard(card, 'color_identity').includes(c)).join('');
       return [WEDGE_MAP[ordered]];
     }
   } else if (sort == 'Color Count') {
-    return [colorIdentity(card).length];
+    return [propertyForCard(card, 'color_identity').length];
   } else if (sort == 'Set') {
-    return [card.details.set.toUpperCase()];
+    return [propertyForCard(card, 'set').toUpperCase()];
   } else if (sort == 'Rarity') {
-    return [card.details.rarity[0].toUpperCase() + card.details.rarity.slice(1)];
+    return [propertyForCard(card, 'rarity')[0].toUpperCase() + propertyForCard(card, 'rarity').slice(1)];
   } else if (sort == 'Subtype') {
-    const split = typeLine(card).split(/[-–—]/);
+    const split = propertyForCard(card, 'type_line').split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
       return subtypes.map((subtype) => subtype.trim()).filter((x) => x);
@@ -539,8 +526,8 @@ export function cardGetLabels(card, sort) {
       return [];
     }
   } else if (sort == 'Types-Multicolor') {
-    if (colorIdentity(card).length <= 1) {
-      var split = typeLine(card).split('—');
+    if (propertyForCard(card, 'color_identity').length <= 1) {
+      var split = propertyForCard(card, 'type_line').split('—');
       var types = split[0].trim().split(' ');
       var type = types[types.length - 1];
       //check last type
@@ -565,7 +552,7 @@ export function cardGetLabels(card, sort) {
       } else {
         return [type];
       }
-    } else if (colorIdentity(card).length === 5) {
+    } else if (propertyForCard(card, 'color_identity').length === 5) {
       return ['Five Color'];
     } else {
       return [
@@ -575,50 +562,50 @@ export function cardGetLabels(card, sort) {
       ];
     }
   } else if (sort == 'Artist') {
-    return [card.details.artist];
+    return [proprtyForCard(card, 'artist')];
   } else if (sort == 'Legality') {
-    return Object.entries(card.details.legalities)
+    return Object.entries(propertyForCard(card, 'legalities'))
       .filter(([k, v]) => v)
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
-    if (card.details.power) {
-      return [parseInt(card.details.power)];
+    if (propertyForCard(card, 'power')) {
+      return [parseInt(propertyForCard(card, 'power'))];
     }
     return [];
   } else if (sort == 'Toughness') {
-    if (card.details.toughness) {
-      return [parseInt(card.details.toughness)];
+    if (propertyForCard(card, 'toughness')) {
+      return [parseInt(propertyForCard(card, 'toughness'))];
     }
     return [];
   } else if (sort == 'Loyalty') {
-    if (card.details.loyalty) {
-      return [parseInt(card.details.loyalty)];
+    if (propertyForCard(card, 'loyalty')) {
+      return [parseInt(propertyForCard(card, 'loyalty'))];
     }
     return [];
   } else if (sort == 'Manacost Type') {
-    if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
+    if (propertyForCard(card, 'colors').length > 1 && propertyForCard(card, 'parsed_cost').every((symbol) => !symbol.includes('-'))) {
       return ['Gold'];
     } else if (
-      card.details.colors.length > 1 &&
-      card.details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
+      propertyForCard(card, 'colors').length > 1 &&
+      propertyForCard(card, 'parsed_cost').some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
     ) {
       return ['Hybrid'];
-    } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
+    } else if (propertyForCard(card, 'parsed_cost').some((symbol) => symbol.includes('-p'))) {
       return ['Phyrexian'];
     }
     return [];
   } else if (sort == 'Creature/Non-Creature') {
-    return typeLine(card)
+    return propertyForCard(card, 'type_line')
       .toLowerCase()
       .includes('creature')
       ? ['Creature']
       : ['Non-Creature'];
   } else if (sort == 'Price') {
     var price = null;
-    if (card.details.price) {
-      price = card.details.price;
-    } else if (card.details.price_foil) {
-      price = card.details.price_foil;
+    if (propertyForCard(card, 'price')) {
+      price = propertyForCard(card, 'price');
+    } else if (propertyForCard(card, 'price_foil')) {
+      price = propertyForCard(card, 'price_foil');
     }
     if (price) {
       //fence post first and last term
@@ -637,15 +624,15 @@ export function cardGetLabels(card, sort) {
       return ['No Price Available'];
     }
   } else if (sort == 'Price Foil') {
-    if (card.details.price_foil) {
+    if (propertyForCard(card, 'price_foil')) {
       //fence post first and last term
-      if (card.details.price_foil < price_buckets[0]) {
+      if (propertyForCard(card, 'price_foil') < price_buckets[0]) {
         return [price_bucket_label(0)];
-      } else if (card.details.price_foil >= price_buckets[price_buckets.length - 1]) {
+      } else if (propertyForCard(card, 'price_foil') >= price_buckets[price_buckets.length - 1]) {
         return [price_bucket_label(price_buckets.length)];
       } else {
         for (let i = 1; i < price_buckets.length; i++) {
-          if (card.details.price_foil >= price_buckets[i - 1] && card.details.price_foil < price_buckets[i]) {
+          if (propertyForCard(card, 'price_foil') >= price_buckets[i - 1] && propertyForCard(card, 'price_foil') < price_buckets[i]) {
             return [price_bucket_label(i)];
           }
         }
@@ -656,8 +643,8 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
-    if (card.details.elo) {
-      return [getEloBucket(card.details.elo)];
+    if (propertyForCard(card, 'elo')) {
+      return [getEloBucket(propertyForCard(card, 'elo'))];
     } else {
       return [];
     }

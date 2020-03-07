@@ -1,4 +1,5 @@
 import { arraysAreEqualSets } from 'utils/Util';
+import { propertyForCard } from 'utils/Card';
 
 async function colorCount(cards) {
   const colorCombinations = [
@@ -40,8 +41,8 @@ async function colorCount(cards) {
   let totalCount = 0;
   let totalAsfan = 0;
   for (const card of cards) {
-    const asfan = card.asfan || 15 / cards.length;
-    const cardColors = card.colors || card.details.colors || [];
+    const { asfan } = card;
+    const cardColors = propertyForCard(card, 'color_identity');
 
     totalCount += 1;
     totalAsfan += asfan;

@@ -1,40 +1,41 @@
-import { getCmc } from 'utils/Card';
-import { GetColorCategory } from 'utils/Sort';
+import { propertyForCard } from 'utils/Card';
+import { GetColorIdentity } from 'utils/Sort';
 
 async function colorCurve(cards) {
   const curve = {
-    White: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Blue: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Black: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Red: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Green: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Colorless: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Multicolored: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    Total: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    White: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Blue: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Black: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Red: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Green: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Colorless: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Multicolored: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    Total: [0, 0, 0, 0, 0, 0, 0, 0, 0],
   };
 
   for (const card of cards) {
-    let colorCategory = GetColorCategory(card.details.type, card.colors);
-    if (card.details.type.toLowerCase().includes('land')) {
-      colorCategory = 'Land';
-    }
-    const category = curve[colorCategory];
-    // Giving raw count instead of asfan currently.
-    const asfan = 1;
-    if (category) {
-      let cmc = Math.floor(getCmc(card));
-      if (cmc >= 9) {
-        cmc = 9;
+    const typeLine = propertyForCard(card, 'type_line');
+    if (typeLine.toLowerCase().indexOf('land') !== -1) {
+      const colors = propertyForCard(card, 'color_identity');
+      const colorCategory = GetColorIdentity(colors);
+      const category = curve[colorCategory];
+      // Giving raw count instead of asfan currently.
+      const asfan = 1;
+      if (category) {
+        let cmc = Math.floor(propertyForCard(card, 'cmc'));
+        if (cmc >= 8) {
+          cmc = 8;
+        }
+        if (cmc < 0) {
+          cmc = 0;
+        }
+        category[cmc] += asfan;
+        curve.Total[cmc] += asfan;
       }
-      if (cmc < 0) {
-        cmc = 0;
-      }
-      category[cmc] += asfan;
-      curve.Total[cmc] += asfan;
     }
   }
   const datasets = {
-    labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9+'],
+    labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8+'],
     datasets: [
       ['White', curve.White, '#D8CEAB'],
       ['Blue', curve.Blue, '#67A6D3'],

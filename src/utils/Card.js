@@ -1,4 +1,17 @@
-import { arraysEqual } from 'utils/Util';
+import { arraysEqual, findProperty } from 'utils/Util';
+
+const CUBE_CARD_PROPERTIES = {
+  color_identity: ['colors', 'details.color_identity', 'details.color'],
+  colors: ['details.colors'],
+  imgUrl: ['imgUrl', 'details.image_normal'],
+  // Not overridable yet.
+  price: ['price', 'details.price', 'details.price_foil'],
+};
+
+export function propertyForCard(card, property) {
+  const paths = CUBE_CARD_PROPERTIES[property] ?? [property, `details.${property}`];
+  return findProperty(card, ...paths);
+}
 
 export function normalizeName(name) {
   return name
@@ -28,8 +41,4 @@ export function cardsAreEquivalent(a, b) {
   );
 }
 
-export function getCmc(card) {
-  return card.cmc !== undefined ? card.cmc : card.details.cmc;
-}
-
-export default { normalizeName, encodeName, decodeName, cardsAreEquivalent, getCmc };
+export default { propertyForCard, normalizeName, encodeName, decodeName, cardsAreEquivalent };

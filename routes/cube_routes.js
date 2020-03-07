@@ -50,6 +50,7 @@ const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybe
 const router = express.Router();
 // Bring in models
 const Cube = require('../models/cube');
+const CardSchema = require('../models/cardSchema');
 const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const User = require('../models/user');
@@ -872,7 +873,7 @@ router.get('/analysis/:id', async (req, res) => {
             token: {
               tags: [],
               status: 'Not Owned',
-              colors: tokenDetails.color_identity,
+              colors: cardutil.propertyForCard({ details: tokenDetails }, 'color_identity'),
               cmc: tokenDetails.cmc,
               cardID: tokenDetails._id,
               type_line: tokenDetails.type,
@@ -1194,27 +1195,30 @@ async function bulkUploadCSV(req, res, cards, cube) {
     const split = util.CSVtoArray(cardRaw);
     const name = split[0];
     const maybeboard = split[8];
+    const set = split[4].toUpperCase();
+    const collector_number = split[5].toUpperCase();
     const card = {
-      name,
       cmc: split[1],
       type_line: split[2].replace('-', '—'),
       colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
-      set: split[4].toUpperCase(),
       addedTmsp: new Date(),
-      collector_number: split[5],
       status: split[6],
       finish: split[7],
       imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
       tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
     };
 
-    const potentialIds = carddb.allIds(card);
+    const potentialIds = carddb.allIds({ name });
     if (potentialIds && potentialIds.length > 0) {
       // First, try to find the correct set.
-      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
+      const matchingSetAndNumber = potentialIds.find((id) => {
+        const potential = carddb.cardFromId(id);
+        return potential.set.toUpperCase() === set && potential.collector_number.toUpperCase === collector_number;
+      });
+      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
       const nonPromo = potentialIds.find(carddb.reasonableId);
       const first = potentialIds[0];
-      card.cardID = matchingSet || nonPromo || first;
+      card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
       if (maybeboard === 'true') {
         cube.maybe.push(card);
       } else {
@@ -1441,16 +1445,14 @@ router.get('/download/cubecobra/:id', async (req, res) => {
 });
 
 function writeCard(req, res, card, maybe) {
+  const details = carddb.cardFromId(card.cardID);
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  let { name } = carddb.cardFromId(card.cardID);
-  while (name.includes('"')) {
-    name = name.replace('"', '-quote-');
-  }
-  while (name.includes('-quote-')) {
-    name = name.replace('-quote-', '""');
-  }
+  const type_line = cardutil.propertyForCard({ ...card, details }, 'type_line');
+  const colors = cardutil.propertyForCard({ ...card, details }, 'color_identity');
+  let { name, set, collector_number } = details;
+  name = name.replace(/"/g, '""');
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
@@ -1459,10 +1461,10 @@ function writeCard(req, res, card, maybe) {
   }
   res.write(`"${name}",`);
   res.write(`${card.cmc},`);
-  res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${card.colors.join('')},`);
-  res.write(`"${carddb.cardFromId(card.cardID).set}",`);
-  res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`"${type_line.replace('—', '-')}",`);
+  res.write(`${colors.join('')},`);
+  res.write(`"${set}",`);
+  res.write(`"${collector_number}",`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
@@ -2859,7 +2861,7 @@ router.post(
       });
     }
 
-    for (const key of Object.keys(Cube.schema.paths.cards.schema.paths)) {
+    for (const key of Object.keys(CardSchema)) {
       if (!Object.prototype.hasOwnProperty.call(updated, key)) {
         updated[key] = card[key];
       }
@@ -2911,24 +2913,19 @@ router.post(
     const allUpdates = {
       $set: {},
     };
+    const MANUAL_FIELDS = ['tags', 'cardID', 'colors'];
+    const automaticFields = Object.keys(CardSchema).filter((field) => MANUAL_FIELDS.indexOf(field) === -1);
     for (const index of selected) {
-      if (updated.status) {
-        allUpdates.$set[`cards.${index}.status`] = updated.status;
-      }
-      if (updated.cmc) {
-        allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
-      }
-      if (updated.type_line) {
-        allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
+      for (const field of automaticFields) {
+        if (updated[field]) {
+          allUpdates.$set[`cards.${index}.${field}`] = updated[field];
+        }
       }
       if (updated.colors) {
         allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
       }
       if (updated.colorC) {
         allUpdates.$set[`cards.${index}.colors`] = [];
-      }
-      if (updated.finish) {
-        allUpdates.$set[`cards.${index}.finish`] = updated.finish;
       }
       if (updated.tags) {
         if (updated.addTags) {
@@ -3026,8 +3023,8 @@ router.post(
       });
     }
     const newVersion = updated.cardID && updated.cardID !== card.cardID;
-    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {
-      if (Object.prototype.hasOwnProperty.call(updated, field)) {
+    for (const field in Object.keys(updated)) {
+      if (!Object.prototype.hasOwnProperty.call(updated, key)) {
         card[field] = updated[field];
       }
     }
