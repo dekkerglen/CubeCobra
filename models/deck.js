@@ -61,8 +61,11 @@ let deckSchema = mongoose.Schema({
   },
 
   //new format, will convert to
-  seats: [SeatDeck],
-
+  seats: {
+    type:[SeatDeck],
+    default: [],
+    index:true
+  },
   //deprecated
   owner: String,
   name: String,

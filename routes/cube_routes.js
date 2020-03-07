@@ -34,6 +34,7 @@ const {
   maybeCards,
   getElo,
 } = require('../serverjs/cubefn.js');
+
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const carddb = require('../serverjs/cards.js');
@@ -71,6 +72,272 @@ if (NODE_ENV === 'production') {
 const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors } = require('./middleware');
 
 router.use(csrfProtection);
+
+//temprorary draft and deck conversion functions
+async function updateDraft(draft) {
+  try {
+    if(draft.seats && draft.seats.length > 0) {
+      return draft;
+    }
+
+    draft.seats = [];
+    draft.unopenedPacks = [];
+
+    //add player
+    const playerSeat = {
+      bot: null,
+      userid: draft.owner,
+      name: draft.username,
+      pickorder: draft.pickOrder,
+      drafted: draft.picks[0],
+      packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
+    };
+
+    draft.seats.push(playerSeat);
+    draft.unopenedPacks.push(draft.packs[0] ? draft.packs[0].slice(1) : []);
+
+    //add bots
+    for (let i = 1; i < draft.picks.length; i++) {
+      const bot = {
+        bot: draft.bots[i - 1],
+        name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
+        pickorder: draft.picks[i],
+        drafted: [],
+        packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
+      };
+
+      //now we need to build picks from the pickorder ids
+      for (let j = 0; j < 16; j++) {
+        bot.drafted.push([]);
+      }
+
+      bot.pickorder.forEach(function(cardid, index) {
+        if (cardid) {
+          //inconsistent formats... find the card id
+          if (cardid[0] && cardid[0].cardID) {
+            cardid = cardid[0].cardID;
+          } else if (cardid.cardID) {
+            cardid = cardid.cardID;
+          }
+          //insert basic card object into correct cmc column
+          const card = {
+            cardId: cardid,
+            details: carddb.cardFromId(cardid),
+          };
+          const col = Math.min(7, card.details.cmc) + (card.details.type.toLowerCase().includes('creature') ? 0 : 8);
+          bot.drafted[col].push(card);
+        }
+      });
+
+      draft.seats.push(bot);
+      draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
+    }
+    return draft;
+  } catch(err) {
+    console.error(err);
+  }
+}
+async function buildDeck(cards, bot) {
+  try {
+    //cards will be a list of cardids
+
+    cards = cards.map((id) => {
+      if (Array.isArray(id)) {
+        if (id.length <= 0) {
+          const details = carddb.getPlaceholderCard('');
+          return {
+            tags: [],
+            colors: details.colors,
+            cardID: details._id,
+            cmc: details.cmc,
+            type_line: details.type,
+            details: details,
+          };
+        }
+        if (id[0].cardID) {
+          id = id[0].cardID;
+        } else {
+          id = id[0];
+        }
+      } else if (id.cardID) {
+        id = id.cardID;
+      }
+      const details = carddb.cardFromId(id);
+      return {
+        tags: [],
+        colors: details.colors,
+        cardID: details._id,
+        cmc: details.cmc,
+        type_line: details.type,
+        details: details,
+      };
+    });
+
+    const elos = await getElo(cards.map((card) => card.details.name));
+    const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
+    const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+
+    sort_fn = function(a, b) {
+      if (bot) {
+        return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
+      } else {
+        return elos[b.details.name] - elos[a.details.name];
+      }
+    };
+
+    nonlands.sort(sort_fn);
+    lands.sort(sort_fn);
+
+    const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
+    const side = nonlands.slice(23).concat(lands.slice(17));
+
+    const deck = [];
+    const sideboard = [];
+    for (let i = 0; i < 16; i += 1) {
+      deck.push([]);
+      if (i < 8) {
+        sideboard.push([]);
+      }
+    }
+
+    for (const card of main) {
+      let index = Math.min(card.cmc|| 0, 7);
+      if (!card.type_line.toLowerCase().includes('creature')) {
+        index += 8;
+      }
+      deck[index].push(card);
+    }
+    for (const card of side) {
+      sideboard[Math.min(card.cmc|| 0, 7)].push(card);
+    }
+    return {
+      deck,
+      sideboard,
+    };
+  } catch (err) {
+    console.error(err);
+    return { deck: [], sideboard: [] };
+  }
+}
+async function updateDeck(deck) {
+  if(deck.seats && deck.seats.length > 0) {
+    return deck;
+  }
+
+  const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft)) : null;
+
+  if (
+    deck.newformat == false &&
+    deck.cards[deck.cards.length - 1] &&
+    typeof deck.cards[deck.cards.length - 1][0] === 'object'
+  ) {
+    //old format
+    deck.seats = [];
+
+    const playerdeck = await buildDeck(deck.cards[0]);
+
+    const playerSeat = {
+      bot: null,
+      userid: deck.owner,
+      username: deck.username,
+      pickorder: deck.cards[0],
+      name: deck.name,
+      description: deck.description,
+      cols: 16,
+      deck: playerdeck.deck,
+      sideboard: playerdeck.sideboard,
+    };
+
+    deck.seats.push(playerSeat);
+
+    //add bots
+    for (let i = 1; i < deck.cards.length; i += 1) {
+      //need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i]);
+      const bot = {
+        bot: deck.bots[i - 1],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors: details.colors,
+              cardID: details._id,
+              cmc: details.cmc,
+              type_line: details.type,
+            };
+          } else {
+            return id;
+          }
+        }),
+        name: 'Bot ' + (i + 1) + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
+        description:
+          'This deck was drafted by a bot with color preference for ' +
+          deck.bots[i - 1][0] +
+          ' and ' +
+          deck.bots[i - 1][1] +
+          '.',
+        cols: 16,
+        deck: botdeck.deck,
+        sideboard: botdeck.sideboard,
+      };
+      deck.seats.push(bot);
+    }
+  } else {
+    //new format
+    deck.seats = [];
+
+    const playerSeat = {
+      bot: null,
+      userid: deck.owner,
+      username: deck.username,
+      pickorder: draft ? draft.pickorder : [],
+      name: deck.name,
+      description: deck.description,
+      cols: 16,
+      deck: deck.playerdeck,
+      sideboard: deck.playersideboard,
+    };
+
+    deck.seats.push(playerSeat);
+
+    //add bots
+    for (let i = 0; i < deck.cards.length; i += 1) {
+      //need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i]);
+      const bot = {
+        bot: deck.bots[i],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors: details.colors,
+              cardID: details._id,
+              cmc: details.cmc,
+              type_line: details.type,
+            };
+          } else {
+            return id;
+          }
+        }),
+        name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
+        description:
+          'This deck was drafted by a bot with color preference for ' +
+          deck.bots[i][0] +
+          ' and ' +
+          deck.bots[i][1] +
+          '.',
+        cols: 16,
+        deck: botdeck.deck,
+        sideboard: botdeck.sideboard,
+      };
+      deck.seats.push(bot);
+    }
+  }
+
+  return deck;
+}
 
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
@@ -795,7 +1062,7 @@ router.get('/playtest/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const decks = await Deck.find(
+    let decks = await Deck.find(
       {
         cube: cube._id,
       },
@@ -806,6 +1073,8 @@ router.get('/playtest/:id', async (req, res) => {
       })
       .limit(10)
       .exec();
+
+    decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
     delete cube.cards;
     delete cube.decks;
@@ -1622,7 +1891,7 @@ router.post('/startdraft/:id', async (req, res) => {
 
 router.get('/draft/:id', async (req, res) => {
   try {
-    const draft = await Draft.findById(req.params.id).lean();
+    const draft = await updateDraft(await Draft.findById(req.params.id).lean());
     if (!draft) {
       req.flash('danger', 'Draft not found');
       return res.status(404).render('misc/404', {});
@@ -2017,7 +2286,7 @@ router.post(
   '/api/postdeckcomment',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const deck = await Deck.findById(req.body.id);
+    const deck = await updateDeck(await Deck.findById(req.body.id));
     const { user } = req;
 
     if (!user) {
@@ -2276,7 +2545,7 @@ router.get(
 
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id);
+    const deck = await updateDeck(await Deck.findById(req.params.id));
     const deckOwner = await User.findById(deck.seats[0].userid);
 
     if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
@@ -2307,7 +2576,7 @@ router.post('/submitdeck/:id', async (req, res) => {
   try {
     // req.body contains a draft
     const draftid = req.body.body;
-    const draft = await Draft.findById(draftid);
+    const draft = await updateDraft(await Draft.findById(draftid).lean());
     const cube = await Cube.findOne(build_id_query(draft.cube));
 
     const deck = new Deck();
@@ -2390,13 +2659,15 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         date: -1,
       })
       .skip(pagesize * page)
-      .limit(pagesize)
+      .limit(pagesize).lean()
       .exec();
     const numDecksq = Deck.countDocuments({
       cube: cube._id,
     }).exec();
 
-    const [decks, numDecks] = await Promise.all([decksq, numDecksq]);
+    let [decks, numDecks] = await Promise.all([decksq, numDecksq]);
+
+    decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
     const reactProps = {
       cube,
@@ -2428,7 +2699,7 @@ router.get('/decks/:id', async (req, res) => {
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
-    const base = await Deck.findById(req.params.id);
+    const base = await updateDeck(await Deck.findById(req.params.id).lean());
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
@@ -2490,14 +2761,14 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
 router.get('/redraft/:id', async (req, res) => {
   try {
-    const base = await Deck.findById(req.params.id);
+    const base = await updateDeck(await Deck.findById(req.params.id).lean());
 
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const srcDraft = await Draft.findById(base.draft);
+    const srcDraft = await updateDraft(await Draft.findById(base.draft).lean());
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
@@ -2551,7 +2822,7 @@ router.get('/redraft/:id', async (req, res) => {
 
 router.get('/deckbuilder/:id', async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id).lean();
+    const deck = await updateDeck(await Deck.findById(req.params.id).lean());
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
@@ -2610,7 +2881,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
-    const deck = await Deck.findById(req.params.id).lean();
+    const deck = await updateDeck(await Deck.findById(req.params.id).lean());
+
+    console.log(deck);
 
     if (!deck) {
       req.flash('danger', 'Deck not found');
@@ -2645,8 +2918,10 @@ router.get('/deck/:id', async (req, res) => {
           }
         }
       }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
+      if(seat.pickorder) {
+        for (const card of seat.pickorder) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
       }
     }
 
@@ -3142,7 +3417,7 @@ const ELO_SPEED = 1000;
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const draftQ = Draft.findById({ _id: req.body.draft_id });
+    const draftQ = updateDraft(await Draft.findById({ _id: req.body.draft_id }));
     const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 

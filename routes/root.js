@@ -8,6 +8,8 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
+const Draft = require('../models/draft');
+
 
 const { NODE_ENV } = process.env;
 
@@ -17,6 +19,7 @@ if (NODE_ENV === 'production') {
 }
 
 const carddb = require('../serverjs/cards.js');
+var cubefn = require('../serverjs/cubefn.js');
 
 const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
@@ -24,6 +27,274 @@ const { csrfProtection } = require('./middleware');
 const router = express.Router();
 
 router.use(csrfProtection);
+
+
+//temprorary draft and deck conversion functions
+async function updateDraft(draft) {
+  try {
+    if(draft.seats && draft.seats.length > 0) {
+      return draft;
+    }
+
+    draft.seats = [];
+    draft.unopenedPacks = [];
+
+    //add player
+    const playerSeat = {
+      bot: null,
+      userid: draft.owner,
+      name: draft.username,
+      pickorder: draft.pickOrder,
+      drafted: draft.picks[0],
+      packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
+    };
+
+    draft.seats.push(playerSeat);
+    draft.unopenedPacks.push(draft.packs[0] ? draft.packs[0].slice(1) : []);
+
+    //add bots
+    for (let i = 1; i < draft.picks.length; i++) {
+      const bot = {
+        bot: draft.bots[i - 1],
+        name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
+        pickorder: draft.picks[i],
+        drafted: [],
+        packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
+      };
+
+      //now we need to build picks from the pickorder ids
+      for (let j = 0; j < 16; j++) {
+        bot.drafted.push([]);
+      }
+
+      bot.pickorder.forEach(function(cardid, index) {
+        if (cardid) {
+          //inconsistent formats... find the card id
+          if (cardid[0] && cardid[0].cardID) {
+            cardid = cardid[0].cardID;
+          } else if (cardid.cardID) {
+            cardid = cardid.cardID;
+          }
+          //insert basic card object into correct cmc column
+          const card = {
+            cardId: cardid,
+            details: carddb.cardFromId(cardid),
+          };
+          const col = Math.min(7, card.details.cmc) + (card.details.type.toLowerCase().includes('creature') ? 0 : 8);
+          bot.drafted[col].push(card);
+        }
+      });
+
+      draft.seats.push(bot);
+      draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
+    }
+    return draft;
+  } catch(err) {
+    console.error(err);
+  }
+}
+async function buildDeck(cards, bot) {
+  try {
+    //cards will be a list of cardids
+
+    cards = cards.map((id) => {
+      if (Array.isArray(id)) {
+        if (id.length <= 0) {
+          const details = carddb.getPlaceholderCard('');
+          return {
+            tags: [],
+            colors: details.colors,
+            cardID: details._id,
+            cmc: details.cmc,
+            type_line: details.type,
+            details: details,
+          };
+        }
+        if (id[0].cardID) {
+          id = id[0].cardID;
+        } else {
+          id = id[0];
+        }
+      } else if (id.cardID) {
+        id = id.cardID;
+      }
+      const details = carddb.cardFromId(id);
+      return {
+        tags: [],
+        colors: details.colors,
+        cardID: details._id,
+        cmc: details.cmc,
+        type_line: details.type,
+        details: details,
+      };
+    });
+
+    const elos = await cubefn.getElo(cards.map((card) => card.details.name));
+    const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
+    const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+
+    sort_fn = function(a, b) {
+      if (bot) {
+        return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
+      } else {
+        return elos[b.details.name] - elos[a.details.name];
+      }
+    };
+
+    nonlands.sort(sort_fn);
+    lands.sort(sort_fn);
+
+    const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
+    const side = nonlands.slice(23).concat(lands.slice(17));
+
+    const deck = [];
+    const sideboard = [];
+    for (let i = 0; i < 16; i += 1) {
+      deck.push([]);
+      if (i < 8) {
+        sideboard.push([]);
+      }
+    }
+
+    for (const card of main) {
+      let index = Math.min(card.cmc|| 0, 7);
+      if (!card.type_line.toLowerCase().includes('creature')) {
+        index += 8;
+      }
+      deck[index].push(card);
+    }
+    for (const card of side) {
+      sideboard[Math.min(card.cmc|| 0, 7)].push(card);
+    }
+    return {
+      deck,
+      sideboard,
+    };
+  } catch (err) {
+    console.error(err);
+    return { deck: [], sideboard: [] };
+  }
+}
+async function updateDeck(deck) {
+  if(deck.seats && deck.seats.length > 0) {
+    return deck;
+  }
+
+  const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft)) : null;
+
+  if (
+    deck.newformat == false &&
+    deck.cards[deck.cards.length - 1] &&
+    typeof deck.cards[deck.cards.length - 1][0] === 'object'
+  ) {
+    //old format
+    deck.seats = [];
+
+    const playerdeck = await buildDeck(deck.cards[0]);
+
+    const playerSeat = {
+      bot: null,
+      userid: deck.owner,
+      username: deck.username,
+      pickorder: deck.cards[0],
+      name: deck.name,
+      description: deck.description,
+      cols: 16,
+      deck: playerdeck.deck,
+      sideboard: playerdeck.sideboard,
+    };
+
+    deck.seats.push(playerSeat);
+
+    //add bots
+    for (let i = 1; i < deck.cards.length; i += 1) {
+      //need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i]);
+      const bot = {
+        bot: deck.bots[i - 1],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors: details.colors,
+              cardID: details._id,
+              cmc: details.cmc,
+              type_line: details.type,
+            };
+          } else {
+            return id;
+          }
+        }),
+        name: 'Bot ' + (i + 1) + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
+        description:
+          'This deck was drafted by a bot with color preference for ' +
+          deck.bots[i - 1][0] +
+          ' and ' +
+          deck.bots[i - 1][1] +
+          '.',
+        cols: 16,
+        deck: botdeck.deck,
+        sideboard: botdeck.sideboard,
+      };
+      deck.seats.push(bot);
+    }
+  } else {
+    //new format
+    deck.seats = [];
+
+    const playerSeat = {
+      bot: null,
+      userid: deck.owner,
+      username: deck.username,
+      pickorder: draft ? draft.pickorder : [],
+      name: deck.name,
+      description: deck.description,
+      cols: 16,
+      deck: deck.playerdeck,
+      sideboard: deck.playersideboard,
+    };
+
+    deck.seats.push(playerSeat);
+
+    //add bots
+    for (let i = 0; i < deck.cards.length; i += 1) {
+      //need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i]);
+      const bot = {
+        bot: deck.bots[i],
+        pickorder: deck.cards[i].map((id) => {
+          if (typeof id === 'string' || id instanceof String) {
+            const details = carddb.cardFromId(id);
+            return {
+              tags: [],
+              colors: details.colors,
+              cardID: details._id,
+              cmc: details.cmc,
+              type_line: details.type,
+            };
+          } else {
+            return id;
+          }
+        }),
+        name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
+        description:
+          'This deck was drafted by a bot with color preference for ' +
+          deck.bots[i][0] +
+          ' and ' +
+          deck.bots[i][1] +
+          '.',
+        cols: 16,
+        deck: botdeck.deck,
+        sideboard: botdeck.sideboard,
+      };
+      deck.seats.push(bot);
+    }
+  }
+
+  return deck;
+}
+
 
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
@@ -86,9 +357,12 @@ router.get('/explore', async (req, res) => {
       date: -1,
     })
     .limit(10)
+    .lean()
     .exec();
 
-  const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+  let [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+
+  decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
   res.render('index', {
     devblog: blog.length > 0 ? blog[0] : null,
@@ -161,18 +435,22 @@ router.get('/dashboard', async (req, res) => {
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
     const cubeIds = cubes.map((cube) => cube._id);
 
-    const decks = await Deck.find(
+    let decks = await Deck.find(
       {
         cube: {
           $in: cubeIds,
         },
       },
-      '_id seats username date',
     )
       .sort({
         date: -1,
       })
+      .lean()
       .limit(13);
+
+    decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
+
+    console.log(decks[0]);
 
     // autocard the posts
     if (posts) {
@@ -221,7 +499,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
 
     const cubeIds = cubes.map((cube) => cube._id);
 
-    const decks = await Deck.find({
+    let decks = await Deck.find({
       cube: {
         $in: cubeIds,
       },
@@ -231,12 +509,16 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       })
       .skip(pagesize * page)
       .limit(pagesize)
+      .lean()
       .exec();
+
     const numDecks = await Deck.countDocuments({
       cube: {
         $in: cubeIds,
       },
-    }).exec();
+    }).lean().exec();
+
+    decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
     const pages = [];
     for (let i = 0; i < numDecks / pagesize; i++) {
