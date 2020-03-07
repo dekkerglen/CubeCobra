@@ -9,7 +9,7 @@ let Draft = require('../../../models/draft');
 const carddb = require('../../../serverjs/cards');
 
 import Filter from '../../../src/utils/Filter';
-import { getDraftBots, getDraftFormat, populateDraft } from '../../../src/drafting/drafCreation';
+import { getDraftBots, getDraftFormat, populateDraft } from '../../../src/drafting/draftCreation';
 
 import { expectOperator } from '../../helpers';
 
