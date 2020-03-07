@@ -1,17 +1,17 @@
+import Filter from '../../../src/utils/Filter';
+import { getDraftBots, getDraftFormat, createDraft } from '../../../src/utils/draftutil';
+
+import { expectOperator } from '../../helpers';
+
 const sinon = require('sinon');
 
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
 
-let CardRating = require('../../../models/cardrating');
-let Draft = require('../../../models/draft');
+const CardRating = require('../../../models/cardrating');
+const Draft = require('../../../models/draft');
 
 const carddb = require('../../../serverjs/cards');
-
-import Filter from '../../../src/utils/Filter';
-import { getDraftBots, getDraftFormat, populateDraft } from '../../../src/utils/draftutil';
-
-import { expectOperator } from '../../helpers';
 
 describe('getDraftBots', () => {
   it('can get the correct number of draft bots', () => {
@@ -40,14 +40,14 @@ describe('getDraftFormat', () => {
   let exampleCube;
 
   it('returns the default format if params are < 0', () => {
-    let params = {
+    const params = {
       id: -1,
       seats: 4,
       packs: 3,
       cards: 2,
     };
     const format = getDraftFormat(params, exampleCube);
-    let expected_format = [
+    const expected_format = [
       ['*', '*'], // pack 1 (* is any card)
       ['*', '*'], // pack 2
       ['*', '*'], // pack 3
@@ -69,11 +69,11 @@ describe('getDraftFormat', () => {
       exampleCube.draft_formats[0] = {}; // mock
     });
 
-    let expectedFilters = function(...args) {
-      let expectedFormat = [];
+    const expectedFilters = function(...args) {
+      const expectedFormat = [];
       args.forEach((filterText) => {
         if (filterText !== null) {
-          let tokens = [];
+          const tokens = [];
           Filter.tokenizeInput(filterText, tokens);
           filterText = Filter.parseTokens(tokens);
         }
@@ -118,8 +118,8 @@ describe('getDraftFormat', () => {
         // NOTE: Because format array als incudes properties (which we aren't testing in this test)
         // we need to convert to json to compare safely.
         // See https://github.com/facebook/jest/issues/8475
-        let formatJSON = JSON.stringify(getDraftFormat(params, exampleCube));
-        let expectedJSON = JSON.stringify(expected);
+        const formatJSON = JSON.stringify(getDraftFormat(params, exampleCube));
+        const expectedJSON = JSON.stringify(expected);
         expect(formatJSON).toEqual(expectedJSON);
       });
 
@@ -138,8 +138,12 @@ describe('getDraftFormat', () => {
   });
 });
 
-describe('populateDraft', () => {
-  let draft, format, cards, bots, seats;
+describe('createDraft', () => {
+  let draft;
+  let format;
+  let cards;
+  let bots;
+  let seats;
   beforeAll(() => {
     draft = new Draft();
     format = [];
@@ -152,7 +156,7 @@ describe('populateDraft', () => {
     cards = [];
     bots = ['fakebot'];
     expect(() => {
-      populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+      createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
     }).toThrow(/no cards/);
   });
 
@@ -160,7 +164,7 @@ describe('populateDraft', () => {
     cards = ['mockcard'];
     bots = [];
     expect(() => {
-      populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+      createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
     }).toThrow(/no bots/);
   });
 
@@ -168,13 +172,13 @@ describe('populateDraft', () => {
     cards = ['mockcards'];
     bots = ['mockbot'];
     expect(() => {
-      populateDraft(format, cards, bots, 1, { username: 'user', _id: 0 });
+      createDraft(format, cards, bots, 1, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
     expect(() => {
-      populateDraft(format, cards, bots, null, { username: 'user', _id: 0 });
+      createDraft(format, cards, bots, null, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
     expect(() => {
-      populateDraft(format, cards, bots, -1, { username: 'user', _id: 0 });
+      createDraft(format, cards, bots, -1, { username: 'user', _id: 0 });
     }).toThrow(/invalid seats/);
   });
 
@@ -194,8 +198,8 @@ describe('populateDraft', () => {
     it('sets the intitial state of the draft', () => {
       cards = exampleCube.cards.slice();
       bots = ['mockbot'];
-      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
-      populateDraft(format, cards, bots, 8, { username: 'user', _id: 0 });
+      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats }, exampleCube);
+      createDraft(format, cards, bots, 8, { username: 'user', _id: 0 });
       expect(draft.pickNumber).toEqual(1);
       expect(draft.packNumber).toEqual(1);
       expect(draft).toHaveProperty('packs');
@@ -203,8 +207,8 @@ describe('populateDraft', () => {
       expect(draft).toHaveProperty('bots');
       // CoreMongooseArray causing trouble, so we check length and use stringify
       expect(draft.bots.length).toEqual(1);
-      let initial_stateJSON = JSON.stringify(draft.initial_state);
-      let packsJSON = JSON.stringify(draft.packs);
+      const initial_stateJSON = JSON.stringify(draft.initial_state);
+      const packsJSON = JSON.stringify(draft.packs);
       expect(initial_stateJSON).toEqual(packsJSON);
     });
 
@@ -213,9 +217,9 @@ describe('populateDraft', () => {
       bots = ['mockbot'];
       seats = 8;
       // cube only contains 65 cards, so 8 * 1 * 15 = 120, should run out if multiples = false
-      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats: seats }, exampleCube);
+      format = getDraftFormat({ id: -1, packs: 1, cards: 15, seats }, exampleCube);
       expect(() => {
-        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
 
@@ -227,7 +231,7 @@ describe('populateDraft', () => {
       exampleCube.draft_formats[0].packs = '[["*","*","*","*","*"],["*","*","*","*","*"]]';
       format = getDraftFormat({ id: 0 }, exampleCube);
       expect(() => {
-        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
 
@@ -240,12 +244,12 @@ describe('populateDraft', () => {
       format = getDraftFormat({ id: 0 }, exampleCube);
       format.multiples = true;
       expect(() => {
-        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).not.toThrow(/not enough cards/);
       // note: because multiples true, cards not "used up" for next check
       format.multiples = false;
       expect(() => {
-        populateDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
+        createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
   });

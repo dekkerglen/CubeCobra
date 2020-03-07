@@ -1,9 +1,8 @@
 const sanitizeHtml = require('sanitize-html');
 const Cube = require('../models/cube');
 const CardRating = require('../models/cardrating');
-const Draft = require('../models/draft');
 const util = require('./util');
-const { getDraftFormat, populateDraft } = require('../dist/utils/draftutil.js');
+const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
 
 function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;
@@ -320,10 +319,10 @@ const methods = {
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    populateDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
+    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.packs[0][0].map((card) => card.details),
+      pack: draft.unopenedPacks[0][0].map((card) => card.details),
     };
   },
   generateShortId,

@@ -1595,7 +1595,7 @@ router.post('/startdraft/:id', async (req, res) => {
     const format = draftutil.getDraftFormat(params, cube);
 
     const draft = new Draft();
-    const populated = draftutil.populateDraft(
+    const populated = draftutil.createDraft(
       format,
       cube.cards,
       bots,
@@ -3134,7 +3134,7 @@ router.post('/:id/defaultdraftformat/:formatId', ensureAuth, async (req, res) =>
     const cubeid = req.params.id;
     const formatId = parseInt(req.params.formatId, 10);
 
-    const cube = await Cube.findOne(build_id_query(cubeid));
+    const cube = await Cube.findOne(buildIdQuery(cubeid));
     if (
       !cube ||
       cube.owner !== req.user.id ||

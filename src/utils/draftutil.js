@@ -244,7 +244,7 @@ function createPacks(draft, format, seats, nextCardFn) {
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(format, cards, bots, seats, user, seed = false) {
+export function createDraft(format, cards, bots, seats, user, seed = false) {
   const draft = {};
 
   let nextCardFn = null;
