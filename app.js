@@ -11,7 +11,7 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
 const winston = require('winston');
 const { Loggly } = require('winston-loggly-bulk');
-const morgan = require('morgan');
+const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 // eslint-disable-next-line import/no-unresolved
@@ -28,44 +28,50 @@ const combinedFile = tmp.fileSync({
   discardDescriptor: true,
 });
 
-const errorStackTracerFormat = winston.format((info) => {
-  if (info.error && info.error.stack) {
-    info.message = info.message ? `${info.message}: ${info.error.stack}` : `${info.error.stack}`;
-    delete info.error;
-  }
-  return info;
-});
-
-const timestamped = winston.format((info) => {
+const timestampedFormat = winston.format((info) => {
   if (info.message) {
     info.message = `[${new Date(Date.now()).toISOString()}] ${info.message}`;
   }
   return info;
 });
 
+const linearFormat = winston.format((info) => {
+  if (info.type === 'request') {
+    // :remote-addr :uuid :method :url :status :res[content-length] - :response-time ms
+    const length = info.length === undefined ? '-' : info.length;
+    info.message = `${info.remoteAddr} ${info.requestId} ${info.method} ${info.path} ${info.status} ${length} ${info.elapsed}ms`;
+    delete info.remoteAddr;
+    delete info.requestId;
+    delete info.method;
+    delete info.path;
+    delete info.status;
+    delete info.length;
+    delete info.elapsed;
+  } else if (info.error) {
+    info.message = info.message
+      ? `${info.message}: ${info.error.message}: ${info.error.stack}`
+      : `${info.error.message}: ${info.error.stack}`;
+    delete info.error;
+  }
+  delete info.type;
+  return info;
+});
+
+const textFormat = winston.format.combine(linearFormat(), winston.format.simple());
+const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
+
 winston.configure({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.splat(), // Necessary to produce the 'meta' property
-    errorStackTracerFormat(),
-    winston.format.simple(),
-  ),
+  format: winston.format.json(),
   exitOnError: false,
   transports: [
     //
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: errorFile.name, level: 'error' }),
-    new winston.transports.File({ filename: combinedFile.name }),
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.splat(), // Necessary to produce the 'meta' property
-        errorStackTracerFormat(),
-        timestamped(),
-        winston.format.simple(),
-      ),
-    }),
+    new winston.transports.File({ filename: errorFile.name, level: 'error', format: textFormat }),
+    new winston.transports.File({ filename: combinedFile.name, format: textFormat }),
+    new winston.transports.Console({ format: consoleFormat }),
   ],
 });
 
@@ -130,23 +136,29 @@ app.use((req, res, next) => {
   next();
 });
 
-// error handling
+// per-request logging configuration
 app.use((req, res, next) => {
   req.uuid = uuid();
   req.logger = winston.child({
     requestId: req.uuid,
   });
+  res.locals.requestId = req.uuid;
+  res.startTime = Date.now();
+  onFinished(res, (err, finalRes) => {
+    req.logger.log({
+      level: 'info',
+      type: 'request',
+      remoteAddr: req.ip,
+      requestId: req.uuid,
+      method: req.method,
+      path: req.path,
+      status: finalRes.statusCode,
+      length: finalRes.getHeader('content-length'),
+      elapsed: Date.now() - finalRes.startTime,
+    });
+  });
   next();
 });
-
-morgan.token('uuid', (req) => req.uuid);
-app.use(
-  morgan(':remote-addr :uuid :method :url :status :res[content-length] - :response-time ms', {
-    stream: {
-      write: (message) => winston.info(message.trim()),
-    },
-  }),
-);
 
 // upload file middleware
 app.use(fileUpload());
@@ -207,7 +219,7 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
   res.locals.user = req.user || null;
   next();
 });
@@ -231,6 +243,17 @@ app.use('/tool', tools);
 
 app.use((req, res) => {
   res.status(404).render('misc/404', {});
+});
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  req.logger.error(null, { error: err });
+  if (!res.statusCode) {
+    res.status(500);
+  }
+  res.render('misc/500', {
+    error: err.message,
+  });
 });
 
 schedule.scheduleJob('0 0 * * *', () => {

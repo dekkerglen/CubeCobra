@@ -245,11 +245,15 @@ const methods = {
         if (!found && card.set.toLowerCase() == set) {
           found = true;
           res[name] = {
+            cardID: option,
+            type_line: card.type,
+            cmc: 0,
             details: card,
           };
         }
       });
     });
+
     return res;
   },
   cardsAreEquivalent: cardsAreEquivalent,

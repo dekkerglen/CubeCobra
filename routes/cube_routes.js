@@ -37,6 +37,7 @@ const {
 
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
+const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -1747,11 +1748,17 @@ function writeCard(req, res, card, maybe) {
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(build_id_query(req.params.id)).lean();
+    for (const card of cube.cards) {
+      const details = carddb.cardFromId(card.cardID);
+      card.details = details;
+    }
+    cube.cards = sortutil.sortForCSVDownload(cube.cards);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
+
     for (const card of cube.cards) {
       writeCard(req, res, card, false);
     }
@@ -1914,7 +1921,7 @@ router.get('/draft/:id', async (req, res) => {
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
         }
       }
     }
@@ -2565,7 +2572,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     await deck.save();
 
-    req.flash('success', 'Deck saved succesfully');
+    req.flash('success', 'Deck saved successfully');
     return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -2802,11 +2809,10 @@ router.get('/redraft/:id', async (req, res) => {
 
     // add ratings
     const names = [];
-    // add in details to all cards
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
-          names.push(card.details.name);
+          names.push(carddb.cardFromId(card.cardID).name);
         }
       }
     }
@@ -2896,6 +2902,11 @@ router.get('/deck/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    let draft = null;
+    if (deck.draft) {
+      draft = await Draft.findById(deck.draft).lean();
+    }
+
     const drafter = {
       name: 'Anonymous',
       id: null,
@@ -2928,6 +2939,7 @@ router.get('/deck/:id', async (req, res) => {
     const reactProps = {
       cube,
       deck,
+      draft,
       canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
       userid: req.user ? req.user.id : null,
     };
@@ -3431,8 +3443,10 @@ router.post(
         packnum += 1;
       }
 
-      rating.name = req.body.pick;
-      rating.elo = ELO_BASE + ELO_RANGE / 2;
+      if (!rating.elo) {
+        rating.name = req.body.pick;
+        rating.elo = ELO_BASE + ELO_RANGE / 2;
+      }
 
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));

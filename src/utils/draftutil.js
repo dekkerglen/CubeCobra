@@ -270,7 +270,19 @@ export function populateDraft(format, cards, bots, seats, user) {
   }
 
   draft.seats = [];
-  draft.unopenedPacks = draft.initial_state.slice();
+  draft.unopenedPacks = [];
+
+  // deep clone packs
+  for (let i = 0; i < draft.initial_state.length; i++) {
+    draft.unopenedPacks.push([]);
+    for (let j = 0; j < draft.initial_state[i].length; j++) {
+      draft.unopenedPacks[i].push([]);
+      for (let k = 0; k < draft.initial_state[i][j].length; k++) {
+        draft.unopenedPacks[i][j].push(draft.initial_state[i][j][k]);
+      }
+    }
+  }
+
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
       bot: i == 0 ? null : bots[i - 1],

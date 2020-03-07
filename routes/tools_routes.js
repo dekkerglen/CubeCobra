@@ -7,6 +7,7 @@ const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
 const Filter = require('../dist/utils/Filter');
 const { getElo } = require('../serverjs/cubefn.js');
+const generateMeta = require('../serverjs/meta.js');
 
 const CardRating = require('../models/cardrating');
 const Card = require('../models/card');
@@ -257,12 +258,22 @@ router.get('/card/:id', async (req, res) => {
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
     const prices = await GetPrices(pids);
     card.elo = (await getElo([card.name], true))[card.name];
-    return res.render('tool/cardpage', {
+    const reactProps = {
       card,
       data,
       prices,
       cubes,
       related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
+    };
+    return res.render('tool/cardpage', {
+      reactProps: serialize(reactProps),
+      title: `${card.name}`,
+      metadata: generateMeta(
+        `${card.name} - Cube Cobra`,
+        `Analytics for ${card.name} on CubeCobra`,
+        card.image_normal,
+        `https://cubecobra.com/card/${req.params.id}`,
+      ),
     });
   } catch (err) {
     req.logger.error(err);
