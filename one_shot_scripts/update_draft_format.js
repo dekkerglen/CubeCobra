@@ -15,7 +15,7 @@ function convertCard(card) {
       tags: [],
       colors: details.colors,
       cardID: details._id,
-      cmc: details.cmc,
+      cmc: details.cmc || 0,
       type_line: details.type,
     };
   } else {

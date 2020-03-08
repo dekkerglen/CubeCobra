@@ -76,7 +76,7 @@ function convertCard(card) {
       tags: [],
       colors: details.colors,
       cardID: details._id,
-      cmc: details.cmc,
+      cmc: details.cmc || 0,
       type_line: details.type,
     };
   }
@@ -160,7 +160,7 @@ async function buildDeck(cards, bot) {
             tags: [],
             colors: details.colors,
             cardID: details._id,
-            cmc: details.cmc,
+            cmc: details.cmc || 0,
             type_line: details.type,
             details,
           };
@@ -179,7 +179,7 @@ async function buildDeck(cards, bot) {
         tags: [],
         colors: details.colors,
         cardID: details._id,
-        cmc: details.cmc,
+        cmc: details.cmc || 0,
         type_line: details.type,
         details,
       };
@@ -274,7 +274,7 @@ async function updateDeck(deck) {
               tags: [],
               colors: details.colors,
               cardID: details._id,
-              cmc: details.cmc,
+              cmc: details.cmc || 0,
               type_line: details.type,
             };
           }
@@ -320,7 +320,7 @@ async function updateDeck(deck) {
               tags: [],
               colors: details.colors,
               cardID: details._id,
-              cmc: details.cmc,
+              cmc: details.cmc || 0,
               type_line: details.type,
             };
           }

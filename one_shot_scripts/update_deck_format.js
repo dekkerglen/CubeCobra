@@ -49,7 +49,7 @@ async function buildDeck(cards, bot) {
             tags: [],
             colors: details.colors,
             cardID: details._id,
-            cmc: details.cmc,
+            cmc: details.cmc || 0,
             type_line: details.type,
             details: details,
           };
@@ -67,7 +67,7 @@ async function buildDeck(cards, bot) {
         tags: [],
         colors: details.colors,
         cardID: details._id,
-        cmc: details.cmc,
+        cmc: details.cmc || 0,
         type_line: details.type,
         details: details,
       };
@@ -164,7 +164,7 @@ async function update(deck) {
               tags: [],
               colors: details.colors,
               cardID: details._id,
-              cmc: details.cmc,
+              cmc: details.cmc || 0,
               type_line: details.type,
             };
           } else {
@@ -217,7 +217,7 @@ async function update(deck) {
               tags: [],
               colors: details.colors,
               cardID: details._id,
-              cmc: details.cmc,
+              cmc: details.cmc || 0,
               type_line: details.type,
             };
           } else {
