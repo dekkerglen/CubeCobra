@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const mongosecrets = require('../../cubecobrasecrets/mongodb');
-var carddb = require('../serverjs/cards.js');
-var cubefn = require('../serverjs/cubefn.js');
+const carddb = require('../serverjs/cards.js');
+const cubefn = require('../serverjs/cubefn.js');
 
 const batch_size = 100;
 
@@ -245,7 +245,6 @@ async function update(deck) {
 (async () => {
   await carddb.initializeCardDb();
 
-  var i = 0;
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
     //gim
     const count = await Deck.countDocuments();
@@ -254,9 +253,9 @@ async function update(deck) {
       .cursor();
 
     //batch them in 100
-    for (var i = 0; i < count; i += batch_size) {
+    for (let i = 0; i < count; i += batch_size) {
       const decks = [];
-      for (var j = 0; j < batch_size; j++) {
+      for (let j = 0; j < batch_size; j++) {
         if (i + j < count) {
           let deck = await cursor.next();
           if (deck) {

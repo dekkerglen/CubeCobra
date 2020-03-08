@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Draft = require('../models/draft');
 const mongosecrets = require('../../cubecobrasecrets/mongodb');
-var carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards.js');
 
 const batch_size = 100;
 
@@ -26,7 +26,7 @@ function convertCard(card) {
 async function update(draft) {
   try {
     if (draft.seats && draft.seats.length > 0) {
-      return async () => {};
+      return async () => {return 0;};
     }
 
     draft.seats = [];
@@ -86,6 +86,7 @@ async function update(draft) {
         await Draft.updateOne({ _id: draft._id }, draft);
       } catch (err) {
         console.log(err);
+        return 0;
       }
     };
   } catch (err) {
@@ -107,9 +108,9 @@ async function update(draft) {
     console.log(`${count} documents to convert`);
 
     //batch them in 100
-    for (var i = 0; i < count; i += batch_size) {
+    for (let i = 0; i < count; i += batch_size) {
       const drafts = [];
-      for (var j = 0; j < batch_size; j++) {
+      for (let j = 0; j < batch_size; j++) {
         if (i + j < count) {
           try {
             let draft = await cursor.next();
