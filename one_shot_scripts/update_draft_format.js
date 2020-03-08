@@ -26,7 +26,7 @@ function convertCard(card) {
 async function update(draft) {
   try {
     if (draft.seats && draft.seats.length > 0) {
-      return async () => {return 0;};
+      return;
     }
 
     draft.seats = [];
@@ -81,14 +81,7 @@ async function update(draft) {
       draft.seats.push(bot);
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
-    return async () => {
-      try {
-        await Draft.updateOne({ _id: draft._id }, draft);
-      } catch (err) {
-        console.log(err);
-        return 0;
-      }
-    };
+    await Draft.updateOne({ _id: draft._id }, draft);
   } catch (err) {
     console.log(err);
   }
@@ -109,23 +102,17 @@ async function update(draft) {
 
     //batch them in 100
     for (let i = 0; i < count; i += batch_size) {
-      const drafts = [];
       for (let j = 0; j < batch_size; j++) {
         if (i + j < count) {
           try {
             let draft = await cursor.next();
             if (draft) {
-              drafts.push(draft);
+              await update(draft);
             }
           } catch (err) {
             console.error(err);
           }
         }
-      }
-      try {
-        await Promise.all(drafts.map((draft) => update(draft)));
-      } catch (err) {
-        console.error(err);
       }
       console.log('Finished: ' + Math.min(count, i + batch_size) + ' of ' + count + ' drafts');
     }
