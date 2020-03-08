@@ -101,14 +101,14 @@ async function buildDeck(cards, bot) {
     }
 
     for (const card of main) {
-      let index = Math.min(card.cmc, 7);
+      let index = Math.min(card.cmc || 0, 7);
       if (!card.type_line.toLowerCase().includes('creature')) {
         index += 8;
       }
       deck[index].push(card);
     }
     for (const card of side) {
-      sideboard[Math.min(card.cmc, 7)].push(card);
+      sideboard[Math.min(card.cmc || 0, 7)].push(card);
     }
     return {
       deck,
@@ -121,7 +121,11 @@ async function buildDeck(cards, bot) {
 }
 
 async function update(deck) {
-  const draft = deck.draft ? await Draft.findById(deck.draft) : null;
+  if (deck.seats && deck.seats.length > 0) {
+    return Deck.updateOne({ _id: deck._id }, deck);
+  }
+
+  const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft).lean()) : null;
 
   if (
     deck.newformat == false &&
@@ -184,11 +188,13 @@ async function update(deck) {
     //new format
     deck.seats = [];
 
+    //console.log(draft);
+
     const playerSeat = {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: draft ? draft.pickorder : [],
+      pickorder: draft ? draft.seats[0].pickorder : [],
       name: deck.name,
       description: deck.description,
       cols: 16,
@@ -241,8 +247,9 @@ async function update(deck) {
 
   var i = 0;
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
-    const count = await Deck.countDocuments({"seats.0": { "$exists": true }});
-    const cursor = Deck.find({"seats.0": { "$exists": true }})
+    //gim
+    const count = await Deck.countDocuments();
+    const cursor = Deck.find()
       .lean()
       .cursor();
 

@@ -5,8 +5,30 @@ var carddb = require('../serverjs/cards.js');
 
 const batch_size = 100;
 
+function convertCard(card) {
+  if (Array.isArray(card)) {
+    return card.map(convertCard);
+  }
+  if (typeof card === 'string' || card instanceof String) {
+    const details = carddb.cardFromId(card);
+    return {
+      tags: [],
+      colors: details.colors,
+      cardID: details._id,
+      cmc: details.cmc,
+      type_line: details.type,
+    };
+  } else {
+    return card;
+  }
+}
+
 async function update(draft) {
   try {
+    if (draft.seats && draft.seats.length > 0) {
+      return Draft.updateOne({ _id: draft._id }, draft);
+    }
+
     draft.seats = [];
     draft.unopenedPacks = [];
 
@@ -15,8 +37,8 @@ async function update(draft) {
       bot: null,
       userid: draft.owner,
       name: draft.username,
-      pickorder: draft.pickOrder,
-      drafted: draft.picks[0],
+      pickorder: draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
+      drafted: draft.picks[0].map(convertCard),
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
 
@@ -28,7 +50,7 @@ async function update(draft) {
       const bot = {
         bot: draft.bots[i - 1],
         name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
-        pickorder: draft.picks[i],
+        pickorder: draft.picks[i].map(convertCard),
         drafted: [],
         packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
       };
@@ -60,18 +82,23 @@ async function update(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return Draft.updateOne({ _id: draft._id }, draft);
-  } catch(err) {
-    console.log(`Error updating:${draft.name}`);
+  } catch (err) {
+    console.log(err);
   }
 }
 
 (async () => {
   await carddb.initializeCardDb();
 
-  var i = 0;
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
-    const count = await Draft.countDocuments();
-    const cursor = Draft.find().lean().cursor();
+    console.log(`starting...`);
+    const count = await Draft.estimatedDocumentCount();
+    console.log(`counted...`);
+    const cursor = Draft.find()
+      .lean()
+      .cursor();
+
+    console.log(`${count} documents to convert`);
 
     //batch them in 100
     for (var i = 0; i < count; i += batch_size) {
@@ -84,7 +111,7 @@ async function update(draft) {
           }
         }
       }
-      try{
+      try {
         await Promise.all(drafts.map((draft) => update(draft)));
       } catch (err) {
         console.error(err);

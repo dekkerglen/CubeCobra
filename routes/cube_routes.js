@@ -77,7 +77,7 @@ router.use(csrfProtection);
 //temprorary draft and deck conversion functions
 async function updateDraft(draft) {
   try {
-    if(draft.seats && draft.seats.length > 0) {
+    if (draft.seats && draft.seats.length > 0) {
       return draft;
     }
 
@@ -89,7 +89,16 @@ async function updateDraft(draft) {
       bot: null,
       userid: draft.owner,
       name: draft.username,
-      pickorder: draft.pickOrder,
+      pickorder: draft.pickOrder.map((id) => {
+        const details = carddb.cardFromId(id);
+        return {
+          tags: [],
+          colors: details.colors,
+          cardID: details._id,
+          cmc: details.cmc,
+          type_line: details.type,
+        };
+      }),
       drafted: draft.picks[0],
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
@@ -134,10 +143,11 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch(err) {
+  } catch (err) {
     console.error(err);
   }
 }
+
 async function buildDeck(cards, bot) {
   try {
     //cards will be a list of cardids
@@ -202,14 +212,14 @@ async function buildDeck(cards, bot) {
     }
 
     for (const card of main) {
-      let index = Math.min(card.cmc|| 0, 7);
+      let index = Math.min(card.cmc || 0, 7);
       if (!card.type_line.toLowerCase().includes('creature')) {
         index += 8;
       }
       deck[index].push(card);
     }
     for (const card of side) {
-      sideboard[Math.min(card.cmc|| 0, 7)].push(card);
+      sideboard[Math.min(card.cmc || 0, 7)].push(card);
     }
     return {
       deck,
@@ -221,11 +231,11 @@ async function buildDeck(cards, bot) {
   }
 }
 async function updateDeck(deck) {
-  if(deck.seats && deck.seats.length > 0) {
+  if (deck.seats && deck.seats.length > 0) {
     return deck;
   }
 
-  const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft)) : null;
+  const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft).lean()) : null;
 
   if (
     deck.newformat == false &&
@@ -288,11 +298,13 @@ async function updateDeck(deck) {
     //new format
     deck.seats = [];
 
+    //console.log(draft);
+
     const playerSeat = {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: draft ? draft.pickorder : [],
+      pickorder: draft ? draft.seats[0].pickorder : [],
       name: deck.name,
       description: deck.description,
       cols: 16,
@@ -1063,12 +1075,9 @@ router.get('/playtest/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    let decks = await Deck.find(
-      {
-        cube: cube._id,
-      },
-      '_id date seats',
-    )
+    let decks = await Deck.find({
+      cube: cube._id,
+    })
       .sort({
         date: -1,
       })
@@ -1421,7 +1430,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       {
         userid: req.user._id,
         username: req.user.username,
-        pickOrder: [],
+        pickorder: [],
         deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         cols: 16,
         deck: added,
@@ -2666,7 +2675,8 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         date: -1,
       })
       .skip(pagesize * page)
-      .limit(pagesize).lean()
+      .limit(pagesize)
+      .lean()
       .exec();
     const numDecksq = Deck.countDocuments({
       cube: cube._id,
@@ -2889,8 +2899,6 @@ router.get('/deck/:id', async (req, res) => {
   try {
     const deck = await updateDeck(await Deck.findById(req.params.id).lean());
 
-    console.log(deck);
-
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
@@ -2904,21 +2912,15 @@ router.get('/deck/:id', async (req, res) => {
 
     let draft = null;
     if (deck.draft) {
-      draft = await Draft.findById(deck.draft).lean();
+      draft = await updateDraft(await Draft.findById(deck.draft).lean());
     }
 
-    const drafter = {
-      name: 'Anonymous',
-      id: null,
-      profileUrl: null,
-    };
+    let drafter = 'Anonymous';
 
     const deckUser = await User.findById(deck.owner);
 
     if (deckUser) {
-      drafter.name = deckUser.username;
-      drafter.id = deckUser._id;
-      drafter.profileUrl = `/user/view/${deckUser._id}`;
+      drafter = deckUser.username;
     }
 
     for (const seat of deck.seats) {
@@ -2929,12 +2931,16 @@ router.get('/deck/:id', async (req, res) => {
           }
         }
       }
-      if(seat.pickorder) {
+      if (seat.pickorder) {
+        console.log('Adding details to seat ' + seat.name);
         for (const card of seat.pickorder) {
+          console.log('   ' + card.cardID);
           card.details = carddb.cardFromId(card.cardID);
         }
       }
     }
+
+    console.log(deck.seats[0].pickorder);
 
     const reactProps = {
       cube,
@@ -2946,7 +2952,7 @@ router.get('/deck/:id', async (req, res) => {
 
     return res.render('cube/cube_deck', {
       reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+      title: `${abbreviate(cube.name)} - ${drafter}'s deck`,
       metadata: generateMeta(
         `Cube Cobra Deck: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
