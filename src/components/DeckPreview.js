@@ -8,7 +8,7 @@ const DeckPreview = ({ deck }) => {
   const maxLength = 35;
   const { date } = deck;
 
-  let { name } = deck;
+  let { name } = deck || 'Deck';
   if (name.length > maxLength) {
     name = `${name.slice(0, maxLength - 3)}...`;
   }
