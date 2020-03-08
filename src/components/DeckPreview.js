@@ -9,7 +9,7 @@ const DeckPreview = ({ deck }) => {
   const { date } = deck;
 
   console.log(deck);
-  
+
   let { name } = deck.seats[0];
   if (name.length > maxLength) {
     name = `${name.slice(0, maxLength - 3)}...`;
@@ -18,7 +18,6 @@ const DeckPreview = ({ deck }) => {
   const handleClick = useCallback(() => {
     window.location.href = `/cube/deck/${deck._id}`;
   }, [deck._id]);
-
 
   return (
     <div className="deck-preview" {...useKeyHandlers(handleClick)}>

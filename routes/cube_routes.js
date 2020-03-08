@@ -74,6 +74,24 @@ const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors 
 
 router.use(csrfProtection);
 
+function convertCard(card) {
+  if (Array.isArray(card)) {
+    return card.map(convertCard);
+  }
+  if (typeof card === 'string' || card instanceof String) {
+    const details = carddb.cardFromId(card);
+    return {
+      tags: [],
+      colors: details.colors,
+      cardID: details._id,
+      cmc: details.cmc,
+      type_line: details.type,
+    };
+  } else {
+    return card;
+  }
+}
+
 //temprorary draft and deck conversion functions
 async function updateDraft(draft) {
   try {
@@ -89,17 +107,8 @@ async function updateDraft(draft) {
       bot: null,
       userid: draft.owner,
       name: draft.username,
-      pickorder: draft.pickOrder.map((id) => {
-        const details = carddb.cardFromId(id);
-        return {
-          tags: [],
-          colors: details.colors,
-          cardID: details._id,
-          cmc: details.cmc,
-          type_line: details.type,
-        };
-      }),
-      drafted: draft.picks[0],
+      pickorder: draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
+      drafted: draft.picks[0].map(convertCard),
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
 
@@ -111,7 +120,7 @@ async function updateDraft(draft) {
       const bot = {
         bot: draft.bots[i - 1],
         name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
-        pickorder: draft.picks[i],
+        pickorder: draft.picks[i].map(convertCard),
         drafted: [],
         packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
       };

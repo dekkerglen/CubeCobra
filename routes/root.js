@@ -10,7 +10,6 @@ const Deck = require('../models/deck');
 const User = require('../models/user');
 const Draft = require('../models/draft');
 
-
 const { NODE_ENV } = process.env;
 
 let DashboardPage = null;
@@ -28,11 +27,10 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-
 //temprorary draft and deck conversion functions
 async function updateDraft(draft) {
   try {
-    if(draft.seats && draft.seats.length > 0) {
+    if (draft.seats && draft.seats.length > 0) {
       return draft;
     }
 
@@ -89,7 +87,7 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch(err) {
+  } catch (err) {
     console.error(err);
   }
 }
@@ -157,14 +155,14 @@ async function buildDeck(cards, bot) {
     }
 
     for (const card of main) {
-      let index = Math.min(card.cmc|| 0, 7);
+      let index = Math.min(card.cmc || 0, 7);
       if (!card.type_line.toLowerCase().includes('creature')) {
         index += 8;
       }
       deck[index].push(card);
     }
     for (const card of side) {
-      sideboard[Math.min(card.cmc|| 0, 7)].push(card);
+      sideboard[Math.min(card.cmc || 0, 7)].push(card);
     }
     return {
       deck,
@@ -176,7 +174,7 @@ async function buildDeck(cards, bot) {
   }
 }
 async function updateDeck(deck) {
-  if(deck.seats && deck.seats.length > 0) {
+  if (deck.seats && deck.seats.length > 0) {
     return deck;
   }
 
@@ -294,7 +292,6 @@ async function updateDeck(deck) {
 
   return deck;
 }
-
 
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
@@ -435,13 +432,11 @@ router.get('/dashboard', async (req, res) => {
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
     const cubeIds = cubes.map((cube) => cube._id);
 
-    let decks = await Deck.find(
-      {
-        cube: {
-          $in: cubeIds,
-        },
+    let decks = await Deck.find({
+      cube: {
+        $in: cubeIds,
       },
-    )
+    })
       .sort({
         date: -1,
       })
@@ -516,7 +511,9 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       cube: {
         $in: cubeIds,
       },
-    }).lean().exec();
+    })
+      .lean()
+      .exec();
 
     decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 

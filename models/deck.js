@@ -62,9 +62,9 @@ let deckSchema = mongoose.Schema({
 
   //new format, will convert to
   seats: {
-    type:[SeatDeck],
+    type: [SeatDeck],
     default: [],
-    index:true
+    index: true,
   },
   //deprecated
   owner: String,

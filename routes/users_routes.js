@@ -570,7 +570,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     let [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
 
     decks = decks.map(async (deck) => await updateDeck(deck));
-    
+
     if (!user) {
       req.flash('danger', 'User not found');
       return res.status(404).render('misc/404', {});
