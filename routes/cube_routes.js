@@ -172,7 +172,7 @@ async function updateDraft(draft) {
         bot.drafted.push([]);
       }
 
-      bot.pickorder.forEach((cardid, index) => {
+      bot.pickorder.forEach((cardid) => {
         if (cardid) {
           // inconsistent formats... find the card id
           if (cardid[0] && cardid[0].cardID) {
@@ -194,9 +194,7 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch (err) {
-    req.logger.error(null, { error: err });
-  }
+  } catch (err) {}
   return async () => {};
 }
 
