@@ -74,6 +74,23 @@ const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors 
 
 router.use(csrfProtection);
 
+const fetchLands = {
+  'Arid Mesa': ['W', 'R'],
+  'Bloodstained Mire': ['B', 'R'],
+  'Flooded Strand': ['W', 'U'],
+  'Marsh Flats': ['W', 'B'],
+  'Misty Rainforest': ['U', 'G'],
+  'Polluted Delta': ['U', 'B'],
+  'Scalding Tarn': ['U', 'R'],
+  'Verdant Catacombs': ['B', 'G'],
+  'Windswept Heath': ['W', 'G'],
+  'Wooded Foothills': ['R', 'G'],
+};
+
+function arrayIsSubset(needles, haystack) {
+  return needles.every((x) => haystack.includes(x));
+}
+
 function botRating(botColors, card, rating) {
   const colors = card.colors || card.details.color_identity;
   const subset = arrayIsSubset(colors, botColors) && colors.length > 0;
@@ -84,7 +101,7 @@ function botRating(botColors, card, rating) {
 
   if (isLand) {
     if (subset) {
-      //if fetches don't have the color identity override, they get lumped into this category
+      // if fetches don't have the color identity override, they get lumped into this category
       rating *= 1.4;
     } else if (overlap || isFetch) {
       rating *= 1.2;
@@ -113,12 +130,11 @@ function convertCard(card) {
       cmc: details.cmc,
       type_line: details.type,
     };
-  } else {
-    return card;
   }
+  return card;
 }
 
-//temprorary draft and deck conversion functions
+// temprorary draft and deck conversion functions
 async function updateDraft(draft) {
   try {
     if (draft.seats && draft.seats.length > 0) {
@@ -128,7 +144,7 @@ async function updateDraft(draft) {
     draft.seats = [];
     draft.unopenedPacks = [];
 
-    //add player
+    // add player
     const playerSeat = {
       bot: null,
       userid: draft.owner,
@@ -141,30 +157,30 @@ async function updateDraft(draft) {
     draft.seats.push(playerSeat);
     draft.unopenedPacks.push(draft.packs[0] ? draft.packs[0].slice(1) : []);
 
-    //add bots
+    // add bots
     for (let i = 1; i < draft.picks.length; i++) {
       const bot = {
         bot: draft.bots[i - 1],
-        name: 'Bot ' + i + ': ' + draft.bots[i - 1][0] + ', ' + draft.bots[i - 1][1],
+        name: `Bot ${i}: ${draft.bots[i - 1][0]}, ${draft.bots[i - 1][1]}`,
         pickorder: draft.picks[i].map(convertCard),
         drafted: [],
         packbacklog: draft.packs[i] && draft.packs[i][0] ? [draft.packs[i][0]] : [],
       };
 
-      //now we need to build picks from the pickorder ids
+      // now we need to build picks from the pickorder ids
       for (let j = 0; j < 16; j++) {
         bot.drafted.push([]);
       }
 
-      bot.pickorder.forEach(function(cardid, index) {
+      bot.pickorder.forEach((cardid, index) => {
         if (cardid) {
-          //inconsistent formats... find the card id
+          // inconsistent formats... find the card id
           if (cardid[0] && cardid[0].cardID) {
             cardid = cardid[0].cardID;
           } else if (cardid.cardID) {
             cardid = cardid.cardID;
           }
-          //insert basic card object into correct cmc column
+          // insert basic card object into correct cmc column
           const card = {
             cardId: cardid,
             details: carddb.cardFromId(cardid),
@@ -179,13 +195,14 @@ async function updateDraft(draft) {
     }
     return draft;
   } catch (err) {
-    console.error(err);
+    req.logger.error(null, { error: err });
   }
+  return async () => {};
 }
 
 async function buildDeck(cards, bot) {
   try {
-    //cards will be a list of cardids
+    // cards will be a list of cardids
 
     cards = cards.map((id) => {
       if (Array.isArray(id)) {
@@ -197,12 +214,13 @@ async function buildDeck(cards, bot) {
             cardID: details._id,
             cmc: details.cmc,
             type_line: details.type,
-            details: details,
+            details,
           };
         }
         if (id[0].cardID) {
           id = id[0].cardID;
         } else {
+          // eslint-disable-next-line prefer-destructuring
           id = id[0];
         }
       } else if (id.cardID) {
@@ -215,7 +233,7 @@ async function buildDeck(cards, bot) {
         cardID: details._id,
         cmc: details.cmc,
         type_line: details.type,
-        details: details,
+        details,
       };
     });
 
@@ -223,15 +241,15 @@ async function buildDeck(cards, bot) {
     const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
     const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
-    let sort_fn = function(a, b) {
+    const sortFn = (a, b) => {
       if (bot) {
         return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
       }
       return elos[b.details.name] - elos[a.details.name];
     };
 
-    nonlands.sort(sort_fn);
-    lands.sort(sort_fn);
+    nonlands.sort(sortFn);
+    lands.sort(sortFn);
 
     const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
     const side = nonlands.slice(23).concat(lands.slice(17));
@@ -314,7 +332,7 @@ async function updateDeck(deck) {
           }
           return id;
         }),
-        name: 'Bot ' + (i + 1) + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
+        name: `Bot ${i}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`,
         description: `This deck was drafted by a bot with color preference for ${deck.bots[i][0]} and ${deck.bots[i][1]}.`,
         cols: 16,
         deck: botdeck.deck,
@@ -360,7 +378,7 @@ async function updateDeck(deck) {
           }
           return id;
         }),
-        name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
+        name: `Bot ${i}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`,
         description: `This deck was drafted by a bot with color preference for ${deck.bots[i][0]} and ${deck.bots[i][1]}.`,
         cols: 16,
         deck: botdeck.deck,
