@@ -20,6 +20,7 @@ const Draft = require('../models/draft');
 
 const router = express.Router();
 
+const { getElo } = require('../serverjs/cubefn.js');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 const fetchLands = {
@@ -184,7 +185,7 @@ async function buildDeck(cards, bot) {
       };
     });
 
-    const elos = await cubefn.getElo(cards.map((card) => card.details.name));
+    const elos = await getElo(cards.map((card) => card.details.name));
     const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
     const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 

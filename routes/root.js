@@ -10,6 +10,8 @@ const Deck = require('../models/deck');
 const User = require('../models/user');
 const Draft = require('../models/draft');
 
+const { getElo } = require('../serverjs/cubefn.js');
+
 const { NODE_ENV } = process.env;
 
 let DashboardPage = null;
@@ -18,7 +20,6 @@ if (NODE_ENV === 'production') {
 }
 
 const carddb = require('../serverjs/cards.js');
-var cubefn = require('../serverjs/cubefn.js');
 
 const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
@@ -147,8 +148,9 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch (err) {}
-  return async () => {};
+  } catch (err) {
+    return async () => {};
+  }
 }
 
 async function buildDeck(cards, bot) {
@@ -406,7 +408,8 @@ router.get('/explore', async (req, res) => {
     .lean()
     .exec();
 
-  let [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+  const [recents, featured, drafted, blog] = await Promise.all([recentsq, featuredq, draftedq, blogq]);
+  let decks = await decksq();
 
   decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
@@ -493,8 +496,6 @@ router.get('/dashboard', async (req, res) => {
       .limit(13);
 
     decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
-
-    console.log(decks[0]);
 
     // autocard the posts
     if (posts) {
