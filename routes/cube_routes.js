@@ -194,8 +194,9 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch (err) {}
-  return async () => {};
+  } catch (err) {
+    return async () => {};
+  }
 }
 
 async function buildDeck(cards, bot) {

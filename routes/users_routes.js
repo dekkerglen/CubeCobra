@@ -16,6 +16,7 @@ const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
+const Draft = require('../models/draft');
 
 const router = express.Router();
 
@@ -141,8 +142,9 @@ async function updateDraft(draft) {
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
     return draft;
-  } catch (err) {}
-  return async () => {};
+  } catch (err) {
+    return async () => {};
+  }
 }
 
 async function buildDeck(cards, bot) {
@@ -182,7 +184,7 @@ async function buildDeck(cards, bot) {
       };
     });
 
-    const elos = await getElo(cards.map((card) => card.details.name));
+    const elos = await cubefn.getElo(cards.map((card) => card.details.name));
     const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
     const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
 
@@ -882,9 +884,10 @@ router.get('/decks/:userid/:page', async (req, res) => {
       owner: userid,
     });
 
-    let [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
+    const [user, numDecks] = await Promise.all([userQ, numDecksQ]);
+    let decks = await decksQ();
 
-    decks = decks.map(async (deck) => await updateDeck(deck));
+    decks = await Promise.all(decks.map(async (deck) => updateDeck(deck)));
 
     if (!user) {
       req.flash('danger', 'User not found');
