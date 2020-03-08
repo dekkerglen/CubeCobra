@@ -26,7 +26,7 @@ function convertCard(card) {
 async function update(draft) {
   try {
     if (draft.seats && draft.seats.length > 0) {
-      return Draft.updateOne({ _id: draft._id }, draft);
+      return async () => {};
     }
 
     draft.seats = [];
@@ -81,7 +81,13 @@ async function update(draft) {
       draft.seats.push(bot);
       draft.unopenedPacks.push(draft.packs[i] ? draft.packs[i].slice(1) : []);
     }
-    return Draft.updateOne({ _id: draft._id }, draft);
+    return async () => {
+      try {
+        await Draft.updateOne({ _id: draft._id }, draft);
+      } catch (err) {
+        console.log(err);
+      }
+    };
   } catch (err) {
     console.log(err);
   }
@@ -105,9 +111,13 @@ async function update(draft) {
       const drafts = [];
       for (var j = 0; j < batch_size; j++) {
         if (i + j < count) {
-          let draft = await cursor.next();
-          if (draft) {
-            drafts.push(draft);
+          try {
+            let draft = await cursor.next();
+            if (draft) {
+              drafts.push(draft);
+            }
+          } catch (err) {
+            console.error(err);
           }
         }
       }
