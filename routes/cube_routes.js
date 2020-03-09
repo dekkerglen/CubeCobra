@@ -1560,6 +1560,261 @@ router.get('/download/plaintext/:id', async (req, res) => {
   }
 });
 
+router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write(`NAME:${seat.name}\r\n`);
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`SB: ${value} ${key}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deck/download/forge/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write('[metadata]\r\n');
+    res.write(`Name=${seat.name}\r\n`);
+    res.write('[Main]\r\n');
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}|${details.set.toUpperCase()}`;
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    res.write('[Side]\r\n');
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}|${details.set.toUpperCase()}`;
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deck/download/txt/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const { name } = carddb.cardFromId(card.cardID);
+        res.write(`${name}\r\n`);
+      }
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const { name } = carddb.cardFromId(card.cardID);
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+    res.write('\r\n\r\n');
+
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const { name } = carddb.cardFromId(card.cardID);
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deck/download/arena/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write('Deck\r\n');
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    res.write('\r\nSideboard\r\n');
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}`;
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value}x ${key}\r\n`);
+    }
+
+    res.write('Sideboard\r\n');
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}`;
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value}x ${key}\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
 router.post('/startdraft/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards').lean();
