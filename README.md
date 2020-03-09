@@ -16,14 +16,14 @@ NodeJS: https://nodejs.org/en/download/
 
 MongoDB: https://docs.mongodb.com/manual/installation/
 
-You will need start a MongoDB background process. Refer to the official documentation for directions on how to set this up for your OS.
+You will need to either start MongoDB background process, or manually start and stop the process in a separate console. Refer to the official documentation for directions on how to set this up for your OS.
 
 VSCode (strongly recommended, but not required): https://code.visualstudio.com/
 ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
 
 VSCode (with the ESLint extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Using this plugin will make adhering to the linting rules significantly easier.
 
-### Clone Project
+### Initial Setup
 
 Clone the project into a folder of your choice. 
 
