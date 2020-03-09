@@ -7,15 +7,42 @@ const cubefn = require('../serverjs/cubefn.js');
 
 const batch_size = 100;
 
+function convertCard(card) {
+  if (Array.isArray(card)) {
+    return card.map(convertCard);
+  }
+  if (typeof card === 'string' || card instanceof String) {
+    const details = carddb.cardFromId(card);
+    return {
+      tags: [],
+      colors: details.colors,
+      cardID: details._id,
+      cmc: details.cmc || 0,
+      type_line: details.type,
+    };
+  }
+  if (card.full_name) {
+    const details = carddb.cardFromId(card._id);
+    return {
+      tags: [],
+      colors: details.colors,
+      cardID: details._id,
+      cmc: details.cmc || 0,
+      type_line: details.type,
+    };
+  }
+  return card;
+}
+
 function arrayIsSubset(needles, haystack) {
   return needles.every((x) => haystack.includes(x));
 }
 
 async function updateDraft(draft) {
   try {
-    if (draft.seats && draft.seats.length > 0) {
-      return draft;
-    }
+    // if (draft.seats && draft.seats.length > 0) {
+    //   return draft;
+    // }
 
     draft.seats = [];
     draft.unopenedPacks = [];
@@ -85,7 +112,7 @@ function botRating(botColors, card, rating) {
 
   if (isLand) {
     if (subset) {
-      //if fetches don't have the color identity override, they get lumped into this category
+      // if fetches don't have the color identity override, they get lumped into this category
       rating *= 1.4;
     } else if (overlap || isFetch) {
       rating *= 1.2;
@@ -103,38 +130,12 @@ function botRating(botColors, card, rating) {
 
 async function buildDeck(cards, bot) {
   try {
-    //cards will be a list of cardids
+    // cards will be a list of cardids
 
-    cards = cards.map((id) => {
-      if (Array.isArray(id)) {
-        if (id.length <= 0) {
-          const details = carddb.getPlaceholderCard('');
-          return {
-            tags: [],
-            colors: details.colors,
-            cardID: details._id,
-            cmc: details.cmc || 0,
-            type_line: details.type,
-            details: details,
-          };
-        }
-        if (id[0].cardID) {
-          id = id[0].cardID;
-        } else {
-          id = id[0];
-        }
-      } else if (id.cardID) {
-        id = id.cardID;
-      }
-      const details = carddb.cardFromId(id);
-      return {
-        tags: [],
-        colors: details.colors,
-        cardID: details._id,
-        cmc: details.cmc || 0,
-        type_line: details.type,
-        details: details,
-      };
+    cards = cards.map(convertCard);
+    cards = cards.map((card) => {
+      card.details = carddb.cardFromId(card.cardID);
+      return card;
     });
 
     const elos = await cubefn.getElo(cards.map((card) => card.details.name));
@@ -144,9 +145,8 @@ async function buildDeck(cards, bot) {
     sort_fn = function(a, b) {
       if (bot) {
         return botRating(b, bot, elos[b.details.name]) - botRating(a, bot, elos[a.details.name]);
-      } else {
-        return elos[b.details.name] - elos[a.details.name];
       }
+      return elos[b.details.name] - elos[a.details.name];
     };
 
     nonlands.sort(sort_fn);
@@ -196,16 +196,16 @@ async function update(deck) {
     deck.cards[deck.cards.length - 1] &&
     typeof deck.cards[deck.cards.length - 1][0] === 'object'
   ) {
-    //old format
+    // old format
     deck.seats = [];
 
-    const playerdeck = await buildDeck(deck.cards[0]);
+    const playerdeck = await buildDeck(deck.cards[0].map(convertCard));
 
     const playerSeat = {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: deck.cards[0],
+      pickorder: deck.cards[0].map(convertCard),
       name: deck.name,
       description: deck.description,
       cols: 16,
@@ -215,33 +215,15 @@ async function update(deck) {
 
     deck.seats.push(playerSeat);
 
-    //add bots
+    // add bots
     for (let i = 1; i < deck.cards.length; i += 1) {
-      //need to build a deck with this pool...
-      const botdeck = await buildDeck(deck.cards[i]);
+      // need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i].map(convertCard));
       const bot = {
         bot: deck.bots[i - 1],
-        pickorder: deck.cards[i].map((id) => {
-          if (typeof id === 'string' || id instanceof String) {
-            const details = carddb.cardFromId(id);
-            return {
-              tags: [],
-              colors: details.colors,
-              cardID: details._id,
-              cmc: details.cmc || 0,
-              type_line: details.type,
-            };
-          } else {
-            return id;
-          }
-        }),
-        name: 'Bot ' + (i + 1) + ': ' + deck.bots[i - 1][0] + ', ' + deck.bots[i - 1][1],
-        description:
-          'This deck was drafted by a bot with color preference for ' +
-          deck.bots[i - 1][0] +
-          ' and ' +
-          deck.bots[i - 1][1] +
-          '.',
+        pickorder: deck.cards[i].map(convertCard),
+        name: `Bot ${i + 1}: ${deck.bots[i - 1][0]}, ${deck.bots[i - 1][1]}`,
+        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${deck.bots[i - 1][1]}.`,
         cols: 16,
         deck: botdeck.deck,
         sideboard: botdeck.sideboard,
@@ -249,16 +231,16 @@ async function update(deck) {
       deck.seats.push(bot);
     }
   } else {
-    //new format
+    // new format
     deck.seats = [];
 
-    //console.log(draft);
+    // console.log(draft);
 
     const playerSeat = {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: draft ? draft.seats[0].pickorder : [],
+      pickorder: draft ? draft.pickOrder.map(convertCard) : [],
       name: deck.name,
       description: deck.description,
       cols: 16,
@@ -268,10 +250,10 @@ async function update(deck) {
 
     deck.seats.push(playerSeat);
 
-    //add bots
+    // add bots
     for (let i = 0; i < deck.cards.length; i += 1) {
-      //need to build a deck with this pool...
-      const botdeck = await buildDeck(deck.cards[i]);
+      // need to build a deck with this pool...
+      const botdeck = await buildDeck(deck.cards[i].map(convertCard));
       const bot = {
         bot: deck.bots[i],
         pickorder: deck.cards[i].map((id) => {
@@ -284,17 +266,11 @@ async function update(deck) {
               cmc: details.cmc || 0,
               type_line: details.type,
             };
-          } else {
-            return id;
           }
+          return id;
         }),
-        name: 'Bot ' + i + ': ' + deck.bots[i][0] + ', ' + deck.bots[i][1],
-        description:
-          'This deck was drafted by a bot with color preference for ' +
-          deck.bots[i][0] +
-          ' and ' +
-          deck.bots[i][1] +
-          '.',
+        name: `Bot ${i}: ${deck.bots[i][0]}, ${deck.bots[i][1]}`,
+        description: `This deck was drafted by a bot with color preference for ${deck.bots[i][0]} and ${deck.bots[i][1]}.`,
         cols: 16,
         deck: botdeck.deck,
         sideboard: botdeck.sideboard,
@@ -310,18 +286,24 @@ async function update(deck) {
   await carddb.initializeCardDb();
 
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
-    //gim
-    const count = await Deck.countDocuments();
-    const cursor = Deck.find()
+    // gim
+    const count = await Deck.countDocuments({ 'seats.0': { $exists: false } });
+    const cursor = Deck.find(
+      { 'seats.0': { $exists: false } },
+      {},
+      {
+        timeout: false,
+      },
+    )
       .lean()
       .cursor();
 
-    //batch them in 100
+    // batch them in 100
     for (let i = 0; i < count; i += batch_size) {
       const decks = [];
       for (let j = 0; j < batch_size; j++) {
         if (i + j < count) {
-          let deck = await cursor.next();
+          const deck = await cursor.next();
           if (deck) {
             decks.push(deck);
           }
@@ -332,7 +314,7 @@ async function update(deck) {
       } catch (err) {
         console.error(err);
       }
-      console.log('Finished: ' + Math.min(count, i + batch_size) + ' of ' + count + ' decks');
+      console.log(`Finished: ${Math.min(count, i + batch_size)} of ${count} decks`);
     }
     mongoose.disconnect();
     console.log('done');
