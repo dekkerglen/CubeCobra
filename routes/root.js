@@ -44,6 +44,7 @@ router.get('/explore', async (req, res) => {
       },
     ],
   })
+    .lean()
     .sort({
       date_updated: -1,
     })
@@ -52,7 +53,9 @@ router.get('/explore', async (req, res) => {
 
   const featuredq = Cube.find({
     isFeatured: true,
-  }).exec();
+  })
+    .lean()
+    .exec();
 
   const draftedq = Cube.find({
     $or: [
@@ -67,50 +70,35 @@ router.get('/explore', async (req, res) => {
       },
     ],
   })
+    .lean()
     .sort({
       numDecks: -1,
     })
     .limit(12)
     .exec();
 
-  const blogq = Blog.find({
-    dev: 'true',
-  })
-    .sort({
-      date: -1,
-    })
-    .exec();
-
   const decksq = Deck.find()
+    .lean()
     .sort({
       date: -1,
     })
     .limit(10)
-    .lean()
     .exec();
 
-  const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+  const [recents, featured, drafted, decks] = await Promise.all([recentsq, featuredq, draftedq, decksq]);
 
-  res.render('index', {
-    devblog: blog.length > 0 ? blog[0] : null,
+  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }).lean();
+
+  const reactProps = {
     recents,
-    drafted,
-    decks,
     featured,
-    loginCallback: '/explore',
-  });
-});
+    drafted,
+    recentlyDrafted,
+  };
 
-// format: {search};{search};{search}:{page}
-// list like:
-// {property}{symbol}{value};
-// properties:
-// name, owner
-// symbols:
-//= ,~(contains)
-router.get('/advanced_search', (req, res) => {
-  res.render('search/advanced_search', {
-    loginCallback: '/advanced_search',
+  res.render('explore', {
+    reactProps: serialize(reactProps),
+    loginCallback: '/explore',
   });
 });
 
@@ -284,135 +272,43 @@ router.get('/landing', async (req, res) => {
   });
 });
 
-router.post('/advanced_search', (req, res) => {
-  let url = '/search/';
-  if (req.body.name && req.body.name.length > 0) {
-    const encoded = encodeURIComponent(req.body.name);
-    url += `name${req.body.nameType}${encoded};`;
-  }
-  if (req.body.owner && req.body.owner.length > 0) {
-    const encoded = encodeURIComponent(req.body.owner);
-    url += `owner_name${req.body.ownerType}${encoded};`;
-  }
-  res.redirect(url);
-});
-
-router.post('/search', (req, res) => {
-  if (!req.body.search || req.body.search.length === 0) {
-    req.flash('danger', 'No Search Parameters');
-    res.redirect('/advanced_search');
-  } else {
-    const query = req.body.search;
-    if (query.includes(';')) {
-      res.redirect(`/search/${query}`);
-    } else {
-      res.redirect(`/search/name~${query}`);
-    }
-  }
-});
-
-router.get('/search/:id', (req, res) => {
-  const rawSplit = req.params.id.split(':');
-  const rawQueries = rawSplit[0].split(';');
-  let page = parseInt(rawSplit[1], 10);
-  let query = {};
-  const terms = [];
-
-  // input is the search string from a user -- should be treated as a string literal, rather than
-  // a regex with special characters.  This method escapes any characters which could be considered
-  // special characters by the regex, like . and *
-  function escapeRegexLiteral(input) {
-    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-  }
-  rawQueries.forEach((searchExpression) => {
-    let field;
-    let filter;
-    let searchRegex;
-    let expressionTerm;
-
-    if (searchExpression.includes('=')) {
-      [field, filter] = searchExpression.split('=');
-      const escapedFilter = escapeRegexLiteral(filter);
-      searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
-      expressionTerm = 'is exactly';
-    } else if (searchExpression.includes('~')) {
-      [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(escapeRegexLiteral(filter), 'i');
-      expressionTerm = 'contains';
-    }
-
-    if (searchRegex) {
-      query[field] = { $regex: searchRegex };
-      terms.push(`${field.replace('owner_name', 'owner')} ${expressionTerm} ${filter.toLowerCase()}`);
-    }
+router.get('/search', async (req, res) => {
+  const reactProps = {
+    query: '',
+    cubes: [],
+  };
+  return res.render('search', {
+    reactProps: serialize(reactProps),
+    loginCallback: `/search/${req.params.id}`,
   });
+});
 
-  let userID = '';
-  if (req.user) userID = req.user._id;
-  query = {
-    $and: [
-      query,
-      {
-        $or: [
-          {
-            isListed: true,
-          },
-          {
-            owner: userID,
-          },
-        ],
-      },
-    ],
+router.get('/search/:query', async (req, res) => {
+  // parse query object
+  const split = req.params.query.split(' ');
+  const query = {
+    $and: split.map((token) => ({ name: { $regex: token, $options: 'i' } })),
   };
 
-  Cube.find(query)
+  console.log(query);
+
+  const cubes = await Cube.find(query)
     .sort({
       date_updated: -1,
     })
-    .exec((err, cubes) => {
-      const pages = [];
-      if (cubes.length > 12) {
-        if (!page) {
-          page = 0;
-        }
-        for (let i = 0; i < cubes.length / 12; i++) {
-          if (page === i) {
-            pages.push({
-              url: `${rawSplit[0]}:${i}`,
-              content: i + 1,
-              active: true,
-            });
-          } else {
-            pages.push({
-              url: `${rawSplit[0]}:${i}`,
-              content: i + 1,
-            });
-          }
-        }
-        const cubePage = [];
-        for (let i = 0; i < 12; i++) {
-          if (cubes[i + page * 12]) {
-            cubePage.push(cubes[i + page * 12]);
-          }
-        }
-        res.render('search', {
-          results: cubePage,
-          search: req.params.id,
-          terms,
-          pages,
-          numresults: cubes.length,
-          loginCallback: `/search/${req.params.id}`,
-        });
-      } else {
-        res.render('search', {
-          results: cubes,
-          search: req.params.id,
-          terms,
-          numresults: cubes.length,
-          loginCallback: `/search/${req.params.id}`,
-        });
-      }
-    });
+    .lean();
+
+  const reactProps = {
+    query: req.params.query,
+    cubes,
+  };
+
+  console.log(reactProps);
+
+  return res.render('search', {
+    reactProps: serialize(reactProps),
+    loginCallback: `/search/${req.params.id}`,
+  });
 });
 
 router.get('/contact', (req, res) => {
