@@ -28,7 +28,6 @@ import LoadingButton from './LoadingButton';
 import TextField from './TextField';
 import NumericField from './NumericField';
 
-
 const allFields = [
   'name',
   'oracle',

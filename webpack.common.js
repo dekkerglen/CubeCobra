@@ -17,7 +17,7 @@ const config = {
       },
       {
         test: /\.(css|less)$/,
-        use: ["style-loader", "css-loader"]
+        use: ['style-loader', 'css-loader'],
       },
     ],
   },
