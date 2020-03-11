@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Input, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
@@ -18,5 +19,14 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>
 );
+
+NumericField.propTypes = {
+  name: PropTypes.string.isRequired,
+  humanName: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  valueOp: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
 
 export default NumericField;

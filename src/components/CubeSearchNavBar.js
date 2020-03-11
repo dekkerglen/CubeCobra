@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader, Navbar, Input, CardBody } from 'reactstrap';
 
@@ -165,6 +166,11 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
   );
 };
 
+AdvancedSearchModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
 const CubeSearchNavBar = ({ query, order, title }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queryText, setQuery] = useState(query || '');
@@ -224,6 +230,16 @@ const CubeSearchNavBar = ({ query, order, title }) => {
       </form>
     </div>
   );
+};
+
+CubeSearchNavBar.propTypes = {
+  query: PropTypes.string.isRequired,
+  order: PropTypes.string.isRequired,
+  title: PropTypes.string,
+};
+
+CubeSearchNavBar.defaultProps = {
+  title: null,
 };
 
 export default CubeSearchNavBar;

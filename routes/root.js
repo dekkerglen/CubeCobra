@@ -18,7 +18,6 @@ if (NODE_ENV === 'production') {
 }
 
 const carddb = require('../serverjs/cards');
-const cardutil = require('../dist/utils/Card.js');
 
 const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
@@ -425,8 +424,6 @@ router.get('/search/:query/:page', async (req, res) => {
       }),
     ),
   };
-
-  console.log(JSON.stringify(query, null, 2));
 
   const count = await Cube.count(query);
 

@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, Row, Col, CardBody, Table, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import { Card, CardHeader, Row, Col, CardBody, Table } from 'reactstrap';
 
 import ImageFallback from 'components/ImageFallback';
 import ButtonLink from 'components/ButtonLink';
@@ -128,7 +128,6 @@ CardPage.propTypes = {
       image_normal: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  cubes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 const wrapper = document.getElementById('react-root');

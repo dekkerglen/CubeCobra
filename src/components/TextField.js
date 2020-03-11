@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Input, InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
 
@@ -10,5 +11,13 @@ const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) 
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>
 );
+
+TextField.propTypes = {
+  name: PropTypes.string.isRequired,
+  humanName: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
 
 export default TextField;

@@ -1,6 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-import { Card, CardHeader, Row, Col, Input, Label, CardBody } from 'reactstrap';
+import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
@@ -45,6 +46,40 @@ const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
       )}
     </>
   );
+};
+
+SearchPage.propTypes = {
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      shortId: PropTypes.string,
+      urlAlias: PropTypes.string,
+      name: PropTypes.string.isRequired,
+      card_count: PropTypes.number.isRequired,
+      type: PropTypes.string.isRequired,
+      overrideCategory: PropTypes.bool,
+      categoryOverride: PropTypes.string,
+      categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
+      image_name: PropTypes.string.isRequired,
+      image_artist: PropTypes.string.isRequired,
+      image_uri: PropTypes.string.isRequired,
+      owner: PropTypes.string.isRequired,
+      owner_name: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  query: PropTypes.string,
+  count: PropTypes.number,
+  perPage: PropTypes.number,
+  page: PropTypes.number,
+  order: PropTypes.string,
+};
+
+SearchPage.defaultProps = {
+  query: '',
+  count: 0,
+  perPage: 0,
+  page: 0,
+  order: 'date',
 };
 
 export default SearchPage;
