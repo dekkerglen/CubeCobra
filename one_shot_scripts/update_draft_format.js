@@ -104,7 +104,7 @@ async function update(draft) {
 (async () => {
   await carddb.initializeCardDb();
 
-  mongoose.connect(mongosecrets.connectionString).then(async (db) => {
+  mongoose.connect(mongosecrets.connectionString).then(async () => {
     console.log(`starting...`);
     const count = await Draft.countDocuments({ 'seats.0': { $exists: false } });
     console.log(`counted...`);
@@ -125,8 +125,10 @@ async function update(draft) {
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {
           try {
+            // eslint-disable-next-line no-await-in-loop
             const draft = await cursor.next();
             if (draft) {
+              // eslint-disable-next-line no-await-in-loop
               await update(draft);
             }
           } catch (err) {
