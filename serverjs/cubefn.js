@@ -312,7 +312,7 @@ const methods = {
     return src;
   },
   generatePack: async (cubeId, carddb, seed) => {
-    const cube = await Cube.findOne(buildIdQuery(cubeId));
+    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
     if (!seed) {
       seed = Date.now().toString();
     }

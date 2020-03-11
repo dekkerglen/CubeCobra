@@ -46,25 +46,21 @@ const CubeAnalysisNavBar = ({
   if (draftFormats) {
     dropdownElement = (
       <Col>
-        <Row>
-          <h5>{formatId >= 0 ? `${draftFormats[formatId].title} (Custom Draft)` : 'Standard Draft Format'}</h5>
-        </Row>
-        <Row>
-          <UncontrolledDropdown inNavbar>
-            <DropdownToggle nav caret>
-              Change Draft Format
-            </DropdownToggle>
-            <DropdownMenu right>
-              <DropdownItem key="default" onClick={() => setFormatId(-1)}>
-                Standard Draft Format
-              </DropdownItem>
-              <DropdownItem header key="customformatsheader">
-                Custom Formats
-              </DropdownItem>
-              {draftFormats ? draftFormats.map(dropdownCustomFormat) : ''}
-            </DropdownMenu>
-          </UncontrolledDropdown>
-        </Row>
+        <h5>{formatId >= 0 ? `${draftFormats[formatId].title} (Custom Draft)` : 'Standard Draft Format'}</h5>
+        <UncontrolledDropdown inNavbar>
+          <DropdownToggle nav caret>
+            Change Draft Format
+          </DropdownToggle>
+          <DropdownMenu right>
+            <DropdownItem key="default" onClick={() => setFormatId(-1)}>
+              Standard Draft Format
+            </DropdownItem>
+            <DropdownItem header key="customformatsheader">
+              Custom Formats
+            </DropdownItem>
+            {draftFormats ? draftFormats.map(dropdownCustomFormat) : ''}
+          </DropdownMenu>
+        </UncontrolledDropdown>
       </Col>
     );
   }
