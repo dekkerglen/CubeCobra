@@ -8,6 +8,8 @@ const DeckPreview = ({ deck }) => {
   const maxLength = 35;
   const { date } = deck;
 
+  console.log(deck);
+
   let { name } = deck.seats[0];
   if (name.length > maxLength) {
     name = `${name.slice(0, maxLength - 3)}...`;
