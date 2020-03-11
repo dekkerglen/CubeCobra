@@ -723,9 +723,8 @@ router.get('/list/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const pids = new Set();
     const cardNames = [];
-    const { cards } = cube;
+    let { cards } = cube;
     cards.forEach((card, index) => {
       card.details = {
         ...carddb.cardFromId(card.cardID),
@@ -734,24 +733,14 @@ router.get('/list/:id', async (req, res) => {
       if (!card.type_line) {
         card.type_line = card.details.type;
       }
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
       cardNames.push(card.details.name);
     });
-
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo(cardNames, true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+    let eloDict;
+    const pricesQ = await addPrices(cards);
+    const eloDictQ = await getElo(cardNames, true);
+    // eslint-disable-next-line prefer-const
+    [cards, eloDict] = await Promise.all([pricesQ, eloDictQ]);
     for (const card of cards) {
-      if (card.details.tcgplayer_id) {
-        if (priceDict[card.details.tcgplayer_id]) {
-          card.details.price = priceDict[card.details.tcgplayer_id];
-        }
-        if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-          card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-        }
-      }
       if (eloDict[card.details.name]) {
         card.details.elo = eloDict[card.details.name];
       }
@@ -771,7 +760,7 @@ router.get('/list/:id', async (req, res) => {
 
     return res.render('cube/cube_list', {
       reactHTML: CubeListPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
@@ -851,8 +840,10 @@ router.get('/playtest/:id', async (req, res) => {
 
 router.get('/analysis/:id', async (req, res) => {
   try {
-    const fields = 'cards name owner defaultDraftFormat draft_formats card_count type';
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
+    const cube = await Cube.findOne(
+      buildIdQuery(req.params.id),
+      'cards name owner defaultDraftFormat draft_formats card_count type',
+    ).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
