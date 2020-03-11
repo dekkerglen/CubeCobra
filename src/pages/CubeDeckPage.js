@@ -1,7 +1,22 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Row, Label, Input } from 'reactstrap';
+import {
+  Col,
+  Collapse,
+  Nav,
+  Navbar,
+  NavbarToggler,
+  NavItem,
+  NavLink,
+  Row,
+  Label,
+  Input,
+  UncontrolledDropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem,
+} from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
@@ -31,11 +46,14 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
     [isOpen],
   );
 
+  console.log(draft);
+  console.log(deck);
+
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>
         <Navbar expand="md" light className="usercontrols mb-3">
-          <div className="view-style-select">
+          <div className="view-style-select pr-2">
             <Label className="sr-only" for="viewSelect">
               Cube View Style
             </Label>
@@ -47,7 +65,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
               ))}
             </Input>
           </div>
-          <div className="view-style-select px-2">
+          <div className="view-style-select pr-2">
             <Label className="sr-only" for="viewSelect">
               Cube View Style
             </Label>
@@ -74,6 +92,23 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
                 <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
               </NavItem>
               <CustomImageToggler />
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>
+                  Export
+                </DropdownToggle>
+                <DropdownMenu right>
+                  <DropdownItem href={`/cube/deck/download/txt/${deck._id}/${seatIndex}`}>
+                    Card Names (.txt)
+                  </DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/forge/${deck._id}/${seatIndex}`}>Forge (.dck)</DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/xmage/${deck._id}/${seatIndex}`}>XMage (.dck)</DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/mtgo/${deck._id}/${seatIndex}`}>MTGO (.txt)</DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/arena/${deck._id}/${seatIndex}`}>Arena (.txt)</DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/cockatrice/${deck._id}/${seatIndex}`}>
+                    Cockatrice (.txt)
+                  </DropdownItem>
+                </DropdownMenu>
+              </UncontrolledDropdown>
             </Nav>
           </Collapse>
         </Navbar>
