@@ -15,7 +15,6 @@ settings:
   import/resolver:
     webpack:
       config: webpack.dev.js
-parser: 'babel-eslint'
 rules:
   prettier/prettier: error
   no-console: 0
