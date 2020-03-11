@@ -8,6 +8,7 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
+const Card = require('../models/card');
 
 const { NODE_ENV } = process.env;
 
@@ -16,7 +17,8 @@ if (NODE_ENV === 'production') {
   DashboardPage = require('../dist/pages/DashboardPage').default;
 }
 
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
+const cardutil = require('../dist/utils/Card.js');
 
 const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
@@ -304,6 +306,7 @@ const queryMap = {
   card_count: 'card_count',
   cards: 'card_count',
   category: 'category',
+  card: 'card',
 };
 
 const operatorMap = {
@@ -315,11 +318,31 @@ const operatorMap = {
 };
 
 const delimiters = [':', '<=', '>=', '<', '>', '='];
-const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
 const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
 
-function buildQuery(key, value, delim) {
-  console.log(key);
+async function getCardCubes(value) {
+  const ids = carddb.getIdsFromName(value);
+  if (ids) {
+    return getCardCubes(carddb.getMostReasonable(value)._id);
+  }
+
+  // if id is a foreign cardname, redirect to english version
+  const english = carddb.getEnglishVersion(value);
+  if (english) {
+    return getCardCubes(english);
+  }
+
+  // otherwise just go to this ID.
+  const card = carddb.cardFromId(value);
+  const data = await Card.findOne({ cardName: card.name_lower });
+  if (!data) {
+    return { _id: { $in: [] } };
+  }
+
+  return { _id: { $in: data.cubes } };
+}
+
+async function buildQuery(key, value, delim) {
   if (!queryMap[key]) {
     return { name: { $regex: `${key}${delim}${value}`, $options: 'i' } };
   }
@@ -340,6 +363,8 @@ function buildQuery(key, value, delim) {
           query.categoryOverride = { $regex: value, $options: 'i' };
         }
         break;
+      case 'card':
+        return getCardCubes(value);
       default:
         break;
     }
@@ -383,19 +408,22 @@ router.get('/search/:query/:page', async (req, res) => {
       break;
   }
 
-  // parse query object
-  const split = req.params.query.split(' ');
+  // parse query object, this regex escapes quotes: https://stackoverflow.com/questions/16261635/javascript-split-string-by-space-but-ignore-space-in-quotes-notice-not-to-spli
+  const split = req.params.query.match(/(?:[^\s"]+|"[^"]*")+/g);
 
   const query = {
-    $and: split.map((token) => {
-      for (const delim of delimiters) {
-        if (token.includes(delim)) {
-          const splitToken = token.split(delim);
-          return buildQuery(splitToken[0], splitToken[1], delim);
+    $and: await Promise.all(
+      split.map(async (token) => {
+        for (const delim of delimiters) {
+          if (token.includes(delim)) {
+            const splitToken = token.split(delim);
+            // this regex strips quotes if visible
+            return buildQuery(splitToken[0], splitToken[1].replace(/["]+/g, ''), delim);
+          }
         }
-      }
-      return { name: { $regex: token, $options: 'i' } };
-    }),
+        return { name: { $regex: token, $options: 'i' } };
+      }),
+    ),
   };
 
   console.log(JSON.stringify(query, null, 2));

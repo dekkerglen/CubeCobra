@@ -11,6 +11,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const [owner, setowner] = useState('');
   const [decks, setDecks] = useState('');
   const [cards, setCards] = useState('');
+  const [include, setInclude] = useState('');
   const [category, setCategory] = useState('');
 
   const [decksOp, setDecksOp] = useState('=');
@@ -60,6 +61,9 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
       case 'category':
         setCategory(value);
         break;
+      case 'include':
+        setInclude(value);
+        break;
       default:
         break;
     }
@@ -71,7 +75,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     let queryText = '';
 
     if (name.length > 0) {
-      queryText += `name:${name} `;
+      queryText += `name:"${name}" `;
     }
     if (owner.length > 0) {
       queryText += `owner:${owner} `;
@@ -84,6 +88,9 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     }
     if (category.length > 0) {
       queryText += `category:${category} `;
+    }
+    if (include.length > 0) {
+      queryText += `card:"${include}" `;
     }
 
     if (queryText.length > 0) {
@@ -135,6 +142,14 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             value={category}
             onChange={handleChange}
             options={Categories}
+          />
+          {/* TODO: use autocomplete here */}
+          <TextField
+            name="include"
+            humanName="Cubes that include the card:"
+            placeholder={'Any full card name, e.g. "Ambush Viper"'}
+            value={include}
+            onChange={handleChange}
           />
         </ModalBody>
         <ModalFooter>
