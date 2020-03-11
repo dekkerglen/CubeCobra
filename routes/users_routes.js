@@ -567,7 +567,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       owner: userid,
     });
 
-    const [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
+    const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
 
     if (!user) {
       req.flash('danger', 'User not found');

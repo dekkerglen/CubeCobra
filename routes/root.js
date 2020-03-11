@@ -86,6 +86,7 @@ router.get('/explore', async (req, res) => {
       date: -1,
     })
     .limit(10)
+    .lean()
     .exec();
 
   const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
@@ -161,17 +162,15 @@ router.get('/dashboard', async (req, res) => {
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
     const cubeIds = cubes.map((cube) => cube._id);
 
-    const decks = await Deck.find(
-      {
-        cube: {
-          $in: cubeIds,
-        },
+    const decks = await Deck.find({
+      cube: {
+        $in: cubeIds,
       },
-      '_id seats username date',
-    )
+    })
       .sort({
         date: -1,
       })
+      .lean()
       .limit(13);
 
     // autocard the posts
@@ -231,12 +230,16 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       })
       .skip(pagesize * page)
       .limit(pagesize)
+      .lean()
       .exec();
+
     const numDecks = await Deck.countDocuments({
       cube: {
         $in: cubeIds,
       },
-    }).exec();
+    })
+      .lean()
+      .exec();
 
     const pages = [];
     for (let i = 0; i < numDecks / pagesize; i++) {
