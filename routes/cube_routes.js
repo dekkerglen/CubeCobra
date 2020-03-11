@@ -34,6 +34,7 @@ const {
   maybeCards,
   getElo,
 } = require('../serverjs/cubefn.js');
+
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
@@ -796,12 +797,9 @@ router.get('/playtest/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const decks = await Deck.find(
-      {
-        cube: cube._id,
-      },
-      '_id date seats',
-    )
+    const decks = await Deck.find({
+      cube: cube._id,
+    })
       .sort({
         date: -1,
       })
@@ -1152,7 +1150,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       {
         userid: req.user._id,
         username: req.user.username,
-        pickOrder: [],
+        pickorder: [],
         deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         cols: 16,
         deck: added,
@@ -2311,7 +2309,7 @@ router.post('/submitdeck/:id', async (req, res) => {
   try {
     // req.body contains a draft
     const draftid = req.body.body;
-    const draft = await Draft.findById(draftid);
+    const draft = await Draft.findById(draftid).lean();
     const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
     const deck = new Deck();
@@ -2395,12 +2393,13 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       })
       .skip(pagesize * page)
       .limit(pagesize)
+      .lean()
       .exec();
     const numDecksq = Deck.countDocuments({
       cube: cube._id,
     }).exec();
 
-    const [decks, numDecks] = await Promise.all([decksq, numDecksq]);
+    const [numDecks, decks] = await Promise.all([numDecksq, decksq]);
 
     const reactProps = {
       cube,
@@ -2432,7 +2431,7 @@ router.get('/decks/:id', async (req, res) => {
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
-    const base = await Deck.findById(req.params.id);
+    const base = await Deck.findById(req.params.id).lean();
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
@@ -2494,14 +2493,14 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
 router.get('/redraft/:id', async (req, res) => {
   try {
-    const base = await Deck.findById(req.params.id);
+    const base = await Deck.findById(req.params.id).lean();
 
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
 
-    const srcDraft = await Draft.findById(base.draft);
+    const srcDraft = await Draft.findById(base.draft).lean();
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
@@ -2632,18 +2631,12 @@ router.get('/deck/:id', async (req, res) => {
       draft = await Draft.findById(deck.draft).lean();
     }
 
-    const drafter = {
-      name: 'Anonymous',
-      id: null,
-      profileUrl: null,
-    };
+    let drafter = 'Anonymous';
 
     const deckUser = await User.findById(deck.owner);
 
     if (deckUser) {
-      drafter.name = deckUser.username;
-      drafter.id = deckUser._id;
-      drafter.profileUrl = `/user/view/${deckUser._id}`;
+      drafter = deckUser.username;
     }
 
     for (const seat of deck.seats) {
@@ -2654,8 +2647,10 @@ router.get('/deck/:id', async (req, res) => {
           }
         }
       }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
+      if (seat.pickorder) {
+        for (const card of seat.pickorder) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
       }
     }
 
@@ -2669,7 +2664,7 @@ router.get('/deck/:id', async (req, res) => {
 
     return res.render('cube/cube_deck', {
       reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - ${drafter.name}'s deck`,
+      title: `${abbreviate(cube.name)} - ${drafter}'s deck`,
       metadata: generateMeta(
         `Cube Cobra Deck: ${cube.name}`,
         cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
