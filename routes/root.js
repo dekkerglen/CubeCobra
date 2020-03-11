@@ -25,25 +25,31 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
+const CUBE_PREVIEW_FIELDS =
+  '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
+
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
   const userID = req.user ? req.user._id : '';
 
-  const recentsq = Cube.find({
-    $or: [
-      {
-        card_count: {
-          $gt: 200,
+  const recentsq = Cube.find(
+    {
+      $or: [
+        {
+          card_count: {
+            $gt: 200,
+          },
+          isListed: true,
         },
-        isListed: true,
-      },
-      {
-        owner: userID,
-      },
-    ],
-  })
+        {
+          owner: userID,
+        },
+      ],
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
     .lean()
     .sort({
       date_updated: -1,
@@ -51,25 +57,31 @@ router.get('/explore', async (req, res) => {
     .limit(12)
     .exec();
 
-  const featuredq = Cube.find({
-    isFeatured: true,
-  })
+  const featuredq = Cube.find(
+    {
+      isFeatured: true,
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
     .lean()
     .exec();
 
-  const draftedq = Cube.find({
-    $or: [
-      {
-        isListed: true,
-      },
-      {
-        isListed: null,
-      },
-      {
-        owner: userID,
-      },
-    ],
-  })
+  const draftedq = Cube.find(
+    {
+      $or: [
+        {
+          isListed: true,
+        },
+        {
+          isListed: null,
+        },
+        {
+          owner: userID,
+        },
+      ],
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
     .lean()
     .sort({
       numDecks: -1,
@@ -87,7 +99,7 @@ router.get('/explore', async (req, res) => {
 
   const [recents, featured, drafted, decks] = await Promise.all([recentsq, featuredq, draftedq, decksq]);
 
-  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }).lean();
+  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }, CUBE_PREVIEW_FIELDS).lean();
 
   const reactProps = {
     recents,
@@ -120,7 +132,7 @@ router.get('/dashboard', async (req, res) => {
       {
         owner: user._id,
       },
-      '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride',
+      CUBE_PREVIEW_FIELDS,
     ).sort({
       date_updated: -1,
     });
@@ -279,31 +291,131 @@ router.get('/search', async (req, res) => {
   };
   return res.render('search', {
     reactProps: serialize(reactProps),
-    loginCallback: `/search/${req.params.id}`,
+    loginCallback: `/search`,
   });
 });
 
-router.get('/search/:query', async (req, res) => {
-  // parse query object
-  const split = req.params.query.split(' ');
-  const query = {
-    $and: split.map((token) => ({ name: { $regex: token, $options: 'i' } })),
+const queryMap = {
+  owner_name: 'owner_name',
+  owner: 'owner_name',
+  name: 'name',
+  numDecks: 'numDecks',
+  decks: 'numDecks',
+  card_count: 'card_count',
+  cards: 'card_count',
+  category: 'category',
+};
+
+const operatorMap = {
+  '>': '$gt',
+  '<': '$lt',
+  '>=': '$gte',
+  '<=': '$lte',
+  '=': '$eq',
+};
+
+const delimiters = [':', '<=', '>=', '<', '>', '='];
+const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
+const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+
+function buildQuery(key, value, delim) {
+  console.log(key);
+  if (!queryMap[key]) {
+    return { name: { $regex: `${key}${delim}${value}`, $options: 'i' } };
+  }
+
+  key = queryMap[key];
+  const query = {};
+  if (delim === ':') {
+    switch (key) {
+      case 'owner_name':
+      case 'name':
+      case 'descriptionhtml':
+        query[key] = { $regex: value, $options: 'i' };
+        break;
+      case 'category':
+        if (prefixes.includes(value)) {
+          query.categoryPrefixes = { $regex: value, $options: 'i' };
+        } else {
+          query.categoryOverride = { $regex: value, $options: 'i' };
+        }
+        break;
+      default:
+        break;
+    }
+  } else {
+    // relational
+    switch (key) {
+      case 'numDecks':
+      case 'card_count':
+        query[key] = {};
+        query[key][operatorMap[delim]] = value;
+        break;
+      default:
+        break;
+    }
+  }
+  return query;
+}
+
+router.get('/search/:query/:page', async (req, res) => {
+  const perPage = 36;
+  const page = Math.max(0, req.params.page);
+
+  const { order } = req.query;
+
+  let sort = {
+    date_updated: -1,
   };
 
-  console.log(query);
+  switch (order) {
+    case 'pop':
+      sort = {
+        numDecks: -1,
+      };
+      break;
+    case 'alpha':
+      sort = {
+        name: -1,
+      };
+      break;
+    default:
+      break;
+  }
 
-  const cubes = await Cube.find(query)
-    .sort({
-      date_updated: -1,
-    })
+  // parse query object
+  const split = req.params.query.split(' ');
+
+  const query = {
+    $and: split.map((token) => {
+      for (const delim of delimiters) {
+        if (token.includes(delim)) {
+          const splitToken = token.split(delim);
+          return buildQuery(splitToken[0], splitToken[1], delim);
+        }
+      }
+      return { name: { $regex: token, $options: 'i' } };
+    }),
+  };
+
+  console.log(JSON.stringify(query, null, 2));
+
+  const count = await Cube.count(query);
+
+  const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
+    .sort(sort)
+    .skip(perPage * page)
+    .limit(perPage)
     .lean();
 
   const reactProps = {
     query: req.params.query,
     cubes,
+    count,
+    perPage,
+    page,
+    order,
   };
-
-  console.log(reactProps);
 
   return res.render('search', {
     reactProps: serialize(reactProps),

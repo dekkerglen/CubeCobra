@@ -724,3 +724,7 @@ img.mana-symbol {
 	text-decoration: underline;
 	cursor: pointer;
   }
+
+  .noBreak {
+	white-space: nowrap;
+  }
