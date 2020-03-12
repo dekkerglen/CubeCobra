@@ -18,6 +18,7 @@ const cubeSchema = mongoose.Schema({
   name: {
     type: String,
     required: true,
+    index: true,
   },
   shortID: {
     type: String,
@@ -85,7 +86,10 @@ const cubeSchema = mongoose.Schema({
   image_artist: String,
   image_name: String,
   owner_name: String,
-  date_updated: Date,
+  date_updated: {
+    type: Date,
+    index: true,
+  },
   updated_string: String,
   default_sorts: [String],
   card_count: Number,

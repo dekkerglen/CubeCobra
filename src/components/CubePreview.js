@@ -39,7 +39,7 @@ const CubePreview = ({ cube }) => {
       <div className="w-100 py-1 px-2">
         <h5 className="text-muted text-ellipsis my-0">{cube.name}</h5>
         <div className="text-muted text-ellipsis">{cube.overrideCategory ? overrideSubtitle : defaultSubtitle}</div>
-        <em className="text-muted">
+        <em className="text-muted text-ellipsis">
           Designed by{' '}
           <a data-sublink href={`/user/view/${cube.owner}`}>
             {cube.owner_name}

@@ -797,18 +797,16 @@ router.get('/playtest/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const decks = await Deck.find({
-      cube: cube._id,
-    })
+    const decks = await Deck.find(
+      {
+        cube: cube._id,
+      },
+      'date seats _id',
+    )
       .sort({
         date: -1,
       })
-      .limit(10)
-      .exec();
-
-    delete cube.cards;
-    delete cube.decks;
-    delete cube.maybe;
+      .limit(10);
 
     let draftFormats = [];
     // NOTE: older cubes do not have custom drafts

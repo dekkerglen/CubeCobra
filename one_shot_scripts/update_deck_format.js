@@ -53,7 +53,7 @@ async function updateDraft(draft) {
       userid: draft.owner,
       name: draft.username,
       pickorder: draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
-      drafted: draft.picks[0].map(convertCard),
+      drafted: draft.picks[0] ? draft.picks[0].map(convertCard) : [],
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
 
@@ -169,10 +169,19 @@ async function buildDeck(cards, bot) {
       if (!card.type_line.toLowerCase().includes('creature')) {
         index += 8;
       }
-      deck[index].push(card);
+      if (deck[index]) {
+        deck[index].push(card);
+      } else {
+        deck[0].push(card);
+      }
     }
     for (const card of side) {
-      sideboard[Math.min(card.cmc || 0, 7)].push(card);
+      const index = Math.min(card.cmc || 0, 7);
+      if (sideboard[index]) {
+        sideboard[index].push(card);
+      } else {
+        sideboard[0].push(card);
+      }
     }
     return {
       deck,
@@ -240,7 +249,7 @@ async function update(deck) {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: draft ? draft.pickOrder.map(convertCard) : [],
+      pickorder: draft && draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
       name: deck.name,
       description: deck.description,
       cols: 16,

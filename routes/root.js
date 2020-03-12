@@ -8,6 +8,7 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
+const Card = require('../models/card');
 
 const { NODE_ENV } = process.env;
 
@@ -16,7 +17,7 @@ if (NODE_ENV === 'production') {
   DashboardPage = require('../dist/pages/DashboardPage').default;
 }
 
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 
 const { addAutocard } = require('../serverjs/cubefn.js');
 const { csrfProtection } = require('./middleware');
@@ -25,92 +26,89 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
+const CUBE_PREVIEW_FIELDS =
+  '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
+
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
   const userID = req.user ? req.user._id : '';
 
-  const recentsq = Cube.find({
-    $or: [
-      {
-        card_count: {
-          $gt: 200,
+  const recentsq = Cube.find(
+    {
+      $or: [
+        {
+          card_count: {
+            $gt: 200,
+          },
+          isListed: true,
         },
-        isListed: true,
-      },
-      {
-        owner: userID,
-      },
-    ],
-  })
+        {
+          owner: userID,
+        },
+      ],
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
+    .lean()
     .sort({
       date_updated: -1,
     })
     .limit(12)
     .exec();
 
-  const featuredq = Cube.find({
-    isFeatured: true,
-  }).exec();
+  const featuredq = Cube.find(
+    {
+      isFeatured: true,
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
+    .lean()
+    .exec();
 
-  const draftedq = Cube.find({
-    $or: [
-      {
-        isListed: true,
-      },
-      {
-        isListed: null,
-      },
-      {
-        owner: userID,
-      },
-    ],
-  })
+  const draftedq = Cube.find(
+    {
+      $or: [
+        {
+          isListed: true,
+        },
+        {
+          owner: userID,
+        },
+      ],
+    },
+    CUBE_PREVIEW_FIELDS,
+  )
+    .lean()
     .sort({
       numDecks: -1,
     })
     .limit(12)
     .exec();
 
-  const blogq = Blog.find({
-    dev: 'true',
-  })
-    .sort({
-      date: -1,
-    })
-    .exec();
-
   const decksq = Deck.find()
+    .lean()
     .sort({
       date: -1,
     })
     .limit(10)
-    .lean()
     .exec();
 
-  const [recents, featured, drafted, blog, decks] = await Promise.all([recentsq, featuredq, draftedq, blogq, decksq]);
+  const [recents, featured, drafted, decks] = await Promise.all([recentsq, featuredq, draftedq, decksq]);
 
-  res.render('index', {
-    devblog: blog.length > 0 ? blog[0] : null,
+  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }, CUBE_PREVIEW_FIELDS).lean();
+
+  const reactProps = {
     recents,
-    drafted,
-    decks,
     featured,
-    loginCallback: '/explore',
-  });
-});
+    drafted,
+    recentlyDrafted,
+  };
 
-// format: {search};{search};{search}:{page}
-// list like:
-// {property}{symbol}{value};
-// properties:
-// name, owner
-// symbols:
-//= ,~(contains)
-router.get('/advanced_search', (req, res) => {
-  res.render('search/advanced_search', {
-    loginCallback: '/advanced_search',
+  res.render('explore', {
+    reactProps: serialize(reactProps),
+    loginCallback: '/explore',
   });
 });
 
@@ -132,7 +130,7 @@ router.get('/dashboard', async (req, res) => {
       {
         owner: user._id,
       },
-      '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride',
+      CUBE_PREVIEW_FIELDS,
     ).sort({
       date_updated: -1,
     });
@@ -284,135 +282,171 @@ router.get('/landing', async (req, res) => {
   });
 });
 
-router.post('/advanced_search', (req, res) => {
-  let url = '/search/';
-  if (req.body.name && req.body.name.length > 0) {
-    const encoded = encodeURIComponent(req.body.name);
-    url += `name${req.body.nameType}${encoded};`;
-  }
-  if (req.body.owner && req.body.owner.length > 0) {
-    const encoded = encodeURIComponent(req.body.owner);
-    url += `owner_name${req.body.ownerType}${encoded};`;
-  }
-  res.redirect(url);
-});
-
-router.post('/search', (req, res) => {
-  if (!req.body.search || req.body.search.length === 0) {
-    req.flash('danger', 'No Search Parameters');
-    res.redirect('/advanced_search');
-  } else {
-    const query = req.body.search;
-    if (query.includes(';')) {
-      res.redirect(`/search/${query}`);
-    } else {
-      res.redirect(`/search/name~${query}`);
-    }
-  }
-});
-
-router.get('/search/:id', (req, res) => {
-  const rawSplit = req.params.id.split(':');
-  const rawQueries = rawSplit[0].split(';');
-  let page = parseInt(rawSplit[1], 10);
-  let query = {};
-  const terms = [];
-
-  // input is the search string from a user -- should be treated as a string literal, rather than
-  // a regex with special characters.  This method escapes any characters which could be considered
-  // special characters by the regex, like . and *
-  function escapeRegexLiteral(input) {
-    return input.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-  }
-  rawQueries.forEach((searchExpression) => {
-    let field;
-    let filter;
-    let searchRegex;
-    let expressionTerm;
-
-    if (searchExpression.includes('=')) {
-      [field, filter] = searchExpression.split('=');
-      const escapedFilter = escapeRegexLiteral(filter);
-      searchRegex = new RegExp(`^${escapedFilter}$`, 'i');
-      expressionTerm = 'is exactly';
-    } else if (searchExpression.includes('~')) {
-      [field, filter] = searchExpression.split('~');
-      searchRegex = new RegExp(escapeRegexLiteral(filter), 'i');
-      expressionTerm = 'contains';
-    }
-
-    if (searchRegex) {
-      query[field] = { $regex: searchRegex };
-      terms.push(`${field.replace('owner_name', 'owner')} ${expressionTerm} ${filter.toLowerCase()}`);
-    }
+router.get('/search', async (req, res) => {
+  const reactProps = {
+    query: '',
+    cubes: [],
+  };
+  return res.render('search', {
+    reactProps: serialize(reactProps),
+    loginCallback: `/search`,
   });
+});
 
-  let userID = '';
-  if (req.user) userID = req.user._id;
-  query = {
-    $and: [
-      query,
-      {
-        $or: [
-          {
-            isListed: true,
-          },
-          {
-            owner: userID,
-          },
-        ],
-      },
-    ],
+const queryMap = {
+  owner_name: 'owner_name',
+  owner: 'owner_name',
+  name: 'name',
+  numDecks: 'numDecks',
+  decks: 'numDecks',
+  card_count: 'card_count',
+  cards: 'card_count',
+  category: 'category',
+  card: 'card',
+};
+
+const operatorMap = {
+  '>': '$gt',
+  '<': '$lt',
+  '>=': '$gte',
+  '<=': '$lte',
+  '=': '$eq',
+};
+
+const delimiters = [':', '<=', '>=', '<', '>', '='];
+const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+
+async function getCardCubes(value) {
+  const ids = carddb.getIdsFromName(value);
+  if (ids) {
+    return getCardCubes(carddb.getMostReasonable(value)._id);
+  }
+
+  // if id is a foreign cardname, redirect to english version
+  const english = carddb.getEnglishVersion(value);
+  if (english) {
+    return getCardCubes(english);
+  }
+
+  // otherwise just go to this ID.
+  const card = carddb.cardFromId(value);
+  const data = await Card.findOne({ cardName: card.name_lower });
+  if (!data) {
+    return { _id: { $in: [] } };
+  }
+
+  return { _id: { $in: data.cubes } };
+}
+
+async function buildQuery(key, value, delim) {
+  if (!queryMap[key]) {
+    return { name: { $regex: `${key}${delim}${value}`, $options: 'i' } };
+  }
+
+  key = queryMap[key];
+  const query = {};
+  if (delim === ':') {
+    switch (key) {
+      case 'owner_name':
+      case 'name':
+      case 'descriptionhtml':
+        query[key] = { $regex: value, $options: 'i' };
+        break;
+      case 'category':
+        if (prefixes.includes(value)) {
+          query.categoryPrefixes = { $regex: value, $options: 'i' };
+        } else {
+          query.categoryOverride = { $regex: value, $options: 'i' };
+        }
+        break;
+      case 'card':
+        return getCardCubes(value);
+      default:
+        break;
+    }
+  } else {
+    // relational
+    switch (key) {
+      case 'numDecks':
+      case 'card_count':
+        query[key] = {};
+        query[key][operatorMap[delim]] = value;
+        break;
+      default:
+        break;
+    }
+  }
+  return query;
+}
+
+router.get('/search/:query/:page', async (req, res) => {
+  const perPage = 36;
+  const page = Math.max(0, req.params.page);
+
+  const { order } = req.query;
+
+  let sort = {
+    date_updated: -1,
   };
 
-  Cube.find(query)
-    .sort({
-      date_updated: -1,
-    })
-    .exec((err, cubes) => {
-      const pages = [];
-      if (cubes.length > 12) {
-        if (!page) {
-          page = 0;
-        }
-        for (let i = 0; i < cubes.length / 12; i++) {
-          if (page === i) {
-            pages.push({
-              url: `${rawSplit[0]}:${i}`,
-              content: i + 1,
-              active: true,
-            });
-          } else {
-            pages.push({
-              url: `${rawSplit[0]}:${i}`,
-              content: i + 1,
-            });
+  switch (order) {
+    case 'pop':
+      sort = {
+        numDecks: -1,
+      };
+      break;
+    case 'alpha':
+      sort = {
+        name: -1,
+      };
+      break;
+    default:
+      break;
+  }
+
+  // parse query object, this regex escapes quotes: https://stackoverflow.com/questions/16261635/javascript-split-string-by-space-but-ignore-space-in-quotes-notice-not-to-spli
+  const split = req.params.query.match(/(?:[^\s"]+|"[^"]*")+/g);
+
+  const query = {
+    $and: await Promise.all(
+      split.map(async (token) => {
+        for (const delim of delimiters) {
+          if (token.includes(delim)) {
+            const splitToken = token.split(delim);
+            // this regex strips quotes if visible
+            return buildQuery(splitToken[0], splitToken[1].replace(/["]+/g, ''), delim);
           }
         }
-        const cubePage = [];
-        for (let i = 0; i < 12; i++) {
-          if (cubes[i + page * 12]) {
-            cubePage.push(cubes[i + page * 12]);
-          }
-        }
-        res.render('search', {
-          results: cubePage,
-          search: req.params.id,
-          terms,
-          pages,
-          numresults: cubes.length,
-          loginCallback: `/search/${req.params.id}`,
-        });
-      } else {
-        res.render('search', {
-          results: cubes,
-          search: req.params.id,
-          terms,
-          numresults: cubes.length,
-          loginCallback: `/search/${req.params.id}`,
-        });
-      }
-    });
+        return { name: { $regex: token, $options: 'i' } };
+      }),
+    ),
+  };
+
+  query.push({
+    isListed: true,
+  });
+
+  const count = await Cube.count(query);
+
+  const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
+    .sort(sort)
+    .skip(perPage * page)
+    .limit(perPage)
+    .lean();
+
+  const reactProps = {
+    query: req.params.query,
+    cubes,
+    count,
+    perPage,
+    page,
+    order,
+  };
+
+  return res.render('search', {
+    reactProps: serialize(reactProps),
+    loginCallback: `/search/${req.params.id}`,
+  });
 });
 
 router.get('/contact', (req, res) => {
