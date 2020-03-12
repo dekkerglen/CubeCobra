@@ -1564,7 +1564,7 @@ function shuffle(a) {
   return a;
 }
 
-router.post('/startsealed/:id', async (req, res) => {
+router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('cards').toInt(), async (req, res) => {
   try {
     const user = await User.findById(req.user);
 
@@ -1618,7 +1618,11 @@ router.post('/startsealed/:id', async (req, res) => {
         index += 8;
       }
 
-      pool[index].push(card);
+      if (pool[index]) {
+        pool[index].push(card);
+      } else {
+        pool[0].push(card);
+      }
     }
 
     const deck = new Deck();
