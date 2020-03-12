@@ -189,6 +189,34 @@ const StandardDraftCard = () => {
   );
 };
 
+const SealedCard = () => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Card className="mb-3">
+      <CSRFForm method="POST" action={`/cube/startsealed/${cubeID}`}>
+        <CardHeader>
+          <CardTitleH5>Standard Sealed</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <LabelRow htmlFor="packs" label="Number of Packs">
+            <Input type="select" name="packs" id="packs" defaultValue="6">
+              {rangeOptions(1, 11)}
+            </Input>
+          </LabelRow>
+          <LabelRow htmlFor="cards" label="Cards per Pack">
+            <Input type="select" name="cards" id="cards" defaultValue="15">
+              {rangeOptions(5, 21)}
+            </Input>
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Button color="success">Start Sealed</Button>
+        </CardFooter>
+      </CSRFForm>
+    </Card>
+  );
+};
+
 const DecksCard = ({ decks, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
@@ -320,10 +348,6 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
       <Alerts alerts={alerts} />
       <Row className="justify-content-center">
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
-          <SamplePackCard className="mb-3" />
-        </Col>
-        <Col xs="12" md="6" xl="6">
           {formatsSorted.map((format) => (
             <CustomDraftCard
               key={format._id}
@@ -334,6 +358,11 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
             />
           ))}
           <StandardDraftCard className="mb-3" />
+          <SealedCard className="mb-3" />
+        </Col>
+        <Col xs="12" md="6" xl="6">
+          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
+          <SamplePackCard className="mb-3" />
         </Col>
       </Row>
       <CustomDraftFormatModal
