@@ -55,8 +55,8 @@ function autocard_init(classname) {
 }
 
 function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in_modal) {
-  var w = card_flip ? 425 : 250;
-  var h = show_art_crop ? 175 : 325;
+  var w = card_flip ? 637.5 : 375;
+  var h = show_art_crop ? 262.5 : 487.5;
 
   document.onmousemove = function(e) {
     if (window.event) {
@@ -115,11 +115,11 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
       '<div style="position:relative"><img class="foilOverlay" src="/content/foilOverlay.png" style="border-radius:"' +
       // magic cards have a border radius of 3mm and a width of 63mm
       (3 / 63) * 255 +
-      'px;" }}><img id="autocard-img" src="" width=225 height=' +
+      'px;" }}><img id="autocard-img" src="" width=337.5 height=' +
       h +
       '></div>';
   } else {
-    innerHTML = '<img id="autocard-img" src="" width=225 height=' + h + '>';
+    innerHTML = '<img id="autocard-img" src="" width=337.5 height=' + h + '>';
   }
   document.getElementById('autocard_popup').innerHTML = innerHTML;
   if (card_flip) {
@@ -133,7 +133,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
       .find('#autocard-img')
       .attr('src', card_flip);
 
-  w = card_flip ? 450 : 225;
+  w = card_flip ? 675 : 337.5;
   document.getElementById('autocard_popup_info').style.width = w + 'px';
 
   if (tags) {
