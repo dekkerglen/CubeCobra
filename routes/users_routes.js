@@ -29,7 +29,7 @@ const usernameValid = [
     max: 24,
   }),
   body('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
-  body('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value)),
+  body('username', 'Username may not use profanity.').custom((value) => !util.hasProfanity(value)),
 ];
 
 function checkPasswordsMatch(value, { req }) {
