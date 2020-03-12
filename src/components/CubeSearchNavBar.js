@@ -71,8 +71,6 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
   };
 
   const submit = () => {
-    console.log(name, owner, decks, cards);
-
     let queryText = '';
 
     if (name.length > 0) {
@@ -189,7 +187,6 @@ const CubeSearchNavBar = ({ query, order, title }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(queryText.length);
     if (queryText && queryText.length > 0) {
       window.location.href = `/search/${queryText}/0?order=${searchOrder}`;
     } else {

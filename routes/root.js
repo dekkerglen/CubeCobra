@@ -74,9 +74,6 @@ router.get('/explore', async (req, res) => {
           isListed: true,
         },
         {
-          isListed: null,
-        },
-        {
           owner: userID,
         },
       ],
@@ -424,6 +421,10 @@ router.get('/search/:query/:page', async (req, res) => {
       }),
     ),
   };
+
+  query.push({
+    isListed: true,
+  });
 
   const count = await Cube.count(query);
 

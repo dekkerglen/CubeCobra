@@ -47,7 +47,7 @@ async function update(draft) {
       userid: draft.owner,
       name: draft.username,
       pickorder: draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
-      drafted: draft.picks[0].map(convertCard),
+      drafted: draft.picks[0] ? draft.picks[0].map(convertCard) : [],
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
 

@@ -72,7 +72,7 @@ function attemptIncrement(obj, propname) {
 }
 
 async function processDeck(deck) {
-  if (deck.seats[0].deck && deck.seats[0].deck.length > 0) {
+  if (deck.seats && deck.seats[0] && deck.seats[0].deck && deck.seats[0].deck.length > 0) {
     // flatten array
     const deckCards = [];
     deck.seats[0].deck.forEach((col) => {
