@@ -26,11 +26,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">
-            {[
-              [bothCmc, 'both'],
-              [onlyACmc, 'a'],
-              [onlyBCmc, 'b'],
-            ].map(([cards, key]) => (
+            {[[bothCmc, 'both'], [onlyACmc, 'a'], [onlyBCmc, 'b']].map(([cards, key]) => (
               <Col xs="4" key={key}>
                 {(cards[cmc] || []).map((card, index) => (
                   <AutocardListItem key={index} card={card} />

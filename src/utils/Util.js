@@ -123,13 +123,7 @@ export function sortDeck(deck) {
   return result;
 }
 
-export const COLORS = [
-  ['White', 'W'],
-  ['Blue', 'U'],
-  ['Black', 'B'],
-  ['Red', 'R'],
-  ['Green', 'G'],
-];
+export const COLORS = [['White', 'W'], ['Blue', 'U'], ['Black', 'B'], ['Red', 'R'], ['Green', 'G']];
 
 export function isTouchDevice() {
   // https://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript

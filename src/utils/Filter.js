@@ -201,12 +201,7 @@ const colorMap = new Map([
   ['temur', 'rug'],
 ]);
 
-const rarityMap = new Map([
-  ['c', 'common'],
-  ['u', 'uncommon'],
-  ['r', 'rare'],
-  ['m', 'mythic'],
-]);
+const rarityMap = new Map([['c', 'common'], ['u', 'uncommon'], ['r', 'rare'], ['m', 'mythic']]);
 
 // change arguments into their verifiable counteraprts, i.e. 'azorius' becomes 'uw'
 function simplifyArg(arg, category) {
