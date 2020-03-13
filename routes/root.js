@@ -422,7 +422,7 @@ router.get('/search/:query/:page', async (req, res) => {
     ),
   };
 
-  query.push({
+  query.$and.push({
     isListed: true,
   });
 
