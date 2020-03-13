@@ -78,13 +78,16 @@ let deckSchema = mongoose.Schema({
     default: 'User',
   },
   cols: Number,
-  playerdeck: [[]],
+  playerdeck: {
+    type: [[]],
+    index: true,
+  },
   playersideboard: [[]],
   bots: [[]],
   cards: [[]],
   newformat: {
     type: Boolean,
-    default: false,
+    default: false
   },
 });
 

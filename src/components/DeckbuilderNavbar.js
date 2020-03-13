@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -118,22 +118,26 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     [saveForm],
   );
 
-  const stripped = JSON.parse(JSON.stringify(deck));
+  const stripped = useMemo(() => {
+    const res = JSON.parse(JSON.stringify(deck));
 
-  for (const seat of stripped.seats) {
-    for (const collection of [seat.deck, seat.sideboard]) {
-      for (const pack of collection) {
-        for (const card of pack) {
+    for (const seat of res.seats) {
+      for (const collection of [seat.deck, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            delete card.details;
+          }
+        }
+      }
+      if (seat.pickorder) {
+        for (const card of seat.pickorder) {
           delete card.details;
         }
       }
+
+      return res;
     }
-    if (seat.pickorder) {
-      for (const card of seat.pickorder) {
-        delete card.details;
-      }
-    }
-  }
+  }, [deck]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>

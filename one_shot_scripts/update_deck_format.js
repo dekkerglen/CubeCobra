@@ -193,11 +193,24 @@ async function buildDeck(cards, bot) {
   }
 }
 
-async function update(deck) {
-  if (deck.seats && deck.seats.length > 0) {
-    return Deck.updateOne({ _id: deck._id }, deck);
+// this just forms lands correctly
+function convertDeckCard(card) {
+  if (Array.isArray(card)) {
+    return card.map(convertDeckCard);
   }
+  if (card.cardID) {
+    return card;
+  }
+  return {
+    tags: [],
+    colors: card.details.colors,
+    cardID: card.details._id,
+    cmc: card.details.cmc || 0,
+    type_line: card.details.type,
+  };
+}
 
+async function update(deck) {
   const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft).lean()) : null;
 
   if (
@@ -232,9 +245,7 @@ async function update(deck) {
         bot: deck.bots[i - 1],
         pickorder: deck.cards[i].map(convertCard),
         name: `Bot ${i + 1}: ${deck.bots[i - 1][0]}, ${deck.bots[i - 1][1]}`,
-        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${
-          deck.bots[i - 1][1]
-        }.`,
+        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${deck.bots[i - 1][1]}.`,
         cols: 16,
         deck: botdeck.deck,
         sideboard: botdeck.sideboard,
@@ -255,7 +266,7 @@ async function update(deck) {
       name: deck.name,
       description: deck.description,
       cols: 16,
-      deck: deck.playerdeck,
+      deck: deck.playerdeck.map(convertDeckCard),
       sideboard: deck.playersideboard,
     };
 
@@ -298,9 +309,12 @@ async function update(deck) {
 
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
     // gim
-    const count = await Deck.countDocuments({ 'seats.0': { $exists: false } });
+    // const query = { _id: '5e6ae64190077871371e222b' };
+    const query = { 'playerdeck.0': { $exists: true } };
+
+    const count = await Deck.countDocuments(query);
     const cursor = Deck.find(
-      { 'seats.0': { $exists: false } },
+      query,
       {},
       {
         timeout: false,
