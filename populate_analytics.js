@@ -222,7 +222,9 @@ async function processCard(card) {
     ? [cardSizeUses.pauper[card.cardName], cardSizeUses.pauper[card.cardName] / cubeCounts.pauper]
     : [0, 0];
 
-  card.cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
+  const cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
+  card.cubes = cubes;
+  card.cubesLength = cubes.length;
 
   // cubed with
   // create correl dict

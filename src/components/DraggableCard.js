@@ -34,24 +34,26 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
     }),
   });
 
-  const classes = [].concat(isAcceptable ? ['outline'] : [], isDragging ? ['transparent'] : []);
+  const previewClasses = [].concat(isAcceptable ? ['outline'] : [], isDragging ? ['transparent'] : []);
   if (className) {
-    Array.prototype.push.apply(classes, className.split(' '));
+    Array.prototype.push.apply(previewClasses, className.split(' '));
   }
+
+  const oldClasses = [].concat(['position-absolute'], isDragging ? ['transparent'] : ['d-none']);
 
   const typeLine = (card.type_line || card.details.type).toLowerCase();
   const cnc = typeLine.includes('creature');
 
   return (
     <>
-      <CardImage card={card} innerRef={imageRef} className="off-screen" />
+      <FoilCardImage card={card} innerRef={imageRef} className={oldClasses.join(' ')} />
       <div ref={drag} className={onMoveCard || props.onClick ? 'clickable' : undefined}>
         <div ref={drop}>
           <FoilCardImage
             card={card}
             tags={[]}
             autocard
-            className={classes.join(' ')}
+            className={previewClasses.join(' ')}
             data-location-type={location.type}
             data-location-data={JSON.stringify(location.data)}
             data-cnc={cnc.toString()}
