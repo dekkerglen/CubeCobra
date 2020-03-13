@@ -175,7 +175,11 @@ const CubeSearchNavBar = ({ query, order, title }) => {
   const toggle = () => setIsOpen((open) => !open);
   const [searchOrder, setSearchIndex] = useState(order || 'date');
 
-  const searchOptions = [['Date Updated', 'date'], ['Alphabetical', 'alpha'], ['Popularity', 'pop']];
+  const searchOptions = [
+    ['Date Updated', 'date'],
+    ['Alphabetical', 'alpha'],
+    ['Popularity', 'pop'],
+  ];
 
   const handleChangeSearch = (event) => {
     setSearchIndex(event.target.value);
