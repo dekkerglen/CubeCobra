@@ -1556,6 +1556,121 @@ router.get('/download/plaintext/:id', async (req, res) => {
   }
 });
 
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('cards').toInt(), async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+
+    if (!user) {
+      req.flash('danger', 'Please Login to build a sealed deck.');
+      return res.redirect(`/cube/playtest/${req.params.id}`);
+    }
+
+    const packs = parseInt(req.body.packs, 10);
+    const cards = parseInt(req.body.cards, 10);
+
+    const numCards = packs * cards;
+
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards owner');
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    if (cube.cards.length < numCards) {
+      throw new Error('Could not create sealed pool: not enough cards');
+    }
+
+    const source = shuffle(cube.cards).slice(0, numCards);
+    const pool = [];
+    for (let i = 0; i < 16; i++) {
+      pool.push([]);
+    }
+
+    for (const card of source) {
+      let index = 0;
+
+      // sort by color
+      const details = carddb.cardFromId(card.cardID);
+      const type = card.type_line || details.type;
+      const colors = card.colors || details.colors;
+
+      if (type.toLowerCase().includes('land')) {
+        index = 7;
+      } else if (colors.length === 1) {
+        index = ['W', 'U', 'B', 'R', 'G'].indexOf(colors[0].toUpperCase());
+      } else if (colors.length === 0) {
+        index = 6;
+      } else {
+        index = 5;
+      }
+
+      if (!type.toLowerCase().includes('creature')) {
+        index += 8;
+      }
+
+      if (pool[index]) {
+        pool[index].push(card);
+      } else {
+        pool[0].push(card);
+      }
+    }
+
+    const deck = new Deck();
+    deck.cube = cube._id;
+    deck.date = Date.now();
+    deck.comments = [];
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    deck.seats.push({
+      userid: user._id,
+      username: user.username,
+      pickorder: [],
+      name: `Sealed from ${cube.name}`,
+      description: '',
+      cols: 16,
+      deck: pool,
+      sideboard: [],
+    });
+
+    if (!cube.decks) {
+      cube.decks = [];
+    }
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+
+    await deck.save();
+
+    cube.decks.push(deck._id);
+    cube.numDecks += 1;
+    await cube.save();
+
+    const cubeOwner = await User.findById(cube.owner);
+
+    await util.addNotification(
+      cubeOwner,
+      user,
+      `/cube/deck/${deck._id}`,
+      `${user.username} built a sealed deck from your cube: ${cube.name}`,
+    );
+
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
 router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();

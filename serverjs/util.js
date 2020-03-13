@@ -172,7 +172,7 @@ function handleRouteError(req, res, err, reroute) {
   res.redirect(reroute);
 }
 
-const exports = {
+const toExport = {
   shuffle(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -238,4 +238,4 @@ const exports = {
   handleRouteError,
 };
 
-module.exports = exports;
+module.exports = toExport;
