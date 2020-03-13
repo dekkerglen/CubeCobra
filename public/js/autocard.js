@@ -55,7 +55,7 @@ function autocard_init(classname) {
 }
 
 function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in_modal) {
-  var w = card_flip ? 637.5 : 375;
+  var w = card_flip ? 675 : 337.5;
   var h = show_art_crop ? 262.5 : 487.5;
 
   document.onmousemove = function(e) {
@@ -114,7 +114,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
     innerHTML =
       '<div style="position:relative"><img class="foilOverlay" src="/content/foilOverlay.png" style="border-radius:"' +
       // magic cards have a border radius of 3mm and a width of 63mm
-      (3 / 63) * 255 +
+      (3 / 63) * 337.5 +
       'px;" }}><img id="autocard-img" src="" width=337.5 height=' +
       h +
       '></div>';
