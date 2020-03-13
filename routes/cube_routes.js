@@ -2872,7 +2872,7 @@ router.get('/redraft/:id', async (req, res) => {
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
-      res.redirect(`/cube/deck/${req.params.id}`);
+      return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
     const draft = new Draft();
