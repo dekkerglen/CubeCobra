@@ -38,7 +38,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   if (className) {
     Array.prototype.push.apply(previewClasses, className.split(' '));
   }
-  
+
   const oldClasses = [].concat(['position-absolute'], isDragging ? ['transparent'] : ['d-none']);
 
   const typeLine = (card.type_line || card.details.type).toLowerCase();
