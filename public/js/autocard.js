@@ -47,7 +47,10 @@ function autocard_init(classname) {
     if (leaveListener) {
       element.removeEventListener('mouseleave', leaveListener);
     }
-    autocardLeaveListeners.set(element, element.addEventListener('mouseleave', () => autocard_hide_card()));
+    autocardLeaveListeners.set(
+      element,
+      element.addEventListener('mouseleave', () => autocard_hide_card()),
+    );
   }
 }
 
