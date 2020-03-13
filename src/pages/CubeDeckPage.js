@@ -46,9 +46,6 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
     [isOpen],
   );
 
-  console.log(draft);
-  console.log(deck);
-
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>
