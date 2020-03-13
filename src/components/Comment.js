@@ -1,11 +1,11 @@
 import React from 'react';
+import TimeAgo from 'react-timeago';
 
 import { Collapse } from 'reactstrap';
 
 import CommentEntry from './CommentEntry';
 import CommentsSection from './CommentsSection';
 import CommentContextMenu from './CommentContextMenu';
-import AgeText from './AgeText';
 
 class Comment extends React.Component {
   constructor(props) {
@@ -100,8 +100,6 @@ class Comment extends React.Component {
   }
 
   toggleChildCollapse() {
-    console.log('toggle');
-    console.log(this.state);
     this.setState({
       childExpanded: !this.state.childExpanded,
     });
@@ -134,14 +132,14 @@ class Comment extends React.Component {
                 <em>
                   <small>
                     {' '}
-                    - Updated <AgeText date={comment.timePosted} />
+                    - Updated <TimeAgo date={comment.timePosted} />
                   </small>
                 </em>
               ) : (
                 <a>
                   <small>
                     {' '}
-                    - <AgeText date={comment.timePosted} />
+                    - <TimeAgo date={comment.timePosted} />
                   </small>
                 </a>
               ))}

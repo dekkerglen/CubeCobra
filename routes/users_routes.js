@@ -29,7 +29,7 @@ const usernameValid = [
     max: 24,
   }),
   body('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
-  body('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value)),
+  body('username', 'Username may not use profanity.').custom((value) => !util.hasProfanity(value)),
 ];
 
 function checkPasswordsMatch(value, { req }) {
@@ -273,7 +273,7 @@ router.post(
                           return res.sendStatus(500);
                         }
 
-                        req.flash('success', 'Password updated succesfully');
+                        req.flash('success', 'Password updated successfully');
                         return res.redirect('/user/login');
                       });
                     }
@@ -393,7 +393,7 @@ router.post(
                             });
 
                             // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                            req.flash('success', 'Account succesfully created. You are now able to login.');
+                            req.flash('success', 'Account successfully created. You are now able to login.');
                             res.redirect('/user/login');
                           }
                         });
@@ -567,7 +567,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       owner: userid,
     });
 
-    const [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
+    const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -672,7 +672,7 @@ router.post(
                       return res.redirect('/user/account?nav=password');
                     }
 
-                    req.flash('success', 'Password updated succesfully');
+                    req.flash('success', 'Password updated successfully');
                     return res.redirect('/user/account?nav=password');
                   });
                 }

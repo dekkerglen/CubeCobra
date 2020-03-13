@@ -1,5 +1,5 @@
 import { csrfFetch } from 'utils/CSRF';
-import { arrayIsSubset, arrayRotate, arrayShuffle } from 'utils/Util';
+import { arrayIsSubset, arrayShuffle } from 'utils/Util';
 
 let draft = null;
 
@@ -16,11 +16,19 @@ function cube() {
 }
 
 function pack() {
-  return draft.packs[0][0] || [];
+  return draft.seats[0].packbacklog[0] || [];
 }
 
 function packPickNumber() {
-  return [draft.packNumber, draft.pickNumber];
+  let picks = draft.seats[0].pickorder.length;
+  let packnum = 0;
+
+  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
+    picks -= draft.initial_state[0][packnum].length;
+    packnum += 1;
+  }
+
+  return [packnum + 1, picks + 1];
 }
 
 function arrangePicks(picks) {
@@ -28,7 +36,7 @@ function arrangePicks(picks) {
     throw new Error('Picks must be an array of length 16.');
   }
 
-  draft.picks[0] = [...picks];
+  draft.seats[0].drafted = [...picks];
 }
 
 const fetchLands = {
@@ -42,6 +50,8 @@ const fetchLands = {
   'Verdant Catacombs': ['B', 'G'],
   'Windswept Heath': ['W', 'G'],
   'Wooded Foothills': ['R', 'G'],
+  'Prismatic Vista': ['W', 'U', 'B', 'R', 'G'],
+  'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
 };
 
 function botRating(botColors, card) {
@@ -70,15 +80,61 @@ function botRating(botColors, card) {
   return rating;
 }
 
+function getSortFn(bot) {
+  return (a, b) => {
+    if (bot) {
+      return botRating(bot, b) - botRating(bot, a);
+    }
+    return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+  };
+}
+
+async function buildDeck(cards, bot) {
+  const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
+  const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+  const sortFn = getSortFn(bot);
+
+  nonlands.sort(sortFn);
+  lands.sort(sortFn);
+
+  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
+  const side = nonlands.slice(23).concat(lands.slice(17));
+
+  const deck = [];
+  const sideboard = [];
+  for (let i = 0; i < 16; i += 1) {
+    deck.push([]);
+    if (i < 8) {
+      sideboard.push([]);
+    }
+  }
+
+  for (const card of main) {
+    let index = Math.min(card.cmc, 7);
+    if (!card.type_line.toLowerCase().includes('creature')) {
+      index += 8;
+    }
+    deck[index].push(card);
+  }
+  for (const card of side) {
+    sideboard[Math.min(card.cmc, 7)].push(card);
+  }
+
+  return {
+    deck,
+    sideboard,
+  };
+}
+
 function botPicks() {
   // make bots take one pick out of active packs
-  for (let botIndex = 1; botIndex < draft.packs.length; botIndex++) {
-    const botPack = draft.packs[botIndex][0];
-    const botColors = draft.bots[botIndex - 1];
+  for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
+    const packFrom = draft.seats[botIndex].packbacklog[0];
+    const botColors = draft.seats[botIndex].bot;
     const ratedPicks = [];
     const unratedPicks = [];
-    for (let cardIndex = 0; cardIndex < botPack.length; cardIndex++) {
-      if (draft.ratings && draft.ratings[botPack[cardIndex].details.name]) {
+    for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
+      if (draft.ratings && draft.ratings[packFrom[cardIndex].details.name]) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -86,50 +142,59 @@ function botPicks() {
     }
 
     ratedPicks.sort((x, y) => {
-      return botRating(botColors, botPack[y]) - botRating(botColors, botPack[x]);
+      return botRating(botColors, packFrom[y]) - botRating(botColors, packFrom[x]);
     });
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    const [botPick] = botPack.splice(pickOrder[0], 1);
-    draft.picks[botIndex].push(botPick.cardID);
+    draft.seats[botIndex].pickorder.push(draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0]);
   }
 }
 
 function passPack() {
-  draft.pickNumber += 1;
   botPicks();
   // check if pack is done
-  if (draft.packs.every((seat) => seat[0].length === 0)) {
-    draft.packNumber += 1;
-    draft.pickNumber = 1;
+  if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
     // splice the first pack out
-    for (const drafter of draft.packs) {
-      drafter.splice(0, 1);
+    for (const seat of draft.seats) {
+      seat.packbacklog.splice(0, 1);
+    }
+
+    if (draft.unopenedPacks[0].length > 0) {
+      // give new pack
+      for (let i = 0; i < draft.seats.length; i++) {
+        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
+      }
+    }
+  } else if (draft.unopenedPacks[0].length % 2 === 0) {
+    // pass left
+    for (let i = 0; i < draft.seats.length; i++) {
+      draft.seats[(i + 1) % draft.seats.length].packbacklog.push(draft.seats[i].packbacklog.splice(0, 1)[0]);
     }
   } else {
-    // eslint-disable-next-line no-lonely-if
-    if (draft.packs[0].length % 2 === 0) {
-      // pass left
-      arrayRotate(draft.packs, false);
-    } else {
-      // pass right
-      arrayRotate(draft.packs, true);
+    // pass right
+    for (let i = draft.seats.length - 1; i >= 0; i--) {
+      const packFrom = draft.seats[i].packbacklog.splice(0, 1)[0];
+      if (i === 0) {
+        draft.seats[draft.seats.length - 1].packbacklog.push(packFrom);
+      } else {
+        draft.seats[i - 1].packbacklog.push(packFrom);
+      }
     }
   }
 }
 
 async function pick(cardIndex) {
-  const [card] = draft.packs[0][0].splice(cardIndex, 1);
-  const currentPack = draft.packs[0][0];
-  draft.pickOrder.push(card.cardID);
+  const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
+  const packFrom = draft.seats[0].packbacklog[0];
+  draft.seats[0].pickorder.push(card);
   passPack();
   await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: currentPack.map((c) => c.details.name),
+      pack: packFrom.map((c) => c.details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -138,29 +203,26 @@ async function pick(cardIndex) {
 }
 
 async function finish() {
-  const temp = JSON.parse(JSON.stringify(draft));
-  for (const seat of temp.packs) {
-    for (const seatPack of seat) {
-      for (const card of seatPack) {
-        delete card.details;
-      }
+  // build bot decks
+  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.bot));
+  const decks = await Promise.all(decksPromise);
+
+  for (let i = 0; i < draft.seats.length; i++) {
+    if (draft.seats[i].bot) {
+      draft.seats[i].drafted = decks[i].deck;
+      draft.seats[i].sideboard = decks[i].sideboard;
+
+      draft.seats[i].name = `Bot ${i + 1}: ${draft.seats[i].bot[0]}, ${draft.seats[i].bot[1]}`;
+      draft.seats[
+        i
+      ].description = `This deck was drafted by a bot with color preference for ${draft.seats[i].bot[0]} and ${draft.seats[i].bot[1]}.`;
     }
   }
-  for (const picks of temp.picks) {
-    if (Array.isArray(picks)) {
-      for (const card of picks) {
-        if (card) {
-          delete card.details;
-        }
-      }
-    } else {
-      delete picks.details;
-    }
-  }
+
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
     method: 'POST',
-    body: JSON.stringify(temp),
+    body: JSON.stringify(draft),
     headers: {
       'Content-Type': 'application/json',
     },

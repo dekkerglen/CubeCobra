@@ -18,7 +18,7 @@ html(lang='en')
 					meta(name=metadatum.name, content=metadatum.content)
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
-		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
+		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
 		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
 		if node_env === 'production'
 			link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css', integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh', crossorigin='anonymous')
@@ -54,7 +54,7 @@ html(lang='en')
 								a.dropdown-item(href='/tool/topcards') Top Cards
 								a.dropdown-item(href='/explore') Explore Cubes
 								a.dropdown-item(href='/random') Random Cube
-								a.dropdown-item(href='/advanced_search') Search
+								a.dropdown-item(href='/search') Search Cubes
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 								|  About

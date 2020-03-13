@@ -663,3 +663,55 @@ img.mana-symbol {
 	vertical-align: top;
 	line-height: 0.9;	
 }
+
+@media (min-width: 768px) {
+	.col-seventh {
+		flex: 0 0 calc(100% / 7);
+		max-width: calc(100% / 7);
+	}
+}
+
+.InfiniteCarouselFrame {
+}
+
+.InfiniteCarouselArrowNextIcon {    
+	border: solid #000000 !important;
+    border-width: 0 5px 5px 0 !important;
+}
+.InfiniteCarouselArrowPrevIcon {    
+	border: solid #000000 !important;
+    border-width: 0 5px 5px 0 !important;
+}
+
+.InfiniteCarouselArrow {
+	background-color: #ffffff !important;
+	right: 0px !important;
+	left: auto !important;
+	height: 100% !important;
+	border: solid #DFDFDF !important;
+	border-width: 1px 1px 1px 1px !important;
+	padding-right: 10px;
+	padding-left: 10px;
+}
+.InfiniteCarouselArrowPrev {
+	left: 0px !important;
+}
+.InfiniteCarouselArrow:hover {
+	background-color: #F7F7F7 !important;
+}
+
+.textButton {
+	background: none!important;
+	border: none;
+	padding: 0!important;
+	/*optional*/
+	font-family: arial, sans-serif;
+	/*input has OS specific font-family*/
+	color: #069;
+	text-decoration: underline;
+	cursor: pointer;
+  }
+
+  .noBreak {
+	white-space: nowrap;
+  }

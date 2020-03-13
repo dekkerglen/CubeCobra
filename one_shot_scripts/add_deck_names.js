@@ -3,7 +3,6 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const User = require('../models/user');
 const mongosecrets = require('../../cubecobrasecrets/mongodb');
-const { generate_short_id } = require('../serverjs/cubefn.js');
 
 const batch_size = 100;
 

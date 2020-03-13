@@ -25,31 +25,8 @@ import { fromEntries } from '../utils/Util';
 import { ColorChecksAddon } from './ColorCheck';
 import LoadingButton from './LoadingButton';
 
-const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText>{humanName}</InputGroupText>
-    </InputGroupAddon>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
-  </InputGroup>
-);
-
-const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText>{humanName}</InputGroupText>
-    </InputGroupAddon>
-    <CustomInput type="select" id={`${name}Op`} name={`${name}Op`} value={valueOp} onChange={onChange}>
-      <option value="=">equal to</option>
-      <option value="<">less than</option>
-      <option value=">">greater than</option>
-      <option value="<=">less than or equal to</option>
-      <option value=">=">greater than or equal to</option>
-      <option value="!=">not equal to</option>
-    </CustomInput>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
-  </InputGroup>
-);
+import TextField from './TextField';
+import NumericField from './NumericField';
 
 const allFields = [
   'name',
