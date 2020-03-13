@@ -56,7 +56,7 @@ function autocard_init(classname) {
 
 function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in_modal) {
   var w = card_flip ? 675 : 337.5;
-  var h = show_art_crop ? 262.5 : 487.5;
+  var h = show_art_crop ? 262.5 : 471.5;
 
   document.onmousemove = function(e) {
     if (window.event) {
@@ -85,13 +85,13 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
     if (rightPixelSpace > w) {
       //display on right
       document.getElementById('autocard_popup').style.left = 5 + x_offset + 'px';
-      document.getElementById('autocard_popup2').style.left = 230 + x_offset + 'px';
+      document.getElementById('autocard_popup2').style.left = 5 + 337.5 + x_offset + 'px';
       document.getElementById('autocard_popup_info').style.left = 5 + x_offset + 'px';
     } else {
       //display on left
-      let card_offset = card_flip ? 455 : 230;
+      let card_offset = 5 + w;
       document.getElementById('autocard_popup').style.left = -card_offset + x_offset + 'px';
-      document.getElementById('autocard_popup2').style.left = -230 + x_offset + 'px';
+      document.getElementById('autocard_popup2').style.left = -5 + -337.5 + x_offset + 'px';
       document.getElementById('autocard_popup_info').style.left = -card_offset + x_offset + 'px';
     }
     if (bottomPixelSpace > h + 25 + tag_offset) {
