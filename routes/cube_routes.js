@@ -1570,14 +1570,13 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     if (!user) {
       req.flash('danger', 'Please Login to build a sealed deck.');
-      return res.redirect(`cube/playtest/${req.params.id}`);
+      return res.redirect(`/cube/playtest/${req.params.id}`);
     }
-    const params = {
-      packs: parseInt(req.body.packs, 10),
-      cards: parseInt(req.body.cards, 10),
-    };
 
-    const numCards = params.packs * params.cards;
+    const packs = parseInt(req.body.packs, 10);
+    const cards = parseInt(req.body.cards, 10);
+
+    const numCards = packs * cards;
 
     const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards owner');
 
@@ -1647,14 +1646,13 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       cube.decks = [];
     }
 
-    cube.decks.push(deck._id);
     if (!cube.numDecks) {
       cube.numDecks = 0;
     }
 
-    cube.decks.push(deck._id);
-
     await deck.save();
+
+    cube.decks.push(deck._id);
     cube.numDecks += 1;
     await cube.save();
 
