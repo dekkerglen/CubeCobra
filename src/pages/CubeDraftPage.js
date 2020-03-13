@@ -214,15 +214,16 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
             </ErrorBoundary>
           )}
           <ErrorBoundary className="mt-3">
-            <DeckStacks
-              cards={picks}
-              title="Picks"
-              subtitle={subtitle(picks.flat().flat())}
-              locationType={Location.PICKS}
-              canDrop={canDrop}
-              onMoveCard={handleMoveCard}
-              className="mt-3"
-            />
+            <Card className="mt-3">
+              <DeckStacks
+                cards={picks}
+                title="Picks"
+                subtitle={subtitle(picks.flat().flat())}
+                locationType={Location.PICKS}
+                canDrop={canDrop}
+                onMoveCard={handleMoveCard}
+              />
+            </Card>
           </ErrorBoundary>
         </DndProvider>
       </DisplayContextProvider>
