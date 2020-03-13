@@ -245,7 +245,9 @@ async function update(deck) {
         bot: deck.bots[i - 1],
         pickorder: deck.cards[i].map(convertCard),
         name: `Bot ${i + 1}: ${deck.bots[i - 1][0]}, ${deck.bots[i - 1][1]}`,
-        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${deck.bots[i - 1][1]}.`,
+        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${
+          deck.bots[i - 1][1]
+        }.`,
         cols: 16,
         deck: botdeck.deck,
         sideboard: botdeck.sideboard,

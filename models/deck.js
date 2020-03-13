@@ -87,7 +87,7 @@ let deckSchema = mongoose.Schema({
   cards: [[]],
   newformat: {
     type: Boolean,
-    default: false
+    default: false,
   },
 });
 
