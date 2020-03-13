@@ -20,12 +20,23 @@ html(lang='en')
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
 		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
-		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
+		if node_env === 'production'
+			link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css', integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh', crossorigin='anonymous')
+		else
+			link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
-		#autocard_popup_info
-		#autocard_popup
-		#autocard_popup2
+
 	body
+		#autocardPopup.d-none
+			.autocard-background
+				.row.no-gutters
+					.position-relative.card-border
+						img.foilOverlay(src='/content/foilOverlay.png', width=225)
+						img#autocardImageFront(src='', alt='', width=225)
+					#autocardBack.position-relative.card-border.d-none
+						img.foilOverlay(src='/content/foilOverlay.png', width=225)
+						img#autocardImageBack(src='', alt='', width=225)
+				#autocardTags.row.no-gutters.p-1
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
 			.container-lg
 				.d-flex.flex-nowrap.w-100(style='flex: 10000 1 auto; min-width: 0')
@@ -173,8 +184,12 @@ html(lang='en')
 							input.btn.btn-success(type='submit',value='Create')
 							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-		script(src='/bower_components/jquery/dist/jquery.slim.min.js')
-		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
+		if node_env === 'production'
+			script(src='https://code.jquery.com/jquery-3.4.1.slim.min.js', integrity='sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n', crossorigin='anonymous')
+			script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js', integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6', crossorigin='anonymous', async)
+		else
+			script(src='/bower_components/jquery/dist/jquery.slim.min.js')
+			script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
 		script(src='/js/csrf.js', async)
 		script(src='/js/toolbar.js', async)
 		block scripts
