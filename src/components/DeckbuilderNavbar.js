@@ -134,9 +134,9 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
           delete card.details;
         }
       }
-
-      return res;
     }
+
+    return res;
   }, [deck]);
 
   return (
