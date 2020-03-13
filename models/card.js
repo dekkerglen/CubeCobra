@@ -19,6 +19,12 @@ let cardSchema = mongoose.Schema({
   total: [Number],
   cubedWith: [[String]], //this is list of card ids
   cubes: [String], //this is a list of cube ids
+  cubesLength: { // length of cubes for indexing purposes
+    type: Number,
+    index: true,
+  },
 });
 
-let Card = (module.exports = mongoose.model('Card', cardSchema));
+const Card = mongoose.model('Card', cardSchema);
+
+module.exports = Card;
