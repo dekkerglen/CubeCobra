@@ -896,45 +896,49 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 });
 
 async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
-  const blogpost = new Blog();
-  blogpost.title = 'Cube Bulk Import - Automatic Post';
-  blogpost.html = changelog;
-  blogpost.owner = cube.owner;
-  blogpost.date = Date.now();
-  blogpost.cube = cube._id;
-  blogpost.dev = 'false';
-  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.owner_name;
-  blogpost.cubename = cube.name;
-
-  if (missing.length > 0) {
-    const reactProps = {
-      cubeID: req.params.id,
-      missing,
-      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-      blogpost: blogpost.toObject(),
-    };
-    return res.render('cube/bulk_upload', {
-      reactHTML: BulkUploadPage
-        ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      cube,
-      cube_id: req.params.id,
-      title: `${abbreviate(cube.name)} - Bulk Upload`,
-    });
-  }
-  await blogpost.save();
-  cube = setCubeType(cube, carddb);
   try {
-    await Cube.updateOne({ _id: cube._id }, cube);
-  } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', 'Error adding cards. Please try again.');
+    const blogpost = new Blog();
+    blogpost.title = 'Cube Bulk Import - Automatic Post';
+    blogpost.html = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    if (missing.length > 0) {
+      const reactProps = {
+        cubeID: req.params.id,
+        missing,
+        added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+        blogpost: blogpost.toObject(),
+      };
+      return res.render('cube/bulk_upload', {
+        reactHTML: BulkUploadPage
+          ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
+        reactProps: serialize(reactProps),
+        cube,
+        cube_id: req.params.id,
+        title: `${abbreviate(cube.name)} - Bulk Upload`,
+      });
+    }
+    await blogpost.save();
+    cube = setCubeType(cube, carddb);
+    try {
+      await Cube.updateOne({ _id: cube._id }, cube);
+    } catch (err) {
+      req.logger.error(err);
+      req.flash('danger', 'Error adding cards. Please try again.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+    req.flash('success', 'All cards successfully added.');
     return res.redirect(`/cube/list/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
-  req.flash('success', 'All cards successfully added.');
-  return res.redirect(`/cube/list/${req.params.id}`);
 }
 
 router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
