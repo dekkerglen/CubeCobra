@@ -8,20 +8,22 @@ const dedupeCards = (cards) => {
 
 function tokenGrid(cards) {
   const positioned = cards.map((card, index) => ({ ...card, position: index }));
-  const byTokenId = {};
+  const byOracleId = {};
   for (const card of positioned) {
     for (const token of card.details.tokens || []) {
-      if (!byTokenId[token.cardID]) {
-        byTokenId[token.cardID] = {
+      const oracleId = token.details.oracle_id;
+      if (!byOracleId[oracleId]) {
+        byOracleId[oracleId] = {
           token,
           cards: [],
         };
       }
-      byTokenId[token.cardID].cards.push(card);
+      // TODO: Use most recent printing for this oracle ID.
+      byOracleId[oracleId].cards.push(card);
     }
   }
 
-  const sorted = [...Object.entries(byTokenId)];
+  const sorted = [...Object.entries(byOracleId)];
   sorted.sort((x, y) => compareCards(x[1].token, y[1].token));
   const data = sorted.map(([, tokenData]) => ({
     card: tokenData.token,
