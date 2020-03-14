@@ -1817,8 +1817,8 @@ router.post(
   '/startdraft/:id',
   body('id').toInt(),
   body('seats').toInt({ min: 2, max: 16 }),
-  body('packs').toInt(),
-  body('cards').toInt(),
+  body('packs').toInt({ min: 1, max: 36 }),
+  body('cards').toInt({ min: 1, max: 90 }),
   async (req, res) => {
     try {
       const cube = await Cube.findOne(
