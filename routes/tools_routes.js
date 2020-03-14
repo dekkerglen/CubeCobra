@@ -138,9 +138,9 @@ async function topCards(filter) {
         $size: '$cubes',
       },
     })
+    .project('cardName cubesLength')
     .sort({ cubesLength: -1 })
-    .limit(4 * MAX_RESULTS)
-    .project('cardName cubesLength');
+    .limit(4 * MAX_RESULTS);
 
   const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
 

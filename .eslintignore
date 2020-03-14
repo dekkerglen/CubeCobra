@@ -11,7 +11,6 @@ public/js/autocard.js
 public/js/index.js
 public/js/toolbar.js
 serverjs/prices.js
-serverjs/util.js
 src/components/AspectRatioBox.js
 src/components/AutocardListItem.js
 src/components/AutocompleteInput.js
