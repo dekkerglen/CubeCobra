@@ -23,7 +23,8 @@ function getPosts(names, current) {
     //please don't try to understand why this works
     if (
       character.toUpperCase() != character.toLowerCase() &&
-      (names[character.toUpperCase()] && names[character.toLowerCase()])
+      names[character.toUpperCase()] &&
+      names[character.toLowerCase()]
     ) {
       if (names[character.toUpperCase()][sub.charAt(0)]) {
         const upper = getPosts(names[character.toUpperCase()], sub);

@@ -15,6 +15,10 @@ const config = {
           },
         },
       },
+      {
+        test: /\.(css|less)$/,
+        use: ['style-loader', 'css-loader'],
+      },
     ],
   },
   devtool: 'source-map',
@@ -45,6 +49,8 @@ const clientConfig = merge(config, {
     user_decks: './src/user_decks.js',
     user_social: './src/user_social.js',
     user_view: './src/user_view.js',
+    explore: './src/explore.js',
+    search: './src/search.js',
   },
   output: {
     filename: '[name].bundle.js',

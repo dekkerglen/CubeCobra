@@ -29,7 +29,7 @@ const usernameValid = [
     max: 24,
   }),
   body('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
-  body('username', 'Username may not use profanity.').custom((value) => !util.has_profanity(value)),
+  body('username', 'Username may not use profanity.').custom((value) => !util.hasProfanity(value)),
 ];
 
 function checkPasswordsMatch(value, { req }) {
@@ -567,7 +567,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       owner: userid,
     });
 
-    const [user, decks, numDecks] = await Promise.all([userQ, decksQ, numDecksQ]);
+    const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
 
     if (!user) {
       req.flash('danger', 'User not found');

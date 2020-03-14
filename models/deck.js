@@ -61,8 +61,11 @@ let deckSchema = mongoose.Schema({
   },
 
   //new format, will convert to
-  seats: [SeatDeck],
-
+  seats: {
+    type: [SeatDeck],
+    default: [],
+    index: true,
+  },
   //deprecated
   owner: String,
   name: String,
@@ -75,7 +78,10 @@ let deckSchema = mongoose.Schema({
     default: 'User',
   },
   cols: Number,
-  playerdeck: [[]],
+  playerdeck: {
+    type: [[]],
+    index: true,
+  },
   playersideboard: [[]],
   bots: [[]],
   cards: [[]],
