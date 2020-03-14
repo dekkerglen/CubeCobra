@@ -482,12 +482,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
       colorcategory: 'l',
-      tokens: [
-        {
-          tokenId: '94057dc6-e589-4a29-9bda-90f5bece96c4',
-          sourceCardId: '7f910495-8bd7-4134-a281-c16fd666d5cc',
-        },
-      ],
+      tokens: ['94057dc6-e589-4a29-9bda-90f5bece96c4'],
     },
   },
   {
@@ -774,12 +769,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/8/5/85929131-4df6-415c-b592-aefb2943c477.jpg?1572490116',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/8/5/85929131-4df6-415c-b592-aefb2943c477.jpg?1572490116',
       colorcategory: 'b',
-      tokens: [
-        {
-          tokenId: '36cd5f96-5683-4959-b973-37f3c2fcf9bf',
-          sourceCardId: '85929131-4df6-415c-b592-aefb2943c477',
-        },
-      ],
+      tokens: ['85929131-4df6-415c-b592-aefb2943c477'],
     },
   },
   {
@@ -829,12 +819,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/7/f/7f78a570-d776-42f2-a609-6da0156c8de7.jpg?1572490513',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/7/f/7f78a570-d776-42f2-a609-6da0156c8de7.jpg?1572490513',
       colorcategory: 'g',
-      tokens: [
-        {
-          tokenId: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-          sourceCardId: '7f78a570-d776-42f2-a609-6da0156c8de7',
-        },
-      ],
+      tokens: ['bf36408d-ed85-497f-8e68-d3a922c388a0'],
     },
   },
   {
@@ -929,12 +914,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/e/7/e76c0c83-3e87-474d-bc72-1677eed32cfa.jpg?1572490732',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/e/7/e76c0c83-3e87-474d-bc72-1677eed32cfa.jpg?1572490732',
       colorcategory: 'm',
-      tokens: [
-        {
-          tokenId: '703e7ecf-3d73-40c1-8cfe-0758778817cf',
-          sourceCardId: 'e76c0c83-3e87-474d-bc72-1677eed32cfa',
-        },
-      ],
+      tokens: ['703e7ecf-3d73-40c1-8cfe-0758778817cf'],
     },
   },
   {
@@ -1369,12 +1349,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/9/a/9a6bb435-1205-416a-a5a0-ca6d37b4dcb2.jpg?1572490524',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/a/9a6bb435-1205-416a-a5a0-ca6d37b4dcb2.jpg?1572490524',
       colorcategory: 'g',
-      tokens: [
-        {
-          tokenId: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-          sourceCardId: '9a6bb435-1205-416a-a5a0-ca6d37b4dcb2',
-        },
-      ],
+      tokens: ['bf36408d-ed85-497f-8e68-d3a922c388a0'],
     },
   },
   {
@@ -1520,12 +1495,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
       colorcategory: 'g',
-      tokens: [
-        {
-          tokenId: 'b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e',
-          sourceCardId: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
-        },
-      ],
+      tokens: ['b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e'],
     },
   },
   {
@@ -1768,12 +1738,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/a/b/abef512f-8f1d-4257-b16f-c0eed58670ec.jpg?1572490758',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/a/b/abef512f-8f1d-4257-b16f-c0eed58670ec.jpg?1572490758',
       colorcategory: 'm',
-      tokens: [
-        {
-          tokenId: 'd6c65749-1774-4b36-891e-abf762c95cec',
-          sourceCardId: 'abef512f-8f1d-4257-b16f-c0eed58670ec',
-        },
-      ],
+      tokens: ['d6c65749-1774-4b36-891e-abf762c95cec'],
     },
   },
   {
@@ -1872,16 +1837,7 @@ module.exports = [
         'https://img.scryfall.com/cards/normal/front/3/0/30377bf0-d9b1-4c14-8dde-f74b1e02d604.jpg?1572490572',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/3/0/30377bf0-d9b1-4c14-8dde-f74b1e02d604.jpg?1572490572',
       colorcategory: 'g',
-      tokens: [
-        {
-          tokenId: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-          sourceCardId: '30377bf0-d9b1-4c14-8dde-f74b1e02d604',
-        },
-        {
-          tokenId: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-          sourceCardId: '30377bf0-d9b1-4c14-8dde-f74b1e02d604',
-        },
-      ],
+      tokens: ['bf36408d-ed85-497f-8e68-d3a922c388a0'],
     },
   },
   {

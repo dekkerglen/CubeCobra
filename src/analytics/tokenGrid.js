@@ -1,44 +1,31 @@
-const compareCards = (x, y) => {
-  if (x.details.name === y.details.name) {
-    return 0;
-  }
-  return x.details.name < y.details.name ? -1 : 1;
-};
-
-const compareTokens = (x, y) => compareCards(x.token, y.token);
-
-const sortTokens = (tokens) => [...tokens].sort(compareTokens);
+const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);
 const sortCards = (cards) => [...cards].sort(compareCards);
 
 const dedupeCards = (cards) => {
-  const map = new Map();
-  for (const card of [...cards].reverse()) {
-    map.set(card.details.name, card);
-  }
+  const map = new Map(cards.map((card) => [card.details.name, card]));
   return [...map.values()];
 };
 
 function tokenGrid(cards) {
-  const mentionedTokens = [];
-  cards.forEach((card, position) => {
-    card.position = position;
-    if (card.details.tokens) {
-      mentionedTokens.push(...card.details.tokens.map(({ token }) => ({ token, sourceCard: { ...card } })));
+  const positioned = cards.map((card, index) => ({ ...card, position: index }));
+  const byTokenId = {};
+  for (const card of positioned) {
+    for (const token of card.details.tokens || []) {
+      if (!byTokenId[token.cardID]) {
+        byTokenId[token.cardID] = {
+          token,
+          cards: [],
+        };
+      }
+      byTokenId[token.cardID].cards.push(card);
     }
-  });
+  }
 
-  const resultingTokens = [];
-  mentionedTokens.forEach((element) => {
-    const relevantIndex = resultingTokens.findIndex(({ token }) => token.cardID === element.token.cardID);
-    if (relevantIndex >= 0) {
-      resultingTokens[relevantIndex].related.push(element.sourceCard);
-    } else {
-      resultingTokens.push({ token: element.token, related: [element.sourceCard] });
-    }
-  });
-  const data = sortTokens(resultingTokens).map(({ token, related }) => ({
-    card: token,
-    cardDescription: sortCards(dedupeCards(related))
+  const sorted = [...Object.entries(byTokenId)];
+  sorted.sort((x, y) => compareCards(x[1].token, y[1].token));
+  const data = sorted.map(([, tokenData]) => ({
+    card: tokenData.token,
+    cardDescription: sortCards(dedupeCards(tokenData.cards))
       .map(({ position }) => `[[${position}]]`)
       .join('\n\n'),
   }));

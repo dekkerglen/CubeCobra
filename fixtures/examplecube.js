@@ -766,9 +766,7 @@ const examplePack = {
         'https://img.scryfall.com/cards/normal/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
       colorcategory: 'g',
-      tokens: [
-        { tokenId: 'b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e', sourceCardId: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa' },
-      ],
+      tokens: ['b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e'],
     },
     {
       color_identity: ['U'],
@@ -1056,9 +1054,7 @@ const examplePack = {
         'https://img.scryfall.com/cards/normal/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
       art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770',
       colorcategory: 'm',
-      tokens: [
-        { tokenId: 'bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099', sourceCardId: '0461867b-ec35-4d37-a398-5247e06c4afe' },
-      ],
+      tokens: ['bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099'],
     },
     {
       color_identity: ['R'],
@@ -1097,6 +1093,6 @@ const examplePack = {
 };
 
 module.exports = {
-  exampleCube: exampleCube,
-  examplePack: examplePack,
+  exampleCube,
+  examplePack,
 };

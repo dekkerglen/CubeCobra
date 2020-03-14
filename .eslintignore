@@ -53,7 +53,6 @@ src/components/GroupModal.js
 src/components/GroupModalContext.js
 src/components/ImageFallback.js
 src/components/LoadingButton.js
-src/components/MassBuyButton.js
 src/components/MulticoloredAnalysis.js
 src/components/Notification.js
 src/components/PagedList.js
