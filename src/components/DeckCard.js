@@ -174,7 +174,7 @@ DeckCard.propTypes = {
   }).isRequired,
   userid: PropTypes.string,
   deckid: PropTypes.string.isRequired,
-  comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  comments: PropTypes.arrayOf(PropTypes.object),
   view: PropTypes.string,
   draft: PropTypes.shape({}).isRequired,
   deck: PropTypes.shape({
@@ -199,6 +199,7 @@ DeckCard.propTypes = {
 DeckCard.defaultProps = {
   userid: null,
   view: 'deck',
+  comments: [],
 };
 
 export default DeckCard;

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -118,6 +118,27 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     [saveForm],
   );
 
+  const stripped = useMemo(() => {
+    const res = JSON.parse(JSON.stringify(deck));
+
+    for (const seat of res.seats) {
+      for (const collection of [seat.deck, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            delete card.details;
+          }
+        }
+      }
+      if (seat.pickorder) {
+        for (const card of seat.pickorder) {
+          delete card.details;
+        }
+      }
+    }
+
+    return res;
+  }, [deck]);
+
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
       <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -128,7 +149,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
               Save Deck
             </NavLink>
             <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
-              <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
+              <Input type="hidden" name="draftraw" value={JSON.stringify(stripped)} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />
             </CSRFForm>

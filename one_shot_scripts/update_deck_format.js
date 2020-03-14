@@ -53,7 +53,7 @@ async function updateDraft(draft) {
       userid: draft.owner,
       name: draft.username,
       pickorder: draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
-      drafted: draft.picks[0].map(convertCard),
+      drafted: draft.picks[0] ? draft.picks[0].map(convertCard) : [],
       packbacklog: draft.packs[0] && draft.packs[0][0] ? [draft.packs[0][0]] : [],
     };
 
@@ -169,10 +169,19 @@ async function buildDeck(cards, bot) {
       if (!card.type_line.toLowerCase().includes('creature')) {
         index += 8;
       }
-      deck[index].push(card);
+      if (deck[index]) {
+        deck[index].push(card);
+      } else {
+        deck[0].push(card);
+      }
     }
     for (const card of side) {
-      sideboard[Math.min(card.cmc || 0, 7)].push(card);
+      const index = Math.min(card.cmc || 0, 7);
+      if (sideboard[index]) {
+        sideboard[index].push(card);
+      } else {
+        sideboard[0].push(card);
+      }
     }
     return {
       deck,
@@ -184,11 +193,24 @@ async function buildDeck(cards, bot) {
   }
 }
 
-async function update(deck) {
-  if (deck.seats && deck.seats.length > 0) {
-    return Deck.updateOne({ _id: deck._id }, deck);
+// this just forms lands correctly
+function convertDeckCard(card) {
+  if (Array.isArray(card)) {
+    return card.map(convertDeckCard);
   }
+  if (card.cardID) {
+    return card;
+  }
+  return {
+    tags: [],
+    colors: card.details.colors,
+    cardID: card.details._id,
+    cmc: card.details.cmc || 0,
+    type_line: card.details.type,
+  };
+}
 
+async function update(deck) {
   const draft = deck.draft ? await updateDraft(await Draft.findById(deck.draft).lean()) : null;
 
   if (
@@ -223,7 +245,9 @@ async function update(deck) {
         bot: deck.bots[i - 1],
         pickorder: deck.cards[i].map(convertCard),
         name: `Bot ${i + 1}: ${deck.bots[i - 1][0]}, ${deck.bots[i - 1][1]}`,
-        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${deck.bots[i - 1][1]}.`,
+        description: `This deck was drafted by a bot with color preference for ${deck.bots[i - 1][0]} and ${
+          deck.bots[i - 1][1]
+        }.`,
         cols: 16,
         deck: botdeck.deck,
         sideboard: botdeck.sideboard,
@@ -240,11 +264,11 @@ async function update(deck) {
       bot: null,
       userid: deck.owner,
       username: deck.username,
-      pickorder: draft ? draft.pickOrder.map(convertCard) : [],
+      pickorder: draft && draft.pickOrder ? draft.pickOrder.map(convertCard) : [],
       name: deck.name,
       description: deck.description,
       cols: 16,
-      deck: deck.playerdeck,
+      deck: deck.playerdeck.map(convertDeckCard),
       sideboard: deck.playersideboard,
     };
 
@@ -287,9 +311,12 @@ async function update(deck) {
 
   mongoose.connect(mongosecrets.connectionString).then(async (db) => {
     // gim
-    const count = await Deck.countDocuments({ 'seats.0': { $exists: false } });
+    // const query = { _id: '5e6ae64190077871371e222b' };
+    const query = { 'playerdeck.0': { $exists: true } };
+
+    const count = await Deck.countDocuments(query);
     const cursor = Deck.find(
-      { 'seats.0': { $exists: false } },
+      query,
       {},
       {
         timeout: false,
