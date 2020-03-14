@@ -47,8 +47,6 @@ Then, run the following commands in the root of the cloned repository:
 
 ```sh
 npm install
-npm install nodemon -g
-npm install rollup -g
 npm run setup               # This will bundle modules and download Scryfall assets.
 node seed.js                # This will create and seed the mongo database specified in cubecobrasecrets.
 ```
