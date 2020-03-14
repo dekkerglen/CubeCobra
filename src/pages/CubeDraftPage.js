@@ -39,6 +39,10 @@ const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
 
+const showPack = (draft, packNum) => {
+  return packNum <= draft.initial_state[0].length;
+};
+
 const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
@@ -197,26 +201,29 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
           <Input type="hidden" name="body" value={Draft.id()} />
         </CSRFForm>
         <DndProvider>
-          <ErrorBoundary>
-            <Pack
-              pack={pack}
-              packNumber={packNumber}
-              pickNumber={pickNumber}
-              picking={picking}
-              onMoveCard={handleMoveCard}
-              onClickCard={handleClickCard}
-            />
-          </ErrorBoundary>
+          {showPack(initialDraft, packNumber) && (
+            <ErrorBoundary>
+              <Pack
+                pack={pack}
+                packNumber={packNumber}
+                pickNumber={pickNumber}
+                picking={picking}
+                onMoveCard={handleMoveCard}
+                onClickCard={handleClickCard}
+              />
+            </ErrorBoundary>
+          )}
           <ErrorBoundary className="mt-3">
-            <DeckStacks
-              cards={picks}
-              title="Picks"
-              subtitle={subtitle(picks.flat().flat())}
-              locationType={Location.PICKS}
-              canDrop={canDrop}
-              onMoveCard={handleMoveCard}
-              className="mt-3"
-            />
+            <Card className="mt-3">
+              <DeckStacks
+                cards={picks}
+                title="Picks"
+                subtitle={subtitle(picks.flat().flat())}
+                locationType={Location.PICKS}
+                canDrop={canDrop}
+                onMoveCard={handleMoveCard}
+              />
+            </Card>
           </ErrorBoundary>
         </DndProvider>
       </DisplayContextProvider>

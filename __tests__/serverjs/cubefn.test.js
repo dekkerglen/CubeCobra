@@ -141,16 +141,16 @@ test('generateShortId returns a valid short ID with profanity', async () => {
   const queryMock = jest.fn().mockReturnValue(queryMockPromise);
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
-  const initialHasProfanity = util.has_profanity;
+  const initialHasProfanity = util.hasProfanity;
   const mockHasProfanity = jest
     .fn()
     .mockReturnValue(false)
     .mockReturnValueOnce(true);
-  util.has_profanity = mockHasProfanity;
+  util.hasProfanity = mockHasProfanity;
   const result = await cubefn.generateShortId();
   expect(result).toBe('1z');
   Cube.find = initialCubeFind;
-  util.has_profanity = initialHasProfanity;
+  util.hasProfanity = initialHasProfanity;
 });
 
 test('getBasics returns the expected set of basic lands', () => {

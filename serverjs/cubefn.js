@@ -34,7 +34,7 @@ async function generateShortId() {
   const shortIds = cubes.map((cube) => cube.shortID);
   const urlAliases = cubes.map((cube) => cube.urlAlias);
 
-  const ids = cubes.map((cube) => util.from_base_36(cube.shortID));
+  const ids = cubes.map((cube) => util.fromBase36(cube.shortID));
   let max = Math.max(...ids);
 
   if (max < 0) {
@@ -45,9 +45,9 @@ async function generateShortId() {
   let isGoodId = false;
   while (!isGoodId) {
     max += 1;
-    newId = util.to_base_36(max);
+    newId = util.toBase36(max);
 
-    isGoodId = !util.has_profanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
+    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
   }
 
   return newId;
