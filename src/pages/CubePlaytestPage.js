@@ -113,7 +113,8 @@ const CustomDraftCard = ({
       <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
         <CardHeader>
           <CardTitleH5>
-            {defaultDraftFormat === index && 'Default Format: '}{format.title}{' '}(Custom Draft)
+            {defaultDraftFormat === index && 'Default Format: '}
+            {format.title} (Custom Draft)
           </CardTitleH5>
         </CardHeader>
         <CardBody>
