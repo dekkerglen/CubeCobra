@@ -131,7 +131,7 @@ const specialCaseCards = {
   'Westvale Abbey': ['94ed2eca-1579-411d-af6f-c7359c65de30'],
 };
 
-function getTokensForCard(card) {
+function getScryfallTokensForCard(card) {
   const allParts = card.all_parts || [];
   return allParts
     .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem'))
@@ -167,10 +167,9 @@ function arraySetEqual(target, candidate) {
   return isValid;
 }
 
-function addTokens(card) {
+function getTokens(card, catalogCard) {
   const mentionedTokens = [];
-  const catalogCard = catalog.dict[card.id];
-  const recordedTokens = getTokensForCard(card);
+  const recordedTokens = getScryfallTokensForCard(card);
   const specialTokens = getTokensForSpecialCaseCard(card);
   if (specialTokens.length > 0) {
     mentionedTokens.push(...recordedTokens);
@@ -233,7 +232,7 @@ function addTokens(card) {
               // populate
               continue; // eslint-disable-line no-continue
 
-            const cardTokens = getTokensForCard(card);
+            const cardTokens = getScryfallTokensForCard(card);
 
             if (cardTokens.length > 0) {
               mentionedTokens.push(...cardTokens);
@@ -359,9 +358,7 @@ function addTokens(card) {
     }
   }
 
-  if (mentionedTokens.length > 0) {
-    catalogCard.tokens = mentionedTokens.filter((id) => id !== card.id);
-  }
+  return mentionedTokens;
 }
 
 function convertCmc(card, isExtra) {
@@ -583,6 +580,11 @@ function convertCard(card, isExtra) {
     newcard.colorcategory = newcard.color_identity[0].toLowerCase();
   }
 
+  const tokens = getTokens(card, newcard);
+  if (tokens.length > 0) {
+    newcard.tokens = tokens;
+  }
+
   return newcard;
 }
 
@@ -637,7 +639,6 @@ function saveEnglishCard(card) {
     addCardToCatalog(convertCard(card, true), true);
   }
   addCardToCatalog(convertCard(card));
-  addTokens(card);
 }
 
 async function saveAllCards(basePath = 'private', defaultPath = null, allPath = null) {
@@ -691,4 +692,5 @@ module.exports = {
   convertColors,
   convertParsedCost,
   convertCmc,
+  getTokens,
 };

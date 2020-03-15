@@ -213,6 +213,7 @@ const convertedExampleAdventureCard = {
   scryfall_uri: 'https://scryfall.com/card/eld/155/flaxen-intruder-welcome-home?utm_source=api',
   set: 'eld',
   tcgplayer_id: 198574,
+  tokens: ['b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e'],
   toughness: '2',
   type: 'Creature — Human Berserker',
 };
