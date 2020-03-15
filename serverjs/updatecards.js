@@ -179,7 +179,7 @@ function addTokens(card) {
   } else if (catalogCard.oracle_text !== null) {
     if (catalogCard.oracle_text.includes(' token')) {
       // find the ability that generates the token to reduce the amount of text to get confused by.
-      const abilities = catalog.dict[card.id].oracle_text.split('\n');
+      const abilities = catalogCard.oracle_text.split('\n');
       for (const ability of abilities) {
         if (ability.includes(' token')) {
           const reString =
@@ -338,20 +338,20 @@ function addTokens(card) {
         }
       }
     }
-    if (catalog.dict[card.id].oracle_text.includes('Ascend (')) {
+    if (catalogCard.oracle_text.includes('Ascend (')) {
       mentionedTokens.push(specialCaseTokens["City's Blessing"]);
     }
-    if (catalog.dict[card.id].oracle_text.includes('poison counter')) {
+    if (catalogCard.oracle_text.includes('poison counter')) {
       mentionedTokens.push(specialCaseTokens.Poison);
     }
-    if (catalog.dict[card.id].oracle_text.includes('you become the monarch')) {
+    if (catalogCard.oracle_text.includes('you become the monarch')) {
       mentionedTokens.push(specialCaseTokens.Monarch);
     }
-    if (catalog.dict[card.id].oracle_text.includes('{E}')) {
+    if (catalogCard.oracle_text.includes('{E}')) {
       mentionedTokens.push(specialCaseTokens.Energy);
     }
 
-    if (catalog.dict[card.id].oracle_text.includes('emblem')) {
+    if (catalogCard.oracle_text.includes('emblem')) {
       const hits = catalog.nameToId[`${card.name.toLowerCase()} emblem`];
       if (Array.isArray(hits) && hits.length > 0) {
         mentionedTokens.push(hits[0]);
@@ -360,7 +360,7 @@ function addTokens(card) {
   }
 
   if (mentionedTokens.length > 0) {
-    catalog.dict[card.id].tokens = mentionedTokens.filter((id) => id !== card.id);
+    catalogCard.tokens = mentionedTokens.filter((id) => id !== card.id);
   }
 }
 

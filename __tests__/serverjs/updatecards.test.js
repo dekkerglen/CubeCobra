@@ -131,6 +131,52 @@ const convertedExampleDoubleFacedCardFlipFace = {
   colorcategory: 'g',
 };
 
+const convertedExampleDoubleFacedPlaneswalkerCard = {
+  color_identity: ['B'],
+  set: 'ori',
+  collector_number: '106',
+  promo: false,
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Liliana, Heretical Healer',
+  name_lower: 'liliana, heretical healer',
+  full_name: 'Liliana, Heretical Healer [ori-106]',
+  artist: 'Karla Ortiz',
+  scryfall_uri: 'https://scryfall.com/card/ori/106/liliana-heretical-healer-liliana-defiant-necromancer?utm_source=api',
+  rarity: 'mythic',
+  oracle_text:
+    'Lifelink\n' +
+    "Whenever another nontoken creature you control dies, exile Liliana, Heretical Healer, then return her to the battlefield transformed under her owner's control. If you do, create a 2/2 black Zombie creature token.\n" +
+    '+2: Each player discards a card.\n' +
+    '−X: Return target nonlegendary creature card with converted mana cost X from your graveyard to the battlefield.\n' +
+    '−8: You get an emblem with "Whenever a creature dies, return it to the battlefield under your control at the beginning of the next end step."',
+  _id: '9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54',
+  oracle_id: 'b96a8ad2-3d86-459b-a34f-19c9dc07c3c4',
+  cmc: 3,
+  legalities: {
+    Legacy: true,
+    Modern: true,
+    Standard: false,
+    Pioneer: true,
+    Pauper: false,
+  },
+  parsed_cost: [''],
+  colors: ['B'],
+  type: 'Legendary Creature — Human Cleric',
+  full_art: false,
+  language: 'en',
+  tcgplayer_id: 96603,
+  power: '2',
+  toughness: '3',
+  image_small: 'https://img.scryfall.com/cards/small/front/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
+  image_normal: 'https://img.scryfall.com/cards/normal/front/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
+  art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
+  image_flip: 'https://img.scryfall.com/cards/normal/back/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
+  colorcategory: 'b',
+  tokens: ['e5ccae95-95c2-4d11-aa68-5c80ecf90fd2', 'd75f984f-2e11-4f52-b3b0-dd9d94a2dd74'],
+};
+
 const convertedExampleAdventureCard = {
   _id: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
@@ -348,6 +394,11 @@ test('convertCard returns a correctly converted double-faced card', () => {
 test('convertCard returns a correctly converted double-faced card flip face object', () => {
   const result = updatecards.convertCard(examplecards.exampleDoubleFacedCard, true);
   expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace);
+});
+
+test('convertCard returns a correctly converted double-faced planeswalker card', () => {
+  const result = updatecards.convertCard(examplecards.exampleDoubleFacedPlaneswalkerCard, false);
+  expect(result).toEqual(convertedExampleDoubleFacedPlaneswalkerCard);
 });
 
 test('convertCard returns a correctly converted Adventure card object', () => {
