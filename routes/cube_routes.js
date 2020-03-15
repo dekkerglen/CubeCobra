@@ -722,7 +722,7 @@ router.get('/list/:id', async (req, res) => {
 
     const pids = new Set();
     const cardNames = [];
-    const addDetails = async (cards) => {
+    const addDetails = (cards) => {
       cards.forEach((card, index) => {
         card.details = {
           ...carddb.cardFromId(card.cardID),
@@ -736,9 +736,17 @@ router.get('/list/:id', async (req, res) => {
         }
         cardNames.push(card.details.name);
       });
+      return cards;
+    };
 
-      const priceDict = await GetPrices([...pids]);
-      const eloDict = await getElo(cardNames, true);
+    cube.cards = addDetails(cube.cards);
+    cube.maybe = addDetails(cube.maybe);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo(cardNames, true);
+    const [priceDict, eloDict] = Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
       for (const card of cards) {
         if (card.details.tcgplayer_id) {
           if (priceDict[card.details.tcgplayer_id]) {
@@ -754,9 +762,8 @@ router.get('/list/:id', async (req, res) => {
       }
       return cards;
     };
-    const cardsQ = await addDetails(cube.cards);
-    const maybeQ = await addDetails(cube.maybe);
-    [cube.cards, cube.maybe] = await Promise.all([cardsQ, maybeQ]);
+    cube.cards = addPriceAndElo(cube.cards);
+    cube.maybe = addPriceAndElo(cube.maybe);
 
     const reactProps = {
       cube,
