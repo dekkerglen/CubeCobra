@@ -1,13 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from 'utils/Draft';
+import { csrfFetch } from 'utils/CSRF';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 
-import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
 import { DisplayContextProvider } from 'components/DisplayContext';
@@ -37,10 +36,6 @@ export const subtitle = (cards) => {
 
 const canDrop = (source, target) => {
   return target.type === Location.PICKS;
-};
-
-const showPack = (draft, packNum) => {
-  return packNum <= draft.initial_state[0].length;
 };
 
 const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
@@ -90,13 +85,11 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
-  useMemo(() => Draft.init(initialDraft), [initialDraft]);
-
-  const [pack, setPack] = useState([...Draft.pack()]);
-  const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
-  const [packNumber, setPackNumber] = useState(initialPackNumber);
-  const [pickNumber, setPickNumber] = useState(initialPickNumber);
+const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
+  console.log(initialPack);
+  const [pack, setPack] = useState(initialPack);
+  const [packNumber, setPackNumber] = useState(0);
+  const [pickNumber, setPickNumber] = useState(0);
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
@@ -106,33 +99,34 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
 
   const [finished, setFinished] = useState(false);
 
-  const submitDeckForm = useRef();
+  const makePick = useCallback(
+    async (pickIndex) => {
+      console.log(pickIndex);
 
-  const update = useCallback(async (newPicks) => {
-    // This is very bad architecture. The React component should manage the state.
-    // TODO: Move state inside React.
-    const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
-    setPackNumber(currentPackNumber);
-    setPickNumber(currentPickNumber);
-    setPicks(newPicks);
-    Draft.arrangePicks([].concat(newPicks[0], newPicks[1]));
+      setPicking(pickIndex);
+      // TODO:grab new pack here
 
-    let newPack = Draft.pack();
-    if (!Array.isArray(newPack) || newPack.length === 0) {
-      // should only happen when draft is over.
-      setFinished(true);
-      newPack = [];
-    }
-    setPack([...newPack]);
-  }, []);
+      const response = await csrfFetch(`/draft/pick/${draftID}/0/${pickIndex}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch((err) => console.error(err));
+
+      setPackNumber(0);
+      setPickNumber(0);
+
+      setPack([]);
+      setPicking(null);
+    },
+    [draftID],
+  );
 
   useEffect(() => {
     (async () => {
       if (finished) {
-        await Draft.finish();
-        if (submitDeckForm.current) {
-          submitDeckForm.current.submit();
-        }
+        // TODO: submit draft
+        console.log('finished');
       }
     })();
   }, [finished]);
@@ -144,22 +138,22 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
       }
       if (source.type === Location.PACK) {
         if (target.type === Location.PICKS) {
-          await Draft.pick(source.data);
           const newPicks = DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]);
-          update(newPicks);
+          await makePick(source.data);
+          setPicks(newPicks);
         } else {
           console.error("Can't move cards inside pack.");
         }
       } else if (source.type === Location.PICKS) {
         if (target.type === Location.PICKS) {
           const newPicks = DeckStacks.moveOrAddCard(picks, target.data, source.data);
-          update(newPicks);
+          setPicks(newPicks);
         } else {
           console.error("Can't move cards from picks back to pack.");
         }
       }
     },
-    [pack, picks, update],
+    [makePick, pack, picks],
   );
 
   const handleClickCard = useCallback(
@@ -173,13 +167,11 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
       const row = typeLine.includes('creature') ? 0 : 1;
       const col = cmcColumn(card);
       const colIndex = picks[row][col].length;
-      setPicking(cardIndex);
-      await Draft.pick(cardIndex);
-      setPicking(null);
       const newPicks = DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card);
-      update(newPicks);
+      await makePick(cardIndex);
+      setPicks(newPicks);
     },
-    [pack, picks, update],
+    [makePick, pack, picks],
   );
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
@@ -192,27 +184,17 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
           </Collapse>
         </Navbar>
         <DynamicFlash />
-        <CSRFForm
-          className="d-none"
-          innerRef={submitDeckForm}
-          method="POST"
-          action={`/cube/submitdeck/${Draft.cube()}`}
-        >
-          <Input type="hidden" name="body" value={Draft.id()} />
-        </CSRFForm>
         <DndProvider>
-          {showPack(initialDraft, packNumber) && (
-            <ErrorBoundary>
-              <Pack
-                pack={pack}
-                packNumber={packNumber}
-                pickNumber={pickNumber}
-                picking={picking}
-                onMoveCard={handleMoveCard}
-                onClickCard={handleClickCard}
-              />
-            </ErrorBoundary>
-          )}
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              packNumber={packNumber}
+              pickNumber={pickNumber}
+              picking={picking}
+              onMoveCard={handleMoveCard}
+              onClickCard={handleClickCard}
+            />
+          </ErrorBoundary>
           <ErrorBoundary className="mt-3">
             <Card className="mt-3">
               <DeckStacks
@@ -234,12 +216,8 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
 CubeDraftPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
-  initialDraft: PropTypes.shape({
-    _id: PropTypes.string,
-    bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-    packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
-    ratings: PropTypes.objectOf(PropTypes.number),
-  }).isRequired,
+  draftID: PropTypes.string.isRequired,
+  initialPack: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default CubeDraftPage;

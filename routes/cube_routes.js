@@ -2011,32 +2011,17 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    // insert card details everywhere that needs them
-    for (const seat of draft.unopenedPacks) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
-        }
-      }
-    }
+    const pack = draft.seats[0].packbacklog[0];
 
-    for (const seat of draft.seats) {
-      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
+    for (const card of pack) {
+      card.details = carddb.cardFromId(card.cardID);
     }
 
     const reactProps = {
       cube,
       cubeID: getCubeId(cube),
-      initialDraft: draft,
+      initialPack: pack,
+      draftID: draft._id,
     };
 
     return res.render('cube/cube_draft', {
@@ -3563,14 +3548,6 @@ router.post(
     });
   }),
 );
-
-router.post('/api/draftpick/:id', async (req, res) => {
-  await Draft.updateOne({ _id: req.body._id }, req.body);
-
-  return res.status(200).send({
-    success: 'true',
-  });
-});
 
 router.get(
   '/api/p1p1/:id',

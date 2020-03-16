@@ -235,6 +235,9 @@ const cubes = require('./routes/cube_routes');
 const users = require('./routes/users_routes');
 const devs = require('./routes/dev_routes');
 const tools = require('./routes/tools_routes');
+const drafts = require('./routes/draft_routes');
+
+app.use('/draft', drafts);
 app.use('', require('./routes/root'));
 
 app.use('/cube', cubes);
