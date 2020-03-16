@@ -55,7 +55,6 @@ const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const User = require('../models/user');
 const Draft = require('../models/draft');
-const CardRating = require('../models/cardrating');
 
 const { NODE_ENV } = process.env;
 
@@ -1972,7 +1971,6 @@ router.post('/startdraft/:id', async (req, res) => {
 
     // add ratings
     const names = [];
-    // add in details to all cards
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
@@ -1981,7 +1979,23 @@ router.post('/startdraft/:id', async (req, res) => {
       }
     }
 
-    draft.ratings = await getElo(names);
+    const ratings = await getElo(names);
+
+    // add in rating to all cards
+    for (const seat of draft.seats) {
+      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            const details = carddb.cardFromId(card.cardID);
+            card.rating = ratings[details.name];
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        const details = carddb.cardFromId(card.cardID);
+        card.rating = ratings[details.name];
+      }
+    }
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2016,11 +2030,17 @@ router.get('/draft/:id', async (req, res) => {
     for (const card of pack) {
       card.details = carddb.cardFromId(card.cardID);
     }
+    for (const col of draft.seats[0].drafted) {
+      for (const card of col) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
 
     const reactProps = {
       cube,
       cubeID: getCubeId(cube),
       initialPack: pack,
+      initialPicks: draft.seats[0].drafted,
       draftID: draft._id,
     };
 
@@ -2655,69 +2675,6 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
-  }
-});
-
-router.post('/submitdeck/:id', async (req, res) => {
-  try {
-    // req.body contains a draft
-    const draftid = req.body.body;
-    const draft = await Draft.findById(draftid).lean();
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
-
-    const deck = new Deck();
-    deck.cube = draft.cube;
-    deck.date = Date.now();
-    deck.comments = [];
-    deck.draft = draft._id;
-    deck.cubename = cube.name;
-    deck.seats = [];
-
-    for (const seat of draft.seats) {
-      deck.seats.push({
-        bot: seat.bot,
-        userid: seat.userid,
-        username: seat.name,
-        pickorder: seat.pickorder,
-        name: `Draft of ${cube.name}`,
-        description: '',
-        cols: 16,
-        deck: seat.drafted,
-        sideboard: seat.sideboard ? seat.sideboard : [],
-      });
-    }
-
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-
-    cube.decks.push(deck._id);
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-
-    cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
-    const cubeOwnerq = User.findById(cube.owner);
-
-    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
-
-    cube.decks.push(deck._id);
-
-    if (user) {
-      await util.addNotification(
-        cubeOwner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} drafted your cube: ${cube.name}`,
-      );
-    }
-
-    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
-
-    return res.redirect(`/cube/deckbuilder/${deck._id}`);
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
@@ -3488,61 +3445,6 @@ router.post(
 
     cube.default_sorts = req.body.sorts;
     await cube.save();
-    return res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
-
-const ELO_BASE = 400;
-const ELO_RANGE = 1600;
-const ELO_SPEED = 1000;
-router.post(
-  '/api/draftpickcard/:id',
-  util.wrapAsyncApi(async (req, res) => {
-    const draftQ = Draft.findById({ _id: req.body.draft_id });
-    const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
-    const packQ = CardRating.find({ name: { $in: req.body.pack } });
-
-    const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
-
-    if (draft) {
-      let picks = draft.seats[0].length;
-      let packnum = 1;
-      while (picks > draft.initial_state[packnum - 1].length) {
-        picks -= draft.initial_state[packnum - 1].length;
-        packnum += 1;
-      }
-
-      if (!rating.elo) {
-        rating.name = req.body.pick;
-        rating.elo = ELO_BASE + ELO_RANGE / 2;
-      }
-
-      if (!Number.isFinite(rating.elo)) {
-        rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
-      }
-      // Update ELO.
-      for (const other of packRatings) {
-        if (!Number.isFinite(other.elo)) {
-          if (!Number.isFinite(other.value)) {
-            other.elo = ELO_BASE + ELO_RANGE / 2;
-          } else {
-            other.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - other.value));
-          }
-        }
-
-        const diff = other.elo - rating.elo;
-        // Expected performance for pick.
-        const expectedA = 1 / (1 + 10 ** (diff / 400));
-        const expectedB = 1 - expectedA;
-        const adjustmentA = 2 * (1 - expectedA);
-        const adjustmentB = 2 * (0 - expectedB);
-        rating.elo += adjustmentA;
-        other.elo += adjustmentB;
-      }
-      await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
-    }
     return res.status(200).send({
       success: 'true',
     });

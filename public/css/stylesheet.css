@@ -720,3 +720,7 @@ img.mana-symbol {
   .noBreak {
 	white-space: nowrap;
   }
+
+  .packBody {
+	min-height: 26rem;
+  }

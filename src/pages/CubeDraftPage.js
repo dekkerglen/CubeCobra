@@ -46,7 +46,7 @@ const Pack = ({ pack, title, picking, onMoveCard, onClickCard }) => (
         <h4 className="mb-0">{title}</h4>
       </CardTitle>
     </CardHeader>
-    <CardBody>
+    <CardBody className="packBody">
       <Row noGutters>
         {pack.map((card, index) => (
           <Col
@@ -84,41 +84,60 @@ Pack.defaultProps = {
 };
 
 let connection = null;
+let onUpdate = () => {};
+let onFinish = () => {};
 
-const connect = (draftID) => {
+const connect = (draftID, updateDelegate, finishDelegate) => {
+  onUpdate = updateDelegate;
+  onFinish = finishDelegate;
+
   if (!connection) {
     connection = openSocket('http://localhost:8080');
 
     console.log('connecting');
 
-    connection.emit('register', draftID);
+    connection.emit('register', { draft: draftID, seat: 0 });
+
+    connection.on('update', (update) => {
+      onUpdate(update);
+    });
+    connection.on('finish', (update) => {
+      onFinish(update);
+    });
   }
   return connection;
 };
 
-const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
-  console.log(initialPack);
+const CubeDraftPage = ({ cube, cubeID, initialPack, initialPicks, draftID }) => {
   const [pack, setPack] = useState(initialPack);
   const [packNumber, setPackNumber] = useState(0);
   const [pickNumber, setPickNumber] = useState(0);
-  const [socket, setSocket] = useState(connect(draftID));
 
-  socket.on('update', (update) => {
-    console.log(update);
-  });
-
+  console.log(initialPicks);
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
-  const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
+  const [picks, setPicks] = useState([initialPicks.slice(0, 8), initialPicks.slice(8)]);
 
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
   const [finished, setFinished] = useState(false);
 
+  const listen = useCallback(
+    async (update) => {
+      setPack(update);
+    },
+    [setPack],
+  );
+
+  const finish = useCallback(async (deck) => {
+    console.log(`finished: ${deck}`);
+  }, []);
+
+  const [socket, setSocket] = useState(connect(draftID, listen, finish));
+
   const makePick = useCallback(
     async (pickIndex) => {
       console.log(pickIndex);
-
-      setPicking(pickIndex);
+      setPack([]);
       // TODO:grab new pack here
 
       const response = await csrfFetch(`/draft/pick/${draftID}/0/${pickIndex}`, {
@@ -130,23 +149,9 @@ const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
 
       setPackNumber(0);
       setPickNumber(0);
-
-      setPack([]);
-      setPicking(null);
     },
     [draftID],
   );
-
-  useEffect(() => {
-    (async () => {
-      if (finished) {
-        // TODO: submit draft
-        console.log('finished');
-      }
-    })();
-  }, [finished]);
-
-  socket.on('FromAPI', (data) => this.setState({ response: data }));
 
   const handleMoveCard = useCallback(
     async (source, target) => {
@@ -234,6 +239,7 @@ CubeDraftPage.propTypes = {
   cubeID: PropTypes.string.isRequired,
   draftID: PropTypes.string.isRequired,
   initialPack: PropTypes.arrayOf(PropTypes.object).isRequired,
+  initialPicks: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
 };
 
 export default CubeDraftPage;

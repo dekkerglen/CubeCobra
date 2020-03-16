@@ -10,11 +10,17 @@ const Seat = {
   sideboard: [[cardSchema]], //organized draft picks
   pickorder: [cardSchema],
   packbacklog: [[cardSchema]],
+  description: String
 };
 
 // Cube schema
 let draftSchema = mongoose.Schema({
   cube: String,
+  deck: String,
+  finished: {
+    type: Boolean,
+    default: false
+  },
   initial_state: [[[cardSchema]]],
 
   //new format, will convert to
