@@ -5,8 +5,11 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
+// Init app
+const app = express();
 // eslint-disable-next-line import/no-extraneous-dependencies
-const http = require('http');
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
@@ -105,9 +108,6 @@ db.once('open', () => {
 db.on('error', (err) => {
   winston.error(err);
 });
-
-// Init app
-const app = express();
 
 const store = new MongoDBStore(
   {
@@ -235,7 +235,7 @@ const cubes = require('./routes/cube_routes');
 const users = require('./routes/users_routes');
 const devs = require('./routes/dev_routes');
 const tools = require('./routes/tools_routes');
-const drafts = require('./routes/draft_routes');
+const drafts = require('./routes/draft_routes')(io);
 
 app.use('/draft', drafts);
 app.use('', require('./routes/root'));
@@ -267,7 +267,7 @@ schedule.scheduleJob('0 0 * * *', () => {
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(() => {
-  http.createServer(app).listen(5000, 'localhost', () => {
+  http.listen(5000, 'localhost', () => {
     winston.info('Server started on port 5000...');
   });
 });

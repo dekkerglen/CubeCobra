@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import openSocket from 'socket.io-client';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
@@ -38,20 +39,18 @@ const canDrop = (source, target) => {
   return target.type === Location.PICKS;
 };
 
-const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
+const Pack = ({ pack, title, picking, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
-        <h4 className="mb-0">
-          Pack {packNumber}, Pick {pickNumber}
-        </h4>
+        <h4 className="mb-0">{title}</h4>
       </CardTitle>
     </CardHeader>
     <CardBody>
       <Row noGutters>
         {pack.map((card, index) => (
           <Col
-            key={/* eslint-disable-line react/no-array-index-key */ `${packNumber}:${pickNumber}:${index}`}
+            key={/* eslint-disable-line react/no-array-index-key */ `${title}:${index}`}
             xs={3}
             className="col-md-1-5 d-flex justify-content-center align-items-center"
           >
@@ -74,8 +73,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
 
 Pack.propTypes = {
   pack: PropTypes.arrayOf(PropTypes.object).isRequired,
-  packNumber: PropTypes.number.isRequired,
-  pickNumber: PropTypes.number.isRequired,
+  title: PropTypes.string.isRequired,
   picking: PropTypes.number,
   onMoveCard: PropTypes.func.isRequired,
   onClickCard: PropTypes.func.isRequired,
@@ -85,18 +83,35 @@ Pack.defaultProps = {
   picking: null,
 };
 
+let connection = null;
+
+const connect = (draftID) => {
+  if (!connection) {
+    connection = openSocket('http://localhost:8080');
+
+    console.log('connecting');
+
+    connection.emit('register', draftID);
+  }
+  return connection;
+};
+
 const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
   console.log(initialPack);
   const [pack, setPack] = useState(initialPack);
   const [packNumber, setPackNumber] = useState(0);
   const [pickNumber, setPickNumber] = useState(0);
+  const [socket, setSocket] = useState(connect(draftID));
+
+  socket.on('update', (update) => {
+    console.log(update);
+  });
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
 
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
-
   const [finished, setFinished] = useState(false);
 
   const makePick = useCallback(
@@ -130,6 +145,8 @@ const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
       }
     })();
   }, [finished]);
+
+  socket.on('FromAPI', (data) => this.setState({ response: data }));
 
   const handleMoveCard = useCallback(
     async (source, target) => {
@@ -188,8 +205,7 @@ const CubeDraftPage = ({ cube, cubeID, initialPack, draftID }) => {
           <ErrorBoundary>
             <Pack
               pack={pack}
-              packNumber={packNumber}
-              pickNumber={pickNumber}
+              title={pack.length > 0 ? `Pack ${packNumber} - Pack ${pickNumber}` : 'Waiting for next pack...'}
               picking={picking}
               onMoveCard={handleMoveCard}
               onClickCard={handleClickCard}
