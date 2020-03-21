@@ -16,9 +16,10 @@
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --mode production --config webpack.prod.js --progress",
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
-    "test": "jest --silent --detectOpenHandles  --coverage",
+    "test-loud": "jest --detectOpenHandles  --coverage",
+    "test": "npm run test-loud -- --silent",
     "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "nearley": "nearleyc nearley/cardFilters.ne -o src/generated/filtering/cardFilters.js"
+    "nearley": "nearleyc nearley/cardFilters.ne -o src/generated/filtering/cardFilters.js && ./nearley/helper.sh"
   },
   "author": "Gwen Dekker",
   "license": "ISC",

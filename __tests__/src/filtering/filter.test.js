@@ -1,3 +1,4 @@
+import { arraysAreEqualSets } from 'utils/Util';
 import { makeFilter } from '../../../src/filtering/filter';
 
 import { expectOperator } from '../../helpers';
@@ -581,7 +582,10 @@ describe('filter', () => {
         oneAndAWhiteCards.forEach((card) => {
           expect(card.details.parsed_cost).toEqual(expect.arrayContaining(['1', 'w']));
         });
-        expect(oneAndAWhiteCards).toHaveLength(3);
+        const expectedCount = exampleCube.cards.filter((card) =>
+          arraysAreEqualSets(card.details.parsed_cost, ['1', 'w']),
+        ).length;
+        expect(oneAndAWhiteCards).toHaveLength(expectedCount);
       });
     });
 

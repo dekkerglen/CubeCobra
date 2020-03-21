@@ -1,8 +1,8 @@
 @builtin "whitespace.ne"
 
 @{%
-const { CARD_CATEGORY_DETECTORS } = require('../../utils/Card');
-const { arrayIsSubset, arraysAreEqualSets } = require('../../utils/Util');
+import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
+import { arrayIsSubset, arraysAreEqualSets } from 'utils/Util';
 %} # %}
 
 start ->
@@ -60,6 +60,7 @@ condition -> (
   | isCondition
   | eloCondition
   | nameCondition
+  | manaCostCondition
 ) {% ([[condition]]) => condition %}
 
 @{% const genericCondition = (property, valuePred) => {
@@ -113,7 +114,7 @@ eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('el
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', valuePred) %}
   | noQuoteStringValue {% ([value]) => genericCondition('name_lower', (fieldValue) => fieldValue.contains(value.toLowerCase())) %}
 
-# manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', valuePred) %}
+manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', valuePred) %}
 
 @{% const defaultOperation = (op, value) => {
   switch (op.toString()) {
@@ -206,23 +207,16 @@ nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCon
   }
 }; %} # %}
 
-@{% const manaCostOperation = (op, value) => {
-  switch (op) {
+@{%
+const convertParsedCost = (parsedCost) => parsedCost.map((symbol) => symbol.toLowerCase().split('-'));
+const manaCostOperation = (op, value) => {
+  switch (op.toString()) {
   case ':':
-    return;
   case '=':
-    return;
+    return (fieldValue) => arraysAreEqualSets(convertParsedCost(fieldValue), value, arraysAreEqualSets);
   case '!=':
   case '<>':
-    return;
-  case '<':
-    return;
-  case '<=':
-    return;
-  case '>':
-    return;
-  case '>=':
-    return;
+    return (fieldValue) => !arraysAreEqualSets(convertParsedCost(fieldValue), value, arraysAreEqualSets);
   default:
     throw new Error(`Unrecognized operator '${op}'`);
   }
@@ -342,8 +336,8 @@ noQuoteStringValue -> [^ \t\n"'\\=<>:]:+ {% ([chars]) => chars.join() %}
 stringChar[Q] -> $Q {% id %}
   | "\\'" {% () => "'" %}
   | "\\\\" {% () => '\\' %}
-  | "\\n" {% () => '\n' %}
-  | "\\t" {% () => '\t' %}
+  | "\\n"i {% () => '\n' %}
+  | "\\t"i {% () => '\t' %}
   | "\\\"" {% () => '"' %}
 # "
 
@@ -360,6 +354,21 @@ doubleQuoteGroup -> [^"\\] {% id %}
 
 singleQuoteGroup -> [^'\\] {% id %}
 
-# manaCostOpValue -> anyOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}
+manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}
 
-# manaCostValue -> 
+manaCostValue -> manaSymbol:+ {% id %}
+
+manaSymbol -> innerManaSymbol {% id %}
+  | "{" innerManaSymbol "}" {% ([, inner]) => inner %}
+  | "(" innerManaSymbol ")" {% ([, inner]) => inner %}
+
+innerManaSymbol -> [0-9]:+ {% ([digits]) => [digits.join('')] %}
+  | ("x"i | "y"i | "z"i | "w"i | "u"i | "b"i | "r"i | "g"i | "s"i) {% ([[color]]) => [color.toLowerCase()] %}
+  | ( "2"i ("/" | "-") ("p"i | "w"i | "u"i | "b"i | "r"i | "g"i)
+    | "p"i ("/" | "-") ("2"i | "w"i | "u"i | "b"i | "r"i | "g"i)
+    | "w"i ("/" | "-") ("2"i | "p"i | "u"i | "b"i | "r"i | "g"i)
+    | "u"i ("/" | "-") ("2"i | "p"i | "w"i | "b"i | "r"i | "g"i)
+    | "b"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "r"i | "g"i)
+    | "r"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "g"i)
+    | "g"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "r"i)
+    ) {% ([[color, , [secondColor]]]) => [color === '2' ? 2 : color, secondColor === '2' ? 2 : color] %}
