@@ -17,7 +17,8 @@
     "build": "webpack --mode production --config webpack.prod.js --progress",
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
-    "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js"
+    "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
+    "nearley": "nearleyc nearley/cardFilters.ne -o src/generated/filtering/cardFilters.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -46,6 +47,7 @@
     "merge-images": "^1.1.0",
     "mongoose": "5.7.7",
     "mongoose-seed": "^0.6.0",
+    "nearley": "^2.19.1",
     "node-fetch": "^2.6.0",
     "node-schedule": "^1.3.2",
     "nodemailer": "^6.3.1",

@@ -7,7 +7,6 @@ import CubeLayout from 'layouts/CubeLayout';
 
 import Query from 'utils/Query';
 import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
-import Filter from 'utils/Filter';
 
 import CardGrid from 'components/analytics/CardGrid';
 import Chart from 'components/analytics/Chart';
@@ -119,8 +118,7 @@ class CubeAnalysisPage extends Component {
       this.updateAsfan();
       return;
     }
-    const filteredWithAsfan =
-      filter.length > 0 ? cardsWithAsfan.filter((card) => Filter.filterCard(card, filter)) : cardsWithAsfan;
+    const filteredWithAsfan = filter.length > 0 ? cardsWithAsfan.filter(filter) : cardsWithAsfan;
     this.setState({ filteredWithAsfan }, this.updateData);
   }
 

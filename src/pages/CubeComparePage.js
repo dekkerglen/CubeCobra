@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from 'utils/Filter';
 import Query from 'utils/Query';
 
 import CardModalForm from 'components/CardModalForm';
@@ -44,7 +43,7 @@ const CubeComparePage = ({
     id: tag,
     text: tag,
   }));
-  const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+  const filteredCards = filter ? cards.filter(filter) : cards;
   return (
     <SortContextProvider defaultSorts={defaultSorts}>
       <DisplayContextProvider>

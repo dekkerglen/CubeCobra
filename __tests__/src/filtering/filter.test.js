@@ -1,23 +1,23 @@
+import { makeFilter } from '../../../src/filtering/filter';
+
+import { expectOperator } from '../../helpers';
+
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
 
 const carddb = require('../../../serverjs/cards');
-
-import Filter from '../../../src/utils/Filter';
-
-import { expectOperator } from '../../helpers';
 
 const setCounts = (cards, propertyName) => {
   let greenCardCount = 0;
   let colorlessCardCount = 0;
   let goldWithGreenCount = 0;
   cards.forEach((card) => {
-    if (card.details[propertyName].length == 0) {
+    if (card.details[propertyName].length === 0) {
       colorlessCardCount += 1;
-    } else if (card.details[propertyName].length == 1) {
-      if (card.details[propertyName][0] == 'G') {
+    } else if (card.details[propertyName].length === 1) {
+      if (card.details[propertyName][0] === 'G') {
         greenCardCount += 1;
-      } else if (card.details[propertyName][0] == 'C') {
+      } else if (card.details[propertyName][0] === 'C') {
         colorlessCardCount += 1;
       }
     } else if (card.details[propertyName].includes('G')) {
@@ -25,165 +25,25 @@ const setCounts = (cards, propertyName) => {
     }
   });
   // uncomment to help with debugging counts
-  //console.log(propertyName,'greenCardCount:', greenCardCount, 'colorlessCardCount:', colorlessCardCount, 'goldWithGreenCount', goldWithGreenCount);
+  // console.log(propertyName,'greenCardCount:', greenCardCount, 'colorlessCardCount:', colorlessCardCount, 'goldWithGreenCount', goldWithGreenCount);
   return [greenCardCount, colorlessCardCount, goldWithGreenCount];
 };
 
 describe('filter', () => {
-  describe('tokenizeInput', () => {
-    let tokens;
-    beforeEach(() => {
-      tokens = [];
-    });
-    it('tokenizes =', () => {
-      Filter.tokenizeInput('rarity=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes >', () => {
-      Filter.tokenizeInput('rarity>common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '>',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes <', () => {
-      Filter.tokenizeInput('rarity<common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '<',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes >=', () => {
-      Filter.tokenizeInput('rarity>=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '>=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes <=', () => {
-      Filter.tokenizeInput('rarity<=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '<=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes !=', () => {
-      Filter.tokenizeInput('rarity!=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: false,
-          operand: '!=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes negated =', () => {
-      Filter.tokenizeInput('-rarity=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: true,
-          operand: '=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes negated >', () => {
-      Filter.tokenizeInput('-rarity>common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: true,
-          operand: '>',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes negated <', () => {
-      Filter.tokenizeInput('-rarity<common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: true,
-          operand: '<',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes negated <=', () => {
-      Filter.tokenizeInput('-rarity<=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: true,
-          operand: '<=',
-          type: 'token',
-        },
-      ]);
-    });
-    it('tokenizes negated >=', () => {
-      Filter.tokenizeInput('-rarity>=common', tokens);
-      expect(tokens).toEqual([
-        {
-          arg: 'common',
-          category: 'rarity',
-          not: true,
-          operand: '>=',
-          type: 'token',
-        },
-      ]);
-    });
-  });
-
-  describe('filterCard', () => {
+  describe('makeFilter', () => {
     let exampleCube;
-    beforeAll(() => {
+    beforeAll(async () => {
       exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-      return carddb.initializeCardDb(fixturesPath, true).then(() => {
-        exampleCube.cards.forEach(function(card, index) {
-          card.details = carddb.cardFromId(card.cardID);
-        });
-      });
+      await carddb.initializeCardDb(fixturesPath, true);
+      for (const card of exampleCube.cards) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
     });
     it('properly filters names and returns a valid object', () => {
-      let tokens = [];
-      Filter.tokenizeInput('castle', tokens);
-      const castleFilters = [Filter.parseTokens(tokens)];
-      const castles = exampleCube.cards.filter((card) => Filter.filterCard(card, castleFilters));
+      const tokens = [];
+      const { err, filter: castleFilter } = makeFilter('castle', tokens);
+      expect(err).toEqual(false);
+      const castles = exampleCube.cards.filter(castleFilter);
       const expectedCastles = [
         {
           tags: ['New'],
@@ -441,16 +301,15 @@ describe('filter', () => {
     });
 
     it('properly filters oracle text', () => {
-      let tokens = [];
-      Filter.tokenizeInput('o:flying', tokens);
-      const flyingFilter = [Filter.parseTokens(tokens)];
-      let countFlyers = exampleCube.cards
+      const { err, filter: flyingFilter } = makeFilter('o:flying');
+      expect(err).toEqual(false);
+      const countFlyers = exampleCube.cards
         .map((card) => {
-          return card.details.oracle_text.toLowerCase().indexOf('flying') == -1 ? 0 : 1;
+          return card.details.oracle_text.toLowerCase().indexOf('flying') === -1 ? 0 : 1;
         })
-        .reduce((total, inc) => (total += inc), 0);
+        .reduce((total, inc) => total + inc, 0);
 
-      const flyers = exampleCube.cards.filter((card) => Filter.filterCard(card, flyingFilter));
+      const flyers = exampleCube.cards.filter(flyingFilter);
       expect(flyers).toHaveLength(countFlyers);
     });
 
@@ -464,28 +323,17 @@ describe('filter', () => {
       });
 
       const testColors = (operator, expectedCount, expectation) => {
-        let fullNameTokens = [];
-        Filter.tokenizeInput('c' + operator + 'green', fullNameTokens);
-        let parsedFilter = [Filter.parseTokens(fullNameTokens)];
-
-        let filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter));
+        const { err, filter } = makeFilter(`c${operator}green`);
+        expect(err).toEqual(false);
+        const filteredCards = exampleCube.cards.filter(filter);
         expect(filteredCards).toHaveLength(expectedCount);
         filteredCards.forEach(expectation);
-
-        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, false));
-        expect(filteredCards).toHaveLength(expectedCount);
-        filteredCards.forEach(expectation);
-
+      };
+      const testColorAbbrv = (operator, expectedCount, expectation) => {
         // handle color abbreviation
-        let abbreviationTokens = [];
-        Filter.tokenizeInput('c' + operator + 'g', abbreviationTokens);
-        parsedFilter = [Filter.parseTokens(abbreviationTokens)];
-
-        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter));
-        expect(filteredCards).toHaveLength(expectedCount);
-        filteredCards.forEach(expectation);
-
-        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, false));
+        const { err, filter } = makeFilter(`c${operator}green`);
+        expect(err).toEqual(false);
+        const filteredCards = exampleCube.cards.filter(filter);
         expect(filteredCards).toHaveLength(expectedCount);
         filteredCards.forEach(expectation);
       };
@@ -494,16 +342,25 @@ describe('filter', () => {
         testColors(':', greenCardCount, (card) => {
           expect(card.details.colors).toEqual(['G']);
         });
+        testColorAbbrv(':', greenCardCount, (card) => {
+          expect(card.details.colors).toEqual(['G']);
+        });
       });
 
       it('the >= operator filters for color-including cards', () => {
         testColors('>=', greenCardCount + goldWithGreenCount, (card) => {
           expect(card.details.colors).toEqual(expect.arrayContaining(['G']));
         });
+        testColorAbbrv('>=', greenCardCount + goldWithGreenCount, (card) => {
+          expect(card.details.colors).toEqual(expect.arrayContaining(['G']));
+        });
       });
 
       it('the <= operator filters for colorless and mono-color cards', () => {
         testColors('<=', greenCardCount + colorlessCardCount, (card) => {
+          expect(card.details.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+        });
+        testColorAbbrv('<=', greenCardCount + colorlessCardCount, (card) => {
           expect(card.details.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
         });
       });
@@ -513,20 +370,25 @@ describe('filter', () => {
           expect(card.details.colors).not.toBe(['G']);
           expect(card.details.colors).toContain('G');
         });
+        testColorAbbrv('>', goldWithGreenCount, (card) => {
+          expect(card.details.colors).not.toBe(['G']);
+          expect(card.details.colors).toContain('G');
+        });
       });
 
       it('the < operator filters for colorless cards', () => {
         testColors('<', colorlessCardCount, (card) => {
           expect(card.details.colors).toEqual([]);
         });
+        testColorAbbrv('<', colorlessCardCount, (card) => {
+          expect(card.details.colors).toEqual([]);
+        });
       });
 
-      let testColorCount = function(operator, numColors, expectedCount) {
-        let tokens = [];
-        Filter.tokenizeInput('c' + operator + numColors, tokens);
-        const filter = [Filter.parseTokens(tokens)];
-        const cards = exampleCube.cards.filter((card) => Filter.filterCard(card, filter));
-        //console.log(operator, numColors, expectedCount, cards.length);
+      const testColorCount = (operator, numColors, expectedCount) => {
+        const { err, filter } = makeFilter(`c${operator}${numColors}`);
+        expect(err).toEqual(false);
+        const cards = exampleCube.cards.filter(filter);
         cards.forEach((card) => {
           expectOperator(card.details.colors.length, operator, numColors);
         });
@@ -589,114 +451,67 @@ describe('filter', () => {
     });
 
     describe('color identity filters', () => {
-      let inCube = false;
       let greenCardCount;
       let colorlessCardCount;
       let goldWithGreenCount;
 
-      let testColors = function(operator, expectedCount, inCube, expectation) {
-        let fullNameTokens = [];
-        Filter.tokenizeInput('ci' + operator + 'green', fullNameTokens);
-        let parsedFilter = [Filter.parseTokens(fullNameTokens)];
+      const testColors = (operator, expectedCount, expectation) => {
+        let { err, filter } = makeFilter(`ci${operator}green`);
+        expect(err).toEqual(false);
 
-        let filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, inCube));
+        let filteredCards = exampleCube.cards.filter(filter);
         filteredCards.forEach(expectation);
         expect(filteredCards).toHaveLength(expectedCount);
 
-        // handle color abbreviation
-        let abbreviationTokens = [];
-        Filter.tokenizeInput('ci' + operator + 'g', abbreviationTokens);
-        parsedFilter = [Filter.parseTokens(abbreviationTokens)];
-
-        filteredCards = exampleCube.cards.filter((card) => Filter.filterCard(card, parsedFilter, inCube));
+        ({ err, filter } = makeFilter(`ci${operator}g`));
+        expect(err).toEqual(false);
+        filteredCards = exampleCube.cards.filter(filter);
         filteredCards.forEach(expectation);
         expect(filteredCards).toHaveLength(expectedCount);
       };
+      beforeAll(() => {
+        // NOTE: in the examplecube.js colors[] have been set for the cards, overriding the card defaults
+        greenCardCount = 8;
+        colorlessCardCount = 4;
+        goldWithGreenCount = 4;
+      });
 
-      describe('not in cube', () => {
-        beforeAll(() => {
-          [greenCardCount, colorlessCardCount, goldWithGreenCount] = setCounts(exampleCube.cards, 'color_identity');
-        });
-
-        it('the = operator filters for mono-color cards', () => {
-          testColors(':', greenCardCount, inCube, (card) => {
-            expect(card.details.color_identity).toEqual(['G']);
-          });
-        });
-
-        it('the >= operator filters for color-including cards', () => {
-          testColors('>=', greenCardCount + goldWithGreenCount, inCube, (card) => {
-            expect(card.details.color_identity).toEqual(expect.arrayContaining(['G']));
-          });
-        });
-
-        it('the <= operator filters for colorless and mono-color cards', () => {
-          testColors('<=', greenCardCount + colorlessCardCount, inCube, (card) => {
-            expect(card.details.color_identity).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
-          });
-        });
-
-        it('the > operator filters for multi-color cards including a color', () => {
-          testColors('>', goldWithGreenCount, inCube, (card) => {
-            expect(card.details.color_identity).not.toBe(['G']);
-            expect(card.details.color_identity).toContain('G');
-          });
-        });
-
-        it('the < operator filters for colorless cards', () => {
-          testColors('<', colorlessCardCount, inCube, (card) => {
-            expect(card.details.color_identity).toEqual([]);
-          });
+      it('the = operator filters for mono-color cards', () => {
+        testColors(':', greenCardCount, (card) => {
+          expect(card.colors).toEqual(['G']);
         });
       });
 
-      describe('in cube, with overrides', () => {
-        beforeAll(() => {
-          inCube = true;
-          // NOTE: in the examplecube.js colors[] have been set for the cards, overriding the card defaults
-          greenCardCount = 8;
-          colorlessCardCount = 4;
-          goldWithGreenCount = 4;
-        });
-
-        it('the = operator filters for mono-color cards', () => {
-          testColors(':', greenCardCount, inCube, (card) => {
-            expect(card.colors).toEqual(['G']);
-          });
-        });
-
-        it('the >= operator filters for color-including cards', () => {
-          testColors('>=', greenCardCount + goldWithGreenCount, inCube, (card) => {
-            expect(card.colors).toEqual(expect.arrayContaining(['G']));
-          });
-        });
-
-        it('the <= operator filters for colorless and mono-color cards', () => {
-          testColors('<=', greenCardCount + colorlessCardCount, inCube, (card) => {
-            expect(card.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
-          });
-        });
-
-        it('the > operator filters for multi-color cards including a color', () => {
-          testColors('>', goldWithGreenCount, inCube, (card) => {
-            expect(card.colors).not.toBe(['G']);
-            expect(card.colors).toContain('G');
-          });
-        });
-
-        it('the < operator filters for colorless cards', () => {
-          testColors('<', colorlessCardCount, inCube, (card) => {
-            expect(card.colors).toEqual([]);
-          });
+      it('the >= operator filters for color-including cards', () => {
+        testColors('>=', greenCardCount + goldWithGreenCount, (card) => {
+          expect(card.colors).toEqual(expect.arrayContaining(['G']));
         });
       });
 
-      let testColorCount = function(operator, numColors, expectedCount) {
-        let tokens = [];
-        Filter.tokenizeInput('ci' + operator + numColors, tokens);
-        const filter = [Filter.parseTokens(tokens)];
-        const cards = exampleCube.cards.filter((card) => Filter.filterCard(card, filter, false));
-        //console.log(operator, numColors, expectedCount, cards.length);
+      it('the <= operator filters for colorless and mono-color cards', () => {
+        testColors('<=', greenCardCount + colorlessCardCount, (card) => {
+          expect(card.colors).not.toEqual(expect.arrayContaining(['W', 'U', 'B', 'R']));
+        });
+      });
+
+      it('the > operator filters for multi-color cards including a color', () => {
+        testColors('>', goldWithGreenCount, (card) => {
+          expect(card.colors).not.toBe(['G']);
+          expect(card.colors).toContain('G');
+        });
+      });
+
+      it('the < operator filters for colorless cards', () => {
+        testColors('<', colorlessCardCount, (card) => {
+          expect(card.colors).toEqual([]);
+        });
+      });
+
+      const testColorCount = (operator, numColors, expectedCount) => {
+        const { err, filter } = makeFilter(`ci${operator}${numColors}`);
+        expect(err).toEqual(false);
+        const cards = exampleCube.cards.filter(filter);
+        // console.log(operator, numColors, expectedCount, cards.length);
         cards.forEach((card) => {
           expectOperator(card.details.color_identity.length, operator, numColors);
         });
@@ -759,15 +574,10 @@ describe('filter', () => {
     });
 
     describe('mana filtering', () => {
-      let tokens;
-      beforeEach(() => {
-        tokens = [];
-      });
-
       it('correctly filters by mana cost', () => {
-        Filter.tokenizeInput('mana:1W', tokens);
-        const oneAndAWhiteFilter = [Filter.parseTokens(tokens)];
-        const oneAndAWhiteCards = exampleCube.cards.filter((card) => Filter.filterCard(card, oneAndAWhiteFilter));
+        const { err, filter } = makeFilter('mana:1W');
+        expect(err).toEqual(false);
+        const oneAndAWhiteCards = exampleCube.cards.filter(filter);
         oneAndAWhiteCards.forEach((card) => {
           expect(card.details.parsed_cost).toEqual(expect.arrayContaining(['1', 'w']));
         });
@@ -776,15 +586,10 @@ describe('filter', () => {
     });
 
     describe('cmc filtering', () => {
-      let tokens;
-      beforeEach(() => {
-        tokens = [];
-      });
-
       it('the = operator filters for exact cmc', () => {
-        Filter.tokenizeInput('cmc=1', tokens);
-        const oneCmcFilter = [Filter.parseTokens(tokens)];
-        const oneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, oneCmcFilter));
+        const { err, filter } = makeFilter('cmc=1');
+        expect(err).toEqual(false);
+        const oneCmcCards = exampleCube.cards.filter(filter);
         oneCmcCards.forEach((card) => {
           expect(card.details.cmc).toEqual(1);
         });
@@ -792,9 +597,9 @@ describe('filter', () => {
       });
 
       it('the < operator filters for less-than cmc', () => {
-        Filter.tokenizeInput('cmc<1', tokens);
-        const ltOneCmcFilter = [Filter.parseTokens(tokens)];
-        const ltOneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, ltOneCmcFilter));
+        const { err, filter } = makeFilter('cmc<1');
+        expect(err).toEqual(false);
+        const ltOneCmcCards = exampleCube.cards.filter(filter);
         ltOneCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeLessThan(1);
         });
@@ -802,9 +607,9 @@ describe('filter', () => {
       });
 
       it('the <= operator filters for less-than-or-equal-to cmc', () => {
-        Filter.tokenizeInput('cmc<=1', tokens);
-        const ltEqOneCmcFilter = [Filter.parseTokens(tokens)];
-        const ltEqOneCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, ltEqOneCmcFilter));
+        const { err, filter } = makeFilter('cmc<=1');
+        expect(err).toEqual(false);
+        const ltEqOneCmcCards = exampleCube.cards.filter(filter);
         ltEqOneCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeLessThanOrEqual(1);
         });
@@ -812,9 +617,9 @@ describe('filter', () => {
       });
 
       it('the > operator filters for greater-than cmc', () => {
-        Filter.tokenizeInput('cmc>5', tokens);
-        const gtFiveCmcFilter = [Filter.parseTokens(tokens)];
-        const gtFiveCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, gtFiveCmcFilter));
+        const { err, filter } = makeFilter('cmc>5');
+        expect(err).toEqual(false);
+        const gtFiveCmcCards = exampleCube.cards.filter(filter);
         gtFiveCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeGreaterThan(5);
         });
@@ -822,9 +627,9 @@ describe('filter', () => {
       });
 
       it('the >= operator filters for greater-than-or-equal-to cmc', () => {
-        Filter.tokenizeInput('cmc>=5', tokens);
-        const gtEqFiveCmcFilter = [Filter.parseTokens(tokens)];
-        const gtEqFiveCmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, gtEqFiveCmcFilter));
+        const { err, filter } = makeFilter('cmc>=5');
+        expect(err).toEqual(false);
+        const gtEqFiveCmcCards = exampleCube.cards.filter(filter);
         gtEqFiveCmcCards.forEach((card) => {
           expect(card.details.cmc).toBeGreaterThanOrEqual(5);
         });
@@ -832,9 +637,9 @@ describe('filter', () => {
       });
 
       it('the != operator filters for cmc not-equal to', () => {
-        Filter.tokenizeInput('cmc!=5', tokens);
-        const notEqual5CmcFilter = [Filter.parseTokens(tokens)];
-        const notEqual5CmcCards = exampleCube.cards.filter((card) => Filter.filterCard(card, notEqual5CmcFilter));
+        const { err, filter } = makeFilter('cmc!=5');
+        expect(err).toEqual(false);
+        const notEqual5CmcCards = exampleCube.cards.filter(filter);
         notEqual5CmcCards.forEach((card) => {
           expect(card.details.cmc).not.toEqual(5);
         });
@@ -843,15 +648,10 @@ describe('filter', () => {
     });
 
     describe('type filtering', () => {
-      let tokens;
-      beforeEach(() => {
-        tokens = [];
-      });
-
       it('filters by card type', () => {
-        Filter.tokenizeInput('type=creature', tokens);
-        const creatureFilter = [Filter.parseTokens(tokens)];
-        const creatureCards = exampleCube.cards.filter((card) => Filter.filterCard(card, creatureFilter));
+        const { err, filter } = makeFilter('type:creature');
+        expect(err).toEqual(false);
+        const creatureCards = exampleCube.cards.filter(filter);
         creatureCards.forEach((card) => {
           expect(card.details.type).toContain('Creature');
         });
@@ -860,15 +660,10 @@ describe('filter', () => {
     });
 
     describe('set filtering', () => {
-      let tokens;
-      beforeEach(() => {
-        tokens = [];
-      });
-
       it('filters by set', () => {
-        Filter.tokenizeInput('set=ELD', tokens);
-        const eldraineFilter = [Filter.parseTokens(tokens)];
-        const eldraineCards = exampleCube.cards.filter((card) => Filter.filterCard(card, eldraineFilter));
+        const { err, filter } = makeFilter('set=ELD');
+        expect(err).toEqual(false);
+        const eldraineCards = exampleCube.cards.filter(filter);
         eldraineCards.forEach((card) => {
           expect(card.details.set).toContain('eld');
         });
@@ -878,9 +673,8 @@ describe('filter', () => {
     });
 
     describe('P/T filtering', () => {
-      let tokens;
       let cards;
-      let expectations = [
+      const expectations = [
         {
           title: 'the = operator exact-matches power/toughness',
           tests: [
@@ -971,9 +765,9 @@ describe('filter', () => {
       expectations.forEach((expectation) => {
         it(expectation.title, () => {
           expectation.tests.forEach((test) => {
-            tokens = [];
-            Filter.tokenizeInput(test.filter, tokens);
-            cards = exampleCube.cards.filter((card) => Filter.filterCard(card, [Filter.parseTokens(tokens)]));
+            const { err, filter } = makeFilter(test.filter);
+            expect(err).toEqual(false);
+            cards = exampleCube.cards.filter(filter);
             cards.forEach((card) => {
               let value = card;
               test.lookup.forEach((key) => {
@@ -987,9 +781,8 @@ describe('filter', () => {
     });
 
     describe('rarity filtering', () => {
-      let tokens;
       let cards;
-      let expectations = [
+      const expectations = [
         {
           title: 'the = operator exact-matches rarity',
           tests: [
@@ -1083,26 +876,27 @@ describe('filter', () => {
       expectations.forEach((expectation) => {
         it(expectation.title, () => {
           expectation.tests.forEach((test) => {
-            tokens = [];
-            Filter.tokenizeInput(test.filter, tokens);
-            cards = exampleCube.cards.filter((card) => Filter.filterCard(card, [Filter.parseTokens(tokens)]));
+            const { err, filter } = makeFilter(test.filter);
+            expect(err).toEqual(false);
+            cards = exampleCube.cards.filter(filter);
             cards.forEach((card) => {
+              // eslint-disable-next-line prefer-const
               let { expectedValue, matcherName, not } = test;
               let value = card;
               test.lookup.forEach((key) => {
                 value = value[key];
               });
-              let expectation = expect(value);
+              let expected = expect(value);
               if (not) {
                 // not.arrayContaining is a special case
                 if (matcherName === 'arrayContaining') {
                   matcherName = 'toEqual';
                   expectedValue = expect.not.arrayContaining(expectedValue);
                 } else {
-                  expectation = expectation.not;
+                  expected = expected.not;
                 }
               }
-              expectation[matcherName](expectedValue);
+              expected[matcherName](expectedValue);
             });
           });
         });
