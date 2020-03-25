@@ -18,8 +18,8 @@
     "start": "npm run nearley && npm run nodemon & npm run webpack-dev-server & webpack --mode development --config webpack.server.js --watch",
     "test-loud": "jest --detectOpenHandles  --coverage",
     "test": "npm run test-loud -- --silent",
-    "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "nearley": "./nearley/helper.sh"
+    "setup": "npm run nearley && npm run webapck -- --progress && node --max-old-space-size=4096 force_update.js",
+    "nearley": "sh nearley/helper.sh"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
