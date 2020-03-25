@@ -2,8 +2,11 @@
 const es = require('event-stream');
 const fs = require('fs');
 const JSONStream = require('JSONStream');
+const mongoose = require('mongoose');
 
 const CardRating = require('../models/cardrating.js');
+
+const mongosecrets = require('../../cubecobrasecrets/mongodb');
 
 async function saveCardRating(cardRating) {
   const existing = (await CardRating.findOne({ name: cardRating.name })) || new CardRating();
@@ -24,4 +27,11 @@ async function saveRatings(defaultPath = null) {
   );
 }
 
-saveRatings(process.argv[2]);
+(async () => {
+  mongoose.connect(mongosecrets.connectionString).then(async () => {
+    saveRatings(process.argv[2]);
+    mongoose.disconnect();
+    console.log('done');
+    process.exit();
+  });
+})();
