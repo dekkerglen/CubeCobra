@@ -7,6 +7,7 @@ const CardRating = require('../models/cardrating.js');
 
 async function saveCardRating(cardRating) {
   const existing = (await CardRating.findOne({ name: cardRating.name })) || new CardRating();
+  existing.name = cardRating.name;
   existing.elo = cardRating.elo;
   existing.picks = cardRating.picks;
   existing.value = cardRating.value;
