@@ -721,7 +721,7 @@ router.get('/list/:id', async (req, res) => {
     }
 
     const pids = new Set();
-    const cardNames = [];
+    const cardNames = new Set();
     const addDetails = (cards) => {
       cards.forEach((card, index) => {
         card.details = {
@@ -734,7 +734,7 @@ router.get('/list/:id', async (req, res) => {
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
         }
-        cardNames.push(card.details.name);
+        cardNames.add(card.details.name);
       });
       return cards;
     };
@@ -743,7 +743,7 @@ router.get('/list/:id', async (req, res) => {
     cube.maybe = addDetails(cube.maybe);
 
     const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo(cardNames, true);
+    const eloDictQ = getElo([...cardNames], true);
     const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
 
     const addPriceAndElo = (cards) => {
