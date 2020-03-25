@@ -116,7 +116,7 @@ stringSetElementOpValue -> ":" stringValue {% ([, value]) => setElementOperation
 
 stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperation(op, value) %}
 
-stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value %}
+stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
 noQuoteStringValue -> [^ \t\n"'\\=<>:]:+ {% ([chars]) => chars.join('').toLowerCase() %}
 # "

@@ -305,18 +305,20 @@ class FilterCollapse extends Component {
   }
 
   async updateFilters(overrideFilter) {
-    const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
-    if (filterInput === '') {
+    const filterInput = overrideFilter ?? this.state.filterInput;
+    if ((filterInput ?? '') === '') {
       this.props.setFilter(null, '');
       return;
     }
 
     const { filter, err } = makeFilter(filterInput);
+    console.warn("Filter", filter, "Error", err);
     if (err) return;
 
     // TODO: Copy to advanced filter boxes.
     this.setState({ loading: true });
-    await this.props.setFilter(filter, filterInput);
+    console.warn("Setting to", filter, filterInput);
+    await this.props.setFilter(() => filter, filterInput);
     this.setState({ loading: false });
   }
 

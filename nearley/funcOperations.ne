@@ -121,5 +121,5 @@ const manaCostOperation = (op, value) => {
 %} # %}
 
 @{%
-const setElementOperation = (value) => (fieldValue) => fieldValue.some((elem) => elem?.toLowerCase() === value);
+const setElementOperation = (value) => (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase() === value);
 %} # %}
