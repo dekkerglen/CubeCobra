@@ -1,6 +1,8 @@
-import nearley from 'nearley';
+import { Grammar, Parser } from 'nearley';
 
 import filterCardGrammar from 'generated/filtering/cardFilters';
+
+const compiledGrammar = Grammar.fromCompiled(filterCardGrammar);
 
 const ALL_OPERATORS = [':', '=', '!=', '<>', '<', '<=', '>', '>='];
 
@@ -22,7 +24,7 @@ export function makeFilter(filterText) {
     };
   }
 
-  const filterParser = new nearley.Parser(nearley.Grammar.fromCompiled(filterCardGrammar));
+  const filterParser = new Parser(compiledGrammar);
   filterParser.feed(filterText);
   const { results } = filterParser;
   if (results.length === 1) {

@@ -1,6 +1,7 @@
 private/
 /dist/
 /.vscode/
+src/generated/
 
 src/generated/
 
