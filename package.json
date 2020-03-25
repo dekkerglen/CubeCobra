@@ -14,12 +14,12 @@
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
     "webpack": "webpack --mode development --config webpack.server.js",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
-    "build": "webpack --mode production --config webpack.prod.js --progress",
-    "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
+    "build": "npm run nearley && webpack --mode production --config webpack.prod.js --progress",
+    "start": "npm run nearley && npm run nodemon & npm run webpack-dev-server & webpack --mode development --config webpack.server.js --watch",
     "test-loud": "jest --detectOpenHandles  --coverage",
     "test": "npm run test-loud -- --silent",
-    "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "nearley": "nearleyc nearley/cardFilters.ne -o src/generated/filtering/cardFilters.js && ./nearley/helper.sh"
+    "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
+    "nearley": "./nearley/helper.sh"
   },
   "author": "Gwen Dekker",
   "license": "ISC",

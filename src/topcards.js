@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
 import { encodeName } from 'utils/Card';
-import { makeFilter } from 'filtering/filter';
+import { makeFilter } from 'filtering/filterCards';
 
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';

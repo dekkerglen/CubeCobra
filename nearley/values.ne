@@ -16,7 +16,7 @@ positiveHalfIntValue ->
 halfIntOpValue -> anyOperator halfIntValue {% ([op, value]) => defaultOperation(op, value) %}
 
 halfIntValue ->
-    [0-9]:+ ("." ("0" | "5")):? {% ([digits, decimal]) => parseFloat(`${digits.join('')}${(decimal ?? []).join('')}`, 10) %}
+    [0-9]:+ ("." ("0" | "5")):? {% ([digits, decimal]) => parseFloat(`${digits.join('')}${(decimal || []).join('')}`, 10) %}
   | "." ("0" | "5") {% ([, digit]) => digit === '5' ? 0.5 : 0 %}
 
 integerOpValue -> anyOperator integerValue {% ([op, value]) => defaultOperation(op, value) %}

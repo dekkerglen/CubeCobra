@@ -1,6 +1,5 @@
 import { arraysAreEqualSets } from 'utils/Util';
-import { makeFilter } from '../../../src/filtering/filter';
-
+import { makeFilter } from 'filtering/filterCards';
 import { expectOperator } from '../../helpers';
 
 const fixturesPath = 'fixtures';

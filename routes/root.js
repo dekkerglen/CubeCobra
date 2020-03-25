@@ -8,7 +8,6 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
-const Card = require('../models/card');
 
 const { NODE_ENV } = process.env;
 
@@ -18,8 +17,8 @@ if (NODE_ENV === 'production') {
 }
 
 const carddb = require('../serverjs/cards');
-
-const { addAutocard } = require('../serverjs/cubefn.js');
+const { makeFilter } = require('../serverjs/filterCubes');
+const { addAutocard } = require('../serverjs/cubefn');
 const { csrfProtection } = require('./middleware');
 
 const router = express.Router();
@@ -112,7 +111,7 @@ router.get('/explore', async (req, res) => {
   });
 });
 
-router.get('/random', async (req, res) => {
+router.get('/random', async (_, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random);
@@ -185,7 +184,7 @@ router.get('/dashboard', async (req, res) => {
     return res.render('dashboard', {
       reactHTML:
         NODE_ENV === 'production'
-          ? await ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
+          ? ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
           : undefined,
       reactProps: serialize(reactProps),
       loginCallback: '/',
@@ -266,7 +265,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
   }
 });
 
-router.get('/landing', async (req, res) => {
+router.get('/landing', async (_, res) => {
   const cubeq = Cube.estimatedDocumentCount().exec();
   const deckq = Deck.estimatedDocumentCount().exec();
   const userq = User.estimatedDocumentCount().exec();
@@ -282,7 +281,7 @@ router.get('/landing', async (req, res) => {
   });
 });
 
-router.get('/search', async (req, res) => {
+router.get('/search', async (_, res) => {
   const reactProps = {
     query: '',
     cubes: [],
@@ -292,103 +291,6 @@ router.get('/search', async (req, res) => {
     loginCallback: `/search`,
   });
 });
-
-const queryMap = {
-  owner_name: 'owner_name',
-  owner: 'owner_name',
-  name: 'name',
-  numDecks: 'numDecks',
-  decks: 'numDecks',
-  card_count: 'card_count',
-  cards: 'card_count',
-  category: 'category',
-  card: 'card',
-};
-
-const operatorMap = {
-  '>': '$gt',
-  '<': '$lt',
-  '>=': '$gte',
-  '<=': '$lte',
-  '=': '$eq',
-};
-
-const delimiters = [':', '<=', '>=', '<', '>', '='];
-const prefixes = [
-  'Powered',
-  'Unpowered',
-  'Pauper',
-  'Peasant',
-  'Budget',
-  'Silver-bordered',
-  'Commander',
-  'Battle Box',
-  'Multiplayer',
-  'Judge Tower',
-];
-
-async function getCardCubes(value) {
-  const ids = carddb.getIdsFromName(value);
-  if (ids) {
-    return getCardCubes(carddb.getMostReasonable(value)._id);
-  }
-
-  // if id is a foreign cardname, redirect to english version
-  const english = carddb.getEnglishVersion(value);
-  if (english) {
-    return getCardCubes(english);
-  }
-
-  // otherwise just go to this ID.
-  const card = carddb.cardFromId(value);
-  const data = await Card.findOne({ cardName: card.name_lower });
-  if (!data) {
-    return { _id: { $in: [] } };
-  }
-
-  return { _id: { $in: data.cubes } };
-}
-
-async function buildQuery(key, value, delim) {
-  if (!queryMap[key]) {
-    return { name: { $regex: `${key}${delim}${value}`, $options: 'i' } };
-  }
-
-  key = queryMap[key];
-  const query = {};
-  if (delim === ':') {
-    switch (key) {
-      case 'owner_name':
-      case 'name':
-      case 'descriptionhtml':
-        query[key] = { $regex: value, $options: 'i' };
-        break;
-      case 'category':
-        if (prefixes.includes(value)) {
-          query.categoryPrefixes = { $regex: value, $options: 'i' };
-        } else {
-          query.categoryOverride = { $regex: value, $options: 'i' };
-        }
-        break;
-      case 'card':
-        return getCardCubes(value);
-      default:
-        break;
-    }
-  } else {
-    // relational
-    switch (key) {
-      case 'numDecks':
-      case 'card_count':
-        query[key] = {};
-        query[key][operatorMap[delim]] = value;
-        break;
-      default:
-        break;
-    }
-  }
-  return query;
-}
 
 router.get('/search/:query/:page', async (req, res) => {
   const perPage = 36;
@@ -415,27 +317,15 @@ router.get('/search/:query/:page', async (req, res) => {
       break;
   }
 
-  // parse query object, this regex escapes quotes: https://stackoverflow.com/questions/16261635/javascript-split-string-by-space-but-ignore-space-in-quotes-notice-not-to-spli
-  const split = req.params.query.match(/(?:[^\s"]+|"[^"]*")+/g);
-
-  const query = {
-    $and: await Promise.all(
-      split.map(async (token) => {
-        for (const delim of delimiters) {
-          if (token.includes(delim)) {
-            const splitToken = token.split(delim);
-            // this regex strips quotes if visible
-            return buildQuery(splitToken[0], splitToken[1].replace(/["]+/g, ''), delim);
-          }
-        }
-        return { name: { $regex: token, $options: 'i' } };
-      }),
-    ),
-  };
-
-  query.$and.push({
-    isListed: true,
-  });
+  let {
+    filter: { query },
+  } = await makeFilter(req.params.query, carddb);
+  const listedQuery = { isListed: true };
+  if (query.$and) {
+    query.$and.push(listedQuery);
+  } else {
+    query = { $and: [{ isListed: true }, query] };
+  }
 
   const count = await Cube.count(query);
 
@@ -460,49 +350,49 @@ router.get('/search/:query/:page', async (req, res) => {
   });
 });
 
-router.get('/contact', (req, res) => {
+router.get('/contact', (_, res) => {
   res.render('info/contact', {
     loginCallback: '/contact',
   });
 });
 
-router.get('/tos', (req, res) => {
+router.get('/tos', (_, res) => {
   res.render('info/tos', {
     loginCallback: '/tos',
   });
 });
 
-router.get('/filters', (req, res) => {
+router.get('/filters', (_, res) => {
   res.render('info/filters', {
     loginCallback: '/filters',
   });
 });
 
-router.get('/privacy', (req, res) => {
+router.get('/privacy', (_, res) => {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy',
   });
 });
 
-router.get('/cookies', (req, res) => {
+router.get('/cookies', (_, res) => {
   res.render('info/cookies', {
     loginCallback: '/cookies',
   });
 });
 
-router.get('/ourstory', (req, res) => {
+router.get('/ourstory', (_, res) => {
   res.render('info/ourstory', {
     loginCallback: '/ourstory',
   });
 });
 
-router.get('/faq', (req, res) => {
+router.get('/faq', (_, res) => {
   res.render('info/faq', {
     loginCallback: '/faq',
   });
 });
 
-router.get('/donate', (req, res) => {
+router.get('/donate', (_, res) => {
   res.render('info/donate', {
     loginCallback: '/donate',
   });

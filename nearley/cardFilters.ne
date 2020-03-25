@@ -5,7 +5,7 @@
 import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
 %} # %}
 
-@{% 
+@{%
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;

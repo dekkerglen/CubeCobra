@@ -2,7 +2,7 @@
 
 const Util = require('utils/Util.js');
 require('./Card.js');
-const { filterToString, makeFilter } = require('filtering/filter.js');
+const { filterToString, makeFilter, operatorsRegex } = require('filtering/filterCards.js');
 
 function matchingCards(cards, filter) {
   if (filter === null) {
@@ -17,7 +17,7 @@ function compileFilter(filterText) {
   }
 
   const { filter, err } = makeFilter(filterText);
-  if (err || !Filter.operatorsRegex.test(filterText)) {
+  if (err || !operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
