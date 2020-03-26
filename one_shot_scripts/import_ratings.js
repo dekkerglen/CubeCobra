@@ -29,7 +29,7 @@ async function saveRatings(defaultPath = null) {
 
 (async () => {
   mongoose.connect(mongosecrets.connectionString).then(async () => {
-    saveRatings(process.argv[2]);
+    await saveRatings(process.argv[2]);
     mongoose.disconnect();
     console.log('done');
     process.exit();
