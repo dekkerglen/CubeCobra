@@ -51,9 +51,18 @@ alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => eq
 
 @{%
 const normalizeCombination = (combination) => combination.join('').toLowerCase().replace('c', '').split('');
+const reversedSetOperation = (op, value) => {
+  if (op.toString() === ':') {
+    return setOperation('<=', value);
+  }
+  return setOperation(op, value);
+};
 %} # %}
 
 colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
+  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+
+colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
 
 comb1[A] -> null {% () => [] %}

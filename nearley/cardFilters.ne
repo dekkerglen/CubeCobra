@@ -55,7 +55,7 @@ cmcCondition -> "cmc"i integerOpValue {% ([, valuePred]) => genericCondition('cm
 
 colorCondition -> ("c"i | "color"i | "colors"i) colorCombinationOpValue {% ([, valuePred]) => genericCondition('colors', valuePred) %}
 
-colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "color_identity"i) colorCombinationOpValue {% ([, valuePred]) => genericCondition('color_identity', valuePred) %}
+colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "color_identity"i) colorIdentityOpValue {% ([, valuePred]) => genericCondition('color_identity', valuePred) %}
 
 typeCondition -> ("t"i |  "type"i | "type_line"i) stringOpValue {% ([, valuePred]) => genericCondition('type_line', valuePred) %}
 
