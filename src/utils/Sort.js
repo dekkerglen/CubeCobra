@@ -694,11 +694,12 @@ function sortGroupsOrdered(cards, sort) {
   for (const [card, cardLabels] of allCardLabels) {
     if (cardLabels.length > 0) {
       cardLabels.sort(compare);
-      const label = cardLabels[0];
-      if (!byLabel[label]) {
-        byLabel[label] = [];
+      for (const label of cardLabels) {
+        if (!byLabel[label]) {
+          byLabel[label] = [];
+        }
+        byLabel[label].push(card);
       }
-      byLabel[label].push(card);
     }
   }
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]]);
