@@ -65,47 +65,47 @@ function botRating(botColors, card) {
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
 
-  // If you add x to a rating you roughly increase the estimated odds of getting
-  // picked by a factor of (50 * 10**(x/400) - 50) percent
+  // If you add x to a rating you roughly increase the estimated value
+  // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
   if (isLand) {
     if ((subset || contains) && isFetch) {
-      // Increase odds of picking by roughly 175%
-      rating += 261;
+      // Increase value of picking by roughly 200%
+      rating += 191;
     } else if (subset || contains) {
       // Would be good if we could detect 5 color lands here and adjust appropriately.
       switch (colors.length) {
         case 1:
-          // Increase odds of picking by roughly 90%
-          rating += 179;
+          // Increase value of picking by roughly 90%
+          rating += 102;
           break;
         case 2:
-          // Increase odds of picking by roughly 150%
-          rating += 241;
+          // Increase value of picking by roughly 150%
+          rating += 159;
           break;
         default:
-          // Increase odds of picking by roughly 200%
-          rating += 280;
+          // Increase value of picking by roughly 240%
+          rating += 213;
           break;
       }
     } else if (overlap && isFetch) {
-      // Increase odds of picking by roughly 125%
-      rating += 218;
+      // Increase value of picking by roughly 125%
+      rating += 141;
     } else if (overlap || colorless) {
-      // Increase odds of picking by roughly 30%
-      rating += 82;
+      // Increase value of picking by roughly 40%
+      rating += 58;
     }
   } else if (colorless) {
-    // Increase odds of picking by roughly 125%
-    rating += 218;
+    // Increase value of picking by roughly 125%
+    rating += 141;
   } else if (subset) {
-    // Increase odds of picking by roughly 100%
-    rating += 191;
-  } else if (contains) {
-    // Increase odds of picking by roughly 50%
+    // Increase value of picking by roughly 100%
     rating += 120;
+  } else if (contains) {
+    // Increase value of picking by roughly 50%
+    rating += 82;
   } else if (overlap) {
-    // Increase odds of picking by roughly 20%
-    rating += 58;
+    // Increase value of picking by roughly 20%
+    rating += 32;
   }
 
   return rating;

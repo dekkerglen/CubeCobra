@@ -35,7 +35,7 @@ const {
   getElo,
 } = require('../serverjs/cubefn.js');
 
-const draftCreation = require('../dist/drafting/draftCreation.js');
+const draftutil = require('../dist/drafting/draftCreation');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
@@ -768,7 +768,7 @@ router.get('/list/:id', async (req, res) => {
 
     return res.render('cube/cube_list', {
       reactHTML: CubeListPage
-        ? ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
@@ -827,7 +827,7 @@ router.get('/playtest/:id', async (req, res) => {
 
     return res.render('cube/cube_playtest', {
       reactHTML: CubePlaytestPage
-        ? ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+        ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Playtest`,
@@ -988,13 +988,13 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     const data = cheerio.load(text);
 
     const tagColors = new Map();
-    data('.keyColour').each((_, elem) => {
+    data('.keyColour').each((i, elem) => {
       const nodeText = elem.firstChild.nodeValue.trim();
       tagColors.set(elem.attribs.class.split(' ')[1], nodeText);
     });
 
     const cards = [];
-    data('.cardPreview').each((_, elem) => {
+    data('.cardPreview').each((i, elem) => {
       const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
       const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
       const tagColorClasses = elem.attribs.class.split(' ').filter((c) => tagColors.has(c));
@@ -1048,7 +1048,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
       };
       return res.render('cube/bulk_upload', {
         reactHTML: BulkUploadPage
-          ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
           : undefined,
         reactProps: serialize(reactProps),
         cube,
@@ -1243,7 +1243,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
     };
     return res.render('cube/bulk_upload', {
       reactHTML: BulkUploadPage
-        ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
@@ -1350,7 +1350,7 @@ async function bulkUpload(req, res, list, cube) {
     };
     return res.render('cube/bulk_upload', {
       reactHTML: BulkUploadPage
-        ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
@@ -1436,7 +1436,7 @@ router.get('/download/cubecobra/:id', async (req, res) => {
   }
 });
 
-function writeCard(res, card, maybe) {
+function writeCard(req, res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
@@ -1487,11 +1487,11 @@ router.get('/download/csv/:id', async (req, res) => {
     res.write(`${CSV_HEADER}\r\n`);
 
     for (const card of cube.cards) {
-      writeCard(res, card, false);
+      writeCard(req, res, card, false);
     }
     if (Array.isArray(cube.maybe)) {
       for (const card of cube.maybe) {
-        writeCard(res, card, true);
+        writeCard(req, res, card, true);
       }
     }
     return res.end();
@@ -1945,7 +1945,6 @@ router.post('/startdraft/:id', async (req, res) => {
       packs: parseInt(req.body.packs, 10),
       cards: parseInt(req.body.cards, 10),
     };
-
     const nameSet = new Set();
     // insert card details everywhere that needs them
     for (const card of cube.cards) {
@@ -1959,11 +1958,10 @@ router.post('/startdraft/:id', async (req, res) => {
     }
 
     // setup draft
-
-    const format = draftCreation.getDraftFormat(params, cube);
+    const format = draftutil.getDraftFormat(params, cube);
 
     const draft = new Draft();
-    const populated = draftCreation.populateDraft(
+    const populated = draftutil.createDraft(
       format,
       cube.cards,
       params.seats - 1,
@@ -2047,7 +2045,7 @@ router.get('/draft/:id', async (req, res) => {
 
     return res.render('cube/cube_draft', {
       reactHTML: CubeDraftPage
-        ? ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
+        ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
@@ -2177,7 +2175,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 });
 
 // API routes
-router.get('/api/cardnames', (_, res) => {
+router.get('/api/cardnames', (req, res) => {
   return res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
@@ -2185,7 +2183,7 @@ router.get('/api/cardnames', (_, res) => {
 });
 
 // Get the full card images including image_normal and image_flip
-router.get('/api/cardimages', (_, res) => {
+router.get('/api/cardimages', (req, res) => {
   return res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
@@ -2516,14 +2514,14 @@ router.post(
   }),
 );
 
-router.get('/api/imagedict', (_, res) => {
+router.get('/api/imagedict', (req, res) => {
   res.status(200).send({
     success: 'true',
     dict: carddb.imagedict,
   });
 });
 
-router.get('/api/fullnames', (_, res) => {
+router.get('/api/fullnames', (req, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.full_names,
@@ -3349,7 +3347,7 @@ router.post(
     const maybe = [...(cube.maybe || [])];
 
     const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
-    const withRemoved = maybe.filter((_, index) => !removeIndices.includes(index));
+    const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
 
     const addCards = Array.isArray(req.body.add) ? req.body.add : [];
     const addCardsNoDetails = addCards.map(({ details, ...card }) => ({ ...util.newCard(details), ...card }));

@@ -229,12 +229,11 @@ function assignBotColors(initialState, botCount, seats) {
   const ITERATIONS = 10000;
   // Think of these as scaling how much of the cards available to a seat
   //   they can reasonably use.
-  const SEAT_COLORS_MULTIPLIERS = [1, 1, 1 / 1.6, 1 / 2.5, 1 / 3.4, 1 / 4.4];
-  // Increase the desirability of cards with more colors in their identity.
-  //   Translates to roughly increases of 20%, 0%, 50%, 80%, 125%, 200% for 0,1,2,3,4,5 colors respectively.
-  const CARD_COLORS_INCREMENT = [58, 0, 120, 166, 218, 280];
+  const SEAT_COLORS_MULTIPLIERS = [1, 1, 0.67, 0.4, 0.28, 0.2];
+  // Scaling the value, not the ELO of the cards.
+  const CARD_COLORS_MULTIPLIERS = [1.2, 0, 1.3, 1.4, 1.5, 1.6];
 
-  let colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { elo: 0, count: 0 }]));
+  let colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { value: 0, count: 0 }]));
   const cards = initialState.flat(3);
 
   for (const card of cards) {
@@ -248,26 +247,28 @@ function assignBotColors(initialState, botCount, seats) {
         (colors) => colors.length === cardColorSet.length && arraysAreEqualSets(colors, cardColorSet),
       ) ?? []
     ).join('');
-    colorCounts[cardColors].elo += elo ?? 0;
+    // Use the estimated value of the card, not the elo directly.
+    colorCounts[cardColors].value += 10 ** ((elo ?? 0) / 400) - 1;
     colorCounts[cardColors].count += 1;
   }
+
   // Cut out all the color combinations that don't contribute any value
   // and increase the value of each card by the additive increment from above.
   colorCounts = fromEntries(
     Object.entries(colorCounts)
-      .filter(([, { elo }]) => elo > 0)
-      .map(([colors, { elo, count }]) => [colors, { elo: elo + CARD_COLORS_INCREMENT[colors.length] * count, count }]),
+      .filter(([, { value }]) => value > 0)
+      .map(([colors, { value, count }]) => [colors, { value: value * CARD_COLORS_MULTIPLIERS[colors.length], count }]),
   );
 
   // We allow playing any combination with at least 1 color
   //   and at least one card with exactly that color identity.
   //   We also allow running a pair if there are mono color cards
   //   of both the colors that make up the pair.
-  let validCombinationArray = Object.keys(colorCounts).filter(
+  let validCombinationArray = COLOR_COMBINATIONS.map((comb) => comb.join('')).filter(
     (comb) =>
       comb.length > 0 &&
-      ((colorCounts[comb]?.elo ?? 0) > 0 ||
-        (comb.length === 2 && (colorCounts[comb[0]]?.elo ?? 0) > 0 && (colorCounts[comb[1]]?.elo ?? 0) > 0)),
+      ((colorCounts[comb]?.value ?? 0) > 0 ||
+        (comb.length === 2 && (colorCounts[comb[0]]?.value ?? 0) > 0 && (colorCounts[comb[1]]?.value ?? 0) > 0)),
   );
   if (validCombinationArray.length === 0) {
     // There are no non-empty color combinations with cards in them
@@ -278,24 +279,21 @@ function assignBotColors(initialState, botCount, seats) {
   const seatsRating = (seatColors) => {
     const seatColorValues = {};
     let includedCount = 0;
-    for (const [combination, { count, elo }] of Object.entries(colorCounts)) {
-      const includedInCount = seatColors.reduce(
-        (c, colors) => (c + COLOR_INCLUSION_MAP[colors][combination] ? 1 : 0),
-        0,
-      );
+    for (const [combination, { count, value }] of Object.entries(colorCounts)) {
+      const includedInCount = seatColors.filter((colors) => COLOR_INCLUSION_MAP[colors][combination]).length;
       if (includedInCount > 0) {
-        // The card is desired by includedInCount different seats
-        // so it's value will get split between them.
-        seatColorValues[combination] = elo / includedInCount;
+        // The cards are desired by includedInCount different seats
+        // so their value will get split between them.
+        seatColorValues[combination] = value / includedInCount;
         includedCount += count;
       }
     }
-    // Sum of the elo each combination colors provides to the seat
+    // Sum of the value each combination colors provides to the seat
     // scaled by the amount of an indiviudal card they can utilize
     // given how many colors they are playing.
     const fValues = seatColors.map(
       (colors) =>
-        COLOR_INCLUSION_MAP[colors].includes.reduce((f, comb) => f + seatColorValues[comb]?.elo ?? 0, 0) *
+        COLOR_INCLUSION_MAP[colors].includes.reduce((f, comb) => f + seatColorValues[comb]?.value ?? 0, 0) *
         SEAT_COLORS_MULTIPLIERS[colors.length],
     );
     // Final rating is linear in:
@@ -341,8 +339,7 @@ function assignBotColors(initialState, botCount, seats) {
       [bestSeats, bestRating] = [currentSeats, rating];
     }
   }
-  // Return just the bot assignments, humans will have to figure out what's
-  //   open on their own.
+  // Return just the bot assignments.
   return bestSeats.slice(0, botCount).map((c) => c.split(''));
 }
 

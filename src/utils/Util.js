@@ -57,16 +57,6 @@ export function arraysAreEqualSets(a1, a2) {
   const set2 = new Set(a2);
   return a1.every((x) => set2.has(x)) && a2.every((x) => set1.has(x));
 }
-
-export function medianOf(data) {
-  data = [...data].sort((a, b) => a - b);
-  const mid = Math.trunc(data.length / 2);
-  if (data.length % 2 === 0) {
-    return (data[mid - 1] + data[mid]) / 2;
-  }
-  return data[mid];
-}
-
 export function meanOf(data) {
   return data.reduce((a, b) => a + b, 0) / data.length;
 }
@@ -74,39 +64,6 @@ export function meanOf(data) {
 export function stdDevOf(data) {
   const mean = meanOf(data);
   return Math.sqrt(data.reduce((sum, a) => sum + (mean - a) ** 2, 0) / (data.length - 1));
-}
-
-export function weightedMedianOf(data) {
-  data = [...data].sort(([a], [b]) => a - b);
-  const halfWeight = (data.reduce((a, [, b]) => a + b, 0) || 2) / 2;
-  let totalWeight = 0;
-  let prevValue = 0;
-  for (const [value, weight] of data) {
-    totalWeight += weight;
-    if (totalWeight === halfWeight) {
-      return value;
-    }
-    if (totalWeight > halfWeight) {
-      return (value + prevValue) / 2;
-    }
-    prevValue = value;
-  }
-  return 0;
-}
-
-export function weightedMeanOf(data) {
-  const totalWeight = data.reduce((a, [, b]) => a + b, 0) || 1;
-  return data.reduce((a, [value, weight]) => a + value * weight, 0) / totalWeight;
-}
-
-export function weightedStdDevOf(data) {
-  const totalWeight = data.reduce((a, [, b]) => a + b, 0) || 1;
-  const mean = weightedMeanOf(data);
-  return Math.sqrt(
-    (data.reduce((sum, [value, weight]) => sum + weight * (mean - value) ** 2, 0) * data.length) /
-      (data.length - 1) /
-      totalWeight,
-  );
 }
 
 export function randomElement(array) {
