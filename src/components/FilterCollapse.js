@@ -312,12 +312,10 @@ class FilterCollapse extends Component {
     }
 
     const { filter, err } = makeFilter(filterInput);
-    console.warn("Filter", filter, "Error", err);
     if (err) return;
 
     // TODO: Copy to advanced filter boxes.
     this.setState({ loading: true });
-    console.warn("Setting to", filter, filterInput);
     await this.props.setFilter(() => filter, filterInput);
     this.setState({ loading: false });
   }
