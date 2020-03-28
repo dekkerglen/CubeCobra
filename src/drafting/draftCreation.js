@@ -229,9 +229,9 @@ function assignBotColors(initialState, botCount, seats) {
   const ITERATIONS = 10000;
   // Think of these as scaling how much of the cards available to a seat
   //   they can reasonably use.
-  const SEAT_COLORS_MULTIPLIERS = [1, 1, 0.67, 0.4, 0.28, 0.2];
+  const SEAT_COLORS_MULTIPLIERS = [1, 1, 0.6, 0.42, 0.3, 0.2];
   // Scaling the value, not the ELO of the cards.
-  const CARD_COLORS_MULTIPLIERS = [1.2, 0, 1.3, 1.4, 1.5, 1.6];
+  const CARD_COLORS_MULTIPLIERS = [1.2, 1, 1.3, 1.4, 1.5, 1.6];
 
   let colorCounts = fromEntries(COLOR_COMBINATIONS.map((c) => [c.join(''), { value: 0, count: 0 }]));
   const cards = initialState.flat(3);
