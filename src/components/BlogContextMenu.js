@@ -39,6 +39,18 @@ class BlogContextMenu extends React.Component {
   clickDelete(post) {
     $('#deleteModal').modal('show');
 
+    var clickDeleteBlog = function(e) {
+      if (event.keyCode === 13) {
+        $('.delete-blog').click();
+      }
+    };
+
+    $(window).on('keyup', clickDeleteBlog)
+
+    $('#deleteModal').on('hidden.bs.modal', function() {
+      $(window).off('keyup', clickDeleteBlog)
+    });
+
     $('.delete-blog')
       .off()
       .on('click', function(e) {
@@ -56,6 +68,7 @@ class BlogContextMenu extends React.Component {
   }
 
   render() {
+
     return (
       <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
         <DropdownToggle tag="a" className="nav-link clickable">
