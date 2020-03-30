@@ -17,23 +17,16 @@ const Seat = {
 let draftSchema = mongoose.Schema({
   cube: String,
   deck: String,
-  finished: {
-    type: Boolean,
-    default: false
+  state: { //states should be new, 
+    type: String,
+    default: 'lobby',
+    enum: ['lobby','drafting','finished']
   },
   initial_state: [[[cardSchema]]],
 
   //new format, will convert to
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
-
-  //deprecated
-  picks: [[]],
-  packs: [[[]]],
-  bots: [[]],
-  pickOrder: [],
-  pickNumber: Number,
-  packNumber: Number,
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));

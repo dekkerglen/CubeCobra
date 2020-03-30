@@ -66,29 +66,6 @@ let deckSchema = mongoose.Schema({
     default: [],
     index: true,
   },
-  //deprecated
-  owner: String,
-  name: String,
-  description: {
-    type: String,
-    default: 'No description available.',
-  },
-  username: {
-    type: String,
-    default: 'User',
-  },
-  cols: Number,
-  playerdeck: {
-    type: [[]],
-    index: true,
-  },
-  playersideboard: [[]],
-  bots: [[]],
-  cards: [[]],
-  newformat: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 let Deck = (module.exports = mongoose.model('Deck', deckSchema));

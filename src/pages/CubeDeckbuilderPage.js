@@ -35,14 +35,14 @@ const makeInitialStacks = (playerDeck) => {
   return sortDeck(playerDeck);
 };
 
-const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
-  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
+const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, seatIndex }) => {
+  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[seatIndex].deck));
   const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.seats[0].sideboard;
+    const initial = initialDeck.seats[seatIndex].sideboard;
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
     }
-    return [initialDeck.seats[0].sideboard.slice(0, 8)];
+    return [initialDeck.seats[seatIndex].sideboard.slice(0, 8)];
   });
 
   const locationMap = {
@@ -103,8 +103,8 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
   currentDeck.playerdeck = [...deck[0], ...deck[1]];
   [currentDeck.playersideboard] = sideboard;
 
-  const [name, setName] = useState(initialDeck.seats[0].name);
-  const [description, setDescription] = useState(initialDeck.seats[0].description);
+  const [name, setName] = useState(initialDeck.seats[seatIndex].name);
+  const [description, setDescription] = useState(initialDeck.seats[seatIndex].description);
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
@@ -115,6 +115,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
           name={name}
           description={description}
           className="mb-3"
+          seatIndex={seatIndex}
         />
         <DynamicFlash />
         <Row>
@@ -186,6 +187,7 @@ CubeDeckbuilderPage.propTypes = {
       }),
     ).isRequired,
   }).isRequired,
+  seatIndex: PropTypes.number.isRequired,
 };
 
 export default CubeDeckbuilderPage;

@@ -7,5 +7,8 @@ module.exports = {
   cardID: String,
   type_line: String,
   imgUrl: String,
-  rating: Number,
+  rating: {
+    type: Number,
+    required: false,
+  },
 };

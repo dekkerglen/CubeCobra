@@ -1968,6 +1968,7 @@ router.post('/startdraft/:id', async (req, res) => {
     draft.unopenedPacks = populated.unopenedPacks;
     draft.seats = populated.seats;
     draft.cube = cube._id;
+    draft.state = 'lobby';
 
     // add ratings
     const names = [];
@@ -2006,7 +2007,7 @@ router.post('/startdraft/:id', async (req, res) => {
 
 router.get('/draft/:id', async (req, res) => {
   try {
-    const draft = await Draft.findById(req.params.id).lean();
+    const draft = await Draft.findById(req.params.id);
     if (!draft) {
       req.flash('danger', 'Draft not found');
       return res.status(404).render('misc/404', {});
@@ -2025,6 +2026,43 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    let seat = 0;
+    if (!req.user) {
+      // add anon seat
+      for (let i = 0; i < draft.seats.length; i++) {
+        if (draft.seats[i].bot) {
+          draft.seats[i].bot = null;
+          draft.seats[i].name = 'Anonymous';
+          seat = i;
+          i = draft.seats.length;
+        }
+      }
+    } else {
+      let found = false;
+      const current = await User.findById(req.user._id);
+      // find user seat or add it
+      for (let i = 0; i < draft.seats.length; i++) {
+        if (current._id.equals(draft.seats[i].userid)) {
+          seat = i;
+          i = draft.seats.length;
+          found = true;
+        }
+      }
+      if (!found) {
+        for (let i = 0; i < draft.seats.length; i++) {
+          if (draft.seats[i].bot) {
+            draft.seats[i].bot = null;
+            draft.seats[i].name = current.username;
+            draft.seats[i].userid = current._id;
+            seat = i;
+            i = draft.seats.length;
+          }
+        }
+      }
+    }
+
+    await draft.save();
+
     const pack = draft.seats[0].packbacklog[0];
 
     for (const card of pack) {
@@ -2042,6 +2080,9 @@ router.get('/draft/:id', async (req, res) => {
       initialPack: pack,
       initialPicks: draft.seats[0].drafted,
       draftID: draft._id,
+      state: draft.state,
+      users: draft.seats.map((seat) => ({ userid: seat.userid, bot: seat.bot, name: seat.name })),
+      seat,
     };
 
     return res.render('cube/cube_draft', {
@@ -2649,10 +2690,11 @@ router.get(
   }),
 );
 
-router.post('/editdeck/:id', ensureAuth, async (req, res) => {
+router.post('/editdeck/:id/:seat', ensureAuth, async (req, res) => {
   try {
+    const seatIndex = req.params.seat;
     const deck = await Deck.findById(req.params.id);
-    const deckOwner = await User.findById(deck.seats[0].userid);
+    const deckOwner = await User.findById(deck.seats[seatIndex].userid);
 
     if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Unauthorized');
@@ -2663,11 +2705,10 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const name = JSON.parse(req.body.name);
     const description = sanitize(JSON.parse(req.body.description));
 
-    deck.seats[0].deck = newdeck.playerdeck;
-    deck.seats[0].sideboard = newdeck.playersideboard;
-    deck.cols = newdeck.cols;
-    deck.seats[0].name = name;
-    deck.seats[0].description = description;
+    deck.seats[seatIndex].deck = newdeck.playerdeck;
+    deck.seats[seatIndex].sideboard = newdeck.playersideboard;
+    deck.seats[seatIndex].name = name;
+    deck.seats[seatIndex].description = description;
 
     await deck.save();
 
@@ -2866,13 +2907,44 @@ router.get('/deckbuilder/:id', async (req, res) => {
     const deck = await Deck.findById(req.params.id).lean();
     if (!deck) {
       req.flash('danger', 'Deck not found');
-      return res.status(404).render('misc/404', {});
+      return res.us(404).render('misc/404', {});
+    }
+    if (!req.user) {
+      req.flash('danger', 'Only logged in deck owners can build decks.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    const deckOwner = await User.findById(deck.seats[0].userid).lean();
+    for (let i = 0; i < deck.seats.length; i++) {
+      console.log(req.user._id, deck.seats[i].userid);
+      if (req.user._id.equals(deck.seats[i].userid)) {
+        return res.redirect(`/cube/deckbuilder/${req.params.id}/${i}`);
+      }
+    }
 
-    if (!req.user || !deckOwner._id.equals(req.user._id)) {
+    req.flash('danger', 'Only the owner of a deck can edit their deck.');
+    return res.redirect(`/cube/deck/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/deckbuilder/:id/:seat', async (req, res) => {
+  try {
+    const seatIndex = req.params.seat;
+    const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', 'Deck not found');
+      return res.us(404).render('misc/404', {});
+    }
+
+    const deckOwner = await User.findById(deck.seats[seatIndex].userid).lean();
+
+    if (!req.user) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+    if (!deckOwner._id.equals(req.user._id)) {
+      req.flash('danger', 'Only the owner of a deck can edit their deck.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
@@ -2902,6 +2974,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       cubeID: getCubeId(cube),
       initialDeck: deck,
       basics: getBasics(carddb),
+      seatIndex,
     };
 
     return res.render('cube/cube_deckbuilder', {
@@ -2964,11 +3037,12 @@ router.get('/deck/:id', async (req, res) => {
       }
     }
 
+    // the deck can be edited as long as this userid matches any seat's userid
     const reactProps = {
       cube,
       deck,
       draft,
-      canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
+      canEdit: req.user ? deck.seats.some((seat) => req.user.id === seat.userid) : false,
       userid: req.user ? req.user.id : null,
     };
 

@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import openSocket from 'socket.io-client';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Nav, Navbar, Row, Spinner } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Nav, Navbar, Row, Spinner, Button } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
 import Location from 'utils/DraftLocation';
@@ -87,7 +87,7 @@ let connection = null;
 let onUpdate = () => {};
 let onFinish = () => {};
 
-const connect = (draftID, updateDelegate, finishDelegate) => {
+const connect = (draftID, seat, updateDelegate, finishDelegate) => {
   onUpdate = updateDelegate;
   onFinish = finishDelegate;
 
@@ -96,7 +96,7 @@ const connect = (draftID, updateDelegate, finishDelegate) => {
 
     console.log('connecting');
 
-    connection.emit('register', { draft: draftID, seat: 0 });
+    connection.emit('register', { draft: draftID, seat });
 
     connection.on('update', (update) => {
       onUpdate(update);
@@ -108,49 +108,106 @@ const connect = (draftID, updateDelegate, finishDelegate) => {
   return connection;
 };
 
-const CubeDraftPage = ({ cube, cubeID, initialPack, initialPicks, draftID }) => {
+const Lobby = ({ players, isHost, startDraft }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <h4>
+          Draft Lobby
+          <div className="float-right">
+            {isHost && (
+              <Button className="mx-2" color="success" onClick={startDraft}>
+                Start Draft
+              </Button>
+            )}
+          </div>
+        </h4>
+      </CardHeader>
+      <CardBody>
+        {players.map((player, index) =>
+          player.bot ? <h6>{`Seat ${index + 1}: Bot`}</h6> : <h6>{`Seat ${index + 1}: ${player.name}`}</h6>,
+        )}
+      </CardBody>
+    </Card>
+  );
+};
+
+const CubeDraft = ({ cube, cubeID, pack, packNumber, pickNumber, handleMoveCard, handleClickCard, picks }) => {
+  return (
+    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
+      <DisplayContextProvider>
+        <Navbar expand="xs" light className="usercontrols">
+          <Collapse navbar>
+            <Nav navbar>
+              <CustomImageToggler />
+            </Nav>
+          </Collapse>
+        </Navbar>
+        <DynamicFlash />
+        <DndProvider>
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              title={pack.length > 0 ? `Pack ${packNumber} - Pack ${pickNumber}` : 'Waiting for next pack...'}
+              onMoveCard={handleMoveCard}
+              onClickCard={handleClickCard}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary className="mt-3">
+            <Card className="mt-3">
+              <DeckStacks
+                cards={picks}
+                title="Picks"
+                subtitle={subtitle(picks.flat().flat())}
+                locationType={Location.PICKS}
+                canDrop={canDrop}
+                onMoveCard={handleMoveCard}
+              />
+            </Card>
+          </ErrorBoundary>
+        </DndProvider>
+      </DisplayContextProvider>
+    </CubeLayout>
+  );
+};
+
+const CubeDraftPage = ({ cube, cubeID, initialPack, initialPicks, draftID, state, users, seat }) => {
   const [pack, setPack] = useState(initialPack);
   const [packNumber, setPackNumber] = useState(0);
   const [pickNumber, setPickNumber] = useState(0);
-
-  console.log(initialPicks);
-  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([initialPicks.slice(0, 8), initialPicks.slice(8)]);
-
-  // State for showing loading while waiting for next pick.
-  const [picking, setPicking] = useState(null);
-  const [finished, setFinished] = useState(false);
+  const [draftState, setDraftState] = useState(state);
+  const [players, setPlayers] = useState(users);
 
   const listen = useCallback(
     async (update) => {
-      setPack(update);
+      console.log(update);
+      setPack(update.pack[seat]);
+      setPlayers(update.players);
+      setDraftState(update.state);
+      setPickNumber(update.packPick[seat][1]);
+      setPackNumber(update.packPick[seat][0]);
     },
-    [setPack],
+    [seat],
   );
 
-  const finish = useCallback(async (deck) => {
-    console.log(`finished: ${deck}`);
-  }, []);
+  const finish = (deck) => {
+    window.location = `/cube/deckbuilder/${deck}`;
+  };
 
-  const [socket, setSocket] = useState(connect(draftID, listen, finish));
+  connect(draftID, seat, listen, finish);
 
   const makePick = useCallback(
     async (pickIndex) => {
-      console.log(pickIndex);
       setPack([]);
-      // TODO:grab new pack here
-
-      const response = await csrfFetch(`/draft/pick/${draftID}/0/${pickIndex}`, {
+      await csrfFetch(`/draft/pick/${draftID}/${seat}/${pickIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       }).catch((err) => console.error(err));
-
-      setPackNumber(0);
-      setPickNumber(0);
     },
-    [draftID],
+    [draftID, seat],
   );
 
   const handleMoveCard = useCallback(
@@ -195,43 +252,36 @@ const CubeDraftPage = ({ cube, cubeID, initialPack, initialPicks, draftID }) => 
     },
     [makePick, pack, picks],
   );
-  return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <Navbar expand="xs" light className="usercontrols">
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <DndProvider>
-          <ErrorBoundary>
-            <Pack
-              pack={pack}
-              title={pack.length > 0 ? `Pack ${packNumber} - Pack ${pickNumber}` : 'Waiting for next pack...'}
-              picking={picking}
-              onMoveCard={handleMoveCard}
-              onClickCard={handleClickCard}
-            />
-          </ErrorBoundary>
-          <ErrorBoundary className="mt-3">
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picks}
-                title="Picks"
-                subtitle={subtitle(picks.flat().flat())}
-                locationType={Location.PICKS}
-                canDrop={canDrop}
-                onMoveCard={handleMoveCard}
-              />
-            </Card>
-          </ErrorBoundary>
-        </DndProvider>
-      </DisplayContextProvider>
-    </CubeLayout>
-  );
+
+  const startDraft = useCallback(async () => {
+    // setDraftState('drafting');
+    await csrfFetch(`/draft/start/${draftID}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch((err) => console.error(err));
+  }, [draftID]);
+
+  switch (draftState) {
+    case 'lobby':
+      return <Lobby players={players} isHost={seat === 0} startDraft={startDraft} />;
+    case 'drafting':
+      return (
+        <CubeDraft
+          cube={cube}
+          cubeID={cubeID}
+          pack={pack}
+          picks={picks}
+          packNumber={packNumber}
+          pickNumber={pickNumber}
+          handleMoveCard={handleMoveCard}
+          handleClickCard={handleClickCard}
+        />
+      );
+    default:
+      break;
+  }
 };
 
 CubeDraftPage.propTypes = {

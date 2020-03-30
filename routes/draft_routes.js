@@ -27,12 +27,8 @@ const fetchLands = {
   'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
 };
 
-function pack(draft) {
-  return draft.seats[0].packbacklog[0] || [];
-}
-
-function packPickNumber(draft) {
-  let picks = draft.seats[0].pickorder.length;
+function packPickNumber(draft, seat) {
+  let picks = seat.pickorder.length;
   let packnum = 0;
 
   while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
@@ -240,7 +236,7 @@ async function finish(draft) {
     delete draft.seats[i]._id;
   }
 
-  draft.finished = true;
+  draft.state = 'finished';
   return draft;
 }
 
@@ -300,12 +296,25 @@ const makeDeck = async (draft) => {
       bot: seat.bot,
       userid: seat.userid,
       username: seat.name,
-      pickorder: seat.pickorder,
+      pickorder: seat.pickorder.map((card) => {
+        card.rating = 0;
+        return card;
+      }),
       name: `Draft of ${cube.name}`,
       description: '',
       cols: 16,
-      deck: seat.drafted,
-      sideboard: seat.sideboard ? seat.sideboard : [],
+      deck: seat.drafted.map((col) =>
+        col.map((card) => {
+          card.rating = 0;
+          return card;
+        }),
+      ),
+      sideboard: (seat.sideboard ? seat.sideboard : []).map((col) =>
+        col.map((card) => {
+          card.rating = 0;
+          return card;
+        }),
+      ),
     });
   }
 
@@ -334,9 +343,8 @@ const makeDeck = async (draft) => {
       `${user.username} drafted your cube: ${cube.name}`,
     );
   }
-
+  console.log(deck.seats[1].pickorder);
   await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
-
   return deck;
 };
 
@@ -360,28 +368,32 @@ module.exports = (io) => {
   }
 
   io.sockets.on('connection', (socket) => {
-    socket.on('register', (param) => {
+    socket.on('register', async (param) => {
       socket.draft = param.draft;
       socket.seat = param.seat;
       socket.join(param.draft);
       console.log(`Seat ${param.seat} of ${param.draft} connected.`);
 
+      eventEmitter.emit(param.draft);
+
       if (eventEmitter.listeners(socket.draft).length <= 0) {
         // TODO remove all listeners when draft is completed, otherwise this will leak!
         eventEmitter.on(socket.draft, async () => {
           const draft = await Draft.findById(socket.draft);
-          if (draft.finished) {
+          if (draft.state === 'finished') {
             io.to(socket.draft).emit('finish', draft.deck);
           } else {
-            io.to(socket.draft).emit(
-              'update',
-              (draft.seats[socket.seat].packbacklog.length > 0 ? draft.seats[socket.seat].packbacklog[0] : []).map(
-                (packcard) => ({
+            io.to(socket.draft).emit('update', {
+              pack: draft.seats.map((seat) =>
+                (seat.packbacklog.length > 0 ? seat.packbacklog[0] : []).map((packcard) => ({
                   details: carddb.cardFromId(packcard.cardID),
                   ...packcard,
-                }),
+                })),
               ),
-            );
+              packPick: draft.seats.map((seat) => packPickNumber(draft, seat)),
+              state: draft.state,
+              players: draft.seats.map((seat) => ({ userid: seat.userid, bot: seat.bot, name: seat.name })),
+            });
           }
         });
       }
@@ -422,11 +434,31 @@ module.exports = (io) => {
     }
 
     draft = await pick(draft, seatIndex, req.params.index);
-    if (draft.finished) {
+    if (draft.state === 'finished') {
       const deck = await makeDeck(draft);
       draft.deck = deck._id;
     }
     await Draft.updateOne({ _id: draft._id }, draft);
+
+    await update(req.params.id, draft);
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  });
+
+  router.post('/start/:id', async (req, res) => {
+    const draft = await Draft.findById(req.params.id);
+
+    if (draft.seats[0].userid && req.user && !req.user._id.equals(draft.seats[0].userid)) {
+      return res.status(401).send({
+        message: 'Unauthorized: Must be logged in as correct user to pick for this seat.',
+        success: 'false',
+      });
+    }
+
+    draft.state = 'drafting';
+    await draft.save();
 
     await update(req.params.id, draft);
 
