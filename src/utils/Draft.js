@@ -69,6 +69,8 @@ function botCardRating(botColors, card) {
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
 
+  // If you add x to a rating you roughly increase the estimated value
+  // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
   if (isLand) {
     if ((subset || contains) && isFetch) {
       rating += 191; // Increase value of picking by roughly 200%
@@ -103,6 +105,8 @@ function botCardRating(botColors, card) {
 }
 
 const toValue = (elo) => 10 ** (elo / 400);
+const considerInCombination = (combination) => (card) =>
+  arrayIsSubset(card.colors ?? card.details.color_identity ?? [], combination);
 
 const COLOR_SCALING_FACTOR = [1, 1, 0.75, 0.45, 0.3, 0.2];
 const botRatingAndCombination = (seen, card, pool, overallPool) => {
@@ -110,8 +114,10 @@ const botRatingAndCombination = (seen, card, pool, overallPool) => {
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
     const poolRating =
-      pool.reduce((w, poolCard) => w + toValue(botCardRating(combination, poolCard)), 0) +
-      (card && toValue(botCardRating(combination, card)));
+      pool
+        .filter(considerInCombination(combination))
+        .reduce((w, poolCard) => w + toValue(poolCard.details.elo ?? 0), 0) +
+      (card && considerInCombination(combination)(card) ? toValue(card.details.elo ?? 0) : 0);
     let seenCount = 1;
     let overallCount = 1;
     if (seen) {
@@ -140,10 +146,11 @@ function getSortFn(bot) {
   };
 }
 
-async function buildDeck(cards, bot) {
+async function buildDeck(cards) {
   const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
-  const sortFn = getSortFn(bot);
+  const colors = botColors(null, null, cards, null);
+  const sortFn = getSortFn(colors);
 
   nonlands.sort(sortFn);
   lands.sort(sortFn);
@@ -272,7 +279,7 @@ async function finish() {
       draft.seats[i].drafted = decks[i].deck;
       draft.seats[i].sideboard = decks[i].sideboard;
       const colors = botColors(null, null, draft.seats[i].pickorder, cards);
-      draft.seats[i].bot = colors;
+      console.log(i, colors);
       draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     }
@@ -288,4 +295,4 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, botRating, pick, finish };
