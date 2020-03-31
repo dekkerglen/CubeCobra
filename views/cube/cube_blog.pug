@@ -44,19 +44,6 @@ block cube_content
                 input.btn.btn-success(type='submit',value='Save')
                 button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-      #deleteModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='deleteModalLabel', aria-hidden='true')
-        .modal-dialog(role='document')
-          .modal-content
-            .modal-header
-              h5.modal-title Confirm Delete
-              button.close(type='button', data-dismiss='modal', aria-label='Close')
-                span(aria-hidden='true') ×
-            .modal-body
-              P Are you sure you wish to delete this post? This action cannot be undone.
-            .modal-footer
-              input.btn.btn-danger.delete-blog(type='submit',value='Delete', data-id='', id="delete")
-              button.btn.btn-secondary(type='button', data-dismiss='modal') Cancel
-
 block scripts
   script(src='/js/texteditor.js', async)
   script(src='/js/blog.js', async)

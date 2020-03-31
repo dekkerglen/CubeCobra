@@ -7,10 +7,6 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse, Modal,
 class BlogDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isOpen: false,
-    };
-
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
     this.confirm = this.confirm.bind(this);
@@ -19,15 +15,15 @@ class BlogDeleteModal extends React.Component {
 
   open() {
     document.addEventListener("keyup", this.keyPress);
-    this.setState({
-      isOpen: true,
+    this.props.menu.setState({
+      deleteModalIsOpen: true,
     });
   }
 
   close() {
     document.removeEventListener("keyup", this.keyPress);
-    this.setState({
-      isOpen: false,
+    this.props.menu.setState({
+      deleteModalIsOpen: false,
     });
   }
 
@@ -51,7 +47,7 @@ class BlogDeleteModal extends React.Component {
   }
 
   render() {
-    const {isOpen} = this.state;
+    const isOpen = this.props.menu.state.deleteModalIsOpen;
     return (
       <>
         <span onClick={this.open}>
@@ -83,6 +79,7 @@ class BlogContextMenu extends React.Component {
     this.state = {
       dropdownOpen: false,
       collapseOpen: false,
+      deleteModalIsOpen: false,
     };
   }
 
@@ -110,37 +107,6 @@ class BlogContextMenu extends React.Component {
       });
   }
 
-  clickDelete(post) {
-    const clickDeleteBlog = function(e) {
-      if (event.keyCode === 13) {
-        $('.delete-blog').click();
-      }
-    };
-    
-    $('#deleteModal').modal('show');
-
-    $(window).on('keyup', clickDeleteBlog)
-
-    $('#deleteModal').on('hidden.bs.modal', function() {
-      $(window).off('keyup', clickDeleteBlog)
-    });
-
-    $('.delete-blog')
-      .off()
-      .on('click', function(e) {
-        csrfFetch('/cube/blog/remove/' + post._id, {
-          method: 'DELETE',
-          headers: {},
-        }).then((response) => {
-          if (!response.ok) {
-            console.log(response);
-          } else {
-            window.location.href = '';
-          }
-        });
-      });
-  }
-
   render() {
 
     return (
@@ -151,7 +117,7 @@ class BlogContextMenu extends React.Component {
         <DropdownMenu right>
           <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
           <DropdownItem>
-            <BlogDeleteModal postID={this.props.post._id}></BlogDeleteModal>
+            <BlogDeleteModal postID={this.props.post._id} menu={this}></BlogDeleteModal>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
