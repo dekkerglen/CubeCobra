@@ -7,26 +7,23 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse, Modal,
 class BlogDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.open = this.open.bind(this);
+    this.state = {
+      isOpen: Boolean(props.isOpen),
+    }
+    
     this.close = this.close.bind(this);
     this.confirm = this.confirm.bind(this);
     this.keyPress = this.keyPress.bind(this);
 
-    if (this.props.menu.state.deleteModalIsOpen) {
+    if (this.state.isOpen) {
       document.addEventListener("keyup", this.keyPress);
     }
   }
 
-  open() {
-    this.props.menu.setState({
-      deleteModalIsOpen: true,
-    });
-  }
-
   close() {
     document.removeEventListener("keyup", this.keyPress);
-    this.props.menu.setState({
-      deleteModalIsOpen: false,
+    this.setState({
+      isOpen: false,
     });
   }
 
@@ -50,12 +47,9 @@ class BlogDeleteModal extends React.Component {
   }
 
   render() {
-    const isOpen = this.props.menu.state.deleteModalIsOpen;
+    const {isOpen} = this.state;
     return (
       <>
-        <span onClick={this.open}>
-          Delete
-        </span>
         <Modal isOpen={isOpen} toggle={this.close}>
           <ModalHeader toggle={this.close}>Confirm Delete</ModalHeader>
           <ModalBody>
@@ -79,6 +73,7 @@ class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
     this.toggle = this.toggle.bind(this);
+    this.openDeleteModal = this.openDeleteModal.bind(this);
     this.state = {
       dropdownOpen: false,
       collapseOpen: false,
@@ -91,6 +86,12 @@ class BlogContextMenu extends React.Component {
       dropdownOpen: !this.state.dropdownOpen,
     });
     updateBlog();
+  }
+
+  openDeleteModal(){
+    this.setState({
+      deleteModalIsOpen: true,
+    });
   }
 
   clickEdit(post) {
@@ -119,8 +120,10 @@ class BlogContextMenu extends React.Component {
         </DropdownToggle>
         <DropdownMenu right>
           <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
-          <DropdownItem>
-            <BlogDeleteModal postID={this.props.post._id} menu={this}></BlogDeleteModal>
+          <DropdownItem onClick={this.openDeleteModal}>
+            Delete
+            <BlogDeleteModal postID={this.props.post._id} isOpen={this.state.deleteModalIsOpen}>
+            </BlogDeleteModal>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
