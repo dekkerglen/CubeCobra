@@ -14,10 +14,6 @@ class BlogDeleteModal extends React.Component {
     this.close = this.close.bind(this);
     this.confirm = this.confirm.bind(this);
     this.keyPress = this.keyPress.bind(this);
-
-    if (this.state.isOpen) {
-      document.addEventListener('keyup', this.keyPress);
-    }
   }
 
   close() {
