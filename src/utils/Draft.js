@@ -122,7 +122,7 @@ const botRatingAndCombination = (seen, card, pool, overallPool) => {
     let overallCount = 1;
     if (seen) {
       seenCount = inclusiveCount(combination, seen);
-      overallCount = inclusiveCount(combination, overallPool);
+      overallCount = inclusiveCount(combination, overallPool) || 1;
     }
     const openness = seenCount / overallCount;
     const rating = poolRating * seenCount * openness * COLOR_SCALING_FACTOR[combination.length];
