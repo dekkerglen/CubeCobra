@@ -11,10 +11,13 @@ class BlogDeleteModal extends React.Component {
     this.close = this.close.bind(this);
     this.confirm = this.confirm.bind(this);
     this.keyPress = this.keyPress.bind(this);
+
+    if (this.props.menu.state.deleteModalIsOpen) {
+      document.addEventListener("keyup", this.keyPress);
+    }
   }
 
   open() {
-    document.addEventListener("keyup", this.keyPress);
     this.props.menu.setState({
       deleteModalIsOpen: true,
     });
