@@ -1,6 +1,80 @@
 import React from 'react';
 
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse } from 'reactstrap';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse, Modal,
+  ModalBody, ModalFooter, ModalHeader, Card, CardHeader, Row, Col, FormGroup,
+  Label, Input, CardBody, Button, } from 'reactstrap';
+
+class BlogDeleteModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isOpen: false,
+    };
+
+    this.open = this.open.bind(this);
+    this.close = this.close.bind(this);
+    this.confirm = this.confirm.bind(this);
+    this.keyPress = this.keyPress.bind(this);
+  }
+
+  open() {
+    document.addEventListener("keyup", this.keyPress);
+    this.setState({
+      isOpen: true,
+    });
+  }
+
+  close() {
+    document.removeEventListener("keyup", this.keyPress);
+    this.setState({
+      isOpen: false,
+    });
+  }
+
+  keyPress(event) {
+    if (event.keyCode === 13) {
+      this.confirm();
+    }
+  }
+
+  confirm() {
+    csrfFetch(`/cube/blog/remove/${this.props.postID}`, {
+      method: 'DELETE',
+      headers: {},
+    }).then((response) => {
+      if (!response.ok) {
+        console.log(response);
+      } else {
+        window.location.href = '';
+      }
+    });
+  }
+
+  render() {
+    const {isOpen} = this.state;
+    return (
+      <>
+        <span onClick={this.open}>
+          Delete
+        </span>
+        <Modal isOpen={isOpen} toggle={this.close}>
+          <ModalHeader toggle={this.close}>Confirm Delete</ModalHeader>
+          <ModalBody>
+            <p>Are you sure you wish to delete this post? This action cannot be undone.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" onClick={this.confirm}>
+              Delete
+            </Button>{' '}
+            <Button color="secondary" onClick={this.close}>
+              Close
+            </Button>
+          </ModalFooter>
+        </Modal>
+      </>
+    )
+  }
+}
 
 class BlogContextMenu extends React.Component {
   constructor(props) {
@@ -37,13 +111,13 @@ class BlogContextMenu extends React.Component {
   }
 
   clickDelete(post) {
-    $('#deleteModal').modal('show');
-
-    var clickDeleteBlog = function(e) {
+    const clickDeleteBlog = function(e) {
       if (event.keyCode === 13) {
         $('.delete-blog').click();
       }
     };
+    
+    $('#deleteModal').modal('show');
 
     $(window).on('keyup', clickDeleteBlog)
 
@@ -76,12 +150,8 @@ class BlogContextMenu extends React.Component {
         </DropdownToggle>
         <DropdownMenu right>
           <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              this.clickDelete(this.props.post);
-            }}
-          >
-            Delete
+          <DropdownItem>
+            <BlogDeleteModal postID={this.props.post._id}></BlogDeleteModal>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
