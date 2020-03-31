@@ -1,25 +1,27 @@
 import React from 'react';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button, } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
+
+import { csrfFetch } from '../util/CSRF';
 
 class BlogDeleteModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isOpen: Boolean(props.isOpen),
-    }
-    
+    };
+
     this.close = this.close.bind(this);
     this.confirm = this.confirm.bind(this);
     this.keyPress = this.keyPress.bind(this);
 
     if (this.state.isOpen) {
-      document.addEventListener("keyup", this.keyPress);
+      document.addEventListener('keyup', this.keyPress);
     }
   }
 
   close() {
-    document.removeEventListener("keyup", this.keyPress);
+    document.removeEventListener('keyup', this.keyPress);
     this.setState({
       isOpen: false,
     });
@@ -45,7 +47,7 @@ class BlogDeleteModal extends React.Component {
   }
 
   render() {
-    const {isOpen} = this.state;
+    const { isOpen } = this.state;
     return (
       <>
         <Modal isOpen={isOpen} toggle={this.close}>
@@ -63,7 +65,7 @@ class BlogDeleteModal extends React.Component {
           </ModalFooter>
         </Modal>
       </>
-    )
+    );
   }
 }
 

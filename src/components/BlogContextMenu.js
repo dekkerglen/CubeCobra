@@ -4,6 +4,8 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, } from 'reactstra
 
 import BlogDeleteModal from './BlogDeleteModal';
 
+import { csrfFetch } from '../util/CSRF';
+
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
@@ -11,26 +13,25 @@ class BlogContextMenu extends React.Component {
     this.openDeleteModal = this.openDeleteModal.bind(this);
     this.state = {
       dropdownOpen: false,
-      collapseOpen: false,
       deleteModalOpen: false,
     };
   }
 
-  toggle(event) {
+  toggle() {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen,
     });
     updateBlog();
   }
 
-  openDeleteModal(){
+  openDeleteModal() {
     this.setState({
       deleteModalOpen: true,
     });
   }
 
   clickEdit(post) {
-    csrfFetch('/cube/blogsrc/' + post._id, {
+    csrfFetch(`/cube/blogsrc/${post._id}`, {
       method: 'GET',
       headers: {},
     })
@@ -69,7 +70,7 @@ class BlogContextMenu extends React.Component {
     if (this.state.deleteModalOpen) {
       this.setState({
         deleteModalOpen: false,
-      })
+      });
     }
   }
 }
