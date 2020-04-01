@@ -368,7 +368,7 @@ function getLabelsRaw(cube, sort) {
 }
 
 function getEloBucket(elo) {
-  const bucket_floor = Math.round(elo / 50) * 50;
+  const bucket_floor = Math.floor(elo / 50) * 50;
   return `${bucket_floor}-${bucket_floor + 49}`;
 }
 
