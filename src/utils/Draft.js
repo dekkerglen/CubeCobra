@@ -224,7 +224,7 @@ function passPack() {
     if (draft.unopenedPacks[0].length > 0) {
       // give new pack
       for (let i = 0; i < draft.seats.length; i++) {
-        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
+        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
       }
     }
   } else if (draft.unopenedPacks[0].length % 2 === 0) {
