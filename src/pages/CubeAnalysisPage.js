@@ -90,6 +90,7 @@ class CubeAnalysisPage extends Component {
   }
 
   setFormat(formatId) {
+    console.log(formatId);
     if (formatId === -1) {
       Query.del('formatId');
     } else {
