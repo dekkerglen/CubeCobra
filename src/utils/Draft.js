@@ -59,7 +59,7 @@ const fetchLands = {
 };
 
 function botCardRating(botColors, card) {
-  let rating = draft.ratings[card.details.name];
+  let { rating } = card;
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
   const subset = arrayIsSubset(colors, botColors) && !colorless;
@@ -142,7 +142,7 @@ function getSortFn(bot) {
     if (bot) {
       return botCardRating(bot, b) - botCardRating(bot, a);
     }
-    return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+    return b.rating - a.rating;
   };
 }
 
@@ -193,7 +193,7 @@ function botPicks() {
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-      if (draft.ratings && draft.ratings[packFrom[cardIndex].details.name]) {
+      if (packFrom[cardIndex].rating) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
