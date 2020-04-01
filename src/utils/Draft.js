@@ -59,7 +59,7 @@ const fetchLands = {
 };
 
 function botCardRating(botColors, card) {
-  let rating = draft.ratings[card.details.name];
+  let { rating } = card;
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
   const subset = arrayIsSubset(colors, botColors) && !colorless;
@@ -142,13 +142,13 @@ function getSortFn(bot) {
     if (bot) {
       return botCardRating(bot, b) - botCardRating(bot, a);
     }
-    return draft.ratings[b.details.name] - draft.ratings[a.details.name];
+    return b.rating - a.rating;
   };
 }
 
 async function buildDeck(cards) {
-  const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+  const nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
+  const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
   const colors = botColors(null, null, cards, null);
   const sortFn = getSortFn(colors);
 
@@ -169,7 +169,7 @@ async function buildDeck(cards) {
 
   for (const card of main) {
     let index = Math.min(card.cmc ?? 0, 7);
-    if (!card.type_line.toLowerCase().includes('creature')) {
+    if (!card.details.type.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
@@ -193,7 +193,7 @@ function botPicks() {
     const ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-      if (draft.ratings && draft.ratings[packFrom[cardIndex].details.name]) {
+      if (packFrom[cardIndex].rating) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -224,7 +224,7 @@ function passPack() {
     if (draft.unopenedPacks[0].length > 0) {
       // give new pack
       for (let i = 0; i < draft.seats.length; i++) {
-        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].splice(0, 1)[0]);
+        draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
       }
     }
   } else if (draft.unopenedPacks[0].length % 2 === 0) {
@@ -279,7 +279,6 @@ async function finish() {
       draft.seats[i].drafted = decks[i].deck;
       draft.seats[i].sideboard = decks[i].sideboard;
       const colors = botColors(null, null, draft.seats[i].pickorder, cards);
-      console.log(i, colors);
       draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     }

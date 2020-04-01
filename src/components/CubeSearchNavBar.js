@@ -34,6 +34,9 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     'Budget',
     'Silver-bordered',
     'Commander',
+    'Judge Tower',
+    'Multiplayer',
+    'Battle Box',
   ];
   const handleChange = (event) => {
     const { target } = event;

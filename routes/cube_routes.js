@@ -1963,6 +1963,10 @@ router.post('/startdraft/:id', async (req, res) => {
     for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
     }
+    const elo = await getElo(cube.cards.map((card) => card.details.name));
+    for (const card of cube.cards) {
+      card.rating = elo[card.details.name];
+    }
 
     // setup draft
 
@@ -1982,19 +1986,6 @@ router.post('/startdraft/:id', async (req, res) => {
     draft.unopenedPacks = populated.unopenedPacks;
     draft.seats = populated.seats;
     draft.cube = cube._id;
-
-    // add ratings
-    const names = [];
-    // add in details to all cards
-    for (const seat of draft.initial_state) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          names.push(carddb.cardFromId(card.cardID).name);
-        }
-      }
-    }
-
-    draft.ratings = await getElo(names);
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2327,7 +2318,18 @@ router.post(
     // cube category override
     if (cube.overrideCategory) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
-      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+      const prefixes = [
+        'Powered',
+        'Unpowered',
+        'Pauper',
+        'Peasant',
+        'Budget',
+        'Silver-bordered',
+        'Commander',
+        'Battle Box',
+        'Multiplayer',
+        'Judge Tower',
+      ];
 
       if (!categories.includes(updatedCube.categoryOverride)) {
         return res.status(400).send({
