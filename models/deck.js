@@ -1,4 +1,5 @@
 let mongoose = require('mongoose');
+let cardSchema = require('./cardSchema');
 
 //this pattern lets us define comment recursively
 var Comment = new mongoose.Schema();
@@ -20,10 +21,24 @@ Comment.add({
   },
 });
 
-// Cube schema
+//data for each seat, human or bot
+const SeatDeck = {
+  bot: [String], //null bot value means human player
+  userid: String,
+  username: String,
+  pickorder: [cardSchema],
+  name: String,
+  description: {
+    type: String,
+    default: 'No description available.',
+  },
+  cols: Number,
+  deck: [[cardSchema]],
+  sideboard: [[cardSchema]],
+};
+
+// Deck schema
 let deckSchema = mongoose.Schema({
-  cards: [[]],
-  owner: String,
   cube: {
     type: String,
     index: true,
@@ -32,34 +47,47 @@ let deckSchema = mongoose.Schema({
     type: Date,
     index: true,
   },
-  name: String,
-  bots: [[]],
-  playerdeck: [[]],
-  playersideboard: [[]],
-  cols: Number,
-  username: {
-    type: String,
-    default: 'User',
-  },
-  cubename: {
-    type: String,
-    default: 'Cube',
+  comments: {
+    type: [Comment],
+    default: [],
   },
   draft: {
     type: String,
     default: '',
   },
+  cubename: {
+    type: String,
+    default: 'Cube',
+  },
+
+  //new format, will convert to
+  seats: {
+    type: [SeatDeck],
+    default: [],
+    index: true,
+  },
+  //deprecated
+  owner: String,
+  name: String,
   description: {
     type: String,
     default: 'No description available.',
   },
+  username: {
+    type: String,
+    default: 'User',
+  },
+  cols: Number,
+  playerdeck: {
+    type: [[]],
+    index: true,
+  },
+  playersideboard: [[]],
+  bots: [[]],
+  cards: [[]],
   newformat: {
     type: Boolean,
     default: false,
-  },
-  comments: {
-    type: [Comment],
-    default: [],
   },
 });
 

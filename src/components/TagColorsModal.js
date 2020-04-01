@@ -15,10 +15,10 @@ import {
   Row,
 } from 'reactstrap';
 
-import { arrayMove } from '../util/Util';
+import { arrayMove } from '../utils/Util';
 
 import LoadingButton from './LoadingButton';
-import TagContext, { getTagColorClass, tagColors as tagColorClasses } from './TagContext';
+import TagContext, { getTagColorClass, TAG_COLORS } from './TagContext';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
@@ -39,7 +39,7 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) => (
     </Col>
     <Col className="d-flex flex-column justify-content-center">
       <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
-        {tagColorClasses.map(([name, value]) => (
+        {TAG_COLORS.map(([name, value]) => (
           <option key={value || 'none'} value={value || 'none'}>
             {name}
           </option>

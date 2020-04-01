@@ -1,13 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import DraftDeck from './components/DraftDeck';
-import ErrorBoundary from './components/ErrorBoundary';
+import CubeDeckPage from 'pages/CubeDeckPage';
 
-const element = (
-  <ErrorBoundary className="mt-5">
-    <DraftDeck {...reactProps} />
-  </ErrorBoundary>
-);
+const element = <CubeDeckPage {...window.reactProps} />;
 const wrapper = document.getElementById('react-root');
-wrapper ? ReactDOM.render(element, wrapper) : false;
+if (wrapper) {
+  ReactDOM.render(element, wrapper);
+}

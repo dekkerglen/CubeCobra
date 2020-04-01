@@ -16,11 +16,14 @@ NodeJS: https://nodejs.org/en/download/
 
 MongoDB: https://docs.mongodb.com/manual/installation/
 
-You will need start a MongoDB background process. Refer to the official documentation for directions on how to set this up for your OS.
+You will need to either start MongoDB background process, or manually start and stop the process in a separate console. Refer to the official documentation for directions on how to set this up for your OS.
 
-VSCode (not required): https://code.visualstudio.com/
+VSCode (strongly recommended, but not required): https://code.visualstudio.com/
+ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
 
-### Clone Project
+VSCode (with the ESLint extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Using this plugin will make adhering to the linting rules significantly easier.
+
+### Initial Setup
 
 Clone the project into a folder of your choice. 
 
@@ -48,16 +51,9 @@ npm install nodemon -g
 npm install rollup -g
 npm run setup               # This will bundle modules and download Scryfall assets.
 node seed.js                # This will create and seed the mongo database specified in cubecobrasecrets.
-
-# Linux/OSX users
-npm start                   # Start nodemon for backend server and webpack for frontend assets.
-
-# Windows users will need to use 2 terminal instances.
-npm run nodemon
-npm run webpack-dev-server
 ```
 
-Alternatively, if you are on Windows, you can use bash to mimic the Linux/OSX steps:
+If you are on Windows, you will need to set bash as your script shell:
 You will need to make sure you have `bash` installed somewhere and run the following command [with your `bash` path in place of the path below].
 
     npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
@@ -74,13 +70,13 @@ Nodemon will restart the application anytime there is a change to a source file.
 
 To run the test suite, run `npm run test`.
 
-If you make changes to `updatecards.js` or other code that will require remaking the fixture files in `fixtures/` you can use the helper: `node update_fixtures.js` after getting the lastest card info using `node force_update.js`. This will retain the same cards in the fixtures but with updated card details and fixture files.
+If you make changes to `updatecards.js` or other code that will require remaking the fixture files in `fixtures/` you can use the helper: `node update_fixtures.js` after getting the lastest card info using `node --max-old-space-size=4096 force_update.js`. This will retain the same cards in the fixtures but with updated card details and fixture files.
 
 ### Updating Card Definitions
 
 The card definitions are cached locally for quick access. This definition is pulled from scryfall every 24 hours normally, but you can force an update with the command:
 ```
-node force_update.js
+node --max-old-space-size=4096 force_update.js
 ```
 
 ### Adding Analytics

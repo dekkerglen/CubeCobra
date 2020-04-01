@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 const TagContext = React.createContext({
   addSuggestion: () => {
@@ -14,7 +14,7 @@ export class TagContextProvider extends Component {
     super(props);
 
     this.state = {
-      tagColors: [...this.props.defaultTagColors],
+      tagColors: this.props.defaultTagColors ? [...this.props.defaultTagColors] : [],
       showTagColors: !!this.props.defaultShowTagColors,
       tags: [...(this.props.defaultTags || [])],
     };
@@ -150,7 +150,7 @@ export const getTagColorClass = (tagColors, tag) => {
   }
 };
 
-export const tagColors = [
+export const TAG_COLORS = [
   ['None', null],
   ['Red', 'red'],
   ['Brown', 'brown'],

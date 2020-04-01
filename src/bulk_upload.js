@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import BulkUploadPage from './components/BulkUploadPage';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from 'components/ErrorBoundary';
+import BulkUploadPage from 'pages/BulkUploadPage';
 
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary className="mt-3">
-    <BulkUploadPage {...reactProps} />
+    <BulkUploadPage {...window.reactProps} />
   </ErrorBoundary>
 );
 if (wrapper) {

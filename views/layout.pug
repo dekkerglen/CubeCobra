@@ -18,14 +18,25 @@ html(lang='en')
 					meta(name=metadatum.name, content=metadatum.content)
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
-		link(rel='icon', href='/content/favicon.ico', type='image/x-icon')
+		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
 		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
-		link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
+		if node_env === 'production'
+			link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css', integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh', crossorigin='anonymous')
+		else
+			link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
-		#autocard_popup_info
-		#autocard_popup
-		#autocard_popup2
+
 	body
+		#autocardPopup.d-none
+			.autocard-background
+				.row.no-gutters
+					.position-relative.card-border
+						img.foilOverlay(src='/content/foilOverlay.png')
+						img#autocardImageFront(src='', alt='')
+					.position-relative.card-border
+						img.foilOverlay(src='/content/foilOverlay.png')
+						img#autocardImageBack(src='', alt='')
+				#autocardTags.row.no-gutters.p-1
 		nav.navbar.navbar-expand-md.navbar-dark.bg-dark
 			.container-lg
 				.d-flex.flex-nowrap.w-100(style='flex: 10000 1 auto; min-width: 0')
@@ -43,7 +54,7 @@ html(lang='en')
 								a.dropdown-item(href='/tool/topcards') Top Cards
 								a.dropdown-item(href='/explore') Explore Cubes
 								a.dropdown-item(href='/random') Random Cube
-								a.dropdown-item(href='/advanced_search') Search
+								a.dropdown-item(href='/search') Search Cubes
 						li.nav-item.dropdown
 							a#navbarDropdownMenuLink.nav-link.dropdown-toggle(href='#', role='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false')
 								|  About
@@ -93,9 +104,8 @@ html(lang='en')
 								.dropdown-menu.dropdown-menu-right(aria-labelledby='navbarDropdownMenuLink')
 									a.dropdown-item(href="/user/view/"+user.id) Your Profile
 									a.dropdown-item(href="#", data-toggle='modal', data-target='#cubeModal') Create New Cube
+									a.dropdown-item(href='/user/social') Social
 									a.dropdown-item(href='/user/account') Account Information
-									a.dropdown-item(href='/user/account/changepassword') Change Password
-									a.dropdown-item(href='/user/account/updateemail') Update Email
 									a.dropdown-item(href='/user/logout') Logout
 
 						else
@@ -143,10 +153,10 @@ html(lang='en')
 						.modal-body
 							.form-group
 								label.col-form-label Username or Email Address:
-								input#username.form-control(name='username', type='text')
+								input#username.form-control(name='username', type='text', autocomplete='username')
 							.form-group
 								label.col-form-label Password:
-								input#password.form-control(name='password', type='password')
+								input#password.form-control(name='password', type='password', autocomplete='current-password')
 							a(href='/user/lostpassword') Forgot password?
 							if loginCallback
 								input(type='hidden', name='loginCallback', value=loginCallback)     
@@ -174,8 +184,12 @@ html(lang='en')
 							input.btn.btn-success(type='submit',value='Create')
 							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
-		script(src='/bower_components/jquery/dist/jquery.slim.min.js')
-		script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
+		if node_env === 'production'
+			script(src='https://code.jquery.com/jquery-3.4.1.slim.min.js', integrity='sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n', crossorigin='anonymous')
+			script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js', integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6', crossorigin='anonymous', async)
+		else
+			script(src='/bower_components/jquery/dist/jquery.slim.min.js')
+			script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
 		script(src='/js/csrf.js', async)
 		script(src='/js/toolbar.js', async)
 		block scripts

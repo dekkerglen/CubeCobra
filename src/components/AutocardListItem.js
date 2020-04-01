@@ -7,7 +7,7 @@ import DisplayContext from './DisplayContext';
 import TagContext from './TagContext';
 import withAutocard from './WithAutocard';
 
-import Affiliate from '../util/Affiliate';
+import Affiliate from '../utils/Affiliate';
 
 const AutocardDiv = withAutocard('li');
 
@@ -18,9 +18,9 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
-      openCardModal(card.index);
+      openCardModal(card);
     },
-    [card.index, openCardModal],
+    [card, openCardModal],
   );
   const handleAuxClick = useCallback(
     (event) => {
@@ -38,6 +38,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
       onAuxClick={noCardModal ? undefined : handleAuxClick}
       onClick={noCardModal ? undefined : handleClick}
       inModal={inModal}
+      role="button"
     >
       {name}
       {children}

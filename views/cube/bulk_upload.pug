@@ -11,5 +11,5 @@ block scripts
   include ../react
   script(src='/js/autocard.js')
   script(type='text/javascript').
-    var reactProps = !{JSON.stringify(reactProps)};
+    window.reactProps = !{reactProps};
   script(src='/js/bulk_upload.bundle.js')

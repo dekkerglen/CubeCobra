@@ -1,50 +1,72 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 
-import { Card, CardHeader } from 'reactstrap';
+import { Card } from 'reactstrap';
 
-class CubePreview extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+import AspectRatioBox from 'components/AspectRatioBox';
 
-  getCubeId(cube) {
-    if (cube.urlAlias) return cube.urlAlias;
-    if (cube.shortID) return cube.shortID;
-    return cube._id;
-  }
+const getCubeId = (cube) => cube.urlAlias || cube.shortId || cube._id;
 
-  render() {
-    var cube = this.props.cube;
-    return (
-      <a href={'/cube/overview/' + this.getCubeId(cube)} className="no-underline-hover">
-        <Card className="cube-preview-card">
-          <div className="cube-preview-element">
-            <img className="card-img-top cube-image-preview" src={cube.image_uri} />
-            <em className="cube-preview-artist">Art by {cube.image_artist}</em>
-          </div>
-          <div className="cube-preview-body py-1 px-2">
-            <h5 className="text-muted cube-preview-text my-0">{cube.name}</h5>
-            <div className="text-muted cube-category">
-              {cube.overrideCategory
-                ? cube.card_count +
-                  ' Card ' +
-                  (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                  cube.categoryOverride +
-                  ' Cube'
-                : cube.card_count + ' Card ' + cube.type + ' Cube'}
-            </div>
-            <em className="text-muted">
-              Designed by <a href={'/user/view/' + cube.owner}>{cube.owner_name}</a>
-            </em>
-          </div>
-        </Card>
-      </a>
-    );
-  }
-}
+const CubePreview = ({ cube }) => {
+  const [hover, setHover] = useState(false);
+  const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
+  const handleMouseOut = useCallback(() => setHover(false), []);
+  const handleClick = useCallback(
+    (event) => {
+      if (!event.target.getAttribute('data-sublink')) {
+        window.location.href = `/cube/overview/${getCubeId(cube)}`;
+      }
+    },
+    [cube],
+  );
+  const defaultSubtitle = `${cube.card_count} Card ${cube.type} Cube`;
+  const overridePrefixes =
+    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
+  const overrideSubtitle = `${cube.card_count} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
+  return (
+    <Card
+      className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
+      onClick={handleClick}
+      onMouseOver={handleMouseOver}
+      onFocus={handleMouseOver}
+      onMouseOut={handleMouseOut}
+      onBlur={handleMouseOut}
+    >
+      <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
+        <img className="w-100" alt={cube.image_name} src={cube.image_uri} />
+        <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+      </AspectRatioBox>
+      <div className="w-100 py-1 px-2">
+        <h5 className="text-muted text-ellipsis my-0">{cube.name}</h5>
+        <div className="text-muted text-ellipsis">{cube.overrideCategory ? overrideSubtitle : defaultSubtitle}</div>
+        <em className="text-muted text-ellipsis">
+          Designed by{' '}
+          <a data-sublink href={`/user/view/${cube.owner}`}>
+            {cube.owner_name}
+          </a>
+        </em>
+      </div>
+    </Card>
+  );
+};
 
-/*
-        
-*/
+CubePreview.propTypes = {
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    shortId: PropTypes.string,
+    urlAlias: PropTypes.string,
+    name: PropTypes.string.isRequired,
+    card_count: PropTypes.number.isRequired,
+    type: PropTypes.string.isRequired,
+    overrideCategory: PropTypes.bool,
+    categoryOverride: PropTypes.string,
+    categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
+    image_name: PropTypes.string.isRequired,
+    image_artist: PropTypes.string.isRequired,
+    image_uri: PropTypes.string.isRequired,
+    owner: PropTypes.string.isRequired,
+    owner_name: PropTypes.string.isRequired,
+  }).isRequired,
+};
 
 export default CubePreview;

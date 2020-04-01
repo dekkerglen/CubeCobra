@@ -1,9 +1,9 @@
 import React from 'react';
+import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from './CommentsSection';
 import CommentEntry from './CommentEntry';
-import AgeText from './AgeText';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -50,19 +50,11 @@ class BlogPost extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.focused) {
-      var $container = $('html,body');
-      var $scrollTo = $('.comment-highlighted');
-
-      $container.animate(
-        { scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0 },
-        300,
-      );
-    }
+    // FIXME: Restore scrolling to highlighted comment.
   }
 
   render() {
-    var post = this.props.post;
+    const { post, onDelete, onEdit } = this.props;
     if (post.html == 'undefined') {
       post.html = null;
     }
@@ -72,7 +64,15 @@ class BlogPost extends React.Component {
           <h5 className="card-title">
             {post.title}
             <div className="float-sm-right">
-              {this.props.canEdit && <BlogContextMenu className="float-sm-right" post={post} value="..." />}
+              {this.props.canEdit && (
+                <BlogContextMenu
+                  className="float-sm-right"
+                  post={post}
+                  value="..."
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                />
+              )}
             </div>
           </h5>
           <h6 className="card-subtitle mb-2 text-muted">
@@ -84,18 +84,18 @@ class BlogPost extends React.Component {
               <a href={'/cube/overview/' + post.cube}>{post.cubename}</a>
             )}
             {' - '}
-            <AgeText date={post.date} />
+            <TimeAgo date={post.date} />
           </h6>
         </CardHeader>
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
           {post.changelist && post.html ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
               </Col>
-              <Col className="col-9">
+              <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                 </CardBody>
@@ -116,7 +116,7 @@ class BlogPost extends React.Component {
             </CommentEntry>
           </CardBody>
         )}
-        {post.comments.length > 0 && (
+        {post.comments && post.comments.length > 0 && (
           <CardBody className=" px-4 pt-2 pb-0 border-top">
             <CommentsSection
               expanded={this.state.childExpanded}

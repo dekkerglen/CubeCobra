@@ -1,17 +1,20 @@
 const fs = require('fs');
+const winston = require('winston');
 const util = require('./util.js');
-const cardutil = require('../dist/util/Card.js');
+const cardutil = require('../dist/utils/Card.js');
 
-var data = {
+const data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
   cardnames: [],
   full_names: [],
   nameToId: {},
+  english: {},
   _carddict: {},
 };
-var fileToAttribute = {
+
+const fileToAttribute = {
   'carddict.json': '_carddict',
   'cardtree.json': 'cardtree',
   'names.json': 'cardnames',
@@ -19,12 +22,13 @@ var fileToAttribute = {
   'full_names.json': 'full_names',
   'imagedict.json': 'imagedict',
   'cardimages.json': 'cardimages',
+  'english.json': 'english',
 };
 
 function getPlaceholderCard(_id) {
-  //placeholder card if we don't find the one due to a scryfall ID update bug
+  // placeholder card if we don't find the one due to a scryfall ID update bug
   return {
-    _id: _id,
+    _id,
     set: '',
     collector_number: '',
     promo: false,
@@ -53,13 +57,14 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    console.log('Could not find card from id: ' + id);
+    winston.error(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
   if (typeof fields === 'undefined') {
     return details;
-  } else if (!Array.isArray(fields)) {
+  }
+  if (!Array.isArray(fields)) {
     fields = fields.split(' ');
   }
 
@@ -68,26 +73,24 @@ function cardFromId(id, fields) {
 
 function getCardDetails(card) {
   if (data._carddict[card.cardID]) {
-    var details = data._carddict[card.cardID];
+    const details = data._carddict[card.cardID];
     card.details = details;
     return details;
-  } else {
-    console.log('Could not find card details: ' + card.cardID);
-    return getPlaceholderCard(card.cardID);
   }
+  winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
+  return getPlaceholderCard(card.cardID);
 }
 
 function loadJSONFile(filename, attribute) {
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, 'utf8', function(err, contents) {
+    fs.readFile(filename, 'utf8', (err, contents) => {
       if (!err) {
         try {
           data[attribute] = JSON.parse(contents);
         } catch (e) {
-          console.log('Error parsing json from ', filename, ' : ', e);
+          winston.error(`Error parsing json from ${filename}.`, { error: e });
           err = e;
         }
-        console.log(attribute + ' loaded');
       }
       if (err) {
         reject(err);
@@ -99,76 +102,89 @@ function loadJSONFile(filename, attribute) {
 }
 
 function registerFileWatcher(filename, attribute) {
-  fs.watchFile(filename, (curr, prev) => {
-    console.log('File Changed: ' + filename);
+  fs.watchFile(filename, () => {
+    winston.info(`File Changed: ${filename}`);
     loadJSONFile(filename, attribute);
   });
 }
 
 function initializeCardDb(dataRoot, skipWatchers) {
+  winston.info('Loading carddb...');
   if (dataRoot === undefined) {
     dataRoot = 'private';
   }
-  var promises = [],
-    filepath,
-    attribute;
-  for (var filename in fileToAttribute) {
-    filepath = dataRoot + '/' + filename;
-    attribute = fileToAttribute[filename];
+  const promises = [];
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
+    const filepath = `${dataRoot}/${filename}`;
     promises.push(loadJSONFile(filepath, attribute));
     if (skipWatchers !== true) {
       registerFileWatcher(filepath, attribute);
     }
   }
-  return Promise.all(promises);
+  return Promise.all(promises).then(() => winston.info('Finished loading carddb.'));
 }
 
 function unloadCardDb() {
-  var attribute;
-  for (var filename in fileToAttribute) {
-    attribute = fileToAttribute[filename];
+  for (const attribute of Object.values(fileToAttribute)) {
     delete data[attribute];
   }
 }
 
-function notPromoOrDigitalId(id) {
-  return notPromoOrDigitalCard(cardFromId(id));
+function reasonableCard(card) {
+  return (
+    !card.promo &&
+    !card.digital &&
+    card.border_color !== 'gold' &&
+    card.language === 'en' &&
+    card.tcgplayer_id &&
+    card.set !== 'myb' &&
+    card.set !== 'mb1' &&
+    card.collector_number.indexOf('★') === -1
+  );
 }
 
-function notPromoOrDigitalCard(card) {
-  return !card.promo && !card.digital && card.border_color != 'gold' && card.language == 'en' && card.tcgplayer_id;
-}
-
-function getMostReasonable(cardName) {
-  const ids = getIdsFromName(cardName);
-  if (typeof ids === 'undefined' || ids.length == 0) {
-    return getMostReasonableById(cardName);
-  }
-
-  for (const id of ids) {
-    if (notPromoOrDigitalId(id)) {
-      return cardFromId(id);
-    }
-  }
-  return cardFromId(ids[0]);
-}
-
-function getMostReasonableById(id) {
-  let card = cardFromId(id);
-  if (card.error) {
-    console.log('Error finding most reasonable for id:', id);
-    return getPlaceholderCard(0);
-  }
-  return getMostReasonable(card.name);
+function reasonableId(id) {
+  return reasonableCard(cardFromId(id));
 }
 
 function getIdsFromName(name) {
   return data.nameToId[cardutil.normalizeName(name)];
 }
 
+// Printing = 'recent' or 'first'
+function getMostReasonable(cardName, printing = 'recent') {
+  let ids = getIdsFromName(cardName);
+  if (ids === undefined || ids.length === 0) {
+    // Try getting it by ID in case this is an ID.
+    // eslint-disable-next-line no-use-before-define
+    return getMostReasonableById(cardName, printing);
+  }
+
+  // Ids are stored in reverse chronological order, so reverse if we want first printing.
+  if (printing !== 'recent') {
+    ids = [...ids];
+    ids.reverse();
+  }
+  return cardFromId(ids.find(reasonableId) || ids[0]);
+}
+
+function getMostReasonableById(id, printing = 'recent') {
+  const card = cardFromId(id);
+  if (card.error) {
+    winston.info(`Error finding most reasonable for id ${id}`);
+    return null;
+  }
+  return getMostReasonable(card.name, printing);
+}
+
+function getEnglishVersion(id) {
+  return data.english[id];
+}
+
 data.cardFromId = cardFromId;
 data.getCardDetails = getCardDetails;
 data.getIdsFromName = getIdsFromName;
+data.getEnglishVersion = getEnglishVersion;
 data.allIds = (card) => getIdsFromName(card.name);
 data.allCards = () => Object.values(data._carddict);
 data.initializeCardDb = initializeCardDb;
@@ -177,8 +193,8 @@ data.getPlaceholderCard = getPlaceholderCard;
 data.unloadCardDb = unloadCardDb;
 data.getMostReasonable = getMostReasonable;
 data.getMostReasonableById = getMostReasonableById;
-data.notPromoOrDigitalId = notPromoOrDigitalId;
-data.notPromoOrDigitalCard = notPromoOrDigitalCard;
+data.reasonableId = reasonableId;
+data.reasonableCard = reasonableCard;
 
 // deprecated: use card.name_lower or cardutil.normalizeName
 data.normalizedName = (card) => cardutil.normalizeName(card.name);

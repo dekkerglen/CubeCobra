@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Button, Form, Input } from 'reactstrap';
 
-import { tcgMassEntryUrl } from '../util/Affiliate';
+import { tcgMassEntryUrl } from '../utils/Affiliate';
 
 const getEntry = ({ details }) => (details.isToken ? `1 ${details.name} Token` : `1 ${details.name}`);
 

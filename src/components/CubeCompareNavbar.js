@@ -46,44 +46,63 @@ class CubeCompareNavbar extends Component {
   }
 
   render() {
-    const { cards, openCollapse, filter, setFilter } = this.props;
+    const { cubeA, cubeAID, cubeB, cubeBID, cards, openCollapse, filter, setFilter } = this.props;
     return (
-      <div className="usercontrols">
-        <Navbar expand="md" className="navbar-light">
-          <NavbarToggler onClick={this.toggle} />
-          <Collapse isOpen={this.state.isOpen} navbar>
-            <Nav navbar>
-              <NavItem>
-                <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
-                  Sort
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
-                  Filter
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
-                  View Tag Colors
-                </NavLink>
-              </NavItem>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <SortCollapse isOpen={openCollapse === 'sort'} />
-        <FilterCollapse
-          filter={filter}
-          setFilter={setFilter}
-          numCards={cards.length}
-          isOpen={this.props.openCollapse === 'filter'}
-        />
+      <>
+        <div className="cubenav">
+          <ul className="nav nav-tabs nav-fill mt-3">
+            <li className="nav-item">
+              <h5 style={{ color: '#218937' }}>Compare Cubes</h5>
+              <h6 className="my-3" style={{ color: '#218937' }}>
+                <span style={{ color: '#495057' }}>Base Cube:</span>{' '}
+                <a href={`/cube/list/${cubeAID}`} className="mr-3" style={{ color: '#218937' }}>
+                  {cubeA.name} ({cubeA.card_count} cards)
+                </a>{' '}
+                <span style={{ color: '#495057' }}>Comparison Cube:</span>{' '}
+                <a href={`/cube/list/${cubeBID}`} style={{ color: '#218937' }}>
+                  {cubeB.name} ({cubeB.card_count} cards)
+                </a>
+              </h6>
+            </li>
+          </ul>
+        </div>
+        <div className="usercontrols">
+          <Navbar expand="md" light>
+            <NavbarToggler onClick={this.toggle} />
+            <Collapse isOpen={this.state.isOpen} navbar>
+              <Nav navbar>
+                <NavItem>
+                  <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
+                    Sort
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink href="#" data-target="filter" onClick={this.handleOpenCollapse}>
+                    Filter
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink href="#" onClick={this.handleOpenTagColorsModal}>
+                    View Tag Colors
+                  </NavLink>
+                </NavItem>
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <SortCollapse isOpen={openCollapse === 'sort'} />
+          <FilterCollapse
+            filter={filter}
+            setFilter={setFilter}
+            numCards={cards.length}
+            isOpen={this.props.openCollapse === 'filter'}
+          />
+        </div>
         <TagColorsModal
           canEdit={false}
           isOpen={this.state.tagColorsModalOpen}
           toggle={this.handleToggleTagColorsModal}
         />
-      </div>
+      </>
     );
   }
 }

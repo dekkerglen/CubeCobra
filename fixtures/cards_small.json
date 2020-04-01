@@ -89,7 +89,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5374,
+    "edhrec_rank": 5122,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -208,7 +208,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8769,
+    "edhrec_rank": 8249,
     "preview": {
       "source": "Huey Jensen",
       "source_uri": "https://twitter.com/HueyJensen/status/1174420655242010624",
@@ -306,7 +306,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 4041,
+    "edhrec_rank": 3227,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473126",
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Kenrith%27s+Transformation&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
@@ -400,7 +400,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12958,
+    "edhrec_rank": 12592,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
@@ -499,7 +499,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12300,
+    "edhrec_rank": 12142,
     "preview": {
       "source": "Mark Rosewater",
       "source_uri": "https://mobile.twitter.com/maro254/status/1172198040263741441",
@@ -576,7 +576,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -618,7 +618,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5645,
+    "edhrec_rank": 5025,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169279011639443457",
@@ -713,7 +713,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1057,
+    "edhrec_rank": 825,
     "preview": {
       "source": "Face to Face Games",
       "source_uri": "http://magic.facetofacegames.com/exclusive-throne-of-eldraine-spoiler-fabled-passage/",
@@ -810,7 +810,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2405,
+    "edhrec_rank": 1915,
     "preview": {
       "source": "Amanda Yeo",
       "source_uri": "https://twitter.com/amandamyeo/status/1173867462036611072",
@@ -907,7 +907,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2427,
+    "edhrec_rank": 2006,
     "preview": {
       "source": "Stopgame",
       "source_uri": "https://youtu.be/ymiqozyqUuE",
@@ -1004,7 +1004,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2836,
+    "edhrec_rank": 2293,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/colors-costs-tempo-building-better-castle-2019-09-17",
@@ -1101,7 +1101,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4249,
+    "edhrec_rank": 3588,
     "preview": {
       "source": "Hareruya",
       "source_uri": "https://article.hareruyamtg.com/article/31458/?lang=en",
@@ -1216,7 +1216,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3708,
+    "edhrec_rank": 3107,
     "preview": {
       "source": "ESPN Brazil",
       "source_uri": "https://es.pn/2LDfNEd",
@@ -1313,7 +1313,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4654,
+    "edhrec_rank": 4094,
     "preview": {
       "source": "Anoa",
       "source_uri": "http://mtg.anoad.com/?p=7533",
@@ -1407,7 +1407,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4872,
+    "edhrec_rank": 4803,
     "preview": {
       "source": "Geektenango",
       "source_uri": "https://www.facebook.com/geektenango/videos/2277811855673952",
@@ -1468,7 +1468,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -1510,7 +1510,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5891,
+    "edhrec_rank": 5416,
     "preview": {
       "source": "Bigweb",
       "source_uri": "https://mtg.bigweb.co.jp/article/preview/ELD",
@@ -1644,7 +1644,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7825,
+    "edhrec_rank": 7336,
     "preview": {
       "source": "Gaby Spartz",
       "source_uri": "https://www.youtube.com/watch?v=OCPU11hC2Dc",
@@ -1746,7 +1746,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10610,
+    "edhrec_rank": 10190,
     "preview": {
       "source": "Tasca Do Magique",
       "source_uri": "https://www.youtube.com/watch?v=rGagRu_HW2w",
@@ -1807,7 +1807,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -1849,7 +1849,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2273,
+    "edhrec_rank": 1888,
     "preview": {
       "source": "cafe.daum.net",
       "source_uri": "http://cafe.daum.net/magin/9Uu6/4718",
@@ -1908,7 +1908,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -1950,7 +1950,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7377,
+    "edhrec_rank": 6680,
     "preview": {
       "source": "Brainstorm Brewery",
       "source_uri": "https://www.youtube.com/watch?v=S44bJNc42GM",
@@ -2027,7 +2027,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2069,7 +2069,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9096,
+    "edhrec_rank": 8683,
     "preview": {
       "source": "Destructoid",
       "source_uri": "https://www.destructoid.com/check-out-magic-the-gathering-s-doom-foretold-our-exclusive-throne-of-eldraine-card-reveal-565657.phtml",
@@ -2128,7 +2128,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2169,7 +2169,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4311,
+    "edhrec_rank": 3820,
     "preview": {
       "source": "Commanderin",
       "source_uri": "https://www.youtube.com/watch?v=oQaCw2LbsCg",
@@ -2228,7 +2228,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2272,7 +2272,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7470,
+    "edhrec_rank": 6807,
     "preview": {
       "source": "IGN España",
       "source_uri": "https://es.ign.com/magic-the-gathering/155533/news/magic-una-carta-una-carta-del-nuevo-set-el-trono-de-eldraine-en-exclusiva",
@@ -2372,7 +2372,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7673,
+    "edhrec_rank": 7006,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/wildborn-preserver-2019-09-10",
@@ -2472,7 +2472,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11141,
+    "edhrec_rank": 10797,
     "preview": {
       "source": "NOT A WOLF",
       "source_uri": "https://twitter.com/SICKOFWOLVES/status/1171097721458946049",
@@ -2571,7 +2571,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 2264,
+    "edhrec_rank": 1772,
     "preview": {
       "source": "The Vorthos Cast",
       "source_uri": "https://twitter.com/TheVorthosCast/status/1174687113389989888",
@@ -2674,7 +2674,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6700,
+    "edhrec_rank": 6193,
     "preview": {
       "source": "Day9TV",
       "source_uri": "https://twitter.com/day9tv/status/1171090892201086976?s=21",
@@ -2705,12 +2705,12 @@
     "layout": "normal",
     "highres_image": true,
     "image_uris": {
-      "small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
-      "normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
-      "large": "https://img.scryfall.com/cards/large/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
-      "png": "https://img.scryfall.com/cards/png/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.png?1576022628",
-      "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628",
-      "border_crop": "https://img.scryfall.com/cards/border_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1576022628"
+      "small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
+      "normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
+      "large": "https://img.scryfall.com/cards/large/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
+      "png": "https://img.scryfall.com/cards/png/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.png?1578843782",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782"
     },
     "mana_cost": "{1}{G}",
     "cmc": 2,
@@ -2724,7 +2724,7 @@
     ],
     "legalities": {
       "standard": "banned",
-      "future": "legal",
+      "future": "banned",
       "historic": "banned",
       "pioneer": "banned",
       "modern": "legal",
@@ -2772,7 +2772,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7047,
+    "edhrec_rank": 6349,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
@@ -2873,7 +2873,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1829,
+    "edhrec_rank": 1422,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/building-great-henge-2019-09-18",
@@ -2934,11 +2934,11 @@
       },
       {
         "object": "related_card",
-        "id": "13e8f518-1c0d-4c01-a397-71481839d02b",
+        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/13e8f518-1c0d-4c01-a397-71481839d02b"
+        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
       }
     ],
     "legalities": {
@@ -2991,7 +2991,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6169,
+    "edhrec_rank": 5492,
     "preview": {
       "source": "Kotaku",
       "source_uri": "https://www.kotaku.com.au/2019/09/magic-the-gathering-throne-of-eldraine-exclusive-reveal-gilded-goose-golden-egg/",
@@ -3052,11 +3052,11 @@
       },
       {
         "object": "related_card",
-        "id": "13e8f518-1c0d-4c01-a397-71481839d02b",
+        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/13e8f518-1c0d-4c01-a397-71481839d02b"
+        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
       }
     ],
     "legalities": {
@@ -3068,7 +3068,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -3109,7 +3109,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9789,
+    "edhrec_rank": 9433,
     "preview": {
       "source": "Kanister",
       "source_uri": "https://www.twitch.tv/videos/479450583",
@@ -3213,7 +3213,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2801,
+    "edhrec_rank": 2397,
     "preview": {
       "source": "ZiggyD Gaming",
       "source_uri": "https://twitter.com/ZiggyDStarcraft/status/1173553765070209024",
@@ -3311,7 +3311,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9766,
+    "edhrec_rank": 9240,
     "preview": {
       "source": "John Rolf",
       "source_uri": "https://twitter.com/JRolfMTG/status/1172624112335958024?s=19",
@@ -3411,7 +3411,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9143,
+    "edhrec_rank": 8603,
     "preview": {
       "source": "J-E Depraz",
       "source_uri": "https://twitter.com/JEDepraz/status/1171392737356197893",
@@ -3511,7 +3511,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9911,
+    "edhrec_rank": 9288,
     "preview": {
       "source": "Sjow",
       "source_uri": "https://twitter.com/LiquidSjow/status/1171861699420413953",
@@ -3612,7 +3612,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8475,
+    "edhrec_rank": 7694,
     "preview": {
       "source": "CoolStuffInc",
       "source_uri": "https://www.coolstuffinc.com/a/aliaintrazi-09182019-watch-it-burn-preview-for-throne-of-eldraine",
@@ -3711,7 +3711,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8589,
+    "edhrec_rank": 7806,
     "preview": {
       "source": "Matthew Nass",
       "source_uri": "https://twitter.com/MatthewLNass/status/1172527368600076289",
@@ -3810,7 +3810,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7015,
+    "edhrec_rank": 6393,
     "preview": {
       "source": "Vandal",
       "source_uri": "https://vandal.elespanol.com/noticia/1350726991/os-desvelamos-una-carta-exclusiva-para-la-nueva-ampliacion-de-magic-the-gathering/",
@@ -3911,7 +3911,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6393,
+    "edhrec_rank": 6137,
     "preview": {
       "source": "Javier Domínguez",
       "source_uri": "https://twitter.com/JavierDmagic/status/1171904308041977862",
@@ -4012,7 +4012,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3948,
+    "edhrec_rank": 3515,
     "preview": {
       "source": "Martin Jůza",
       "source_uri": "https://twitter.com/MartinJuza/status/1171095982068686848",
@@ -4069,7 +4069,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4111,7 +4111,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11142,
+    "edhrec_rank": 10935,
     "preview": {
       "source": "The Masters of Modern",
       "source_uri": "https://twitter.com/theMMcast/status/1171115818630828033",
@@ -4209,7 +4209,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3840,
+    "edhrec_rank": 3385,
     "preview": {
       "source": "Brian Kibler",
       "source_uri": "https://twitter.com/bmkibler/status/1171093966801866754",
@@ -4312,7 +4312,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4778,
+    "edhrec_rank": 4361,
     "preview": {
       "source": "TCGplayer",
       "source_uri": "https://twitter.com/MTGatTCGplayer/status/1169119200381689856",
@@ -4412,7 +4412,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10024,
+    "edhrec_rank": 9492,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://www.twitch.tv/videos/480556742",
@@ -4530,7 +4530,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6564,
+    "edhrec_rank": 6079,
     "preview": {
       "source": "Noxious",
       "source_uri": "https://www.youtube.com/watch?v=VYL28w0hmwg",
@@ -4631,7 +4631,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6316,
+    "edhrec_rank": 5882,
     "preview": {
       "source": "Brian Braun-Duin",
       "source_uri": "https://twitter.com/BraunDuinIt/status/1173693988697542657",
@@ -4690,7 +4690,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4732,7 +4732,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7649,
+    "edhrec_rank": 7342,
     "preview": {
       "source": "Malditos Nerds",
       "source_uri": "https://twitter.com/MalditosNerdsVX/status/1173676142269816833",
@@ -4836,7 +4836,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2914,
+    "edhrec_rank": 2460,
     "preview": {
       "source": "Good Luck High Five",
       "source_uri": "https://youtu.be/qhWhI57on0Q",
@@ -4936,7 +4936,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9947,
+    "edhrec_rank": 9329,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
@@ -5053,7 +5053,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7136,
+    "edhrec_rank": 6644,
     "preview": {
       "source": "Giga",
       "source_uri": "https://www.giga.de/artikel/magic-the-gathering-exklusive-preview-karte-zu-throne-of-eldraine/",
@@ -5110,7 +5110,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5152,7 +5152,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2470,
+    "edhrec_rank": 1981,
     "preview": {
       "source": "MTGGoldfish",
       "source_uri": "https://www.mtggoldfish.com/articles/mirrormade-exclusive-throne-of-eldraine-preview",
@@ -5250,7 +5250,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4856,
+    "edhrec_rank": 4289,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169142807564640257/photo/1",
@@ -5351,7 +5351,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3851,
+    "edhrec_rank": 3424,
     "preview": {
       "source": "Brad Nelson",
       "source_uri": "https://twitter.com/fffreakmtg/status/1172525989802283009",
@@ -5410,7 +5410,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5455,7 +5455,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5146,
+    "edhrec_rank": 4470,
     "preview": {
       "source": "The Command Zone",
       "source_uri": "https://www.youtube.com/watch?v=RYzy2drIllM&feature=youtu.be",
@@ -5553,7 +5553,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4618,
+    "edhrec_rank": 4098,
     "preview": {
       "source": "PCGamesN",
       "source_uri": "https://www.pcgamesn.com/magic-the-gathering-arena/throne-of-eldraine-folio-of-fancies",
@@ -5656,7 +5656,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3164,
+    "edhrec_rank": 2767,
     "preview": {
       "source": "NGA",
       "source_uri": "https://bbs.nga.cn/read.php?&tid=18485267&rand=293",
@@ -5733,7 +5733,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5775,7 +5775,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6820,
+    "edhrec_rank": 6605,
     "preview": {
       "source": "GameSpot",
       "source_uri": "https://www.gamespot.com/articles/new-magic-the-gathering-throne-of-eldraine-cards-p/1100-6469732/",
@@ -5834,7 +5834,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5879,7 +5879,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8784,
+    "edhrec_rank": 7707,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/singing-eldraine-2019-09-16",
@@ -5980,7 +5980,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4730,
+    "edhrec_rank": 4257,
     "preview": {
       "source": "LadyLavinias",
       "source_uri": "https://twitter.com/LadyLavinias/status/1174775658695864322",
@@ -6099,7 +6099,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9033,
+    "edhrec_rank": 8443,
     "preview": {
       "source": "Jess Estephan",
       "source_uri": "https://twitter.com/jesstephan/status/1171786180666544130?s=20",
@@ -6197,7 +6197,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 7402,
+    "edhrec_rank": 7102,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/happily-ever-after-2019-09-19",
@@ -6316,7 +6316,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5533,
+    "edhrec_rank": 5260,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.facebook.com/channelfireball/videos/366428504287148/",
@@ -6416,7 +6416,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5857,
+    "edhrec_rank": 5145,
     "preview": {
       "source": "Reid Duke",
       "source_uri": "https://www.twitch.tv/videos/479548512",
@@ -6516,7 +6516,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5735,
+    "edhrec_rank": 5403,
     "preview": {
       "source": "Rei Sato",
       "source_uri": "https://www.twitch.tv/videos/482593745",
@@ -6659,7 +6659,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12029,
+    "edhrec_rank": 11613,
     "preview": {
       "source": "Formação Fireball",
       "source_uri": "https://www.youtube.com/watch?v=rPJLKVyOnIE",
@@ -6783,7 +6783,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12423,
+    "edhrec_rank": 12007,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -6907,7 +6907,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8542,
+    "edhrec_rank": 8160,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -7049,7 +7049,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10793,
+    "edhrec_rank": 10547,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169022264182038531",
@@ -7173,7 +7173,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 14559,
+    "edhrec_rank": 14524,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174052806459707393?s=21",
@@ -7315,7 +7315,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9412,
+    "edhrec_rank": 9081,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1168992065994334208",
@@ -7399,11 +7399,11 @@
       },
       {
         "object": "related_card",
-        "id": "13e8f518-1c0d-4c01-a397-71481839d02b",
+        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/13e8f518-1c0d-4c01-a397-71481839d02b"
+        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
       }
     ],
     "legalities": {
@@ -7457,7 +7457,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12599,
+    "edhrec_rank": 12510,
     "preview": {
       "source": "CNEWS",
       "source_uri": "https://www.cnews.fr/vie-numerique/2019-09-10/magic-gathering-revisite-les-contes-de-fees-avec-le-trone-deldraine-876392",
@@ -7579,7 +7579,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4378,
+    "edhrec_rank": 3869,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
@@ -7701,7 +7701,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10892,
+    "edhrec_rank": 10242,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473099",
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rimrock+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
@@ -7820,7 +7820,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8392,
+    "edhrec_rank": 7836,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
@@ -7944,7 +7944,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6280,
+    "edhrec_rank": 5948,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.youtube.com/watch?v=lKBtbDYICcU&t=2m21s",
@@ -8068,7 +8068,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8609,
+    "edhrec_rank": 8092,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
@@ -8192,7 +8192,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5802,
+    "edhrec_rank": 5559,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8314,7 +8314,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 13013,
+    "edhrec_rank": 12859,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473064",
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Reaper+of+Night&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
@@ -8431,7 +8431,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5390,
+    "edhrec_rank": 5082,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8553,7 +8553,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3019,
+    "edhrec_rank": 2613,
     "preview": {
       "source": "StarCityGames",
       "source_uri": "https://twitter.com/StarCityGames/status/1171077240102313988",
@@ -8675,7 +8675,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6168,
+    "edhrec_rank": 5792,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8797,7 +8797,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11559,
+    "edhrec_rank": 10989,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473023",
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Queen+of+Ice&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
@@ -8916,7 +8916,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9962,
+    "edhrec_rank": 9338,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473015",
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Merfolk+Secretkeeper&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
@@ -9033,7 +9033,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7807,
+    "edhrec_rank": 7514,
     "preview": {
       "source": "StarCityGames",
       "source_uri": "http://www.starcitygames.com/articles/39065_How-To-Approach-Hypnotic-Sprite-In-Throne-Of-Eldraine-Standard.html",
@@ -9155,7 +9155,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10480,
+    "edhrec_rank": 10258,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "",
@@ -9277,7 +9277,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7912,
+    "edhrec_rank": 7352,
     "preview": {
       "source": "/r/MagicArena",
       "source_uri": "https://www.reddit.com/r/MagicArena/comments/d60peu/eld_brazen_borrower_official_rmagicarena_spoiler/",
@@ -9401,7 +9401,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8788,
+    "edhrec_rank": 8478,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -9525,7 +9525,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 13405,
+    "edhrec_rank": 13202,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -9649,7 +9649,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10350,
+    "edhrec_rank": 9997,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174065513636474880",
@@ -9771,7 +9771,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7757,
+    "edhrec_rank": 7379,
     "preview": {
       "source": "Tolarian Community College",
       "source_uri": "https://www.youtube.com/watch?v=d4Zm4JzNiVs",
@@ -9911,7 +9911,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12939,
+    "edhrec_rank": 12959,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -9993,7 +9993,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -10035,7 +10035,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8652,
+    "edhrec_rank": 8121,
     "preview": {
       "source": "Amaz",
       "source_uri": "https://twitter.com/Amaz/status/1171122126486757381",
@@ -10159,7 +10159,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10018,
+    "edhrec_rank": 9560,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
@@ -10283,7 +10283,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9511,
+    "edhrec_rank": 9192,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
@@ -10384,7 +10384,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6902,
+    "edhrec_rank": 6410,
     "preview": {
       "source": "RiotPixels",
       "source_uri": "http://riotpixels.com/magicheskij-vestnik-vypusk-s-eksklyuzivami/",
@@ -10415,12 +10415,12 @@
     "layout": "normal",
     "highres_image": true,
     "image_uris": {
-      "small": "https://img.scryfall.com/cards/small/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
-      "normal": "https://img.scryfall.com/cards/normal/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
-      "large": "https://img.scryfall.com/cards/large/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
-      "png": "https://img.scryfall.com/cards/png/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.png?1576516452",
-      "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452",
-      "border_crop": "https://img.scryfall.com/cards/border_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1576516452"
+      "small": "https://img.scryfall.com/cards/small/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
+      "normal": "https://img.scryfall.com/cards/normal/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
+      "large": "https://img.scryfall.com/cards/large/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
+      "png": "https://img.scryfall.com/cards/png/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.png?1578911629",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629"
     },
     "mana_cost": "{1}{G}{U}",
     "cmc": 3,
@@ -10446,19 +10446,19 @@
       },
       {
         "object": "related_card",
-        "id": "13e8f518-1c0d-4c01-a397-71481839d02b",
+        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/13e8f518-1c0d-4c01-a397-71481839d02b"
+        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
       }
     ],
     "legalities": {
       "standard": "banned",
-      "future": "legal",
+      "future": "banned",
       "historic": "banned",
       "pioneer": "banned",
-      "modern": "legal",
+      "modern": "banned",
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
@@ -10503,7 +10503,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4603,
+    "edhrec_rank": 3782,
     "preview": {
       "source": "Card Kingdom",
       "source_uri": "https://twitter.com/Card_Kingdom/status/1168967403805511680",
@@ -10630,7 +10630,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5089,
+    "edhrec_rank": 4609,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169264113412972544",
@@ -10817,7 +10817,7 @@
     "textless": false,
     "booster": false,
     "story_spotlight": false,
-    "edhrec_rank": 5746,
+    "edhrec_rank": 4920,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/inside-throne-eldraine-brawl-decks-2019-09-04",
@@ -10911,7 +10911,7 @@
     "textless": false,
     "booster": false,
     "story_spotlight": false,
-    "edhrec_rank": 224,
+    "edhrec_rank": 156,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/new-era-brawl-2019-07-22",
@@ -10922,6 +10922,96 @@
       "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Arcane+Signet&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Arcane+Signet",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Arcane+Signet"
+    }
+  },
+  {
+    "object": "card",
+    "id": "85506a24-8d60-475c-9f43-65994caca7d4",
+    "oracle_id": "b2187f45-80ae-4ac4-9f83-5eb7a00978e2",
+    "multiverse_ids": [
+      435407
+    ],
+    "mtgo_id": 65522,
+    "mtgo_foil_id": 65523,
+    "arena_id": 66471,
+    "tcgplayer_id": 142033,
+    "name": "Sorcerous Spyglass",
+    "lang": "en",
+    "released_at": "2017-09-29",
+    "uri": "https://api.scryfall.com/cards/85506a24-8d60-475c-9f43-65994caca7d4",
+    "scryfall_uri": "https://scryfall.com/card/xln/248/sorcerous-spyglass?utm_source=api",
+    "layout": "normal",
+    "highres_image": true,
+    "image_uris": {
+      "small": "https://img.scryfall.com/cards/small/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+      "normal": "https://img.scryfall.com/cards/normal/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+      "large": "https://img.scryfall.com/cards/large/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+      "png": "https://img.scryfall.com/cards/png/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.png?1564096143",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143"
+    },
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "As Sorcerous Spyglass enters the battlefield, look at an opponent's hand, then choose any card name.\nActivated abilities of sources with the chosen name can't be activated unless they're mana abilities.",
+    "colors": [],
+    "color_identity": [],
+    "legalities": {
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper": "not_legal",
+      "vintage": "legal",
+      "penny": "not_legal",
+      "commander": "legal",
+      "brawl": "banned",
+      "duel": "legal",
+      "oldschool": "not_legal"
+    },
+    "games": [
+      "arena",
+      "mtgo",
+      "paper"
+    ],
+    "reserved": false,
+    "foil": true,
+    "nonfoil": true,
+    "oversized": false,
+    "promo": false,
+    "reprint": false,
+    "variation": false,
+    "set": "xln",
+    "set_name": "Ixalan",
+    "set_type": "expansion",
+    "set_uri": "https://api.scryfall.com/sets/fe0dad85-54bc-4151-9200-d68da84dd0f2",
+    "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Axln&unique=prints",
+    "scryfall_set_uri": "https://scryfall.com/sets/xln?utm_source=api",
+    "rulings_uri": "https://api.scryfall.com/cards/85506a24-8d60-475c-9f43-65994caca7d4/rulings",
+    "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab2187f45-80ae-4ac4-9f83-5eb7a00978e2&unique=prints",
+    "collector_number": "248",
+    "digital": false,
+    "rarity": "rare",
+    "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+    "artist": "Kieran Yanner",
+    "artist_ids": [
+      "aa7e89ed-d294-4633-9057-ce04dacfcfa4"
+    ],
+    "illustration_id": "ade4b31c-1048-49c7-b41b-b46322bf55d4",
+    "border_color": "black",
+    "frame": "2015",
+    "full_art": false,
+    "textless": false,
+    "booster": true,
+    "story_spotlight": false,
+    "edhrec_rank": 4803,
+    "related_uris": {
+      "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=435407",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sorcerous+Spyglass&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "edhrec": "https://edhrec.com/route/?cc=Sorcerous+Spyglass",
+      "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Sorcerous+Spyglass"
     }
   }
 ]

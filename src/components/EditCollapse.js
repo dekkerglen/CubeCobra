@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { Button, Col, Collapse, Form, Row, UncontrolledAlert } from 'reactstrap';
+import { Button, Col, Collapse, Form, InputGroup, InputGroupAddon, Row, UncontrolledAlert } from 'reactstrap';
 
-import { encodeName } from '../util/Card';
+import { encodeName } from '../utils/Card';
 
 import AutocompleteInput from './AutocompleteInput';
 import BlogpostEditor from './BlogpostEditor';
@@ -10,11 +10,12 @@ import Changelist from './Changelist';
 import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
+import DisplayContext from './DisplayContext';
 
-export const getCard = async (name, setAlerts) => {
+export const getCard = async (cubeID, name, setAlerts) => {
   if (name && name.length > 0) {
     const normalized = encodeName(name);
-    const response = await fetch(`/cube/api/getcard/${normalized}`);
+    const response = await fetch(`/cube/api/getcardforcube/${cubeID}/${normalized}`);
     if (!response.ok) {
       const message = `Couldn't get card: ${response.status}.`;
       if (setAlerts) {
@@ -39,17 +40,24 @@ export const getCard = async (name, setAlerts) => {
   }
 };
 
-const EditCollapse = ({ cubeID, ...props }) => {
+const EditCollapse = ({ ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
-  const [addValue, setAddValue] = useState('');
-  const [removeValue, setRemoveValue] = useState('');
 
-  const { changes, addChange, setChanges } = useContext(ChangelistContext);
-  const { cube } = useContext(CubeContext);
+  const {
+    changes,
+    addValue,
+    setAddValue,
+    removeValue,
+    setRemoveValue,
+    addInputRef,
+    removeInputRef,
+    addChange,
+    setChanges,
+  } = useContext(ChangelistContext);
+  const { cube, cubeID } = useContext(CubeContext);
+  const { toggleShowMaybeboard } = useContext(DisplayContext);
 
-  const addInput = useRef();
-  const removeInput = useRef();
   const changelistForm = useRef();
 
   const handleChange = useCallback((event) => {
@@ -64,19 +72,19 @@ const EditCollapse = ({ cubeID, ...props }) => {
     async (event, newValue) => {
       event.preventDefault();
       try {
-        const card = await getCard(newValue || addValue, setAlerts);
+        const card = await getCard(cubeID, newValue || addValue, setAlerts);
         if (!card) {
           return;
         }
         addChange({ add: { details: card } });
         setAddValue('');
         setRemoveValue('');
-        addInput.current && addInput.current.focus();
+        addInputRef.current && addInputRef.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput],
+    [addChange, addValue, addInputRef, cubeID],
   );
 
   const handleRemoveReplace = useCallback(
@@ -84,7 +92,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = cube.find(
+        const cardOut = cube.cards.find(
           (card) =>
             card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
             !changes.some(
@@ -101,7 +109,7 @@ const EditCollapse = ({ cubeID, ...props }) => {
           return;
         }
         if (replace) {
-          const cardIn = await getCard(addValue, setAlerts);
+          const cardIn = await getCard(cubeID, addValue, setAlerts);
           if (!cardIn) {
             return;
           }
@@ -111,14 +119,14 @@ const EditCollapse = ({ cubeID, ...props }) => {
         }
         setAddValue('');
         setRemoveValue('');
-        /* If replace, put focus back in addInput; otherwise leave it here. */
-        const focus = replace ? addInput : removeInput;
+        /* If replace, put focus back in addInputRef; otherwise leave it here. */
+        const focus = replace ? addInputRef : removeInputRef;
         focus.current && focus.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addInput, addValue, removeInput, removeValue, cube, changes],
+    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, cubeID, changes],
   );
 
   const handleDiscardAll = useCallback((event) => {
@@ -136,49 +144,58 @@ const EditCollapse = ({ cubeID, ...props }) => {
           {message}
         </UncontrolledAlert>
       ))}
-      <Row>
-        <Col xs="12" sm="auto">
-          <Form inline className="mb-2" onSubmit={handleAdd}>
-            <AutocompleteInput
-              treeUrl="/cube/api/cardnames"
-              treePath="cardnames"
-              type="text"
-              className="mr-2"
-              innerRef={addInput}
-              name="add"
-              value={addValue}
-              onChange={handleChange}
-              onSubmit={handleAdd}
-              placeholder="Card to Add"
-              autoComplete="off"
-              data-lpignore
-            />
-            <Button color="success" type="submit" disabled={addValue.length === 0}>
-              Just Add
-            </Button>
+      <Row noGutters>
+        <Row noGutters className="mr-auto">
+          <Form inline className="mb-2 mr-2" onSubmit={handleAdd}>
+            <InputGroup className="flex-nowrap">
+              <AutocompleteInput
+                treeUrl="/cube/api/cardnames"
+                treePath="cardnames"
+                type="text"
+                innerRef={addInputRef}
+                name="add"
+                value={addValue}
+                onChange={handleChange}
+                onSubmit={handleAdd}
+                placeholder="Card to Add"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <InputGroupAddon addonType="append">
+                <Button color="success" type="submit" disabled={addValue.length === 0}>
+                  Add
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </Form>
-        </Col>
-        <Col xs="12" sm="auto">
-          <Form inline className="mb-2" onSubmit={handleRemoveReplace}>
-            <AutocompleteInput
-              treeUrl={`/cube/api/cubecardnames/${cubeID}`}
-              treePath="cardnames"
-              type="text"
-              className="mr-2"
-              innerRef={removeInput}
-              name="remove"
-              value={removeValue}
-              onChange={handleChange}
-              onSubmit={handleRemoveReplace}
-              placeholder="Card to Remove"
-              autoComplete="off"
-              data-lpignore
-            />
-            <Button color="success" type="submit" disabled={removeValue.length === 0}>
-              Remove/Replace
-            </Button>
+          <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
+            <InputGroup className="flex-nowrap">
+              <AutocompleteInput
+                treeUrl={`/cube/api/cubecardnames/${cubeID}`}
+                treePath="cardnames"
+                type="text"
+                innerRef={removeInputRef}
+                name="remove"
+                value={removeValue}
+                onChange={handleChange}
+                onSubmit={handleRemoveReplace}
+                placeholder="Card to Remove"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <InputGroupAddon addonType="append">
+                <Button color="success" type="submit" disabled={removeValue.length === 0}>
+                  Remove/Replace
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </Form>
-        </Col>
+        </Row>
+        <Button color="primary" className="mb-2" onClick={toggleShowMaybeboard}>
+          Maybeboard
+        </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
         <CSRFForm innerRef={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>

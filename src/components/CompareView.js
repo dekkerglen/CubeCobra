@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import { getLabels, sortIntoGroups } from '../util/Sort';
+import { getLabels, sortIntoGroups } from '../utils/Sort';
 
 import AutocardListItem from './AutocardListItem';
 import SortContext from './SortContext';
@@ -26,7 +26,11 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">
-            {[[bothCmc, 'both'], [onlyACmc, 'a'], [onlyBCmc, 'b']].map(([cards, key]) => (
+            {[
+              [bothCmc, 'both'],
+              [onlyACmc, 'a'],
+              [onlyBCmc, 'b'],
+            ].map(([cards, key]) => (
               <Col xs="4" key={key}>
                 {(cards[cmc] || []).map((card, index) => (
                   <AutocardListItem key={index} card={card} />

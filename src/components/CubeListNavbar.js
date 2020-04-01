@@ -35,6 +35,7 @@ import DisplayContext from './DisplayContext';
 import EditCollapse from './EditCollapse';
 import FilterCollapse from './FilterCollapse';
 import GroupModalContext from './GroupModalContext';
+import SortContext from './SortContext';
 import SortCollapse from './SortCollapse';
 import TagColorsModal from './TagColorsModal';
 import withModal from './WithModal';
@@ -64,7 +65,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           <Button color="success" type="submit">
             Upload
           </Button>
-          <Button color="secondary" onclick={toggle}>
+          <Button color="secondary" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -128,7 +129,7 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
               <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
             </InputGroupAddon>
             {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
-            <Input type="text" name="cubeid" placeholder="e.g. 123456" />
+            <Input type="number" name="cubeid" placeholder="e.g. 123456" />
           </InputGroup>
         </ModalBody>
         <ModalFooter>
@@ -201,6 +202,7 @@ const CubeListNavbar = ({
   setCubeView,
   openCollapse,
   setOpenCollapse,
+  defaultFilterText,
   filter,
   setFilter,
   className,
@@ -211,6 +213,7 @@ const CubeListNavbar = ({
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
+  const { primary, secondary, tertiary } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
@@ -240,7 +243,7 @@ const CubeListNavbar = ({
         if (cards.length === 0) {
           setSelectEmptyModalOpen(true);
         } else if (cards.length === 1) {
-          openCardModal(cards[0].index);
+          openCardModal(cards[0]);
         } else if (cards.length > 1) {
           openGroupModal();
         }
@@ -355,7 +358,11 @@ const CubeListNavbar = ({
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cubeID}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem
+                  href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}
+                >
+                  Comma-Separated (.csv)
+                </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
               </DropdownMenu>
@@ -363,9 +370,10 @@ const CubeListNavbar = ({
           </Nav>
         </Collapse>
       </Navbar>
-      {!canEdit ? '' : <EditCollapse cubeID={cubeID} isOpen={openCollapse === 'edit'} />}
+      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse
+        defaultFilterText={defaultFilterText}
         filter={filter}
         setFilter={setFilter}
         numCards={cards.length}

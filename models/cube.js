@@ -18,6 +18,7 @@ const cubeSchema = mongoose.Schema({
   name: {
     type: String,
     required: true,
+    index: true,
   },
   shortID: {
     type: String,
@@ -85,7 +86,10 @@ const cubeSchema = mongoose.Schema({
   image_artist: String,
   image_name: String,
   owner_name: String,
-  date_updated: Date,
+  date_updated: {
+    type: Date,
+    index: true,
+  },
   updated_string: String,
   default_sorts: [String],
   card_count: Number,
@@ -105,6 +109,21 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
+  defaultStatus: {
+    type: String,
+    default: 'Owned',
+  },
+  defaultPrinting: {
+    type: String,
+    // Values: first, recent
+    default: 'recent',
+  },
 });
 
-const Cube = (module.exports = mongoose.model('Cube', cubeSchema));
+const Cube = mongoose.model('Cube', cubeSchema);
+
+Cube.LAYOUT_FIELDS = '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+Cube.PREVIEW_FIELDS =
+  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name';
+
+module.exports = Cube;

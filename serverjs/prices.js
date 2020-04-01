@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const url = require('url');
+const winston = require('winston');
 const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 
 var token = null;
@@ -10,7 +11,7 @@ async function GetToken() {
     //TODO: check if token is expired, if so, fetch a new one
     return token.access_token;
   } else {
-    console.log(Date(Date.now()).toString(), 'fetching fresh token');
+    winston.info('Fetching fresh TCGPlayer token.');
 
     const body = new url.URLSearchParams({
       grant_type: 'client_credentials',
@@ -25,7 +26,7 @@ async function GetToken() {
     try {
       token = await response.json();
       token.expires = Tomorrow();
-      console.log(token.expires.toString(), 'token expiration');
+      winston.info(`${token.expires} token expiration`);
       return token.access_token;
     } catch (e) {
       return;
@@ -81,41 +82,42 @@ async function GetPrices(card_ids) {
   let access_token;
   try {
     access_token = await GetToken();
-  } catch (e) {
+    const responses = await Promise.all(
+      chunks.map((chunk) =>
+        fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {
+          headers: {
+            Authorization: 'Bearer ' + access_token,
+          },
+        })
+          .then(checkStatus)
+          .then((response) => response.json())
+          .catch((err) => winston.error('TCGPlayer request failed.', { error: err })),
+      ),
+    );
+    for (response of responses) {
+      if (!response || !response.success) {
+        continue;
+      }
+      for (item of response.results) {
+        if (!cached_prices[item.productId]) {
+          cached_prices[item.productId] = {};
+        }
+        if (item.marketPrice && item.subTypeName == 'Normal') {
+          price_dict[item.productId] = item.marketPrice;
+          cached_prices[item.productId].price = item.marketPrice;
+          cached_prices[item.productId].expires = Tomorrow();
+        } else if (item.marketPrice && item.subTypeName == 'Foil') {
+          price_dict[item.productId + '_foil'] = item.marketPrice;
+          cached_prices[item.productId].price_foil = item.marketPrice;
+          cached_prices[item.productId].expires = Tomorrow();
+        }
+      }
+    }
+    return price_dict;
+  } catch (err) {
+    winston.error(err);
     return price_dict;
   }
-  const responses = await Promise.all(
-    chunks.map((chunk) =>
-      fetch('http://api.tcgplayer.com/v1.32.0/pricing/product/' + chunk.join(','), {
-        headers: {
-          Authorization: ' Bearer ' + access_token,
-        },
-      })
-        .then(checkStatus)
-        .then((response) => response.json())
-        .catch((err) => console.error('TCGPlayer request failed', err)),
-    ),
-  );
-  for (response of responses) {
-    if (!response.success) {
-      continue;
-    }
-    for (item of response.results) {
-      if (!cached_prices[item.productId]) {
-        cached_prices[item.productId] = {};
-      }
-      if (item.marketPrice && item.subTypeName == 'Normal') {
-        price_dict[item.productId] = item.marketPrice;
-        cached_prices[item.productId].price = item.marketPrice;
-        cached_prices[item.productId].expires = Tomorrow();
-      } else if (item.marketPrice && item.subTypeName == 'Foil') {
-        price_dict[item.productId + '_foil'] = item.marketPrice;
-        cached_prices[item.productId].price_foil = item.marketPrice;
-        cached_prices[item.productId].expires = Tomorrow();
-      }
-    }
-  }
-  return price_dict;
 }
 
 async function addPrices(cards) {

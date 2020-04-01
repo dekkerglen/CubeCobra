@@ -8,6 +8,7 @@ const cubefixture = require('./fixtures/examplecube');
 const dataPath = 'private';
 const fixturesPath = 'fixtures';
 const cardsPath = path.join(dataPath, 'cards.json');
+const emptyPath = path.join(fixturesPath, 'empty.json');
 const cardsFixturePath = path.join(fixturesPath, 'cards_small.json');
 const cardsConvertedPath = path.join(fixturesPath, 'cards_small_converted.json');
 const err = 1;
@@ -70,6 +71,8 @@ const success = 0;
 
   console.log('Writing:', cardsConvertedPath);
   res = await fs.writeFileSync(cardsConvertedPath, JSON.stringify(convertedCards, null, 2));
+
+  await fs.writeFileSync(emptyPath, '{}\n');
 
   //fixExampleCube();
 

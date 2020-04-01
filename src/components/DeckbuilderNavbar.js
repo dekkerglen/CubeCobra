@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -17,8 +17,8 @@ import {
   Input,
 } from 'reactstrap';
 
-import CSRFForm from './CSRFForm';
-import CustomImageToggler from './CustomImageToggler';
+import CSRFForm from 'components/CSRFForm';
+import CustomImageToggler from 'components/CustomImageToggler';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -31,18 +31,19 @@ const MAX_BASICS = 20;
 
 const BasicsModal = ({ isOpen, toggle, addBasics }) => {
   const refs = {};
-  for (const [long, short, basic] of COLORS) {
+  for (const [, , basic] of COLORS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     refs[basic] = useRef();
   }
 
   const handleAddBasics = useCallback(() => {
     const numBasics = {};
-    for (const basic in refs) {
-      numBasics[basic] = parseInt(refs[basic].current.value);
+    for (const basic of Object.keys(refs)) {
+      numBasics[basic] = parseInt(refs[basic].current.value, 10);
     }
     addBasics(numBasics);
     toggle();
-  }, [addBasics, toggle]);
+  }, [addBasics, toggle, refs]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="sm">
@@ -79,12 +80,12 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
 };
 
 BasicsModal.propTypes = {
-  isOpen: PropTypes.bool,
-  toggle: PropTypes.func,
-  handleAddBasics: PropTypes.func,
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  addBasics: PropTypes.func.isRequired,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
 
@@ -98,7 +99,9 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
 
   const toggleBasicsModal = useCallback(
     (event) => {
-      event && event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
       setBasicsModalOpen(!basicsModalOpen);
     },
     [basicsModalOpen],
@@ -115,33 +118,52 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description }) => {
     [saveForm],
   );
 
+  const stripped = useMemo(() => {
+    const res = JSON.parse(JSON.stringify(deck));
+
+    for (const seat of res.seats) {
+      for (const collection of [seat.deck, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            delete card.details;
+          }
+        }
+      }
+      if (seat.pickorder) {
+        for (const card of seat.pickorder) {
+          delete card.details;
+        }
+      }
+    }
+
+    return res;
+  }, [deck]);
+
   return (
-    <div className="usercontrols">
-      <Navbar expand="md" light>
-        <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
-        <Collapse isOpen={isOpen} navbar>
-          <Nav navbar>
-            <NavItem>
-              <NavLink href="#" onClick={saveDeck}>
-                Save Deck
-              </NavLink>
-              <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
-                <Input type="hidden" name="draftraw" value={JSON.stringify(deck)} />
-                <Input type="hidden" name="name" value={JSON.stringify(name)} />
-                <Input type="hidden" name="description" value={JSON.stringify(description)} />
-              </CSRFForm>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#" onClick={toggleBasicsModal}>
-                Add Basic Lands
-              </NavLink>
-              <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
-            </NavItem>
-            <CustomImageToggler />
-          </Nav>
-        </Collapse>
-      </Navbar>
-    </div>
+    <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
+      <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+      <Collapse isOpen={isOpen} navbar>
+        <Nav navbar>
+          <NavItem>
+            <NavLink href="#" onClick={saveDeck}>
+              Save Deck
+            </NavLink>
+            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
+              <Input type="hidden" name="draftraw" value={JSON.stringify(stripped)} />
+              <Input type="hidden" name="name" value={JSON.stringify(name)} />
+              <Input type="hidden" name="description" value={JSON.stringify(description)} />
+            </CSRFForm>
+          </NavItem>
+          <NavItem>
+            <NavLink href="#" onClick={toggleBasicsModal}>
+              Add Basic Lands
+            </NavLink>
+            <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
+          </NavItem>
+          <CustomImageToggler />
+        </Nav>
+      </Collapse>
+    </Navbar>
   );
 };
 
@@ -151,6 +173,14 @@ DeckbuilderNavbar.propTypes = {
     playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
   }).isRequired,
+  addBasics: PropTypes.func.isRequired,
+  name: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  className: PropTypes.string,
+};
+
+DeckbuilderNavbar.defaultProps = {
+  className: null,
 };
 
 export default DeckbuilderNavbar;

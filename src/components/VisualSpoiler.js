@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 
 import { Row, Col } from 'reactstrap';
 
-import { sortDeep } from '../util/Sort';
+import { sortDeep } from '../utils/Sort';
 
 import SortContext from './SortContext';
 import SpoilerImage from './SpoilerImage';

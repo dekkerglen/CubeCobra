@@ -4,9 +4,16 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
 import exampleCardsFull from '../../../fixtures/examplecardsdetails';
-import CubeListPage from 'components/CubeListPage';
+import exampleCube from '../../../fixtures/examplecube';
+import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
+import { fromEntries } from 'utils/Util';
+
+const cube = {
+  ...exampleCube,
+  cards: exampleCardsFull,
+};
 
 const element = () => (
   <FetchMock
@@ -17,7 +24,7 @@ const element = () => (
         matcher: '/cube/api/getversions',
         response: {
           success: 'true',
-          dict: Object.fromEntries(
+          dict: fromEntries(
             exampleCardsFull.map((card) => [
               card.cardID,
               [
@@ -36,10 +43,12 @@ const element = () => (
     ]}
   >
     <CubeListPage
-      cards={exampleCardsFull}
+      cube={cube}
       cubeID="1"
-      canEdit={true}
+      canEdit
       maybe={exampleCardsFull}
+      defaultView="table"
+      defaultFilterText=""
       defaultTagColors={[]}
       defaultShowTagColors={true}
       defaultSorts={['Color Category', 'Types-Multicolor']}

@@ -1,14 +1,16 @@
 import React, { useCallback } from 'react';
+import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 
-import AgeText from './AgeText';
+import useKeyHandlers from 'hooks/UseKeyHandlers';
 
 const DeckPreview = ({ deck }) => {
   const maxLength = 35;
+  const { date } = deck;
 
-  let name = deck.name;
+  let { name } = deck.seats[0];
   if (name.length > maxLength) {
-    name = name.slice(0, maxLength - 3) + '...';
+    name = `${name.slice(0, maxLength - 3)}...`;
   }
 
   const handleClick = useCallback(() => {
@@ -16,12 +18,15 @@ const DeckPreview = ({ deck }) => {
   }, [deck._id]);
 
   return (
-    <div className="deck-preview" onClick={handleClick}>
+    <div className="deck-preview" {...useKeyHandlers(handleClick)}>
       <h6 className="mb-0 text-muted">
-        <a href={'/cube/deck/' + deck._id}>{name}</a>
-        {' by '}
-        {deck.owner ? <a href={'/user/view/' + deck.owner}>{deck.username}</a> : <a>Anonymous</a>} {' - '}
-        <AgeText date={deck.date} />
+        <a href={`/cube/deck/${deck._id}`}>{name}</a> by{' '}
+        {deck.seats[0].userid ? (
+          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
+        ) : (
+          'Anonymous'
+        )}{' '}
+        - <TimeAgo date={date} />
       </h6>
     </div>
   );
@@ -30,9 +35,8 @@ const DeckPreview = ({ deck }) => {
 DeckPreview.propTypes = {
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    owner: PropTypes.string,
-    username: PropTypes.string,
+    seats: PropTypes.arrayOf(PropTypes.object),
+    date: PropTypes.instanceOf(Date),
   }).isRequired,
 };
 

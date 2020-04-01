@@ -1,0 +1,54 @@
+env:
+  browser: true
+  jest/globals: true
+  node: true
+extends:
+  - airbnb
+  - prettier
+plugins:
+  - jest
+  - prettier
+  - react-hooks
+settings:
+  import/resolver:
+    webpack:
+      config: webpack.dev.js
+rules:
+  prettier/prettier: error
+  no-console: off
+  global-require: off
+  no-param-reassign: off
+  no-underscore-dangle:
+    - error
+    - allow: ['_id', '_carddict']
+  camelcase:
+    - error
+    - properties: never
+      ignoreDestructuring: true
+      ignoreImports: true
+      allow: ['tcgplayer_id']
+  no-plusplus:
+    - error
+    - allowForLoopAfterthoughts: true
+  no-restricted-syntax:
+    - error
+    - WithStatement
+    - LabeledStatement
+    - BinaryExpression[operator='in']
+  react/jsx-filename-extension: off
+  react/jsx-one-expression-per-line: off
+  react/jsx-props-no-spreading: off
+  react/no-unescaped-entities:
+    - error
+    - forbid: ['>', '"', '}']
+  react-hooks/rules-of-hooks: error
+  react-hooks/exhaustive-deps: error
+overrides:
+  - files: ['src/**']
+    rules:
+      no-restricted-imports:
+        - error
+        - patterns: ['./*', '../*']
+  - files: ['routes/**', 'serverjs/**']
+    rules:
+      no-console: error

@@ -1,13 +1,13 @@
-import React, { Component, Fragment } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-import CubePlaytestPage from './components/CubePlaytestPage';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from 'components/ErrorBoundary';
+import CubePlaytestPage from 'pages/CubePlaytestPage';
 
 const wrapper = document.getElementById('react-root');
 const element = (
   <ErrorBoundary className="mt-3">
-    <CubePlaytestPage {...reactProps} />
+    <CubePlaytestPage {...window.reactProps} />
   </ErrorBoundary>
 );
 if (wrapper) {

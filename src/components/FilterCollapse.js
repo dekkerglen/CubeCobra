@@ -12,45 +12,21 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  Label,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
 } from 'reactstrap';
 
-import Filter from '../util/Filter';
-import Hash from '../util/Hash';
-import Query from '../util/Query';
-import { fromEntries, COLORS } from '../util/Util';
+import Filter from '../utils/Filter';
+import Query from '../utils/Query';
+import { fromEntries } from '../utils/Util';
 
 import { ColorChecksAddon } from './ColorCheck';
+import LoadingButton from './LoadingButton';
 
-const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText>{humanName}</InputGroupText>
-    </InputGroupAddon>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
-  </InputGroup>
-);
-
-const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText>{humanName}</InputGroupText>
-    </InputGroupAddon>
-    <CustomInput type="select" id={`${name}Op`} name={`${name}Op`} value={valueOp} onChange={onChange}>
-      <option value="=">equal to</option>
-      <option value="<">less than</option>
-      <option value=">">greater than</option>
-      <option value="<=">less than or equal to</option>
-      <option value=">=">greater than or equal to</option>
-      <option value="!=">not equal to</option>
-    </CustomInput>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
-  </InputGroup>
-);
+import TextField from './TextField';
+import NumericField from './NumericField';
 
 const allFields = [
   'name',
@@ -64,6 +40,7 @@ const allFields = [
   'finish',
   'price',
   'priceFoil',
+  'elo',
   'power',
   'toughness',
   'loyalty',
@@ -71,7 +48,7 @@ const allFields = [
   'artist',
   'is',
 ];
-const numFields = ['cmc', 'price', 'priceFoil', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = ['cmc', 'price', 'priceFoil', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
 const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
@@ -170,7 +147,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             <InputGroupText>Status</InputGroupText>
           </InputGroupAddon>
           <Input type="select" name="status" value={values.status} onChange={onChange}>
-            {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
+            {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
               <option key={status}>{status}</option>
             ))}
           </Input>
@@ -197,6 +174,13 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Foil Price"
           placeholder={'Any decimal number, e.g. "14.00"'}
           value={values.priceFoil}
+          onChange={onChange}
+        />
+        <NumericField
+          name="elo"
+          humanName="Elo"
+          placeholder={'Any integer number, e.g. "1200"'}
+          value={values.elo}
           onChange={onChange}
         />
         <NumericField
@@ -252,8 +236,9 @@ class FilterCollapse extends Component {
     super(props);
 
     this.state = {
+      loading: false,
       advancedOpen: false,
-      filterInput: this.store().get('f', ''),
+      filterInput: this.props.defaultFilterText || '',
       ...fromEntries(allFields.map((n) => [n, ''])),
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
@@ -269,12 +254,15 @@ class FilterCollapse extends Component {
     this.handleReset = this.handleReset.bind(this);
   }
 
-  componentDidMount() {
-    this.updateFilters();
-  }
-
-  store() {
-    return this.props.useQuery ? Query : Hash;
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.filter !== this.props.filter) {
+      const { filterInput } = this.state;
+      if (filterInput === '') {
+        Query.del('f');
+      } else {
+        Query.set('f', filterInput);
+      }
+    }
   }
 
   toggleAdvanced() {
@@ -283,7 +271,7 @@ class FilterCollapse extends Component {
     });
   }
 
-  applyAdvanced() {
+  async applyAdvanced() {
     // Advanced Filter change. Render to filter input.
     const tokens = [];
     for (const name of allFields) {
@@ -313,14 +301,13 @@ class FilterCollapse extends Component {
       advancedOpen: false,
       filterInput,
     });
-    this.updateFilters(filterInput);
+    await this.updateFilters(filterInput);
   }
 
-  updateFilters(overrideFilter) {
+  async updateFilters(overrideFilter) {
     const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
     if (filterInput === '') {
       this.props.setFilter([], '');
-      this.store().del('f');
       return;
     }
     const tokens = [];
@@ -330,8 +317,9 @@ class FilterCollapse extends Component {
     if (tokens.length > 0) {
       const filters = [Filter.parseTokens(tokens)];
       // TODO: Copy to advanced filter boxes.
-      this.props.setFilter(filters, filterInput);
-      this.store().set('f', filterInput);
+      this.setState({ loading: true });
+      await this.props.setFilter(filters, filterInput);
+      this.setState({ loading: false });
     }
   }
 
@@ -345,27 +333,26 @@ class FilterCollapse extends Component {
     });
   }
 
-  handleApply(event) {
+  async handleApply(event) {
     event.preventDefault();
-    this.updateFilters();
+    await this.updateFilters();
   }
 
-  handleKeyDown(event) {
+  async handleKeyDown(event) {
     if (event.keyCode === 13 /* ENTER */) {
       event.preventDefault();
-      this.updateFilters();
+      await this.updateFilters();
     }
   }
 
   handleReset(event) {
     this.setState({ filterInput: '' });
     this.props.setFilter([], '');
-    this.store().del('f');
   }
 
   render() {
-    const { filter, setFilter, numCards, numShown, useQuery, ...props } = this.props;
-    const { filterInput, advancedOpen } = this.state;
+    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
+    const { loading, filterInput, advancedOpen } = this.state;
     const tokens = [];
     const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
     const appliedText =
@@ -388,6 +375,7 @@ class FilterCollapse extends Component {
                     id="filterInput"
                     name="filterInput"
                     placeholder={'name:"Ambush Viper"'}
+                    disabled={loading}
                     valid={filterInput.length > 0 && valid}
                     invalid={filterInput.length > 0 && !valid}
                     value={this.state.filterInput}
@@ -395,9 +383,9 @@ class FilterCollapse extends Component {
                     onKeyDown={this.handleKeyDown}
                   />
                   <InputGroupAddon addonType="append">
-                    <Button color="success" onClick={this.handleApply}>
+                    <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
                       Apply
-                    </Button>
+                    </LoadingButton>
                   </InputGroupAddon>
                 </InputGroup>
               </Form>

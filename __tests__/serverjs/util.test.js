@@ -25,54 +25,54 @@ test('turnToTree returns a valid prefix tree', () => {
 });
 
 test('binaryInsert inserts to an empty array', () => {
-  var testArray = [];
-  var initialLength = testArray.length;
-  var testValue = 1;
+  const testArray = [];
+  const initialLength = testArray.length;
+  const testValue = 1;
   util.binaryInsert(testValue, testArray);
   expect(testArray.length).toBe(initialLength + 1);
   expect(testArray[0]).toBe(testValue);
 });
 
 test('binaryInsert inserts new maximum correctly to a sorted array', () => {
-  var testArray = [1, 2, 3, 4];
-  var initialLength = testArray.length;
-  var testValue = 5;
+  const testArray = [1, 2, 3, 4];
+  const initialLength = testArray.length;
+  const testValue = 5;
   util.binaryInsert(testValue, testArray);
   expect(testArray.length).toBe(initialLength + 1);
   expect(testArray[testArray.length - 1]).toBe(testValue);
 });
 
 test('binaryInsert inserts new minimum correctly to a sorted array', () => {
-  var testArray = [1, 2, 3, 4];
-  var initialLength = testArray.length;
-  var testValue = 0;
+  const testArray = [1, 2, 3, 4];
+  const initialLength = testArray.length;
+  const testValue = 0;
   util.binaryInsert(testValue, testArray);
   expect(testArray.length).toBe(initialLength + 1);
   expect(testArray[0]).toBe(testValue);
 });
 
 test('binaryInsert inserts new median correctly to a sorted array', () => {
-  var testArray = [1, 2, 4, 5];
-  var initialLength = testArray.length;
-  var testValue = 3;
+  const testArray = [1, 2, 4, 5];
+  const initialLength = testArray.length;
+  const testValue = 3;
   util.binaryInsert(testValue, testArray);
   expect(testArray.length).toBe(initialLength + 1);
   expect(testArray[initialLength / 2]).toBe(testValue);
 });
 
 test('binaryInsert does not fail when input array is unsorted', () => {
-  var testArray = [1, 2, 9, 4];
-  var initialLength = testArray.length;
-  var testValue = 5;
+  const testArray = [1, 2, 9, 4];
+  const initialLength = testArray.length;
+  const testValue = 5;
   util.binaryInsert(testValue, testArray);
   expect(testArray.length).toBe(initialLength + 1);
 });
 
 test('addCardToCube adds a well-formed object', () => {
-  var testCube = {
+  const testCube = {
     cards: [],
   };
-  var initialLength = testCube.cards.length;
+  const initialLength = testCube.cards.length;
   const testCard = {
     color_identity: 'W',
     cmc: 1,
@@ -83,7 +83,7 @@ test('addCardToCube adds a well-formed object', () => {
   expect(testCube.cards.length).toBe(initialLength + 1);
   const result = testCube.cards[0];
   expect(result.tags.length).toBe(0);
-  expect(result.status).toBe('Not Owned');
+  expect(result.status).toBe('Owned');
   expect(result.finish).toBe('Non-foil');
   expect(result.colors).toBe(testCard.color_identity);
   expect(result.cmc).toBe(testCard.cmc);
@@ -92,11 +92,23 @@ test('addCardToCube adds a well-formed object', () => {
   expect(result.imgUrl).toBe(undefined);
 });
 
-test('addCardToCube allows custom tags', () => {
-  var testCube = {
+test('addCardToCube declines to add invalid card', () => {
+  const testCube = {
     cards: [],
   };
-  var initialLength = testCube.cards.length;
+  const initialLength = testCube.cards.length;
+  const testCard = {
+    error: true,
+  };
+  util.addCardToCube(testCube, testCard);
+  expect(testCube.cards.length).toBe(initialLength);
+});
+
+test('addCardToCube allows custom tags', () => {
+  const testCube = {
+    cards: [],
+  };
+  const initialLength = testCube.cards.length;
   const testCard = {
     color_identity: 'W',
     cmc: 1,
@@ -151,35 +163,35 @@ test('CSVtoArray returns an array of the correct length when commas are included
   expect(result.length).toBe(3);
 });
 
-test('generate_edit_token does not generate the same token on sequential calls', () => {
-  const firstResult = util.generate_edit_token();
-  const secondResult = util.generate_edit_token();
+test('generateEditToken does not generate the same token on sequential calls', () => {
+  const firstResult = util.generateEditToken();
+  const secondResult = util.generateEditToken();
   expect(firstResult).not.toBe(secondResult);
 });
 
-test('to_base_36 returns the base36 representation of its input', () => {
+test('toBase36 returns the base36 representation of its input', () => {
   const testInput = 69;
   const expected = testInput.toString(36);
-  const result = util.to_base_36(testInput);
+  const result = util.toBase36(testInput);
   expect(result).toBe(expected);
 });
 
-test('from_base_36 returns the base10 int representation of its input', () => {
+test('fromBase36 returns the base10 int representation of its input', () => {
   const testInt = 69;
   const testInput = testInt.toString(36);
   const expected = parseInt(testInput, 36);
-  const result = util.from_base_36(testInput);
+  const result = util.fromBase36(testInput);
   expect(result).toBe(expected);
 });
 
-test('has_profanity returns true for strings containing profanity', () => {
+test('hasProfanity returns true for strings containing profanity', () => {
   const testString = 'the quick brown fox jumped over the lazy ass dog';
-  const result = util.has_profanity(testString);
+  const result = util.hasProfanity(testString);
   expect(result).toBe(true);
 });
 
-test('has_profanity returns false for strings not containing profanity', () => {
+test('hasProfanity returns false for strings not containing profanity', () => {
   const testString = 'the quick brown fox jumped over the lazy dog';
-  const result = util.has_profanity(testString);
+  const result = util.hasProfanity(testString);
   expect(result).toBe(false);
 });
