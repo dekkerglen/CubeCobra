@@ -265,7 +265,7 @@ class CubeOverviewModal extends Component {
                     </FormGroup>
                   </Col>
                   <Col>
-                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'].map(
+                    {['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander', 'Battle Box', 'Multiplayer','Judge Tower'].map(
                       (label) => (
                         <div className="form-check" key={label}>
                           <input
