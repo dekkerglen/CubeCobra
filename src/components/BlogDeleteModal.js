@@ -10,12 +10,12 @@ class BlogDeleteModal extends React.Component {
     this.toggle = props.toggle;
     this.acceptButton = React.createRef();
     this.confirm = this.confirm.bind(this);
-    this.focusAcceptButton = this.focusAcceptButton.bind(this)
+    this.focusAcceptButton = this.focusAcceptButton.bind(this);
   }
 
   focusAcceptButton() {
     if (this.acceptButton.current) {
-      this.acceptButton.current.focus()
+      this.acceptButton.current.focus();
     }
   }
 
