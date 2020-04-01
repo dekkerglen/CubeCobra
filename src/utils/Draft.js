@@ -147,8 +147,8 @@ function getSortFn(bot) {
 }
 
 async function buildDeck(cards) {
-  const nonlands = cards.filter((card) => !card.type_line.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.type_line.toLowerCase().includes('land'));
+  const nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
+  const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
   const colors = botColors(null, null, cards, null);
   const sortFn = getSortFn(colors);
 
@@ -169,7 +169,7 @@ async function buildDeck(cards) {
 
   for (const card of main) {
     let index = Math.min(card.cmc ?? 0, 7);
-    if (!card.type_line.toLowerCase().includes('creature')) {
+    if (!card.details.type.toLowerCase().includes('creature')) {
       index += 8;
     }
     deck[index].push(card);
@@ -279,7 +279,6 @@ async function finish() {
       draft.seats[i].drafted = decks[i].deck;
       draft.seats[i].sideboard = decks[i].sideboard;
       const colors = botColors(null, null, draft.seats[i].pickorder, cards);
-      console.log(i, colors);
       draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     }
