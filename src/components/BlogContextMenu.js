@@ -9,12 +9,18 @@ import { csrfFetch } from '../util/CSRF';
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
-    this.deleteModal = React.createRef()
+    this.deleteModal = React.createRef();
     this.toggle = this.toggle.bind(this);
+    this.toggleDeleteModal = this.toggleDeleteModal.bind(this)
     this.openDeleteModal = this.openDeleteModal.bind(this);
     this.state = {
       dropdownOpen: false,
+      deleteModalOpen: false,
     };
+  }
+
+  componentDidUpdate() {
+    this.state
   }
 
   toggle() {
@@ -24,11 +30,16 @@ class BlogContextMenu extends React.Component {
     updateBlog();
   }
 
+  toggleDeleteModal() {
+    this.setState({
+      deleteModalOpen: !this.state.deleteModalOpen,
+    });
+  }
+
   openDeleteModal() {
-    this.deleteModal.current.setState({
-      isOpen: true,
-    })
-    document.addEventListener('keyup', this.deleteModal.current.keyPress);
+    this.setState({
+      deleteModalOpen: true,
+    });
   }
 
   clickEdit(post) {
@@ -63,7 +74,8 @@ class BlogContextMenu extends React.Component {
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
-        <BlogDeleteModal postID={this.props.post._id} ref={this.deleteModal}>
+        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={this.state.deleteModalOpen}
+          postID={this.props.post._id} ref={this.deleteModal}>
         </BlogDeleteModal>
       </>
     );

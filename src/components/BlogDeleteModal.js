@@ -7,25 +7,15 @@ import { csrfFetch } from '../util/CSRF';
 class BlogDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isOpen: Boolean(props.isOpen),
-    };
-
-    this.close = this.close.bind(this);
+    this.toggle = props.toggle;
+    this.acceptButton = React.createRef();
     this.confirm = this.confirm.bind(this);
-    this.keyPress = this.keyPress.bind(this);
+    this.focusAcceptButton = this.focusAcceptButton.bind(this)
   }
 
-  close() {
-    document.removeEventListener('keyup', this.keyPress);
-    this.setState({
-      isOpen: false,
-    });
-  }
-
-  keyPress(event) {
-    if (event.keyCode === 13) {
-      this.confirm();
+  focusAcceptButton() {
+    if (this.acceptButton.current) {
+      this.acceptButton.current.focus()
     }
   }
 
@@ -43,24 +33,22 @@ class BlogDeleteModal extends React.Component {
   }
 
   render() {
-    const { isOpen } = this.state;
+    const { isOpen } = this.props;
     return (
-      <>
-        <Modal isOpen={isOpen} toggle={this.close}>
-          <ModalHeader toggle={this.close}>Confirm Delete</ModalHeader>
-          <ModalBody>
-            <p>Are you sure you wish to delete this post? This action cannot be undone.</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.confirm}>
-              Delete
-            </Button>{' '}
-            <Button color="secondary" onClick={this.close}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
-      </>
+      <Modal isOpen={isOpen} toggle={this.toggle} onOpened={this.focusAcceptButton}>
+        <ModalHeader toggle={this.toggle}>Confirm Delete</ModalHeader>
+        <ModalBody>
+          <p>Are you sure you wish to delete this post? This action cannot be undone.</p>
+        </ModalBody>
+        <ModalFooter>
+          <Button innerRef={this.acceptButton} color="danger" onClick={this.confirm}>
+            Delete
+          </Button>{' '}
+          <Button color="secondary" onClick={this.toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </Modal>
     );
   }
 }
