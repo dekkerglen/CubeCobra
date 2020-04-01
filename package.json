@@ -6,10 +6,11 @@
   "main": "app.js",
   "scripts": {
     "beautify": "npm run prettier",
-    "prettier": "prettier --write {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' webpack.'*'.js",
+    "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' '*.js'",
+    "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
-    "lint": "prettier --check {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src,views}'/**/*.js' && eslint app.js models public/js routes serverjs src",
+    "lint": "npm run prettier-base -- --check && eslint app.js models public/js routes serverjs src",
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
     "webpack": "webpack --mode development --config webpack.server.js",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
