@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, } from 'reactstrap';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 import BlogDeleteModal from './BlogDeleteModal';
 
@@ -11,7 +11,7 @@ class BlogContextMenu extends React.Component {
     super(props);
     this.deleteModal = React.createRef();
     this.toggle = this.toggle.bind(this);
-    this.toggleDeleteModal = this.toggleDeleteModal.bind(this)
+    this.toggleDeleteModal = this.toggleDeleteModal.bind(this);
     this.openDeleteModal = this.openDeleteModal.bind(this);
     this.state = {
       dropdownOpen: false,
@@ -20,7 +20,7 @@ class BlogContextMenu extends React.Component {
   }
 
   componentDidUpdate() {
-    this.state
+    this.state;
   }
 
   toggle() {
@@ -60,7 +60,6 @@ class BlogContextMenu extends React.Component {
   }
 
   render() {
-
     return (
       <>
         <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
@@ -69,14 +68,15 @@ class BlogContextMenu extends React.Component {
           </DropdownToggle>
           <DropdownMenu right>
             <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
-            <DropdownItem onClick={this.openDeleteModal}>
-              Delete
-            </DropdownItem>
+            <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
           </DropdownMenu>
         </Dropdown>
-        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={this.state.deleteModalOpen}
-          postID={this.props.post._id} ref={this.deleteModal}>
-        </BlogDeleteModal>
+        <BlogDeleteModal
+          toggle={this.toggleDeleteModal}
+          isOpen={this.state.deleteModalOpen}
+          postID={this.props.post._id}
+          ref={this.deleteModal}
+        ></BlogDeleteModal>
       </>
     );
   }
