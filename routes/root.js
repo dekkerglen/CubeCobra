@@ -314,7 +314,18 @@ const operatorMap = {
 };
 
 const delimiters = [':', '<=', '>=', '<', '>', '='];
-const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+const prefixes = [
+  'Powered',
+  'Unpowered',
+  'Pauper',
+  'Peasant',
+  'Budget',
+  'Silver-bordered',
+  'Commander',
+  'Battle Box',
+  'Multiplayer',
+  'Judge Tower',
+];
 
 async function getCardCubes(value) {
   const ids = carddb.getIdsFromName(value);
