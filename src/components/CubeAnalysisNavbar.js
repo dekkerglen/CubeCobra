@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler, Input } from 'reactstrap';
 
 import FilterCollapse from 'components/FilterCollapse';
+import useToggle from 'hooks/UseToggle';
 
 const CubeAnalysisNavBar = ({
   draftFormats,
@@ -14,13 +15,13 @@ const CubeAnalysisNavBar = ({
   numCards,
   defaultFilterText,
 }) => {
-  const [navCollapseOpen, setNavCollapse] = useState(false);
-  const [filterCollapseOpen, setFilterCollapse] = useState(false);
+  const [navCollapseOpen, toggleNavCollapse] = useToggle(false);
+  const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
   return (
     <div className="usercontrols">
       <Navbar expand="md" className="navbar-light">
-        <NavbarToggler onClick={() => setNavCollapse(!navCollapseOpen)} />
+        <NavbarToggler onClick={toggleNavCollapse} />
         <Collapse isOpen={navCollapseOpen} navbar>
           <Nav navbar>
             <h6 className="mt-2">Selected Draft Format:</h6>
@@ -40,13 +41,7 @@ const CubeAnalysisNavBar = ({
               </Input>
             </div>
             <NavItem>
-              <NavLink
-                href="#"
-                onClick={() => {
-                  console.log(filterCollapseOpen);
-                  setFilterCollapse(!filterCollapseOpen);
-                }}
-              >
+              <NavLink href="#" onClick={toggleFilterCollapse}>
                 Filter
               </NavLink>
             </NavItem>
