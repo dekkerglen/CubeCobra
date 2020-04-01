@@ -1,8 +1,10 @@
+import PropTypes from 'prop-types';
+
 import React from 'react';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
 
-import { csrfFetch } from '../utils/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
 class BlogDeleteModal extends React.Component {
   constructor(props) {
@@ -20,7 +22,8 @@ class BlogDeleteModal extends React.Component {
   }
 
   confirm() {
-    csrfFetch(`/cube/blog/remove/${this.props.postID}`, {
+    const { postID } = this.props;
+    csrfFetch(`/cube/blog/remove/${postID}`, {
       method: 'DELETE',
       headers: {},
     }).then((response) => {
@@ -52,5 +55,11 @@ class BlogDeleteModal extends React.Component {
     );
   }
 }
+
+BlogDeleteModal.propTypes = {
+  toggle: PropTypes.func.isRequired,
+  postID: PropTypes.string.isRequired,
+  isOpen: PropTypes.bool.isRequired,
+};
 
 export default BlogDeleteModal;

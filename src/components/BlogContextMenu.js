@@ -4,7 +4,7 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap
 
 import BlogDeleteModal from './BlogDeleteModal';
 
-import { csrfFetch } from '../utils/CSRF';
+import { csrfFetch } from 'utils/CSRF';
 
 class BlogContextMenu extends React.Component {
   constructor(props) {
@@ -19,15 +19,10 @@ class BlogContextMenu extends React.Component {
     };
   }
 
-  componentDidUpdate() {
-    this.state;
-  }
-
   toggle() {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen,
     });
-    updateBlog();
   }
 
   toggleDeleteModal() {
@@ -42,8 +37,8 @@ class BlogContextMenu extends React.Component {
     });
   }
 
-  clickEdit(post) {
-    csrfFetch(`/cube/blogsrc/${post._id}`, {
+  clickEdit(id) {
+    csrfFetch(`/cube/blogsrc/${id}`, {
       method: 'GET',
       headers: {},
     })
@@ -52,7 +47,7 @@ class BlogContextMenu extends React.Component {
         $('#editor').html(json.src || json.body || '');
 
         $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(post._id);
+        $('#postBlogHiddenId').val(id);
         $('#blogEditTitle').text('Edit Blog Post');
         $('#editBlogModal').modal('show');
         autocard_init('autocard');
@@ -67,7 +62,7 @@ class BlogContextMenu extends React.Component {
             {this.props.value}
           </DropdownToggle>
           <DropdownMenu right>
-            <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
+            <DropdownItem onClick={() => this.props.onEdit(this.props.post._id)}>Edit</DropdownItem>
             <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
           </DropdownMenu>
         </Dropdown>
