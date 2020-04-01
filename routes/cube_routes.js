@@ -1161,7 +1161,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         userid: req.user._id,
         username: req.user.username,
         pickorder: [],
-        deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
+        name: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         cols: 16,
         deck: added,
         sideboard: [],
