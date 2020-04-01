@@ -4,7 +4,7 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, } from 'reactstra
 
 import BlogDeleteModal from './BlogDeleteModal';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 class BlogContextMenu extends React.Component {
   constructor(props) {

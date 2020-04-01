@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
+import { csrfFetch } from '../utils/CSRF';
 
 class BlogDeleteModal extends React.Component {
   constructor(props) {
