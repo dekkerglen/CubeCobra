@@ -379,7 +379,7 @@ module.exports = (io) => {
       if (eventEmitter.listeners(socket.draft).length <= 0) {
         // TODO remove all listeners when draft is completed, otherwise this will leak!
         eventEmitter.on(socket.draft, async () => {
-          const draft = await Draft.findById(socket.draft);
+          const draft = await Draft.findById(socket.draft).lean();
           if (draft.state === 'finished') {
             io.to(socket.draft).emit('finish', draft.deck);
           } else {
@@ -403,6 +403,7 @@ module.exports = (io) => {
   router.post(
     '/update/:id',
     util.wrapAsyncApi(async (req, res) => {
+      console.log('got update');
       if (req.headers['cobra-token'] !== secrets.token) {
         res.status(401).send({
           success: 'true',
