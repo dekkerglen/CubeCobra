@@ -1,14 +1,32 @@
 import { csrfFetch } from 'utils/CSRF';
-import { arrayIsSubset, arrayShuffle } from 'utils/Util';
-import { COLOR_COMBINATIONS, inclusiveCount } from 'utils/Card';
+import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
+import { COLOR_COMBINATIONS } from 'utils/Card';
 
 let draft = null;
+
+const toValue = (elo) => 10 ** (elo / 400);
+
+function addSeen(seen, cards) {
+  for (const card of cards) {
+    const colors = card.colors ?? card.details.colors ?? [];
+    if (colors.length > 0) {
+      for (const comb of COLOR_COMBINATIONS) {
+        if (arrayIsSubset(colors, comb)) {
+          seen[comb.join('')] += card.rating ? toValue(card.rating) : 0;
+        }
+      }
+    }
+  }
+}
 
 function init(newDraft) {
   draft = newDraft;
   for (const seat of draft.seats) {
-    seat.seen = seat.packbacklog[0].slice();
+    seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    addSeen(seat.seen, seat.packbacklog[0].slice());
   }
+  draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+  addSeen(draft.overallPool, draft.initial_state.flat(3));
 }
 
 function id() {
@@ -104,26 +122,19 @@ function botCardRating(botColors, card) {
   return rating;
 }
 
-const toValue = (elo) => 10 ** (elo / 400);
 const considerInCombination = (combination) => (card) =>
   arrayIsSubset(card.colors ?? card.details.color_identity ?? [], combination);
 
-const COLOR_SCALING_FACTOR = [1, 1, 0.75, 0.45, 0.3, 0.2];
+const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
 const botRatingAndCombination = (seen, card, pool, overallPool) => {
   let bestRating = -1;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
     const poolRating =
-      pool
-        .filter(considerInCombination(combination))
-        .reduce((w, poolCard) => w + toValue(poolCard.details.elo ?? 0), 0) +
-      (card && considerInCombination(combination)(card) ? toValue(card.details.elo ?? 0) : 0);
-    let seenCount = 1;
-    let overallCount = 1;
-    if (seen) {
-      seenCount = inclusiveCount(combination, seen);
-      overallCount = inclusiveCount(combination, overallPool) || 1;
-    }
+      pool.filter(considerInCombination(combination)).reduce((w, poolCard) => w + toValue(poolCard.rating ?? 0), 0) +
+      (card && considerInCombination(combination)(card) ? toValue(card.rating ?? 0) : 0);
+    const seenCount = seen?.[combination.join('')] ?? 1;
+    const overallCount = overallPool?.[combination.join('')] || 1;
     const openness = seenCount / overallCount;
     const rating = poolRating * seenCount * openness * COLOR_SCALING_FACTOR[combination.length];
     if (rating > bestRating) {
@@ -185,12 +196,12 @@ async function buildDeck(cards) {
 }
 
 function botPicks() {
-  const overallPool = draft.initial_state.flat(3);
   // make bots take one pick out of active packs
   for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
     const packFrom = draft.seats[botIndex].packbacklog[0];
     const { seen, pickorder } = draft.seats[botIndex];
-    const ratedPicks = [];
+    const { overallPool } = draft;
+    let ratedPicks = [];
     const unratedPicks = [];
     for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
       if (packFrom[cardIndex].rating) {
@@ -199,12 +210,10 @@ function botPicks() {
         unratedPicks.push(cardIndex);
       }
     }
-
-    ratedPicks.sort((x, y) => {
-      return (
-        botRating(seen, packFrom[y], pickorder, overallPool) - botRating(seen, packFrom[x], pickorder, overallPool)
-      );
-    });
+    ratedPicks = ratedPicks
+      .map((cardIndex) => [botRating(seen, packFrom[cardIndex], pickorder, overallPool), cardIndex])
+      .sort(([a], [b]) => b - a)
+      .map(([, cardIndex]) => cardIndex);
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
@@ -245,7 +254,7 @@ function passPack() {
   }
   for (const seat of draft.seats) {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
-      seat.seen.push(...seat.packbacklog[0]);
+      addSeen(seat.seen, seat.packbacklog[0]);
     }
   }
 }
@@ -281,6 +290,9 @@ async function finish() {
       const colors = botColors(null, null, draft.seats[i].pickorder, cards);
       draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
+    } else {
+      const colors = botColors(null, null, draft.seats[i].pickorder, cards);
+      draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
     }
   }
 
@@ -294,4 +306,4 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, botRating, pick, finish };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors };
