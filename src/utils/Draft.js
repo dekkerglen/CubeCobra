@@ -114,10 +114,8 @@ const botRatingAndCombination = (seen, card, pool, overallPool) => {
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
     const poolRating =
-      pool
-        .filter(considerInCombination(combination))
-        .reduce((w, poolCard) => w + toValue(poolCard.details.elo ?? 0), 0) +
-      (card && considerInCombination(combination)(card) ? toValue(card.details.elo ?? 0) : 0);
+      pool.filter(considerInCombination(combination)).reduce((w, poolCard) => w + toValue(poolCard.rating ?? 0), 0) +
+      (card && considerInCombination(combination)(card) ? toValue(card.rating ?? 0) : 0);
     let seenCount = 1;
     let overallCount = 1;
     if (seen) {

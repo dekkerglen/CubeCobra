@@ -93,6 +93,8 @@ Pack.defaultProps = {
 const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   useMemo(() => Draft.init(initialDraft), [initialDraft]);
 
+  console.log(initialDraft);
+
   const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);
