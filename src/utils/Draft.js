@@ -282,6 +282,27 @@ async function finish() {
     }
   }
 
+  for (const seat of draft.seats) {
+    for (const category of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+      for (const card of category) {
+        delete card.details;
+      }
+    }
+    for (const card of seat.pickorder) {
+      delete card.details;
+    }
+  }
+
+  for (const category of [draft.initial_state, draft.unopenedPacks]) {
+    for (const seat of category) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          delete card.details;
+        }
+      }
+    }
+  }
+
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
     method: 'POST',
