@@ -123,7 +123,7 @@ function botCardRating(botColors, card) {
 }
 
 const considerInCombination = (combination) => (card) =>
-  arrayIsSubset(card.colors ?? card.details.color_identity ?? [], combination);
+  arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
 const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
 const botRatingAndCombination = (seen, card, pool, overallPool) => {
@@ -295,6 +295,29 @@ async function finish() {
       draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
     }
   }
+
+  for (const seat of draft.seats) {
+    for (const category of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+      for (const card of category) {
+        delete card.details;
+      }
+    }
+    for (const card of seat.pickorder) {
+      delete card.details;
+    }
+    delete seat.seen;
+  }
+
+  for (const category of [draft.initial_state, draft.unopenedPacks]) {
+    for (const seat of category) {
+      for (const col of seat) {
+        for (const card of col) {
+          delete card.details;
+        }
+      }
+    }
+  }
+  delete draft.overallPool;
 
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
