@@ -295,8 +295,8 @@ async function finish() {
 
   for (const category of [draft.initial_state, draft.unopenedPacks]) {
     for (const seat of category) {
-      for (const pack of seat) {
-        for (const card of pack) {
+      for (const col of seat) {
+        for (const card of col) {
           delete card.details;
         }
       }
