@@ -719,3 +719,12 @@ img.mana-symbol {
   .noBreak {
 	white-space: nowrap;
   }
+  
+  .sortIcon {
+	max-height: 1rem;
+}
+
+.overflow-x{
+	overflow-x: auto;
+	overflow-y: visible;
+}
