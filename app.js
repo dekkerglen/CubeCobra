@@ -62,7 +62,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'info',
+  level: 'error',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
