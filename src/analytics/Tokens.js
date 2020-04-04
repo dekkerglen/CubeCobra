@@ -86,7 +86,10 @@ const Tokens = ({ cards, cube }) => {
 };
 
 Tokens.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({})),
+    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+  }).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
-
 export default Tokens;

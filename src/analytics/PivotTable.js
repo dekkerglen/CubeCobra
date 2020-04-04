@@ -29,5 +29,8 @@ const PivotTable = ({ cards }) => {
     </Col>
   );
 };
+PivotTable.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
 
 export default PivotTable;

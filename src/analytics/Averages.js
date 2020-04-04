@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Col,
-  Row,
-  Table,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  CustomInput,
-  NavItem,
-  NavLink,
-} from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, NavLink } from 'reactstrap';
 
 import { getCmc } from 'utils/Card';
 import { sortIntoGroups, getSorts } from 'utils/Sort';
@@ -61,10 +51,20 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
   return (
     <th scope="col">
       <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {label} <img src={icon} className="sortIcon" />
+        {label} <img src={icon} className="sortIcon" alt="" />
       </NavLink>
     </th>
   );
+};
+
+HeaderCell.propTypes = {
+  label: PropTypes.string.isRequired,
+  fieldName: PropTypes.string.isRequired,
+  sortConfig: PropTypes.shape({
+    key: PropTypes.string.isRequired,
+    direction: PropTypes.string.isRequired,
+  }).isRequired,
+  requestSort: PropTypes.string.isRequired,
 };
 
 const Averages = ({ cards }) => {
@@ -115,6 +115,7 @@ const Averages = ({ cards }) => {
         median: median(vals).toFixed(2),
         stddev: stddev(vals, avg).toFixed(2),
         count: vals.length,
+        sum: (vals.length * avg).toFixed(2),
       };
     })
     .filter((row) => row.count > 0);
@@ -171,6 +172,7 @@ const Averages = ({ cards }) => {
                 requestSort={requestSort}
               />
               <HeaderCell label="Count" fieldName="count" sortConfig={sortConfig} requestSort={requestSort} />
+              <HeaderCell label="Sum" fieldName="sum" sortConfig={sortConfig} requestSort={requestSort} />
             </tr>
           </thead>
           <tbody className="breakdown">
@@ -181,6 +183,7 @@ const Averages = ({ cards }) => {
                 <td>{row.median}</td>
                 <td>{row.stddev}</td>
                 <td>{row.count}</td>
+                <td>{row.sum}</td>
               </tr>
             ))}
           </tbody>
@@ -188,6 +191,9 @@ const Averages = ({ cards }) => {
       </ErrorBoundary>
     </Col>
   );
+};
+Averages.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default Averages;

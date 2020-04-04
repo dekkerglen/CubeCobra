@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
 import { getCmc } from 'utils/Card';
-import { GetColorCategory, sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
+import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
 
 const Chart = ({ cards }) => {
   const sorts = getSorts();
@@ -113,6 +114,9 @@ const Chart = ({ cards }) => {
       <ChartComponent options={options} data={data} type="bar" />
     </Col>
   );
+};
+Chart.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default Chart;

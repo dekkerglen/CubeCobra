@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, Input, NavLink } from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, NavLink } from 'reactstrap';
 
 import { getDraftFormat, matchingCards } from 'utils/draftutil';
 import { sortIntoGroups, getSorts } from 'utils/Sort';
@@ -51,10 +51,20 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
   return (
     <th scope="col">
       <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {label} <img src={icon} className="sortIcon" />
+        {label} <img src={icon} className="sortIcon" alt="" />
       </NavLink>
     </th>
   );
+};
+
+HeaderCell.propTypes = {
+  label: PropTypes.string.isRequired,
+  fieldName: PropTypes.string.isRequired,
+  sortConfig: PropTypes.shape({
+    key: PropTypes.string.isRequired,
+    direction: PropTypes.string.isRequired,
+  }).isRequired,
+  requestSort: PropTypes.string.isRequired,
 };
 
 const Asfans = ({ cards, cube }) => {
@@ -80,6 +90,7 @@ const Asfans = ({ cards, cube }) => {
   };
 
   const calculateCustomAsfans = (draftFormat) => {
+    const matchesDict = {};
     return draftFormat.map((pack, index) => {
       const asfanDict = {};
       for (const card of cards) {
@@ -87,7 +98,10 @@ const Asfans = ({ cards, cube }) => {
         for (const slot of pack) {
           let sum = 0;
           for (const filter of slot) {
-            const matches = matchingCards(cube.cards, filter);
+            if (!matchesDict[JSON.stringify(filter)]) {
+              matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
+            }
+            const matches = matchesDict[JSON.stringify(filter)];
             if (matches.includes(card)) {
               sum += 1 / matches.length;
             }
@@ -96,7 +110,7 @@ const Asfans = ({ cards, cube }) => {
         }
         asfanDict[card.cardID] = total;
       }
-      console.log(asfanDict);
+      console.log(matchesDict);
 
       return {
         label: `Pack ${index + 1}`,
@@ -110,7 +124,6 @@ const Asfans = ({ cards, cube }) => {
     });
   };
 
-  // {multiples:false,packs:"[[*,*,*,*,*,*,*,*,*,*,*,*,*,*,*]]"}
   const asfans = formatId >= 0 ? calculateCustomAsfans(getDraftFormat({ id: formatId }, cube)) : calculateAsfans();
 
   const { items, requestSort, sortConfig } = useSortableData(asfans);
@@ -181,6 +194,14 @@ const Asfans = ({ cards, cube }) => {
       </ErrorBoundary>
     </Col>
   );
+};
+
+Asfans.propTypes = {
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({})),
+    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+  }).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default Asfans;

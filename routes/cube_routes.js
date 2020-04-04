@@ -741,7 +741,7 @@ router.get('/list/:id', async (req, res) => {
     };
 
     cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe);
+    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);

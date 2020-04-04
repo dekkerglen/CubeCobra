@@ -10,17 +10,11 @@ import {
   InputGroupAddon,
   InputGroupText,
   CustomInput,
-  NavItem,
-  NavLink,
   Card,
   CardBody,
   Input,
   Button,
 } from 'reactstrap';
-
-import { getCmc } from 'utils/Card';
-import { sortIntoGroups, getSorts } from 'utils/Sort';
-import ErrorBoundary from 'components/ErrorBoundary';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -31,6 +25,14 @@ const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) 
   </InputGroup>
 );
 
+TextField.propTypes = {
+  name: PropTypes.string.isRequired,
+  humanName: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
 const TextDisplay = ({ humanName, value }) => (
   <InputGroup className="mb-3">
     <InputGroupAddon addonType="prepend">
@@ -40,6 +42,11 @@ const TextDisplay = ({ humanName, value }) => (
   </InputGroup>
 );
 
+TextDisplay.propTypes = {
+  humanName: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+};
+
 const inputs = [
   'Population size',
   'Number of successes in population',
@@ -47,7 +54,7 @@ const inputs = [
   'Number of successes in sample (x)',
 ];
 
-const HyperGeom = ({ cards }) => {
+const HyperGeom = () => {
   const [populationSize, setPopulationSize] = useState('');
   const [popSuccesses, sePopSuccesses] = useState('');
   const [sampleSize, setSampleSize] = useState('');

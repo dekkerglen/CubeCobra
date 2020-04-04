@@ -1,6 +1,6 @@
 import React from 'react';
 import { TagCloud } from 'react-tagcloud';
-import { Col, Row } from 'reactstrap';
+import { Col } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 const Cloud = ({ cards }) => {
@@ -27,6 +27,9 @@ const Cloud = ({ cards }) => {
       <TagCloud minSize={10} maxSize={80} colorOptions={colorOptions} tags={words} />
     </Col>
   );
+};
+Cloud.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default Cloud;
