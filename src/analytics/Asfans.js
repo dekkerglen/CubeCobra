@@ -129,7 +129,7 @@ const Asfans = ({ cards, cube }) => {
   const { items, requestSort, sortConfig } = useSortableData(asfans);
 
   return (
-    <Col xs="12" lg="10">
+    <>
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Asfans</h4>
@@ -192,7 +192,7 @@ const Asfans = ({ cards, cube }) => {
           </>
         ))}
       </ErrorBoundary>
-    </Col>
+    </>
   );
 };
 

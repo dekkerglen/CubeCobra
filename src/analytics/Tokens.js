@@ -55,7 +55,7 @@ const Tokens = ({ cards, cube }) => {
   console.log(data);
 
   return (
-    <Col xs="12" lg="10">
+    <>
       <h4>Tokens</h4>
       <p>All the tokens and emblems your cube uses and what cards require each of them.</p>
       <Row className="mb-3">
@@ -81,7 +81,7 @@ const Tokens = ({ cards, cube }) => {
           </Col>
         ))}
       </Row>
-    </Col>
+    </>
   );
 };
 

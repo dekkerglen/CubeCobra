@@ -53,7 +53,7 @@ const AnalyticTable = ({ cards }) => {
     .concat(['Total']);
 
   return (
-    <Col xs="12" lg="10">
+    <>
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Table</h4>
@@ -111,7 +111,7 @@ const AnalyticTable = ({ cards }) => {
           </tbody>
         </Table>
       </ErrorBoundary>
-    </Col>
+    </>
   );
 };
 

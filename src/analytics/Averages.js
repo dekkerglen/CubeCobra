@@ -123,7 +123,7 @@ const Averages = ({ cards }) => {
   const { items, requestSort, sortConfig } = useSortableData(counts);
 
   return (
-    <Col xs="12" lg="10">
+    <>
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Averages</h4>
@@ -189,7 +189,7 @@ const Averages = ({ cards }) => {
           </tbody>
         </Table>
       </ErrorBoundary>
-    </Col>
+    </>
   );
 };
 Averages.propTypes = {

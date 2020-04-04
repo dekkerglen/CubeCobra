@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Nav, NavLink, Row } from 'reactstrap';
+import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
@@ -83,7 +83,13 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
             ))}
           </Nav>
         </Col>
-        <ErrorBoundary>{analytics[activeTab].component(cards, cube)}</ErrorBoundary>
+        <Col xs="12" lg="10" className="overflow-x">
+          <Card>
+            <CardBody>
+              <ErrorBoundary>{analytics[activeTab].component(cards, cube)}</ErrorBoundary>
+            </CardBody>
+          </Card>
+        </Col>
       </Row>
     </CubeLayout>
   );

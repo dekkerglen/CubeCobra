@@ -76,7 +76,7 @@ const Chart = ({ cards }) => {
   };
 
   return (
-    <Col>
+    <>
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Chart</h4>
@@ -112,7 +112,7 @@ const Chart = ({ cards }) => {
         </Col>
       </Row>
       <ChartComponent options={options} data={data} type="bar" />
-    </Col>
+    </>
   );
 };
 Chart.propTypes = {

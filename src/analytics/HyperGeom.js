@@ -249,108 +249,106 @@ const HyperGeom = () => {
   console.log(plotdata);
 
   return (
-    <Col xs="12" lg="10">
+    <>
       <h4 className="d-lg-block d-none">Hypergeometric Calculator</h4>
       <p>
         This Hypergeometric Calculator makes it easy to compute individual and cumulative hypergeometric probabilities.
       </p>
       <p>The population is the entire cube.</p>
-      <Card>
-        <CardBody>
-          <TextField
-            name="1"
-            humanName="Population size"
-            placeholder=""
-            value={populationSize}
-            onChange={(event) => setPopulationSize(event.target.value)}
-          />
-          <TextField
-            name="2"
-            humanName="Number of successes in population"
-            placeholder=""
-            value={popSuccesses}
-            onChange={(event) => sePopSuccesses(event.target.value, 10)}
-          />
-          <TextField
-            name="2"
-            humanName="Sample size"
-            placeholder=""
-            value={sampleSize}
-            onChange={(event) => setSampleSize(event.target.value, 10)}
-          />
-          <TextField
-            name="2"
-            humanName="Number of successes in sample (x)"
-            placeholder=""
-            value={sampleSuccesses}
-            onChange={(event) => setSampleSuccesses(event.target.value, 10)}
-          />
-          <Button className="mb-3" color="success" block onClick={submit}>
-            Calculate
-          </Button>
-          <TextDisplay humanName={`Hypergeometric Probability: P(X = ${sampleSuccesses})`} value={et} />
-          <TextDisplay humanName={`Cumulative Probability: P(X < ${sampleSuccesses})`} value={lt} />
-          <TextDisplay humanName={`Cumulative Probability: P(X <= ${sampleSuccesses})`} value={lte} />
-          <TextDisplay humanName={`Cumulative Probability: P(X > ${sampleSuccesses})`} value={gt} />
-          <TextDisplay humanName={`Cumulative Probability: P(X >= ${sampleSuccesses})`} value={gte} />
-          {data.length > 0 && (
-            <>
-              <h5>Cumulative Distributions</h5>
-              <ChartComponent options={options} data={plotdata} type="line" />
-              <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>X-Axis: </InputGroupText>
-                </InputGroupAddon>
-                <CustomInput type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
-                  {inputs.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </CustomInput>
-              </InputGroup>
-              <h5>Datasets</h5>
-              <Row>
-                {data.map((datapoint) => (
-                  <Col xs="12" lg="6">
-                    <Table bordered responsive className="mt-lg-3">
-                      <thead>
-                        <tr>
-                          <th colSpan="2" scope="row">
-                            {datapoint.name}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="breakdown">
-                        <tr>
-                          <th scope="col">Population size</th>
-                          <td>{datapoint.populationSize}</td>
-                        </tr>
-                        <tr>
-                          <th scope="col">Number of successes in population</th>
-                          <td>{datapoint.popSuccesses}</td>
-                        </tr>
-                        <tr>
-                          <th scope="col">Sample size</th>
-                          <td>{datapoint.sampleSize}</td>
-                        </tr>
-                        <tr>
-                          <th scope="col">Number of successes in sample (x)</th>
-                          <td>{datapoint.sampleSuccesses}</td>
-                        </tr>
-                      </tbody>
-                    </Table>
-                  </Col>
+      <>
+        <TextField
+          name="1"
+          humanName="Population size"
+          placeholder=""
+          value={populationSize}
+          onChange={(event) => setPopulationSize(event.target.value)}
+        />
+        <TextField
+          name="2"
+          humanName="Number of successes in population"
+          placeholder=""
+          value={popSuccesses}
+          onChange={(event) => sePopSuccesses(event.target.value, 10)}
+        />
+        <TextField
+          name="2"
+          humanName="Sample size"
+          placeholder=""
+          value={sampleSize}
+          onChange={(event) => setSampleSize(event.target.value, 10)}
+        />
+        <TextField
+          name="2"
+          humanName="Number of successes in sample (x)"
+          placeholder=""
+          value={sampleSuccesses}
+          onChange={(event) => setSampleSuccesses(event.target.value, 10)}
+        />
+        <Button className="mb-3" color="success" block onClick={submit}>
+          Calculate
+        </Button>
+        <TextDisplay humanName={`Hypergeometric Probability: P(X = ${sampleSuccesses})`} value={et} />
+        <TextDisplay humanName={`Cumulative Probability: P(X < ${sampleSuccesses})`} value={lt} />
+        <TextDisplay humanName={`Cumulative Probability: P(X <= ${sampleSuccesses})`} value={lte} />
+        <TextDisplay humanName={`Cumulative Probability: P(X > ${sampleSuccesses})`} value={gt} />
+        <TextDisplay humanName={`Cumulative Probability: P(X >= ${sampleSuccesses})`} value={gte} />
+        {data.length > 0 && (
+          <>
+            <h5>Cumulative Distributions</h5>
+            <ChartComponent options={options} data={plotdata} type="line" />
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>X-Axis: </InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
+                {inputs.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
-              </Row>
-              <Button className="mb-3" color="danger" block onClick={clear}>
-                Reset
-              </Button>
-            </>
-          )}
-        </CardBody>
-      </Card>
-    </Col>
+              </CustomInput>
+            </InputGroup>
+            <h5>Datasets</h5>
+            <Row>
+              {data.map((datapoint) => (
+                <Col xs="12" lg="6">
+                  <Table bordered responsive className="mt-lg-3">
+                    <thead>
+                      <tr>
+                        <th colSpan="2" scope="row">
+                          {datapoint.name}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="breakdown">
+                      <tr>
+                        <th scope="col">Population size</th>
+                        <td>{datapoint.populationSize}</td>
+                      </tr>
+                      <tr>
+                        <th scope="col">Number of successes in population</th>
+                        <td>{datapoint.popSuccesses}</td>
+                      </tr>
+                      <tr>
+                        <th scope="col">Sample size</th>
+                        <td>{datapoint.sampleSize}</td>
+                      </tr>
+                      <tr>
+                        <th scope="col">Number of successes in sample (x)</th>
+                        <td>{datapoint.sampleSuccesses}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+              ))}
+            </Row>
+            <Button className="mb-3" color="danger" block onClick={clear}>
+              Reset
+            </Button>
+          </>
+        )}
+      </>
+    </>
   );
 };
 

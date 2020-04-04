@@ -23,10 +23,10 @@ const PivotTable = ({ cards }) => {
   const [state, updateState] = useState(data);
 
   return (
-    <Col xs="12" lg="10" className="overflow-x">
+    <>
       <h4>Pivot Table</h4>
       <PivotTableUI data={data} onChange={updateState} {...state} />
-    </Col>
+    </>
   );
 };
 PivotTable.propTypes = {
