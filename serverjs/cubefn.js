@@ -286,50 +286,6 @@ function CSVtoCards(cards, carddb) {
   return { newCards, newMaybe, missing };
 }
 
-// prices should be the prices module with the getPrices function.
-// elo should be in the form { round: bool }.
-// requested details is a string to pass to carddb.cardFromId.
-async function populateCardDetails(cardLists, carddb, { getPrices = null, elo = null, requestedDetails = undefined }) {
-  const pids = new Set();
-  const cardNames = new Set();
-  const lists = cardLists.map((list) =>
-    list.map((card) => {
-      // We don't want to modify the cards passed in or the card objects in the carddb.
-      card = { ...card, details: { ...carddb.cardFromId(card.cardID, requestedDetails) } };
-      if (!card.type_line) {
-        card.type_line = card.details.type;
-      }
-      if (getPrices && card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      if (elo !== null) {
-        cardNames.add(card.details.name);
-      }
-      return card;
-    }),
-  );
-  if (getPrices !== null || elo !== null) {
-    const queries = [getPrices !== null && getPrices([...pids]), elo !== null && getElo([...cardNames], elo.round)];
-    const [priceDict, eloDict] = await Promise.all(queries);
-    for (const cards of lists) {
-      for (const card of cards) {
-        if (getPrices !== null && card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (elo !== null && eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-    }
-  }
-  return lists;
-}
-
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];
   const onlyA = cardsA.slice(0);
@@ -467,7 +423,6 @@ const methods = {
   maybeCards,
   getElo,
   CSVtoCards,
-  populateCardDetails,
   compareCubes,
 };
 

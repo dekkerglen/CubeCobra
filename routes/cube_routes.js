@@ -34,7 +34,6 @@ const {
   maybeCards,
   getElo,
   CSVtoCards,
-  populateCardDetails,
   compareCubes,
 } = require('../serverjs/cubefn.js');
 
@@ -401,14 +400,18 @@ router.get('/overview/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    const requestedDetails = 'name tcgplayer_id';
-    const [cardDetails] = await populateCardDetails([cube.cards], carddb, { getPrices: GetPrices, requestedDetails });
+    for (const card of cube.cards) {
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+    }
     const allVersions = [];
-    for (const card of cardDetails) {
+    for (const card of cube.cards) {
       const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
       allVersions.push(...allVersionsOfCard.map((id) => ({ cardID: id, related: card.cardID })));
     }
-    const allVersionsDetailsQ = populateCardDetails([allVersions], carddb, { getPrices: GetPrices, requestedDetails });
+    for (const card of allVersions) {
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+    }
+    const pricesQ = addPrices(allVersions);
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -420,18 +423,24 @@ router.get('/overview/:id', async (req, res) => {
       },
       '_id username image artist users_following',
     ).lean();
-    const [blogs, followers, [allVersionsDetails]] = await Promise.all([blogsQ, followersQ, allVersionsDetailsQ]);
+    const [blogs, followers] = await Promise.all([blogsQ, followersQ, pricesQ]);
     const allVersionsLookup = {};
-    for (const card of allVersionsDetails) {
+    for (const card of allVersions) {
       if (!allVersionsLookup[card.related]) {
         allVersionsLookup[card.related] = [];
       }
       allVersionsLookup[card.related].push(card.details);
     }
+    for (const card of cube.cards) {
+      const withPrice = allVersions.find((pricedCard) => pricedCard.cardID === card.cardID);
+      if (withPrice) {
+        card.details = withPrice.details;
+      }
+    }
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
-    for (const card of cardDetails) {
+    for (const card of cube.cards) {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
@@ -635,9 +644,50 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
-    const [cubeACards, cubeBCards] = await populateCardDetails([cubeA.cards, cubeB.cards], carddb, {
-      getPrices: GetPrices,
-    });
+    const pids = new Set();
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
+
+    cubeA.cards = addDetails(cubeA.cards);
+    cubeB.cards = addDetails(cubeB.cards);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
+    cubeA.cards = addPriceAndElo(cubeA.cards);
+    cubeB.cards = addPriceAndElo(cubeB.cards);
     const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeACards, cubeBCards);
     cubeA.cards = cubeACards;
 
@@ -681,7 +731,50 @@ router.get('/list/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    [cube.cards] = await populateCardDetails([cube.cards], carddb, { getPrices: GetPrices, elo: true });
+    const pids = new Set();
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
+
+    cube.cards = addDetails(cube.cards);
+    cube.maybe = addDetails(cube.maybe);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
+    cube.cards = addPriceAndElo(cube.cards);
+    cube.maybe = addPriceAndElo(cube.maybe);
 
     const reactProps = {
       cube,
@@ -692,7 +785,7 @@ router.get('/list/:id', async (req, res) => {
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
-      maybe: maybeCards(cube, carddb),
+      maybe: cube.maybe,
     };
 
     return res.render('cube/cube_list', {
@@ -1082,7 +1175,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         userid: req.user._id,
         username: req.user.username,
         pickorder: [],
-        deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
+        name: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         cols: 16,
         deck: added,
         sideboard: [],
@@ -1250,9 +1343,47 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       let newMaybe = [];
       if (lines[0].trim() === CSV_HEADER) {
         ({ newCards, newMaybe, missing } = CSVtoCards(lines.slice(1), carddb));
-        const [cubeCards, newDetails] = await populateCardDetails([cards, newCards], carddb, { getPrices: GetPrices });
         cube.cards = newCards;
         cube.maybe = newMaybe;
+        const pids = new Set();
+        const cardNames = new Set();
+        const addDetails = (cardList) => {
+          cardList.splice().forEach((card, index) => {
+            card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
+            if (!card.type_line) {
+              card.type_line = card.details.type;
+            }
+            if (card.details.tcgplayer_id) {
+              pids.add(card.details.tcgplayer_id);
+            }
+            cardNames.add(card.details.name);
+          });
+          return cardList;
+        };
+
+        const cubeCards = addDetails(cards);
+        const newDetails = addDetails(newCards);
+
+        const [priceDict, eloDict] = await Promise.all([GetPrices([...pids]), getElo([...cardNames], true)]);
+
+        const addPriceAndElo = (cardList) => {
+          for (const card of cardList) {
+            if (card.details.tcgplayer_id) {
+              if (priceDict[card.details.tcgplayer_id]) {
+                card.details.price = priceDict[card.details.tcgplayer_id];
+              }
+              if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+                card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+              }
+            }
+            if (eloDict[card.details.name]) {
+              card.details.elo = eloDict[card.details.name];
+            }
+          }
+          return cardList;
+        };
+        addPriceAndElo(cubeCards);
+        addPriceAndElo(newDetails);
         const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
         changelog += onlyA.map(({ cardID }) => removeCardHtml(carddb.cardFromId(cardID))).join('');
         changelog += onlyB.map(({ cardID }) => addCardHtml(carddb.cardFromId(cardID))).join('');
@@ -1657,7 +1788,8 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
       }
     }
     for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
+      const name = key.replace(' // ', '/');
+      res.write(`${value} ${name}\r\n`);
     }
     res.write('\r\n\r\n');
 
@@ -1800,6 +1932,10 @@ router.post('/startdraft/:id', async (req, res) => {
     for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
     }
+    const elo = await getElo(cube.cards.map((card) => card.details.name));
+    for (const card of cube.cards) {
+      card.rating = elo[card.details.name];
+    }
 
     // setup draft
     const bots = draftutil.getDraftBots(params);
@@ -1818,19 +1954,6 @@ router.post('/startdraft/:id', async (req, res) => {
     draft.unopenedPacks = populated.unopenedPacks;
     draft.seats = populated.seats;
     draft.cube = cube._id;
-
-    // add ratings
-    const names = [];
-    // add in details to all cards
-    for (const seat of draft.initial_state) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          names.push(carddb.cardFromId(card.cardID).name);
-        }
-      }
-    }
-
-    draft.ratings = await getElo(names);
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2163,7 +2286,18 @@ router.post(
     // cube category override
     if (cube.overrideCategory) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
-      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+      const prefixes = [
+        'Powered',
+        'Unpowered',
+        'Pauper',
+        'Peasant',
+        'Budget',
+        'Silver-bordered',
+        'Commander',
+        'Battle Box',
+        'Multiplayer',
+        'Judge Tower',
+      ];
 
       if (!categories.includes(updatedCube.categoryOverride)) {
         return res.status(400).send({
