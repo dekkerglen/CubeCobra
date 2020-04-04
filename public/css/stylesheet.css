@@ -300,6 +300,10 @@
 	overflow: hidden;
 }
 
+#autocardPopup img {
+	width: 15rem;
+}
+
 .autocard-background {
 	background-color: #f8f9fa;
 	background-clip: content-box;

@@ -15,20 +15,9 @@ const Seat = {
 // Cube schema
 let draftSchema = mongoose.Schema({
   cube: String,
-  ratings: {},
   initial_state: [[[cardSchema]]],
-
-  //new format, will convert to
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
-
-  //deprecated
-  picks: [[]],
-  packs: [[[]]],
-  bots: [[]],
-  pickOrder: [],
-  pickNumber: Number,
-  packNumber: Number,
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));

@@ -1,7 +1,7 @@
 var seeder = require('mongoose-seed');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 
-const seedsPath = './seeds/'
+const seedsPath = './seeds/';
 var blogs = require(seedsPath + 'blogs.json');
 var cardratings = require(seedsPath + 'cardratings.json');
 var cubes = require(seedsPath + 'cubes.json');
@@ -10,30 +10,31 @@ var drafts = require(seedsPath + 'drafts.json');
 var users = require(seedsPath + 'users.json');
 
 // Data array containing seed data - documents organized by Model
-var data = [{
-    'model': 'User',
-    'documents': users
+var data = [
+  {
+    model: 'User',
+    documents: users,
   },
   {
-    'model': 'Blog',
-    'documents': blogs
+    model: 'Blog',
+    documents: blogs,
   },
   {
-    'model': 'CardRating',
-    'documents': cardratings
+    model: 'CardRating',
+    documents: cardratings,
   },
   {
-    'model': 'Cube',
-    'documents': cubes
+    model: 'Cube',
+    documents: cubes,
   },
   {
-    'model': 'Deck',
-    'documents': decks
+    model: 'Deck',
+    documents: decks,
   },
   {
-    'model': 'Draft',
-    'documents': drafts
-  }
+    model: 'Draft',
+    documents: drafts,
+  },
 ];
 
 seeder.connect(mongosecrets.connectionString, function() {
@@ -45,7 +46,7 @@ seeder.connect(mongosecrets.connectionString, function() {
     modelPath + 'cube.js',
     modelPath + 'deck.js',
     modelPath + 'draft.js',
-    modelPath + 'user.js'
+    modelPath + 'user.js',
   ]);
 
   // Populate databases, then close seeder

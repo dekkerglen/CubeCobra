@@ -62,7 +62,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'info',
+  level: 'error',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
@@ -167,13 +167,13 @@ app.use(fileUpload());
 // Body parser middleware
 app.use(
   bodyParser.urlencoded({
-    limit: '50mb',
+    limit: '200mb',
     extended: true,
   }),
 );
 app.use(
   bodyParser.json({
-    limit: '50mb',
+    limit: '200mb',
     extended: true,
   }),
 );
