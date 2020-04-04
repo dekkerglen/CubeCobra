@@ -76,29 +76,16 @@ async function processDeck(deck) {
     // flatten array
     const deckCards = [];
     deck.seats[0].deck.forEach((col) => {
-      if (Array.isArray(col)) {
-        col.forEach((row) => {
-          if (row && row.details) {
-            deckCards.push(
-              carddb
-                .cardFromId(row.cardID)
-                .name.toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .trim(),
-            );
-          }
-        });
-      } else {
+      col.forEach((row) => {
         deckCards.push(
           carddb
-            .cardFromId(col.cardID)
+            .cardFromId(row.cardID)
             .name.toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .trim(),
         );
-      }
+      });
     });
 
     for (let i = 0; i < deckCards.length; i += 1) {

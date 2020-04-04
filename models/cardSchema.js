@@ -6,4 +6,6 @@ module.exports = {
   cmc: Number,
   cardID: String,
   type_line: String,
+  imgUrl: String,
+  rating: Number,
 };

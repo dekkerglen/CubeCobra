@@ -1,23 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import useToggle from 'hooks/UseToggle';
-
-import {
-  Collapse,
-  Col,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
-  Nav,
-  NavItem,
-  NavLink,
-  Navbar,
-  NavbarToggler,
-  UncontrolledDropdown,
-} from 'reactstrap';
+import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler, Input } from 'reactstrap';
 
 import FilterCollapse from 'components/FilterCollapse';
+import useToggle from 'hooks/UseToggle';
 
 const CubeAnalysisNavBar = ({
   draftFormats,
@@ -28,52 +15,33 @@ const CubeAnalysisNavBar = ({
   numCards,
   defaultFilterText,
 }) => {
-  const [isOpen, , toggleIsOpen] = useToggle(false);
-  const [filterCollapseOpen, , toggleFilterCollapseOpen] = useToggle(false);
+  const [navCollapseOpen, toggleNavCollapse] = useToggle(false);
+  const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
-  let dropdownElement = <h5>Standard Draft Format</h5>;
-
-  const dropdownCustomFormat = (format, formatIndex) => (
-    <DropdownItem
-      key={/* eslint-disable-line react/no-array-index-key */ `format-${formatIndex}`}
-      onClick={() => setFormatId(formatIndex)}
-    >
-      {format.title}
-    </DropdownItem>
-  );
-
-  if (draftFormats) {
-    dropdownElement = (
-      <Col>
-        <h5>{formatId >= 0 ? `${draftFormats[formatId].title} (Custom Draft)` : 'Standard Draft Format'}</h5>
-        <UncontrolledDropdown inNavbar>
-          <DropdownToggle nav caret>
-            Change Draft Format
-          </DropdownToggle>
-          <DropdownMenu right>
-            <DropdownItem key="default" onClick={() => setFormatId(-1)}>
-              Standard Draft Format
-            </DropdownItem>
-            <DropdownItem header key="customformatsheader">
-              Custom Formats
-            </DropdownItem>
-            {draftFormats ? draftFormats.map(dropdownCustomFormat) : ''}
-          </DropdownMenu>
-        </UncontrolledDropdown>
-      </Col>
-    );
-  }
   return (
     <div className="usercontrols">
       <Navbar expand="md" className="navbar-light">
-        <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
-          {dropdownElement}
-          <NavbarToggler onClick={toggleIsOpen} />
-        </div>
-        <Collapse isOpen={isOpen} navbar>
-          <Nav className="ml-auto" navbar>
+        <NavbarToggler onClick={toggleNavCollapse} />
+        <Collapse isOpen={navCollapseOpen} navbar>
+          <Nav navbar>
+            <h6 className="mt-2">Selected Draft Format:</h6>
+            <div className="view-style-select px-2">
+              <Input
+                type="select"
+                id="viewSelect"
+                value={formatId}
+                onChange={(event) => setFormatId(parseInt(event.target.value, 10))}
+              >
+                <option value={-1}>Standard Draft</option>
+                {draftFormats.map((format, index) => (
+                  <option key={format._id} value={index}>
+                    {format.title}
+                  </option>
+                ))}
+              </Input>
+            </div>
             <NavItem>
-              <NavLink href="#" data-target="filter" onClick={toggleFilterCollapseOpen}>
+              <NavLink href="#" onClick={toggleFilterCollapse}>
                 Filter
               </NavLink>
             </NavItem>
