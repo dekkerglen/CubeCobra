@@ -41,7 +41,7 @@ const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
-const { addPrices, GetPrices } = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;

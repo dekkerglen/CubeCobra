@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler, Input } from 'reactstrap';
+import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler } from 'reactstrap';
 
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
@@ -36,9 +36,6 @@ const CubeAnalysisNavBar = ({ filter, setFilter, numCards, defaultFilterText }) 
 };
 
 CubeAnalysisNavBar.propTypes = {
-  draftFormats: PropTypes.arrayOf(PropTypes.object).isRequired,
-  formatId: PropTypes.number.isRequired,
-  setFormatId: PropTypes.func.isRequired,
   filter: PropTypes.arrayOf(PropTypes.object).isRequired,
   setFilter: PropTypes.func.isRequired,
   numCards: PropTypes.number.isRequired,

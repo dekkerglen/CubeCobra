@@ -93,7 +93,7 @@ const Averages = ({ cards }) => {
     return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
   };
   const stddev = (arr, avg) => {
-    const squareDiffs = arr.map(function(value) {
+    const squareDiffs = arr.map((value) => {
       const diff = value - avg;
       const sqrDiff = diff * diff;
       return sqrDiff;
