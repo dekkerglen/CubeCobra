@@ -24,6 +24,7 @@ function init(newDraft) {
   for (const seat of draft.seats) {
     seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     addSeen(seat.seen, seat.packbacklog[0].slice());
+    seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   }
   draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   addSeen(draft.overallPool, draft.initial_state.flat(3));
@@ -95,28 +96,28 @@ function botCardRating(botColors, card) {
     } else if (subset || contains) {
       switch (colors.length) {
         case 1:
-          rating += 102; // Increase value of picking by roughly 90%
+          rating += 176; // Increase value of picking by roughly 175%
           break;
         case 2:
-          rating += 159; // Increase value of picking by roughly 150%
+          rating += 218; // Increase value of picking by roughly 250%
           break;
         default:
-          rating += 213; // Increase value of picking by roughly 240%
+          rating += 265; // Increase value of picking by roughly 360%
           break;
       }
     } else if (overlap && isFetch) {
-      rating += 141; // Increase value of picking by roughly 125%
+      rating += 241; // Increase value of picking by roughly 300%
     } else if (overlap || colorless) {
-      rating += 58; // Increase value of picking by roughly 40%
+      rating += 159; // Increase value of picking by roughly 150%
     }
   } else if (colorless) {
-    rating += 141; // Increase value of picking by roughly 125%
+    rating += 205; // Increase value of picking by roughly 225%
   } else if (subset) {
-    rating += 120; // Increase value of picking by roughly 100%
+    rating += 191; // Increase value of picking by roughly 200%
   } else if (contains) {
-    rating += 82; // Increase value of picking by roughly 50%
+    rating += 141; // Increase value of picking by roughly 125%
   } else if (overlap) {
-    rating += 32; // Increase value of picking by roughly 20%
+    rating += 70; // Increase value of picking by roughly 50%
   }
 
   return rating;
@@ -126,13 +127,13 @@ const considerInCombination = (combination) => (card) =>
   arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
 const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
-const botRatingAndCombination = (seen, card, pool, overallPool) => {
+const botRatingAndCombination = (seen, card, picked, overallPool) => {
   let bestRating = -1;
   let bestCombination = [];
+  const cardValue = card ? toValue(card.rating ?? 0) : 0;
   for (const combination of COLOR_COMBINATIONS) {
     const poolRating =
-      pool.filter(considerInCombination(combination)).reduce((w, poolCard) => w + toValue(poolCard.rating ?? 0), 0) +
-      (card && considerInCombination(combination)(card) ? toValue(card.rating ?? 0) : 0);
+      picked[combination.join('')] + (card && considerInCombination(combination)(card) ? cardValue : 0);
     const seenCount = seen?.[combination.join('')] ?? 1;
     const overallCount = overallPool?.[combination.join('')] || 1;
     const openness = seenCount / overallCount;
@@ -158,13 +159,17 @@ function getSortFn(bot) {
 }
 
 async function buildDeck(cards) {
-  const nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
+  let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
   const colors = botColors(null, null, cards, null);
   const sortFn = getSortFn(colors);
+  const inColor = nonlands.filter(considerInCombination(colors));
+  const outOfColor = nonlands.filter((x) => !considerInCombination(colors)(x));
 
-  nonlands.sort(sortFn);
+  inColor.sort(sortFn);
+  outOfColor.sort(sortFn);
   lands.sort(sortFn);
+  nonlands = inColor.concat(outOfColor);
 
   const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
   const side = nonlands.slice(23).concat(lands.slice(17));
@@ -198,8 +203,11 @@ async function buildDeck(cards) {
 function botPicks() {
   // make bots take one pick out of active packs
   for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
-    const packFrom = draft.seats[botIndex].packbacklog[0];
-    const { seen, pickorder } = draft.seats[botIndex];
+    const {
+      seen,
+      picked,
+      packbacklog: [packFrom],
+    } = draft.seats[botIndex];
     const { overallPool } = draft;
     let ratedPicks = [];
     const unratedPicks = [];
@@ -211,13 +219,15 @@ function botPicks() {
       }
     }
     ratedPicks = ratedPicks
-      .map((cardIndex) => [botRating(seen, packFrom[cardIndex], pickorder, overallPool), cardIndex])
+      .map((cardIndex) => [botRating(seen, packFrom[cardIndex], picked, overallPool), cardIndex])
       .sort(([a], [b]) => b - a)
       .map(([, cardIndex]) => cardIndex);
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    draft.seats[botIndex].pickorder.push(draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0]);
+    const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+    draft.seats[botIndex].pickorder.push(pickedCard);
+    addSeen(picked, [pickedCard]);
   }
 }
 
@@ -282,16 +292,17 @@ async function finish() {
   const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.bot));
   const decks = await Promise.all(decksPromise);
 
-  const cards = draft.initial_state.flat(3);
   for (let i = 0; i < draft.seats.length; i++) {
     if (draft.seats[i].bot) {
       draft.seats[i].drafted = decks[i].deck;
       draft.seats[i].sideboard = decks[i].sideboard;
-      const colors = botColors(null, null, draft.seats[i].pickorder, cards);
+      const colors = botColors(null, null, draft.seats[i].picked, null);
       draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
-      const colors = botColors(null, null, draft.seats[i].pickorder, cards);
+      const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+      addSeen(picked, draft.seats[i].pickorder);
+      const colors = botColors(null, null, picked, null);
       draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
     }
   }
@@ -306,6 +317,7 @@ async function finish() {
       delete card.details;
     }
     delete seat.seen;
+    delete seat.picked;
   }
 
   for (const category of [draft.initial_state, draft.unopenedPacks]) {
