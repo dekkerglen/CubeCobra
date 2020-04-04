@@ -365,8 +365,8 @@ function getLabelsRaw(cube, sort) {
     });
     const buckets = elos.map(getEloBucket);
     const res = [];
-    for(const bucket of buckets) {
-      if(!res.includes(bucket)) {
+    for (const bucket of buckets) {
+      if (!res.includes(bucket)) {
         res.push(bucket);
       }
     }

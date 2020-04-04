@@ -14,7 +14,7 @@ import Filter from 'utils/Filter';
 import Chart from 'analytics/Chart';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
-import TagCloud from 'analytics/TagCloud';
+import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
 
@@ -37,7 +37,7 @@ const analytics = [
   },
   {
     name: 'Tag Cloud',
-    component: (cards) => <TagCloud cards={cards} />,
+    component: (cards) => <Cloud cards={cards} />,
   },
   {
     name: 'Pivot Table',
