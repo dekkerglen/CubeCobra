@@ -4,7 +4,7 @@ var Util = require('utils/Util.js');
 require('./Card.js');
 var Filter = require('utils/Filter.js');
 
-function matchingCards(cards, filter) {
+export function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }

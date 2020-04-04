@@ -16,6 +16,7 @@ import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
 import TagCloud from 'analytics/TagCloud';
 import HyperGeom from 'analytics/HyperGeom';
+import Asfans from 'analytics/Asfans';
 
 const analytics = [
   {
@@ -25,6 +26,10 @@ const analytics = [
   {
     name: 'Chart',
     component: (cards) => <Chart cards={cards} />,
+  },
+  {
+    name: 'Asfans',
+    component: (cards, cube) => <Asfans cards={cards} cube={cube} />,
   },
   {
     name: 'Tokens',
@@ -46,7 +51,6 @@ const analytics = [
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultNav, defaultFormatId, defaultFilterText }) => {
   const [filter, setFilter] = useState([]);
-  const [formatId, setFormatId] = useState(defaultFormatId || -1);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
 
@@ -59,9 +63,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultNav, defaultFormatId, defaultFi
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
       <DynamicFlash />
       <CubeAnalysisNavBar
-        draftFormats={cube.draft_formats}
-        formatId={formatId}
-        setFormatId={setFormatId}
         filter={filter}
         setFilter={updateFilter}
         numCards={cards.length}
