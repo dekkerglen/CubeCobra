@@ -49,14 +49,14 @@ const analytics = [
   },
 ];
 
-const CubeAnalysisPage = ({ cube, cubeID, defaultNav, defaultFormatId, defaultFilterText }) => {
+const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
 
-  const updateFilter = (filter) => {
-    setFilter(filter);
-    setCards(cube.cards.filter((card) => Filter.filterCard(card, filter)));
+  const updateFilter = (val) => {
+    setFilter(val);
+    setCards(cube.cards.filter((card) => Filter.filterCard(card, val)));
   };
 
   return (
@@ -90,14 +90,10 @@ CubeAnalysisPage.propTypes = {
     draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
-  defaultNav: PropTypes.string,
-  defaultFormatId: PropTypes.number,
   defaultFilterText: PropTypes.string,
 };
 
 CubeAnalysisPage.defaultProps = {
-  defaultNav: 'curve',
-  defaultFormatId: -1,
   defaultFilterText: '',
 };
 
