@@ -14,6 +14,7 @@ import Filter from 'utils/Filter';
 import Chart from 'analytics/Chart';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
+import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
@@ -22,6 +23,10 @@ const analytics = [
   {
     name: 'Averages',
     component: (cards) => <Averages cards={cards} />,
+  },
+  {
+    name: 'Table',
+    component: (cards) => <Table cards={cards} />,
   },
   {
     name: 'Chart',
