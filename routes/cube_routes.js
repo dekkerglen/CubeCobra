@@ -2734,12 +2734,14 @@ router.post('/submitdeck/:id', async (req, res) => {
 
     cube.decks.push(deck._id);
 
-    await util.addNotification(
-      cubeOwner,
-      user,
-      `/cube/deck/${deck._id}`,
-      `${user.username || 'Anonymous'} drafted your cube: ${cube.name}`,
-    );
+    if (user) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username || 'Anonymous'} drafted your cube: ${cube.name}`,
+      );
+    }
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 
