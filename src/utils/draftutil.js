@@ -379,7 +379,7 @@ export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
             sum += 1 / matches.length;
           }
         }
-        total += sum / slot.length;
+        total += (1-total) * sum / slot.length;
       }
       asfanDict[card.cardID] = total;
     }
