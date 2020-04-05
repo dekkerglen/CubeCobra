@@ -128,10 +128,6 @@ function fromEntries(entries) {
 }
 
 async function addNotification(user, from, url, text) {
-  console.log(user);
-  console.log(from);
-  console.log(url);
-  console.log(text);
   if (user.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }
