@@ -1,71 +1,13 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, NavLink } from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { getDraftFormat, matchingCards } from 'utils/draftutil';
-import { sortIntoGroups, getSorts } from 'utils/Sort';
+import { getDraftFormat, calculateCustomAsfans, calculateAsfans } from 'utils/draftutil';
+import { getSorts } from 'utils/Sort';
 import ErrorBoundary from 'components/ErrorBoundary';
-
-const useSortableData = (items, config = null) => {
-  const [sortConfig, setSortConfig] = useState(config);
-
-  const sortedItems = React.useMemo(() => {
-    const sortableItems = [...items];
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] - b[sortConfig.key] < 0) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
-        }
-        if (a[sortConfig.key] - b[sortConfig.key] > 0) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [items, sortConfig]);
-
-  const requestSort = (key) => {
-    let direction = 'descending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'descending') {
-      direction = 'ascending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  return { items: sortedItems, requestSort, sortConfig };
-};
-
-const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
-  let icon = '/content/nosort.png';
-
-  if (sortConfig && sortConfig.key === fieldName) {
-    if (sortConfig.direction === 'descending') {
-      icon = '/content/ascending.png';
-    } else {
-      icon = '/content/descending.png';
-    }
-  }
-
-  return (
-    <th scope="col">
-      <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {label} <img src={icon} className="sortIcon" alt="" />
-      </NavLink>
-    </th>
-  );
-};
-
-HeaderCell.propTypes = {
-  label: PropTypes.string.isRequired,
-  fieldName: PropTypes.string.isRequired,
-  sortConfig: PropTypes.shape({
-    key: PropTypes.string.isRequired,
-    direction: PropTypes.string.isRequired,
-  }).isRequired,
-  requestSort: PropTypes.string.isRequired,
-};
+import useSortableData from 'hooks/UseSortableData';
+import HeaderCell from 'components/HeaderCell';
 
 const Asfans = ({ cards, cube }) => {
   const sorts = getSorts();
@@ -73,58 +15,10 @@ const Asfans = ({ cards, cube }) => {
   const [sort, setSort] = useState('Color');
   const [formatId, setFormatId] = useState(-1);
 
-  const draftFormats = cube.draft_formats;
-
-  const calculateAsfans = () => {
-    return [
-      {
-        label: '',
-        data: Object.entries(sortIntoGroups(cards, sort)).map((tuple) => {
-          return {
-            label: tuple[0],
-            asfan: (tuple[1].length / cube.cards.length) * 15, // 15 cards a pack
-          };
-        }),
-      },
-    ];
-  };
-
-  const calculateCustomAsfans = (draftFormat) => {
-    const matchesDict = {};
-    return draftFormat.map((pack, index) => {
-      const asfanDict = {};
-      for (const card of cards) {
-        let total = 0;
-        for (const slot of pack) {
-          let sum = 0;
-          for (const filter of slot) {
-            if (!matchesDict[JSON.stringify(filter)]) {
-              matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
-            }
-            const matches = matchesDict[JSON.stringify(filter)];
-            if (matches.includes(card)) {
-              sum += 1 / matches.length;
-            }
-          }
-          total += sum / slot.length;
-        }
-        asfanDict[card.cardID] = total;
-      }
-      console.log(matchesDict);
-
-      return {
-        label: `Pack ${index + 1}`,
-        data: Object.entries(sortIntoGroups(cards, sort)).map((tuple) => {
-          return {
-            label: tuple[0],
-            asfan: tuple[1].reduce((acc, c) => acc + asfanDict[c.cardID], 0),
-          };
-        }),
-      };
-    });
-  };
-
-  const asfans = formatId >= 0 ? calculateCustomAsfans(getDraftFormat({ id: formatId }, cube)) : calculateAsfans();
+  const asfans =
+    formatId >= 0
+      ? calculateCustomAsfans(cards, cube, sort, getDraftFormat({ id: formatId }, cube))
+      : calculateAsfans(cards, cube, sort);
 
   const { items, requestSort, sortConfig } = useSortableData(asfans);
 
@@ -148,7 +42,7 @@ const Asfans = ({ cards, cube }) => {
               onChange={(event) => setFormatId(parseInt(event.target.value, 10))}
             >
               <option value={-1}>Standard Draft</option>
-              {draftFormats.map((format, index) => (
+              {cube.draft_formats.map((format, index) => (
                 <option key={format._id} value={index}>
                   {format.title}
                 </option>

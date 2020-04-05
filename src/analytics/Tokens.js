@@ -52,8 +52,6 @@ const Tokens = ({ cards, cube }) => {
       .join('\n\n'),
   }));
 
-  console.log(data);
-
   return (
     <>
       <h4>Tokens</h4>

@@ -1,71 +1,14 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, NavLink } from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
 import { getCmc } from 'utils/Card';
 import { sortIntoGroups, getSorts } from 'utils/Sort';
+import { average, median, stddev } from 'utils/draftutil';
 import ErrorBoundary from 'components/ErrorBoundary';
-
-const useSortableData = (items, config = null) => {
-  const [sortConfig, setSortConfig] = useState(config);
-
-  const sortedItems = React.useMemo(() => {
-    const sortableItems = [...items];
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] - b[sortConfig.key] < 0) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
-        }
-        if (a[sortConfig.key] - b[sortConfig.key] > 0) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [items, sortConfig]);
-
-  const requestSort = (key) => {
-    let direction = 'descending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'descending') {
-      direction = 'ascending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  return { items: sortedItems, requestSort, sortConfig };
-};
-
-const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
-  let icon = '/content/nosort.png';
-
-  if (sortConfig && sortConfig.key === fieldName) {
-    if (sortConfig.direction === 'descending') {
-      icon = '/content/ascending.png';
-    } else {
-      icon = '/content/descending.png';
-    }
-  }
-
-  return (
-    <th scope="col">
-      <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {label} <img src={icon} className="sortIcon" alt="" />
-      </NavLink>
-    </th>
-  );
-};
-
-HeaderCell.propTypes = {
-  label: PropTypes.string.isRequired,
-  fieldName: PropTypes.string.isRequired,
-  sortConfig: PropTypes.shape({
-    key: PropTypes.string.isRequired,
-    direction: PropTypes.string.isRequired,
-  }).isRequired,
-  requestSort: PropTypes.string.isRequired,
-};
+import useSortableData from 'hooks/UseSortableData';
+import HeaderCell from 'components/HeaderCell';
 
 const Averages = ({ cards }) => {
   const sorts = getSorts();
@@ -74,40 +17,25 @@ const Averages = ({ cards }) => {
     Power: (card) => parseInt(card.details.power, 10),
     Toughness: (card) => parseInt(card.details.toughness, 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) => parseFloat(card.details.price),
-    'Price Foil': (card) => parseFloat(card.details.price_foil),
+    Price: (card) =>
+      parseFloat(
+        card.finish === 'Foil'
+          ? card.details.price_foil ?? card.details.price
+          : card.details.price ?? card.details.price_foil,
+        10,
+      ),
+    'Foil Price': (card) => parseFloat(card.details.price_foil),
+    'Non-Foil Price': (card) => parseFloat(card.details.price),
   };
 
   const [sort, setSort] = useState('Color');
-  const [Characteristic, setCharacteristic] = useState('CMC');
+  const [characteristic, setcharacteristic] = useState('CMC');
 
   const groups = sortIntoGroups(cards, sort);
 
-  const average = (arr) => {
-    const total = arr.reduce((acc, c) => acc + c, 0);
-    return total / arr.length;
-  };
-  const median = (arr) => {
-    const mid = Math.floor(arr.length / 2);
-    const nums = [...arr].sort((a, b) => a - b);
-    return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
-  };
-  const stddev = (arr, avg) => {
-    const squareDiffs = arr.map((value) => {
-      const diff = value - avg;
-      const sqrDiff = diff * diff;
-      return sqrDiff;
-    });
-
-    const avgSquareDiff = average(squareDiffs);
-
-    const stdDev = Math.sqrt(avgSquareDiff);
-    return stdDev;
-  };
-
   const counts = Object.entries(groups)
     .map((tuple) => {
-      const vals = tuple[1].map((card) => characteristics[Characteristic](card)).filter((x) => x);
+      const vals = tuple[1].map((card) => characteristics[characteristic](card)).filter((x) => x);
       const avg = average(vals);
       return {
         label: tuple[0],
@@ -146,8 +74,8 @@ const Averages = ({ cards }) => {
             </InputGroupAddon>
             <CustomInput
               type="select"
-              value={Characteristic}
-              onChange={(event) => setCharacteristic(event.target.value)}
+              value={characteristic}
+              onChange={(event) => setcharacteristic(event.target.value)}
             >
               {Object.keys(characteristics).map((key) => (
                 <option key={key} value={key}>
