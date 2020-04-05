@@ -27,7 +27,7 @@ const AnalyticTable = ({ cards }) => {
   const groups = sortIntoGroups(cards, primary);
   groups.Total = {};
   for (const key of Object.keys(groups)) {
-    if (key != 'Total') {
+    if (key !== 'Total') {
       groups[key] = sortWithTotal(groups[key], secondary);
 
       for (const subkey of Object.keys(groups[key])) {

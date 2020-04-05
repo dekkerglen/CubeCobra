@@ -2,19 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import {
-  Col,
-  Row,
-  Table,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  CustomInput,
-  Card,
-  CardBody,
-  Input,
-  Button,
-} from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, Input, Button } from 'reactstrap';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>

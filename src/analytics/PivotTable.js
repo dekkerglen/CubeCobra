@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import PivotTableUI from 'react-pivottable/PivotTableUI';
 import 'react-pivottable/pivottable.css';
 
-import { Col } from 'reactstrap';
-
 const PivotTable = ({ cards }) => {
   const data = cards.map((card) => ({
     CMC: card.cmc || card.details.cmc,

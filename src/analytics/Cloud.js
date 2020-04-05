@@ -1,6 +1,5 @@
 import React from 'react';
 import { TagCloud } from 'react-tagcloud';
-import { Col } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 const Cloud = ({ cards }) => {
