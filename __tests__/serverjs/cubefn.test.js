@@ -320,9 +320,14 @@ describe('compareCubes', () => {
     });
     const queryMock = jest.fn();
     queryMock.mockReturnValue(queryMockPromise);
-    let cardsA = [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]];
-    let cardsB = [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]];
-    [cardsA, cardsB] = await cubefn.populateCardDetails([cardsA, cardsB], carddb, {});
+    const cardsA = [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]];
+    const cardsB = [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]];
+    for (const card of cardsA) {
+      card.details = { ...carddb.cardFromId(card.cardID) };
+    }
+    for (const card of cardsB) {
+      card.details = { ...carddb.cardFromId(card.cardID) };
+    }
     const { inBoth, onlyA, onlyB, aNames, bNames, allCards } = await cubefn.compareCubes(cardsA, cardsB);
     expect(inBoth.length).toBe(1);
     expect(inBoth[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
