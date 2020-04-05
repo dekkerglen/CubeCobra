@@ -244,7 +244,7 @@ const HyperGeom = () => {
       </p>
       <p>
         View information on how to use this tool{' '}
-        <a href="https://www.youtube.com/watch?v=lKYNtxrACRY" target="_blank">
+        <a href="https://www.youtube.com/watch?v=lKYNtxrACRY" target="_blank" rel="noopener noreferrer">
           here
         </a>
         .
