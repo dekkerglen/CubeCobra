@@ -40,8 +40,6 @@ const AnalyticTable = ({ cards }) => {
   }
   groups.Total.Total = cards.length;
 
-  console.log(groups);
-
   const primaryGroups = sortIntoGroups(cards, primary);
   const secondaryGroups = sortIntoGroups(cards, secondary);
 
@@ -104,7 +102,9 @@ const AnalyticTable = ({ cards }) => {
                   <td>
                     {groups[primaryLabel][label] || 0}
                     {label !== 'Total' && (
-                      <span className="percent">{(groups[primaryLabel][label] ?? 0) / cards.length}%</span>
+                      <span className="percent">
+                        {(((groups[primaryLabel][label] ?? 0) / cards.length) * 100).toFixed(2)}%
+                      </span>
                     )}
                   </td>
                 ))}

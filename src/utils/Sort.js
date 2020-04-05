@@ -589,12 +589,12 @@ export function cardGetLabels(card, sort) {
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
-      return [parseInt(card.details.power)];
+      return [card.details.power];
     }
     return [];
   } else if (sort == 'Toughness') {
     if (card.details.toughness) {
-      return [parseInt(card.details.toughness)];
+      return [card.details.toughness];
     }
     return [];
   } else if (sort == 'Loyalty') {

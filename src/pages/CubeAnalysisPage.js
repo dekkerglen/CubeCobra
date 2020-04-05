@@ -37,7 +37,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
           : card.details.price ?? card.details.price_foil,
         10,
       ),
-    'Foil Price': (card) => parseFloat(card.details.price_foil),
+    'Price Foil': (card) => parseFloat(card.details.price_foil),
     'Non-Foil Price': (card) => parseFloat(card.details.price),
   };
 
@@ -48,11 +48,11 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
     {
       name: 'Table',
-      component: (collection) => <Table cards={collection} characteristics={characteristics} />,
+      component: (collection) => <Table cards={collection} />,
     },
     {
       name: 'Chart',
-      component: (collection) => <Chart cards={collection} />,
+      component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Asfans',
