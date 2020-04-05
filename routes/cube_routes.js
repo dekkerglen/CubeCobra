@@ -1837,7 +1837,7 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
     }
     for (const [key, value] of Object.entries(side)) {
       const name = key.replace(' // ', '/');
-      res.write(`${value} ${key}\r\n`);
+      res.write(`${value} ${name}\r\n`);
     }
     return res.end();
   } catch (err) {
