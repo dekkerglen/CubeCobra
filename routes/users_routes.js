@@ -553,9 +553,9 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const userQ = User.findById(userid, '_id username users_following').lean();
     const decksQ = Deck.find(
       {
-        owner: userid,
+        seats: { $elemMatch: { userid } },
       },
-      '_id name owner username date',
+      '_id seats date',
     )
       .sort({
         date: -1,
@@ -564,7 +564,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .limit(pagesize)
       .lean();
     const numDecksQ = Deck.countDocuments({
-      owner: userid,
+      seats: { $elemMatch: { userid } },
     });
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
