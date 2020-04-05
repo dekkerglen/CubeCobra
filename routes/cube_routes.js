@@ -2739,7 +2739,7 @@ router.post('/submitdeck/:id', async (req, res) => {
         cubeOwner,
         user,
         `/cube/deck/${deck._id}`,
-        `${user.username || 'Anonymous'} drafted your cube: ${cube.name}`,
+        `${user.username} drafted your cube: ${cube.name}`,
       );
     }
 
