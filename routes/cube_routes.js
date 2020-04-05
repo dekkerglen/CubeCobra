@@ -688,8 +688,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     };
     cubeA.cards = addPriceAndElo(cubeA.cards);
     cubeB.cards = addPriceAndElo(cubeB.cards);
-    const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeACards, cubeBCards);
-    cubeA.cards = cubeACards;
+    const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeA.cards, cubeB.cards);
 
     const reactProps = {
       cube: cubeA,
