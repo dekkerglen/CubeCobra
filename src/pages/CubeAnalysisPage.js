@@ -18,46 +18,63 @@ import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
-
-const analytics = [
-  {
-    name: 'Averages',
-    component: (cards) => <Averages cards={cards} />,
-  },
-  {
-    name: 'Table',
-    component: (cards) => <Table cards={cards} />,
-  },
-  {
-    name: 'Chart',
-    component: (cards) => <Chart cards={cards} />,
-  },
-  {
-    name: 'Asfans',
-    component: (cards, cube) => <Asfans cards={cards} cube={cube} />,
-  },
-  {
-    name: 'Tokens',
-    component: (cards, cube) => <Tokens cards={cards} cube={cube} />,
-  },
-  {
-    name: 'Tag Cloud',
-    component: (cards) => <Cloud cards={cards} />,
-  },
-  {
-    name: 'Pivot Table',
-    component: (cards) => <PivotTable cards={cards} />,
-  },
-  {
-    name: 'Hypergeometric Calculator',
-    component: (cards) => <HyperGeom cards={cards} />,
-  },
-];
+import { getCmc } from 'utils/Card';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
+
+  const characteristics = {
+    CMC: getCmc,
+    Power: (card) => parseInt(card.details.power, 10),
+    Toughness: (card) => parseInt(card.details.toughness, 10),
+    Elo: (card) => parseFloat(card.details.elo, 10),
+    Price: (card) =>
+      parseFloat(
+        card.finish === 'Foil'
+          ? card.details.price_foil ?? card.details.price
+          : card.details.price ?? card.details.price_foil,
+        10,
+      ),
+    'Foil Price': (card) => parseFloat(card.details.price_foil),
+    'Non-Foil Price': (card) => parseFloat(card.details.price),
+  };
+
+  const analytics = [
+    {
+      name: 'Averages',
+      component: (cards) => <Averages cards={cards} characteristics={characteristics} />,
+    },
+    {
+      name: 'Table',
+      component: (cards) => <Table cards={cards} characteristics={characteristics} />,
+    },
+    {
+      name: 'Chart',
+      component: (cards) => <Chart cards={cards} />,
+    },
+    {
+      name: 'Asfans',
+      component: (cards, cube) => <Asfans cards={cards} cube={cube} />,
+    },
+    {
+      name: 'Tokens',
+      component: (cards, cube) => <Tokens cards={cards} cube={cube} />,
+    },
+    {
+      name: 'Tag Cloud',
+      component: (cards) => <Cloud cards={cards} />,
+    },
+    {
+      name: 'Pivot Table',
+      component: (cards) => <PivotTable cards={cards} />,
+    },
+    {
+      name: 'Hypergeometric Calculator',
+      component: (cards) => <HyperGeom cards={cards} />,
+    },
+  ];
 
   const updateFilter = (val) => {
     setFilter(val);

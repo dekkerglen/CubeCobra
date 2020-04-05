@@ -103,7 +103,9 @@ const AnalyticTable = ({ cards }) => {
                 {primaryLabels.map((primaryLabel) => (
                   <td>
                     {groups[primaryLabel][label] || 0}
-                    <span className="percent">{groups[primaryLabel][label] || 0 / cards.length}%</span>
+                    {label !== 'Total' && (
+                      <span className="percent">{(groups[primaryLabel][label] ?? 0) / cards.length}%</span>
+                    )}
                   </td>
                 ))}
               </tr>

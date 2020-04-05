@@ -3,31 +3,14 @@ import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { getCmc } from 'utils/Card';
 import { sortIntoGroups, getSorts } from 'utils/Sort';
 import { average, median, stddev } from 'utils/draftutil';
 import ErrorBoundary from 'components/ErrorBoundary';
 import useSortableData from 'hooks/UseSortableData';
 import HeaderCell from 'components/HeaderCell';
 
-const Averages = ({ cards }) => {
+const Averages = ({ cards, characteristics }) => {
   const sorts = getSorts();
-  const characteristics = {
-    CMC: getCmc,
-    Power: (card) => parseInt(card.details.power, 10),
-    Toughness: (card) => parseInt(card.details.toughness, 10),
-    Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) =>
-      parseFloat(
-        card.finish === 'Foil'
-          ? card.details.price_foil ?? card.details.price
-          : card.details.price ?? card.details.price_foil,
-        10,
-      ),
-    'Foil Price': (card) => parseFloat(card.details.price_foil),
-    'Non-Foil Price': (card) => parseFloat(card.details.price),
-  };
-
   const [sort, setSort] = useState('Color');
   const [characteristic, setcharacteristic] = useState('CMC');
 
@@ -122,6 +105,7 @@ const Averages = ({ cards }) => {
 };
 Averages.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  characteristics: PropTypes.shape({}).isRequired,
 };
 
 export default Averages;

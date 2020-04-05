@@ -2,20 +2,13 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
-import { getCmc } from 'utils/Card';
 import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
 
-const Chart = ({ cards }) => {
+const Chart = ({ cards, characteristics }) => {
   const sorts = getSorts();
-  const characteristics = {
-    CMC: getCmc,
-    Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) => parseFloat(card.details.price),
-    'Price Foil': (card) => parseFloat(card.details.price_foil),
-  };
 
   const [sort, setSort] = useState('Color Identity');
-  const [Characteristic, setCharacteristic] = useState('CMC');
+  const [characteristic, setcharacteristic] = useState('CMC');
 
   const groups = sortIntoGroups(cards, sort);
 
@@ -30,7 +23,7 @@ const Chart = ({ cards }) => {
   };
 
   const getColor = (label) => {
-    return colorMap[label] ? colorMap[label] : '#000000';
+    return colorMap[label] ?? '#000000';
   };
 
   const options = {
@@ -49,7 +42,7 @@ const Chart = ({ cards }) => {
           display: true,
           scaleLabel: {
             display: true,
-            labelString: Characteristic,
+            labelString: characteristic,
           },
         },
       ],
@@ -64,12 +57,12 @@ const Chart = ({ cards }) => {
       ],
     },
   };
-  const labels = getLabels(cards, Characteristic);
+  const labels = getLabels(cards, characteristic);
   const data = {
     labels,
     datasets: Object.keys(groups).map((key) => ({
       label: key,
-      data: labels.map((label) => groups[key].filter((card) => cardIsLabel(card, label, Characteristic)).length),
+      data: labels.map((label) => groups[key].filter((card) => cardIsLabel(card, label, characteristic)).length),
       backgroundColor: getColor(key),
       borderColor: getColor(key),
     })),
@@ -99,8 +92,8 @@ const Chart = ({ cards }) => {
             </InputGroupAddon>
             <CustomInput
               type="select"
-              value={Characteristic}
-              onChange={(event) => setCharacteristic(event.target.value)}
+              value={characteristic}
+              onChange={(event) => setcharacteristic(event.target.value)}
             >
               {Object.keys(characteristics).map((key) => (
                 <option key={key} value={key}>
@@ -117,6 +110,7 @@ const Chart = ({ cards }) => {
 };
 Chart.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  characteristics: PropTypes.shape({}).isRequired,
 };
 
 export default Chart;
