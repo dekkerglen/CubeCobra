@@ -35,7 +35,7 @@ const CubeListPageRaw = ({
 
   const [cubeView, setCubeView] = useState(defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
-  const [filter, setFilter] = useState([]);
+  const [filter, setFilter] = useState(null);
 
   useEffect(() => {
     const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);

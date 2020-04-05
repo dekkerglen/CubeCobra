@@ -350,8 +350,8 @@ class FilterCollapse extends Component {
   render() {
     const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
     const { loading, filterInput, advancedOpen } = this.state;
-    const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    const { err } = makeFilter(filterInput);
+    const valid = !err;
     const appliedText =
       'Filters applied' +
       (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '') +

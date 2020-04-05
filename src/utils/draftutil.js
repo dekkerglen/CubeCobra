@@ -8,12 +8,13 @@ function matchingCards(cards, filter) {
   if (filter === null) {
     return cards;
   }
+  console.warn(filter);
   return cards.filter(filter);
 }
 
 function compileFilter(filterText) {
   if (!filterText || filterText === '' || filterText == '*') {
-    return [null];
+    return null;
   }
 
   const { filter, err } = makeFilter(filterText);
@@ -24,7 +25,6 @@ function compileFilter(filterText) {
       tagfilterText = `"${filterText}"`;
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
-    tokens = [];
     ({ filter, err } = makeFilter(tagfilterText));
   }
 
@@ -99,7 +99,7 @@ function customDraft(cards, duplicates = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }

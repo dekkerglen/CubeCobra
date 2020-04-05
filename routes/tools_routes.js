@@ -177,7 +177,7 @@ function shuffle(a) {
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = Filter.makeFilter(req.query.f);
+    const { err, filter } = makeFilter(req.query.f);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -201,7 +201,7 @@ router.get('/api/topcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = Filter.makeFilter(req.query.f);
+    const { err, filter } = makeFilter(req.query.f);
 
     if (err) {
       req.flash('Invalid filter.');
