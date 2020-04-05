@@ -25,8 +25,8 @@ Comment.add({
 const SeatDeck = {
   bot: [String], //null bot value means human player
   userid: {
-    type:String,
-    index:true
+    type: String,
+    index: true,
   },
   username: String,
   pickorder: [cardSchema],
