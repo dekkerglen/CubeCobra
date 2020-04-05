@@ -2727,21 +2727,19 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
+    const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
     cube.decks.push(deck._id);
 
-    if (user) {
-      await util.addNotification(
-        cubeOwner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} drafted your cube: ${cube.name}`,
-      );
-    }
+    await util.addNotification(
+      cubeOwner,
+      user,
+      `/cube/deck/${deck._id}`,
+      `${user.username || 'Anonymous'} drafted your cube: ${cube.name}`,
+    );
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
 
