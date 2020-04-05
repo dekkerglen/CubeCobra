@@ -130,7 +130,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
+const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.2, 0.15];
 const botRatingAndCombination = (seen, card, picked, overallPool) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
@@ -212,6 +212,7 @@ async function buildDeck(cards) {
   return {
     deck,
     sideboard,
+    colors,
   };
 }
 
@@ -309,10 +310,10 @@ async function finish() {
 
   for (let i = 0; i < draft.seats.length; i++) {
     if (draft.seats[i].bot) {
-      draft.seats[i].drafted = decks[i].deck;
-      draft.seats[i].sideboard = decks[i].sideboard;
-      const colors = botColors(null, null, draft.seats[i].picked, null);
-      draft.seats[i].name = `Bot ${i + 1}: ${colors.join(', ')}`;
+      const { deck, sideboard, colors } = decks[i];
+      draft.seats[i].drafted = deck;
+      draft.seats[i].sideboard = sideboard;
+      draft.seats[i].name = `Bot ${i === 0 ? draft.seats.length : i}: ${colors.join(', ')}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
