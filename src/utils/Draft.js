@@ -9,6 +9,8 @@ const toValue = (elo) => 10 ** (elo / 400);
 function addSeen(seen, cards) {
   for (const card of cards) {
     const colors = card.colors ?? card.details.colors ?? [];
+    // We ignore colorless because they just reduce variance by
+    // being in all color combinations.
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
@@ -124,19 +126,32 @@ function botCardRating(botColors, card) {
 }
 
 const considerInCombination = (combination) => (card) =>
-  arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
+  card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
+// We want to discourage playing more colors so they get less
+// value the more colors, this gets offset by having more cards.
 const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
 const botRatingAndCombination = (seen, card, picked, overallPool) => {
+  // Find the color combination that gives us the highest score
+  // that'll be the color combination we want to play currently.
   let bestRating = -1;
   let bestCombination = [];
   const cardValue = card ? toValue(card.rating ?? 0) : 0;
   for (const combination of COLOR_COMBINATIONS) {
-    const poolRating =
-      picked[combination.join('')] + (card && considerInCombination(combination)(card) ? cardValue : 0);
+    // The sum of the values of all cards in our pool, possibly
+    // plus the card we are considering.
+    const poolRating = picked[combination.join('')] + (considerInCombination(combination)(card) ? cardValue : 0);
+    // The sum of the values of all cards we've seen passed to
+    // us times the number of times we've seen them.
     const seenCount = seen?.[combination.join('')] ?? 1;
+    // This is technically cheating, but looks at the set of
+    // all cards dealt out to players to see what the trends
+    // for colors are. This is in value as well.
     const overallCount = overallPool?.[combination.join('')] || 1;
+    // The ratio of seen to overall gives us an idea what is
+    // being taken.
     const openness = seenCount / overallCount;
+    // We equally weight the factors to get a final score.
     const rating = poolRating * seenCount * openness * COLOR_SCALING_FACTOR[combination.length];
     if (rating > bestRating) {
       bestRating = rating;
