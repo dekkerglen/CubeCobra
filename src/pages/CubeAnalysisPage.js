@@ -44,35 +44,35 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const analytics = [
     {
       name: 'Averages',
-      component: (cards) => <Averages cards={cards} characteristics={characteristics} />,
+      component: (collection) => <Averages cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Table',
-      component: (cards) => <Table cards={cards} characteristics={characteristics} />,
+      component: (collection) => <Table cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Chart',
-      component: (cards) => <Chart cards={cards} />,
+      component: (collection) => <Chart cards={collection} />,
     },
     {
       name: 'Asfans',
-      component: (cards, cube) => <Asfans cards={cards} cube={cube} />,
+      component: (collection, cubeObj) => <Asfans cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tokens',
-      component: (cards, cube) => <Tokens cards={cards} cube={cube} />,
+      component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',
-      component: (cards) => <Cloud cards={cards} />,
+      component: (collection) => <Cloud cards={collection} />,
     },
     {
       name: 'Pivot Table',
-      component: (cards) => <PivotTable cards={cards} />,
+      component: (collection) => <PivotTable cards={collection} />,
     },
     {
       name: 'Hypergeometric Calculator',
-      component: (cards) => <HyperGeom cards={cards} />,
+      component: (collection) => <HyperGeom cards={collection} />,
     },
   ];
 
