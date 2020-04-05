@@ -2653,8 +2653,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
     const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
+    res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
   }),
 );
