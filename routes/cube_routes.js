@@ -2727,7 +2727,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
+    const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
