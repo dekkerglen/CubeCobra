@@ -242,7 +242,13 @@ const HyperGeom = () => {
       <p>
         This Hypergeometric Calculator makes it easy to compute individual and cumulative hypergeometric probabilities.
       </p>
-      <p>The population is the entire cube.</p>
+      <p>
+        View information on how to use this tool{' '}
+        <a href="https://www.youtube.com/watch?v=lKYNtxrACRY" target="_blank">
+          here
+        </a>
+        .
+      </p>
       <>
         <TextField
           name="1"
