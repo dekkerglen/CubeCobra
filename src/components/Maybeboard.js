@@ -134,7 +134,6 @@ MaybeboardListItem.defaultProps = {
 };
 
 const Maybeboard = ({ filter, ...props }) => {
-  console.log(filter);
   const { canEdit, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
   const { maybeboard, addMaybeboardCard } = useContext(MaybeboardContext);
