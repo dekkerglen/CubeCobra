@@ -32,7 +32,9 @@ const Suggestions = ({ cards, cube }) => {
       },
       body: JSON.stringify(data), // body data type must match "Content-Type" header
     });
+    console.log(response);
     const val = await response.json(); // parses JSON response into native JavaScript objects
+    console.log(val);
     return val.result;
   }
 
