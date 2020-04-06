@@ -3365,6 +3365,22 @@ router.post(
   }),
 );
 
+
+router.post(
+  '/api/adds/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    
+    var process = spawn('python3',["./python/ml_recommend.py", req.params.id, 10, 'http://localhost:5000/'] ); 
+    
+    process.stdout.on('data', function(data) { 
+      //res.send(data.toString()); 
+      console.log(data);
+      return res.send(['card from server 1','card from server 2']); 
+    });
+  }),
+);
+
 router.get(
   '/api/maybe/:id',
   ensureAuth,

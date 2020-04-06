@@ -18,6 +18,7 @@ import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
+import Suggestions from 'analytics/Suggestions';
 import { getCmc } from 'utils/Card';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
@@ -53,6 +54,10 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     {
       name: 'Chart',
       component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
+    },
+    {
+      name: 'Recommender',
+      component: (collection, cubeObj) => <Suggestions cards={collection}  cube={cubeObj} />,
     },
     {
       name: 'Asfans',
