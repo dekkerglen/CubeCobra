@@ -3370,19 +3370,24 @@ router.post(
 router.post(
   '/api/adds/:id',
   ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    
+  util.wrapAsyncApi(async (req, res) => {    
 
     const response = await fetch(`http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${5}&root=${encodeURIComponent('http://localhost:5000')}`);
     if (!response.ok) {
-      req.flash('danger', 'Error accessing CubeTutor.');
       return res.status(500).send({
         success: 'false',
+        result: {}
       });
     }
+    const res = await response.json();
+    const list = Object.entries(res).sort((a,b) => {
+      if (a[1] > b[1]) return +1;
+      if (a[1] < b[1]) return -1;
+      return 0;
+    }) 
     return res.status(200).send({
       success: 'true',
-      result: await response.json()
+      result: list
     });
   }),
 );

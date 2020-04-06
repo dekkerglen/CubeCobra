@@ -36,7 +36,7 @@ const Suggestions = ({ cards, cube }) => {
     });
     console.log(response);
     const val = await response.json(); // parses JSON response into native JavaScript objects
-    return val;
+    return val.list;
   }
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const Suggestions = ({ cards, cube }) => {
             </CardHeader>
             <CardBody>
               <ListGroup>
-                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add}>{add}</ListGroupItem>)}
+                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add[0]}>{add[0] + ': ' + add[1]}</ListGroupItem>)}
               </ListGroup>
             </CardBody>
           </Card>
