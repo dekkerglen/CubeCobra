@@ -57,11 +57,11 @@ const Suggestions = ({ cards, cube }) => {
       </p>
 
       <FilterCollapse
-        defaultFilterText={defaultFilterText}
+        defaultFilterText={'type="creature"'}
         filter={filter}
         setFilter={updateFilter}
         numCards={numCards}
-        isOpen={filterCollapseOpen}
+        isOpen={true}
       />
       <Row>
         <Col xs="12" lg="6">
