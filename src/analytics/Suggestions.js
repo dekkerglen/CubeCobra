@@ -40,7 +40,7 @@ const Suggestions = ({ cards, cube }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(20));
+    setAdds(suggestions.filter((card) => Filter.filterCard({details:card}, val)).slice(20));
   };
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const Suggestions = ({ cards, cube }) => {
       </p>
 
       <FilterCollapse
-        defaultFilterText={'type="creature"'}
+        defaultFilterText={''}
         filter={filter}
         setFilter={updateFilter}
         numCards={cards.length}
