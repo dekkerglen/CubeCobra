@@ -8,7 +8,6 @@ function matchingCards(cards, filter) {
   if (filter === null) {
     return cards;
   }
-  console.warn(filter);
   return cards.filter(filter);
 }
 

@@ -61,7 +61,6 @@ const CubeListPageRaw = ({
   }));
 
   const filteredCards = useMemo(() => {
-    console.warn(filter);
     return filter ? cube.cards.filter(filter) : cube.cards;
   }, [filter, cube]);
 
