@@ -36,6 +36,7 @@ const Suggestions = ({ cards, cube }) => {
     });
     console.log(response);
     const val = await response.json(); // parses JSON response into native JavaScript objects
+    console.log(val);
     return val.list;
   }
 
