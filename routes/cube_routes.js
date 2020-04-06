@@ -7,7 +7,7 @@ const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
-var {spawn} = require("child_process"); 
+const {spawn} = require("child_process"); 
 
 Canvas.Image = Image;
 
@@ -3372,12 +3372,17 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     
-    var process = spawn('python3',["./python/ml_recommend.py", req.params.id, 10, 'http://localhost:5000/'] ); 
-    
-    process.stdout.on('data', function(data) { 
-      //res.send(data.toString()); 
-      console.log(data);
-      return res.send(['card from server 1','card from server 2']); 
+
+    const response = await fetch(`http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${5}&root=${encodeURIComponent('http://localhost:5000')}`);
+    if (!response.ok) {
+      req.flash('danger', 'Error accessing CubeTutor.');
+      return res.status(500).send({
+        success: 'false',
+      });
+    }
+    return res.status(200).send({
+      success: 'true',
+      result: await response.json()
     });
   }),
 );
