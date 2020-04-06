@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import LoadingButton from 'components/LoadingButton';
 import { csrfFetch } from 'utils/CSRF';
+import FilterCollapse from 'components/FilterCollapse';
+import Filter from 'utils/Filter';
 
 import {
   Col,
@@ -12,15 +14,10 @@ import {
   Card,
   CardBody,
   CardHeader,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  Input,
 } from 'reactstrap';
 
 const Suggestions = ({ cards, cube }) => {
-  const [filterText, setfilterText] = useState('');
-  const [filterValid, setFilterValid] = useState(true);
+  const [filter, setFilter] = useState([]);
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
   const [adds, setAdds] = useState([]);
@@ -39,16 +36,17 @@ const Suggestions = ({ cards, cube }) => {
     return val.result;
   }
 
+  const updateFilter = (val) => {
+    setFilter(val);
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
+  };
+
   useEffect(() => {
     getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
-      setAdds(data);
+      setSuggestions(data);
       setLoading(false);
     });
   }, [cards]);
-
-  const applyFilter = (event) => {
-    console.log('Apply filter');
-  };
 
   return (
     <>
@@ -58,26 +56,13 @@ const Suggestions = ({ cards, cube }) => {
         Cube Cobra.
       </p>
 
-      <InputGroup className="mb-3">
-        <InputGroupAddon addonType="prepend">
-          <InputGroupText htmlFor="filterTextInput">Suggest cards that match: </InputGroupText>
-        </InputGroupAddon>
-        <Input
-          type="text"
-          id="filterTextInput"
-          name="filterTextInput"
-          placeholder={'type:"creature"'}
-          valid={filterText.length > 0 && filterValid}
-          invalid={filterText.length > 0 && !filterValid}
-          value={filterText}
-          onChange={(event) => setfilterText(event.target.value)}
-        />
-        <InputGroupAddon addonType="append">
-          <LoadingButton color="success" className="square-left" onClick={applyFilter} loading={loading}>
-            Apply
-          </LoadingButton>
-        </InputGroupAddon>
-      </InputGroup>
+      <FilterCollapse
+        defaultFilterText={defaultFilterText}
+        filter={filter}
+        setFilter={updateFilter}
+        numCards={numCards}
+        isOpen={filterCollapseOpen}
+      />
       <Row>
         <Col xs="12" lg="6">
           <Card>
