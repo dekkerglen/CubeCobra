@@ -3379,8 +3379,8 @@ router.post(
         result: {}
       });
     }
-    const res = await response.json();
-    const list = Object.entries(res).sort((a,b) => {
+    const data = await response.json();
+    const list = Object.entries(data).sort((a,b) => {
       if (a[1] > b[1]) return +1;
       if (a[1] < b[1]) return -1;
       return 0;
