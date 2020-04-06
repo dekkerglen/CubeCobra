@@ -38,7 +38,7 @@ const Suggestions = ({ cards, cube }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(20));
   };
 
   useEffect(() => {
