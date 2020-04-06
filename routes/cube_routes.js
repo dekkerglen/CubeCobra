@@ -3369,7 +3369,6 @@ router.post(
 
 router.post(
   '/api/adds/:id',
-  ensureAuth,
   util.wrapAsyncApi(async (req, res) => {    
 
     const response = await fetch(`http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${5}&root=${encodeURIComponent('http://localhost:5000')}`);
