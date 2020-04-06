@@ -1836,7 +1836,8 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
       }
     }
     for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
+      const name = key.replace(' // ', '/');
+      res.write(`${value} ${name}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -2653,8 +2654,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
     const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
+    res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
   }),
 );
@@ -2727,7 +2733,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
+    const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
