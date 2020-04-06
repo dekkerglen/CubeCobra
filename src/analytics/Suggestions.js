@@ -22,6 +22,7 @@ const Suggestions = ({ cards, cube }) => {
   const [filterText, setfilterText] = useState('');
   const [filterValid, setFilterValid] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [suggestions, setSuggestions] = useState([]);
   const [adds, setAdds] = useState([]);
 
   async function getData(url = '', data = {}) {
@@ -53,7 +54,7 @@ const Suggestions = ({ cards, cube }) => {
     <>
       <h4 className="d-lg-block d-none">Recommender</h4>
       <p>
-        View recommended additions and cuts. This data is generated using machine learning analysis over all cubes on
+        View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all cubes on
         Cube Cobra.
       </p>
 
@@ -85,7 +86,7 @@ const Suggestions = ({ cards, cube }) => {
             </CardHeader>
             <CardBody>
               <ListGroup>
-                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add[0]}>{add[0] + ': ' + add[1]}</ListGroupItem>)}
+                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add.name}>{add.name}</ListGroupItem>)}
               </ListGroup>
             </CardBody>
           </Card>
