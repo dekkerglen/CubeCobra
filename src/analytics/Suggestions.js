@@ -60,7 +60,7 @@ const Suggestions = ({ cards, cube }) => {
         defaultFilterText={'type="creature"'}
         filter={filter}
         setFilter={updateFilter}
-        numCards={numCards}
+        numCards={cards.length}
         isOpen={true}
       />
       <Row>
