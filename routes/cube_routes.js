@@ -41,7 +41,7 @@ const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
-const { addPrices, GetPrices } = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
@@ -741,7 +741,7 @@ router.get('/list/:id', async (req, res) => {
     };
 
     cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe);
+    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -864,36 +864,70 @@ router.get('/analysis/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    for (const card of cube.cards) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
-      card.details.display_image = util.getCardImageURL(card);
-      if (!card.type_line) {
-        card.type_line = card.details.type;
+
+    const pids = new Set();
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+
+        if (card.details.tokens) {
+          card.details.tokens = card.details.tokens.map((element) => {
+            const tokenDetails = carddb.cardFromId(element.tokenId);
+            return {
+              ...element,
+              token: {
+                tags: [],
+                status: 'Not Owned',
+                colors: tokenDetails.color_identity,
+                cmc: tokenDetails.cmc,
+                cardID: tokenDetails._id,
+                type_line: tokenDetails.type,
+                addedTmsp: new Date(),
+                imgUrl: undefined,
+                finish: 'Non-foil',
+                details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
+              },
+            };
+          });
+        }
+
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
+    cube.cards = addDetails(cube.cards);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
       }
-      if (card.details.tokens) {
-        card.details.tokens = card.details.tokens.map((element) => {
-          const tokenDetails = carddb.cardFromId(element.tokenId);
-          return {
-            ...element,
-            token: {
-              tags: [],
-              status: 'Not Owned',
-              colors: tokenDetails.color_identity,
-              cmc: tokenDetails.cmc,
-              cardID: tokenDetails._id,
-              type_line: tokenDetails.type,
-              addedTmsp: new Date(),
-              imgUrl: undefined,
-              finish: 'Non-foil',
-              details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
-            },
-          };
-        });
-      }
-    }
-    cube.cards = await addPrices(cube.cards);
+      return cards;
+    };
+    cube.cards = addPriceAndElo(cube.cards);
 
     const reactProps = {
       cube,
