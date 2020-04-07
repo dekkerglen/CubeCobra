@@ -3369,7 +3369,7 @@ router.post(
 router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
-    /* const response = await fetch(
+    const response = await fetch(
       `http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
         'http://localhost:5000',
       )}`,
@@ -3380,8 +3380,10 @@ router.post(
         result: {},
       });
     }
-    const data = await response.json(); */
-    const data = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    const data = await response.json();
+
+    // use this instead if you want debug data
+    // const data = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
 
     const pids = new Set();
     const cardNames = new Set();
