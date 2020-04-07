@@ -3381,6 +3381,8 @@ router.post(
       });
     }
     const data = await response.json();
+    const pids = new Set();
+    const cardNames = new Set();
     const list = Object.entries(data)
       .sort((a, b) => {
         if (a[1] > b[1]) return -1;
@@ -3391,8 +3393,21 @@ router.post(
         const details = carddb.getMostReasonable(tuple[0]);
         const card = util.newCard(details);
         card.details = details;
+
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+        cardNames.add(card.details.name);
+
         return card;
       });
+
+    cube.cards = addDetails(cube.cards);
+    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
     const addPriceAndElo = (cards) => {
       for (const card of cards) {
         if (card.details.tcgplayer_id) {
