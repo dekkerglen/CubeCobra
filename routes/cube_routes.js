@@ -3388,8 +3388,9 @@ router.post(
         return 0;
       })
       .map((tuple) => {
-        const card = util.newCard(carddb.getMostReasonable(tuple[0]));
-        card.details = tuple[0];
+        const details = carddb.getMostReasonable(tuple[0]);
+        const card = util.newCard(details);
+        card.details = details;
         return card;
       });
     return res.status(200).send({
