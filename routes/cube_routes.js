@@ -3393,9 +3393,25 @@ router.post(
         card.details = details;
         return card;
       });
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
     return res.status(200).send({
       success: 'true',
-      result: list,
+      result: addPriceAndElo(list),
     });
   }),
 );
