@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
 
@@ -60,9 +60,11 @@ const PagedList = ({ pageSize, rows }) => {
   const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
 
+  const current = Math.min(page, validPages.length);
+
   return (
     <>
-      <PaginationLabels validPages={validPages} page={page} setPage={setPage} />
+      <PaginationLabels validPages={validPages} page={current} setPage={setPage} />
       {displayRows}
     </>
   );
