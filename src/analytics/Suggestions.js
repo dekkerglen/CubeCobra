@@ -57,6 +57,7 @@ const Suggestions = ({ cards, cube }) => {
 
   useEffect(() => {
     getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
+      console.log(data);
       setSuggestions(data);
       setAdds(data.slice(0, MAX_CARDS));
       setLoading(false);
