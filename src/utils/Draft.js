@@ -130,7 +130,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.2, 0.15];
+const COLOR_SCALING_FACTOR = [0.8, 1, 0.8, 0.56, 0.2, 0.15];
 const botRatingAndCombination = (seen, card, picked, overallPool) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
@@ -151,8 +151,8 @@ const botRatingAndCombination = (seen, card, picked, overallPool) => {
     // The ratio of seen to overall gives us an idea what is
     // being taken.
     const openness = seenCount / overallCount;
-    // We equally weight the factors to get a final score.
-    const rating = poolRating * seenCount * openness * COLOR_SCALING_FACTOR[combination.length];
+    // We weigh the factors with exponents to get a final score.
+    const rating = poolRating ** 2 * seenCount * openness * COLOR_SCALING_FACTOR[combination.length];
     if (rating > bestRating) {
       bestRating = rating;
       bestCombination = combination;
