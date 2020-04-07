@@ -5,10 +5,9 @@ import FilterCollapse from 'components/FilterCollapse';
 import withAutocard from 'components/WithAutocard';
 import Filter from 'utils/Filter';
 import { encodeName } from 'utils/Card';
+import PagedList from 'components/PagedList';
 
 import { Col, Row, ListGroup, ListGroupItem, ListGroupItemHeading, Card, CardBody, CardHeader } from 'reactstrap';
-
-const MAX_CARDS = 30;
 
 const AutocardA = withAutocard('a');
 
@@ -52,14 +51,14 @@ const Suggestions = ({ cards, cube }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(0, MAX_CARDS));
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
   };
 
   useEffect(() => {
     getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
       console.log(data);
       setSuggestions(data);
-      setAdds(data.slice(0, MAX_CARDS));
+      setAdds(data);
       setLoading(false);
     });
   }, [cards, cube._id]);
@@ -93,7 +92,12 @@ const Suggestions = ({ cards, cube }) => {
                 {loading && <em>Loading...</em>}
                 {!loading &&
                   (adds.length > 0 ? (
-                    adds.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} />)
+                    <PagedList
+                      pageSize={20}
+                      rows={adds.slice(0).map((add, index) => (
+                        <Suggestion key={add.cardID} index={index} card={add} />
+                      ))}
+                    />
                   ) : (
                     <em>No results with the given filter.</em>
                   ))}
