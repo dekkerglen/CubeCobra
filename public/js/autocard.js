@@ -133,28 +133,30 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
   }
 
   // only show the three autocard divs once the images are done loading
-  autocardLoadListeners[popupImg.id] = popupImg.addEventListener('load', () => {
+  autocardLoadListeners[popupImg.id] = () => {
     if (card_flip && !popupImgBack.complete) {
       return;
     }
     // only fill in tags area once the image is done loading
     if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
-    autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 50);
-  });
+    autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 10);
+  };
+  popupImg.addEventListener('load', autocardLoadListeners[popupImg.id]);
   if (card_flip) {
-    autocardLoadListeners[popupImgBack.id] = popupImgBack.addEventListener('load', () => {
+    autocardLoadListeners[popupImgBack.id] = () => {
       if (!popupImg.complete) {
         return;
       }
       // only fill in tags area once the image is done loading
       if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
-      autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 50);
-    });
+      autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 10);
+    };
+    popupImgBack.addEventListener('load', autocardLoadListeners[popupImgBack.id]);
   }
   if (popupImg.complete && (!card_flip || popupImgBack.complete)) {
     // cached workaround
     if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
-    autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 50);
+    autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 10);
   }
 }
 
@@ -163,9 +165,8 @@ function autocard_hide_card() {
   if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
   for (const id in autocardLoadListeners) {
     const img = document.getElementById(id);
-    const listener = autocardLoadListeners[img];
-    img.removeEventListener('load', listener);
-    delete autocardLoadListeners[img];
+    img.removeEventListener('load', autocardLoadListeners[id]);
+    delete autocardLoadListeners[id];
   }
 
   document.getElementById('autocardPopup').classList.add('d-none');
