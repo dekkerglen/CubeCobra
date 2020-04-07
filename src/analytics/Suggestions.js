@@ -40,12 +40,13 @@ const Suggestions = ({ cards, cube }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard({details:card}, val)).slice(20));
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(20));
   };
 
   useEffect(() => {
     getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
       setSuggestions(data);
+      setAdds(data.slice(20));
       setLoading(false);
     });
   }, [cards]);

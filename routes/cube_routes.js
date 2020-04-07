@@ -3383,7 +3383,7 @@ router.post(
       if (a[1] > b[1]) return -1;
       if (a[1] < b[1]) return 1;
       return 0;
-    }).map((tuple) => carddb.getMostReasonable(tuple[0]));
+    }).map((tuple) => util.newCard(carddb.getMostReasonable(tuple[0])));
     console.log(list);
     return res.status(200).send({
       success: 'true',
