@@ -1,20 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import LoadingButton from 'components/LoadingButton';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
+import withAutocard from 'components/WithAutocard';
 import Filter from 'utils/Filter';
+import { encodeName } from 'utils/Card';
 
-import {
-  Col,
-  Row,
-  ListGroup,
-  ListGroupItem,
-  ListGroupItemHeading,
-  Card,
-  CardBody,
-  CardHeader,
-} from 'reactstrap';
+import { Col, Row, ListGroup, ListGroupItem, ListGroupItemHeading, Card, CardBody, CardHeader } from 'reactstrap';
+
+const MAX_CARDS = 30;
+
+const AutocardA = withAutocard('a');
+
+const Suggestion = ({ card, index }) => {
+  return (
+    <ListGroupItem>
+      <h6>
+        {index + 1}
+        {'. '}
+        <AutocardA
+          front={card.details.image_normal}
+          back={card.details.image_flip || undefined}
+          href={`/tool/card/${encodeName(card.cardID)}`}
+        >
+          {card.details.name}
+        </AutocardA>
+      </h6>
+    </ListGroupItem>
+  );
+};
 
 const Suggestions = ({ cards, cube }) => {
   const [filter, setFilter] = useState([]);
@@ -32,39 +46,40 @@ const Suggestions = ({ cards, cube }) => {
       },
       body: JSON.stringify(data), // body data type must match "Content-Type" header
     });
-    console.log(response);
     const val = await response.json(); // parses JSON response into native JavaScript objects
-    console.log(val);
     return val.result;
   }
 
   const updateFilter = (val) => {
     setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(20));
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)).slice(0, MAX_CARDS));
   };
 
   useEffect(() => {
     getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
       setSuggestions(data);
-      setAdds(data.slice(20));
+      setAdds(data.slice(0, MAX_CARDS));
       setLoading(false);
     });
-  }, [cards]);
+  }, [cards, cube._id]);
+
+  console.log(adds);
 
   return (
     <>
       <h4 className="d-lg-block d-none">Recommender</h4>
       <p>
-        View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all cubes on
-        Cube Cobra.
+        View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all
+        cubes on Cube Cobra.
       </p>
 
       <FilterCollapse
-        defaultFilterText={''}
+        defaultFilterText=""
         filter={filter}
         setFilter={updateFilter}
         numCards={cards.length}
-        isOpen={true}
+        isOpen
+        noCount
       />
       <Row>
         <Col xs="12" lg="6">
@@ -74,7 +89,13 @@ const Suggestions = ({ cards, cube }) => {
             </CardHeader>
             <CardBody>
               <ListGroup>
-                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add.cardID}>{add.details.name}</ListGroupItem>)}
+                {loading && <em>Loading...</em>}
+                {!loading &&
+                  (adds.length > 0 ? (
+                    adds.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} />)
+                  ) : (
+                    <em>No results with the given filter.</em>
+                  ))}
               </ListGroup>
             </CardBody>
           </Card>

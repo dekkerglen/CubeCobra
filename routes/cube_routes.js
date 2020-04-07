@@ -7,7 +7,7 @@ const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
-const {spawn} = require("child_process"); 
+const { spawn } = require('child_process');
 
 Canvas.Image = Image;
 
@@ -3366,32 +3366,35 @@ router.post(
   }),
 );
 
-
 router.post(
   '/api/adds/:id',
-  util.wrapAsyncApi(async (req, res) => {    
-
-    const response = await fetch(`http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${100}&root=${encodeURIComponent('http://localhost:5000')}`);
+  util.wrapAsyncApi(async (req, res) => {
+    const response = await fetch(
+      `http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${100}&root=${encodeURIComponent(
+        'http://localhost:5000',
+      )}`,
+    );
     if (!response.ok) {
       return res.status(500).send({
         success: 'false',
-        result: {}
+        result: {},
       });
     }
     const data = await response.json();
-    const list = Object.entries(data).sort((a,b) => {
-      if (a[1] > b[1]) return -1;
-      if (a[1] < b[1]) return 1;
-      return 0;
-    }).map((tuple) =>{
-      const card = util.newCard(carddb.getMostReasonable(tuple[0]))
-      card.details = tuple[0];
-      return card;
-    });
-    console.log(list);
+    const list = Object.entries(data)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return -1;
+        if (a[1] < b[1]) return 1;
+        return 0;
+      })
+      .map((tuple) => {
+        const card = util.newCard(carddb.getMostReasonable(tuple[0]));
+        card.details = tuple[0];
+        return card;
+      });
     return res.status(200).send({
       success: 'true',
-      result: list
+      result: list,
     });
   }),
 );
