@@ -1,55 +1,72 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 
 import { Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
 
-class PagedList extends Component {
-  constructor(props) {
-    super(props);
+const PageLink = ({ pageIndex, active, setPage }) => {
+  return (
+    <PaginationItem key={pageIndex} active={active}>
+      <PaginationLink
+        tag="a"
+        href="#"
+        page={pageIndex}
+        onClick={(event) => {
+          event.preventDefault();
+          setPage(pageIndex);
+        }}
+      >
+        {pageIndex + 1}
+      </PaginationLink>
+    </PaginationItem>
+  );
+};
 
-    this.state = { page: 0 };
+const FakePage = ({ text }) => (
+  <PaginationItem disabled>
+    <PaginationLink tag="a">{text}</PaginationLink>
+  </PaginationItem>
+);
 
-    this.setPage = this.setPage.bind(this);
+const PaginationLabels = ({ validPages, page, setPage }) => {
+  if (validPages.length <= 1) {
+    return <></>;
   }
-
-  setPage(event) {
-    event.preventDefault();
-    this.setState({
-      page: parseInt(event.target.getAttribute('page')),
-    });
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.rows.length !== this.props.rows.length) {
-      this.setState({ page: 0 });
-    }
-  }
-
-  render() {
-    const { pageSize, rows, children, ...props } = this.props;
-    const { page } = this.state;
-    const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
-    const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
-
+  if (validPages.length <= 5) {
     return (
-      <>
-        {validPages.length === 1 ? (
-          ''
-        ) : (
-          <Pagination aria-label="Table page" className="mt-3">
-            {validPages.map((page) => (
-              <PaginationItem key={page} active={page === this.state.page}>
-                <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-                  {page + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-          </Pagination>
-        )}
-        {displayRows}
-      </>
+      <Pagination aria-label="Table page" className="mt-3">
+        {validPages.map((pageIndex) => (
+          <PageLink pageIndex={pageIndex} setPage={setPage} active={pageIndex === page} />
+        ))}
+      </Pagination>
     );
   }
-}
+
+  const count = validPages.length;
+  return (
+    <Pagination aria-label="Table page" className="mt-3">
+      {page > 1 && <PageLink pageIndex={0} setPage={setPage} active={false} />}
+      {page > 2 && <FakePage text="..." />}
+      {page !== 0 && <PageLink pageIndex={page - 1} setPage={setPage} active={false} />}
+      <PageLink pageIndex={page} setPage={setPage} active />
+      {page !== count - 1 && <PageLink pageIndex={page + 1} setPage={setPage} active={false} />}
+      {page < count - 3 && <FakePage text="..." />}
+      {page < count - 2 && <PageLink pageIndex={count - 1} setPage={setPage} active={false} />}
+    </Pagination>
+  );
+};
+
+const PagedList = ({ pageSize, rows }) => {
+  const [page, setPage] = useState(0);
+
+  const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
+  const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
+
+  return (
+    <>
+      <PaginationLabels validPages={validPages} page={page} setPage={setPage} />
+      {displayRows}
+    </>
+  );
+};
 
 PagedList.defaultProps = {
   pageSize: 60,

@@ -41,7 +41,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
 
   const bigPagination = (
     <>
-      {active > 1 && <RealPage index={1} active={active} urlF={urlF} onClick={onClick} />}
+      {active > 1 && <RealPage index={0} active={active} urlF={urlF} onClick={onClick} />}
       {active > 2 && <FakePage text="..." />}
       {active !== 0 && <RealPage index={active - 1} active={active} urlF={urlF} onClick={onClick} />}
       <RealPage index={active} active={active} urlF={urlF} onClick={onClick} />
