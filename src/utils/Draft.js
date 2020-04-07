@@ -173,10 +173,11 @@ function getSortFn(bot) {
   };
 }
 
-async function buildDeck(cards) {
+async function buildDeck(cards, picked) {
   let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
-  const colors = botColors(null, null, cards, null);
+
+  const colors = botColors(null, null, picked, null);
   const sortFn = getSortFn(colors);
   const inColor = nonlands.filter(considerInCombination(colors));
   const outOfColor = nonlands.filter((x) => !considerInCombination(colors)(x));
@@ -305,7 +306,7 @@ async function pick(cardIndex) {
 
 async function finish() {
   // build bot decks
-  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.bot));
+  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.picked));
   const decks = await Promise.all(decksPromise);
 
   for (let i = 0; i < draft.seats.length; i++) {
@@ -313,7 +314,7 @@ async function finish() {
       const { deck, sideboard, colors } = decks[i];
       draft.seats[i].drafted = deck;
       draft.seats[i].sideboard = sideboard;
-      draft.seats[i].name = `Bot ${i === 0 ? draft.seats.length : i}: ${colors.join(', ')}`;
+      draft.seats[i].name = `Bot ${i === 0 ? draft.seats.length : i}: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
