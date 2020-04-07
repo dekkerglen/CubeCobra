@@ -1,8 +1,8 @@
 @include "./filterBase.ne"
-@include "./funcOperations.ne"
 
 @{%
 import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
+import * from 'filtering/funcOperations';
 %} # %}
 
 @{%
@@ -57,7 +57,7 @@ colorCondition -> ("c"i | "color"i | "colors"i) colorCombinationOpValue {% ([, v
 
 colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "color_identity"i) colorIdentityOpValue {% ([, valuePred]) => genericCondition('color_identity', (card) => card.colors ?? card.details.color_identity, valuePred) %}
 
-typeCondition -> ("t"i |  "type"i | "type_line"i) stringOpValue {% ([, valuePred]) => genericCondition('type_line', (card) => card.type_line ?? card.details.type, valuePred) %}
+typeCondition -> ("t"i |  "type"i | "type_line"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', (card) => card.type_line ?? card.details.type, valuePred) %}
 
 oracleCondition -> ("o"i | "oracle"i | "text"i) stringOpValue {% ([, valuePred]) => genericCondition('oracle_text', (card) => card.details.oracle_text, valuePred) %}
 
@@ -89,10 +89,6 @@ isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details',
 
 eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('elo', (card) => card.details.elo, valuePred) %}
 
-# picksCondition -> "picks" integerOpValue 
-
-# cubesCondition -> "cubes" integerOpValue
-
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', (card) => card.details.name_lower, valuePred) %}
   | noQuoteStringValue {% ([value]) => genericCondition('name_lower', (card) => card.details.name_lower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
 
@@ -101,3 +97,7 @@ manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => g
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
 isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i) {% ([[category]]) => category.toLowerCase() %}
+
+# picksCondition -> "picks" integerOpValue 
+
+# cubesCondition -> "cubes" integerOpValue
