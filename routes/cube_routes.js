@@ -3383,7 +3383,11 @@ router.post(
       if (a[1] > b[1]) return -1;
       if (a[1] < b[1]) return 1;
       return 0;
-    }).map((tuple) => util.newCard(carddb.getMostReasonable(tuple[0])));
+    }).map((tuple) =>{
+      const card = util.newCard(carddb.getMostReasonable(tuple[0]))
+      card.details = tuple[0];
+      return card;
+    });
     console.log(list);
     return res.status(200).send({
       success: 'true',
