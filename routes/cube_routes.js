@@ -3402,9 +3402,6 @@ router.post(
         return card;
       });
 
-    cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
-
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
     const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
