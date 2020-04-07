@@ -74,7 +74,7 @@ const Suggestions = ({ cards, cube }) => {
             </CardHeader>
             <CardBody>
               <ListGroup>
-                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add.name}>{add.name}</ListGroupItem>)}
+                {loading ? <em>Loading...</em> : adds.map((add) => <ListGroupItem key={add.cardID}>{add.details.name}</ListGroupItem>)}
               </ListGroup>
             </CardBody>
           </Card>
