@@ -2,7 +2,17 @@
 
 @{%
 import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
-import * from 'filtering/funcOperations';
+import {
+  defaultOperation,
+  stringOperation,
+  stringContainOperation,
+  equalityOperation,
+  setOperation,
+  rarityOperation,
+  convertParsedCost,
+  manaCostOperation,
+  setElementOperation,
+} from 'filtering/funcOperations';
 %} # %}
 
 @{%

@@ -51,21 +51,6 @@ export const stringContainOperation = (op, value) => {
   }
 };
 
-export const typeOperation = (op, value) => {
-  value = value.toLowerCase();
-  switch (op.toString()) {
-    case ':':
-      return (fieldValue) => fieldValue.toLowerCase().includes(value);
-    case '=':
-      return (fieldValue) => fieldValue.toLowerCase() === value;
-    case '!=':
-    case '<>':
-      return (fieldValue) => fieldValue.toLowerCase() !== value;
-    default:
-      throw new Error(`Unrecognized operator '${op}'`);
-  }
-};
-
 export const equalityOperation = (op, value) => {
   switch (op.toString()) {
     case ':':
