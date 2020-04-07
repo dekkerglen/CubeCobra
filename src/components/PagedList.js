@@ -60,7 +60,7 @@ const PagedList = ({ pageSize, rows }) => {
   const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
 
-  const current = Math.min(page, validPages.length);
+  const current = Math.min(page, validPages.length - 1);
 
   return (
     <>
