@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import withAutocard from 'components/WithAutocard';
 import Filter from 'utils/Filter';
@@ -41,46 +40,7 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const Suggestions = ({ cards, cube }) => {
-  const [filter, setFilter] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [suggestions, setSuggestions] = useState([]);
-  const [removes, setRemoves] = useState([]);
-  const [adds, setAdds] = useState([]);
-  const [cuts, setCuts] = useState([]);
-
-  async function getData(url = '', data = {}) {
-    // Default options are marked with *
-    const response = await csrfFetch(url, {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: JSON.stringify(data), // body data type must match "Content-Type" header
-    });
-    const val = await response.json(); // parses JSON response into native JavaScript objects
-    return val.result;
-  }
-
-  const updateFilter = (val) => {
-    setFilter(val);
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
-    setCuts(removes.filter((card) => Filter.filterCard(card, val)));
-  };
-
-  useEffect(() => {
-    getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then(
-      ({ toCut, toAdd }) => {
-        setSuggestions(toAdd);
-        setRemoves(toCut);
-        setAdds(toAdd);
-        setCuts(toCut);
-        setLoading(false);
-      },
-    );
-  }, [adds, cards, cube._id, cuts]);
-
+const Suggestions = ({ adds, cuts, loading }) => {
   console.log(adds);
 
   return (
@@ -90,15 +50,6 @@ const Suggestions = ({ cards, cube }) => {
         View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all
         cubes on Cube Cobra.
       </p>
-
-      <FilterCollapse
-        defaultFilterText=""
-        filter={filter}
-        setFilter={updateFilter}
-        numCards={cards.length}
-        isOpen
-        noCount
-      />
       <Row>
         <Col xs="12" lg="6">
           <Card>

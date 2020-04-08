@@ -3382,7 +3382,8 @@ router.post(
     const { cuts, additions } = await response.json();
 
     // use this instead if you want debug data
-    // const data = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    // const cuts = { ...additions };
 
     const pids = new Set();
     const cardNames = new Set();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
@@ -20,11 +20,17 @@ import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
 import { getCmc } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
+  const [suggestions, setSuggestions] = useState([]);
+  const [removes, setRemoves] = useState([]);
+  const [adds, setAdds] = useState([]);
+  const [cuts, setCuts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const characteristics = {
     CMC: getCmc,
@@ -57,7 +63,9 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj) => <Suggestions cards={collection} cube={cubeObj} />,
+      component: (collection, cubeObj, addCards, cutCards, isLoading) => (
+        <Suggestions cards={collection} cube={cubeObj} adds={addCards} cuts={cutCards} loading={isLoading} />
+      ),
     },
     {
       name: 'Asfans',
@@ -81,9 +89,35 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
   ];
 
+  async function getData(url = '', data = {}) {
+    // Default options are marked with *
+    const response = await csrfFetch(url, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify(data), // body data type must match "Content-Type" header
+    });
+    const val = await response.json(); // parses JSON response into native JavaScript objects
+    return val.result;
+  }
+
+  useEffect(() => {
+    getData(`/cube/api/adds/${cubeID}`, { cards: cards.map((card) => card.details.name) }).then(({ toCut, toAdd }) => {
+      setSuggestions(toAdd);
+      setRemoves(toCut);
+      setAdds(toAdd);
+      setCuts(toCut);
+      setLoading(false);
+    });
+  }, [cards, cubeID]);
+
   const updateFilter = (val) => {
     setFilter(val);
     setCards(cube.cards.filter((card) => Filter.filterCard(card, val)));
+    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
+    setCuts(removes.filter((card) => Filter.filterCard(card, val)));
   };
 
   return (
@@ -108,7 +142,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
         <Col xs="12" lg="10" className="overflow-x">
           <Card>
             <CardBody>
-              <ErrorBoundary>{analytics[activeTab].component(cards, cube)}</ErrorBoundary>
+              <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
             </CardBody>
           </Card>
         </Col>
