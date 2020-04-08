@@ -89,7 +89,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
   ];
 
-  async function getData(url = '', data = {}) {
+  async function getData(url = '') {
     // Default options are marked with *
     const response = await csrfFetch(url, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -97,21 +97,20 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
         'Content-Type': 'application/json',
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(data), // body data type must match "Content-Type" header
     });
     const val = await response.json(); // parses JSON response into native JavaScript objects
     return val.result;
   }
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cubeID}`, { cards: cards.map((card) => card.details.name) }).then(({ toCut, toAdd }) => {
+    getData(`/cube/api/adds/${cubeID}`).then(({ toCut, toAdd }) => {
       setSuggestions(toAdd);
       setRemoves(toCut);
       setAdds(toAdd);
       setCuts(toCut);
       setLoading(false);
     });
-  }, [cards, cubeID]);
+  }, [cubeID]);
 
   const updateFilter = (val) => {
     setFilter(val);
