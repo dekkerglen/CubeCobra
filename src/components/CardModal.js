@@ -149,6 +149,11 @@ const CardModal = ({
                 handleInputBlur={addTagText}
                 {...tagActions}
               />
+
+              <h5>Notes</h5>
+              <InputGroup className="mb-3">
+                <Input type="text" name="notes" value={values.notes} onChange={onChange} />
+              </InputGroup>
             </fieldset>
           </Col>
         </Row>

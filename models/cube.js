@@ -10,6 +10,7 @@ const Card = {
   type_line: String,
   addedTmsp: Date,
   imgUrl: String,
+  notes: String,
   details: {},
 };
 

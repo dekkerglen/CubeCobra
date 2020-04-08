@@ -76,7 +76,8 @@ export function cardsAreEquivalent(a, b) {
     a.cmc === b.cmc &&
     arraysEqual(a.colors, b.colors) &&
     arraysEqual(a.tags, b.tags) &&
-    a.finish === b.finish
+    a.finish === b.finish &&
+    a.notes === b.notes
   );
 }
 
