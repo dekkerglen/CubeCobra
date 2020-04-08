@@ -7,7 +7,6 @@ const serialize = require('serialize-javascript');
 const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
-const { spawn } = require('child_process');
 
 Canvas.Image = Image;
 
