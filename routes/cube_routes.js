@@ -12,6 +12,7 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
   addAutocard,
@@ -3369,7 +3370,7 @@ router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
     const response = await fetch(
-      `http://127.0.0.1:8000/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
         'http://localhost:5000',
       )}`,
     );
