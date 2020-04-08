@@ -59,7 +59,7 @@ const Suggestions = ({ adds, cuts, loading }) => {
               {!loading &&
                 (adds.length > 0 ? (
                   <PagedList
-                    pageSize={1}
+                    pageSize={20}
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
                     rows={adds.slice(0).map((add, index) => (
@@ -82,7 +82,7 @@ const Suggestions = ({ adds, cuts, loading }) => {
               {!loading &&
                 (cuts.length > 0 ? (
                   <PagedList
-                    pageSize={2}
+                    pageSize={20}
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
                     rows={cuts.slice(0).map((add, index) => (
