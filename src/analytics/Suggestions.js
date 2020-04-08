@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import FilterCollapse from 'components/FilterCollapse';
 import withAutocard from 'components/WithAutocard';
-import Filter from 'utils/Filter';
 import { encodeName } from 'utils/Card';
 import PagedList from 'components/PagedList';
 
@@ -103,12 +101,9 @@ const Suggestions = ({ adds, cuts, loading }) => {
 };
 
 Suggestions.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  adds: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cuts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  loading: PropTypes.bool.isRequired,
 };
 
 export default Suggestions;
