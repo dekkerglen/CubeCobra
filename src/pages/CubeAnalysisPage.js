@@ -5,7 +5,6 @@ import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
-import CubeAnalysisNavBar from 'components/CubeAnalysisNavbar';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 
@@ -21,6 +20,8 @@ import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
 import { getCmc } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
+import FilterCollapse from 'components/FilterCollapse';
+import useToggle from 'hooks/UseToggle';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState([]);
@@ -31,6 +32,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
   const characteristics = {
     CMC: getCmc,
@@ -122,12 +124,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
       <DynamicFlash />
-      <CubeAnalysisNavBar
-        filter={filter}
-        setFilter={updateFilter}
-        numCards={cards.length}
-        defaultFilterText={defaultFilterText}
-      />
       <Row className="mt-3">
         <Col xs="12" lg="2">
           <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
@@ -139,6 +135,20 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
           </Nav>
         </Col>
         <Col xs="12" lg="10" className="overflow-x">
+          <Card className="mb-3">
+            <CardBody>
+              <NavLink href="#" onClick={toggleFilterCollapse}>
+                <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
+              </NavLink>
+              <FilterCollapse
+                defaultFilterText={defaultFilterText}
+                filter={filter}
+                setFilter={updateFilter}
+                numCards={cards.length}
+                isOpen={filterCollapseOpen}
+              />
+            </CardBody>
+          </Card>
           <Card>
             <CardBody>
               <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
