@@ -140,6 +140,11 @@ const CardModal = ({
                 <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
               </InputGroup>
 
+              <h5>Notes</h5>
+              <InputGroup className="mb-3">
+                <Input type="textarea" name="notes" value={values.notes} onChange={onChange} />
+              </InputGroup>
+
               <h5>Tags</h5>
               <TagInput
                 tags={values.tags}
@@ -149,11 +154,6 @@ const CardModal = ({
                 handleInputBlur={addTagText}
                 {...tagActions}
               />
-
-              <h5>Notes</h5>
-              <InputGroup className="mb-3">
-                <Input type="text" name="notes" value={values.notes} onChange={onChange} />
-              </InputGroup>
             </fieldset>
           </Col>
         </Row>
