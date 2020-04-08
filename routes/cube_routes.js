@@ -12,6 +12,8 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+// eslint-disable-next-line import/no-unresolved
+const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
   addAutocard,
@@ -3367,6 +3369,85 @@ router.post(
     await cube.updateOne(allUpdates);
     return res.status(200).send({
       success: 'true',
+    });
+  }),
+);
+
+router.post(
+  '/api/adds/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const response = await fetch(
+      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+        'http://localhost:5000',
+      )}`,
+    );
+    if (!response.ok) {
+      return res.status(500).send({
+        success: 'false',
+        result: {},
+      });
+    }
+    const { cuts, additions } = await response.json();
+
+    // use this instead if you want debug data
+    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    // const cuts = { ...additions };
+
+    const pids = new Set();
+    const cardNames = new Set();
+
+    const formatTuple = (tuple) => {
+      const details = carddb.getMostReasonable(tuple[0]);
+      const card = util.newCard(details);
+      card.details = details;
+
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
+
+      return card;
+    };
+
+    const addlist = Object.entries(additions)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return -1;
+        if (a[1] < b[1]) return 1;
+        return 0;
+      })
+      .map(formatTuple);
+
+    // this is sorted the opposite way, as lower numbers mean we want to cut it
+    const cutlist = Object.entries(cuts)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return 1;
+        if (a[1] < b[1]) return -1;
+        return 0;
+      })
+      .map(formatTuple);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
+    return res.status(200).send({
+      success: 'true',
+      result: { toAdd: addPriceAndElo(addlist), toCut: addPriceAndElo(cutlist) },
     });
   }),
 );
