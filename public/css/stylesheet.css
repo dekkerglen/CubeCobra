@@ -728,3 +728,6 @@ img.mana-symbol {
 	overflow-x: auto;
 	overflow-y: visible;
 }
+.pagination {
+	justify-content: center;
+  }

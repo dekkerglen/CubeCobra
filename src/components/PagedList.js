@@ -43,7 +43,7 @@ const PaginationLabels = ({ validPages, page, setPage }) => {
   }
   if (validPages.length <= 5) {
     return (
-      <Pagination aria-label="Table page" className="mt-3">
+      <Pagination aria-label="Table page" className="my-2 justify-content-center">
         {validPages.map((pageIndex) => (
           <PageLink pageIndex={pageIndex} setPage={setPage} active={pageIndex === page} />
         ))}
@@ -53,7 +53,10 @@ const PaginationLabels = ({ validPages, page, setPage }) => {
 
   const count = validPages.length;
   return (
-    <Pagination aria-label="Table page" className="mt-3">
+    <Pagination aria-label="Table page" className="my-2">
+      <PaginationItem disabled={page === 0}>
+        <PaginationLink tag="a" previous onClick={() => setPage(page - 1)} />
+      </PaginationItem>
       {page > 1 && <PageLink pageIndex={0} setPage={setPage} active={false} />}
       {page > 2 && <FakePage text="..." />}
       {page !== 0 && <PageLink pageIndex={page - 1} setPage={setPage} active={false} />}
@@ -61,6 +64,9 @@ const PaginationLabels = ({ validPages, page, setPage }) => {
       {page !== count - 1 && <PageLink pageIndex={page + 1} setPage={setPage} active={false} />}
       {page < count - 3 && <FakePage text="..." />}
       {page < count - 2 && <PageLink pageIndex={count - 1} setPage={setPage} active={false} />}
+      <PaginationItem disabled={page === count - 1}>
+        <PaginationLink tag="a" next onClick={() => setPage(page + 1)} />
+      </PaginationItem>
     </Pagination>
   );
 };
@@ -71,7 +77,7 @@ PaginationLabels.propTypes = {
   validPages: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
-const PagedList = ({ pageSize, rows }) => {
+const PagedList = ({ pageSize, rows, showBottom, pageWrap }) => {
   const [page, setPage] = useState(0);
 
   const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
@@ -82,18 +88,23 @@ const PagedList = ({ pageSize, rows }) => {
   return (
     <>
       <PaginationLabels validPages={validPages} page={current} setPage={setPage} />
-      {displayRows}
+      {pageWrap(displayRows)}
+      {showBottom && <PaginationLabels validPages={validPages} page={current} setPage={setPage} />}
     </>
   );
 };
 
 PagedList.propTypes = {
   pageSize: PropTypes.number,
+  showBottom: PropTypes.bool,
   rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  pageWrap: PropTypes.func,
 };
 
 PagedList.defaultProps = {
   pageSize: 60,
+  showBottom: false,
+  pageWrap: (element) => element,
 };
 
 export default PagedList;

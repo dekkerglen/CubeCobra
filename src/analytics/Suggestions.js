@@ -54,22 +54,22 @@ const Suggestions = ({ adds, cuts, loading }) => {
             <CardHeader>
               <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
             </CardHeader>
-            <CardBody>
-              <ListGroup>
-                {loading && <em>Loading...</em>}
-                {!loading &&
-                  (adds.length > 0 ? (
-                    <PagedList
-                      pageSize={20}
-                      rows={adds.slice(0).map((add, index) => (
-                        <Suggestion key={add.cardID} index={index} card={add} />
-                      ))}
-                    />
-                  ) : (
-                    <em>No results with the given filter.</em>
-                  ))}
-              </ListGroup>
-            </CardBody>
+            <ListGroup>
+              {loading && <em>Loading...</em>}
+              {!loading &&
+                (adds.length > 0 ? (
+                  <PagedList
+                    pageSize={1}
+                    showBottom
+                    pageWrap={(element) => <CardBody>{element}</CardBody>}
+                    rows={adds.slice(0).map((add, index) => (
+                      <Suggestion key={add.cardID} index={index} card={add} />
+                    ))}
+                  />
+                ) : (
+                  <em>No results with the given filter.</em>
+                ))}
+            </ListGroup>
           </Card>
         </Col>
         <Col xs="12" lg="6">
@@ -77,22 +77,22 @@ const Suggestions = ({ adds, cuts, loading }) => {
             <CardHeader>
               <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
             </CardHeader>
-            <CardBody>
-              <ListGroup>
-                {loading && <em>Loading...</em>}
-                {!loading &&
-                  (cuts.length > 0 ? (
-                    <PagedList
-                      pageSize={20}
-                      rows={cuts.slice(0).map((add, index) => (
-                        <Suggestion key={add.cardID} index={index} card={add} />
-                      ))}
-                    />
-                  ) : (
-                    <em>No results with the given filter.</em>
-                  ))}
-              </ListGroup>
-            </CardBody>
+            <ListGroup>
+              {loading && <em>Loading...</em>}
+              {!loading &&
+                (cuts.length > 0 ? (
+                  <PagedList
+                    pageSize={2}
+                    showBottom
+                    pageWrap={(element) => <CardBody>{element}</CardBody>}
+                    rows={cuts.slice(0).map((add, index) => (
+                      <Suggestion key={add.cardID} index={index} card={add} />
+                    ))}
+                  />
+                ) : (
+                  <em>No results with the given filter.</em>
+                ))}
+            </ListGroup>
           </Card>
         </Col>
       </Row>
