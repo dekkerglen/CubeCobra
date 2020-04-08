@@ -4,7 +4,7 @@ services:
   cubecobra-mongodb:
     image: 'mongo'
     volumes:
-      - ./cubecobra-mongodb-volume:/data/db
+      - cubecobra-mongodb-volume:/data/db
     ports:
       - '27017-27019:27017-27019'
   cubecobra:
@@ -17,4 +17,4 @@ services:
       - "cubecobra-mongodb"
 
 volumes:
-  cubecobra-mongodb-volume:  
+  cubecobra-mongodb-volume:
