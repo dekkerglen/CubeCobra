@@ -33,7 +33,9 @@ const Suggestions = ({ cards, cube }) => {
   const [filter, setFilter] = useState([]);
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] = useState([]);
+  const [removes, setRemoves] = useState([]);
   const [adds, setAdds] = useState([]);
+  const [cuts, setCuts] = useState([]);
 
   async function getData(url = '', data = {}) {
     // Default options are marked with *
@@ -52,13 +54,15 @@ const Suggestions = ({ cards, cube }) => {
   const updateFilter = (val) => {
     setFilter(val);
     setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
+    setCuts(removes.filter((card) => Filter.filterCard(card, val)));
   };
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then((data) => {
-      console.log(data);
-      setSuggestions(data);
-      setAdds(data);
+    getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then(({ cuts, adds }) => {
+      setSuggestions(adds);
+      setRemoves(cuts);
+      setAdds(adds);
+      setCuts(cuts);
       setLoading(false);
     });
   }, [cards, cube._id]);
@@ -112,9 +116,18 @@ const Suggestions = ({ cards, cube }) => {
             </CardHeader>
             <CardBody>
               <ListGroup>
-                <ListGroupItem>
-                  <em>Coming soon!</em>
-                </ListGroupItem>
+                {loading && <em>Loading...</em>}
+                {!loading &&
+                  (cuts.length > 0 ? (
+                    <PagedList
+                      pageSize={20}
+                      rows={cuts.slice(0).map((add, index) => (
+                        <Suggestion key={add.cardID} index={index} card={add} />
+                      ))}
+                    />
+                  ) : (
+                    <em>No results with the given filter.</em>
+                  ))}
               </ListGroup>
             </CardBody>
           </Card>

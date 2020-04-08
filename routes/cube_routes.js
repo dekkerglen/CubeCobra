@@ -3380,31 +3380,43 @@ router.post(
         result: {},
       });
     }
-    const data = await response.json();
+    const { cuts, additions } = await response.json();
 
     // use this instead if you want debug data
     // const data = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
 
     const pids = new Set();
     const cardNames = new Set();
-    const list = Object.entries(data)
+
+    const formatTuple = (tuple) => {
+      const details = carddb.getMostReasonable(tuple[0]);
+      const card = util.newCard(details);
+      card.details = details;
+
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
+
+      return card;
+    };
+
+    const addlist = Object.entries(additions)
       .sort((a, b) => {
         if (a[1] > b[1]) return -1;
         if (a[1] < b[1]) return 1;
         return 0;
       })
-      .map((tuple) => {
-        const details = carddb.getMostReasonable(tuple[0]);
-        const card = util.newCard(details);
-        card.details = details;
+      .map(formatTuple);
 
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
-        cardNames.add(card.details.name);
-
-        return card;
-      });
+    // this is sorted the opposite way, as lower numbers mean we want to cut it
+    const cutlist = Object.entries(cuts)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return 1;
+        if (a[1] < b[1]) return -1;
+        return 0;
+      })
+      .map(formatTuple);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -3427,7 +3439,7 @@ router.post(
     };
     return res.status(200).send({
       success: 'true',
-      result: addPriceAndElo(list),
+      result: { adds: addPriceAndElo(addlist), cuts: addPriceAndElo(cutlist) },
     });
   }),
 );
