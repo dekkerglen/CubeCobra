@@ -91,7 +91,7 @@ const CardModalForm = ({ children, ...props }) => {
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    if (cardsAreEquivalent(updated, card) && updated.imgUrl === card.imgUrl) {
+    if (cardsAreEquivalent(updated, card)) {
       // no need to sync
       closeCardModal();
       return;
