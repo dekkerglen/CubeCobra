@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
-import { Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
+import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 const PageLink = ({ pageIndex, active, setPage }) => {
   return (
@@ -20,11 +21,21 @@ const PageLink = ({ pageIndex, active, setPage }) => {
   );
 };
 
+PageLink.propTypes = {
+  pageIndex: PropTypes.number.isRequired,
+  active: PropTypes.bool.isRequired,
+  setPage: PropTypes.func.isRequired,
+};
+
 const FakePage = ({ text }) => (
   <PaginationItem disabled>
     <PaginationLink tag="a">{text}</PaginationLink>
   </PaginationItem>
 );
+
+FakePage.propTypes = {
+  text: PropTypes.string.isRequired,
+};
 
 const PaginationLabels = ({ validPages, page, setPage }) => {
   if (validPages.length <= 1) {
@@ -54,6 +65,12 @@ const PaginationLabels = ({ validPages, page, setPage }) => {
   );
 };
 
+PaginationLabels.propTypes = {
+  page: PropTypes.number.isRequired,
+  setPage: PropTypes.func.isRequired,
+  validPages: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
+
 const PagedList = ({ pageSize, rows }) => {
   const [page, setPage] = useState(0);
 
@@ -68,6 +85,11 @@ const PagedList = ({ pageSize, rows }) => {
       {displayRows}
     </>
   );
+};
+
+PagedList.propTypes = {
+  pageSize: PropTypes.number,
+  rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 PagedList.defaultProps = {

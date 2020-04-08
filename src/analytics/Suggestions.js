@@ -29,6 +29,18 @@ const Suggestion = ({ card, index }) => {
   );
 };
 
+Suggestion.propTypes = {
+  card: PropTypes.shape({
+    cardID: PropTypes.string.isRequired,
+    details: PropTypes.shape({
+      image_normal: PropTypes.string.isRequired,
+      image_flip: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+  index: PropTypes.number.isRequired,
+};
+
 const Suggestions = ({ cards, cube }) => {
   const [filter, setFilter] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,14 +70,16 @@ const Suggestions = ({ cards, cube }) => {
   };
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then(({ cuts, adds }) => {
-      setSuggestions(adds);
-      setRemoves(cuts);
-      setAdds(adds);
-      setCuts(cuts);
-      setLoading(false);
-    });
-  }, [cards, cube._id]);
+    getData(`/cube/api/adds/${cube._id}`, { cards: cards.map((card) => card.details.name) }).then(
+      ({ toCut, toAdd }) => {
+        setSuggestions(toAdd);
+        setRemoves(toCut);
+        setAdds(toAdd);
+        setCuts(toCut);
+        setLoading(false);
+      },
+    );
+  }, [adds, cards, cube._id, cuts]);
 
   console.log(adds);
 
@@ -141,6 +155,7 @@ Suggestions.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({})),
     draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    _id: PropTypes.string.isRequired,
   }).isRequired,
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };

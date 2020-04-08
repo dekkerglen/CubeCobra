@@ -3439,7 +3439,7 @@ router.post(
     };
     return res.status(200).send({
       success: 'true',
-      result: { adds: addPriceAndElo(addlist), cuts: addPriceAndElo(cutlist) },
+      result: { toAdd: addPriceAndElo(addlist), toCut: addPriceAndElo(cutlist) },
     });
   }),
 );
