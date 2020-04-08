@@ -12,6 +12,7 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+// eslint-disable-next-line import/no-unresolved
 const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
