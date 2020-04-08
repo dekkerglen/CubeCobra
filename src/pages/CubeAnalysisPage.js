@@ -57,7 +57,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj) => <Suggestions cards={collection}  cube={cubeObj} />,
+      component: (collection, cubeObj) => <Suggestions cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Asfans',

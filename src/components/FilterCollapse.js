@@ -390,9 +390,9 @@ class FilterCollapse extends Component {
                 </InputGroup>
               </Form>
               <h5>Filters</h5>
-              {!noCount &&
+              {!noCount && (
                 <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
-              }
+              )}
             </Col>
           </Row>
           <Row>
