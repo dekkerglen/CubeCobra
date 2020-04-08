@@ -48,7 +48,7 @@ const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
-const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags';
+const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags, Notes';
 
 const router = express.Router();
 // Bring in models
