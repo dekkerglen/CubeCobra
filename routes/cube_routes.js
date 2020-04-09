@@ -3457,7 +3457,7 @@ router.post('/resize/:id/:size', async (req, res) => {
       // we cut from cube
       for (const card of list) {
         for (let i = 0; i < cube.cards.length; i++) {
-          if (cube.cards[i].cardID === card.cardID) {
+          if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
             cube.cards.splice(i, 1);
             i = cube.cards.length;
           }
