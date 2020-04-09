@@ -11,6 +11,7 @@ import ChangelistContext from './ChangelistContext';
 import CubeContext from './CubeContext';
 import CSRFForm from './CSRFForm';
 import DisplayContext from './DisplayContext';
+import ResizeModal from './ResizeModal';
 
 export const getCard = async (cubeID, name, setAlerts) => {
   if (name && name.length > 0) {
@@ -193,7 +194,8 @@ const EditCollapse = ({ ...props }) => {
             </InputGroup>
           </Form>
         </Row>
-        <Button color="primary" className="mb-2" onClick={toggleShowMaybeboard}>
+        <ResizeModal cubeID={cubeID}/>
+        <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
           Maybeboard
         </Button>
       </Row>

@@ -8,7 +8,7 @@ const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) 
     <InputGroupAddon addonType="prepend">
       <InputGroupText>{humanName}</InputGroupText>
     </InputGroupAddon>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
+    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} {...props} />
   </InputGroup>
 );
 

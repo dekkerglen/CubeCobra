@@ -390,7 +390,7 @@ export const parseTokens = (tokens) => {
 };
 
 /* inCube should be true when we are using a cube's card object and false otherwise (e.g. in Top Cards). */
-function filterCard(card, filters, inCube) {
+export function filterCard(card, filters, inCube) {
   if (filters.length == 1) {
     if (filters[0].type == 'token') {
       return filterApply(card, filters[0], inCube);
