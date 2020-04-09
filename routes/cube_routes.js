@@ -3466,9 +3466,12 @@ router.post('/resize/:id/:size', async (req, res) => {
     }
 
     cube = setCubeType(cube, carddb);
+
+    // TODO: generate changelog
+
     await cube.save();
 
-    req.flash('success', 'Cube Resize');
+    req.flash('success', 'Cube Resized succesfully.');
     return res.redirect(`/cube/list/${req.params.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);

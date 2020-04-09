@@ -28,7 +28,7 @@ const ResizeModal = ({ cubeID }) => {
             <p>
               Resize your cube to the set size. This will add or remove cards from the suggestions found in the
               recommender analysis tab in order to reach the requested size. For best results, don't use large deltas
-              (20->360 won't be great).
+              (20 to 360 won't be great).
             </p>
             <TextField
               name="size"
