@@ -281,7 +281,9 @@ async function processCard(card) {
     // process all cube objects
     console.log('Started: cubes');
     let count = await Cube.countDocuments();
-    let cursor = Cube.find().cursor();
+    let cursor = Cube.find()
+      .lean()
+      .cursor();
     for (let i = 0; i < count; i += 1) {
       await processCube(await cursor.next());
       if ((i + 1) % 10 === 0) {
@@ -293,7 +295,9 @@ async function processCard(card) {
     // process all deck objects
     console.log('Started: decks');
     count = await Deck.countDocuments();
-    cursor = Deck.find().cursor();
+    cursor = Deck.find()
+      .lean()
+      .cursor();
     for (let i = 0; i < count; i += 1) {
       await processDeck(await cursor.next());
       if ((i + 1) % 1000 === 0) {
@@ -307,7 +311,11 @@ async function processCard(card) {
     for (let i = 0; i < totalCards; i += batchSize) {
       const cardnames = carddb.cardnames.slice(i, i + batchSize);
       const cardids = cardnames.map((cardname) => carddb.nameToId[cardname.toLowerCase()]).flat();
-      const cardqs = cardids.map((cardID) => CardHistory.findOne({ cardID }).exec());
+      const cardqs = cardids.map((cardID) =>
+        CardHistory.findOne({ cardID })
+          .lean()
+          .exec(),
+      );
 
       const batch = await Promise.all(cardqs);
 
@@ -323,7 +331,7 @@ async function processCard(card) {
       await Promise.all(batch.map((obj) => processCard(obj)));
 
       const saveq = batch.map((item) => {
-        return item.save();
+        return CardHistory.findOneAndUpdate({ _id: item._id }, item, { upsert: true });
       });
 
       await Promise.all(saveq);
