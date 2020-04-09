@@ -3449,15 +3449,20 @@ router.post('/resize/:id/:size', async (req, res) => {
     const filter = JSON.parse(req.body.filter);
     list = list.filter((card) => filterutil.filterCard(card, filter)).slice(0, Math.abs(newSize - cube.cards.length));
 
+    let changelog = '';
     if (newSize > cube.cards.length) {
       // we add to cube
-      const toAdd = list.map((card) => util.newCard(card.details));
+      const toAdd = list.map((card) => {
+        changelog += addCardHtml(card.details);
+        return util.newCard(card.details);
+      });
       cube.cards = cube.cards.concat(toAdd);
     } else {
       // we cut from cube
       for (const card of list) {
         for (let i = 0; i < cube.cards.length; i++) {
           if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
+            changelog += removeCardHtml(card.details);
             cube.cards.splice(i, 1);
             i = cube.cards.length;
           }
@@ -3467,8 +3472,18 @@ router.post('/resize/:id/:size', async (req, res) => {
 
     cube = setCubeType(cube, carddb);
 
-    // TODO: generate changelog
+    const blogpost = new Blog();
+    blogpost.title = 'Resize - Automatic Post';
+    blogpost.html = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
 
+    await blogpost.save();
     await cube.save();
 
     req.flash('success', 'Cube Resized succesfully.');
