@@ -3380,9 +3380,7 @@ router.post(
 router.post('/resize/:id/:size', async (req, res) => {
   try {
     const response = await fetch(
-      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
-        'http://localhost:5000',
-      )}`,
+      `${secrets.flaskRoot}/?cube_name=${req.params.id}&root=${encodeURIComponent('http://localhost:5000')}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
@@ -3393,7 +3391,7 @@ router.post('/resize/:id/:size', async (req, res) => {
     // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
     // const cuts = { ...additions };
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const pids = new Set();
     const cardNames = new Set();
@@ -3448,9 +3446,8 @@ router.post('/resize/:id/:size', async (req, res) => {
     };
     addPriceAndElo(list);
 
-    list = list
-      .filter((card) => filterutil.filterCard(card, req.body.filter))
-      .slice(0, Math.abs(newSize - cube.cards.length));
+    const filter = JSON.parse(req.body.filter);
+    list = list.filter((card) => filterutil.filterCard(card, filter)).slice(0, Math.abs(newSize - cube.cards.length));
 
     if (newSize > cube.cards.length) {
       // we add to cube
@@ -3468,6 +3465,7 @@ router.post('/resize/:id/:size', async (req, res) => {
       }
     }
 
+    cube = setCubeType(cube, carddb);
     await cube.save();
 
     req.flash('success', 'Cube Resize');

@@ -27,7 +27,8 @@ const ResizeModal = ({ cubeID }) => {
           <ModalBody>
             <p>
               Resize your cube to the set size. This will add or remove cards from the suggestions found in the
-              recommender analysis tab in order to reach the requested size.
+              recommender analysis tab in order to reach the requested size. For best results, don't use large deltas
+              (20->360 won't be great).
             </p>
             <TextField
               name="size"
@@ -37,7 +38,7 @@ const ResizeModal = ({ cubeID }) => {
               invalid={size.length > 0 && !valid}
               onChange={(event) => setSize(event.target.value)}
             />
-            <Input type="hidden" name="filter" value={filter} />
+            <Input type="hidden" name="filter" value={JSON.stringify(filter)} />
             <Card className="p-3">
               <h5>Filter for restrictions:</h5>
               <p>
