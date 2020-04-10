@@ -365,7 +365,7 @@ async function buildQuery(key, value, delim) {
         break;
       case 'category':
         if (prefixes.includes(value)) {
-          query.categoryPrefixes = { $regex: value, $options: 'i' };
+          query.categoryPrefixes = { $regex: `\\b${value}\\b`, $options: 'i' };
         } else {
           query.categoryOverride = { $regex: value, $options: 'i' };
         }

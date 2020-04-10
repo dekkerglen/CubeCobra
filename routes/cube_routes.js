@@ -48,7 +48,7 @@ const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
-const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags, Notes';
+const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -1250,6 +1250,7 @@ async function bulkUploadCSV(req, res, cards, cube) {
       finish: split[7],
       imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
       tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
+      notes: split[11],
     };
 
     const potentialIds = carddb.allIds(card);
@@ -1517,7 +1518,9 @@ function writeCard(req, res, card, maybe) {
     }
     res.write(tag);
   });
-  res.write('"\r\n');
+  res.write(`","${card.notes || ''}",`);
+  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''},`);
+  res.write('\r\n');
 }
 
 router.get('/download/csv/:id', async (req, res) => {
