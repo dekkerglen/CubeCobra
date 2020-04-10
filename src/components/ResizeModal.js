@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import useToggle from 'hooks/UseToggle';
 import CSRFForm from 'components/CSRFForm';
 import FilterCollapse from 'components/FilterCollapse';
@@ -60,6 +61,10 @@ const ResizeModal = ({ cubeID }) => {
       </Modal>
     </>
   );
+};
+
+ResizeModal.propTypes = {
+  cubeID: PropTypes.string.isRequired,
 };
 
 export default ResizeModal;
