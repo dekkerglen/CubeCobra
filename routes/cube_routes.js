@@ -413,7 +413,7 @@ router.get('/overview/:id', async (req, res) => {
     for (const card of allVersions) {
       card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
     }
-    const pricesQ = addPrices(allVersions);
+    const priceDictQ = GetPrices([...pids]);
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -425,9 +425,13 @@ router.get('/overview/:id', async (req, res) => {
       },
       '_id username image artist users_following',
     ).lean();
-    const [blogs, followers] = await Promise.all([blogsQ, followersQ, pricesQ]);
+    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
     const allVersionsLookup = {};
     for (const card of allVersions) {
+      if (card.tcgplayer_id) {
+        card.details.price = priceDict[card.tcgplayer_id];
+        card.details.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
+      }
       if (!allVersionsLookup[card.related]) {
         allVersionsLookup[card.related] = [];
       }
