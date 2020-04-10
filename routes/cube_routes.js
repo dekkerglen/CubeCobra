@@ -4,7 +4,7 @@ const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
-const mergeImages = require('merge-images');
+// const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
 
@@ -14,6 +14,7 @@ const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 // eslint-disable-next-line import/no-unresolved
 const secrets = require('../../cubecobrasecrets/secrets');
+const mergeImages = require('../serverjs/mergeImages');
 
 const {
   addAutocard,
@@ -993,9 +994,11 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const srcArray = pack.pack.map((card, index) => {
       return {
-        src: card.image_normal,
-        x: CARD_WIDTH * (index % 5),
-        y: CARD_HEIGHT * Math.floor(index / 5),
+        src: card.imgUrl || card.details.image_normal,
+        left: CARD_WIDTH * (index % 5),
+        top: CARD_HEIGHT * Math.floor(index / 5),
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
       };
     });
 
@@ -1003,12 +1006,15 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       width: CARD_WIDTH * 5,
       height: CARD_HEIGHT * 3,
       Canvas,
-    }).then((image) => {
-      res.writeHead(200, {
-        'Content-Type': 'image/png',
-      });
-      res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-    });
+      Image,
+    })
+      .then((image) => {
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+        });
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+      })
+      .catch((err) => util.handleRouteError(req, res, err, '/404'));
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
