@@ -61,9 +61,12 @@ const reversedSetOperation = (op, value) => {
 
 colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+  | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
 
 colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+  | ("=" | ":") "m"i {% ([op]) => { normalizeCombination(fieldValue).length > 1; } %}
+  | ("!=" | "<>") "m"i {% ([op]) => { normalizeCombination(fieldValue).length < 2; } %}
 
 comb1[A] -> null {% () => [] %}
   | $A {% (comb) => comb %}
