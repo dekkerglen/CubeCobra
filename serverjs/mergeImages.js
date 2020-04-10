@@ -45,7 +45,7 @@ const mergeImages = (sources = [], options = {}) =>
           // Resolve source and img when loaded
           const img = new Image();
           img.crossOrigin = options.crossOrigin;
-          img.onerror = () => reject(new Error("Couldn't load image"));
+          img.onerror = () => reject(new Error(`Couldn't load image '${source.src}'`));
           img.onload = () => resolve({ ...source, img });
           img.src = source.src;
         }),
