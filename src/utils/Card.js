@@ -45,13 +45,6 @@ for (const colorsIncluded of Object.values(COLOR_INCLUSION_MAP)) {
   colorsIncluded.includes = Object.keys(colorsIncluded).filter((c) => colorsIncluded[c]);
 }
 
-export function inclusiveCount(combination, cards) {
-  return cards.reduce(
-    (sum, card) => sum + (arrayIsSubset(card.colors ?? card.details.color_identity ?? [], combination) ? 1 : 0),
-    0,
-  );
-}
-
 export function normalizeName(name) {
   return name
     .trim()
@@ -76,7 +69,9 @@ export function cardsAreEquivalent(a, b) {
     a.cmc === b.cmc &&
     arraysEqual(a.colors, b.colors) &&
     arraysEqual(a.tags, b.tags) &&
-    a.finish === b.finish
+    a.finish === b.finish &&
+    a.imgUrl === b.imgUrl &&
+    a.notes === b.notes
   );
 }
 
