@@ -258,6 +258,7 @@ function CSVtoCards(cards, carddb) {
       finish: split[7],
       imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
       tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
+      notes: split[11],
     };
 
     const potentialIds = carddb.allIds(card);

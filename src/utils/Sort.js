@@ -347,23 +347,30 @@ function getLabelsRaw(cube, sort) {
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
-    var items = [];
+    var elos = [];
     cube.forEach(function(card, index) {
       if (card.details.elo) {
-        const bucket = getEloBucket(card.details.elo);
-        if (!items.includes(bucket)) {
-          items.push(bucket);
+        if (!elos.includes(card.details.elo)) {
+          elos.push(card.details.elo);
         }
       }
     });
-    return items.sort(function(x, y) {
-      if (x > y) {
+    elos = elos.sort(function(x, y) {
+      if (x - y > 0) {
         return 1;
-      } else if (y > x) {
+      } else if (y - x > 0) {
         return -1;
       }
       return 1;
     });
+    const buckets = elos.map(getEloBucket);
+    const res = [];
+    for (const bucket of buckets) {
+      if (!res.includes(bucket)) {
+        res.push(bucket);
+      }
+    }
+    return res;
   }
 }
 
@@ -582,12 +589,12 @@ export function cardGetLabels(card, sort) {
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
-      return [parseInt(card.details.power)];
+      return [card.details.power];
     }
     return [];
   } else if (sort == 'Toughness') {
     if (card.details.toughness) {
-      return [parseInt(card.details.toughness)];
+      return [card.details.toughness];
     }
     return [];
   } else if (sort == 'Loyalty') {

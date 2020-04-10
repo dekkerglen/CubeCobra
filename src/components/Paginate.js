@@ -41,7 +41,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
 
   const bigPagination = (
     <>
-      {active > 1 && <RealPage index={1} active={active} urlF={urlF} onClick={onClick} />}
+      {active > 1 && <RealPage index={0} active={active} urlF={urlF} onClick={onClick} />}
       {active > 2 && <FakePage text="..." />}
       {active !== 0 && <RealPage index={active - 1} active={active} urlF={urlF} onClick={onClick} />}
       <RealPage index={active} active={active} urlF={urlF} onClick={onClick} />
@@ -52,31 +52,27 @@ const Paginate = ({ count, active, urlF, onClick }) => {
   );
 
   return (
-    <>
-      <hr />
-      <Pagination aria-label="Table page" className="mt-3">
-        <PaginationItem disabled={active === 0}>
-          <PaginationLink
-            tag="a"
-            previous
-            href={urlF ? urlF(active - 1) : '#'}
-            data-index={onClick ? active - 1 : undefined}
-            onClick={onClick}
-          />
-        </PaginationItem>
-        {count < 5 ? smallPagination : bigPagination}
-        <PaginationItem disabled={active === count - 1}>
-          <PaginationLink
-            tag="a"
-            next
-            href={urlF ? urlF(active + 1) : '#'}
-            data-index={onClick ? active + 1 : undefined}
-            onClick={onClick}
-          />
-        </PaginationItem>
-      </Pagination>
-      <hr />
-    </>
+    <Pagination aria-label="Table page" className="mt-3">
+      <PaginationItem disabled={active === 0}>
+        <PaginationLink
+          tag="a"
+          previous
+          href={urlF ? urlF(active - 1) : '#'}
+          data-index={onClick ? active - 1 : undefined}
+          onClick={onClick}
+        />
+      </PaginationItem>
+      {count < 5 ? smallPagination : bigPagination}
+      <PaginationItem disabled={active === count - 1}>
+        <PaginationLink
+          tag="a"
+          next
+          href={urlF ? urlF(active + 1) : '#'}
+          data-index={onClick ? active + 1 : undefined}
+          onClick={onClick}
+        />
+      </PaginationItem>
+    </Pagination>
   );
 };
 

@@ -12,6 +12,8 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
+// eslint-disable-next-line import/no-unresolved
+const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
   addAutocard,
@@ -43,12 +45,12 @@ const sortutil = require('../dist/utils/Sort.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
-const { addPrices, GetPrices } = require('../serverjs/prices.js');
+const { GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
-const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags';
+const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -750,7 +752,7 @@ router.get('/list/:id', async (req, res) => {
     };
 
     cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe);
+    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -873,36 +875,70 @@ router.get('/analysis/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    for (const card of cube.cards) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
-      card.details.display_image = util.getCardImageURL(card);
-      if (!card.type_line) {
-        card.type_line = card.details.type;
+
+    const pids = new Set();
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+
+        if (card.details.tokens) {
+          card.details.tokens = card.details.tokens.map((element) => {
+            const tokenDetails = carddb.cardFromId(element.tokenId);
+            return {
+              ...element,
+              token: {
+                tags: [],
+                status: 'Not Owned',
+                colors: tokenDetails.color_identity,
+                cmc: tokenDetails.cmc,
+                cardID: tokenDetails._id,
+                type_line: tokenDetails.type,
+                addedTmsp: new Date(),
+                imgUrl: undefined,
+                finish: 'Non-foil',
+                details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
+              },
+            };
+          });
+        }
+
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
+    cube.cards = addDetails(cube.cards);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
       }
-      if (card.details.tokens) {
-        card.details.tokens = card.details.tokens.map((element) => {
-          const tokenDetails = carddb.cardFromId(element.tokenId);
-          return {
-            ...element,
-            token: {
-              tags: [],
-              status: 'Not Owned',
-              colors: tokenDetails.color_identity,
-              cmc: tokenDetails.cmc,
-              cardID: tokenDetails._id,
-              type_line: tokenDetails.type,
-              addedTmsp: new Date(),
-              imgUrl: undefined,
-              finish: 'Non-foil',
-              details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
-            },
-          };
-        });
-      }
-    }
-    cube.cards = await addPrices(cube.cards);
+      return cards;
+    };
+    cube.cards = addPriceAndElo(cube.cards);
 
     const reactProps = {
       cube,
@@ -1449,7 +1485,9 @@ function writeCard(res, card, maybe) {
     }
     res.write(tag);
   });
-  res.write('"\r\n');
+  res.write(`","${card.notes || ''}",`);
+  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''},`);
+  res.write('\r\n');
 }
 
 router.get('/download/csv/:id', async (req, res) => {
@@ -1804,7 +1842,8 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
       }
     }
     for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
+      const name = key.replace(' // ', '/');
+      res.write(`${value} ${name}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -2620,8 +2659,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
     const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
+    res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
   }),
 );
@@ -2694,7 +2738,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
+    const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
@@ -3294,6 +3338,85 @@ router.post(
     await cube.updateOne(allUpdates);
     return res.status(200).send({
       success: 'true',
+    });
+  }),
+);
+
+router.post(
+  '/api/adds/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const response = await fetch(
+      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+        'http://localhost:5000',
+      )}`,
+    );
+    if (!response.ok) {
+      return res.status(500).send({
+        success: 'false',
+        result: {},
+      });
+    }
+    const { cuts, additions } = await response.json();
+
+    // use this instead if you want debug data
+    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    // const cuts = { ...additions };
+
+    const pids = new Set();
+    const cardNames = new Set();
+
+    const formatTuple = (tuple) => {
+      const details = carddb.getMostReasonable(tuple[0]);
+      const card = util.newCard(details);
+      card.details = details;
+
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
+
+      return card;
+    };
+
+    const addlist = Object.entries(additions)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return -1;
+        if (a[1] < b[1]) return 1;
+        return 0;
+      })
+      .map(formatTuple);
+
+    // this is sorted the opposite way, as lower numbers mean we want to cut it
+    const cutlist = Object.entries(cuts)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return 1;
+        if (a[1] < b[1]) return -1;
+        return 0;
+      })
+      .map(formatTuple);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
+    return res.status(200).send({
+      success: 'true',
+      result: { toAdd: addPriceAndElo(addlist), toCut: addPriceAndElo(cutlist) },
     });
   }),
 );
