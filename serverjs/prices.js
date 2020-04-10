@@ -28,6 +28,7 @@ async function GetToken() {
       winston.info(`${token.expires} token expiration`);
       return token.access_token;
     } catch (e) {
+      console.error(e);
       return;
     }
   }
@@ -50,7 +51,7 @@ function checkStatus(response) {
 async function GetPrices(card_ids) {
   var price_dict = {};
 
-  if (!tcgconfig.Public_Key || !tcgconfig.Private_Key) {
+  if (!process.env.TCG_PLAYER_PUBLIC_KEY || !process.env.TCG_PLAYER_PRIVATE_KEY) {
     return price_dict;
   }
 
