@@ -348,7 +348,7 @@ class FilterCollapse extends Component {
   }
 
   render() {
-    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
+    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, noCount, ...props } = this.props;
     const { loading, filterInput, advancedOpen } = this.state;
     const { err } = makeFilter(filterInput);
     const valid = !err;
@@ -387,7 +387,9 @@ class FilterCollapse extends Component {
                 </InputGroup>
               </Form>
               <h5>Filters</h5>
-              <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
+              {!noCount && (
+                <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
+              )}
             </Col>
           </Row>
           <Row>

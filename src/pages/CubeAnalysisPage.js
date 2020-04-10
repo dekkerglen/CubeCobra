@@ -1,203 +1,163 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Nav, NavLink, Row } from 'reactstrap';
+import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
-import Query from 'utils/Query';
-import { getDraftFormat, calculateAsfans } from 'utils/draftutil';
-
-import CardGrid from 'components/analytics/CardGrid';
-import Chart from 'components/analytics/Chart';
-import Cloud from 'components/analytics/Cloud';
-import AnalyticsTable from 'components/analytics/AnalyticsTable';
-import CubeAnalysisNavBar from 'components/CubeAnalysisNavbar';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import MagicMarkdown from 'components/MagicMarkdown';
 
-import averageCmc from 'analytics/averageCmc';
-import colorCount from 'analytics/colorCount';
-import colorCurve from 'analytics/colorCurve';
-import inclusiveColorCount from 'analytics/inclusiveColorCount';
-import tagCloud from 'analytics/tagCloud';
-import tokenGrid from 'analytics/tokenGrid';
-import typeBreakdown from 'analytics/typeBreakdown';
-import typeBreakdownCount from 'analytics/typeBreakdownCount';
+import Averages from 'analytics/Averages';
+import Chart from 'analytics/Chart';
+import Tokens from 'analytics/Tokens';
+import PivotTable from 'analytics/PivotTable';
+import Table from 'analytics/Table';
+import Cloud from 'analytics/Cloud';
+import HyperGeom from 'analytics/HyperGeom';
+import Asfans from 'analytics/Asfans';
+import Suggestions from 'analytics/Suggestions';
+import { getCmc } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import FilterCollapse from 'components/FilterCollapse';
+import useToggle from 'hooks/UseToggle';
 
-class CubeAnalysisPage extends Component {
-  constructor(props) {
-    super(props);
+const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
+  const [filter, setFilter] = useState([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [cards, setCards] = useState(cube.cards);
+  const [suggestions, setSuggestions] = useState([]);
+  const [removes, setRemoves] = useState([]);
+  const [adds, setAdds] = useState([]);
+  const [cuts, setCuts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
-    const { defaultFormatId, defaultNav } = this.props;
+  const characteristics = {
+    CMC: getCmc,
+    Power: (card) => parseInt(card.details.power, 10),
+    Toughness: (card) => parseInt(card.details.toughness, 10),
+    Elo: (card) => parseFloat(card.details.elo, 10),
+    Price: (card) =>
+      parseFloat(
+        card.finish === 'Foil'
+          ? card.details.price_foil ?? card.details.price
+          : card.details.price ?? card.details.price_foil,
+        10,
+      ),
+    'Price Foil': (card) => parseFloat(card.details.price_foil),
+    'Non-Foil Price': (card) => parseFloat(card.details.price),
+  };
 
-    this.state = {
-      data: { type: 'none' },
-      analytics: {
-        curve: { fn: colorCurve, title: 'Curve' },
-        averageCmc: { fn: averageCmc, title: 'Average CMC' },
-        typeBreakdown: { fn: typeBreakdown, title: 'Type Breakdown' },
-        typeBreakdownCount: { fn: typeBreakdownCount, title: 'Type Breakdown Counts' },
-        colorCount: { fn: colorCount, title: 'Color Counts' },
-        inclusiveColorCount: { fn: inclusiveColorCount, title: 'Inclusive Color Counts' },
-        tokenGrid: { fn: tokenGrid, title: 'Tokens' },
-        tagCloud: { fn: tagCloud, title: 'Tag Cloud' },
+  const analytics = [
+    {
+      name: 'Averages',
+      component: (collection) => <Averages cards={collection} characteristics={characteristics} />,
+    },
+    {
+      name: 'Table',
+      component: (collection) => <Table cards={collection} />,
+    },
+    {
+      name: 'Chart',
+      component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
+    },
+    {
+      name: 'Recommender',
+      component: (collection, cubeObj, addCards, cutCards, isLoading) => (
+        <Suggestions cards={collection} cube={cubeObj} adds={addCards} cuts={cutCards} loading={isLoading} />
+      ),
+    },
+    {
+      name: 'Asfans',
+      component: (collection, cubeObj) => <Asfans cards={collection} cube={cubeObj} />,
+    },
+    {
+      name: 'Tokens',
+      component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
+    },
+    {
+      name: 'Tag Cloud',
+      component: (collection) => <Cloud cards={collection} />,
+    },
+    {
+      name: 'Pivot Table',
+      component: (collection) => <PivotTable cards={collection} />,
+    },
+    {
+      name: 'Hypergeometric Calculator',
+      component: (collection) => <HyperGeom cards={collection} />,
+    },
+  ];
+
+  async function getData(url = '') {
+    // Default options are marked with *
+    const response = await csrfFetch(url, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
       },
-      analyticsOrder: [
-        'curve',
-        'averageCmc',
-        'typeBreakdown',
-        'typeBreakdownCount',
-        'colorCount',
-        'inclusiveColorCount',
-        'tokenGrid',
-        'tagCloud',
-      ],
-      filter: [],
-      cardsWithAsfan: null,
-      filteredWithAsfan: null,
-      formatId: defaultFormatId || -1,
-      nav: defaultNav || 'curve',
-    };
-    const { analytics, nav } = this.state;
-    if (!analytics[nav]) {
-      this.state.nav = 'curve';
-    }
-
-    this.updateAsfan = this.updateAsfan.bind(this);
-    this.updateFilter = this.updateFilter.bind(this);
-    this.updateData = this.updateData.bind(this);
-    this.setFilter = this.setFilter.bind(this);
-    this.toggleFormatDropdownOpen = this.toggleFormatDropdownOpen.bind(this);
-    this.setFormat = this.setFormat.bind(this);
-    this.handleNav = this.handleNav.bind(this);
-  }
-
-  componentDidMount() {
-    this.updateAsfan();
-
-    const { nav } = this.state;
-    const newNav = Query.get('nav', nav);
-    if (newNav !== nav) {
-      this.handleNav(newNav);
-    }
-  }
-
-  setFilter(filter) {
-    this.setState({ filter }, this.updateFilter);
-  }
-
-  setFormat(formatId) {
-    if (formatId === -1) {
-      Query.del('formatId');
-    } else {
-      Query.set('formatId', formatId);
-    }
-    this.setState({ formatId }, this.updateAsfan);
-  }
-
-  async updateData() {
-    const { nav, analytics, analyticsOrder, filteredWithAsfan } = this.state;
-    if (filteredWithAsfan == null) {
-      this.updateFilter();
-      return;
-    }
-
-    if (analytics[nav]) {
-      const data = await analytics[nav].fn(filteredWithAsfan);
-      this.setState({ data });
-    } else {
-      this.handleNav(analyticsOrder[0]);
-    }
-  }
-
-  async updateFilter() {
-    const { filter, cardsWithAsfan } = this.state;
-    if (cardsWithAsfan == null) {
-      this.updateAsfan();
-      return;
-    }
-    const filteredWithAsfan = filter.length > 0 ? cardsWithAsfan.filter(filter) : cardsWithAsfan;
-    this.setState({ filteredWithAsfan }, this.updateData);
-  }
-
-  async updateAsfan() {
-    const { formatId } = this.state;
-    const { cube } = this.props;
-    const cardsWithAsfan = cube.cards.map((card) => ({ ...card }));
-    const format = getDraftFormat({ id: formatId, packs: 3, cards: 15 }, cube);
-    calculateAsfans(format, cardsWithAsfan);
-    this.setState({ cardsWithAsfan }, this.updateFilter);
-  }
-
-  handleNav(nav) {
-    const { analytics, analyticsOrder } = this.state;
-    if (nav === analyticsOrder[0] || !analytics[nav]) {
-      Query.del('nav');
-      [nav] = analyticsOrder;
-    } else {
-      Query.set('nav', nav);
-    }
-    this.setState({ nav }, this.updateData);
-  }
-
-  toggleFormatDropdownOpen() {
-    this.setState((prevState) => {
-      return { formatDropdownOpen: !prevState.formatDropdownOpen };
     });
+    const val = await response.json(); // parses JSON response into native JavaScript objects
+    return val.result;
   }
 
-  render() {
-    const { cube, cubeID, defaultFilterText } = this.props;
-    const { analytics, analyticsOrder, data, filter, formatId, nav, filteredWithAsfan } = this.state;
-    const navItem = (active, text) => (
-      <NavLink active={active === nav} onClick={() => this.handleNav(active)} href="#" key={active}>
-        {text}
-      </NavLink>
-    );
-    let visualization = <p>Loading Data</p>;
-    if (data) {
-      // Formats for data are documented in their respective components
-      if (data.type === 'table') visualization = <AnalyticsTable data={data} />;
-      else if (data.type === 'chart') visualization = <Chart data={data} />;
-      else if (data.type === 'cloud') visualization = <Cloud data={data} />;
-      else if (data.type === 'cardGrid') visualization = <CardGrid data={data} cube={cube} />;
-    }
-    return (
-      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
-        <DynamicFlash />
-        <CubeAnalysisNavBar
-          draftFormats={cube.draft_formats}
-          formatId={formatId}
-          setFormatId={this.setFormat}
-          filter={filter}
-          setFilter={this.setFilter}
-          numCards={filteredWithAsfan ? filteredWithAsfan.length : 0}
-          defaultFilterText={defaultFilterText}
-        />
-        <Row className="mt-3">
-          <Col xs="12" lg="2">
-            <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
-              {analyticsOrder.map((key) => navItem(key, analytics[key].title))}
-            </Nav>
-          </Col>
-          <Col xs="12" lg="10">
-            <Row>
-              <Col>
-                <h4 className="d-lg-block d-none">{analytics[nav].title}</h4>
-                <p>
-                  <MagicMarkdown markdown={data.description} cube={cube} />
-                </p>
-              </Col>
-            </Row>
-            <ErrorBoundary>{visualization}</ErrorBoundary>
-          </Col>
-        </Row>
-      </CubeLayout>
-    );
-  }
-}
+  useEffect(() => {
+    getData(`/cube/api/adds/${cubeID}`).then(({ toCut, toAdd }) => {
+      setSuggestions(toAdd);
+      setRemoves(toCut);
+      setAdds(toAdd);
+      setCuts(toCut);
+      setLoading(false);
+    });
+  }, [cubeID]);
+
+  const updateFilter = (val) => {
+    setFilter(val);
+    setCards(cube.cards.filter(val));
+    setAdds(suggestions.filter(val));
+    setCuts(removes.filter(val));
+  };
+
+  return (
+    <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
+      <DynamicFlash />
+      <Row className="mt-3">
+        <Col xs="12" lg="2">
+          <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
+            {analytics.map((analytic, index) => (
+              <NavLink key={analytic.name} active={activeTab === index} onClick={() => setActiveTab(index)} href="#">
+                {analytic.name}
+              </NavLink>
+            ))}
+          </Nav>
+        </Col>
+        <Col xs="12" lg="10" className="overflow-x">
+          <Card className="mb-3">
+            <CardBody>
+              <NavLink href="#" onClick={toggleFilterCollapse}>
+                <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
+              </NavLink>
+              <FilterCollapse
+                defaultFilterText={defaultFilterText}
+                filter={filter}
+                setFilter={updateFilter}
+                numCards={cards.length}
+                isOpen={filterCollapseOpen}
+              />
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+    </CubeLayout>
+  );
+};
 
 CubeAnalysisPage.propTypes = {
   cube: PropTypes.shape({
@@ -205,14 +165,10 @@ CubeAnalysisPage.propTypes = {
     draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
-  defaultNav: PropTypes.string,
-  defaultFormatId: PropTypes.number,
   defaultFilterText: PropTypes.string,
 };
 
 CubeAnalysisPage.defaultProps = {
-  defaultNav: 'curve',
-  defaultFormatId: -1,
   defaultFilterText: '',
 };
 

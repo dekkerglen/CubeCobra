@@ -84,11 +84,14 @@ const CardModalForm = ({ children, ...props }) => {
     if (updated.imgUrl === '') {
       updated.imgUrl = null;
     }
+    if (updated.notes === '') {
+      updated.notes = null;
+    }
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    if (cardsAreEquivalent(updated, card) && updated.imgUrl === card.imgUrl) {
+    if (cardsAreEquivalent(updated, card)) {
       // no need to sync
       closeCardModal();
       return;
@@ -165,7 +168,8 @@ const CardModalForm = ({ children, ...props }) => {
       finish: newCard.finish,
       cmc: newCard.cmc,
       type_line: typeLine,
-      imgUrl: newCard.imgUrl,
+      imgUrl: newCard.imgUrl || '',
+      notes: newCard.notes || '',
       tags: tags.map((tag) => ({ id: tag, text: tag })),
       tagInput: '',
       colorW: colors.includes('W'),
