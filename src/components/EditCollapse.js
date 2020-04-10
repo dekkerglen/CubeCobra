@@ -194,7 +194,7 @@ const EditCollapse = ({ ...props }) => {
             </InputGroup>
           </Form>
         </Row>
-        <ResizeModal cubeID={cubeID}/>
+        <ResizeModal cubeID={cubeID} />
         <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
           Maybeboard
         </Button>
