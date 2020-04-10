@@ -12,6 +12,8 @@ import { getTCGLink } from 'utils/Affiliate';
 import { encodeName } from 'utils/Card';
 
 const CardPage = ({ card, data, prices, related }) => {
+  console.log(data);
+
   return (
     <Card className="mt-2">
       <CardHeader>
@@ -54,19 +56,19 @@ const CardPage = ({ card, data, prices, related }) => {
           </Col>
           <Col className="breakdown" xs="12" sm="8">
             <p>
-              Played in {Math.round(data.total[1] * 1000.0) / 10}%<span className="percent">{data.total[0]}</span> Cubes
-              total.
+              Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
+              <span className="percent">{data.current.total[0]}</span> Cubes total.
             </p>
             <Row>
               <Col xs="12" sm="6" md="6" lg="6">
                 <h5>By Legality:</h5>
                 <Table bordered>
                   <tbody>
-                    <CountTableRow label="Vintage" value={data.vintage} />
-                    <CountTableRow label="Legacy" value={data.legacy} />
-                    <CountTableRow label="Modern" value={data.modern} />
-                    <CountTableRow label="Standard" value={data.standard} />
-                    <CountTableRow label="Pauper" value={data.pauper} />
+                    <CountTableRow label="Vintage" value={data.current.vintage} />
+                    <CountTableRow label="Legacy" value={data.current.legacy} />
+                    <CountTableRow label="Modern" value={data.current.modern} />
+                    <CountTableRow label="Standard" value={data.current.standard} />
+                    <CountTableRow label="Pauper" value={data.current.pauper} />
                   </tbody>
                 </Table>
               </Col>
@@ -74,11 +76,11 @@ const CardPage = ({ card, data, prices, related }) => {
                 <h5>By Size:</h5>
                 <Table bordered>
                   <tbody>
-                    <CountTableRow label="1-180" value={data.size180} />
-                    <CountTableRow label="181-360" value={data.size360} />
-                    <CountTableRow label="361-450" value={data.size450} />
-                    <CountTableRow label="451-540" value={data.size540} />
-                    <CountTableRow label="541+" value={data.size720} />
+                    <CountTableRow label="1-180" value={data.current.size180} />
+                    <CountTableRow label="181-360" value={data.current.size360} />
+                    <CountTableRow label="361-450" value={data.current.size450} />
+                    <CountTableRow label="451-540" value={data.current.size540} />
+                    <CountTableRow label="541+" value={data.current.size720} />
                   </tbody>
                 </Table>
               </Col>

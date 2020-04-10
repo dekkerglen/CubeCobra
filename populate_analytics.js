@@ -88,14 +88,16 @@ async function processDeck(deck) {
     const deckCards = [];
     deck.seats[0].deck.forEach((col) => {
       col.forEach((row) => {
-        deckCards.push(
-          carddb
-            .cardFromId(row.cardID)
-            .name.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim(),
-        );
+        if (row && row.cardID) {
+          deckCards.push(
+            carddb
+              .cardFromId(row.cardID)
+              .name.toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .trim(),
+          );
+        }
       });
     });
 
