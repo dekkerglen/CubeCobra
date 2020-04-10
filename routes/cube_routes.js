@@ -12,8 +12,6 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
-// eslint-disable-next-line import/no-unresolved
-const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
   addAutocard,
@@ -3380,7 +3378,7 @@ router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
     const response = await fetch(
-      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
         'http://localhost:5000',
       )}`,
     );

@@ -1,24 +1,20 @@
+// Load Environment Variables
+require('dotenv').config();
+
 const express = require('express');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const schedule = require('node-schedule');
 const winston = require('winston');
-const { Loggly } = require('winston-loggly-bulk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
-// eslint-disable-next-line import/no-unresolved
-const secrets = require('../cubecobrasecrets/secrets');
-// eslint-disable-next-line import/no-unresolved
-const mongosecrets = require('../cubecobrasecrets/mongodb');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
@@ -78,20 +74,8 @@ winston.configure({
 
 console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
-if (secrets.loggly) {
-  winston.add(
-    new Loggly({
-      token: secrets.loggly.token,
-      subdomain: secrets.loggly.subdomain,
-      tags: ['Winston-NodeJS'],
-      json: true,
-    }),
-  );
-  console.log(`Logging to Loggly @ https://${secrets.loggly.subdomain}.loggly.com.`);
-}
-
 // Connect db
-mongoose.connect(mongosecrets.connectionString, {
+mongoose.connect(process.env.MONGODB_URL, {
   useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -111,8 +95,8 @@ const app = express();
 
 const store = new MongoDBStore(
   {
-    uri: mongosecrets.connectionString,
-    databaseName: mongosecrets.dbname,
+    uri: process.env.MONGODB_URL,
+    databaseName: process.env.DBNAME,
     collection: 'session_data',
   },
   (err) => {
@@ -188,7 +172,7 @@ app.use('/js', express.static(path.join(__dirname, 'dist')));
 app.use('/jquery-ui', express.static(`${__dirname}/node_modules/jquery-ui-dist/`));
 
 const sessionOptions = {
-  secret: secrets.session,
+  secret: process.env.SESSION,
   store,
   resave: true,
   saveUninitialized: true,
@@ -197,7 +181,7 @@ const sessionOptions = {
   },
 };
 
-if (secrets.environment === 'production') {
+if (process.env.ENV === 'production') {
   app.set('trust proxy', 1);
   sessionOptions.cookie.secure = true;
 }

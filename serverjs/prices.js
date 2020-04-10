@@ -1,7 +1,6 @@
 const fetch = require('node-fetch');
 const url = require('url');
 const winston = require('winston');
-const tcgconfig = require('../../cubecobrasecrets/tcgplayer');
 
 var token = null;
 const cached_prices = {};
@@ -15,8 +14,8 @@ async function GetToken() {
 
     const body = new url.URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: tcgconfig.Public_Key,
-      client_secret: tcgconfig.Private_Key,
+      client_id: process.env.TCG_PLAYER_PUBLIC_KEY,
+      client_secret: process.env.TCG_PLAYER_PRIVATE_KEY,
     });
     const response = await fetch('https://api.tcgplayer.com/token', {
       method: 'POST',

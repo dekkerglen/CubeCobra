@@ -1,13 +1,15 @@
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
 
+// Load Environment Variables
+require('dotenv').config();
+
 const mongoose = require('mongoose');
 
 const carddb = require('./serverjs/cards.js');
 const Deck = require('./models/deck');
 const Cube = require('./models/cube');
 const Card = require('./models/card');
-const mongosecrets = require('../cubecobrasecrets/mongodb');
 
 const batchSize = 100;
 
@@ -243,7 +245,7 @@ async function processCard(card) {
   await carddb.initializeCardDb();
 
   const i = 0;
-  mongoose.connect(mongosecrets.connectionString).then(async (db) => {
+  mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
     createCorrelations();
 
     // process all cube objects

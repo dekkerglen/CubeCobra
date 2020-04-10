@@ -5,9 +5,6 @@ const passport = require('passport');
 const mailer = require('nodemailer');
 const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
-
-// eslint-disable-next-line import/no-unresolved
-const emailconfig = require('../../cubecobrasecrets/email');
 const util = require('../serverjs/util.js');
 const carddb = require('../serverjs/cards.js');
 
@@ -371,8 +368,8 @@ router.post(
                               secure: true,
                               service: 'Gmail',
                               auth: {
-                                user: emailconfig.username,
-                                pass: emailconfig.password,
+                                user: process.env.EMAIL_CONFIG_USERNAME,
+                                pass: process.env.EMAIL_CONFIG_PASSWORD,
                               },
                             });
 
