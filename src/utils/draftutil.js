@@ -297,7 +297,7 @@ export function populateDraft(format, cards, bots, seats, user) {
       seat.drafted.push([]);
     }
 
-    seat.packbacklog.push(draft.unopenedPacks[i].pop());
+    seat.packbacklog.push(draft.unopenedPacks[i].shift());
     draft.seats.push(seat);
   }
 

@@ -722,37 +722,49 @@ router.get('/list/:id', async (req, res) => {
     }
 
     const pids = new Set();
-    const cardNames = [];
-    const { cards } = cube;
-    cards.forEach((card, index) => {
-      card.details = {
-        ...carddb.cardFromId(card.cardID),
-      };
-      card.index = index;
-      if (!card.type_line) {
-        card.type_line = card.details.type;
-      }
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      cardNames.push(card.details.name);
-    });
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
+        card.details = {
+          ...carddb.cardFromId(card.cardID),
+        };
+        card.index = index;
+        if (!card.type_line) {
+          card.type_line = card.details.type;
+        }
+        if (card.details.tcgplayer_id) {
+          pids.add(card.details.tcgplayer_id);
+        }
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
 
-    const priceDict = await GetPrices([...pids]);
-    const eloDict = await getElo(cardNames, true);
-    for (const card of cards) {
-      if (card.details.tcgplayer_id) {
-        if (priceDict[card.details.tcgplayer_id]) {
-          card.details.price = priceDict[card.details.tcgplayer_id];
+    cube.cards = addDetails(cube.cards);
+    cube.maybe = addDetails(cube.maybe);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
         }
-        if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-          card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
         }
       }
-      if (eloDict[card.details.name]) {
-        card.details.elo = eloDict[card.details.name];
-      }
-    }
+      return cards;
+    };
+    cube.cards = addPriceAndElo(cube.cards);
+    cube.maybe = addPriceAndElo(cube.maybe);
 
     const reactProps = {
       cube,
@@ -763,12 +775,12 @@ router.get('/list/:id', async (req, res) => {
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       defaultSorts: cube.default_sorts,
-      maybe: maybeCards(cube, carddb),
+      maybe: cube.maybe,
     };
 
     return res.render('cube/cube_list', {
       reactHTML: CubeListPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       cube,
@@ -1145,7 +1157,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         userid: req.user._id,
         username: req.user.username,
         pickorder: [],
-        deckname: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
+        name: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         cols: 16,
         deck: added,
         sideboard: [],
@@ -1803,7 +1815,8 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
       }
     }
     for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
+      const name = key.replace(' // ', '/');
+      res.write(`${value} ${name}\r\n`);
     }
     res.write('\r\n\r\n');
 
@@ -1819,7 +1832,8 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
       }
     }
     for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
+      const name = key.replace(' // ', '/');
+      res.write(`${value} ${name}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -1946,6 +1960,10 @@ router.post('/startdraft/:id', async (req, res) => {
     for (const card of cube.cards) {
       card.details = carddb.cardFromId(card.cardID);
     }
+    const elo = await getElo(cube.cards.map((card) => card.details.name));
+    for (const card of cube.cards) {
+      card.rating = elo[card.details.name];
+    }
 
     // setup draft
 
@@ -1965,19 +1983,6 @@ router.post('/startdraft/:id', async (req, res) => {
     draft.unopenedPacks = populated.unopenedPacks;
     draft.seats = populated.seats;
     draft.cube = cube._id;
-
-    // add ratings
-    const names = [];
-    // add in details to all cards
-    for (const seat of draft.initial_state) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          names.push(carddb.cardFromId(card.cardID).name);
-        }
-      }
-    }
-
-    draft.ratings = await getElo(names);
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -2310,7 +2315,18 @@ router.post(
     // cube category override
     if (cube.overrideCategory) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'];
-      const prefixes = ['Powered', 'Unpowered', 'Pauper', 'Peasant', 'Budget', 'Silver-bordered', 'Commander'];
+      const prefixes = [
+        'Powered',
+        'Unpowered',
+        'Pauper',
+        'Peasant',
+        'Budget',
+        'Silver-bordered',
+        'Commander',
+        'Battle Box',
+        'Multiplayer',
+        'Judge Tower',
+      ];
 
       if (!categories.includes(updatedCube.categoryOverride)) {
         return res.status(400).send({
@@ -2634,8 +2650,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
     const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
+    res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
   }),
 );
@@ -2708,7 +2729,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     cube.numDecks += 1;
-    const userq = User.findById(deck.seats[0].owner);
+    const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);

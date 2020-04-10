@@ -24,7 +24,10 @@ Comment.add({
 //data for each seat, human or bot
 const SeatDeck = {
   bot: [String], //null bot value means human player
-  userid: String,
+  userid: {
+    type: String,
+    index: true,
+  },
   username: String,
   pickorder: [cardSchema],
   name: String,
@@ -59,35 +62,10 @@ let deckSchema = mongoose.Schema({
     type: String,
     default: 'Cube',
   },
-
-  //new format, will convert to
   seats: {
     type: [SeatDeck],
     default: [],
     index: true,
-  },
-  //deprecated
-  owner: String,
-  name: String,
-  description: {
-    type: String,
-    default: 'No description available.',
-  },
-  username: {
-    type: String,
-    default: 'User',
-  },
-  cols: Number,
-  playerdeck: {
-    type: [[]],
-    index: true,
-  },
-  playersideboard: [[]],
-  bots: [[]],
-  cards: [[]],
-  newformat: {
-    type: Boolean,
-    default: false,
   },
 });
 
