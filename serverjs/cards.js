@@ -75,10 +75,11 @@ function getCardDetails(card) {
   if (data._carddict[card.cardID]) {
     const details = data._carddict[card.cardID];
     card.details = details;
-    return details;
+    return card;
   }
   winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
-  return getPlaceholderCard(card.cardID);
+  card.details = getPlaceholderCard(card.cardID);
+  return card;
 }
 
 function loadJSONFile(filename, attribute) {

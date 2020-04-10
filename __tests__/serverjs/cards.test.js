@@ -146,7 +146,7 @@ test('getCardDetails returns a well-formed card object', () => {
     const result = carddb.getCardDetails({
       cardID: _id,
     });
-    expect(result).toEqual(expected);
+    expect(result).toEqual(expected.details);
   });
 });
 
@@ -160,7 +160,7 @@ test('getCardDetails returns a placeholder card object when given a nonexistent 
     const result = carddb.getCardDetails({
       cardID: _id,
     });
-    expect(result).toEqual(expected);
+    expect(result).toEqual(expected.details);
   });
 });
 
