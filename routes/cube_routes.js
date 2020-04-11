@@ -38,6 +38,7 @@ const {
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
+const filterutil = require('../dist/utils/Filter.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -873,19 +874,16 @@ router.get('/analysis/:id', async (req, res) => {
           ...carddb.cardFromId(card.cardID),
         };
         card.index = index;
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
         }
 
         if (card.details.tokens) {
-          card.details.tokens = card.details.tokens.map((element) => {
-            const tokenDetails = carddb.cardFromId(element.tokenId);
-            return {
-              ...element,
-              token: {
+          card.details.tokens = card.details.tokens
+            .filter((tokenId) => tokenId !== card.cardID)
+            .map((tokenId) => {
+              const tokenDetails = carddb.cardFromId(tokenId);
+              return {
                 tags: [],
                 status: 'Not Owned',
                 colors: tokenDetails.color_identity,
@@ -893,12 +891,10 @@ router.get('/analysis/:id', async (req, res) => {
                 cardID: tokenDetails._id,
                 type_line: tokenDetails.type,
                 addedTmsp: new Date(),
-                imgUrl: undefined,
                 finish: 'Non-foil',
-                details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
-              },
-            };
-          });
+                details: tokenDetails,
+              };
+            });
         }
 
         cardNames.add(card.details.name);
@@ -3373,6 +3369,122 @@ router.post(
     });
   }),
 );
+
+router.post('/resize/:id/:size', async (req, res) => {
+  try {
+    const response = await fetch(
+      `${secrets.flaskRoot}/?cube_name=${req.params.id}&root=${encodeURIComponent('http://localhost:5000')}`,
+    );
+    if (!response.ok) {
+      return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
+    }
+    const { cuts, additions } = await response.json();
+
+    // use this instead if you want debug data
+    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
+    // const cuts = { ...additions };
+
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    const pids = new Set();
+    const cardNames = new Set();
+
+    const formatTuple = (tuple) => {
+      const details = carddb.getMostReasonable(tuple[0]);
+      const card = util.newCard(details);
+      card.details = details;
+
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
+
+      return card;
+    };
+
+    const newSize = parseInt(req.params.size, 10);
+
+    if (newSize === cube.cards.length) {
+      req.flash('success', 'Your cube is already this size!');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+
+    // we sort the reverse way depending on adding or removing
+    let list = Object.entries(newSize > cube.cards.length ? additions : cuts)
+      .sort((a, b) => {
+        if (a[1] > b[1]) return newSize > cube.cards.length ? -1 : 1;
+        if (a[1] < b[1]) return newSize > cube.cards.length ? 1 : -1;
+        return 0;
+      })
+      .map(formatTuple);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
+        if (card.details.tcgplayer_id) {
+          if (priceDict[card.details.tcgplayer_id]) {
+            card.details.price = priceDict[card.details.tcgplayer_id];
+          }
+          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+          }
+        }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
+      }
+      return cards;
+    };
+    addPriceAndElo(list);
+
+    const filter = JSON.parse(req.body.filter);
+    list = list.filter((card) => filterutil.filterCard(card, filter)).slice(0, Math.abs(newSize - cube.cards.length));
+
+    let changelog = '';
+    if (newSize > cube.cards.length) {
+      // we add to cube
+      const toAdd = list.map((card) => {
+        changelog += addCardHtml(card.details);
+        return util.newCard(card.details);
+      });
+      cube.cards = cube.cards.concat(toAdd);
+    } else {
+      // we cut from cube
+      for (const card of list) {
+        for (let i = 0; i < cube.cards.length; i++) {
+          if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
+            changelog += removeCardHtml(card.details);
+            cube.cards.splice(i, 1);
+            i = cube.cards.length;
+          }
+        }
+      }
+    }
+
+    cube = setCubeType(cube, carddb);
+
+    const blogpost = new Blog();
+    blogpost.title = 'Resize - Automatic Post';
+    blogpost.html = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    await blogpost.save();
+    await cube.save();
+
+    req.flash('success', 'Cube Resized succesfully.');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
+  }
+});
 
 router.post(
   '/api/adds/:id',

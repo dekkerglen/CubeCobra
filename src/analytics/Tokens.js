@@ -7,16 +7,7 @@ import { getTCGLink } from 'utils/Affiliate';
 import MagicMarkdown from 'components/MagicMarkdown';
 import MassBuyButton from 'components/MassBuyButton';
 
-const compareCards = (x, y) => {
-  if (x.details.name === y.details.name) {
-    return 0;
-  }
-  return x.details.name < y.details.name ? -1 : 1;
-};
-
-const compareTokens = (x, y) => compareCards(x.token, y.token);
-
-const sortTokens = (tokens) => [...tokens].sort(compareTokens);
+const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);
 const sortCards = (cards) => [...cards].sort(compareCards);
 
 const dedupeCards = (cards) => {
@@ -28,26 +19,27 @@ const dedupeCards = (cards) => {
 };
 
 const Tokens = ({ cards, cube }) => {
-  const mentionedTokens = [];
-  cards.forEach((card, position) => {
-    card.position = position;
-    if (card.details.tokens) {
-      mentionedTokens.push(...card.details.tokens.map(({ token }) => ({ token, sourceCard: { ...card } })));
+  const positioned = cards.map((card, index) => ({ ...card, position: index }));
+  const byOracleId = {};
+  for (const card of positioned) {
+    for (const token of card.details.tokens || []) {
+      const oracleId = token.details.oracle_id;
+      if (!byOracleId[oracleId]) {
+        byOracleId[oracleId] = {
+          token,
+          cards: [],
+        };
+      }
+      // TODO: Use most recent printing for this oracle ID.
+      byOracleId[oracleId].cards.push(card);
     }
-  });
+  }
 
-  const resultingTokens = [];
-  mentionedTokens.forEach((element) => {
-    const relevantIndex = resultingTokens.findIndex(({ token }) => token.cardID === element.token.cardID);
-    if (relevantIndex >= 0) {
-      resultingTokens[relevantIndex].related.push(element.sourceCard);
-    } else {
-      resultingTokens.push({ token: element.token, related: [element.sourceCard] });
-    }
-  });
-  const data = sortTokens(resultingTokens).map(({ token, related }) => ({
-    card: token,
-    cardDescription: sortCards(dedupeCards(related))
+  const sorted = [...Object.entries(byOracleId)];
+  sorted.sort((x, y) => compareCards(x[1].token, y[1].token));
+  const data = sorted.map(([, tokenData]) => ({
+    card: tokenData.token,
+    cardDescription: sortCards(dedupeCards(tokenData.cards))
       .map(({ position }) => `[[${position}]]`)
       .join('\n\n'),
   }));
