@@ -15,16 +15,12 @@ async function saveCardRating(cardRating) {
   existing.picks = cardRating.picks;
   existing.value = cardRating.value;
   await existing.save();
+  return existing;
 }
 
-async function saveRatings(defaultPath = null) {
-  await new Promise((resolve) =>
-    fs
-      .createReadStream(defaultPath)
-      .pipe(JSONStream.parse('*'))
-      .pipe(es.mapSync(saveCardRating))
-      .on('close', resolve),
-  );
+async function saveRatings(defaultPath) {
+  const ratings = JSON.parse(fs.readFileSync(defaultPath));
+  return Promise.all(ratings.map(saveCardRating));
 }
 
 (async () => {
