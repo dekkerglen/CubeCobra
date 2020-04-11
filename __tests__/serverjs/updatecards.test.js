@@ -164,6 +164,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
     Pioneer: true,
     Pauper: false,
   },
+  mtgo_id: 57940,
   parsed_cost: [''],
   colors: ['B'],
   type: 'Legendary Creature — Human Cleric',
