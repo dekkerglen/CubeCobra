@@ -2,15 +2,9 @@ FROM node:13
 
 RUN mkdir -p /CubeCobra
 WORKDIR /CubeCobra
-RUN npm install -g nodemon rollup
-COPY package*.json ./
-RUN npm install && npm cache clean --force
 
-ENV NODE_ENV=production
-COPY src/ src/
-COPY webpack* ./
-COPY babel.config.js ./
-RUN npm run build
+COPY ./serverjs ./serverjs
+COPY ./models ./models
+COPY ./jobs ./jobs
 
-COPY ./ ./
-RUN npm install
+RUN npm install mongoose dotenv fs winston node-fetch url sanitize-html 
