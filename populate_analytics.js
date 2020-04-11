@@ -277,8 +277,6 @@ async function processCard(card) {
 
 (async () => {
   await carddb.initializeCardDb();
-
-  const i = 0;
   mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
     createCorrelations();
 
