@@ -10,7 +10,7 @@ const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CardRating = require('../models/cardrating');
-const Card = require('../models/card');
+const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 
 const router = express.Router();
@@ -69,7 +69,7 @@ async function matchingCards(filter) {
     }
     if (Filter.filterUses(filter, 'cubes')) {
       const names = cards.map(({ name }) => name.toLowerCase());
-      const cardDatas = await Card.find(
+      const cardDatas = await CardHistory.find(
         {
           cardName: {
             $in: names.map((name) => name.toLowerCase()),
@@ -123,7 +123,7 @@ async function topCards(filter) {
     .sort('-elo')
     .limit(MAX_RESULTS)
     .lean();
-  const cardDataQ = Card.aggregate()
+  const cardDataQ = CardHistory.aggregate()
     .match(
       filter.length === 0
         ? {}

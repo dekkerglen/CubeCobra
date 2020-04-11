@@ -12,9 +12,9 @@
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
     "lint": "npm run prettier-base -- --check && eslint app.js models public/js routes serverjs src",
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
-    "webpack": "webpack --mode development --config webpack.server.js",
-    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
-    "build": "webpack --mode production --config webpack.prod.js --progress",
+    "webpack": "webpack --mode development --config webpack.server.js --port 8081",
+    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js --port 8081",
+    "build": "webpack --mode production --config webpack.prod.js --progress --port 8081",
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
     "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js"

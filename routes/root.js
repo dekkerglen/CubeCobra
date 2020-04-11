@@ -8,7 +8,7 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
-const Card = require('../models/card');
+const CardHistory = require('../models/cardHistory');
 
 const { NODE_ENV } = process.env;
 
@@ -341,7 +341,7 @@ async function getCardCubes(value) {
 
   // otherwise just go to this ID.
   const card = carddb.cardFromId(value);
-  const data = await Card.findOne({ cardName: card.name_lower });
+  const data = await CardHistory.findOne({ cardName: card.name_lower });
   if (!data) {
     return { _id: { $in: [] } };
   }

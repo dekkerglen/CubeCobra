@@ -10,13 +10,10 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
-const schedule = require('node-schedule');
 const winston = require('winston');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
-const updatedb = require('./serverjs/updatecards.js');
-const carddb = require('./serverjs/cards.js');
 
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 const combinedFile = tmp.fileSync({
