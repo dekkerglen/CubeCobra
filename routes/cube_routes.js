@@ -875,19 +875,16 @@ router.get('/analysis/:id', async (req, res) => {
           ...carddb.cardFromId(card.cardID),
         };
         card.index = index;
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
         }
 
         if (card.details.tokens) {
-          card.details.tokens = card.details.tokens.map((element) => {
-            const tokenDetails = carddb.cardFromId(element.tokenId);
-            return {
-              ...element,
-              token: {
+          card.details.tokens = card.details.tokens
+            .filter((tokenId) => tokenId !== card.cardID)
+            .map((tokenId) => {
+              const tokenDetails = carddb.cardFromId(tokenId);
+              return {
                 tags: [],
                 status: 'Not Owned',
                 colors: tokenDetails.color_identity,
@@ -895,12 +892,10 @@ router.get('/analysis/:id', async (req, res) => {
                 cardID: tokenDetails._id,
                 type_line: tokenDetails.type,
                 addedTmsp: new Date(),
-                imgUrl: undefined,
                 finish: 'Non-foil',
-                details: { ...(element.tokenId === card.cardID ? {} : tokenDetails) },
-              },
-            };
-          });
+                details: tokenDetails,
+              };
+            });
         }
 
         cardNames.add(card.details.name);
