@@ -18,7 +18,7 @@
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
     "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "deploy": "npm run build && node app.js"
+    "deploy": "npm run build && node --max-old-space-size=4096 force_update.js && node app.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",

@@ -248,7 +248,7 @@ schedule.scheduleJob('0 0 * * *', () => {
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(() => {
-  http.createServer(app).listen(5000, 'localhost', () => {
-    winston.info('Server started on port 5000...');
+  http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
+    winston.info(`Server started on port ${process.env.PORT || 5000}...`);
   });
 });
