@@ -1,0 +1,26 @@
+name: Docker Image CI
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Print ref
+      run: echo `echo $GITHUB_REF | sed 's/^refs\/heads\///g' | sed 's/^refs\///' | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]'`
+    - name: Print repository
+      run: echo docker.pkg.github.com/$GITHUB_REPOSITORY
+    - name: Build the Docker image
+      run: TAG=`echo $GITHUB_REF | sed 's/^refs\/heads\///g' | sed 's/^refs\///' | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]'` REPOSITORY=docker.pkg.github.com/`echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]'` docker-compose -f .docker/docker-compose.yml build
+    - name: Check Lint
+      run: TAG=`echo $GITHUB_REF | sed 's/^refs\/heads\///g' | sed 's/^refs\///' | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]'` REPOSITORY=docker.pkg.github.com/`echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]'` docker-compose -f .docker/docker-compose.yml run cubecobra sh -c 'NODE_ENV=development npm i && npm run lint'
+    - name: Ensure tests pass
+      run: TAG=`echo $GITHUB_REF | sed 's/^refs\/heads\///g' | sed 's/^refs\///' | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]'` REPOSITORY=docker.pkg.github.com/`echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]'` docker-compose -f .docker/docker-compose.yml run cubecobra sh -c 'NODE_ENV=development npm i && npm run test'
+    - name: Login to Docker
+      run: docker login -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com/`echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]'`
+    - name: Push to github package registry
+      run: TAG=`echo $GITHUB_REF | sed 's/^refs\/heads\///g' | sed 's/^refs\///' | sed 's/\//-/g' | tr '[:upper:]' '[:lower:]'` REPOSITORY=docker.pkg.github.com/`echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]'` docker-compose -f .docker/docker-compose.yml push

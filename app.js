@@ -262,9 +262,11 @@ schedule.scheduleJob('0 0 * * *', () => {
   updatedb.updateCardbase();
 });
 
+(async () => updatedb.updateCardbase())();
+
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(() => {
-  http.createServer(app).listen(5000, 'localhost', () => {
+  http.createServer(app).listen(5000, secrets.host, () => {
     winston.info('Server started on port 5000...');
   });
 });

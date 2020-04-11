@@ -3,15 +3,26 @@
 
 const mongoose = require('mongoose');
 
+const { GetPrices } = require('./serverjs/prices');
+const { getElo } = require('./serverjs/cubefn.js');
 const carddb = require('./serverjs/cards.js');
 const Deck = require('./models/deck');
 const Cube = require('./models/cube');
-const Card = require('./models/card');
+const CardHistory = require('./models/cardHistory');
 const mongosecrets = require('../cubecobrasecrets/mongodb');
 
 const batchSize = 100;
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
+
+// define .flat()
+Object.defineProperty(Array.prototype, 'flat', {
+  value(depth = 1) {
+    return this.reduce(function(flat, toFlatten) {
+      return flat.concat(Array.isArray(toFlatten) && depth > 1 ? toFlatten.flat(depth - 1) : toFlatten);
+    }, []);
+  },
+});
 
 const cardUses = {};
 const cardSizeUses = {
@@ -177,37 +188,58 @@ async function processCube(cube) {
 }
 
 async function processCard(card) {
-  card.total = cardUses[card.cardName] ? [cardUses[card.cardName], cardUses[card.cardName] / cubeCounts.total] : [0, 0];
-  card.size180 = cardSizeUses.size180[card.cardName]
+  const pid = carddb.cardFromId(card.cardID).tcgplayer_id;
+  const prices = await GetPrices([pid]);
+
+  const current = {};
+  current.elo = (await getElo([card.name], true))[card.name];
+  if (prices[pid]) {
+    current.price = prices[pid];
+  }
+  if (prices[`${pid}_foil`]) {
+    current.price_foil = prices[`${pid}_foil`];
+  }
+
+  current.total = cardUses[card.cardName]
+    ? [cardUses[card.cardName], cardUses[card.cardName] / cubeCounts.total]
+    : [0, 0];
+  current.size180 = cardSizeUses.size180[card.cardName]
     ? [cardSizeUses.size180[card.cardName], cardSizeUses.size180[card.cardName] / cubeCounts.size180]
     : [0, 0];
-  card.size360 = cardSizeUses.size360[card.cardName]
+  current.size360 = cardSizeUses.size360[card.cardName]
     ? [cardSizeUses.size360[card.cardName], cardSizeUses.size360[card.cardName] / cubeCounts.size360]
     : [0, 0];
-  card.size450 = cardSizeUses.size450[card.cardName]
+  current.size450 = cardSizeUses.size450[card.cardName]
     ? [cardSizeUses.size450[card.cardName], cardSizeUses.size450[card.cardName] / cubeCounts.size450]
     : [0, 0];
-  card.size540 = cardSizeUses.size540[card.cardName]
+  current.size540 = cardSizeUses.size540[card.cardName]
     ? [cardSizeUses.size540[card.cardName], cardSizeUses.size540[card.cardName] / cubeCounts.size540]
     : [0, 0];
-  card.size720 = cardSizeUses.size720[card.cardName]
+  current.size720 = cardSizeUses.size720[card.cardName]
     ? [cardSizeUses.size720[card.cardName], cardSizeUses.size720[card.cardName] / cubeCounts.size720]
     : [0, 0];
-  card.vintage = cardSizeUses.vintage[card.cardName]
+  current.vintage = cardSizeUses.vintage[card.cardName]
     ? [cardSizeUses.vintage[card.cardName], cardSizeUses.vintage[card.cardName] / cubeCounts.vintage]
     : [0, 0];
-  card.legacy = cardSizeUses.legacy[card.cardName]
+  current.legacy = cardSizeUses.legacy[card.cardName]
     ? [cardSizeUses.legacy[card.cardName], cardSizeUses.legacy[card.cardName] / cubeCounts.legacy]
     : [0, 0];
-  card.modern = cardSizeUses.modern[card.cardName]
+  current.modern = cardSizeUses.modern[card.cardName]
     ? [cardSizeUses.modern[card.cardName], cardSizeUses.modern[card.cardName] / cubeCounts.modern]
     : [0, 0];
-  card.standard = cardSizeUses.standard[card.cardName]
+  current.standard = cardSizeUses.standard[card.cardName]
     ? [cardSizeUses.standard[card.cardName], cardSizeUses.standard[card.cardName] / cubeCounts.standard]
     : [0, 0];
-  card.pauper = cardSizeUses.pauper[card.cardName]
+  current.pauper = cardSizeUses.pauper[card.cardName]
     ? [cardSizeUses.pauper[card.cardName], cardSizeUses.pauper[card.cardName] / cubeCounts.pauper]
     : [0, 0];
+
+  card.current = current;
+  const d = new Date();
+  card.history.push({
+    date: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
+    data: current,
+  });
 
   const cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
   card.cubes = cubes;
@@ -249,7 +281,9 @@ async function processCard(card) {
     // process all cube objects
     console.log('Started: cubes');
     let count = await Cube.countDocuments();
-    let cursor = Cube.find().cursor();
+    let cursor = Cube.find()
+      .lean()
+      .cursor();
     for (let i = 0; i < count; i += 1) {
       await processCube(await cursor.next());
       if ((i + 1) % 10 === 0) {
@@ -261,7 +295,9 @@ async function processCard(card) {
     // process all deck objects
     console.log('Started: decks');
     count = await Deck.countDocuments();
-    cursor = Deck.find().cursor();
+    cursor = Deck.find()
+      .lean()
+      .cursor();
     for (let i = 0; i < count; i += 1) {
       await processDeck(await cursor.next());
       if ((i + 1) % 1000 === 0) {
@@ -274,22 +310,28 @@ async function processCard(card) {
     const totalCards = carddb.cardnames.length;
     for (let i = 0; i < totalCards; i += batchSize) {
       const cardnames = carddb.cardnames.slice(i, i + batchSize);
-      const cardqs = cardnames.map((cardname) => {
-        return Card.findOne({ cardName: cardname.toLowerCase() }).exec();
-      });
+      const cardids = cardnames.map((cardname) => carddb.nameToId[cardname.toLowerCase()]).flat();
+      const cardqs = cardids.map((cardID) =>
+        CardHistory.findOne({ cardID })
+          .lean()
+          .exec(),
+      );
 
       const batch = await Promise.all(cardqs);
 
       for (let j = 0; j < batch.length; j += 1) {
         if (!batch[j]) {
-          batch[j] = new Card();
-          batch[j].cardName = cardnames[j].toLowerCase();
+          batch[j] = new CardHistory();
+          batch[j].cardName = carddb.cardFromId(cardids[j]).name_lower;
+          batch[j].cardID = cardids[j];
         }
-        await processCard(batch[j]);
+        // await processCard(batch[j]);
       }
 
+      await Promise.all(batch.map((obj) => processCard(obj)));
+
       const saveq = batch.map((item) => {
-        return item.save();
+        return CardHistory.findOneAndUpdate({ _id: item._id }, item, { upsert: true });
       });
 
       await Promise.all(saveq);
