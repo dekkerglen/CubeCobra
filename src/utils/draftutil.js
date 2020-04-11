@@ -3,8 +3,9 @@
 var Util = require('utils/Util.js');
 require('./Card.js');
 var Filter = require('utils/Filter.js');
+var Sort = require('utils/Sort.js');
 
-function matchingCards(cards, filter) {
+export function matchingCards(cards, filter) {
   if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
     return cards;
   }
@@ -304,22 +305,6 @@ export function populateDraft(format, cards, bots, seats, user) {
   return draft;
 }
 
-export function calculateAsfans(format, cards) {
-  let nextCardFn = null;
-
-  cards.forEach((card) => {
-    card.asfan = 0;
-  });
-
-  if (format.custom === true) {
-    nextCardFn = customDraftAsfan(cards, format.multiples);
-  } else {
-    nextCardFn = standardDraftAsfan(cards);
-  }
-
-  return createPacks({}, format, 1, nextCardFn);
-}
-
 export function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
@@ -337,4 +322,77 @@ export function checkFormat(format, cards) {
     return { ok: messages.length === 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
+}
+
+export function average(arr) {
+  const total = arr.reduce((acc, c) => acc + c, 0);
+  return total / arr.length;
+}
+
+export function median(arr) {
+  const mid = Math.floor(arr.length / 2);
+  const nums = [...arr].sort((a, b) => a - b);
+  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+export function stddev(arr, avg) {
+  const squareDiffs = arr.map((value) => {
+    const diff = value - avg;
+    const sqrDiff = diff * diff;
+    return sqrDiff;
+  });
+
+  const avgSquareDiff = average(squareDiffs);
+
+  const stdDev = Math.sqrt(avgSquareDiff);
+  return stdDev;
+}
+
+export function calculateAsfans(cards, cube, sort) {
+  return [
+    {
+      label: '',
+      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
+        return {
+          label: tuple[0],
+          asfan: (tuple[1].length / cube.cards.length) * 15, // 15 cards a pack
+        };
+      }),
+    },
+  ];
+}
+
+export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
+  const matchesDict = {};
+  return draftFormat.map((pack, index) => {
+    const asfanDict = {};
+    for (const card of cards) {
+      let total = 0;
+      for (const slot of pack) {
+        let sum = 0;
+        for (const filter of slot) {
+          if (!matchesDict[JSON.stringify(filter)]) {
+            matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
+          }
+          const matches = matchesDict[JSON.stringify(filter)];
+          if (matches.includes(card)) {
+            sum += 1 / matches.length;
+          }
+        }
+        total += ((1 - total) * sum) / slot.length;
+      }
+      asfanDict[card.cardID] = total;
+    }
+    console.log(matchesDict);
+
+    return {
+      label: `Pack ${index + 1}`,
+      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
+        return {
+          label: tuple[0],
+          asfan: tuple[1].reduce((acc, c) => acc + asfanDict[c.cardID], 0),
+        };
+      }),
+    };
+  });
 }

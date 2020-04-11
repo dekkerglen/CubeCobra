@@ -80,7 +80,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
       queryText += `name:"${name}" `;
     }
     if (owner.length > 0) {
-      queryText += `owner:${owner} `;
+      queryText += `owner:"${owner}" `;
     }
     if (decks.length > 0) {
       queryText += `decks${decksOp}${decks} `;
@@ -89,7 +89,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
       queryText += `cards${cardsOp}${cards} `;
     }
     if (category.length > 0) {
-      queryText += `category:${category} `;
+      queryText += `category:"${category}" `;
     }
     if (include.length > 0) {
       queryText += `card:"${include}" `;

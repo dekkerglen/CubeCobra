@@ -63,6 +63,7 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
       {posts.length > 0 ? (
         <PagedList
           pageSize={10}
+          showBottom
           rows={posts.slice(0).map((post) => (
             <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn />
           ))}
