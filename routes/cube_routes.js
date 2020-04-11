@@ -406,6 +406,7 @@ router.get('/overview/:id', async (req, res) => {
     for (const card of cube.cards) {
       card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
     }
+    const pids = new Set();
     const allVersions = [];
     for (const card of cube.cards) {
       const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
@@ -413,6 +414,9 @@ router.get('/overview/:id', async (req, res) => {
     }
     for (const card of allVersions) {
       card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
     }
     const priceDictQ = GetPrices([...pids]);
     const blogsQ = Blog.find({
