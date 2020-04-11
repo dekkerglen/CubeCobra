@@ -3373,7 +3373,7 @@ router.post(
 router.post('/resize/:id/:size', async (req, res) => {
   try {
     const response = await fetch(
-      `${secrets.flaskRoot}/?cube_name=${req.params.id}&root=${encodeURIComponent('http://localhost:5000')}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);

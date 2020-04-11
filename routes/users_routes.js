@@ -165,8 +165,8 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
             const smtpTransport = mailer.createTransport({
               service: 'Gmail',
               auth: {
-                user: emailconfig.username,
-                pass: emailconfig.password,
+                user: process.env.EMAIL_CONFIG_USERNAME,
+                pass: process.env.EMAIL_CONFIG_PASSWORD,
               },
             });
 
