@@ -238,7 +238,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+schedule.scheduleJob('0 0 * * *', () => {
+  winston.info('Starting midnight cardbase update...');
+  updatedb.updateCardbase();
+});
+
 // Start server after carddb is initialized.
-http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
-  winston.info(`Server started on port ${process.env.PORT}...`);
+carddb.initializeCardDb().then(() => {
+  http.createServer(app).listen(5000, 'localhost', () => {
+    winston.info('Server started on port 5000...');
+  });
 });
