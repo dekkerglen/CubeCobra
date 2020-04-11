@@ -12,12 +12,13 @@
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
     "lint": "npm run prettier-base -- --check && eslint app.js models public/js routes serverjs src",
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
-    "webpack": "webpack --mode development --config webpack.server.js --port 8081",
-    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js --port 8081",
-    "build": "webpack --mode production --config webpack.prod.js --progress --port 8081",
+    "webpack": "webpack --mode development --config webpack.server.js",
+    "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
+    "build": "node_modules/.bin/webpack --mode production --config webpack.prod.js --progress",
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
-    "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js"
+    "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
+    "deploy": "npm run build && node app.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -78,9 +79,7 @@
     "tmp": "^0.1.0",
     "uuid": "^3.4.0",
     "winston": "git://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
-    "winston-loggly-bulk": "^3.0.1"
-  },
-  "devDependencies": {
+    "winston-loggly-bulk": "^3.0.1",
     "@babel/core": "^7.7.2",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
     "@babel/plugin-proposal-optional-chaining": "^7.8.3",
@@ -94,6 +93,14 @@
     "babel-loader": "^8.0.6",
     "chart.js": "^2.9.2",
     "core-js": "^3.6.3",
+    "terser-webpack-plugin": "^2.2.1",
+    "webpack": "^4.41.1",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0",
+    "webpack-merge": "^4.2.2",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "devDependencies": {
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.5.0",
@@ -109,12 +116,6 @@
     "nodemon": "^2.0.2",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "sinon": "^7.4.2",
-    "terser-webpack-plugin": "^2.2.1",
-    "webpack": "^4.41.1",
-    "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.9.0",
-    "webpack-merge": "^4.2.2",
-    "webpack-node-externals": "^1.7.2"
+    "sinon": "^7.4.2"
   }
 }

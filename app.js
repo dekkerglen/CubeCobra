@@ -55,7 +55,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'error',
+  level: 'info',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
@@ -239,6 +239,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start server after carddb is initialized.
-http.createServer(app).listen(5000, 'localhost', () => {
-  winston.info('Server started on port 5000...');
+http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
+  winston.info(`Server started on port ${process.env.PORT}...`);
 });
