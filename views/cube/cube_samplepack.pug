@@ -13,14 +13,11 @@ block cube_content
             a.btn.btn-success.mr-2(href=`/cube/samplepack/${cube_id}`) New Pack
             a.btn.btn-success(href=`/cube/samplepackimage/${cube_id}/${seed}`) Get Image
       .card-body
-        .samplepack.row
-          if pack
-            each card, i in pack
-              if i % 5 === 0
-                .col-md-2.offset-md-1(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img.card-border.defaultCardImage( src=card.image_normal, width='150', height='210')
-              else
-                .col-md-2(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img.card-border.defaultCardImage( src=card.image_normal, width='150', height='210')
+        .pack-body.row.justify-content-center.no-gutters
+          .col(style="max-width:800px;")
+            .samplepack.row.justify-content-center.no-gutters
+              if pack
+                each card, i in pack
+                    .col-2-4
+                      a.autocard(card=card.image_normal)
+                        img.card-border.defaultCardImage( src=card.image_normal, width='150', height='210')
