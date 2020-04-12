@@ -4,7 +4,6 @@ const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
-const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
 
@@ -35,6 +34,7 @@ const {
   buildTagColors,
   maybeCards,
   getElo,
+  generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
 const draftutil = require('../dist/utils/draftutil.js');
@@ -992,10 +992,14 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         src: card.image_normal,
         x: CARD_WIDTH * (index % 5),
         y: CARD_HEIGHT * Math.floor(index / 5),
+        w: CARD_WIDTH,
+        h: CARD_HEIGHT,
+        rX: 0.065 * CARD_WIDTH,
+        rY: 0.0464 * CARD_HEIGHT,
       };
     });
 
-    return mergeImages(srcArray, {
+    return generateSamplepackImage(srcArray, {
       width: CARD_WIDTH * 5,
       height: CARD_HEIGHT * 3,
       Canvas,
