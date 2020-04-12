@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 
 import FoilCardImage from 'components/FoilCardImage';
+import CardGrid from 'components/CardGrid';
 import PropTypes from 'prop-types';
-import { encodeName } from 'utils/Card';
 import { arrayShuffle } from 'utils/Util';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Button, Col, Row, NavLink } from 'reactstrap';
@@ -71,6 +71,8 @@ class SampleHandModal extends Component {
   render() {
     const { isOpen, hand } = this.state;
 
+    const cardList = hand.map((card) => card);
+
     return (
       <>
         <NavLink className="nav-link" href="#" onClick={this.open}>
@@ -80,19 +82,13 @@ class SampleHandModal extends Component {
         <Modal size="xl" isOpen={isOpen} toggle={this.close} centered>
           <ModalHeader toggle={this.close}>Sample Hand</ModalHeader>
           <ModalBody className="p-4">
-            <Row>
-              {hand.map((card, cardindex) => (
-                <Col
-                  key={/* eslint-disable-line react/no-array-index-key */ cardindex}
-                  xs={4}
-                  className="col-seventh p-1"
-                >
-                  <a href={`/tool/card/${encodeName(card.details.name)}`}>
-                    <FoilCardImage autocard data-in-modal card={card} className="clickable" />
-                  </a>
-                </Col>
-              ))}
-            </Row>
+            <CardGrid
+              cardList={cardList}
+              Tag={FoilCardImage}
+              colProps={{ xs: 4, className: 'col-seventh' }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
           </ModalBody>
           <ModalFooter>
             <Button color="success" onClick={this.refresh}>
