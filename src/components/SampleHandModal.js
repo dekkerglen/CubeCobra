@@ -5,7 +5,7 @@ import CardGrid from 'components/CardGrid';
 import PropTypes from 'prop-types';
 import { arrayShuffle } from 'utils/Util';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button, Col, Row, NavLink } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader, Button, NavLink } from 'reactstrap';
 
 class SampleHandModal extends Component {
   constructor(props) {
