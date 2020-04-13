@@ -1007,12 +1007,14 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       width: CARD_WIDTH * 5,
       height: CARD_HEIGHT * 3,
       Canvas,
-    }).then((image) => {
-      res.writeHead(200, {
-        'Content-Type': 'image/png',
-      });
-      res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-    });
+    })
+      .then((image) => {
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+        });
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+      })
+      .catch((err) => util.handleRouteError(req, res, err, '/404'));
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
