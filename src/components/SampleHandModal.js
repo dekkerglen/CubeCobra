@@ -71,8 +71,6 @@ class SampleHandModal extends Component {
   render() {
     const { isOpen, hand } = this.state;
 
-    const cardList = hand.map((card) => card);
-
     return (
       <>
         <NavLink className="nav-link" href="#" onClick={this.open}>
@@ -83,7 +81,7 @@ class SampleHandModal extends Component {
           <ModalHeader toggle={this.close}>Sample Hand</ModalHeader>
           <ModalBody className="p-4">
             <CardGrid
-              cardList={cardList}
+              cardList={hand}
               Tag={FoilCardImage}
               colProps={{ xs: 4, className: 'col-seventh' }}
               cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -108,23 +106,8 @@ class SampleHandModal extends Component {
 }
 
 SampleHandModal.propTypes = {
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-        pickorder: PropTypes.array.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-  }).isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  deck: PropTypes.array.isRequired,
 };
 
 export default SampleHandModal;

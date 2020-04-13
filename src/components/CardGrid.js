@@ -34,8 +34,8 @@ CardGrid.propTypes = {
     }),
   ).isRequired,
   Tag: PropTypes.func.isRequired,
-  colProps: PropTypes.shape,
-  cardProps: PropTypes.shape,
+  colProps: PropTypes.shape({}),
+  cardProps: PropTypes.shape({}),
   linkDetails: PropTypes.bool,
 };
 

@@ -19,7 +19,7 @@ const VisualSpoiler = ({ cards, ...props }) => {
     <CardGrid
       cardList={cardList}
       Tag={SpoilerImage}
-      colProps={{ xs: 6, sm: 4, className: 'col-md-1-5' }} xs={6} sm={4}
+      colProps={{ xs: 6, sm: 4, className: 'col-md-1-5' }}
     />
   );
 };

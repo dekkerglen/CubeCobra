@@ -960,12 +960,16 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
+    const reactProps = {
+      cube_id: req.params.id,
+      seed: pack.seed,
+      pack: pack.pack,
+    };
+
     return res.render('cube/cube_samplepack', {
       cube,
       title: `${abbreviate(cube.name)} - Sample Pack`,
-      pack: pack.pack,
-      seed: pack.seed,
-      cube_id: req.params.id,
+      reactProps: serialize(reactProps),
       activeLink: 'playtest',
       metadata: generateMeta(
         'Cube Cobra Sample Pack',
