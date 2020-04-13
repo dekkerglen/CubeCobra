@@ -11,7 +11,6 @@ import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 
 import { getTCGLink } from 'utils/Affiliate';
-import { encodeName } from 'utils/Card';
 
 const CardPage = ({ card, data, prices, related }) => {
   const cardList = related.map((item) => ({ details: item }));
