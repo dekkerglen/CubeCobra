@@ -282,6 +282,20 @@ router.get('/landing', async (req, res) => {
   });
 });
 
+router.get('/version', async (req, res) => {
+  try {
+    const reactProps = { version: process.env.version, host: process.env.host };
+
+    return res.render('version', {
+      reactProps: serialize(reactProps),
+      loginCallback: '/version',
+    });
+  } catch (err) {
+    req.logger.error(err);
+    return res.status(500).send(err);
+  }
+});
+
 router.get('/search', async (req, res) => {
   const reactProps = {
     query: '',

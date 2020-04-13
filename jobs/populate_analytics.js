@@ -273,6 +273,8 @@ async function processCard(card) {
 
   // Create a new array with only the first 100 items
   card.cubedWith = items.slice(0, 100);
+
+  await CardHistory.findOneAndUpdate({ _id: card._id }, card, { upsert: true });
 }
 
 (async () => {
@@ -332,11 +334,6 @@ async function processCard(card) {
 
       await Promise.all(batch.map((obj) => processCard(obj)));
 
-      const saveq = batch.map((item) => {
-        return CardHistory.findOneAndUpdate({ _id: item._id }, item, { upsert: true });
-      });
-
-      await Promise.all(saveq);
       console.log(`Finished: ${i + batchSize} of ${totalCards} cards.`);
     }
 
