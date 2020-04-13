@@ -10,14 +10,6 @@ const SamplePackPage = ({ cube_id, seed, pack }) => {
   // eslint-disable-next-line camelcase
   const cubeId = cube_id;
 
-  pack = pack.map((card) => {
-    card.details = {
-      name: card.name,
-      image_normal: card.image_normal,
-    };
-    return card;
-  });
-
   return (
     <div>
       <div className="container" />

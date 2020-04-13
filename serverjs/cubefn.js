@@ -216,6 +216,10 @@ async function getElo(cardnames, round) {
   return result;
 }
 
+/* 
+Forked from https://github.com/lukechilds/merge-images
+to support border radius for cards and width/height for custom card images.
+*/
 const generateSamplepackImage = (sources = [], options = {}) =>
   new Promise((resolve) => {
     const defaultOptions = {
@@ -267,30 +271,41 @@ const generateSamplepackImage = (sources = [], options = {}) =>
         // Draw images to canvas
         images.forEach((image) => {
           const scratchCanvas = options.Canvas ? new options.Canvas() : window.document.createElement('canvas');
-          scratchCanvas.width = image.w || 100;
-          scratchCanvas.height = image.h || 100;
+          scratchCanvas.width = image.w || image.img.width;
+          scratchCanvas.height = image.h || image.img.height;
           const scratchCtx = scratchCanvas.getContext('2d');
           scratchCtx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
           scratchCtx.globalCompositeOperation = 'source-over';
-          scratchCtx.drawImage(image.img, 0, 0);
 
           const radiusX = image.rX || 0;
           const radiusY = image.rY || 0;
-          const width = image.w || 100;
-          const height = image.h || 100;
+          const aspectRatio = image.img.width / image.img.height;
+
+          let { width } = scratchCanvas;
+          let height = width / aspectRatio;
+
+          if (height > scratchCanvas.height) {
+            height = scratchCanvas.height;
+            width = height * aspectRatio;
+          }
+
+          const x = scratchCanvas.width / 2 - width / 2;
+          const y = scratchCanvas.height / 2 - height / 2;
+
+          scratchCtx.drawImage(image.img, x, y, width, height);
 
           scratchCtx.fillStyle = '#fff';
           scratchCtx.globalCompositeOperation = 'destination-in';
           scratchCtx.beginPath();
-          scratchCtx.moveTo(radiusX, 0);
-          scratchCtx.lineTo(width - radiusX, 0);
-          scratchCtx.quadraticCurveTo(width, 0, width, radiusY);
-          scratchCtx.lineTo(width, height - radiusY);
-          scratchCtx.quadraticCurveTo(width, height, width - radiusX, height);
-          scratchCtx.lineTo(radiusX, height);
-          scratchCtx.quadraticCurveTo(0, height, 0, height - radiusY);
-          scratchCtx.lineTo(0, radiusY);
-          scratchCtx.quadraticCurveTo(0, 0, radiusX, 0);
+          scratchCtx.moveTo(x + radiusX, y);
+          scratchCtx.lineTo(x + width - radiusX, y);
+          scratchCtx.quadraticCurveTo(x + width, y, x + width, y + radiusY);
+          scratchCtx.lineTo(x + width, y + height - radiusY);
+          scratchCtx.quadraticCurveTo(x + width, y + height, x + width - radiusX, y + height);
+          scratchCtx.lineTo(x + radiusX, y + height);
+          scratchCtx.quadraticCurveTo(x, y + height, x, y + height - radiusY);
+          scratchCtx.lineTo(x, y + radiusY);
+          scratchCtx.quadraticCurveTo(x, y, x + radiusX, y);
           scratchCtx.closePath();
           scratchCtx.fill();
 
@@ -428,7 +443,10 @@ const methods = {
     const pack = util
       .shuffle(cube.cards, seed)
       .slice(0, 15)
-      .map((card) => carddb.getCardDetails(card));
+      .map((card) => {
+        card.details = carddb.getCardDetails(card);
+        return card;
+      });
 
     return {
       seed,

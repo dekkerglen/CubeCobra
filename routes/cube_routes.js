@@ -993,7 +993,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const srcArray = pack.pack.map((card, index) => {
       return {
-        src: card.image_normal,
+        src: card.imgUrl || card.details.image_normal,
         x: CARD_WIDTH * (index % 5),
         y: CARD_HEIGHT * Math.floor(index / 5),
         w: CARD_WIDTH,
