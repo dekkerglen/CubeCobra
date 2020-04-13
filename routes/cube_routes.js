@@ -3489,11 +3489,7 @@ router.post('/resize/:id/:size', async (req, res) => {
 router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
-        'http://localhost:5000',
-      )}`,
-    );
+    const response = await fetch(`${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}`);
     if (!response.ok) {
       return res.status(500).send({
         success: 'false',
