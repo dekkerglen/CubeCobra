@@ -82,17 +82,17 @@ export function GetColorCategory(type, colors) {
 export function GetColorCategoryHybridInclusive(type, colors, parsedCost) {
   let res = [GetColorCategory(type, colors)];
 
-  if(parsedCost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))) {
-    let validColors = ['w', 'u', 'b', 'r', 'g']
-    for(const symbol of parsedCost) {
-      if(symbol.includes('-')) {
+  if (parsedCost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))) {
+    let validColors = ['w', 'u', 'b', 'r', 'g'];
+    for (const symbol of parsedCost) {
+      if (symbol.includes('-')) {
         let colors = symbol.split('-');
         validColors = validColors.filter((color) => colors.includes(color));
-      } else if([...'wubrg'].includes(symbol)) {
+      } else if ([...'wubrg'].includes(symbol)) {
         validColors = validColors.filter((color) => color == symbol);
       }
     }
-    for(const color of validColors) {
+    for (const color of validColors) {
       switch (color) {
         case 'w':
           res.push('White');
