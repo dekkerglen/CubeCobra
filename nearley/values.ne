@@ -102,10 +102,10 @@ colorCombinationValue ->
   | "azorious"i {% () => ['w', 'u'] %}
   | "dimir"i {% () => ['u', 'b'] %}
   | "rakdos"i {% () => ['b', 'r'] %}
-  | "gruul"i {% () => ['r', 'g'] %}
+  | ("gruul"i | "grul"i) {% () => ['r', 'g'] %}
   | "selesnya"i {% () => ['g', 'w'] %}
   | "orzhov"i {% () => ['w', 'b'] %}
-  | "izzet"i {% () => ['u', 'r'] %}
+  | ("izzet"i | "izet"i) {% () => ['u', 'r'] %}
   | "golgari"i {% () => ['b', 'g'] %}
   | "boros"i {% () => ['w', 'r'] %}
   | "simic"i {% () => ['u', 'g'] %}

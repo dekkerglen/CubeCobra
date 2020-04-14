@@ -67,7 +67,7 @@ colorCondition -> ("c"i | "color"i | "colors"i) colorCombinationOpValue {% ([, v
 
 colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "color_identity"i) colorIdentityOpValue {% ([, valuePred]) => genericCondition('color_identity', (card) => card.colors ?? card.details.color_identity, valuePred) %}
 
-typeCondition -> ("t"i |  "type"i | "type_line"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', (card) => card.type_line ?? card.details.type, valuePred) %}
+typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', (card) => card.type_line ?? card.details.type, valuePred) %}
 
 oracleCondition -> ("o"i | "oracle"i | "text"i) stringOpValue {% ([, valuePred]) => genericCondition('oracle_text', (card) => card.details.oracle_text, valuePred) %}
 
