@@ -278,6 +278,7 @@ router.get('/landing', async (req, res) => {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
     numdrafts: deck.toLocaleString('en-US'),
+    version: process.env.version,
     loginCallback: '/',
   });
 });
