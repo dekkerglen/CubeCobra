@@ -594,6 +594,11 @@ body.busy-cursor {
 		max-width: 12.5%;
 	}
 
+	.col-md-2-4 {
+		flex: 0 0 20%;
+		max-width: 20%;
+	}
+
 	.col-md-1-4285 {
 		flex: 0 0 14.285%;
 		max-width: 14.285%;

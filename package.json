@@ -45,7 +45,6 @@
     "express-validator": "^6.4.0",
     "jquery-ui": "^1.12.1",
     "jquery-ui-dist": "^1.12.1",
-    "merge-images": "^1.1.0",
     "mongoose": "5.7.7",
     "mongoose-seed": "^0.6.0",
     "nearley": "^2.19.1",
