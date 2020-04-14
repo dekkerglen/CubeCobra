@@ -1,6 +1,7 @@
 # must implement the following to use these values.
 # const defaultOperation = (op, value) => ...
 # const stringOperation = (op, value) => ...
+# const stringContainOperation = (op, value) => ...
 # const equalityOperation = (op, value) => ...
 # const setOperation = (op, value) => ...
 # const rarityOperation = (op, value) => ...
@@ -53,12 +54,13 @@ alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => eq
 const normalizeCombination = (combination) => combination.join('').toLowerCase().replace('c', '').split('');
 const reversedSetOperation = (op, value) => {
   if (op.toString() === ':') {
-    return setOperation('<=', value);
+    op = '<=';
   }
   return setOperation(op, value);
 };
 %} # %}
 
+# TODO: Make these work with non-func operations
 colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
   | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}

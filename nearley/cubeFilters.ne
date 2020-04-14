@@ -1,7 +1,17 @@
 @include "./filterBase.ne"
-@include "./mongoOperations.ne"
 
 @{%
+const {
+  defaultOperation,
+  stringOperation,
+  stringContainOperation,
+  equalityOperation,
+  setOperation,
+  rarityOperation,
+  convertParsedCost,
+  manaCostOperation,
+  setElementOperation,
+} = require('../../../serverjs/mongoOperations');
 const negated = ({ query, fieldsUsed }) => ({ query: { $not: query }, fieldsUsed });
 %} # %}
 
@@ -17,6 +27,7 @@ connector -> (null | "and"i __) {% () => (clause1, clause2) => ({ query: { $and:
     | cardCountCondition
     | categoryCondition
     | cardCondition
+    | tagsCondition
   )  {% ([[condition]]) => condition %}
 
 @{%
@@ -35,6 +46,8 @@ cardCountCondition -> ("cardcount"i | "card_count"i | "cards"i | "c"i) integerOp
 cardCondition -> ("card"i) ":" stringValue {% ([, , value]) => ({ query: { CARD: value }, fieldsUsed: ['card'] }) %}
 
 categoryCondition -> ("category"i) (prefixCategoryOpValue | overrideCategoryOpValue) {% ([, [condition]]) => condition %}
+
+tagsCondition -> ("t"i | "tag"i | "tags"i) stringSetElementOpValue {% ([, condition]) => genericCondition('tags', condition) %}
 
 prefixCategoryOpValue -> ":" prefixCategoryValue {% ([, prefix]) => genericCondition('categoryPrefixes', { $regex: prefix, $options: 'i' }) %}
 
