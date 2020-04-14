@@ -5,7 +5,7 @@ const serialize = require('serialize-javascript');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
-const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/filterCards');
+const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 

@@ -2,7 +2,7 @@
 
 const Util = require('utils/Util.js');
 require('./Card.js');
-const { filterToString, makeFilter, operatorsRegex } = require('filtering/filterCards.js');
+const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
 var Sort = require('utils/Sort.js');
 
 function matchingCards(cards, filter) {

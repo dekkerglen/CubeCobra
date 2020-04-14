@@ -18,7 +18,7 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import { makeFilter } from 'filtering/filterCards';
+import { makeFilter } from 'filtering/FilterCards';
 import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 

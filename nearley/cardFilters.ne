@@ -12,7 +12,7 @@ import {
   convertParsedCost,
   manaCostOperation,
   setElementOperation,
-} from 'filtering/funcOperations';
+} from 'filtering/FuncOperations';
 %} # %}
 
 @{%

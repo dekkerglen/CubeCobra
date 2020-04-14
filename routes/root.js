@@ -111,7 +111,7 @@ router.get('/explore', async (req, res) => {
   });
 });
 
-router.get('/random', async (_, res) => {
+router.get('/random', async (req, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random);
@@ -265,7 +265,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
   }
 });
 
-router.get('/landing', async (_, res) => {
+router.get('/landing', async (req, res) => {
   const cubeq = Cube.estimatedDocumentCount().exec();
   const deckq = Deck.estimatedDocumentCount().exec();
   const userq = User.estimatedDocumentCount().exec();
@@ -281,7 +281,7 @@ router.get('/landing', async (_, res) => {
   });
 });
 
-router.get('/search', async (_, res) => {
+router.get('/search', async (req, res) => {
   const reactProps = {
     query: '',
     cubes: [],
@@ -350,49 +350,49 @@ router.get('/search/:query/:page', async (req, res) => {
   });
 });
 
-router.get('/contact', (_, res) => {
+router.get('/contact', (req, res) => {
   res.render('info/contact', {
     loginCallback: '/contact',
   });
 });
 
-router.get('/tos', (_, res) => {
+router.get('/tos', (req, res) => {
   res.render('info/tos', {
     loginCallback: '/tos',
   });
 });
 
-router.get('/filters', (_, res) => {
+router.get('/filters', (req, res) => {
   res.render('info/filters', {
     loginCallback: '/filters',
   });
 });
 
-router.get('/privacy', (_, res) => {
+router.get('/privacy', (req, res) => {
   res.render('info/privacy_policy', {
     loginCallback: '/privacy',
   });
 });
 
-router.get('/cookies', (_, res) => {
+router.get('/cookies', (req, res) => {
   res.render('info/cookies', {
     loginCallback: '/cookies',
   });
 });
 
-router.get('/ourstory', (_, res) => {
+router.get('/ourstory', (req, res) => {
   res.render('info/ourstory', {
     loginCallback: '/ourstory',
   });
 });
 
-router.get('/faq', (_, res) => {
+router.get('/faq', (req, res) => {
   res.render('info/faq', {
     loginCallback: '/faq',
   });
 });
 
-router.get('/donate', (_, res) => {
+router.get('/donate', (req, res) => {
   res.render('info/donate', {
     loginCallback: '/donate',
   });
