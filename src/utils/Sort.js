@@ -79,11 +79,49 @@ export function GetColorCategory(type, colors) {
   }
 }
 
+export function GetColorCategoryHybridInclusive(type, colors, parsedCost) {
+  let res = [GetColorCategory(type, colors)];
+
+  if(parsedCost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))) {
+    let validColors = ['w', 'u', 'b', 'r', 'g']
+    for(const symbol of parsedCost) {
+      if(symbol.includes('-')) {
+        let colors = symbol.split('-');
+        validColors = validColors.filter((color) => colors.includes(color));
+      } else if([...'wubrg'].includes(symbol)) {
+        validColors = validColors.filter((color) => color == symbol);
+      }
+    }
+    for(const color of validColors) {
+      switch (color) {
+        case 'w':
+          res.push('White');
+          break;
+        case 'u':
+          res.push('Blue');
+          break;
+        case 'b':
+          res.push('Black');
+          break;
+        case 'r':
+          res.push('Red');
+          break;
+        case 'g':
+          res.push('Green');
+          break;
+      }
+    }
+  }
+
+  return [...new Set(res)];
+}
+
 export function getSorts() {
   return [
     'Artist',
     'CMC',
     'Color Category',
+    'Color Category (Hybrid Inclusive)',
     'Color Count',
     'Color Identity',
     'Color',
@@ -117,7 +155,7 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .concat(['1000000']);
 
 function getLabelsRaw(cube, sort) {
-  if (sort == 'Color Category') {
+  if (sort == 'Color Category' || sort == 'Color Category (Hybrid Inclusive)') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort == 'Color Identity') {
@@ -445,6 +483,9 @@ function typeLine(card) {
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
     return [GetColorCategory(typeLine(card), colorIdentity(card))];
+  }
+  if (sort == 'Color Category (Hybrid Inclusive)') {
+    return GetColorCategoryHybridInclusive(typeLine(card), colorIdentity(card), card.details.parsed_cost);
   }
   if (sort == 'Color Identity') {
     return [GetColorIdentity(colorIdentity(card))];
