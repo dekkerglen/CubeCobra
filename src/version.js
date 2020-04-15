@@ -2,14 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, Row, Col, CardBody, Table } from 'reactstrap';
-
-import ImageFallback from 'components/ImageFallback';
-import ButtonLink from 'components/ButtonLink';
-import CountTableRow from 'components/CountTableRow';
-
-import { getTCGLink } from 'utils/Affiliate';
-import { encodeName } from 'utils/Card';
+import { Card, CardHeader, CardBody } from 'reactstrap';
 
 const VersionPage = ({ version, host }) => {
   return (
