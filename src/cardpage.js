@@ -4,16 +4,16 @@ import PropTypes from 'prop-types';
 
 import { Card, CardHeader, Row, Col, CardBody, Table } from 'reactstrap';
 
+import CardImage from 'components/CardImage';
+import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 
 import { getTCGLink } from 'utils/Affiliate';
-import { encodeName } from 'utils/Card';
 
 const CardPage = ({ card, data, prices, related }) => {
-  console.log(data);
-
+  const cardList = related.map((item) => ({ details: item }));
   return (
     <Card className="mt-2">
       <CardHeader>
@@ -90,13 +90,13 @@ const CardPage = ({ card, data, prices, related }) => {
       </CardBody>
       <CardBody>
         <h4>Often Drafted With:</h4>
-        <Row>
-          {related.map((item) => (
-            <a key={item.name} href={`/tool/card/${encodeName(item.name)}`}>
-              <img width="150" height="210" alt={item.name} src={item.image_normal} />
-            </a>
-          ))}
-        </Row>
+        <CardGrid
+          cardList={cardList}
+          Tag={CardImage}
+          colProps={{ xs: 6, sm: 4, className: 'col-md-1-5' }}
+          cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+          linkDetails
+        />
       </CardBody>
     </Card>
   );

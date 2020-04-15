@@ -60,7 +60,6 @@
     "http": "0.0.1-security",
     "jquery-ui": "^1.12.1",
     "jquery-ui-dist": "^1.12.1",
-    "merge-images": "^1.1.0",
     "mongoose": "5.7.7",
     "mongoose-seed": "^0.6.0",
     "node-fetch": "^2.6.0",
