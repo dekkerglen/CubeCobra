@@ -278,14 +278,14 @@ router.get('/landing', async (req, res) => {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
     numdrafts: deck.toLocaleString('en-US'),
-    version: process.env.version,
+    version: process.env.CUBECOBRA_VERSION,
     loginCallback: '/',
   });
 });
 
 router.get('/version', async (req, res) => {
   try {
-    const reactProps = { version: process.env.version, host: process.env.host };
+    const reactProps = { version: process.env.CUBECOBRA_VERSION, host: process.env.host };
 
     return res.render('version', {
       reactProps: serialize(reactProps),
