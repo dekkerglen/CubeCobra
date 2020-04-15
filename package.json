@@ -18,7 +18,7 @@
     "start": "npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "test": "jest --silent --detectOpenHandles  --coverage",
     "setup": "npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "deploy": "npm run build && node --max-old-space-size=4096 force_update.js && node app.js",
+    "deploy": "npm run build && node --max-old-space-size=4096 force_update.js && nodemon app.js",
     "populate-analytics": "node --max-old-space-size=4096 force_update.js && node --max-old-space-size=8192 jobs/populate_analytics.js"
   },
   "author": "Gwen Dekker",
