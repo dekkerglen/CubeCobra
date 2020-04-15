@@ -25,7 +25,11 @@ export function makeFilter(filterText) {
   }
 
   const filterParser = new Parser(compiledGrammar);
-  filterParser.feed(filterText);
+  try {
+    filterParser.feed(filterText);
+  } catch (err) {
+    return { err, filter: null };
+  }
   const { results } = filterParser;
   if (results.length === 1) {
     const [filter] = results;

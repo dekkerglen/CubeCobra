@@ -11,6 +11,7 @@ import {
   rarityOperation,
   convertParsedCost,
   manaCostOperation,
+  castableCostOperation,
   setElementOperation,
 } from 'filtering/FuncOperations';
 %} # %}
@@ -51,6 +52,7 @@ condition -> (
   | eloCondition
   | nameCondition
   | manaCostCondition
+  | castableCostCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -103,6 +105,8 @@ nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCon
   | noQuoteStringValue {% ([value]) => genericCondition('name_lower', (card) => card.details.name_lower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
 
 manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (card) => card.details.parsed_cost, valuePred) %}
+
+castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (card) => card.details.parsed_cost, valuePred) %}
 
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 

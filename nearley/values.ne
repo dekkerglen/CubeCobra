@@ -6,6 +6,7 @@
 # const setOperation = (op, value) => ...
 # const rarityOperation = (op, value) => ...
 # const manaCostOperation = (op, value) => ...
+# const castableCostOperation = (op, value) => ...
 # const setElementOperation = (value) => ...
 
 positiveHalfIntOpValue -> anyOperator positiveHalfIntValue {% ([op, value]) => defaultOperation(op, value) %}
@@ -147,14 +148,25 @@ manaSymbol -> innerManaSymbol {% id %}
 
 innerManaSymbol -> [0-9]:+ {% ([digits]) => [digits.join('')] %}
   | ("x"i | "y"i | "z"i | "w"i | "u"i | "b"i | "r"i | "g"i | "s"i) {% ([[color]]) => [color.toLowerCase()] %}
-  | ( "2"i ("/" | "-") ("p"i | "w"i | "u"i | "b"i | "r"i | "g"i)
-    | "p"i ("/" | "-") ("2"i | "w"i | "u"i | "b"i | "r"i | "g"i)
+  | ( "2"i ("/" | "-") ("w"i | "u"i | "b"i | "r"i | "g"i)
+    | "p"i ("/" | "-") ("w"i | "u"i | "b"i | "r"i | "g"i)
     | "w"i ("/" | "-") ("2"i | "p"i | "u"i | "b"i | "r"i | "g"i)
     | "u"i ("/" | "-") ("2"i | "p"i | "w"i | "b"i | "r"i | "g"i)
     | "b"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "r"i | "g"i)
     | "r"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "g"i)
     | "g"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "r"i)
     ) {% ([[color, , [secondColor]]]) => [color, secondColor] %}
+
+castableCostOpValue -> equalityOperator basicCostValue  {%([op, value]) => castableCostOperation(op, value) %}
+
+basicCostValue -> basicManaSymbol:+ {% id %}
+
+basicManaSymbol -> innerBasicManaSymbol {% id %}
+  | "{" innerBasicManaSymbol "}" {% ([, inner]) => inner %}
+  | "(" innerBasicManaSymbol ")" {% ([, inner]) => inner %}
+
+innerBasicManaSymbol -> [0-9]:+ {% ([digits]) => parseInt(digits.join('')) %}
+  | ("w"i | "u"i | "b"i | "r"i | "g"i) {% ([[color]]) => color.toLowerCase() %}
 
 anyOperator -> ":" | "=" | "!=" | "<>" | "<" | "<=" | ">" | ">="  {% id %}
 
