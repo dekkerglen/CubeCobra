@@ -215,12 +215,12 @@ const canCastWithInfinite = (mana, cost) => {
 };
 export const castableCostOperation = (op, value) => {
   switch (op.toString()) {
-    case ':':
     case '=':
       return (fieldValue) => canCastWith(value, convertParsedCost(fieldValue));
     case '<>':
     case '!=':
       return (fieldValue) => !canCastWith(value, convertParsedCost(fieldValue));
+    case ':':
     case '<=':
       return (fieldValue) => canCastWithInfinite(value, convertParsedCost(fieldValue));
     case '>':
