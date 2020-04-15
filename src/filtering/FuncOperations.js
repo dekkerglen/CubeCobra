@@ -139,6 +139,7 @@ const subtractOutValue = (intValue, costValue, remainder, remove, replace, index
 };
 const canCastWith = (mana, cost) => {
   cost = [...cost]
+    .filter((symbol) => symbol[0] === 'x' || symbol[0] === 'y' || symbol[0] === 'z')
     .map((symbol) => {
       console.debug(symbol);
       if (symbol.length === 1) {
@@ -195,6 +196,23 @@ const canCastWith = (mana, cost) => {
   console.log(cost);
   return cost.length === 0;
 };
+const canCastWithInfinite = (mana, cost) => {
+  cost = cost.filter((symbol) => {
+    const intValue = parseInt(symbol[0], 10);
+    return !(
+      Number.isInteger(intValue) ||
+      symbol[0] === 'x' ||
+      symbol[0] === 'y' ||
+      symbol[0] === 'z' ||
+      symbol[1] === '2'
+    );
+  });
+  console.log(cost.join('|'));
+  for (const symbol of mana) {
+    cost = cost.filter((costSymbol) => costSymbol.indexOf(symbol) < 0);
+  }
+  return cost.length === 0;
+};
 export const castableCostOperation = (op, value) => {
   switch (op.toString()) {
     case ':':
@@ -203,6 +221,10 @@ export const castableCostOperation = (op, value) => {
     case '<>':
     case '!=':
       return (fieldValue) => !canCastWith(value, convertParsedCost(fieldValue));
+    case '<=':
+      return (fieldValue) => canCastWithInfinite(value, convertParsedCost(fieldValue));
+    case '>':
+      return (fieldValue) => !canCastWithInfinite(value, convertParsedCost(fieldValue));
     default:
       throw new Error(`Unrecognized operator '${op}'`);
   }
