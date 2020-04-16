@@ -11,8 +11,6 @@ Canvas.Image = Image;
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
-// eslint-disable-next-line import/no-unresolved
-const secrets = require('../../cubecobrasecrets/secrets');
 
 const {
   addAutocard,
@@ -3385,7 +3383,7 @@ router.post(
 router.post('/resize/:id/:size', async (req, res) => {
   try {
     const response = await fetch(
-      `${secrets.flaskRoot}/?cube_name=${req.params.id}&root=${encodeURIComponent('http://localhost:5000')}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
@@ -3504,11 +3502,7 @@ router.post('/resize/:id/:size', async (req, res) => {
 router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const response = await fetch(
-      `${secrets.flaskRoot}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
-        'http://localhost:5000',
-      )}`,
-    );
+    const response = await fetch(`${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}`);
     if (!response.ok) {
       return res.status(500).send({
         success: 'false',
