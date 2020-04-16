@@ -4,7 +4,6 @@ const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const serialize = require('serialize-javascript');
-const mergeImages = require('merge-images');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
 
@@ -37,6 +36,7 @@ const {
   getElo,
   CSVtoCards,
   compareCubes,
+  generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
 const draftutil = require('../dist/utils/draftutil.js');
@@ -977,12 +977,16 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
+    const reactProps = {
+      cube_id: req.params.id,
+      seed: pack.seed,
+      pack: pack.pack,
+    };
+
     return res.render('cube/cube_samplepack', {
       cube,
       title: `${abbreviate(cube.name)} - Sample Pack`,
-      pack: pack.pack,
-      seed: pack.seed,
-      cube_id: req.params.id,
+      reactProps: serialize(reactProps),
       activeLink: 'playtest',
       metadata: generateMeta(
         'Cube Cobra Sample Pack',
@@ -1004,22 +1008,30 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     req.params.seed = req.params.seed.replace('.png', '');
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
-    const srcArray = pack.pack.map((card, index) => ({
-      src: card.image_normal,
-      x: CARD_WIDTH * (index % 5),
-      y: CARD_HEIGHT * Math.floor(index / 5),
-    }));
+    const srcArray = pack.pack.map((card, index) => {
+      return {
+        src: card.imgUrl || card.details.image_normal,
+        x: CARD_WIDTH * (index % 5),
+        y: CARD_HEIGHT * Math.floor(index / 5),
+        w: CARD_WIDTH,
+        h: CARD_HEIGHT,
+        rX: 0.065 * CARD_WIDTH,
+        rY: 0.0464 * CARD_HEIGHT,
+      };
+    });
 
-    return mergeImages(srcArray, {
+    return generateSamplepackImage(srcArray, {
       width: CARD_WIDTH * 5,
       height: CARD_HEIGHT * 3,
       Canvas,
-    }).then((image) => {
-      res.writeHead(200, {
-        'Content-Type': 'image/png',
-      });
-      res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
-    });
+    })
+      .then((image) => {
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+        });
+        res.end(Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64'));
+      })
+      .catch((err) => util.handleRouteError(req, res, err, '/404'));
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }

@@ -32,6 +32,7 @@ const clientConfig = merge(config, {
     blogpost: './src/blogpost.js',
     bulk_upload: './src/bulk_upload.js',
     cardpage: './src/cardpage.js',
+    cube_samplepack: './src/cube_samplepack.js',
     cube_analysis: './src/cube_analysis.js',
     cube_blog: './src/cube_blog.js',
     cube_compare: './src/cube_compare.js',
