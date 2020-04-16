@@ -1,0 +1,32 @@
+version: '3'
+services:
+  cubecobra-mongodb:
+    image: 'mongo'
+    volumes:
+      - cubecobra-mongodb-volume:/data/db
+    ports:
+      - '27017-27019:27017-27019'
+  cubecobra-analytics:
+    build:
+      dockerfile: Dockerfile
+      context: ../
+    image: ${REPOSITORY}/cubecobra-analytics:${TAG}
+    command: 'npm run populate_analytics'
+    depends_on:
+      - 'cubecobra-mongodb'
+    env_file:
+      - '../.env-EXAMPLE'
+  cubecobra:
+    build:
+      dockerfile: .docker/Dockerfile.full
+      context: ../
+    image: ${REPOSITORY}/cubecobra:${TAG}
+    command: bash -c 'node force_update.js && node app.js'
+    ports:
+      - "5000:8080"
+    depends_on:
+      - "cubecobra-mongodb"
+    env_file:
+      - '../.env-EXAMPLE'
+volumes:
+  cubecobra-mongodb-volume:

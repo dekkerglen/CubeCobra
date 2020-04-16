@@ -1,0 +1,16 @@
+FROM node:13
+
+RUN mkdir -p /CubeCobra/CubeCobra && mkdir -p /CubeCobra/cubecobrasecrets 
+WORKDIR /CubeCobra/CubeCobra
+COPY package*.json ./
+ENV NODE_ENV=development
+RUN npm install && npm cache clean --force
+
+ENV NODE_ENV=production
+COPY src/ src/
+COPY webpack* ./
+COPY babel.config.js ./
+COPY nearley/ nearley/
+RUN npm run build
+
+COPY ./ ./

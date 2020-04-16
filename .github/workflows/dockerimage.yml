@@ -1,0 +1,19 @@
+name: Docker Image CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Show tag and repo
+      run: 'echo "REPOSITORY: `echo "docker.pkg.github.com/$GITHUB_REPOSITORY" | tr "[:upper:]" "[:lower:]"`" && echo "TAG: ${GITHUB_SHA:0:8}"'
+    - name: Build the Docker image
+      run: TAG=${GITHUB_SHA:0:8} REPOSITORY=`echo "docker.pkg.github.com/$GITHUB_REPOSITORY" | tr "[:upper:]" "[:lower:]"` docker-compose -f .docker/docker-compose.yml build
+    - name: Check compliance with ESLint and Prettier settings
+      run: TAG=${GITHUB_SHA:0:8} REPOSITORY=`echo "docker.pkg.github.com/$GITHUB_REPOSITORY" | tr "[:upper:]" "[:lower:]"` docker-compose -f .docker/docker-compose.yml run cubecobra npm run lint
+    - name: Ensure tests pass
+      run: TAG=${GITHUB_SHA:0:8} REPOSITORY=`echo "docker.pkg.github.com/$GITHUB_REPOSITORY" | tr "[:upper:]" "[:lower:]"` docker-compose -f .docker/docker-compose.yml run cubecobra npm run test-loud
+    - name: Login to Docker
+      run: docker login -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }} 'docker.pkg.github.com'
+    - name: Push to github package registry
+      run: TAG=${GITHUB_SHA:0:8} REPOSITORY=`echo "docker.pkg.github.com/$GITHUB_REPOSITORY" | tr "[:upper:]" "[:lower:]"` docker-compose -f .docker/docker-compose.yml push
