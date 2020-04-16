@@ -1,7 +1,6 @@
 const fs = require('fs');
 const winston = require('winston');
 const util = require('./util.js');
-const cardutil = require('../dist/utils/Card.js');
 
 const data = {
   cardtree: {},
@@ -148,7 +147,13 @@ function reasonableId(id) {
 }
 
 function getIdsFromName(name) {
-  return data.nameToId[cardutil.normalizeName(name)];
+  return data.nameToId[
+    name
+      .trim()
+      .normalize('NFD') // convert to consistent unicode format
+      .replace(/[\u0300-\u036f]/g, '') // remove unicode
+      .toLowerCase()
+  ];
 }
 
 // Printing = 'recent' or 'first'
@@ -196,7 +201,6 @@ data.getMostReasonableById = getMostReasonableById;
 data.reasonableId = reasonableId;
 data.reasonableCard = reasonableCard;
 
-// deprecated: use card.name_lower or cardutil.normalizeName
-data.normalizedName = (card) => cardutil.normalizeName(card.name);
+data.normalizedName = (card) => card.name_lower;
 
 module.exports = data;
