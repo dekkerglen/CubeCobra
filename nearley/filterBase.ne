@@ -16,11 +16,11 @@ filter ->
   | clause {% id %}
 
 clause -> "-":? (
-    "(" filter ")" {% ([, f]) => f %} 
+    "(" filter ")" {% ([, f]) => [f] %} 
   | condition
 ) {% ([negation, [inner]]) => {
   if (negation) {
-    return negate(inner);
+    return negated(inner);
   }
   return inner;
 } %}

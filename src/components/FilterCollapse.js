@@ -352,6 +352,9 @@ class FilterCollapse extends Component {
     const { loading, filterInput, advancedOpen } = this.state;
     const { err } = makeFilter(filterInput);
     const valid = !err;
+    if (err) {
+      console.warn(err);
+    }
     const appliedText =
       'Filters applied' +
       (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '') +
