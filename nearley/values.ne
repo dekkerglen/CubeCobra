@@ -135,7 +135,8 @@ stringContainOpValue -> equalityOperator stringValue {% ([op, value]) => stringC
 
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
-noQuoteStringValue -> [^ \t\n"'\\=<>:]:+ {% ([chars]) => chars.join('').toLowerCase() %}
+# anything that isn't a special character and isn't "and" or "or"
+noQuoteStringValue -> ([^aAoO \t\n"'\\=<>:] | "a"i [^nN \t\n"'\\=<>:] | "an"i:+ [^dD \t\n"'\\=<>:] | "o"i:+ [^rR \t\n"'\\=<>:]) [^ \t\n"'\\=<>:]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
 # "
 
 manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}
