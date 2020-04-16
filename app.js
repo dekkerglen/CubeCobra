@@ -246,8 +246,6 @@ schedule.scheduleJob('0 0 * * *', () => {
   updatedb.updateCardbase();
 });
 
-(async () => updatedb.updateCardbase())();
-
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(() => {
   http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
