@@ -8,7 +8,7 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
-const Card = require('../models/card');
+const CardHistory = require('../models/cardHistory');
 
 const { NODE_ENV } = process.env;
 
@@ -278,8 +278,23 @@ router.get('/landing', async (req, res) => {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
     numdrafts: deck.toLocaleString('en-US'),
+    version: process.env.CUBECOBRA_VERSION,
     loginCallback: '/',
   });
+});
+
+router.get('/version', async (req, res) => {
+  try {
+    const reactProps = { version: process.env.CUBECOBRA_VERSION, host: process.env.host };
+
+    return res.render('version', {
+      reactProps: serialize(reactProps),
+      loginCallback: '/version',
+    });
+  } catch (err) {
+    req.logger.error(err);
+    return res.status(500).send(err);
+  }
 });
 
 router.get('/search', async (req, res) => {
@@ -341,7 +356,7 @@ async function getCardCubes(value) {
 
   // otherwise just go to this ID.
   const card = carddb.cardFromId(value);
-  const data = await Card.findOne({ cardName: card.name_lower });
+  const data = await CardHistory.findOne({ cardName: card.name_lower });
   if (!data) {
     return { _id: { $in: [] } };
   }
