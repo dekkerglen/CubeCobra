@@ -1398,8 +1398,8 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         cube.maybe = newMaybe;
         const pids = new Set();
         const cardNames = new Set();
-        const addDetails = (cardList) => {
-          cardList.splice().map((card, index) => {
+        const addDetails = (cardList) =>
+          cardList.map((card, index) => {
             card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
             if (!card.type_line) {
               card.type_line = card.details.type;
@@ -1410,8 +1410,6 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
             cardNames.add(card.details.name);
             return card;
           });
-          return cardList;
-        };
 
         const cubeCards = addDetails(cards);
         const newDetails = addDetails(newCards);
