@@ -344,7 +344,7 @@ class FilterCollapse extends Component {
 
   handleReset() {
     this.setState({ filterInput: '' });
-    this.props.setFilter([], '');
+    this.props.setFilter(null, '');
   }
 
   render() {
