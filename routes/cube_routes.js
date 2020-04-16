@@ -1387,7 +1387,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         const pids = new Set();
         const cardNames = new Set();
         const addDetails = (cardList) => {
-          cardList.splice().forEach((card, index) => {
+          cardList.splice().map((card, index) => {
             card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
             if (!card.type_line) {
               card.type_line = card.details.type;
@@ -1396,6 +1396,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
               pids.add(card.details.tcgplayer_id);
             }
             cardNames.add(card.details.name);
+            return card;
           });
           return cardList;
         };
