@@ -284,7 +284,7 @@ router.get('/landing', async (req, res) => {
 
 router.get('/version', async (req, res) => {
   try {
-    const reactProps = { version: process.env.CUBECOBRA_VERSION, host: process.env.host };
+    const reactProps = { version: process.env.CUBECOBRA_VERSION, host: process.env.HOST };
 
     return res.render('version', {
       reactProps: serialize(reactProps),
