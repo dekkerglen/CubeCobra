@@ -1,4 +1,4 @@
-import { makeFilter } from 'filtering/filterCards';
+import { makeFilter } from 'filtering/FilterCards';
 import { expectOperator } from '../../helpers';
 
 const fixturesPath = 'fixtures';

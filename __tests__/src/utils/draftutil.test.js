@@ -1,5 +1,5 @@
 import { getDraftBots, getDraftFormat, populateDraft } from 'utils/draftutil';
-import { makeFilter } from 'filtering/filterCards';
+import { makeFilter } from 'filtering/FilterCards';
 
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
