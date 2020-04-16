@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 
 import Averages from 'analytics/Averages';
-import Filter from 'utils/Filter';
+import { filterCard } from 'utils/Filter';
 import Chart from 'analytics/Chart';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
@@ -116,9 +116,9 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setCards(cube.cards.filter((card) => Filter.filterCard(card, val)));
-    setAdds(suggestions.filter((card) => Filter.filterCard(card, val)));
-    setCuts(removes.filter((card) => Filter.filterCard(card, val)));
+    setCards(cube.cards.filter((card) => filterCard(card, val)));
+    setAdds(suggestions.filter((card) => filterCard(card, val)));
+    setCuts(removes.filter((card) => filterCard(card, val)));
   };
 
   return (

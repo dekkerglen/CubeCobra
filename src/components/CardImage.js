@@ -7,17 +7,19 @@ import withAutocard from 'components/WithAutocard';
 
 const ImageAutocard = withAutocard(ImageFallback);
 
-const CardImage = ({ card, autocard, className, ...props }) => {
+const CardImage = ({ card, autocard, className, width, height, ...props }) => {
   const { showCustomImages } = useContext(DisplayContext);
   const imageSrc = (showCustomImages && card.imgUrl) || card.details.image_normal;
   const Tag = autocard ? ImageAutocard : ImageFallback;
+
   return (
     <Tag
       card={autocard ? card : undefined}
       src={imageSrc}
       fallbackSrc="/content/default_card.png"
       alt={card.details.name}
-      width="100%"
+      width={width || '100%'}
+      height={height || 'auto'}
       className={className ? `${className} card-border` : 'card-border'}
       {...props}
     />
@@ -34,11 +36,15 @@ CardImage.propTypes = {
   }).isRequired,
   autocard: PropTypes.bool,
   className: PropTypes.string,
+  width: PropTypes.string,
+  height: PropTypes.string,
 };
 
 CardImage.defaultProps = {
   autocard: false,
   className: null,
+  width: null,
+  height: null,
 };
 
 export default CardImage;

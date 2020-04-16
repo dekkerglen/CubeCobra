@@ -217,6 +217,130 @@ async function getElo(cardnames, round) {
   return result;
 }
 
+/* 
+Forked from https://github.com/lukechilds/merge-images
+to support border radius for cards and width/height for custom card images.
+*/
+const generateSamplepackImage = (sources = [], options = {}) =>
+  new Promise((resolve) => {
+    const defaultOptions = {
+      format: 'image/png',
+      quality: 0.92,
+      width: undefined,
+      height: undefined,
+      Canvas: undefined,
+      crossOrigin: undefined,
+    };
+
+    options = { ...defaultOptions, ...options };
+
+    // Setup browser/Node.js specific variables
+    const canvas = options.Canvas ? new options.Canvas() : window.document.createElement('canvas');
+    const { Image } = options.Canvas;
+
+    // Load sources
+    const images = sources.map(
+      (source) =>
+        // eslint-disable-next-line no-shadow
+        new Promise((resolve, reject) => {
+          // Convert sources to objects
+          if (source.constructor.name !== 'Object') {
+            source = { src: source };
+          }
+
+          // Resolve source and img when loaded
+          const img = new Image();
+          img.crossOrigin = options.crossOrigin;
+          img.onerror = () => reject(new Error("Couldn't load image"));
+          img.onload = () => resolve({ ...source, img });
+          img.src = source.src;
+        }),
+    );
+
+    // Get canvas context
+    const ctx = canvas.getContext('2d');
+
+    // When sources have loaded
+    resolve(
+      // eslint-disable-next-line no-shadow
+      Promise.all(images).then((images) => {
+        // Set canvas dimensions
+        const getSize = (dim) => options[dim] || Math.max(...images.map((image) => image.img[dim]));
+        canvas.width = getSize('width');
+        canvas.height = getSize('height');
+
+        // Draw images to canvas
+        images.forEach((image) => {
+          const scratchCanvas = options.Canvas ? new options.Canvas() : window.document.createElement('canvas');
+          scratchCanvas.width = image.w || image.img.width;
+          scratchCanvas.height = image.h || image.img.height;
+          const scratchCtx = scratchCanvas.getContext('2d');
+          scratchCtx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+          scratchCtx.globalCompositeOperation = 'source-over';
+
+          const radiusX = image.rX || 0;
+          const radiusY = image.rY || 0;
+          const aspectRatio = image.img.width / image.img.height;
+
+          let { width } = scratchCanvas;
+          let height = width / aspectRatio;
+
+          if (height > scratchCanvas.height) {
+            height = scratchCanvas.height;
+            width = height * aspectRatio;
+          }
+
+          const x = scratchCanvas.width / 2 - width / 2;
+          const y = scratchCanvas.height / 2 - height / 2;
+
+          scratchCtx.drawImage(image.img, x, y, width, height);
+
+          scratchCtx.fillStyle = '#fff';
+          scratchCtx.globalCompositeOperation = 'destination-in';
+          scratchCtx.beginPath();
+          scratchCtx.moveTo(x + radiusX, y);
+          scratchCtx.lineTo(x + width - radiusX, y);
+          scratchCtx.quadraticCurveTo(x + width, y, x + width, y + radiusY);
+          scratchCtx.lineTo(x + width, y + height - radiusY);
+          scratchCtx.quadraticCurveTo(x + width, y + height, x + width - radiusX, y + height);
+          scratchCtx.lineTo(x + radiusX, y + height);
+          scratchCtx.quadraticCurveTo(x, y + height, x, y + height - radiusY);
+          scratchCtx.lineTo(x, y + radiusY);
+          scratchCtx.quadraticCurveTo(x, y, x + radiusX, y);
+          scratchCtx.closePath();
+          scratchCtx.fill();
+
+          ctx.globalAlpha = image.opacity ? image.opacity : 1;
+          return ctx.drawImage(scratchCanvas, image.x || 0, image.y || 0);
+        });
+
+        if (options.Canvas && options.format === 'image/jpeg') {
+          // Resolve data URI for node-canvas jpeg async
+          // eslint-disable-next-line no-shadow
+          return new Promise((resolve, reject) => {
+            canvas.toDataURL(
+              options.format,
+              {
+                quality: options.quality,
+                progressive: false,
+              },
+              (err, jpeg) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                resolve(jpeg);
+              },
+            );
+          });
+        }
+
+        // Resolve all other data URIs sync
+        return canvas.toDataURL(options.format, options.quality);
+      }),
+    );
+  });
+
 const methods = {
   getBasics(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -340,6 +464,7 @@ const methods = {
   buildTagColors,
   maybeCards,
   getElo,
+  generateSamplepackImage,
 };
 
 module.exports = methods;

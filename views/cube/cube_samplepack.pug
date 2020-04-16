@@ -2,25 +2,12 @@ extends cube_layout
 
 block cube_content
   include ../flash
-  .container
-    br
-    .card
-      .card-header
-        .row
-          .col-md-6
-            h5.card-title Sample Pack
-          .col-md-6.text-right
-            a.btn.btn-success.mr-2(href=`/cube/samplepack/${cube_id}`) New Pack
-            a.btn.btn-success(href=`/cube/samplepackimage/${cube_id}/${seed}`) Get Image
-      .card-body
-        .samplepack.row
-          if pack
-            each card, i in pack
-              if i % 5 === 0
-                .col-md-2.offset-md-1(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img.defaultCardImage( src=card.image_normal, width='150', height='210')
-              else
-                .col-md-2(style='padding-top:10px;')
-                  a.autocard(card=card.image_normal)
-                    img.defaultCardImage( src=card.image_normal, width='150', height='210')
+  
+  #react-root
+
+block scripts
+  include ../react
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  script(src='/js/cube_samplepack.bundle.js')
