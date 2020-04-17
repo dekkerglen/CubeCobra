@@ -91,7 +91,7 @@ foilPriceCondition -> ("fp"i | "pf"i | "foil"i | "foilprice"i | "pricefoil"i) do
 
 statusCondition -> ("stat"i | "status"i) statusOpValue {% ([, valuePred]) => genericCondition('status', (card) => card.status, valuePred) %}
 
-rarityCondition -> ("r"i | "rar"i | "rarity"i) rarityOpValue {% ([, valuePred]) => genericCondition('rarity', (card) => card.details.rarity, valuePred) %}
+rarityCondition -> ("r"i | "rar"i | "rarity"i) rarityOpValue {% ([, valuePred]) => genericCondition('rarity', (card) => card.rarity ?? card.details.rarity, valuePred) %}
 
 loyaltyCondition -> ("l"i | "loy"i | "loyal"i | "loyalty"i) integerOpValue {% ([, valuePred]) => genericCondition('loyalty', (card) => card.details.loyalty, valuePred) %}
 
