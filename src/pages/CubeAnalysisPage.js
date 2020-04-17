@@ -18,7 +18,7 @@ import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
-import { getCmc } from 'utils/Card';
+import { cardCmc } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
@@ -35,7 +35,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
   const characteristics = {
-    CMC: getCmc,
+    CMC: cardCmc,
     Power: (card) => parseInt(card.details.power, 10),
     Toughness: (card) => parseInt(card.details.toughness, 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
