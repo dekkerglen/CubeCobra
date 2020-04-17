@@ -11,12 +11,18 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const winston = require('winston');
+const WinstonCloudWatch = require('winston-cloudwatch');
+const AWS = require('aws-sdk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 const schedule = require('node-schedule');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
+
+AWS.config.update({
+  region: 'us-east-2',
+});
 
 const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
 const combinedFile = tmp.fileSync({
@@ -58,7 +64,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'info',
+  level: 'error',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
@@ -89,6 +95,13 @@ db.once('open', () => {
 db.on('error', (err) => {
   winston.error(err);
 });
+
+winston.add(
+  new WinstonCloudWatch({
+    logGroupName: process.env.LOG_GROUP,
+    logStreamName: `CubeCobraErrors${uuid()}`,
+  }),
+);
 
 // Init app
 const app = express();
