@@ -72,7 +72,8 @@ export function cardsAreEquivalent(a, b) {
     a.finish === b.finish &&
     a.imgUrl === b.imgUrl &&
     a.notes === b.notes &&
-    a.colorCategory === b.colorCategory
+    a.colorCategory === b.colorCategory &&
+    a.rarity === b.rarity
   );
 }
 

@@ -537,7 +537,9 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Set') {
     return [card.details.set.toUpperCase()];
   } else if (sort == 'Rarity') {
-    return [card.details.rarity[0].toUpperCase() + card.details.rarity.slice(1)];
+    let { rarity } = card.details;
+    if( card.rarity ) rarity = card.rarity;
+    return [rarity[0].toUpperCase() + rarity.slice(1)];
   } else if (sort == 'Subtype') {
     const split = typeLine(card).split(/[-–—]/);
     if (split.length > 1) {

@@ -131,6 +131,16 @@ const CardModal = ({
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Rarity</InputGroupText>
+                </InputGroupAddon>
+                <CustomInput type="select" name="rarity" id="cardModalRarity" value={values.rarity} onChange={onChange}>
+                  {getLabels(null, 'Rarity').map((rarity) => (
+                    <option key={rarity}>{rarity}</option>
+                  ))}
+                </CustomInput>
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
                   <InputGroupText>Image URL</InputGroupText>
                 </InputGroupAddon>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />

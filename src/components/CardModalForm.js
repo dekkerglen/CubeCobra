@@ -79,6 +79,7 @@ const CardModalForm = ({ children, ...props }) => {
   const saveChanges = useCallback(async () => {
     const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
     const updated = { ...formValues, colors };
+    updated.rarity = updated.rarity.toLowerCase();
     for (const color of [...'WUBRG']) {
       delete updated[`color${color}`];
     }
@@ -87,6 +88,9 @@ const CardModalForm = ({ children, ...props }) => {
     }
     if (updated.notes === '') {
       updated.notes = null;
+    }
+    if (updated.rarity === card.details.rarity) {
+      updated.rarity = null;
     }
     if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
       updated.colorCategory = null;
@@ -163,6 +167,8 @@ const CardModalForm = ({ children, ...props }) => {
   const openCardModal = useCallback((newCard, newMaybe) => {
     const colors = newCard.colors || newCard.details.colors;
     const typeLine = newCard.type_line || newCard.details.type;
+    let rarity = newCard.rarity || newCard.details.rarity;
+    rarity = rarity[0].toUpperCase() + rarity.slice(1);
     const tags = newCard.tags || [];
     setCard(newCard);
     setMaybe(!!newMaybe);
@@ -172,6 +178,7 @@ const CardModalForm = ({ children, ...props }) => {
       finish: newCard.finish,
       cmc: newCard.cmc,
       type_line: typeLine,
+      rarity: rarity,
       imgUrl: newCard.imgUrl || '',
       notes: newCard.notes || '',
       tags: tags.map((tag) => ({ id: tag, text: tag })),
