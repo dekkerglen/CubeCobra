@@ -444,7 +444,7 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
-    if (card.colorCategory ) return [card.colorCategory];
+    if (card.colorCategory) return [card.colorCategory];
     return [GetColorCategory(typeLine(card), colorIdentity(card))];
   }
   if (sort == 'Color Identity') {

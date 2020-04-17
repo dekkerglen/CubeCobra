@@ -143,7 +143,13 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Color Category</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput type="select" name="colorCategory" id="colorCat" value={values.colorCategory || cardGetLabels(card, 'Color Category' )} onChange={onChange}>
+                <CustomInput
+                  type="select"
+                  name="colorCategory"
+                  id="colorCat"
+                  value={values.colorCategory || cardGetLabels(card, 'Color Category')}
+                  onChange={onChange}
+                >
                   {getLabels(null, 'Color Category').map((colorCat) => (
                     <option key={colorCat}>{colorCat}</option>
                   ))}
