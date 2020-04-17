@@ -244,7 +244,8 @@ router.get('/card/:id', async (req, res) => {
 
     // otherwise just go to this ID.
     const card = carddb.cardFromId(req.params.id);
-    const data = await CardRating.findOne({ cardID: req.params.id });
+    console.log(card);
+    const data = await CardHistory.findOne({ cardID: req.params.id });
     if (!data) {
       return res.status(404).render('misc/404', {});
     }
