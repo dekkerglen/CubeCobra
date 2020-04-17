@@ -165,15 +165,15 @@ const CardModal = ({
             <span className="d-sm-none">Remove</span>
           </Button>
         )}
-        <Button color="secondary" href={card.details.scryfall_uri}>
+        <Button color="secondary" href={card.details.scryfall_uri} target="_blank">
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
         </Button>
-        <Button color="secondary" href={'/tool/card/' + card.cardID}>
+        <Button color="secondary" href={'/tool/card/' + card.cardID} target="_blank">
           <span className="d-none d-sm-inline">View card analytics</span>
           <span className="d-sm-none">Analytics</span>
         </Button>
-        <Button color="secondary" href={Affiliate.getTCGLink(card)}>
+        <Button color="secondary" href={Affiliate.getTCGLink(card)} target="_blank">
           Buy
         </Button>
         {!disabled && (
