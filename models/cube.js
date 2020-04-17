@@ -8,9 +8,11 @@ const Card = {
   cmc: Number,
   cardID: String,
   type_line: String,
+  rarity: String,
   addedTmsp: Date,
   imgUrl: String,
   notes: String,
+  colorCategory: String,
   details: {},
 };
 

@@ -25,8 +25,8 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
             md={compressedView ? undefined : 'auto'}
             className="table-col"
             style={{
-              width: `${100 / Math.min(sorted.length, 8)}%`,
-              flexBasis: compressedView ? `${100 / Math.min(sorted.length, 8)}%` : undefined,
+              width: `${100 / Math.min(sorted.length, 9)}%`,
+              flexBasis: compressedView ? `${100 / Math.min(sorted.length, 9)}%` : undefined,
             }}
           >
             <h6 className="text-center card-list-heading">

@@ -20,7 +20,7 @@
     "build": "npm run nearley && node_modules/.bin/webpack --mode production --config webpack.prod.js --progress",
     "start": "npm run nearley && npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
-    "deploy": "npm install && npm run build && node force_update.js && nodemon app.js",
+    "deploy": "npm install && npm run build && node force_update.js && nodemon -x 'node app.js || touch app.js'",
     "populate-analytics": "node --max-old-space-size=4096 force_update.js && node --max-old-space-size=8192 jobs/populate_analytics.js"
   },
   "author": "Gwen Dekker",

@@ -16,7 +16,7 @@ import {
 } from 'reactstrap';
 
 import Affiliate from 'utils/Affiliate';
-import { getLabels } from 'utils/Sort';
+import { getLabels, cardGetLabels } from 'utils/Sort';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
@@ -131,6 +131,16 @@ const CardModal = ({
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Rarity</InputGroupText>
+                </InputGroupAddon>
+                <CustomInput type="select" name="rarity" id="cardModalRarity" value={values.rarity} onChange={onChange}>
+                  {getLabels(null, 'Rarity').map((rarity) => (
+                    <option key={rarity}>{rarity}</option>
+                  ))}
+                </CustomInput>
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
                   <InputGroupText>Image URL</InputGroupText>
                 </InputGroupAddon>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
@@ -138,6 +148,22 @@ const CardModal = ({
               <InputGroup className="mb-3">
                 <InputGroupText className="square-right">Color</InputGroupText>
                 <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Color Category</InputGroupText>
+                </InputGroupAddon>
+                <CustomInput
+                  type="select"
+                  name="colorCategory"
+                  id="colorCat"
+                  value={values.colorCategory || cardGetLabels(card, 'Color Category')}
+                  onChange={onChange}
+                >
+                  {getLabels(null, 'Color Category').map((colorCat) => (
+                    <option key={colorCat}>{colorCat}</option>
+                  ))}
+                </CustomInput>
               </InputGroup>
 
               <h5>Notes</h5>
@@ -165,15 +191,15 @@ const CardModal = ({
             <span className="d-sm-none">Remove</span>
           </Button>
         )}
-        <Button color="secondary" href={card.details.scryfall_uri}>
+        <Button color="secondary" href={card.details.scryfall_uri} target="_blank">
           <span className="d-none d-sm-inline">View on Scryfall</span>
           <span className="d-sm-none">Scryfall</span>
         </Button>
-        <Button color="secondary" href={'/tool/card/' + card.cardID}>
+        <Button color="secondary" href={'/tool/card/' + card.cardID} target="_blank">
           <span className="d-none d-sm-inline">View card analytics</span>
           <span className="d-sm-none">Analytics</span>
         </Button>
-        <Button color="secondary" href={Affiliate.getTCGLink(card)}>
+        <Button color="secondary" href={Affiliate.getTCGLink(card)} target="_blank">
           Buy
         </Button>
         {!disabled && (
