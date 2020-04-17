@@ -147,8 +147,8 @@
 		padding: 2px 4px;
 	}
 	.table-col {
-		flex: 0 0 calc(100% / 8);
-		width: calc(100% / 8);
+		flex: 0 0 calc(100% / 9);
+		width: calc(100% / 9);
 	}
 }
 
