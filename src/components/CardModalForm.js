@@ -9,10 +9,11 @@ import CardModalContext from 'components/CardModalContext';
 import ChangelistContext from 'components/ChangelistContext';
 import CubeContext from 'components/CubeContext';
 import MaybeboardContext from 'components/MaybeboardContext';
+import { cardGetLabels } from 'utils/Sort';
 
 const CardModalForm = ({ children, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [card, setCard] = useState({ colors: [], details: {}, tags: [] });
+  const [card, setCard] = useState({ colors: [], details: { type: '' }, tags: [], type_line: '' });
   const [maybe, setMaybe] = useState(false);
   const [versionDict, setVersionDict] = useState({});
   const [versionsLoading, setVersionsLoading] = useState(true);
@@ -86,6 +87,9 @@ const CardModalForm = ({ children, ...props }) => {
     }
     if (updated.notes === '') {
       updated.notes = null;
+    }
+    if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
+      updated.colorCategory = null;
     }
     updated.cardID = updated.version;
     delete updated.version;

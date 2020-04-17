@@ -16,7 +16,7 @@ import {
 } from 'reactstrap';
 
 import Affiliate from 'utils/Affiliate';
-import { getLabels } from 'utils/Sort';
+import { getLabels, cardGetLabels } from 'utils/Sort';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
@@ -138,6 +138,16 @@ const CardModal = ({
               <InputGroup className="mb-3">
                 <InputGroupText className="square-right">Color</InputGroupText>
                 <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Color Category</InputGroupText>
+                </InputGroupAddon>
+                <CustomInput type="select" name="colorCategory" id="colorCat" value={values.colorCategory || cardGetLabels(card, 'Color Category' )} onChange={onChange}>
+                  {getLabels(null, 'Color Category').map((colorCat) => (
+                    <option key={colorCat}>{colorCat}</option>
+                  ))}
+                </CustomInput>
               </InputGroup>
 
               <h5>Notes</h5>

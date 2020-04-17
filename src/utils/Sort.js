@@ -118,7 +118,7 @@ const ALL_CMCS = Array.from(Array(33).keys())
 
 function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
-    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
+    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
@@ -444,6 +444,7 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
+    if (card.colorCategory ) return [card.colorCategory];
     return [GetColorCategory(typeLine(card), colorIdentity(card))];
   }
   if (sort == 'Color Identity') {

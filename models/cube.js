@@ -11,6 +11,7 @@ const Card = {
   addedTmsp: Date,
   imgUrl: String,
   notes: String,
+  colorCategory: String,
   details: {},
 };
 
