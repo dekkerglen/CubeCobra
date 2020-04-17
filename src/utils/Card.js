@@ -77,142 +77,142 @@ export function cardsAreEquivalent(a, b) {
   );
 }
 
-export const getTags = (card) => card.tags;
+export const cardTags = (card) => card.tags;
 
-export const getFinish = (card) => card.finish;
+export const cardFinish = (card) => card.finish;
 
-export const getStatus = (card) => card.status;
+export const cardStatus = (card) => card.status;
 
-export const getColorIdentity = (card) => card.colors ?? card.details.color_identity;
+export const cardColorIdentity = (card) => card.colors ?? card.details.color_identity;
 
-export const getCmc = (card) => card.cmc ?? card.details.cmc;
+export const cardCmc = (card) => card.cmc ?? card.details.cmc;
 
-export const getId = (card) => card.cardID ?? card.details._id;
+export const cardId = (card) => card.cardID ?? card.details._id;
 
-export const getType = (card) => card.type_line ?? card.details.type;
+export const cardType = (card) => card.type_line ?? card.details.type;
 
-export const getRarity = (card) => card.rarity ?? card.details.rarity;
+export const cardRarity = (card) => card.rarity ?? card.details.rarity;
 
-export const getAddedTime = (card) => card.addedTmsp;
+export const cardAddedTime = (card) => card.addedTmsp;
 
-export const getImg = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
+export const cardImg = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
 
-export const getNotes = (card) => card.notes;
+export const cardNotes = (card) => card.notes;
 
-export const getColorCategory = (card) => card.colorCategory;
+export const cardColorCategory = (card) => card.colorCategory ?? card.details.color_category;
 
-export const getPrice = (card) =>
-  getFinish() === 'Foil'
+export const cardPrice = (card) =>
+  cardFinish() === 'Foil'
     ? card.details.price_foil ?? card.details.price
     : card.details.price ?? card.details.price_foil;
 
-export const getNormalPrice = (card) => card.details.price;
+export const cardNormalPrice = (card) => card.details.price;
 
-export const getFoilPrice = (card) => card.details.price_foil;
+export const cardFoilPrice = (card) => card.details.price_foil;
 
-export const getIsFullArt = (card) => card.details.full_art;
+export const cardIsFullArt = (card) => card.details.full_art;
 
-export const getCost = (card) => card.details.parsed_cost;
+export const cardCost = (card) => card.details.parsed_cost;
 
-export const getSet = (card) => card.details.set;
+export const cardSet = (card) => card.details.set;
 
-export const getCollectorNumber = (card) => card.details.collector_number;
+export const cardCollectorNumber = (card) => card.details.collector_number;
 
-export const getPromo = (card) => card.details.promo;
+export const cardPromo = (card) => card.details.promo;
 
-export const getDigital = (card) => card.details.digital;
+export const cardDigital = (card) => card.details.digital;
 
-export const getIsToken = (card) => card.details.is_token;
+export const cardIsToken = (card) => card.details.is_token;
 
-export const getBorderColor = (card) => card.details.border_color;
+export const cardBorderColor = (card) => card.details.border_color;
 
-export const getName = (card) => card.details.name;
+export const cardName = (card) => card.details.name;
 
-export const getNameLower = (card) => card.details.name_lower;
+export const cardNameLower = (card) => card.details.name_lower;
 
-export const getFullName = (card) => card.details.full_name;
+export const cardFullName = (card) => card.details.full_name;
 
-export const getArtist = (card) => card.details.artist;
+export const cardArtist = (card) => card.details.artist;
 
-export const getScryfallUri = (card) => card.details.scryfall_uri;
+export const cardScryfallUri = (card) => card.details.scryfall_uri;
 
-export const getOracleText = (card) => card.details.oracle_text;
+export const cardOracleText = (card) => card.details.oracle_text;
 
-export const getOracleId = (card) => card.details.oracle_id;
+export const cardOracleId = (card) => card.details.oracle_id;
 
-export const getLegalities = (card) => card.details.legalities;
+export const cardLegalities = (card) => card.details.legalities;
 
-export const getColors = (card) => card.details.colors;
+export const cardColors = (card) => card.details.colors;
 
-export const getLanguage = (card) => card.details.language;
+export const cardLanguage = (card) => card.details.language;
 
-export const getMtgoId = (card) => card.details.mtgo_id;
+export const cardMtgoId = (card) => card.details.mtgo_id;
 
-export const getTcgplayerId = (card) => card.details.tcgplayer_id;
+export const cardTcgplayerId = (card) => card.details.tcgplayer_id;
 
-export const getLoyalty = (card) => card.details.loyalty;
+export const cardLoyalty = (card) => card.details.loyalty;
 
-export const getPower = (card) => card.details.power;
+export const cardPower = (card) => card.details.power;
 
-export const getToughness = (card) => card.details.toughness;
+export const cardToughness = (card) => card.details.toughness;
 
-export const getImageSmall = (card) => card.details.image_small;
+export const cardImageSmall = (card) => card.details.image_small;
 
-export const getImageNormal = (card) => card.details.image_normal;
+export const cardImageNormal = (card) => card.details.image_normal;
 
-export const getArtCrop = (card) => card.details.art_crop;
+export const cardArtCrop = (card) => card.details.art_crop;
 
-export const getImageFlip = (card) => card.details.image_flip;
+export const cardImageFlip = (card) => card.details.image_flip;
 
-export const getTokens = (card) => card.details.tokens;
+export const cardTokens = (card) => card.details.tokens;
 
-export const getElo = (card) => card.details.elo;
+export const cardElo = (card) => card.details.elo;
 
 export default {
-  getTags,
-  getFinish,
-  getStatus,
-  getColorIdentity,
-  getCmc,
-  getId,
-  getType,
-  getRarity,
-  getAddedTime,
-  getImg,
-  getNotes,
-  getColorCategory,
-  getCost,
-  getIsFullArt,
-  getPrice,
-  getFoilPrice,
-  getNormalPrice,
-  getSet,
-  getCollectorNumber,
-  getPromo,
-  getDigital,
-  getIsToken,
-  getBorderColor,
-  getName,
-  getNameLower,
-  getFullName,
-  getArtist,
-  getScryfallUri,
-  getOracleText,
-  getOracleId,
-  getLegalities,
-  getColors,
-  getLanguage,
-  getMtgoId,
-  getTcgplayerId,
-  getLoyalty,
-  getPower,
-  getToughness,
-  getImageSmall,
-  getImageNormal,
-  getArtCrop,
-  getImageFlip,
-  getTokens,
-  getElo,
+  cardTags,
+  cardFinish,
+  cardStatus,
+  cardColorIdentity,
+  cardCmc,
+  cardId,
+  cardType,
+  cardRarity,
+  cardAddedTime,
+  cardImg,
+  cardNotes,
+  cardColorCategory,
+  cardCost,
+  cardIsFullArt,
+  cardPrice,
+  cardFoilPrice,
+  cardNormalPrice,
+  cardSet,
+  cardCollectorNumber,
+  cardPromo,
+  cardDigital,
+  cardIsToken,
+  cardBorderColor,
+  cardName,
+  cardNameLower,
+  cardFullName,
+  cardArtist,
+  cardScryfallUri,
+  cardOracleText,
+  cardOracleId,
+  cardLegalities,
+  cardColors,
+  cardLanguage,
+  cardMtgoId,
+  cardTcgplayerId,
+  cardLoyalty,
+  cardPower,
+  cardToughness,
+  cardImageSmall,
+  cardImageNormal,
+  cardArtCrop,
+  cardImageFlip,
+  cardTokens,
+  cardElo,
   COLOR_COMBINATIONS,
   normalizeName,
   encodeName,
