@@ -635,7 +635,7 @@ function filterApply(card, filter, inCube) {
   }
   if (filter.category == 'rarity') {
     let { rarity } = card.details;
-    if( card.rarity ) rarity = card.rarity;
+    if (card.rarity) rarity = card.rarity;
     const rarityNum = rarity_order.indexOf(rarity);
     const argNum = rarity_order.indexOf(filter.arg);
     res = testNumeric(filter, rarityNum, argNum);
