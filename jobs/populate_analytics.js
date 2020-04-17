@@ -17,6 +17,9 @@ const batchSize = 100;
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
+const d = new Date();
+const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
 // define .flat()
 Object.defineProperty(Array.prototype, 'flat', {
   value(depth = 1) {
@@ -191,90 +194,109 @@ async function processCube(cube) {
   });
 }
 
-async function processCard(card) {
-  const pid = carddb.cardFromId(card.cardID).tcgplayer_id;
-  const prices = await GetPrices([pid]);
+async function processCard(cardname) {
+  const ids = carddb.nameToId[cardname];
+
+  const pids = ids.map((id) => carddb.cardFromId(id).tcgplayer_id);
+  const prices = await GetPrices(pids);
 
   const current = {};
-  current.elo = (await getElo([card.name], true))[card.name];
-  if (prices[pid]) {
-    current.price = prices[pid];
-  }
-  if (prices[`${pid}_foil`]) {
-    current.price_foil = prices[`${pid}_foil`];
-  }
+  current.elo = (await getElo([cardname], true))[cardname];
 
-  current.total = cardUses[card.cardName]
-    ? [cardUses[card.cardName], cardUses[card.cardName] / cubeCounts.total]
+  current.total = cardUses[cardname] ? [cardUses[cardname], cardUses[cardname] / cubeCounts.total] : [0, 0];
+  current.size180 = cardSizeUses.size180[cardname]
+    ? [cardSizeUses.size180[cardname], cardSizeUses.size180[cardname] / cubeCounts.size180]
     : [0, 0];
-  current.size180 = cardSizeUses.size180[card.cardName]
-    ? [cardSizeUses.size180[card.cardName], cardSizeUses.size180[card.cardName] / cubeCounts.size180]
+  current.size360 = cardSizeUses.size360[cardname]
+    ? [cardSizeUses.size360[cardname], cardSizeUses.size360[cardname] / cubeCounts.size360]
     : [0, 0];
-  current.size360 = cardSizeUses.size360[card.cardName]
-    ? [cardSizeUses.size360[card.cardName], cardSizeUses.size360[card.cardName] / cubeCounts.size360]
+  current.size450 = cardSizeUses.size450[cardname]
+    ? [cardSizeUses.size450[cardname], cardSizeUses.size450[cardname] / cubeCounts.size450]
     : [0, 0];
-  current.size450 = cardSizeUses.size450[card.cardName]
-    ? [cardSizeUses.size450[card.cardName], cardSizeUses.size450[card.cardName] / cubeCounts.size450]
+  current.size540 = cardSizeUses.size540[cardname]
+    ? [cardSizeUses.size540[cardname], cardSizeUses.size540[cardname] / cubeCounts.size540]
     : [0, 0];
-  current.size540 = cardSizeUses.size540[card.cardName]
-    ? [cardSizeUses.size540[card.cardName], cardSizeUses.size540[card.cardName] / cubeCounts.size540]
+  current.size720 = cardSizeUses.size720[cardname]
+    ? [cardSizeUses.size720[cardname], cardSizeUses.size720[cardname] / cubeCounts.size720]
     : [0, 0];
-  current.size720 = cardSizeUses.size720[card.cardName]
-    ? [cardSizeUses.size720[card.cardName], cardSizeUses.size720[card.cardName] / cubeCounts.size720]
+  current.vintage = cardSizeUses.vintage[cardname]
+    ? [cardSizeUses.vintage[cardname], cardSizeUses.vintage[cardname] / cubeCounts.vintage]
     : [0, 0];
-  current.vintage = cardSizeUses.vintage[card.cardName]
-    ? [cardSizeUses.vintage[card.cardName], cardSizeUses.vintage[card.cardName] / cubeCounts.vintage]
+  current.legacy = cardSizeUses.legacy[cardname]
+    ? [cardSizeUses.legacy[cardname], cardSizeUses.legacy[cardname] / cubeCounts.legacy]
     : [0, 0];
-  current.legacy = cardSizeUses.legacy[card.cardName]
-    ? [cardSizeUses.legacy[card.cardName], cardSizeUses.legacy[card.cardName] / cubeCounts.legacy]
+  current.modern = cardSizeUses.modern[cardname]
+    ? [cardSizeUses.modern[cardname], cardSizeUses.modern[cardname] / cubeCounts.modern]
     : [0, 0];
-  current.modern = cardSizeUses.modern[card.cardName]
-    ? [cardSizeUses.modern[card.cardName], cardSizeUses.modern[card.cardName] / cubeCounts.modern]
+  current.standard = cardSizeUses.standard[cardname]
+    ? [cardSizeUses.standard[cardname], cardSizeUses.standard[cardname] / cubeCounts.standard]
     : [0, 0];
-  current.standard = cardSizeUses.standard[card.cardName]
-    ? [cardSizeUses.standard[card.cardName], cardSizeUses.standard[card.cardName] / cubeCounts.standard]
-    : [0, 0];
-  current.pauper = cardSizeUses.pauper[card.cardName]
-    ? [cardSizeUses.pauper[card.cardName], cardSizeUses.pauper[card.cardName] / cubeCounts.pauper]
+  current.pauper = cardSizeUses.pauper[cardname]
+    ? [cardSizeUses.pauper[cardname], cardSizeUses.pauper[cardname] / cubeCounts.pauper]
     : [0, 0];
 
-  card.current = current;
-  const d = new Date();
-  card.history.push({
-    date: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
-    data: current,
-  });
-
-  const cubes = cubesWithCard[correlationIndex[card.cardName]] ? cubesWithCard[correlationIndex[card.cardName]] : [];
-  card.cubes = cubes;
-  card.cubesLength = cubes.length;
+  const cubes = cubesWithCard[correlationIndex[cardname]] ? cubesWithCard[correlationIndex[cardname]] : [];
 
   // cubed with
   // create correl dict
   const totalCards = carddb.cardnames.length;
-  const items = [];
+  let cubedWith = [];
   for (let i = 0; i < totalCards; i += 1) {
-    items.push([
+    cubedWith.push([
       carddb.cardnames[i].toLowerCase(),
-      correlations[correlationIndex[card.cardName]][correlationIndex[carddb.cardnames[i].toLowerCase()]],
+      correlations[correlationIndex[cardname]][correlationIndex[carddb.cardnames[i].toLowerCase()]],
     ]);
   }
 
-  // Sort the array based on the second element
-
-  // quickselect(items, 100, 0, items.length - 1, function(first, second) {
-  //    return second[1] - first[1];
-  // });
-
   // quickselect isn't sorting correctly for some reason
-  items.sort((first, second) => {
+  cubedWith.sort((first, second) => {
     return second[1] - first[1];
   });
 
-  // Create a new array with only the first 100 items
-  card.cubedWith = items.slice(0, 100);
+  cubedWith = cubedWith.slice(0, 100);
 
-  await CardHistory.findOneAndUpdate({ _id: card._id }, card, { upsert: true });
+  await Promise.all(
+    ids.map(async (id) => {
+      let card = await CardHistory.findOne({ cardID: id });
+      try {
+        if (!card) {
+          card = new CardHistory();
+          card.cardName = carddb.cardFromId(id).name_lower;
+          card.cardID = id;
+        }
+        const pid = carddb.cardFromId(id).tcgplayer_id;
+
+        // set universals
+        const cur = { ...current };
+
+        if (prices[pid]) {
+          cur.price = prices[pid];
+        }
+        if (prices[`${pid}_foil`]) {
+          cur.price_foil = prices[`${pid}_foil`];
+        }
+
+        card.current = cur;
+        card.cubedWith = cubedWith;
+        card.cubes = cubes;
+        card.cubesLength = cubes.length;
+
+        if (!card.history) {
+          card.history = [];
+        }
+
+        card.history.push({
+          date: currentDate,
+          data: cur,
+        });
+
+        await card.save();
+      } catch (error) {
+        console.error(error);
+        console.log(card);
+      }
+    }),
+  );
 }
 
 (async () => {
@@ -312,29 +334,9 @@ async function processCard(card) {
 
     // save card models
     const totalCards = carddb.cardnames.length;
-    for (let i = 0; i < totalCards; i += batchSize) {
-      const cardnames = carddb.cardnames.slice(i, i + batchSize);
-      const cardids = cardnames.map((cardname) => carddb.nameToId[cardname.toLowerCase()]).flat();
-      const cardqs = cardids.map((cardID) =>
-        CardHistory.findOne({ cardID })
-          .lean()
-          .exec(),
-      );
-
-      const batch = await Promise.all(cardqs);
-
-      for (let j = 0; j < batch.length; j += 1) {
-        if (!batch[j]) {
-          batch[j] = new CardHistory();
-          batch[j].cardName = carddb.cardFromId(cardids[j]).name_lower;
-          batch[j].cardID = cardids[j];
-        }
-        // await processCard(batch[j]);
-      }
-
-      await Promise.all(batch.map((obj) => processCard(obj)));
-
-      console.log(`Finished: ${i + batchSize} of ${totalCards} cards.`);
+    for (let i = 0; i < totalCards; i += 1) {
+      await processCard(carddb.cardnames.slice(i, i + 1)[0].toLowerCase());
+      console.log(`Finished: ${i + 1} of ${totalCards} cards.`);
     }
 
     mongoose.disconnect();
