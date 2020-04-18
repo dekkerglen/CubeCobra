@@ -19,16 +19,20 @@ function addSeen(seen, cards) {
       }
     }
   }
+  seen.cards += cards.length;
 }
 
 function init(newDraft) {
   draft = newDraft;
   for (const seat of draft.seats) {
     seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    seat.seen.cards = 0;
     addSeen(seat.seen, seat.packbacklog[0].slice());
     seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    seat.picked.cards = 0;
   }
   draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+  draft.overallPool.cards = 0;
   addSeen(draft.overallPool, draft.initial_state.flat(3));
 }
 
@@ -130,8 +134,8 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [0.8, 1, 0.6, 0.3, 0.2, 0.1];
-const botRatingAndCombination = (seen, card, picked, overallPool) => {
+const COLOR_SCALING_FACTOR = [0.8, 1, 0.6, 0.33, 0.15, 0.1];
+const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inPack = 1, packNum = 1, numPacks = 1) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
   let bestRating = -1;
@@ -152,8 +156,10 @@ const botRatingAndCombination = (seen, card, picked, overallPool) => {
       // The ratio of seen to overall gives us an idea what is
       // being taken.
       const openness = seenCount / overallCount;
+      const opennessWeight = (numPacks * inPack) / seats / packNum;
+      const scaling = COLOR_SCALING_FACTOR[combination.length];
       // We weigh the factors with exponents to get a final score.
-      const rating = poolRating ** 2 * seenCount * openness ** 5 * COLOR_SCALING_FACTOR[combination.length];
+      const rating = scaling * poolRating ** 2 * openness ** opennessWeight;
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -227,9 +233,13 @@ function botPicks() {
       picked,
       packbacklog: [packFrom],
     } = draft.seats[botIndex];
-    const { overallPool } = draft;
+    const { overallPool, initial_state } = draft;
     let ratedPicks = [];
     const unratedPicks = [];
+    const seats = draft.seats.length;
+    const inPack = packFrom.length;
+    const [packNum] = packPickNumber();
+    const numPacks = initial_state[0].length;
     for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
       if (packFrom[cardIndex].rating) {
         ratedPicks.push(cardIndex);
@@ -238,7 +248,10 @@ function botPicks() {
       }
     }
     ratedPicks = ratedPicks
-      .map((cardIndex) => [botRating(seen, packFrom[cardIndex], picked, overallPool), cardIndex])
+      .map((cardIndex) => [
+        botRating(seen, packFrom[cardIndex], picked, overallPool, seats, inPack, packNum, numPacks),
+        cardIndex,
+      ])
       .sort(([a], [b]) => b - a)
       .map(([, cardIndex]) => cardIndex);
     arrayShuffle(unratedPicks);
