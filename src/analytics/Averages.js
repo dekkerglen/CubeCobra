@@ -21,6 +21,8 @@ const Averages = ({ cards, characteristics }) => {
       const vals = tuple[1]
         .filter((card) => {
           if (characteristic === 'CMC') {
+            /* If we are calculating the average cmc, we don't want to include lands in the average.
+               We can't just filter out 0 cmc cards, so we need to check the type here. */
             const type = card.type_line || card.detail.type;
             if (type.toLowerCase().includes('land')) return false;
           }
@@ -30,6 +32,7 @@ const Averages = ({ cards, characteristics }) => {
           return characteristics[characteristic](card);
         })
         .filter((x) => {
+          // Don't include null, undefined, or NaN values, but we still want to include 0 values.
           return x || x === 0;
         });
       const avg = average(vals);
