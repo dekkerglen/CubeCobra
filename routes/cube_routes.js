@@ -989,21 +989,23 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     req.params.seed = req.params.seed.replace('.png', '');
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
+    const imgScale = 0.9;
+
     const srcArray = pack.pack.map((card, index) => {
       return {
         src: card.imgUrl || card.details.image_normal,
-        x: CARD_WIDTH * (index % 5),
-        y: CARD_HEIGHT * Math.floor(index / 5),
-        w: CARD_WIDTH,
-        h: CARD_HEIGHT,
-        rX: 0.065 * CARD_WIDTH,
-        rY: 0.0464 * CARD_HEIGHT,
+        x: imgScale * CARD_WIDTH * (index % 5),
+        y: imgScale * CARD_HEIGHT * Math.floor(index / 5),
+        w: imgScale * CARD_WIDTH,
+        h: imgScale * CARD_HEIGHT,
+        rX: imgScale * 0.065 * CARD_WIDTH,
+        rY: imgScale * 0.0464 * CARD_HEIGHT,
       };
     });
 
     return generateSamplepackImage(srcArray, {
-      width: CARD_WIDTH * 5,
-      height: CARD_HEIGHT * 3,
+      width: imgScale * CARD_WIDTH * 5,
+      height: imgScale * CARD_HEIGHT * 3,
       Canvas,
     })
       .then((image) => {
