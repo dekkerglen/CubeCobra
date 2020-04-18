@@ -18,7 +18,21 @@ const Averages = ({ cards, characteristics }) => {
 
   const counts = Object.entries(groups)
     .map((tuple) => {
-      const vals = tuple[1].map((card) => characteristics[characteristic](card)).filter((x) => x);
+      const vals = tuple[1]
+        .filter((card) => {
+          if (characteristic === 'CMC') {
+            const type = card.type_line || card.detail.type;
+            if (type.toLowerCase().includes('land')) return false;
+          }
+          return true;
+        })
+        .map((card) => {
+          return characteristics[characteristic](card);
+        })
+        .filter((x) => {
+          return x || x === 0;
+        });
+      console.log(vals);
       const avg = average(vals);
       return {
         label: tuple[0],
