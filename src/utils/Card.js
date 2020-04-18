@@ -95,7 +95,7 @@ export const cardRarity = (card) => card.rarity ?? card.details.rarity;
 
 export const cardAddedTime = (card) => card.addedTmsp;
 
-export const cardImg = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
+export const cardImageUrl = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
 
 export const cardNotes = (card) => card.notes;
 
@@ -178,7 +178,7 @@ export default {
   cardType,
   cardRarity,
   cardAddedTime,
-  cardImg,
+  cardImageUrl,
   cardNotes,
   cardColorCategory,
   cardCost,
