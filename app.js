@@ -15,6 +15,7 @@ const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 const schedule = require('node-schedule');
+const fs = require('fs');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
@@ -76,9 +77,9 @@ console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
-  useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useCreateIndex: true,
 });
 const db = mongoose.connection;
 db.once('open', () => {

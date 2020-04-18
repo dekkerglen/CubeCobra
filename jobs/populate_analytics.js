@@ -341,5 +341,6 @@ async function processCard(cardname) {
 
     mongoose.disconnect();
     console.log('done');
+    process.exit();
   });
 })();
