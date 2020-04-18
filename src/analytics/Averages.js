@@ -32,7 +32,6 @@ const Averages = ({ cards, characteristics }) => {
         .filter((x) => {
           return x || x === 0;
         });
-      console.log(vals);
       const avg = average(vals);
       return {
         label: tuple[0],
