@@ -31,8 +31,8 @@ Once your `.env` file is filled out, run the following commands in the root of t
 
 ```sh
 npm install
-npm run setup               # This will bundle modules and download Scryfall assets.
-node seed.js                # This will create and seed the mongo database specified in cubecobrasecrets.
+npm run setup                  # This will bundle modules and download Scryfall assets.
+node one_shot_scripts/seed.js  # This will create and seed the mongo database specified in the .env file.
 ```
 
 If you are on Windows, you will need to set bash as your script shell:
