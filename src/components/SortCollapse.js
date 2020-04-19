@@ -133,7 +133,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
           <Col>
             <Button
               color="success"
-              style={{ marginRight: 5 }}
+              className="mr-sm-2 mb-3"
               onClick={(e) => {
                 Query.del('s1');
                 Query.del('s2');
@@ -145,7 +145,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
             {!canEdit ? (
               false
             ) : (
-              <Button color="success" onClick={handleSave}>
+              <Button color="success" className="mr-sm-2 mb-3" onClick={handleSave}>
                 Save as Default Sort
               </Button>
             )}
