@@ -772,6 +772,8 @@ router.get('/list/:id', async (req, res) => {
       cubeID: req.params.id,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       defaultView: req.query.view || 'table',
+      defaultPrimarySort: req.query.s1 || '',
+      defaultSecondarySort: req.query.s2 || '',
       defaultFilterText: req.query.f || '',
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
+import { getSorts } from 'utils/Sort';
 import { filterCard } from 'utils/Filter';
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
@@ -26,6 +27,8 @@ import CubeLayout from 'layouts/CubeLayout';
 
 const CubeListPageRaw = ({
   maybe,
+  defaultPrimarySort,
+  defaultSecondarySort,
   defaultFilterText,
   defaultView,
   defaultTagColors,
@@ -37,6 +40,7 @@ const CubeListPageRaw = ({
   const [cubeView, setCubeView] = useState(defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
   const [filter, setFilter] = useState([]);
+  const [sorts, setSorts] = useState([]);
 
   useEffect(() => {
     const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);
@@ -44,8 +48,13 @@ const CubeListPageRaw = ({
       setOpenCollapse('edit');
     } else if (defaultFilterText && defaultFilterText.length > 0) {
       setOpenCollapse('filter');
+    } else if (
+      (defaultPrimarySort && defaultPrimarySort.length > 0) ||
+      (defaultSecondarySort && defaultSecondarySort.length > 0)
+    ) {
+      setOpenCollapse('sort');
     }
-  }, [cubeID, defaultFilterText]);
+  }, [cubeID, defaultFilterText, defaultPrimarySort, defaultSecondarySort]);
 
   useEffect(() => {
     if (cubeView === 'table') {
@@ -82,6 +91,11 @@ const CubeListPageRaw = ({
                   setCubeView={setCubeView}
                   openCollapse={openCollapse}
                   setOpenCollapse={setOpenCollapse}
+                  defaultPrimarySort={defaultPrimarySort}
+                  defaultSecondarySort={defaultSecondarySort}
+                  sorts={sorts}
+                  setSorts={setSorts}
+                  defaultSorts={defaultSorts}
                   defaultFilterText={defaultFilterText}
                   filter={filter}
                   setFilter={setFilter}

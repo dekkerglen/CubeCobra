@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useState, useRef, useEffect } from 'react';
 
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
 
@@ -7,11 +7,37 @@ import { getSorts } from '../utils/Sort';
 
 import CubeContext from './CubeContext';
 import SortContext from './SortContext';
+import Query from 'utils/Query';
 
-const SortCollapse = (props) => {
+const SortCollapse = ({defaultPrimarySort, defaultSecondarySort, defaultSorts, setSorts, ...props}) => {
   const [alerts, setAlerts] = useState([]);
   const { canEdit, cubeID } = useContext(CubeContext);
   const { primary, secondary, changeSort } = useContext(SortContext);
+
+  const [defSorts, setDefSorts] = useState(defaultSorts.length > 1 ? [...defaultSorts] : ['Color Category', 'Types-Multicolor']);
+
+  const prevSorts = useRef();
+  useEffect(() => {
+    const sortTypes = getSorts();
+    let currentPrimarySort = defaultPrimarySort || '';
+    let currentSecondarySort = defaultSecondarySort || '';
+    if (!sortTypes.includes(currentPrimarySort)) currentPrimarySort = '';
+    if (!sortTypes.includes(currentSecondarySort)) currentSecondarySort = '';
+
+    if (prevSorts !== [currentPrimarySort, currentSecondarySort]) {
+      if (!currentPrimarySort || currentPrimarySort === defSorts[0]) {
+        Query.del('s1');
+        currentPrimarySort = defSorts[0];
+      }
+      if (!currentSecondarySort || currentSecondarySort === defSorts[1]) {
+        Query.del('s2');
+        currentSecondarySort = defSorts[1];
+      }
+      prevSorts.current = [currentPrimarySort, currentSecondarySort];
+      setSorts(prevSorts.current);
+      changeSort({primary: currentPrimarySort, secondary: currentSecondarySort});
+    }
+  }, [defaultPrimarySort, defaultSecondarySort, setSorts]);
 
   const addAlert = useCallback((color, message) => setAlerts((alerts) => [...alerts, { color, message }]), []);
 
@@ -26,7 +52,12 @@ const SortCollapse = (props) => {
           'Content-Type': 'application/json',
         },
       })
-        .then(() => addAlert('success', 'Default sorts saved.'))
+        .then(() => {
+          Query.del('s1');
+          Query.del('s2');
+          setDefSorts([primary, secondary]);
+          addAlert('success', 'Default sorts saved.');
+        })
         .catch((err) => addAlert('danger', 'Error saving default sorts.'));
     },
     [addAlert, cubeID, primary, secondary],
@@ -47,7 +78,15 @@ const SortCollapse = (props) => {
         <Row>
           <Col xs="12" sm="6" className="mt-2">
             <h6>Primary Sort</h6>
-            <Input type="select" value={primary} onChange={(e) => changeSort({ primary: e.target.value })}>
+            <Input type="select" value={primary} onChange={(e) => {
+              const newPrimary = e.target.value;
+              if (!newPrimary || newPrimary === defSorts[0]) {
+                Query.del('s1');
+              } else {
+                Query.set('s1', newPrimary);
+              }
+              changeSort({ primary: newPrimary });
+            }}>
               {getSorts().map((sort) => (
                 <option key={sort}>{sort}</option>
               ))}
@@ -55,7 +94,15 @@ const SortCollapse = (props) => {
           </Col>
           <Col xs="12" sm="6" className="mt-2">
             <h6>Secondary Sort</h6>
-            <Input type="select" value={secondary} onChange={(e) => changeSort({ secondary: e.target.value })}>
+            <Input type="select" value={secondary} onChange={(e) => {
+              const newSecondary = e.target.value;
+              if (!newSecondary || newSecondary === defSorts[1]) {
+                Query.del('s2');
+              } else {
+                Query.set('s2', newSecondary);
+              }
+              changeSort({ secondary: newSecondary })
+            }}>
               {getSorts().map((sort) => (
                 <option key={sort}>{sort}</option>
               ))}
@@ -73,15 +120,22 @@ const SortCollapse = (props) => {
           </Col>
         </Row>
         <Row className="mb-3">
+          <Col>
+            <Button color="success" style={{marginRight: 5}} onClick={(e) => {
+              Query.del('s1');
+              Query.del('s2');
+              changeSort({primary: defSorts[0], secondary: defSorts[1]});
+            }}>
+              Reset Sort
+            </Button>
           {!canEdit ? (
             false
           ) : (
-            <Col>
-              <Button color="success" onClick={handleSave}>
-                Save as Default Sort
-              </Button>
-            </Col>
+            <Button color="success" onClick={handleSave}>
+              Save as Default Sort
+            </Button>
           )}
+          </Col>
         </Row>
       </Container>
     </Collapse>
