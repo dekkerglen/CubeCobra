@@ -247,21 +247,23 @@ class CubeOverviewModal extends Component {
                 <Row>
                   <Col>
                     <FormGroup tag="fieldset">
-                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'].map((label) => (
-                        <FormGroup check key={label}>
-                          <Label check>
-                            <Input
-                              type="radio"
-                              name="categoryOverride"
-                              value={label}
-                              disabled={cube.overrideCategory ? false : true}
-                              checked={cube.categoryOverride == label}
-                              onChange={this.handleChange}
-                            />{' '}
-                            {label}
-                          </Label>
-                        </FormGroup>
-                      ))}
+                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'].map(
+                        (label) => (
+                          <FormGroup check key={label}>
+                            <Label check>
+                              <Input
+                                type="radio"
+                                name="categoryOverride"
+                                value={label}
+                                disabled={cube.overrideCategory ? false : true}
+                                checked={cube.categoryOverride == label}
+                                onChange={this.handleChange}
+                              />{' '}
+                              {label}
+                            </Label>
+                          </FormGroup>
+                        ),
+                      )}
                     </FormGroup>
                   </Col>
                   <Col>
