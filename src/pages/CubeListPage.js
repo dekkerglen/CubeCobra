@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { getSorts } from 'utils/Sort';
 import { filterCard } from 'utils/Filter';
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
