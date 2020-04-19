@@ -247,7 +247,7 @@ class CubeOverviewModal extends Component {
                 <Row>
                   <Col>
                     <FormGroup tag="fieldset">
-                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'].map((label) => (
+                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'].map((label) => (
                         <FormGroup check key={label}>
                           <Label check>
                             <Input
