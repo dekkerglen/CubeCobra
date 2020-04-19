@@ -1,29 +1,64 @@
 let mongoose = require('mongoose');
 
 // card schema for analytics only. Use card objects for most use cases
-let cardSchema = mongoose.Schema({
-  cardName: {
+let cardSchema = mongoose.Schema({    
+  // Scryfall ID
+  scryfall_id: {
+    index: true,
+    type: String
+  },
+  // normalized to lowercase
+  name_lower: {
+    index: true,
     type: String,
-    index: true,
   },
-  size180: [Number],
-  size360: [Number],
-  size450: [Number],
-  size540: [Number],
-  size720: [Number],
-  pauper: [Number],
-  legacy: [Number],
-  modern: [Number],
-  standard: [Number],
-  vintage: [Number],
-  total: [Number],
-  cubedWith: [[String]], //this is list of card ids
-  cubes: [String], //this is a list of cube ids
-  cubesLength: {
-    // length of cubes for indexing purposes
-    type: Number,
-    index: true,
+  color_identity: [String],
+  set: String,
+  collector_number: String,
+  promo: Boolean,
+  digital: Boolean,
+  isToken: Boolean,
+  border_color: String,
+  name: String,
+  // name [set-collector_number]
+  full_name: String,
+  artist: String,
+  // Url
+  scryfall_uri: String,
+  rarity: String,
+  oracle_text: String,
+  oracle_id: String,
+  cmc: Number,
+  legalities: {
+    Legacy: Boolean,
+    Modern: Boolean,
+    Standard: Boolean,
+    Pauper: Boolean,
+    Pioneer: Boolean,
   },
+  // Hybrid looks like w-u
+  parsed_cost: [String],
+  colors: [String],
+  type: String,
+  full_art: Boolean,
+  language: String,
+  mtgo_id: String,
+  tcgplayer_id: String,
+  loyalty: Number,
+  power: Number,
+  toughness: Number,
+  // URL
+  image_small: String,
+  // URL
+  image_normal: String,
+  // URL
+  art_crop: String,
+  // URL
+  image_flip: String,
+  // Lowercase
+  color_category: String,
+  // Card ID's
+  tokens: [String],
 });
 
 const Card = mongoose.model('Card', cardSchema);

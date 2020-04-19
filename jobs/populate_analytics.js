@@ -1,6 +1,3 @@
-// run with: node --max-old-space-size=8192 populate_analytics.js
-// will oom without the added tag
-
 // Load Environment Variables
 require('dotenv').config();
 
@@ -301,7 +298,7 @@ async function processCard(cardname) {
 
 (async () => {
   await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
+  mongoose.connect(process.env.MONGODB_URL).then(async () => {
     createCorrelations();
 
     // process all cube objects
