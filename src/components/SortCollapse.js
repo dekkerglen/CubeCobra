@@ -18,7 +18,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
     defaultSorts.length > 1 ? [...defaultSorts] : ['Color Category', 'Types-Multicolor'],
   );
 
-  const prevSorts = useRef();
+  const prevSorts = useRef(defSorts);
   useEffect(() => {
     const sortTypes = getSorts();
     let currentPrimarySort = defaultPrimarySort || '';
@@ -26,7 +26,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
     if (!sortTypes.includes(currentPrimarySort)) currentPrimarySort = '';
     if (!sortTypes.includes(currentSecondarySort)) currentSecondarySort = '';
 
-    if (prevSorts !== [currentPrimarySort, currentSecondarySort]) {
+    if (prevSorts[0] !== currentPrimarySort || prevSorts[1] !== currentSecondarySort) {
       if (!currentPrimarySort || currentPrimarySort === defSorts[0]) {
         Query.del('s1');
         currentPrimarySort = defSorts[0];
