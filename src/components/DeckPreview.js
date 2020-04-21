@@ -26,34 +26,42 @@ const DeckPreview = ({ deck, canEdit }) => {
     }, [deck._id]),
   );
 
-  const openDeleteModal = useKeyHandlers(
-    useCallback(
-      (event) => {
-        event.stopPropagation();
-        setDeleteModalOpen(true);
-      },
-      [setDeleteModalOpen],
-    ),
-  );
+  const openDeleteModal = (event) => {
+    event.stopPropagation();
+    setDeleteModalOpen(true);
+  };
 
-  const toggleDeleteModal = useCallback(() => {
-    setDeleteModalOpen(!deleteModalOpen);
-  }, [deleteModalOpen, setDeleteModalOpen]);
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+  };
 
   return (
     <div className="deck-preview" {...handleClick}>
       {canEdit && (
         <>
-          <button type="button" className="close" style={{ fontSize: '1rem' }} {...openDeleteModal}>
-            x
+          <button
+            type="button"
+            className="close"
+            style={{
+              fontSize: '.8rem',
+              textAlign: 'center',
+              width: '19px',
+              height: '19px',
+              paddingBottom: '2px',
+              lineHeight: '17px',
+              border: '1px solid rgba(0,0,0,.5)',
+            }}
+            onClick={openDeleteModal}
+          >
+            X
+            <DeckDeleteModal
+              toggle={closeDeleteModal}
+              isOpen={deleteModalOpen}
+              deckID={deck._id}
+              cubeID={deck.cube}
+              ref={deleteModal}
+            />
           </button>
-          <DeckDeleteModal
-            toggle={toggleDeleteModal}
-            isOpen={deleteModalOpen}
-            deckID={deck._id}
-            cubeID={deck.cube}
-            ref={deleteModal}
-          />
         </>
       )}
       <h6 className="mb-0 text-muted">
