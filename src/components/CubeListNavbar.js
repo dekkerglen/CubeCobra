@@ -234,6 +234,11 @@ const CubeListNavbar = ({
   setCubeView,
   openCollapse,
   setOpenCollapse,
+  defaultPrimarySort,
+  defaultSecondarySort,
+  sorts,
+  setSorts,
+  defaultSorts,
   defaultFilterText,
   filter,
   setFilter,
@@ -404,7 +409,14 @@ const CubeListNavbar = ({
         </Collapse>
       </Navbar>
       {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
-      <SortCollapse isOpen={openCollapse === 'sort'} />
+      <SortCollapse
+        defaultPrimarySort={defaultPrimarySort}
+        defaultSecondarySort={defaultSecondarySort}
+        sorts={sorts}
+        setSorts={setSorts}
+        defaultSorts={defaultSorts}
+        isOpen={openCollapse === 'sort'}
+      />
       <FilterCollapse
         defaultFilterText={defaultFilterText}
         filter={filter}
