@@ -25,6 +25,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     'Legacy',
     'Modern',
     'Pioneer',
+    'Historic',
     'Standard',
     'Set',
     'Powered',

@@ -10,6 +10,7 @@ const ResizeModal = ({ cubeID }) => {
   const [open, toggleOpen] = useToggle(false);
   const [size, setSize] = useState('720');
   const [filter, setFilter] = useState('');
+  const [filterText, setFilterText] = useState('');
   const [valid, setValid] = useState(true);
 
   useEffect(() => {
@@ -39,14 +40,22 @@ const ResizeModal = ({ cubeID }) => {
               invalid={size.length > 0 && !valid}
               onChange={(event) => setSize(event.target.value)}
             />
-            <Input type="hidden" name="filter" value={JSON.stringify(filter)} />
+            <Input type="hidden" name="filter" value={filterText} />
             <Card className="p-3">
               <h5>Filter for restrictions:</h5>
               <p>
                 If you include a filter, this will only add or remove cards that match the filter. If there are not
                 enough cards found to add or remove, your target size may not be reached.
               </p>
-              <FilterCollapse defaultFilterText="" filter={filter} setFilter={setFilter} isOpen />
+              <FilterCollapse
+                defaultFilterText=""
+                filter={filter}
+                setFilter={(newFilter, newFilterText) => {
+                  setFilter(newFilter);
+                  setFilterText(newFilterText);
+                }}
+                isOpen
+              />
             </Card>
           </ModalBody>
           <ModalFooter>

@@ -9,7 +9,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 
 import Averages from 'analytics/Averages';
-import { filterCard } from 'utils/Filter';
 import Chart from 'analytics/Chart';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
@@ -18,7 +17,7 @@ import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
-import { getCmc } from 'utils/Card';
+import { cardCmc } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
@@ -35,7 +34,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
   const characteristics = {
-    CMC: getCmc,
+    CMC: cardCmc,
     Power: (card) => parseInt(card.details.power, 10),
     Toughness: (card) => parseInt(card.details.toughness, 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
@@ -116,9 +115,9 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 
   const updateFilter = (val) => {
     setFilter(val);
-    setCards(cube.cards.filter((card) => filterCard(card, val)));
-    setAdds(suggestions.filter((card) => filterCard(card, val)));
-    setCuts(removes.filter((card) => filterCard(card, val)));
+    setCards(cube.cards.filter(val));
+    setAdds(suggestions.filter(val));
+    setCuts(removes.filter(val));
   };
 
   return (
