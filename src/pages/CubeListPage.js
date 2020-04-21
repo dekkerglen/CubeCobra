@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { filterCard } from 'utils/Filter';
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
 
@@ -38,8 +37,8 @@ const CubeListPageRaw = ({
 
   const [cubeView, setCubeView] = useState(defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
-  const [filter, setFilter] = useState([]);
-  const [sorts, setSorts] = useState([]);
+  const [filter, setFilter] = useState(null);
+  const [sorts, setSorts] = useState(null);
 
   useEffect(() => {
     const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);
@@ -70,7 +69,7 @@ const CubeListPageRaw = ({
   }));
 
   const filteredCards = useMemo(() => {
-    return filter.length > 0 ? cube.cards.filter((card) => filterCard(card, filter)) : cube.cards;
+    return filter ? cube.cards.filter(filter) : cube.cards;
   }, [filter, cube]);
 
   return (

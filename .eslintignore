@@ -75,3 +75,4 @@ src/components/WithModal.js
 src/utils/draftutil.js
 src/utils/Filter.js
 src/utils/Sort.js
+src/generated

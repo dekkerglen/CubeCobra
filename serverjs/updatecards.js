@@ -11,6 +11,59 @@ const carddb = require('./cards.js');
 
 const catalog = {};
 
+/* cardDetailsSchema = {
+ *   color_identity: [Char],
+ *   set: String,
+ *   collector_number: String,
+ *   promo: Boolean,
+ *   digital: Boolean,
+ *   isToken: Boolean,
+ *   border_color: String,
+ *   name: String,
+ *   // normalized to lowercase
+ *   name_lower: String,
+ *   // name [set-collector_number]
+ *   full_name: String,
+ *   artist: String,
+ *   // Url
+ *   scryfall_uri: String,
+ *   rarity: String,
+ *   oracle_text: String,
+ *   // Scryfall ID
+ *   _id: UUID,
+ *   oracle_id: String,
+ *   cmc: Number
+ *   legalities: {
+ *     Legacy: Boolean,
+ *     Modern: Boolean,
+ *     Standard: Boolean,
+ *     Pauper: Boolean,
+ *     Pioneer: Boolean,
+ *   },
+ *   // Hybrid looks like w-u
+ *   parsed_cost: [String],
+ *   colors: [Char],
+ *   type: String,
+ *   full_art: Boolean,
+ *   language: String,
+ *   mtgo_id: String,
+ *   tcgplayer_id: String,
+ *   loyalty: UnsignedInteger
+ *   power: Number
+ *   toughness: Number
+ *   // URL
+ *   image_small: String
+ *   // URL
+ *   image_normal: String
+ *   // URL
+ *   art_crop: String
+ *   // URL
+ *   image_flip: String
+ *   // Lowercase
+ *   color_category: Char
+ *   // Card ID's
+ *   tokens: [UUID]
+ */
 function initializeCatalog() {
   catalog.dict = {};
   catalog.names = [];
