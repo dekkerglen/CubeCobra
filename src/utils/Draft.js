@@ -4,70 +4,6 @@ import { COLOR_COMBINATIONS } from 'utils/Card';
 
 let draft = null;
 
-const toValue = (elo) => 10 ** (elo / 400);
-
-function addSeen(seen, cards) {
-  for (const card of cards) {
-    const colors = card.colors ?? card.details.colors ?? [];
-    // We ignore colorless because they just reduce variance by
-    // being in all color combinations.
-    if (colors.length > 0) {
-      for (const comb of COLOR_COMBINATIONS) {
-        if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += card.rating ? toValue(card.rating) : 0;
-        }
-      }
-    }
-  }
-  seen.cards += cards.length;
-}
-
-function init(newDraft) {
-  draft = newDraft;
-  for (const seat of draft.seats) {
-    seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    seat.seen.cards = 0;
-    addSeen(seat.seen, seat.packbacklog[0].slice());
-    seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    seat.picked.cards = 0;
-  }
-  draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  draft.overallPool.cards = 0;
-  addSeen(draft.overallPool, draft.initial_state.flat(3));
-}
-
-function id() {
-  return draft._id;
-}
-
-function cube() {
-  return draft.cube;
-}
-
-function pack() {
-  return draft.seats[0].packbacklog[0] || [];
-}
-
-function packPickNumber() {
-  let picks = draft.seats[0].pickorder.length;
-  let packnum = 0;
-
-  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
-    picks -= draft.initial_state[0][packnum].length;
-    packnum += 1;
-  }
-
-  return [packnum + 1, picks + 1];
-}
-
-function arrangePicks(picks) {
-  if (!Array.isArray(picks) || picks.length !== 16) {
-    throw new Error('Picks must be an array of length 16.');
-  }
-
-  draft.seats[0].drafted = [...picks];
-}
-
 const fetchLands = {
   'Arid Mesa': ['W', 'R'],
   'Bloodstained Mire': ['B', 'R'],
@@ -90,7 +26,7 @@ function botCardRating(botColors, card) {
   const subset = arrayIsSubset(colors, botColors) && !colorless;
   const contains = arrayIsSubset(botColors, colors);
   const overlap = botColors.some((c) => colors.includes(c));
-  const typeLine = card.type_line || card.details.type;
+  const typeLine = card.type_line ?? card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
 
@@ -129,6 +65,70 @@ function botCardRating(botColors, card) {
   return rating;
 }
 
+const toValue = (elo) => 10 ** (elo / 400);
+
+function addSeen(seen, cards) {
+  for (const card of cards) {
+    const colors = card.colors ?? card.details.colors ?? [];
+    // We ignore colorless because they just reduce variance by
+    // being in all color combinations.
+    if (colors.length > 0) {
+      for (const comb of COLOR_COMBINATIONS) {
+        if (arrayIsSubset(colors, comb)) {
+          seen[comb.join('')] += card.rating ? toValue(botCardRating(comb, card, card)) : 0;
+        }
+      }
+    }
+  }
+  seen.cards += cards.length;
+}
+
+function init(newDraft) {
+  draft = newDraft;
+  for (const seat of draft.seats) {
+    seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    seat.seen.cards = 0;
+    addSeen(seat.seen, seat.packbacklog[0].slice());
+    seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    seat.picked.cards = 0;
+  }
+  draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+  draft.overallPool.cards = 0;
+  addSeen(draft.overallPool, draft.unopenedPacks.flat(3));
+}
+
+function id() {
+  return draft._id;
+}
+
+function cube() {
+  return draft.cube;
+}
+
+function pack() {
+  return draft.seats[0].packbacklog[0] || [];
+}
+
+function packPickNumber() {
+  let picks = draft.seats[0].pickorder.length;
+  let packnum = 0;
+
+  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
+    picks -= draft.initial_state[0][packnum].length;
+    packnum += 1;
+  }
+
+  return [packnum + 1, picks + 1];
+}
+
+function arrangePicks(picks) {
+  if (!Array.isArray(picks) || picks.length !== 16) {
+    throw new Error('Picks must be an array of length 16.');
+  }
+
+  draft.seats[0].drafted = [...picks];
+}
+
 const considerInCombination = (combination) => (card) =>
   card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
@@ -140,9 +140,9 @@ const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inP
   // that'll be the color combination we want to play currently.
   let bestRating = -1;
   let bestCombination = [];
-  const cardValue = card ? toValue(card.rating ?? 0) : 0;
   for (const combination of COLOR_COMBINATIONS) {
     if (!card || considerInCombination(combination)(card)) {
+      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 0;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
