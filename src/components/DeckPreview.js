@@ -91,6 +91,6 @@ DeckPreview.propTypes = {
 
 DeckPreview.defaultProps = {
   nextURL: null,
-}
+};
 
 export default DeckPreview;
