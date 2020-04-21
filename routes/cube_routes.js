@@ -38,7 +38,7 @@ const {
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
-const filterutil = require('../dist/utils/Filter.js');
+const filterutil = require('../dist/filtering/FilterCards.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -3451,8 +3451,11 @@ router.post('/resize/:id/:size', async (req, res) => {
     };
     addPriceAndElo(list);
 
-    const filter = JSON.parse(req.body.filter);
-    list = list.filter((card) => filterutil.filterCard(card, filter)).slice(0, Math.abs(newSize - cube.cards.length));
+    const { filter, err } = filterutil.makeFilter(req.body.filter);
+    if (err) {
+      return util.handleRouteError(req, res, 'Error parsing filter.', `/cube/list/${req.params.id}`);
+    }
+    list = list.filter(filter).slice(0, Math.abs(newSize - cube.cards.length));
 
     let changelog = '';
     if (newSize > cube.cards.length) {

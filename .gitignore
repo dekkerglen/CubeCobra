@@ -1,6 +1,9 @@
 private/
 /dist/
 /.vscode/
+src/generated/
+
+src/generated/
 
 .python-version
 

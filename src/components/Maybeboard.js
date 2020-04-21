@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
-import { filterCard } from 'utils/Filter';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import CardModalContext from 'components/CardModalContext';
@@ -183,7 +182,7 @@ const Maybeboard = ({ filter, ...props }) => {
   const maybeboardIndex = useMemo(() => maybeboard.map((card, index) => ({ ...card, index })), [maybeboard]);
 
   const filteredMaybeboard = useMemo(() => {
-    return filter && filter.length > 0 ? maybeboardIndex.filter((card) => filterCard(card, filter)) : maybeboardIndex;
+    return filter ? maybeboardIndex.filter(filter) : maybeboardIndex;
   }, [filter, maybeboardIndex]);
 
   return (

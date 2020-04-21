@@ -52,7 +52,16 @@ export function arrayIsSubset(needles, haystack) {
   return needles.every((x) => haystack.includes(x));
 }
 
-export function arraysAreEqualSets(a1, a2) {
+export function arraysAreEqualSets(a1, a2, comparison) {
+  if (a1.length !== a2.length) {
+    return false;
+  }
+  if (comparison) {
+    return (
+      a1.every((elem) => a2.some((elem2) => comparison(elem, elem2))) &&
+      a2.every((elem) => a1.some((elem2) => comparison(elem, elem2)))
+    );
+  }
   const set1 = new Set(a1);
   const set2 = new Set(a2);
   return a1.every((x) => set2.has(x)) && a2.every((x) => set1.has(x));
