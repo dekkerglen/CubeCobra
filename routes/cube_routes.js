@@ -2839,6 +2839,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       cube,
       cubeID: cubeid,
       decks,
+      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,
     };

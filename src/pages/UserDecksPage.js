@@ -17,7 +17,7 @@ const UserDecksPage = ({ user, followers, following, canEdit, decks, pages, acti
       {decks.length > 0 ? (
         <CardBody className="p-0">
           {decks.map((deck) => (
-            <DeckPreview key={deck._id} deck={deck} />
+            <DeckPreview key={deck._id} deck={deck} canEdit={canEdit} />
           ))}
         </CardBody>
       ) : (

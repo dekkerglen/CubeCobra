@@ -217,7 +217,7 @@ const SealedCard = () => {
   );
 };
 
-const DecksCard = ({ decks, ...props }) => {
+const DecksCard = ({ decks, canEdit, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card {...props}>
@@ -226,7 +226,7 @@ const DecksCard = ({ decks, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} />
+          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit} />
         ))}
       </CardBody>
       <CardFooter>
@@ -242,6 +242,7 @@ DecksCard.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  canEdit: PropTypes.bool.isRequired,
 };
 
 const SamplePackCard = (props) => {
@@ -361,7 +362,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
           <SealedCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
+          {decks.length !== 0 && <DecksCard decks={decks} canEdit={canEdit} cubeID={cubeID} className="mb-3" />}
           <SamplePackCard className="mb-3" />
         </Col>
       </Row>
