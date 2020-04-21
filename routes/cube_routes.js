@@ -32,13 +32,15 @@ const {
   buildTagColors,
   maybeCards,
   getElo,
+  CSVtoCards,
+  compareCubes,
   generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
-const filterutil = require('../dist/utils/Filter.js');
+const filterutil = require('../dist/filtering/FilterCards.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -399,19 +401,22 @@ router.get('/overview/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-
-    const pids = new Set();
     for (const card of cube.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-      const allVersions = carddb.getIdsFromName(card.details.name) || [];
-      card.allDetails = allVersions.map((id) => carddb.cardFromId(id));
-      for (const details of card.allDetails) {
-        if (details.tcgplayer_id) {
-          pids.add(details.tcgplayer_id);
-        }
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+    }
+    const pids = new Set();
+    const allVersions = [];
+    for (const card of cube.cards) {
+      const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
+      allVersions.push(...allVersionsOfCard.map((id) => ({ cardID: id, related: card.cardID })));
+    }
+    for (const card of allVersions) {
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
       }
     }
-
+    const priceDictQ = GetPrices([...pids]);
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -423,8 +428,24 @@ router.get('/overview/:id', async (req, res) => {
       },
       '_id username image artist users_following',
     ).lean();
-    const priceDictQ = GetPrices([...pids]);
     const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
+    const allVersionsLookup = {};
+    for (const card of allVersions) {
+      if (card.tcgplayer_id) {
+        card.details.price = priceDict[card.tcgplayer_id];
+        card.details.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
+      }
+      if (!allVersionsLookup[card.related]) {
+        allVersionsLookup[card.related] = [];
+      }
+      allVersionsLookup[card.related].push(card.details);
+    }
+    for (const card of cube.cards) {
+      const withPrice = allVersions.find((pricedCard) => pricedCard.cardID === card.cardID);
+      if (withPrice) {
+        card.details = withPrice.details;
+      }
+    }
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -432,20 +453,20 @@ router.get('/overview/:id', async (req, res) => {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
-          priceOwned = priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
+          priceOwned = card.details.price_foil || card.details.price || 0;
         } else {
-          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
+          priceOwned = card.details.price || card.details.price_foil || 0;
         }
         totalPriceOwned += priceOwned;
       }
 
-      const allPrices = card.allDetails.map((details) => [
-        priceDict[details.tcgplayer_id],
-        priceDict[`${details.tcgplayer_id}_foil`],
-      ]);
-      const allPricesFlat = [].concat(...allPrices).filter((p) => p && p > 0.001);
-      if (allPricesFlat.length > 0) {
-        totalPricePurchase += Math.min(...allPricesFlat) || 0;
+      if (allVersionsLookup[card.cardID]) {
+        const allPrices = allVersionsLookup[card.cardID]
+          .reduce((lst, { price, priceFoil }) => lst.concat([price, priceFoil]), [])
+          .filter((p) => p && p > 0.001);
+        if (allPrices.length > 0) {
+          totalPricePurchase += Math.min(...allPrices) || 0;
+        }
       }
     }
 
@@ -632,25 +653,34 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
-
     const pids = new Set();
-    [cubeA, cubeB].forEach((cube) => {
-      for (const card of cube.cards) {
+    const cardNames = new Set();
+    const addDetails = (cards) => {
+      cards.forEach((card, index) => {
         card.details = {
           ...carddb.cardFromId(card.cardID),
         };
+        card.index = index;
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
         }
-      }
-    });
+        cardNames.add(card.details.name);
+      });
+      return cards;
+    };
 
-    const priceDict = await GetPrices([...pids]);
-    [cubeA, cubeB].forEach((cube) => {
-      for (const card of cube.cards) {
+    cubeA.cards = addDetails(cubeA.cards);
+    cubeB.cards = addDetails(cubeB.cards);
+
+    const priceDictQ = GetPrices([...pids]);
+    const eloDictQ = getElo([...cardNames], true);
+    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
+
+    const addPriceAndElo = (cards) => {
+      for (const card of cards) {
         if (card.details.tcgplayer_id) {
           if (priceDict[card.details.tcgplayer_id]) {
             card.details.price = priceDict[card.details.tcgplayer_id];
@@ -659,28 +689,15 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
             card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
           }
         }
+        if (eloDict[card.details.name]) {
+          card.details.elo = eloDict[card.details.name];
+        }
       }
-    });
-
-    const inBoth = [];
-    const onlyA = cubeA.cards.slice(0);
-    const onlyB = cubeB.cards.slice(0);
-    const aNames = onlyA.map((card) => card.details.name);
-    const bNames = onlyB.map((card) => card.details.name);
-
-    for (const card of cubeA.cards) {
-      if (bNames.includes(card.details.name)) {
-        inBoth.push(card);
-
-        onlyA.splice(aNames.indexOf(card.details.name), 1);
-        onlyB.splice(bNames.indexOf(card.details.name), 1);
-
-        aNames.splice(aNames.indexOf(card.details.name), 1);
-        bNames.splice(bNames.indexOf(card.details.name), 1);
-      }
-    }
-
-    const allCards = inBoth.concat(onlyA).concat(onlyB);
+      return cards;
+    };
+    cubeA.cards = addPriceAndElo(cubeA.cards);
+    cubeB.cards = addPriceAndElo(cubeB.cards);
+    const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeA.cards, cubeB.cards);
 
     const reactProps = {
       cube: cubeA,
@@ -772,6 +789,8 @@ router.get('/list/:id', async (req, res) => {
       cubeID: req.params.id,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       defaultView: req.query.view || 'table',
+      defaultPrimarySort: req.query.s1 || '',
+      defaultSecondarySort: req.query.s2 || '',
       defaultFilterText: req.query.f || '',
       defaultTagColors: cube.tag_colors || [],
       defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -840,7 +859,7 @@ router.get('/playtest/:id', async (req, res) => {
 
     return res.render('cube/cube_playtest', {
       reactHTML: CubePlaytestPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Playtest`,
@@ -1020,6 +1039,52 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   }
 });
 
+async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
+  try {
+    const blogpost = new Blog();
+    blogpost.title = 'Cube Bulk Import - Automatic Post';
+    blogpost.html = changelog;
+    blogpost.owner = cube.owner;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = cube.owner_name;
+    blogpost.cubename = cube.name;
+
+    if (missing.length > 0) {
+      const reactProps = {
+        cubeID: req.params.id,
+        missing,
+        added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
+        blogpost: blogpost.toObject(),
+      };
+      return res.render('cube/bulk_upload', {
+        reactHTML: BulkUploadPage
+          ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
+          : undefined,
+        reactProps: serialize(reactProps),
+        cube,
+        cube_id: req.params.id,
+        title: `${abbreviate(cube.name)} - Bulk Upload`,
+      });
+    }
+    await blogpost.save();
+    cube = setCubeType(cube, carddb);
+    try {
+      await Cube.updateOne({ _id: cube._id }, cube);
+    } catch (err) {
+      req.logger.error(err);
+      req.flash('danger', 'Error adding cards. Please try again.');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+    req.flash('success', 'All cards successfully added.');
+    return res.redirect(`/cube/list/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
+  }
+}
+
 router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
@@ -1042,13 +1107,13 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     const data = cheerio.load(text);
 
     const tagColors = new Map();
-    data('.keyColour').each((i, elem) => {
+    data('.keyColour').each((_, elem) => {
       const nodeText = elem.firstChild.nodeValue.trim();
       tagColors.set(elem.attribs.class.split(' ')[1], nodeText);
     });
 
     const cards = [];
-    data('.cardPreview').each((i, elem) => {
+    data('.cardPreview').each((_, elem) => {
       const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
       const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
       const tagColorClasses = elem.attribs.class.split(' ').filter((c) => tagColors.has(c));
@@ -1082,47 +1147,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
       }
     }
 
-    const blogpost = new Blog();
-    blogpost.title = 'Cubetutor Import - Automatic Post';
-    blogpost.html = changelog;
-    blogpost.owner = cube.owner;
-    blogpost.date = Date.now();
-    blogpost.cube = cube._id;
-    blogpost.dev = 'false';
-    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.owner_name;
-    blogpost.cubename = cube.name;
-
-    if (missing.length > 0) {
-      const reactProps = {
-        cubeID: req.params.id,
-        missing,
-        added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-        blogpost: blogpost.toObject(),
-      };
-      return res.render('cube/bulk_upload', {
-        reactHTML: BulkUploadPage
-          ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-          : undefined,
-        reactProps: serialize(reactProps),
-        cube,
-        cubeID: req.params.id,
-        title: `${abbreviate(cube.name)} - Bulk Upload`,
-      });
-    }
-
-    try {
-      const blogQ = blogpost.save();
-      setCubeType(cube, carddb);
-      const cubeQ = cube.save();
-      await Promise.all([blogQ, cubeQ]);
-      req.flash('success', 'All cards successfully added.');
-      return res.redirect(`/cube/list/${req.params.id}`);
-    } catch (e) {
-      req.logger.error(e);
-      req.flash('danger', 'Error adding cards. Please try again.');
-      return res.redirect(`/cube/list/${req.params.id}`);
-    }
+    return await updateCubeAndBlog(req, res, cube, changelog, added, missing);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
@@ -1236,200 +1261,67 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   }
 });
 
-async function bulkUploadCSV(req, res, cards, cube) {
-  const added = [];
-  let missing = '';
-  let changelog = '';
-  for (const cardRaw of cards) {
-    const split = util.CSVtoArray(cardRaw);
-    const name = split[0];
-    const maybeboard = split[8];
-    const card = {
-      name,
-      cmc: split[1],
-      type_line: split[2].replace('-', '—'),
-      colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
-      set: split[4].toUpperCase(),
-      addedTmsp: new Date(),
-      collector_number: split[5],
-      status: split[6],
-      finish: split[7],
-      imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
-      tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
-      notes: split[11],
-    };
-
-    const potentialIds = carddb.allIds(card);
-    if (potentialIds && potentialIds.length > 0) {
-      // First, try to find the correct set.
-      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
-      const nonPromo = potentialIds.find(carddb.reasonableId);
-      const first = potentialIds[0];
-      card.cardID = matchingSet || nonPromo || first;
-      if (maybeboard === 'true') {
-        cube.maybe.push(card);
-      } else {
-        cube.cards.push(card);
-      }
-      changelog += addCardHtml(carddb.cardFromId(card.cardID));
-    } else {
-      missing += `${card.name}\n`;
-    }
-  }
-
-  const blogpost = new Blog();
-  blogpost.title = 'Cube Bulk Import - Automatic Post';
-  blogpost.html = changelog;
-  blogpost.owner = cube.owner;
-  blogpost.date = Date.now();
-  blogpost.cube = cube._id;
-  blogpost.dev = 'false';
-  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.owner_name;
-  blogpost.cubename = cube.name;
-
-  //
-  if (missing.length > 0) {
-    const reactProps = {
-      cubeID: req.params.id,
-      missing,
-      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-      blogpost: blogpost.toObject(),
-    };
-    return res.render('cube/bulk_upload', {
-      reactHTML: BulkUploadPage
-        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      cube,
-      cubeID: req.params.id,
-      title: `${abbreviate(cube.name)} - Bulk Upload`,
-    });
-  }
-
-  try {
-    await blogpost.save();
-    cube = setCubeType(cube, carddb);
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      cube,
-    );
-    req.flash('success', 'All cards successfully added.');
-    return res.redirect(`/cube/list/${req.params.id}`);
-  } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', 'Error adding cards. Please try again.');
-    return res.redirect(`/cube/list/${req.params.id}`);
-  }
-}
-
 async function bulkUpload(req, res, list, cube) {
   const cards = list.match(/[^\r\n]+/g);
-  if (!cards) {
-    req.flash('danger', 'Invalid request.');
-    return res.redirect(`/cube/list/${req.params.id}`);
-  }
-
-  if (cards[0].trim() === CSV_HEADER) {
-    cards.splice(0, 1);
-    return bulkUploadCSV(req, res, cards, cube);
-  }
-
-  cube.date_updated = Date.now();
-  cube.updated_string = cube.date_updated.toLocaleString('en-US');
   let missing = '';
   const added = [];
   let changelog = '';
-  for (let i = 0; i < cards.length; i++) {
-    const item = cards[i].toLowerCase().trim();
-    const numericMatch = item.match(/([0-9]+)x? (.*)/);
-    if (numericMatch) {
-      let count = parseInt(numericMatch[1], 10);
-      if (!Number.isInteger(count)) {
-        count = 1;
-      }
-      for (let j = 0; j < count; j++) {
-        cards.push(numericMatch[2]);
-      }
+  if (cards) {
+    if (cards[0].trim() === CSV_HEADER) {
+      cards.splice(0, 1);
+      let newCards = [];
+      let newMaybe = [];
+      ({ newCards, newMaybe, missing } = CSVtoCards(cards, carddb));
+      newCards.forEach((card) => {
+        changelog += addCardHtml(carddb.cardFromId(card.cardID));
+      });
+      cube.cards.push(...newCards);
+      cube.maybe.push(...newMaybe);
+      added.concat(newCards, newMaybe);
     } else {
-      let selected = null;
-      if (/(.*)( \((.*)\))/.test(item)) {
-        // has set info
-        const name = item.substring(0, item.indexOf('('));
-        const potentialIds = carddb.getIdsFromName(name);
-        if (potentialIds && potentialIds.length > 0) {
-          const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
-          // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-          const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
-          selected = matching || potentialIds[0];
-        }
-      } else {
-        // does not have set info
-        const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
-        selected = selectedCard ? selectedCard._id : null;
-      }
-      if (selected) {
-        const details = carddb.cardFromId(selected);
-        if (!details.error) {
-          util.addCardToCube(cube, details);
-          added.push(details);
-          changelog += addCardHtml(details);
+      for (const itemUntrimmed of cards) {
+        const item = itemUntrimmed.trim();
+        const numericMatch = item.match(/([0-9]+)x? (.*)/);
+        if (numericMatch) {
+          let count = parseInt(numericMatch[1], 10);
+          if (!Number.isInteger(count)) {
+            count = 1;
+          }
+          for (let j = 0; j < count; j++) {
+            cards.push(numericMatch[2]);
+          }
         } else {
-          missing += `${item}\n`;
+          let selected = null;
+          if (/(.*)( \((.*)\))/.test(item)) {
+            // has set info
+            const name = item.substring(0, item.indexOf('('));
+            const potentialIds = carddb.getIdsFromName(name);
+            if (potentialIds && potentialIds.length > 0) {
+              const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
+              // if we've found a match, and it DOES need to be parsed with cubecobra syntax
+              const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
+              selected = matching || potentialIds[0];
+            }
+          } else {
+            // does not have set info
+            const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
+            selected = selectedCard ? selectedCard._id : null;
+          }
+          if (selected) {
+            const details = carddb.cardFromId(selected);
+            if (!details.error) {
+              util.addCardToCube(cube, details);
+              added.push(details);
+              changelog += addCardHtml(details);
+            } else {
+              missing += `${item}\n`;
+            }
+          }
         }
-      } else {
-        missing += `${item}\n`;
       }
     }
   }
-
-  const blogpost = new Blog();
-  blogpost.title = 'Cube Bulk Import - Automatic Post';
-  blogpost.html = changelog;
-  blogpost.owner = cube.owner;
-  blogpost.date = Date.now();
-  blogpost.cube = cube._id;
-  blogpost.dev = 'false';
-  blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-  blogpost.username = cube.owner_name;
-  blogpost.cubename = cube.name;
-
-  if (missing.length > 0) {
-    const reactProps = {
-      cubeID: req.params.id,
-      missing,
-      added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
-      blogpost: blogpost.toObject(),
-    };
-    return res.render('cube/bulk_upload', {
-      reactHTML: BulkUploadPage
-        ? await ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      cube,
-      cubeID: req.params.id,
-      title: `${abbreviate(cube.name)} - Bulk Upload`,
-    });
-  }
-
-  try {
-    await blogpost.save();
-    cube = setCubeType(cube, carddb);
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      cube,
-    );
-    req.flash('success', 'All cards successfully added.');
-    return res.redirect(`/cube/list/${req.params.id}`);
-  } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', 'Error adding cards. Please try again.');
-    return res.redirect(`/cube/list/${req.params.id}`);
-  }
+  await updateCubeAndBlog(req, res, cube, changelog, added, missing);
 }
 
 router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
@@ -1444,7 +1336,8 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
-    return await bulkUpload(req, res, req.body.body, cube);
+    await bulkUpload(req, res, req.body.body, cube);
+    return null;
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
@@ -1469,7 +1362,92 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/list/${req.params.id}`);
     }
 
-    return await bulkUpload(req, res, items, cube);
+    await bulkUpload(req, res, items, cube);
+    return null;
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
+  }
+});
+
+router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
+  try {
+    if (!req.files) {
+      req.flash('danger', 'Please attach a file');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+    const items = req.files.document.data.toString('utf8'); // the uploaded file object
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    // We need a copy of cards we can mutate to be able to populate details for the comparison.
+    const { cards } = await Cube.findOne(buildIdQuery(req.params.id), 'cards').lean();
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+    if (!req.user._id.equals(cube.owner)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect(`/cube/list/${req.params.id}`);
+    }
+    const lines = items.match(/[^\r\n]+/g);
+    if (lines) {
+      let changelog = '';
+      let missing = '';
+      const added = [];
+      let newCards = [];
+      let newMaybe = [];
+      if (lines[0].trim() === CSV_HEADER) {
+        ({ newCards, newMaybe, missing } = CSVtoCards(lines.slice(1), carddb));
+        cube.cards = newCards;
+        cube.maybe = newMaybe;
+        const pids = new Set();
+        const cardNames = new Set();
+        const addDetails = (cardList) =>
+          cardList.map((card, index) => {
+            card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
+            if (!card.type_line) {
+              card.type_line = card.details.type;
+            }
+            if (card.details.tcgplayer_id) {
+              pids.add(card.details.tcgplayer_id);
+            }
+            cardNames.add(card.details.name);
+            return card;
+          });
+
+        const cubeCards = addDetails(cards);
+        const newDetails = addDetails(newCards);
+
+        const [priceDict, eloDict] = await Promise.all([GetPrices([...pids]), getElo([...cardNames], true)]);
+
+        const addPriceAndElo = (cardList) => {
+          for (const card of cardList) {
+            if (card.details.tcgplayer_id) {
+              if (priceDict[card.details.tcgplayer_id]) {
+                card.details.price = priceDict[card.details.tcgplayer_id];
+              }
+              if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
+                card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
+              }
+            }
+            if (eloDict[card.details.name]) {
+              card.details.elo = eloDict[card.details.name];
+            }
+          }
+          return cardList;
+        };
+        addPriceAndElo(cubeCards);
+        addPriceAndElo(newDetails);
+        const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
+        changelog += onlyA.map(({ cardID }) => removeCardHtml(carddb.cardFromId(cardID))).join('');
+        changelog += onlyB.map(({ cardID }) => addCardHtml(carddb.cardFromId(cardID))).join('');
+        added.push(...onlyB);
+      } else {
+        // Eventually add plaintext support here.
+        throw new Error('Invalid file format');
+      }
+      await updateCubeAndBlog(req, res, cube, changelog, added, missing);
+      return null;
+    }
+    throw new Error('Received empty file');
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
@@ -1491,7 +1469,7 @@ router.get('/download/cubecobra/:id', async (req, res) => {
   }
 });
 
-function writeCard(req, res, card, maybe) {
+function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
@@ -1544,7 +1522,7 @@ router.get('/download/csv/:id', async (req, res) => {
     res.write(`${CSV_HEADER}\r\n`);
 
     for (const card of cube.cards) {
-      writeCard(req, res, card, false);
+      writeCard(res, card, false);
     }
     if (Array.isArray(cube.maybe)) {
       for (const card of cube.maybe) {
@@ -2015,7 +1993,6 @@ router.post('/startdraft/:id', async (req, res) => {
     }
 
     // setup draft
-
     const bots = draftutil.getDraftBots(params);
     const format = draftutil.getDraftFormat(params, cube);
 
@@ -3452,8 +3429,11 @@ router.post('/resize/:id/:size', async (req, res) => {
     };
     addPriceAndElo(list);
 
-    const filter = JSON.parse(req.body.filter);
-    list = list.filter((card) => filterutil.filterCard(card, filter)).slice(0, Math.abs(newSize - cube.cards.length));
+    const { filter, err } = filterutil.makeFilter(req.body.filter);
+    if (err) {
+      return util.handleRouteError(req, res, 'Error parsing filter.', `/cube/list/${req.params.id}`);
+    }
+    list = list.filter(filter).slice(0, Math.abs(newSize - cube.cards.length));
 
     let changelog = '';
     if (newSize > cube.cards.length) {
