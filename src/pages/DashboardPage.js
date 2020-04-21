@@ -43,7 +43,7 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
         </CardHeader>
         <CardBody className="p-0">
           {decks.length > 0 ? (
-            decks.map((deck) => <DeckPreview key={deck._id} deck={deck} />)
+            decks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" />)
           ) : (
             <p className="m-2">
               Nobody has drafted your cubes! Perhaps try reaching out on the{' '}

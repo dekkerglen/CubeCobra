@@ -22,13 +22,15 @@ class DeckDeleteModal extends React.Component {
   }
 
   confirm() {
-    const { deckID, cubeID } = this.props;
+    const { deckID, cubeID, nextURL } = this.props;
     csrfFetch(`/cube/deletedeck/${deckID}`, {
       method: 'DELETE',
       headers: {},
     }).then((response) => {
       if (!response.ok) {
         console.log(response);
+      } else if (nextURL) {
+        window.location.href = nextURL;
       } else {
         window.location.href = `/cube/playtest/${cubeID}`;
       }
@@ -61,6 +63,11 @@ DeckDeleteModal.propTypes = {
   deckID: PropTypes.string.isRequired,
   cubeID: PropTypes.string.isRequired,
   isOpen: PropTypes.bool.isRequired,
+  nextURL: PropTypes.string,
+};
+
+DeckDeleteModal.defaultProps = {
+  nextURL: null,
 };
 
 export default DeckDeleteModal;

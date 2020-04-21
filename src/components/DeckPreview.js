@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 
-const DeckPreview = ({ deck, canEdit }) => {
+const DeckPreview = ({ deck, canEdit, nextURL }) => {
   const maxLength = 35;
   const { date } = deck;
   const deleteModal = useRef();
@@ -60,6 +60,7 @@ const DeckPreview = ({ deck, canEdit }) => {
               deckID={deck._id}
               cubeID={deck.cube}
               ref={deleteModal}
+              nextURL={nextURL}
             />
           </button>
         </>
@@ -85,6 +86,11 @@ DeckPreview.propTypes = {
     date: PropTypes.instanceOf(Date),
   }).isRequired,
   canEdit: PropTypes.bool.isRequired,
+  nextURL: PropTypes.string,
 };
+
+DeckPreview.defaultProps = {
+  nextURL: null,
+}
 
 export default DeckPreview;

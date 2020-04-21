@@ -2779,6 +2779,32 @@ router.post('/submitdeck/:id', async (req, res) => {
   }
 });
 
+router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
+  try {
+    const query = {
+      _id: req.params.id,
+    };
+
+    const deck = await Deck.findById(req.params.id);
+    const deckOwner = await User.findById(deck.seats[0].userid);
+
+    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
+    }
+
+    await Deck.deleteOne(query);
+
+    req.flash('success', 'Deck Deleted');
+    return res.send('Success');
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error deleting deck.',
+    });
+  }
+});
+
 router.get('/decks/:cubeid/:page', async (req, res) => {
   try {
     const { cubeid } = req.params;

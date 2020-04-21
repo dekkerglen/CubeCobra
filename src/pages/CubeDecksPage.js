@@ -16,7 +16,7 @@ const CubeDecksPage = ({ cube, cubeID, canEdit, decks, pages, activePage }) => (
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit} />
+          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit} nextURL={`/cube/decks/${cubeID}/${activePage}`} />
         ))}
       </CardBody>
     </Card>
