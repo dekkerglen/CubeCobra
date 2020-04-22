@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 
