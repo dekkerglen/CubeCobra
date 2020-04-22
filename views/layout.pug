@@ -169,7 +169,7 @@ html(lang='en')
 		#cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
 			.modal-dialog(role='document')
 				.modal-content
-					form(method='POST', action='/cube/add')
+					form(method='POST', action='/cube/add', onsubmit='createButton.disabled = true; return true;')
 						input(type='hidden', name='_csrf', value=csrfToken)
 						.modal-header
 							h5#loginModalLabel.modal-title Create New Cube
@@ -181,7 +181,7 @@ html(lang='en')
 								input.form-control(name='name', type='text')
 							br
 						.modal-footer
-							input.btn.btn-success(type='submit',value='Create')
+							input.btn.btn-success(name='createButton', type='submit', value='Create')
 							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
 
 		if node_env === 'production'

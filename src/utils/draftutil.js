@@ -4,41 +4,36 @@ const shuffleSeed = require('shuffle-seed');
 
 const Util = require('utils/Util.js');
 require('./Card.js');
-var Filter = require('utils/Filter.js');
+const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
 var Sort = require('utils/Sort.js');
 
-export function matchingCards(cards, filter) {
-  if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
+function matchingCards(cards, filter) {
+  if (filter === null) {
     return cards;
   }
-  return Filter.filterCards(cards, filter, true);
+  return cards.filter(filter);
 }
 
-function makeFilter(filterText) {
+function compileFilter(filterText) {
   if (!filterText || filterText === '' || filterText == '*') {
-    return [null];
+    return null;
   }
 
-  let tokens = [];
-  let valid = false;
-  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
-
-  // backwards compatibilty: treat as tag
-  if (!valid || !Filter.operatorsRegex.test(filterText)) {
+  const { filter, err } = makeFilter(filterText);
+  if (err || !operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
       tagfilterText = `"${filterText}"`;
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
-    tokens = [];
-    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
+    ({ filter, err } = makeFilter(tagfilterText));
   }
 
-  if (!valid) {
+  if (err) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  return [Filter.parseTokens(tokens)];
+  return filter;
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
@@ -52,7 +47,7 @@ export function parseDraftFormat(packsJSON, splitter = ',') {
     for (let k = 0; k < format[j].length; k++) {
       format[j][k] = format[j][k].split(splitter);
       for (let m = 0; m < format[j][k].length; m++) {
-        format[j][k][m] = makeFilter(format[j][k][m].trim());
+        format[j][k][m] = compileFilter(format[j][k][m].trim());
       }
     }
   }
@@ -110,7 +105,7 @@ function customDraft(cards, duplicates = false, seed = false) {
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -313,7 +308,7 @@ export function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
-        messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {

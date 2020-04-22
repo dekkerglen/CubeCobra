@@ -1,14 +1,9 @@
-import Filter from '../../../src/utils/Filter';
-import { getDraftBots, getDraftFormat, createDraft } from '../../../src/utils/draftutil';
-
-import { expectOperator } from '../../helpers';
-
-const sinon = require('sinon');
+import { getDraftBots, getDraftFormat, createDraft } from 'utils/draftutil';
+import { makeFilter } from 'filtering/FilterCards';
 
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
 
-const CardRating = require('../../../models/cardrating');
 const Draft = require('../../../models/draft');
 
 const carddb = require('../../../serverjs/cards');
@@ -47,15 +42,15 @@ describe('getDraftFormat', () => {
       cards: 2,
     };
     const format = getDraftFormat(params, exampleCube);
-    const expected_format = [
+    const expectedFormat = [
       ['*', '*'], // pack 1 (* is any card)
       ['*', '*'], // pack 2
       ['*', '*'], // pack 3
     ];
-    expected_format.custom = false;
-    expected_format.multiples = false;
+    expectedFormat.custom = false;
+    expectedFormat.multiples = false;
 
-    expect(format).toEqual(expected_format);
+    expect(format).toEqual(expectedFormat);
     expect(format.custom).toBe(false);
     expect(format.multiples).toBe(false);
   });
@@ -69,13 +64,11 @@ describe('getDraftFormat', () => {
       exampleCube.draft_formats[0] = {}; // mock
     });
 
-    const expectedFilters = function(...args) {
+    const expectedFilters = (...args) => {
       const expectedFormat = [];
       args.forEach((filterText) => {
         if (filterText !== null) {
-          const tokens = [];
-          Filter.tokenizeInput(filterText, tokens);
-          filterText = Filter.parseTokens(tokens);
+          ({ filter: filterText } = makeFilter(filterText));
         }
         expectedFormat.push([filterText]);
       });
@@ -111,7 +104,7 @@ describe('getDraftFormat', () => {
           [expectedFilters('rarity:Mythic', 'rarity:common'), [[null]]], // pack 3
         ],
       ],
-    ])('%s', (name, packsFormat, multiples, expected) => {
+    ])('%s', (_, packsFormat, multiples, expected) => {
       test(`returns expected format`, () => {
         exampleCube.draft_formats[params.id].packs = packsFormat;
         exampleCube.draft_formats[params.id].multiples = multiples;
@@ -189,7 +182,7 @@ describe('createDraft', () => {
       exampleCube.draft_formats = [];
       exampleCube.draft_formats[0] = {}; // mock
       return carddb.initializeCardDb(fixturesPath, true).then(() => {
-        exampleCube.cards.forEach(function(card, index) {
+        exampleCube.cards.forEach((card) => {
           card.details = carddb.cardFromId(card.cardID);
         });
       });
@@ -207,9 +200,9 @@ describe('createDraft', () => {
       expect(draft).toHaveProperty('bots');
       // CoreMongooseArray causing trouble, so we check length and use stringify
       expect(draft.bots.length).toEqual(1);
-      const initial_stateJSON = JSON.stringify(draft.initial_state);
+      const initialStateJSON = JSON.stringify(draft.initial_state);
       const packsJSON = JSON.stringify(draft.packs);
-      expect(initial_stateJSON).toEqual(packsJSON);
+      expect(initialStateJSON).toEqual(packsJSON);
     });
 
     it('fails if it runs out of cards in a standard draft', () => {

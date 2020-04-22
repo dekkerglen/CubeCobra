@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
 import { encodeName } from 'utils/Card';
-import { makeFilter } from 'utils/Filter';
+import { makeFilter } from 'filtering/FilterCards';
 
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -21,7 +21,7 @@ class TopCards extends Component {
     const { defaultData, defaultNumResults, defaultFilterText } = props;
 
     this.state = {
-      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) || [],
+      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) || null,
       data: defaultData || [],
       numResults: defaultNumResults || 0,
     };

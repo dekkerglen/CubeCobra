@@ -1,6 +1,8 @@
 const sanitizeHtml = require('sanitize-html');
-const Cube = require('../models/cube');
+
 const CardRating = require('../models/cardrating');
+const Cube = require('../models/cube');
+
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
 
@@ -113,6 +115,26 @@ function cardsAreEquivalent(card, details) {
   return true;
 }
 
+function setCubeType(cube, carddb) {
+  let pauper = true;
+  let type = legalityToInt('Standard');
+  for (const card of cube.cards) {
+    if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
+      pauper = false;
+    }
+    while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
+      type -= 1;
+    }
+  }
+
+  cube.type = intToLegality(type);
+  if (pauper) {
+    cube.type += ' Pauper';
+  }
+  cube.card_count = cube.cards.length;
+  return cube;
+}
+
 function cardHtml(card) {
   if (card.image_flip) {
     return `<a class="dynamic-autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
@@ -215,6 +237,84 @@ async function getElo(cardnames, round) {
   }
 
   return result;
+}
+
+function CSVtoCards(cards, carddb) {
+  let missing = '';
+  const newCards = [];
+  const newMaybe = [];
+  for (const rawCard of cards) {
+    const split = util.CSVtoArray(rawCard);
+    const name = split[0];
+    const maybeboard = split[8];
+    const card = {
+      name,
+      cmc: split[1],
+      type_line: split[2].replace('-', '—'),
+      colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
+      set: split[4].toUpperCase(),
+      addedTmsp: new Date(),
+      collector_number: split[5],
+      status: split[6],
+      finish: split[7],
+      imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
+      tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
+      notes: split[11],
+    };
+
+    const potentialIds = carddb.allIds(card);
+    if (potentialIds && potentialIds.length > 0) {
+      // First, try to find the correct set.
+      const matchingSetAndNumber = potentialIds.find((id) => {
+        const dbCard = carddb.cardFromId(id);
+        return (
+          card.set.toUpperCase() === dbCard.set.toUpperCase() &&
+          card.collector_number.toUpperCase() === dbCard.collector_number.toUpperCase()
+        );
+      });
+      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
+      const nonPromo = potentialIds.find(carddb.reasonableId);
+      const first = potentialIds[0];
+      card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
+      if (maybeboard === 'true') {
+        newMaybe.push(card);
+      } else {
+        newCards.push(card);
+      }
+    } else {
+      missing += `${card.name}\n`;
+    }
+  }
+  return { newCards, newMaybe, missing };
+}
+
+async function compareCubes(cardsA, cardsB) {
+  const inBoth = [];
+  const onlyA = cardsA.slice(0);
+  const onlyB = cardsB.slice(0);
+  const aNames = onlyA.map((card) => card.details.name);
+  const bNames = onlyB.map((card) => card.details.name);
+  for (const card of cardsA) {
+    if (bNames.includes(card.details.name)) {
+      inBoth.push(card);
+
+      onlyA.splice(aNames.indexOf(card.details.name), 1);
+      onlyB.splice(bNames.indexOf(card.details.name), 1);
+
+      aNames.splice(aNames.indexOf(card.details.name), 1);
+      bNames.splice(bNames.indexOf(card.details.name), 1);
+    }
+  }
+
+  const allCards = inBoth.concat(onlyA).concat(onlyB);
+  return {
+    inBoth,
+    onlyA,
+    onlyB,
+    aNames,
+    bNames,
+    allCards,
+  };
 }
 
 /* 
@@ -365,26 +465,8 @@ const methods = {
 
     return res;
   },
+  setCubeType,
   cardsAreEquivalent,
-  setCubeType(cube, carddb) {
-    let pauper = true;
-    let type = legalityToInt('Standard');
-    for (const card of cube.cards) {
-      if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
-        pauper = false;
-      }
-      while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
-        type -= 1;
-      }
-    }
-
-    cube.type = intToLegality(type);
-    if (pauper) {
-      cube.type += ' Pauper';
-    }
-    cube.card_count = cube.cards.length;
-    return cube;
-  },
   sanitize(html) {
     return sanitizeHtml(html, {
       allowedTags: [
@@ -464,6 +546,8 @@ const methods = {
   buildTagColors,
   maybeCards,
   getElo,
+  CSVtoCards,
+  compareCubes,
   generateSamplepackImage,
 };
 
