@@ -16,7 +16,6 @@ class DeckDeleteModal extends React.Component {
   }
 
   confirm() {
-    console.log(this.deckID, this.cubeID, this.nextURL);
     csrfFetch(`/cube/deletedeck/${this.deckID}`, {
       method: 'DELETE',
       headers: {},
