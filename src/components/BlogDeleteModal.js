@@ -13,17 +13,17 @@ class BlogDeleteModal extends React.Component {
     this.confirm = this.confirm.bind(this);
   }
 
-  confirm() {
-    csrfFetch(`/cube/blog/remove/${this.postID}`, {
+  async confirm() {
+    const response = await csrfFetch(`/cube/blog/remove/${this.postID}`, {
       method: 'DELETE',
       headers: {},
-    }).then((response) => {
-      if (!response.ok) {
-        console.log(response);
-      } else {
-        window.location.href = '';
-      }
     });
+
+    if (!response.ok) {
+      console.log(response);
+    } else {
+      window.location.href = '';
+    }
   }
 
   render() {

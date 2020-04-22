@@ -15,19 +15,19 @@ class DeckDeleteModal extends React.Component {
     this.confirm = this.confirm.bind(this);
   }
 
-  confirm() {
-    csrfFetch(`/cube/deletedeck/${this.deckID}`, {
+  async confirm() {
+    const response = await csrfFetch(`/cube/deletedeck/${this.deckID}`, {
       method: 'DELETE',
       headers: {},
-    }).then((response) => {
-      if (!response.ok) {
-        console.log(response);
-      } else if (this.nextURL) {
-        window.location.href = this.nextURL;
-      } else {
-        window.location.href = `/cube/playtest/${this.cubeID}`;
-      }
     });
+
+    if (!response.ok) {
+      console.log(response);
+    } else if (this.nextURL) {
+      window.location.href = this.nextURL;
+    } else {
+      window.location.href = `/cube/playtest/${this.cubeID}`;
+    }
   }
 
   render() {
