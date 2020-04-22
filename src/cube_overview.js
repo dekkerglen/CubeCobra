@@ -167,27 +167,33 @@ class CubeOverview extends Component {
             <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <TextBadge name="Cube ID">
-                  <Tooltip text="Click to copy to clipboard">
-                    <button
-                      type="button"
-                      className="cube-id-btn"
-                      onKeyDown={() => {}}
-                      onClick={(e) => {
-                        navigator.clipboard.writeText(cubeID);
-                        e.target.blur();
-                        addAlert('success', 'Cube ID copied to clipboard.');
-                      }}
-                    >
-                      {cubeID}
-                    </button>
-                  </Tooltip>
-                </TextBadge>
-                <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
-                  <FollowersModalLink href="#" modalProps={{ followers }}>
-                    {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
-                  </FollowersModalLink>
-                </h6>
+                <Row>
+                  <Col>
+                    <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
+                      <FollowersModalLink href="#" modalProps={{ followers }}>
+                        {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
+                      </FollowersModalLink>
+                    </h6>
+                  </Col>
+                  <Col sm={5} style={{ paddingTop: 3 }}>
+                    <TextBadge name="Cube ID">
+                      <Tooltip text="Click to copy to clipboard">
+                        <button
+                          type="button"
+                          className="cube-id-btn"
+                          onKeyDown={() => {}}
+                          onClick={(e) => {
+                            navigator.clipboard.writeText(cubeID);
+                            e.target.blur();
+                            addAlert('success', 'Cube ID copied to clipboard.');
+                          }}
+                        >
+                          {cubeID}
+                        </button>
+                      </Tooltip>
+                    </TextBadge>
+                  </Col>
+                </Row>
               </CardHeader>
               <div className="position-relative">
                 <img className="card-img-top w-100" alt={cube.image_name} src={cube.image_uri} />
