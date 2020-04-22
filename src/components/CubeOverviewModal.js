@@ -142,7 +142,7 @@ class CubeOverviewModal extends Component {
         },
       }));
     } else {
-      if (target.name === 'urlAlias') this.setState({urlChanged: true});
+      if (target.name === 'urlAlias') this.setState({ urlChanged: true });
       this.setState((prevState) => ({
         cube: {
           ...prevState.cube,
