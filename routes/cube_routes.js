@@ -853,6 +853,7 @@ router.get('/playtest/:id', async (req, res) => {
       cube,
       cubeID: req.params.id,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
+      userID: req.user ? req.user._id : null,
       decks,
       draftFormats,
     };
