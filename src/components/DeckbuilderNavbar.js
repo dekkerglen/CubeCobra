@@ -1,6 +1,8 @@
 import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
+import DeckDeleteModal from 'components/DeckDeleteModal';
+
 import {
   Button,
   Collapse,
@@ -88,6 +90,7 @@ BasicsModal.propTypes = {
 const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const toggleNavbar = useCallback(
     (event) => {
@@ -117,6 +120,14 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     },
     [saveForm],
   );
+
+  const openDeleteModal = useCallback(() => {
+    setDeleteModalOpen(true);
+  }, [setDeleteModalOpen]);
+
+  const toggleDeleteModal = useCallback(() => {
+    setDeleteModalOpen(!deleteModalOpen);
+  }, [deleteModalOpen, setDeleteModalOpen]);
 
   const stripped = useMemo(() => {
     const res = JSON.parse(JSON.stringify(deck));
@@ -155,6 +166,12 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
             </CSRFForm>
           </NavItem>
           <NavItem>
+            <NavLink href="#" onClick={openDeleteModal}>
+              Delete Deck
+            </NavLink>
+            <DeckDeleteModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} deckID={deck._id} cubeID={deck.cube} />
+          </NavItem>
+          <NavItem>
             <NavLink href="#" onClick={toggleBasicsModal}>
               Add Basic Lands
             </NavLink>
@@ -170,6 +187,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
 DeckbuilderNavbar.propTypes = {
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
+    cube: PropTypes.string.isRequired,
     playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
   }).isRequired,

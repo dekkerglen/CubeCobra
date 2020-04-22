@@ -246,7 +246,7 @@ const SealedCard = () => {
   );
 };
 
-const DecksCard = ({ decks, ...props }) => {
+const DecksCard = ({ decks, canEdit, userID, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card {...props}>
@@ -255,7 +255,7 @@ const DecksCard = ({ decks, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} />
+          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit || userID === deck.seats[0].userid} />
         ))}
       </CardBody>
       <CardFooter>
@@ -271,6 +271,8 @@ DecksCard.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  userID: PropTypes.string.isRequired,
+  canEdit: PropTypes.bool.isRequired,
 };
 
 const SamplePackCard = (props) => {
@@ -302,7 +304,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
-const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
+const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }) => {
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -434,7 +436,9 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, decks, draftFormats }) => {
           <SealedCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} cubeID={cubeID} className="mb-3" />}
+          {decks.length !== 0 && (
+            <DecksCard decks={decks} canEdit={canEdit} userID={userID} cubeID={cubeID} className="mb-3" />
+          )}
           <SamplePackCard className="mb-3" />
         </Col>
       </Row>
@@ -455,6 +459,7 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
+  userID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   draftFormats: PropTypes.arrayOf(

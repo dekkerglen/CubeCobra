@@ -552,7 +552,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       {
         seats: { $elemMatch: { userid } },
       },
-      '_id seats date',
+      '_id seats date cube',
     )
       .sort({
         date: -1,
