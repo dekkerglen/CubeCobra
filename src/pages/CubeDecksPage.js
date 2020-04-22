@@ -32,6 +32,7 @@ const CubeDecksPage = ({ cube, cubeID, canEdit, userID, decks, pages, activePage
 CubeDecksPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
+  userID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool.isRequired,
   decks: PropTypes.arrayOf(
     PropTypes.shape({
