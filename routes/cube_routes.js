@@ -833,7 +833,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube: cube._id,
       },
-      'date seats _id',
+      'date seats _id cube',
     )
       .sort({
         date: -1,
@@ -2823,7 +2823,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       {
         cube: cube._id,
       },
-      '_id seats date',
+      '_id seats date cube',
     )
       .sort({
         date: -1,

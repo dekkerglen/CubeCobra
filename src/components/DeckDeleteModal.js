@@ -2,58 +2,44 @@ import PropTypes from 'prop-types';
 
 import React from 'react';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
-
 import { csrfFetch } from 'utils/CSRF';
+
+import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
 class DeckDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.toggle = props.toggle;
-    this.acceptButton = React.createRef();
+    this.deckID = props.deckID;
+    this.cubeID = props.cubeID;
+    this.nextURL = props.nextURL;
     this.confirm = this.confirm.bind(this);
-    this.focusAcceptButton = this.focusAcceptButton.bind(this);
-  }
-
-  focusAcceptButton() {
-    if (this.acceptButton.current) {
-      this.acceptButton.current.focus();
-    }
   }
 
   confirm() {
-    const { deckID, cubeID, nextURL } = this.props;
-    csrfFetch(`/cube/deletedeck/${deckID}`, {
+    console.log(this.deckID, this.cubeID, this.nextURL);
+    csrfFetch(`/cube/deletedeck/${this.deckID}`, {
       method: 'DELETE',
       headers: {},
     }).then((response) => {
       if (!response.ok) {
         console.log(response);
-      } else if (nextURL) {
-        window.location.href = nextURL;
+      } else if (this.nextURL) {
+        window.location.href = this.nextURL;
       } else {
-        window.location.href = `/cube/playtest/${cubeID}`;
+        window.location.href = `/cube/playtest/${this.cubeID}`;
       }
     });
   }
 
   render() {
-    const { isOpen } = this.props;
+    const { isOpen, toggle } = this.props;
     return (
-      <Modal isOpen={isOpen} toggle={this.toggle} onOpened={this.focusAcceptButton}>
-        <ModalHeader toggle={this.toggle}>Confirm Delete</ModalHeader>
-        <ModalBody>
-          <p>Are you sure you wish to delete this deck? This action cannot be undone.</p>
-        </ModalBody>
-        <ModalFooter>
-          <Button innerRef={this.acceptButton} color="danger" onClick={this.confirm}>
-            Delete
-          </Button>{' '}
-          <Button color="secondary" onClick={this.toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
+      <ConfirmDeleteModal
+        toggle={toggle}
+        delete={this.confirm}
+        isOpen={isOpen}
+        text="Are you sure you wish to delete this deck? This action cannot be undone."
+      />
     );
   }
 }

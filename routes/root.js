@@ -26,7 +26,7 @@ const router = express.Router();
 router.use(csrfProtection);
 
 const CUBE_PREVIEW_FIELDS =
-  '_id urlAlias shortId image_uri image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
+  '_id urlAlias shortId image_uri image_name image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
 
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
@@ -179,7 +179,7 @@ router.get('/dashboard', async (req, res) => {
       }
     }
 
-    const reactProps = { posts, cubes, decks, userId: user._id };
+    const reactProps = { posts, cubes, decks, canEdit: true, userId: user._id };
 
     return res.render('dashboard', {
       reactHTML:
@@ -257,6 +257,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
     return res.render('dashboard_decks', {
       decks,
       pages,
+      canEdit: true,
       loginCallback: '/',
     });
   } catch (err) {

@@ -54,7 +54,7 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    const { post, onDelete, onEdit } = this.props;
+    const { post, onEdit } = this.props;
     if (post.html == 'undefined') {
       post.html = null;
     }
@@ -65,13 +65,7 @@ class BlogPost extends React.Component {
             {post.title}
             <div className="float-sm-right">
               {this.props.canEdit && (
-                <BlogContextMenu
-                  className="float-sm-right"
-                  post={post}
-                  value="..."
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                />
+                <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />
               )}
             </div>
           </h5>

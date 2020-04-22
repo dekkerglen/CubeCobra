@@ -1,7 +1,7 @@
 import React from 'react';
 import TimeAgo from 'react-timeago';
 
-class DeckPreview extends React.Component {
+class Notification extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -25,4 +25,4 @@ class DeckPreview extends React.Component {
   }
 }
 
-export default DeckPreview;
+export default Notification;

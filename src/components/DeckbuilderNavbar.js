@@ -90,7 +90,6 @@ BasicsModal.propTypes = {
 const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
-  const deleteModal = useRef();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const toggleNavbar = useCallback(
@@ -170,13 +169,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
             <NavLink href="#" onClick={openDeleteModal}>
               Delete Deck
             </NavLink>
-            <DeckDeleteModal
-              toggle={toggleDeleteModal}
-              isOpen={deleteModalOpen}
-              deckID={deck._id}
-              cubeID={deck.cube}
-              ref={deleteModal}
-            />
+            <DeckDeleteModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} deckID={deck._id} cubeID={deck.cube} />
           </NavItem>
           <NavItem>
             <NavLink href="#" onClick={toggleBasicsModal}>

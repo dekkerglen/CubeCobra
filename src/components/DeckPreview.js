@@ -8,7 +8,6 @@ import DeckDeleteModal from 'components/DeckDeleteModal';
 const DeckPreview = ({ deck, canEdit, nextURL }) => {
   const maxLength = 35;
   const { date } = deck;
-  const deleteModal = useRef();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   let { name } = deck.seats[0];
@@ -59,7 +58,6 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
               isOpen={deleteModalOpen}
               deckID={deck._id}
               cubeID={deck.cube}
-              ref={deleteModal}
               nextURL={nextURL}
             />
           </button>
