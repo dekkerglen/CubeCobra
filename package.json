@@ -91,6 +91,7 @@
     "request": "^2.88.0",
     "rss": "^1.2.2",
     "sanitize-html": "^1.20.1",
+    "seedrandom": "^3.0.5",
     "serialize-javascript": "^2.1.2",
     "shuffle-seed": "^1.1.6",
     "style-loader": "^1.1.3",

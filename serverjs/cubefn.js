@@ -4,6 +4,7 @@ const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 
 const util = require('./util');
+const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
 
 function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;
@@ -517,22 +518,17 @@ const methods = {
     return src;
   },
   generatePack: async (cubeId, carddb, seed) => {
-    const cube = await Cube.findOne(buildIdQuery(cubeId));
+    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
     if (!seed) {
       seed = Date.now().toString();
     }
-
-    const pack = util
-      .shuffle(cube.cards, seed)
-      .slice(0, 15)
-      .map((card) => {
-        card.details = carddb.getCardDetails(card);
-        return card;
-      });
-
+    cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
+    const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
+    const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
+    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack,
+      pack: draft.unopenedPacks[0][0].map((card) => card.details),
     };
   },
   generateShortId,

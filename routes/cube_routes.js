@@ -1963,59 +1963,64 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
-router.post('/startdraft/:id', async (req, res) => {
-  try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards').lean();
+router.post(
+  '/startdraft/:id',
+  body('id').toInt(),
+  body('seats').toInt({ min: 2, max: 16 }),
+  body('packs').toInt({ min: 1, max: 36 }),
+  body('cards').toInt({ min: 1, max: 90 }),
+  async (req, res) => {
+    try {
+      const cube = await Cube.findOne(
+        buildIdQuery(req.params.id),
+        '_id name draft_formats card_count type cards',
+      ).lean();
 
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      return res.status(404).render('misc/404', {});
+      if (!cube) {
+        req.flash('danger', 'Cube not found');
+        return res.status(404).render('misc/404', {});
+      }
+
+      if (cube.cards.length === 0) {
+        throw new Error('Could not create draft: no cards');
+      }
+
+      const params = req.body;
+
+      // insert card details everywhere that needs them
+      for (const card of cube.cards) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+      const elo = await getElo(cube.cards.map((card) => card.details.name));
+      for (const card of cube.cards) {
+        card.rating = elo[card.details.name];
+      }
+
+      // setup draft
+      const bots = draftutil.getDraftBots(params);
+      const format = draftutil.getDraftFormat(params, cube);
+
+      const draft = new Draft();
+      const populated = draftutil.createDraft(
+        format,
+        cube.cards,
+        bots,
+        params.seats,
+        req.user ? req.user : { username: 'Anonymous' },
+      );
+
+      draft.initial_state = populated.initial_state;
+      draft.unopenedPacks = populated.unopenedPacks;
+      draft.seats = populated.seats;
+      draft.cube = cube._id;
+
+      await draft.save();
+      return res.redirect(`/cube/draft/${draft._id}`);
+    } catch (err) {
+      return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
     }
-
-    if (cube.cards.length === 0) {
-      throw new Error('Could not create draft: no cards');
-    }
-
-    const params = {
-      id: parseInt(req.body.id, 10), // < 0 is standard draft, otherwise custom draft
-      seats: parseInt(req.body.seats, 10),
-      packs: parseInt(req.body.packs, 10),
-      cards: parseInt(req.body.cards, 10),
-    };
-
-    // insert card details everywhere that needs them
-    for (const card of cube.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-    }
-    const elo = await getElo(cube.cards.map((card) => card.details.name));
-    for (const card of cube.cards) {
-      card.rating = elo[card.details.name];
-    }
-
-    // setup draft
-    const bots = draftutil.getDraftBots(params);
-    const format = draftutil.getDraftFormat(params, cube);
-
-    const draft = new Draft();
-    const populated = draftutil.populateDraft(
-      format,
-      cube.cards,
-      bots,
-      params.seats,
-      req.user ? req.user : { username: 'Anonymous' },
-    );
-
-    draft.initial_state = populated.initial_state;
-    draft.unopenedPacks = populated.unopenedPacks;
-    draft.seats = populated.seats;
-    draft.cube = cube._id;
-
-    await draft.save();
-    return res.redirect(`/cube/draft/${draft._id}`);
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
-  }
-});
+  },
+);
 
 router.get('/draft/:id', async (req, res) => {
   try {
@@ -3724,6 +3729,33 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
     });
   }
 });
+
+router.post(
+  '/:id/defaultdraftformat/:formatId',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cubeid = req.params.id;
+    const formatId = parseInt(req.params.formatId, 10);
+
+    const cube = await Cube.findOne(buildIdQuery(cubeid));
+    if (
+      !cube ||
+      cube.owner !== req.user.id ||
+      !Number.isInteger(formatId) ||
+      formatId >= cube.draft_formats.length ||
+      formatId < -1
+    ) {
+      return res.sendStatus(401);
+    }
+
+    cube.defaultDraftFormat = formatId;
+
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
 
 router.post(
   '/api/savesorts/:id',
