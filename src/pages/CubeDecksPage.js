@@ -7,7 +7,7 @@ import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
 import CubeLayout from 'layouts/CubeLayout';
 
-const CubeDecksPage = ({ cube, cubeID, canEdit, decks, pages, activePage }) => (
+const CubeDecksPage = ({ cube, cubeID, canEdit, userID, decks, pages, activePage }) => (
   <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
     {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cubeID}/${i}`} />}
     <Card>
@@ -16,7 +16,12 @@ const CubeDecksPage = ({ cube, cubeID, canEdit, decks, pages, activePage }) => (
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit} nextURL={`/cube/decks/${cubeID}/${activePage}`} />
+          <DeckPreview
+            key={deck._id}
+            deck={deck}
+            canEdit={canEdit || userID === deck.seats[0].userid}
+            nextURL={`/cube/decks/${cubeID}/${activePage}`}
+          />
         ))}
       </CardBody>
     </Card>
