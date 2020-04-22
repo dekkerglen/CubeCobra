@@ -735,4 +735,13 @@ img.mana-symbol {
 }
 .pagination {
 	justify-content: center;
-  }
+}
+
+.cube-id-btn {
+	border: none;
+	background-color: white;
+	margin: -8px;
+}
+.cube-id-btn:focus {
+	outline: 0;
+}
