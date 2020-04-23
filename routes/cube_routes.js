@@ -49,7 +49,8 @@ const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
-const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
+const CSV_HEADER =
+  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -1268,14 +1269,11 @@ async function bulkUpload(req, res, list, cube) {
   const added = [];
   let changelog = '';
   if (cards) {
-    if (cards[0].trim() === CSV_HEADER) {
-      cards.splice(0, 1);
+    if ((cards[0].match(/,/g) || []).length > 3) {
       let newCards = [];
       let newMaybe = [];
-      ({ newCards, newMaybe, missing } = CSVtoCards(cards, carddb));
-      newCards.forEach((card) => {
-        changelog += addCardHtml(carddb.cardFromId(card.cardID));
-      });
+      ({ newCards, newMaybe, missing } = await CSVtoCards(list, carddb));
+      changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
       added.concat(newCards, newMaybe);
@@ -1395,8 +1393,8 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       const added = [];
       let newCards = [];
       let newMaybe = [];
-      if (lines[0].trim() === CSV_HEADER) {
-        ({ newCards, newMaybe, missing } = CSVtoCards(lines.slice(1), carddb));
+      if ((lines[0].match(/,/g) || []).length > 3) {
+        ({ newCards, newMaybe, missing } = await CSVtoCards(items, carddb));
         cube.cards = newCards;
         cube.maybe = newMaybe;
         const pids = new Set();
@@ -1475,12 +1473,7 @@ function writeCard(res, card, maybe) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
   let { name } = carddb.cardFromId(card.cardID);
-  while (name.includes('"')) {
-    name = name.replace('"', '-quote-');
-  }
-  while (name.includes('-quote-')) {
-    name = name.replace('-quote-', '""');
-  }
+  name = name.replace(/"/, '""');
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
@@ -1493,6 +1486,8 @@ function writeCard(res, card, maybe) {
   res.write(`${card.colors.join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`${card.rarity},`);
+  res.write(`${card.colorCategory},`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
@@ -1527,7 +1522,7 @@ router.get('/download/csv/:id', async (req, res) => {
     }
     if (Array.isArray(cube.maybe)) {
       for (const card of cube.maybe) {
-        writeCard(req, res, card, true);
+        writeCard(res, card, true);
       }
     }
     return res.end();
