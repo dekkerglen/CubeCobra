@@ -56,16 +56,35 @@ const HyperGeom = () => {
   const [lte, setlte] = useState('');
   const [et, setet] = useState('');
 
-  const factorial = (n) => {
-    let total = 1;
-    for (let i = 1; i <= n; i++) {
-      total *= i;
-    }
-    return total;
-  };
-
   const combination = (n, r) => {
-    return factorial(n) / (factorial(r) * factorial(n - r));
+    const topArray = [];
+    const botArray = [];
+    const comboArray = [];
+
+    for (let i = 1; i <= n; i++) {
+      topArray.push(i);
+    }
+    for (let i = 1; i <= r; i++) {
+      botArray.push(i);
+    }
+    for (let i = 1; i <= n - r; i++) {
+      comboArray.push(i);
+    }
+
+    let sum = 1;
+
+    for (let i = 0; i < Math.max(topArray.length, botArray.length, comboArray.length); i++) {
+      if (topArray[i]) {
+        sum *= topArray[i];
+      }
+      if (botArray[i]) {
+        sum /= botArray[i];
+      }
+      if (comboArray[i]) {
+        sum /= comboArray[i];
+      }
+    }
+    return sum;
   };
 
   const hyp = (N, S, n, s) => {
@@ -178,8 +197,6 @@ const HyperGeom = () => {
   });
   const length = possible.length > 0 ? Math.max(...possible.map((x) => parseInt(x, 10))) + 1 : 0;
 
-  console.log(length);
-
   const plotPopSize = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
@@ -192,7 +209,6 @@ const HyperGeom = () => {
     for (let i = 0; i < size; i++) {
       res.push(calculate(dataset.populationSize, i, dataset.sampleSize, dataset.sampleSuccesses).greaterThanEqual);
     }
-    console.log(res);
     return res;
   };
   const plotSampleSize = (dataset, size) => {
@@ -234,7 +250,6 @@ const HyperGeom = () => {
       data: plotData(dataset, length),
     })),
   };
-  console.log(plotdata);
 
   return (
     <>
