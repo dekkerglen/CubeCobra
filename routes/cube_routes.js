@@ -1272,7 +1272,7 @@ async function bulkUpload(req, res, list, cube) {
     if ((cards[0].match(/,/g) || []).length > 3) {
       let newCards = [];
       let newMaybe = [];
-      ({ newCards, newMaybe, missing } = await CSVtoCards(list, carddb));
+      ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
       changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
@@ -1394,7 +1394,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       let newCards = [];
       let newMaybe = [];
       if ((lines[0].match(/,/g) || []).length > 3) {
-        ({ newCards, newMaybe, missing } = await CSVtoCards(items, carddb));
+        ({ newCards, newMaybe, missing } = CSVtoCards(items, carddb));
         cube.cards = newCards;
         cube.maybe = newMaybe;
         const pids = new Set();
