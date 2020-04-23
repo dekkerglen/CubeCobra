@@ -41,7 +41,7 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
-const carddb = require('../serverjs/cards.js');
+const { cardsFromIds, namesToCardDict } = require('../serverjs/cards');
 
 const util = require('../serverjs/util.js');
 const { GetPrices } = require('../serverjs/prices.js');
@@ -111,15 +111,17 @@ router.post('/add', ensureAuth, async (req, res) => {
     cube.cards = [];
     cube.decks = [];
     cube.articles = [];
-    const details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
-    cube.image_uri = details.art_crop;
-    cube.image_name = details.full_name;
-    cube.image_artist = details.artist;
+
+    // these hard coded values are saving us a pointless DB call - as long as this card doesn't change
+    cube.image_uri =
+      'https://img.scryfall.com/cards/art_crop/front/3/d/3d946df5-f206-4241-bb55-97db67dc793c.jpg?1562546549';
+    cube.image_name = 'Doubling Cube [10e-321]';
+    cube.image_artist = 'Mark Tedin';
     cube.description = 'This is a brand new cube!';
     cube.owner_name = user.username;
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
+    cube = await setCubeType(cube);
     await cube.save();
 
     req.flash('success', 'Cube Added');
@@ -165,7 +167,7 @@ router.get('/clone/:id', async (req, res) => {
     cube.owner_name = req.user.username;
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
+    cube = await setCubeType(cube);
     await cube.save();
 
     const sourceOwner = await User.findById(source.owner);
@@ -267,7 +269,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
 
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
+    cube = await setCubeType(cube);
 
     await cube.save();
 

@@ -16,7 +16,6 @@ if (NODE_ENV === 'production') {
   DashboardPage = require('../dist/pages/DashboardPage').default;
 }
 
-const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
 const { addAutocard } = require('../serverjs/cubefn');
 const { csrfProtection } = require('./middleware');

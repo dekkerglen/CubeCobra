@@ -44,9 +44,9 @@ let cardSchema = mongoose.Schema({
   language: String,
   mtgo_id: String,
   tcgplayer_id: String,
-  loyalty: Number,
-  power: Number,
-  toughness: Number,
+  loyalty: String,
+  power: String,
+  toughness: String,
   // URL
   image_small: String,
   // URL

@@ -1,28 +1,5 @@
-const fs = require('fs');
 const winston = require('winston');
-const util = require('./util.js');
-
-const data = {
-  cardtree: {},
-  imagedict: {},
-  cardimages: {},
-  cardnames: [],
-  full_names: [],
-  nameToId: {},
-  english: {},
-  _carddict: {},
-};
-
-const fileToAttribute = {
-  'carddict.json': '_carddict',
-  'cardtree.json': 'cardtree',
-  'names.json': 'cardnames',
-  'nameToId.json': 'nameToId',
-  'full_names.json': 'full_names',
-  'imagedict.json': 'imagedict',
-  'cardimages.json': 'cardimages',
-  'english.json': 'english',
-};
+const Card = require('../models/card');
 
 function getPlaceholderCard(_id) {
   // placeholder card if we don't find the one due to a scryfall ID update bug
@@ -51,25 +28,47 @@ function getPlaceholderCard(_id) {
   };
 }
 
-function cardFromId(id, fields) {
-  let details;
-  if (data._carddict[id]) {
-    details = data._carddict[id];
-  } else {
+const cardsFromIds = async (ids) => {
+  const cards = await Card.find({ scryfall_id: { $in: ids } }).lean();
+  const dict = {};
+  for (const card of cards) {
+    dict[card.scryfall_id] = card;
+  }
+  return ids.map((id) => dict[id]);
+};
+
+const cardFromId = async (id) => {
+  const card = await Card.findOne({ scryfall_id: id }).lean();
+  if (!card) {
     // TODO: replace this back with error. it was clogging the logs.
     winston.info(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
-    details = getPlaceholderCard(id);
+    return getPlaceholderCard(id);
   }
+  return card;
+};
 
-  if (typeof fields === 'undefined') {
-    return details;
+const nameToCards = async (name) => {
+  const cards = await Card.find({ name_lower: name }).lean();
+  if (!cards) {
+    return [];
   }
-  if (!Array.isArray(fields)) {
-    fields = fields.split(' ');
-  }
+  return cards;
+};
 
-  return util.fromEntries(fields.map((field) => [field, details[field]]));
-}
+const namesToCardDict = async (names) => {
+  const cards = await Card.find({ name_lower: { $in: names } }).lean();
+  if (!cards) {
+    return {};
+  }
+  const dict = {};
+  for (const card of cards) {
+    if (!dict[card.name_lower]) {
+      dict[card.name_lower] = [];
+    }
+    dict[card.name_lower].push(card);
+  }
+  return cards;
+};
 
 function getCardDetails(card) {
   if (data._carddict[card.cardID]) {
@@ -79,55 +78,6 @@ function getCardDetails(card) {
   }
   winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
   return getPlaceholderCard(card.cardID);
-}
-
-function loadJSONFile(filename, attribute) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filename, 'utf8', (err, contents) => {
-      if (!err) {
-        try {
-          data[attribute] = JSON.parse(contents);
-        } catch (e) {
-          winston.error(`Error parsing json from ${filename}.`, { error: e });
-          err = e;
-        }
-      }
-      if (err) {
-        reject(err);
-      } else {
-        resolve(contents);
-      }
-    });
-  });
-}
-
-function registerFileWatcher(filename, attribute) {
-  fs.watchFile(filename, () => {
-    winston.info(`File Changed: ${filename}`);
-    loadJSONFile(filename, attribute);
-  });
-}
-
-function initializeCardDb(dataRoot, skipWatchers) {
-  winston.info('Loading carddb...');
-  if (dataRoot === undefined) {
-    dataRoot = 'private';
-  }
-  const promises = [];
-  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
-    const filepath = `${dataRoot}/${filename}`;
-    promises.push(loadJSONFile(filepath, attribute));
-    if (skipWatchers !== true) {
-      registerFileWatcher(filepath, attribute);
-    }
-  }
-  return Promise.all(promises).then(() => winston.info('Finished loading carddb.'));
-}
-
-function unloadCardDb() {
-  for (const attribute of Object.values(fileToAttribute)) {
-    delete data[attribute];
-  }
 }
 
 function reasonableCard(card) {
@@ -184,24 +134,20 @@ function getMostReasonableById(id, printing = 'recent') {
 }
 
 function getEnglishVersion(id) {
-  return data.english[id];
+  // TODO: add english mapping
+  // return data.english[id];
 }
 
-data.cardFromId = cardFromId;
-data.getCardDetails = getCardDetails;
-data.getIdsFromName = getIdsFromName;
-data.getEnglishVersion = getEnglishVersion;
-data.allIds = (card) => getIdsFromName(card.name);
-data.allCards = () => Object.values(data._carddict);
-data.initializeCardDb = initializeCardDb;
-data.loadJSONFile = loadJSONFile;
-data.getPlaceholderCard = getPlaceholderCard;
-data.unloadCardDb = unloadCardDb;
-data.getMostReasonable = getMostReasonable;
-data.getMostReasonableById = getMostReasonableById;
-data.reasonableId = reasonableId;
-data.reasonableCard = reasonableCard;
-
-data.normalizedName = (card) => card.name_lower;
-
-module.exports = data;
+module.exports = {
+  getEnglishVersion,
+  getMostReasonableById,
+  getMostReasonable,
+  getIdsFromName,
+  reasonableId,
+  reasonableCard,
+  getCardDetails,
+  cardFromId,
+  cardsFromIds,
+  nameToCards,
+  namesToCardDict,
+};

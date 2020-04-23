@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 
 const { GetPrices } = require('../serverjs/prices');
 const { getElo } = require('../serverjs/cubefn.js');
-const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');

@@ -2,8 +2,8 @@ const sanitizeHtml = require('sanitize-html');
 
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
-
 const util = require('./util');
+const { cardsFromIds, namesToCardDict } = require('./cards');
 
 function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;
@@ -114,14 +114,15 @@ function cardsAreEquivalent(card, details) {
   return true;
 }
 
-function setCubeType(cube, carddb) {
+const setCubeType = async (cube) => {
   let pauper = true;
   let type = legalityToInt('Standard');
-  for (const card of cube.cards) {
-    if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
+  const cards = await cardsFromIds(cube.cards.map((card) => card.cardID));
+  for (const card of cards) {
+    if (pauper && !card.legalities.Pauper) {
       pauper = false;
     }
-    while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
+    while (type > 0 && !card.legalities[intToLegality(type)]) {
       type -= 1;
     }
   }
@@ -132,7 +133,7 @@ function setCubeType(cube, carddb) {
   }
   cube.card_count = cube.cards.length;
   return cube;
-}
+};
 
 function cardHtml(card) {
   if (card.image_flip) {
@@ -218,10 +219,15 @@ function buildTagColors(cube) {
   return tagColor;
 }
 
-function maybeCards(cube, carddb) {
+const maybeCards = async (cube) => {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
-  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
-}
+  const cards = await cardsFromIds(maybe.map((card) => card.cardID));
+  const dict = {};
+  for (const card of cards) {
+    dict[card.scryfall_id] = card;
+  }
+  return maybe.map((card) => ({ ...card, details: dict[card.cardID] }));
+};
 
 async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
@@ -238,10 +244,13 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-function CSVtoCards(cards, carddb) {
+const CSVtoCards = async (cards) => {
   let missing = '';
   const newCards = [];
   const newMaybe = [];
+
+  const dict = await namesToCardDict(cards.map((card) => util.CSVtoArray(card)[0]));
+
   for (const rawCard of cards) {
     const split = util.CSVtoArray(rawCard);
     const name = split[0];
@@ -261,20 +270,17 @@ function CSVtoCards(cards, carddb) {
       notes: split[11],
     };
 
-    const potentialIds = carddb.allIds(card);
-    if (potentialIds && potentialIds.length > 0) {
+    const potentialCards = dict[name];
+    if (potentialCards && potentialCards.length > 0) {
       // First, try to find the correct set.
-      const matchingSetAndNumber = potentialIds.find((id) => {
-        const dbCard = carddb.cardFromId(id);
-        return (
-          card.set.toUpperCase() === dbCard.set.toUpperCase() &&
-          card.collector_number.toUpperCase() === dbCard.collector_number.toUpperCase()
-        );
-      });
-      const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
-      const nonPromo = potentialIds.find(carddb.reasonableId);
-      const first = potentialIds[0];
-      card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
+      const matchingSetAndNumber = potentialCards.find(
+        (possible) =>
+          card.set.toUpperCase() === possible.set.toUpperCase() &&
+          card.collector_number.toUpperCase() === possible.collector_number.toUpperCase(),
+      );
+      const matchingSet = potentialCards.find((possible) => possible.set.toUpperCase() === card.set);
+      const first = potentialCards[0];
+      card.cardID = (matchingSetAndNumber || matchingSet || first).scryfall_id;
       if (maybeboard === 'true') {
         newMaybe.push(card);
       } else {
@@ -285,7 +291,7 @@ function CSVtoCards(cards, carddb) {
     }
   }
   return { newCards, newMaybe, missing };
-}
+};
 
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];
@@ -441,19 +447,19 @@ const generateSamplepackImage = (sources = [], options = {}) =>
   });
 
 const methods = {
-  getBasics(carddb) {
+  getBasics: async () => {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
     const set = 'unh';
     const res = {};
+    const dict = await namesToCardDict(names);
     for (const name of names) {
       let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
-      for (const option of options) {
-        const card = carddb.cardFromId(option);
+      const options = dict[name.toLowerCase()];
+      for (const card of options) {
         if (!found && card.set.toLowerCase() === set) {
           found = true;
           res[name] = {
-            cardID: option,
+            cardID: card.scryfall_id,
             type_line: card.type,
             cmc: 0,
             details: card,
@@ -489,22 +495,26 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  addAutocard(src, carddb, cube) {
+  addAutocard: async (src, cube) => {
+    const cardnames = src.match(/(\[\[.+?\]\])/);
+    const dict = await namesToCardDict(cardnames.map((name) => name.toLowerCase()));
     while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
       const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
       let mid = cardname;
-      if (carddb.nameToId[cardname.toLowerCase()]) {
-        const possible = carddb.nameToId[cardname.toLowerCase()];
-        let cardID = null;
+      if (dict[cardname.toLowerCase()]) {
+        const possible = dict[cardname.toLowerCase()];
+        let index = null;
         if (cube && cube.cards) {
-          const allIds = cube.cards.map((card) => card.cardID);
-          const matchingNameIds = allIds.filter((id) => possible.includes(id));
-          [cardID] = matchingNameIds;
+          const candidateIds = cube.cards
+            .filter((card) => card.name.toLowerCase() === cardname)
+            .map((card) => card.cardID);
+          for (let i = 0; i < possible.length; i++) {
+            if (candidateIds.includes(possible[i].scryfall_id)) {
+              index = i;
+            }
+          }
         }
-        if (!cardID) {
-          [cardID] = possible;
-        }
-        const card = carddb.cardFromId(cardID);
+        const card = possible[index || 0];
         if (card.image_flip) {
           mid = `<a class="autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
         } else {
@@ -516,19 +526,19 @@ const methods = {
     }
     return src;
   },
-  generatePack: async (cubeId, carddb, seed) => {
+  generatePack: async (cubeId, seed) => {
     const cube = await Cube.findOne(buildIdQuery(cubeId));
     if (!seed) {
       seed = Date.now().toString();
     }
 
-    const pack = util
-      .shuffle(cube.cards, seed)
-      .slice(0, 15)
-      .map((card) => {
-        card.details = carddb.getCardDetails(card);
-        return card;
-      });
+    const pack = util.shuffle(cube.cards, seed).slice(0, 15);
+
+    const details = await cardsFromIds(pack.map((card) => card.cardID));
+
+    for (let i = 0; i < pack.length; i++) {
+      pack[i].details = details[i];
+    }
 
     return {
       seed,
