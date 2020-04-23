@@ -48,17 +48,22 @@ class CubeOverview extends Component {
     this.onCubeUpdate = this.onCubeUpdate.bind(this);
     this.handleChangeDeleteConfirm = this.handleChangeDeleteConfirm.bind(this);
 
-    const { followed, cube } = props;
+    const { followed, cube, cubeID } = props;
 
     this.state = {
       followed,
       alerts: [],
       cube,
+      cubeID,
       deleteConfirm: '',
     };
   }
 
   onCubeUpdate(updated) {
+    let cubeID = updated._id;
+    if (updated.shortID) cubeID = updated.shortID;
+    if (updated.urlAlias) cubeID = updated.urlAlias;
+
     this.setState(({ alerts }) => ({
       alerts: [
         ...alerts,
@@ -67,6 +72,7 @@ class CubeOverview extends Component {
           message: 'Update Successful',
         },
       ],
+      cubeID,
       cube: updated,
     }));
   }
@@ -118,8 +124,8 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, priceOwned, pricePurchase, admin, cubeID, canEdit, owner, ownerID, loggedIn, followers } = this.props;
-    const { cube, deleteConfirm, alerts, followed } = this.state;
+    const { post, priceOwned, pricePurchase, admin, canEdit, owner, ownerID, loggedIn, followers } = this.props;
+    const { cube, cubeID, deleteConfirm, alerts, followed } = this.state;
     const { addAlert, onCubeUpdate } = this;
 
     const numFollowers = followers.length;
@@ -167,11 +173,33 @@ class CubeOverview extends Component {
             <Card>
               <CardHeader>
                 <h3>{cube.name}</h3>
-                <h6 className="card-subtitle mb-2">
-                  <FollowersModalLink href="#" modalProps={{ followers }}>
-                    {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
-                  </FollowersModalLink>
-                </h6>
+                <Row>
+                  <Col>
+                    <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
+                      <FollowersModalLink href="#" modalProps={{ followers }}>
+                        {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
+                      </FollowersModalLink>
+                    </h6>
+                  </Col>
+                  <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
+                    <TextBadge name="Cube ID">
+                      <Tooltip text="Click to copy to clipboard">
+                        <button
+                          type="button"
+                          className="cube-id-btn"
+                          onKeyDown={() => {}}
+                          onClick={(e) => {
+                            navigator.clipboard.writeText(cubeID);
+                            e.target.blur();
+                            addAlert('success', 'Cube ID copied to clipboard.');
+                          }}
+                        >
+                          {cubeID}
+                        </button>
+                      </Tooltip>
+                    </TextBadge>
+                  </div>
+                </Row>
               </CardHeader>
               <div className="position-relative">
                 <img className="card-img-top w-100" alt={cube.image_name} src={cube.image_uri} />
