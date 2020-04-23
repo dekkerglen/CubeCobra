@@ -21,9 +21,10 @@ const Chart = ({ cards, characteristics }) => {
     Colorless: '#ADADAD',
     Multicolored: '#DBC467',
   };
+  const colors = [...Object.values(colorMap), '#000000'];
 
-  const getColor = (label) => {
-    return colorMap[label] ?? '#000000';
+  const getColor = (label, index) => {
+    return colorMap[label] ?? colors[index % colors.length];
   };
 
   const options = {
@@ -60,11 +61,11 @@ const Chart = ({ cards, characteristics }) => {
   const labels = getLabels(cards, characteristic);
   const data = {
     labels,
-    datasets: Object.keys(groups).map((key) => ({
+    datasets: Object.keys(groups).map((key, index) => ({
       label: key,
       data: labels.map((label) => groups[key].filter((card) => cardIsLabel(card, label, characteristic)).length),
-      backgroundColor: getColor(key),
-      borderColor: getColor(key),
+      backgroundColor: getColor(key, index),
+      borderColor: getColor(key, index),
     })),
   };
 
