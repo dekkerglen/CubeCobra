@@ -109,7 +109,6 @@ router.post('/add', ensureAuth, async (req, res) => {
     cube.name = req.body.name;
     cube.owner = req.user.id;
     cube.cards = [];
-    cube.decks = [];
     cube.articles = [];
     const details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
     cube.image_uri = details.art_crop;
@@ -156,7 +155,6 @@ router.get('/clone/:id', async (req, res) => {
     cube.name = `Clone of ${source.name}`;
     cube.owner = req.user.id;
     cube.cards = source.cards;
-    cube.decks = [];
     cube.articles = [];
     cube.image_uri = source.image_uri;
     cube.image_name = source.image_name;
@@ -491,7 +489,6 @@ router.get('/overview/:id', async (req, res) => {
 
     // Performance
     delete cube.cards;
-    delete cube.decks;
     delete cube.draft_formats;
     delete cube.maybe;
 
@@ -1236,11 +1233,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       },
     ];
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-    cube.decks.push(deck._id);
-
     await deck.save();
     await Cube.updateOne(
       {
@@ -1249,9 +1241,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       {
         $inc: {
           numDecks: 1,
-        },
-        $push: {
-          decks: deck._id,
         },
       },
     );
@@ -1722,18 +1711,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       sideboard: [],
     });
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-
     await deck.save();
 
-    cube.decks.push(deck._id);
-    cube.numDecks += 1;
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
+
     await cube.save();
 
     const cubeOwner = await User.findById(cube.owner);
@@ -2759,22 +2742,14 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
 
-    cube.decks.push(deck._id);
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-
-    cube.numDecks += 1;
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
-
-    cube.decks.push(deck._id);
 
     if (user) {
       await util.addNotification(
@@ -2909,15 +2884,15 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
-    cube.numDecks += 1;
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
-
-    cube.decks.push(deck._id);
 
     if (!cubeOwner._id.equals(user._id)) {
       await util.addNotification(
