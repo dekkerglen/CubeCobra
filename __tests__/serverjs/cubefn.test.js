@@ -269,6 +269,7 @@ describe('CSVtoCards', () => {
       tags: ['tag3', 'tag4'],
     };
     const cards = [
+      'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags',
       `"${expectedCard.name}",${expectedCard.cmc},${expectedCard.type_line.replace(
         '—',
         '-',
@@ -283,7 +284,7 @@ describe('CSVtoCards', () => {
       },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`,
     ];
     await carddb.initializeCardDb(fixturesPath, true);
-    const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards, carddb);
+    const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards.join('\n'), carddb);
     expect.extend({
       equalsArray: (received, expected) => ({
         message: () => `expected ${received} to equal array ${expected}`,
@@ -295,7 +296,6 @@ describe('CSVtoCards', () => {
       expect(card.name).toBe(expected.name);
       expect(card.cmc).toBe(expected.cmc);
       expect(card.colors).equalsArray(expected.colors);
-      expect(card.set).toBe(expected.set);
       expect(card.collector_number).toBe(expected.collector_number);
       expect(card.status).toBe(expected.status);
       expect(card.finish).toBe(expected.finish);

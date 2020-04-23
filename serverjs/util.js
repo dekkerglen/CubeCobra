@@ -200,31 +200,6 @@ const toExport = {
     }
     return true;
   },
-  CSVtoArray(text) {
-    const ret = [''];
-    let i = 0;
-    let p = '';
-    let s = true;
-    for (let character of text) {
-      if (character === '"') {
-        s = !s;
-        if (p === '"') {
-          ret[i] += '"';
-          character = '-';
-        } else if (p === '') {
-          character = '-';
-        }
-      } else if (s && character === ',') {
-        // not sure what's going on here...
-        // eslint-disable-next-line
-        character = ret[++i] = '';
-      } else {
-        ret[i] += character;
-      }
-      p = character;
-    }
-    return ret;
-  },
   generateEditToken,
   toBase36,
   fromBase36,
