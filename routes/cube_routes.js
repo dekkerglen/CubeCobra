@@ -41,7 +41,7 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
-const { cardsFromIds, namesToCardDict } = require('../serverjs/cards');
+const { cardsFromIds, namesToCardDict, mostReasonable, normalizeName } = require('../serverjs/cards');
 
 const util = require('../serverjs/util.js');
 const { GetPrices } = require('../serverjs/prices.js');
@@ -398,26 +398,28 @@ router.get('/overview/:id', async (req, res) => {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
 
-    const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    for (const card of cube.cards) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-    }
-    const pids = new Set();
-    const allVersions = [];
-    for (const card of cube.cards) {
-      const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
-      allVersions.push(...allVersionsOfCard.map((id) => ({ cardID: id, related: card.cardID })));
-    }
-    for (const card of allVersions) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
+
+    // use this for actual price
+    const details = await cardsFromIds(cube.cards.map((card) => card.cardID));
+
+    // use this for buy price
+    const dict = await namesToCardDict(details.map((card) => card.name));
+
+    // get all tcgplayer product ids
+    const pids = [];
+    for (const name of Object.keys(dict)) {
+      for (const card of dict[name]) {
+        if (card.tcgplayer_id) {
+          pids.push(card.tcgplayer_id);
+        }
       }
     }
+
+    // make async calls
     const priceDictQ = GetPrices([...pids]);
     const blogsQ = Blog.find({
       cube: cube._id,
@@ -431,23 +433,9 @@ router.get('/overview/:id', async (req, res) => {
       '_id username image artist users_following',
     ).lean();
     const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
-    const allVersionsLookup = {};
-    for (const card of allVersions) {
-      if (card.tcgplayer_id) {
-        card.details.price = priceDict[card.tcgplayer_id];
-        card.details.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
-      }
-      if (!allVersionsLookup[card.related]) {
-        allVersionsLookup[card.related] = [];
-      }
-      allVersionsLookup[card.related].push(card.details);
-    }
-    for (const card of cube.cards) {
-      const withPrice = allVersions.find((pricedCard) => pricedCard.cardID === card.cardID);
-      if (withPrice) {
-        card.details = withPrice.details;
-      }
-    }
+
+    const price = (card) => priceDict[card.details.cardID];
+    const priceFoil = (card) => priceDict[`${card.details.cardID}_foil`];
 
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
@@ -455,40 +443,32 @@ router.get('/overview/:id', async (req, res) => {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
-          priceOwned = card.details.price_foil || card.details.price || 0;
+          priceOwned = priceFoil(card) || price(card) || 0;
         } else {
-          priceOwned = card.details.price || card.details.price_foil || 0;
+          priceOwned = price(card) || priceFoil(card) || 0;
         }
         totalPriceOwned += priceOwned;
       }
 
-      if (allVersionsLookup[card.cardID]) {
-        const allPrices = allVersionsLookup[card.cardID]
-          .reduce((lst, { price, priceFoil }) => lst.concat([price, priceFoil]), [])
-          .filter((p) => p && p > 0.001);
+      if (dict[card.cardID]) {
+        const allPrices = dict[card.cardID].map((item) => price(item) || priceFoil(item) || 0).filter((x) => x > 0.001);
         if (allPrices.length > 0) {
           totalPricePurchase += Math.min(...allPrices) || 0;
         }
       }
     }
 
-    if (blogs) {
-      for (const item of blogs) {
-        if (!item.date_formatted) {
-          item.date_formatted = item.date.toLocaleString('en-US');
-        }
-        if (item.html) {
-          item.html = addAutocard(item.html, carddb, cube);
-        }
-      }
-      if (blogs.length > 0) {
-        blogs.reverse();
-      }
+    if (!blogs[0].date_formatted) {
+      blogs[0].date_formatted = blogs[0].date.toLocaleString('en-US');
     }
+    if (blogs[0].html) {
+      blogs[0].html = await addAutocard(blogs[0].html, cube);
+    }
+
     cube.raw_desc = cube.body;
     if (cube.descriptionhtml) {
       cube.raw_desc = cube.descriptionhtml;
-      cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb, cube);
+      cube.descriptionhtml = await addAutocard(cube.descriptionhtml, cube);
     }
 
     // Performance
@@ -510,7 +490,7 @@ router.get('/overview/:id', async (req, res) => {
       editorvalue: cube.raw_desc,
       priceOwned: !cube.privatePrices ? totalPriceOwned : null,
       pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
-      admin,
+      admin: util.isAdmin(req.user),
     };
 
     return res.render('cube/cube_overview', {
@@ -564,14 +544,16 @@ router.get('/blog/:id/:page', async (req, res) => {
     });
     const [user, blogs] = await Promise.all([userQ, blogsQ]);
 
-    for (const item of blogs) {
-      if (!item.date_formatted) {
-        item.date_formatted = item.date.toLocaleString('en-US');
-      }
-      if (item.html) {
-        item.html = addAutocard(item.html, carddb, cube);
-      }
-    }
+    await Promise.all(
+      blogs.map(async (blog) => {
+        if (!blog.date_formatted) {
+          blog.date_formatted = blog.date.toLocaleString('en-US');
+        }
+        if (blog.html) {
+          blog.html = await addAutocard(blog.html, cube);
+        }
+      }),
+    );
 
     blogs.reverse();
     const blogPage = blogs.slice(page * 10, (page + 1) * 10);
@@ -657,11 +639,14 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
     const pids = new Set();
     const cardNames = new Set();
+
+    const dict = await cardsFromIds(
+      cubeA.cards.map((card) => card.cardID).concat(cubeB.cards.map((card) => card.cardID)),
+    );
+
     const addDetails = (cards) => {
       cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
+        card.details = dict[card.cardID];
         card.index = index;
         if (!card.type_line) {
           card.type_line = card.details.type;
@@ -741,13 +726,13 @@ router.get('/list/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
+
     const pids = new Set();
     const cardNames = new Set();
     const addDetails = (cards) => {
       cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
+        card.details = dict[card.cardID];
         card.index = index;
         if (!card.type_line) {
           card.type_line = card.details.type;
@@ -887,13 +872,18 @@ router.get('/analysis/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
+    const tokenDict = await cardsFromIds(
+      Object.entries(dict)
+        .map((card) => card.tokens)
+        .flat(),
+    );
+
     const pids = new Set();
     const cardNames = new Set();
     const addDetails = (cards) => {
       cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
+        card.details = dict[card.cardID];
         card.index = index;
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
@@ -903,7 +893,7 @@ router.get('/analysis/:id', async (req, res) => {
           card.details.tokens = card.details.tokens
             .filter((tokenId) => tokenId !== card.cardID)
             .map((tokenId) => {
-              const tokenDetails = carddb.cardFromId(tokenId);
+              const tokenDetails = tokenDict[tokenId];
               return {
                 tags: [],
                 status: 'Not Owned',
@@ -977,7 +967,7 @@ router.get('/samplepack/:id', (req, res) => {
 router.get('/samplepack/:id/:seed', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    const pack = await generatePack(req.params.id, req.params.seed);
 
     const reactProps = {
       cube_id: req.params.id,
@@ -1008,7 +998,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
-    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    const pack = await generatePack(req.params.id, req.params.seed);
 
     const imgScale = 0.9;
 
@@ -1072,7 +1062,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
       });
     }
     await blogpost.save();
-    cube = setCubeType(cube, carddb);
+    cube = await setCubeType(cube);
     try {
       await Cube.updateOne({ _id: cube._id }, cube);
     } catch (err) {
@@ -1130,17 +1120,19 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     const added = [];
     let missing = '';
     let changelog = '';
+
+    const dict = await namesToCardDict(cards.map((card) => card.name));
+
     for (const card of cards) {
-      const potentialIds = carddb.allIds(card);
-      if (potentialIds && potentialIds.length > 0) {
-        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
-        const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
-        const selected = matchingSet || nonPromo || potentialIds[0];
-        const details = carddb.cardFromId(selected);
-        if (!details.error) {
-          added.push(details);
-          util.addCardToCube(cube, details, card.tags);
-          changelog += addCardHtml(details);
+      const potentials = dict[normalizeName(card.name)];
+      if (potentials && potentials.length > 0) {
+        const matchingSet = potentials.find((item) => item.set.toUpperCase() === card.set);
+        const nonPromo = mostReasonable(potentials);
+        const selected = matchingSet || nonPromo || potentials[0];
+        if (!selected.error) {
+          added.push(selected);
+          util.addCardToCube(cube, selected, card.tags);
+          changelog += addCardHtml(selected);
         } else {
           missing += `${card.name}\n`;
         }
@@ -1187,36 +1179,40 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         for (let j = 0; j < count; j++) {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
-      } else {
-        let selected = null;
-        // does not have set info
-        const normalizedName = cardutil.normalizeName(item);
-        const potentialIds = carddb.getIdsFromName(normalizedName);
-        if (potentialIds && potentialIds.length > 0) {
-          const inCube = cube.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
-          if (inCube) {
-            selected = {
-              ...inCube,
-              details: carddb.cardFromId(inCube.cardID),
-            };
-          } else {
-            const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
-            const reasonableId = reasonableCard ? reasonableCard._id : null;
-            const selectedId = reasonableId || potentialIds[0];
-            selected = {
-              cardID: selectedId,
-              details: carddb.cardFromId(selectedId),
-            };
-          }
+      }
+    }
+
+    const dict = await namesToCardDict(cards);
+
+    for (let i = 0; i < cards.length; i++) {
+      const item = cards[i].toLowerCase().trim();
+      let selected = null;
+      // does not have set info
+      const normalizedName = normalizeName(item);
+      const potentials = dict[normalizedName];
+      if (potentials && potentials.length > 0) {
+        const inCube = cube.cards.find((card) => card.name_lower === normalizedName);
+        if (inCube) {
+          selected = {
+            ...inCube,
+            details: potentials.find((card) => card.scryfall_id === inCube.cardID),
+          };
+        } else {
+          const reasonableCard = mostReasonable(potentials);
+          const select = reasonableCard || potentials[0];
+          selected = {
+            cardID: select.scryfall_id,
+            details: select,
+          };
         }
-        if (selected) {
-          // push into correct column.
-          let column = Math.min(7, selected.cmc !== undefined ? selected.cmc : selected.details.cmc);
-          if (!selected.details.type.toLowerCase().includes('creature')) {
-            column += 8;
-          }
-          added[column].push(selected);
+      }
+      if (selected) {
+        // push into correct column.
+        let column = Math.min(7, selected.cmc !== undefined ? selected.cmc : selected.details.cmc);
+        if (!selected.details.type.toLowerCase().includes('creature')) {
+          column += 8;
         }
+        added[column].push(selected);
       }
     }
 

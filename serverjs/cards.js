@@ -1,6 +1,13 @@
 const winston = require('winston');
 const Card = require('../models/card');
 
+const normalizeName = (name) =>
+  name
+    .trim()
+    .normalize('NFD') // convert to consistent unicode format
+    .replace(/[\u0300-\u036f]/g, '') // remove unicode
+    .toLowerCase();
+
 function getPlaceholderCard(_id) {
   // placeholder card if we don't find the one due to a scryfall ID update bug
   return {
@@ -48,7 +55,7 @@ const cardFromId = async (id) => {
 };
 
 const nameToCards = async (name) => {
-  const cards = await Card.find({ name_lower: name }).lean();
+  const cards = await Card.find({ name_lower: normalizeName(name) }).lean();
   if (!cards) {
     return [];
   }
@@ -56,7 +63,7 @@ const nameToCards = async (name) => {
 };
 
 const namesToCardDict = async (names) => {
-  const cards = await Card.find({ name_lower: { $in: names } }).lean();
+  const cards = await Card.find({ name_lower: { $in: names.map(normalizeName) } }).lean();
   if (!cards) {
     return {};
   }
@@ -69,16 +76,6 @@ const namesToCardDict = async (names) => {
   }
   return cards;
 };
-
-function getCardDetails(card) {
-  if (data._carddict[card.cardID]) {
-    const details = data._carddict[card.cardID];
-    card.details = details;
-    return details;
-  }
-  winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
-  return getPlaceholderCard(card.cardID);
-}
 
 function reasonableCard(card) {
   return (
@@ -93,61 +90,25 @@ function reasonableCard(card) {
   );
 }
 
-function reasonableId(id) {
-  return reasonableCard(cardFromId(id));
-}
-
-function getIdsFromName(name) {
-  return data.nameToId[
-    name
-      .trim()
-      .normalize('NFD') // convert to consistent unicode format
-      .replace(/[\u0300-\u036f]/g, '') // remove unicode
-      .toLowerCase()
-  ];
-}
-
-// Printing = 'recent' or 'first'
-function getMostReasonable(cardName, printing = 'recent') {
-  let ids = getIdsFromName(cardName);
-  if (ids === undefined || ids.length === 0) {
-    // Try getting it by ID in case this is an ID.
-    // eslint-disable-next-line no-use-before-define
-    return getMostReasonableById(cardName, printing);
-  }
-
-  // Ids are stored in reverse chronological order, so reverse if we want first printing.
-  if (printing !== 'recent') {
-    ids = [...ids];
-    ids.reverse();
-  }
-  return cardFromId(ids.find(reasonableId) || ids[0]);
-}
-
-function getMostReasonableById(id, printing = 'recent') {
-  const card = cardFromId(id);
-  if (card.error) {
-    winston.info(`Error finding most reasonable for id ${id}`);
-    return null;
-  }
-  return getMostReasonable(card.name, printing);
-}
-
-function getEnglishVersion(id) {
+const getEnglishVersion = (id) => {
   // TODO: add english mapping
   // return data.english[id];
-}
+};
+
+const mostReasonable = (cards, printing = 'recent') => {
+  if (printing !== 'recent') {
+    cards = [...cards];
+    cards.reverse();
+  }
+  return cards.find(reasonableCard);
+};
 
 module.exports = {
   getEnglishVersion,
-  getMostReasonableById,
-  getMostReasonable,
-  getIdsFromName,
-  reasonableId,
-  reasonableCard,
-  getCardDetails,
+  mostReasonable,
   cardFromId,
   cardsFromIds,
   nameToCards,
   namesToCardDict,
+  normalizeName,
 };
