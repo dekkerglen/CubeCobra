@@ -402,6 +402,7 @@ const CubeListNavbar = ({
                   Comma-Separated (.csv)
                 </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cubeID}`}>MTGO (.txt)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>

@@ -16,13 +16,10 @@ import {
   NavLink,
 } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
-
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'components/CubeContext';
 import DynamicFlash from 'components/DynamicFlash';
-import LoadingButton from 'components/LoadingButton';
 import Paginate from 'components/Paginate';
 import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
@@ -71,59 +68,11 @@ EditBlogModal.defaultProps = {
   post: null,
 };
 
-const DeleteBlogModal = ({ isOpen, toggle, post }) => {
-  const handleDelete = useCallback(async (event) => {
-    const postID = event.target.getAttribute('data-post');
-    if (postID) {
-      try {
-        const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          console.error('Failed to delete blog post.');
-        } else {
-          window.location.href = '';
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }, []);
-  return (
-    <Modal isOpen={isOpen} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Confirm Delete</ModalHeader>
-      <ModalBody>
-        <p>Are you sure you wish to delete this post? This action cannot be undone.</p>
-      </ModalBody>
-      <ModalFooter>
-        <LoadingButton color="danger" type="submit" data-post={post && post._id} onClick={handleDelete}>
-          Delete
-        </LoadingButton>
-        <Button color="secondary" onClick={toggle}>
-          Cancel
-        </Button>
-      </ModalFooter>
-    </Modal>
-  );
-};
-
-DeleteBlogModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  post: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-};
-
 const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid, loggedIn }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
   const [editHtml, setEditHtml] = useState('');
   const toggleEdit = useCallback(() => setEditOpen((open) => !open), []);
-
-  const [deletePostIndex, setDeletePostIndex] = useState(-1);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const toggleDelete = useCallback(() => setDeleteOpen((open) => !open), []);
 
   const handleEdit = useCallback(
     (id) => {
@@ -138,17 +87,6 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
   );
 
   const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
-
-  const handleDelete = useCallback(
-    (id) => {
-      const postIndex = posts.findIndex((post) => post._id === id);
-      if (postIndex > -1) {
-        setDeleteOpen(true);
-        setDeletePostIndex(postIndex);
-      }
-    },
-    [posts],
-  );
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="blog">
@@ -173,7 +111,6 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
             canEdit={canEdit}
             userid={userid}
             loggedIn={loggedIn}
-            onDelete={handleDelete}
             onEdit={handleEdit}
           />
         ))
@@ -188,7 +125,6 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
         html={editHtml}
         setHtml={setEditHtml}
       />
-      <DeleteBlogModal isOpen={deleteOpen} toggle={toggleDelete} post={posts[deletePostIndex]} />
     </CubeLayout>
   );
 };

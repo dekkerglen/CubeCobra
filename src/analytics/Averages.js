@@ -23,7 +23,7 @@ const Averages = ({ cards, characteristics }) => {
           if (characteristic === 'CMC') {
             /* If we are calculating the average cmc, we don't want to include lands in the average.
                We can't just filter out 0 cmc cards, so we need to check the type here. */
-            const type = card.type_line || card.detail.type;
+            const type = card.type_line || card.details.type;
             if (type.toLowerCase().includes('land')) return false;
           }
           return true;

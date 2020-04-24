@@ -1,9 +1,12 @@
+const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 const util = require('./util');
+
 const { cardsFromIds, namesToCardDict } = require('./cards');
+const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
 
 function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;
@@ -244,50 +247,68 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-const CSVtoCards = async (cards) => {
+
+function CSVtoCards(csvString, carddb) {
+  let { data } = Papa.parse(csvString.trim(), { header: true });
+  data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
   let missing = '';
   const newCards = [];
   const newMaybe = [];
+  for (const {
+    name,
+    cmc,
+    type,
+    color,
+    set,
+    'collector number': collectorNumber,
+    status,
+    finish,
+    maybeboard,
+    'image url': imageUrl,
+    tags,
+    notes,
+    'Color Category': colorCategory,
+    rarity,
+  } of data) {
+    if (name) {
+      const upperSet = (set || '').toUpperCase();
+      const card = {
+        name,
+        cmc,
+        type_line: type && type.replace('-', '—'),
+        colors: color && color.split('').filter((c) => [...'WUBRG'].includes(c)),
+        addedTmsp: new Date(),
+        collector_number: collectorNumber && collectorNumber.toUpperCase(),
+        status,
+        finish,
+        imgUrl: imageUrl && imageUrl !== 'undefined' ? imageUrl : null,
+        tags: tags && tags.length > 0 ? tags.split(',') : [],
+        notes,
+        rarity,
+        colorCategory,
+      };
 
-  const dict = await namesToCardDict(cards.map((card) => util.CSVtoArray(card)[0]));
-
-  for (const rawCard of cards) {
-    const split = util.CSVtoArray(rawCard);
-    const name = split[0];
-    const maybeboard = split[8];
-    const card = {
-      name,
-      cmc: split[1],
-      type_line: split[2].replace('-', '—'),
-      colors: split[3].split('').filter((c) => [...'WUBRG'].includes(c)),
-      set: split[4].toUpperCase(),
-      addedTmsp: new Date(),
-      collector_number: split[5],
-      status: split[6],
-      finish: split[7],
-      imgUrl: split[9] && split[9] !== 'undefined' ? split[9] : null,
-      tags: split[10] && split[10].length > 0 ? split[10].split(',') : [],
-      notes: split[11],
-    };
-
-    const potentialCards = dict[name];
-    if (potentialCards && potentialCards.length > 0) {
-      // First, try to find the correct set.
-      const matchingSetAndNumber = potentialCards.find(
-        (possible) =>
-          card.set.toUpperCase() === possible.set.toUpperCase() &&
-          card.collector_number.toUpperCase() === possible.collector_number.toUpperCase(),
-      );
-      const matchingSet = potentialCards.find((possible) => possible.set.toUpperCase() === card.set);
-      const first = potentialCards[0];
-      card.cardID = (matchingSetAndNumber || matchingSet || first).scryfall_id;
-      if (maybeboard === 'true') {
-        newMaybe.push(card);
+      const potentialIds = carddb.allIds(card);
+      if (potentialIds && potentialIds.length > 0) {
+        // First, try to find the correct set.
+        const matchingSetAndNumber = potentialIds.find((id) => {
+          const dbCard = carddb.cardFromId(id);
+          return (
+            upperSet === dbCard.set.toUpperCase() && card.collectorNumber === dbCard.collector_number.toUpperCase()
+          );
+        });
+        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === upperSet);
+        const nonPromo = potentialIds.find(carddb.reasonableId);
+        const first = potentialIds[0];
+        card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
+        if (maybeboard === 'true') {
+          newMaybe.push(card);
+        } else {
+          newCards.push(card);
+        }
       } else {
-        newCards.push(card);
+        missing += `${card.name}\n`;
       }
-    } else {
-      missing += `${card.name}\n`;
     }
   }
   return { newCards, newMaybe, missing };
@@ -322,7 +343,7 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
-/* 
+/*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
 */
@@ -526,23 +547,18 @@ const methods = {
     }
     return src;
   },
-  generatePack: async (cubeId, seed) => {
-    const cube = await Cube.findOne(buildIdQuery(cubeId));
+  generatePack: async (cubeId, carddb, seed) => {
+    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
     if (!seed) {
       seed = Date.now().toString();
     }
-
-    const pack = util.shuffle(cube.cards, seed).slice(0, 15);
-
-    const details = await cardsFromIds(pack.map((card) => card.cardID));
-
-    for (let i = 0; i < pack.length; i++) {
-      pack[i].details = details[i];
-    }
-
+    cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
+    const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
+    const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
+    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack,
+      pack: draft.unopenedPacks[0][0].map((card) => card.details),
     };
   },
   generateShortId,

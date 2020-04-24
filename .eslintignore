@@ -55,7 +55,6 @@ src/components/ImageFallback.js
 src/components/LoadingButton.js
 src/components/MulticoloredAnalysis.js
 src/components/Notification.js
-src/components/PagedTable.js
 src/components/SortCollapse.js
 src/components/SortContext.js
 src/components/SortableTable.js

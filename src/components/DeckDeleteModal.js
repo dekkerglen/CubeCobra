@@ -6,23 +6,27 @@ import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-class BlogDeleteModal extends React.Component {
+class DeckDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.postID = props.postID;
+    this.deckID = props.deckID;
+    this.cubeID = props.cubeID;
+    this.nextURL = props.nextURL;
     this.confirm = this.confirm.bind(this);
   }
 
   async confirm() {
-    const response = await csrfFetch(`/cube/blog/remove/${this.postID}`, {
+    const response = await csrfFetch(`/cube/deletedeck/${this.deckID}`, {
       method: 'DELETE',
       headers: {},
     });
 
     if (!response.ok) {
       console.log(response);
+    } else if (this.nextURL) {
+      window.location.href = this.nextURL;
     } else {
-      window.location.href = '';
+      window.location.href = `/cube/playtest/${this.cubeID}`;
     }
   }
 
@@ -33,16 +37,22 @@ class BlogDeleteModal extends React.Component {
         toggle={toggle}
         delete={this.confirm}
         isOpen={isOpen}
-        text="Are you sure you wish to delete this post? This action cannot be undone."
+        text="Are you sure you wish to delete this deck? This action cannot be undone."
       />
     );
   }
 }
 
-BlogDeleteModal.propTypes = {
+DeckDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,
-  postID: PropTypes.string.isRequired,
+  deckID: PropTypes.string.isRequired,
+  cubeID: PropTypes.string.isRequired,
   isOpen: PropTypes.bool.isRequired,
+  nextURL: PropTypes.string,
 };
 
-export default BlogDeleteModal;
+DeckDeleteModal.defaultProps = {
+  nextURL: null,
+};
+
+export default DeckDeleteModal;

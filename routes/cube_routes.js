@@ -49,7 +49,8 @@ const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
-const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
+const CSV_HEADER =
+  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -109,7 +110,6 @@ router.post('/add', ensureAuth, async (req, res) => {
     cube.name = req.body.name;
     cube.owner = req.user.id;
     cube.cards = [];
-    cube.decks = [];
     cube.articles = [];
 
     // these hard coded values are saving us a pointless DB call - as long as this card doesn't change
@@ -158,7 +158,6 @@ router.get('/clone/:id', async (req, res) => {
     cube.name = `Clone of ${source.name}`;
     cube.owner = req.user.id;
     cube.cards = source.cards;
-    cube.decks = [];
     cube.articles = [];
     cube.image_uri = source.image_uri;
     cube.image_name = source.image_name;
@@ -473,7 +472,6 @@ router.get('/overview/:id', async (req, res) => {
 
     // Performance
     delete cube.cards;
-    delete cube.decks;
     delete cube.draft_formats;
     delete cube.maybe;
 
@@ -820,7 +818,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube: cube._id,
       },
-      'date seats _id',
+      'date seats _id cube',
     )
       .sort({
         date: -1,
@@ -840,6 +838,7 @@ router.get('/playtest/:id', async (req, res) => {
       cube,
       cubeID: req.params.id,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
+      userID: req.user ? req.user._id : null,
       decks,
       draftFormats,
     };
@@ -1233,11 +1232,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       },
     ];
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-    cube.decks.push(deck._id);
-
     await deck.save();
     await Cube.updateOne(
       {
@@ -1246,9 +1240,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       {
         $inc: {
           numDecks: 1,
-        },
-        $push: {
-          decks: deck._id,
         },
       },
     );
@@ -1265,14 +1256,11 @@ async function bulkUpload(req, res, list, cube) {
   const added = [];
   let changelog = '';
   if (cards) {
-    if (cards[0].trim() === CSV_HEADER) {
-      cards.splice(0, 1);
+    if ((cards[0].match(/,/g) || []).length > 3) {
       let newCards = [];
       let newMaybe = [];
-      ({ newCards, newMaybe, missing } = CSVtoCards(cards, carddb));
-      newCards.forEach((card) => {
-        changelog += addCardHtml(carddb.cardFromId(card.cardID));
-      });
+      ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
+      changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
       added.concat(newCards, newMaybe);
@@ -1392,8 +1380,8 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       const added = [];
       let newCards = [];
       let newMaybe = [];
-      if (lines[0].trim() === CSV_HEADER) {
-        ({ newCards, newMaybe, missing } = CSVtoCards(lines.slice(1), carddb));
+      if ((lines[0].match(/,/g) || []).length > 3) {
+        ({ newCards, newMaybe, missing } = CSVtoCards(items, carddb));
         cube.cards = newCards;
         cube.maybe = newMaybe;
         const pids = new Set();
@@ -1472,12 +1460,7 @@ function writeCard(res, card, maybe) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
   let { name } = carddb.cardFromId(card.cardID);
-  while (name.includes('"')) {
-    name = name.replace('"', '-quote-');
-  }
-  while (name.includes('-quote-')) {
-    name = name.replace('-quote-', '""');
-  }
+  name = name.replace(/"/, '""');
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
@@ -1490,6 +1473,8 @@ function writeCard(res, card, maybe) {
   res.write(`${card.colors.join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`${card.rarity},`);
+  res.write(`${card.colorCategory},`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
@@ -1524,7 +1509,7 @@ router.get('/download/csv/:id', async (req, res) => {
     }
     if (Array.isArray(cube.maybe)) {
       for (const card of cube.maybe) {
-        writeCard(req, res, card, true);
+        writeCard(res, card, true);
       }
     }
     return res.end();
@@ -1549,6 +1534,50 @@ router.get('/download/forge/:id', async (req, res) => {
       res.write(`1 ${name}|${set.toUpperCase()}\r\n`);
     }
     return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+const exportToMtgo = (res, fileName, mainCards, sideCards) => {
+  res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
+  res.setHeader('Content-type', 'text/plain');
+  res.charset = 'UTF-8';
+  const main = {};
+  for (const card of mainCards) {
+    const { name } = carddb.cardFromId(card.cardID);
+    if (main[name]) {
+      main[name] += 1;
+    } else {
+      main[name] = 1;
+    }
+  }
+  for (const [key, value] of Object.entries(main)) {
+    const name = key.replace(' // ', '/');
+    res.write(`${value} ${name}\r\n`);
+  }
+  res.write('\r\n\r\n');
+
+  const side = {};
+  for (const card of sideCards) {
+    const { name } = carddb.cardFromId(card.cardID);
+    if (side[name]) {
+      side[name] += 1;
+    } else {
+      side[name] = 1;
+    }
+  }
+  for (const [key, value] of Object.entries(side)) {
+    const name = key.replace(' // ', '/');
+    res.write(`${value} ${name}\r\n`);
+  }
+  return res.end();
+};
+
+router.get('/download/mtgo/:id', async (req, res) => {
+  try {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -1675,18 +1704,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       sideboard: [],
     });
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
-
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-
     await deck.save();
 
-    cube.decks.push(deck._id);
-    cube.numDecks += 1;
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
+
     await cube.save();
 
     const cubeOwner = await User.findById(cube.owner);
@@ -1824,43 +1847,7 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
-
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
-    res.setHeader('Content-type', 'text/plain');
-    res.charset = 'UTF-8';
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const { name } = carddb.cardFromId(card.cardID);
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      const name = key.replace(' // ', '/');
-      res.write(`${value} ${name}\r\n`);
-    }
-    res.write('\r\n\r\n');
-
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const { name } = carddb.cardFromId(card.cardID);
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      const name = key.replace(' // ', '/');
-      res.write(`${value} ${name}\r\n`);
-    }
-    return res.end();
+    return exportToMtgo(res, seat.name, seat.deck.flat(), seat.sideboard.flat());
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -1961,59 +1948,64 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
-router.post('/startdraft/:id', async (req, res) => {
-  try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards').lean();
+router.post(
+  '/startdraft/:id',
+  body('id').toInt(),
+  body('seats').toInt({ min: 2, max: 16 }),
+  body('packs').toInt({ min: 1, max: 36 }),
+  body('cards').toInt({ min: 1, max: 90 }),
+  async (req, res) => {
+    try {
+      const cube = await Cube.findOne(
+        buildIdQuery(req.params.id),
+        '_id name draft_formats card_count type cards',
+      ).lean();
 
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      return res.status(404).render('misc/404', {});
+      if (!cube) {
+        req.flash('danger', 'Cube not found');
+        return res.status(404).render('misc/404', {});
+      }
+
+      if (cube.cards.length === 0) {
+        throw new Error('Could not create draft: no cards');
+      }
+
+      const params = req.body;
+
+      // insert card details everywhere that needs them
+      for (const card of cube.cards) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+      const elo = await getElo(cube.cards.map((card) => card.details.name));
+      for (const card of cube.cards) {
+        card.rating = elo[card.details.name];
+      }
+
+      // setup draft
+      const bots = draftutil.getDraftBots(params);
+      const format = draftutil.getDraftFormat(params, cube);
+
+      const draft = new Draft();
+      const populated = draftutil.createDraft(
+        format,
+        cube.cards,
+        bots,
+        params.seats,
+        req.user ? req.user : { username: 'Anonymous' },
+      );
+
+      draft.initial_state = populated.initial_state;
+      draft.unopenedPacks = populated.unopenedPacks;
+      draft.seats = populated.seats;
+      draft.cube = cube._id;
+
+      await draft.save();
+      return res.redirect(`/cube/draft/${draft._id}`);
+    } catch (err) {
+      return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
     }
-
-    if (cube.cards.length === 0) {
-      throw new Error('Could not create draft: no cards');
-    }
-
-    const params = {
-      id: parseInt(req.body.id, 10), // < 0 is standard draft, otherwise custom draft
-      seats: parseInt(req.body.seats, 10),
-      packs: parseInt(req.body.packs, 10),
-      cards: parseInt(req.body.cards, 10),
-    };
-
-    // insert card details everywhere that needs them
-    for (const card of cube.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-    }
-    const elo = await getElo(cube.cards.map((card) => card.details.name));
-    for (const card of cube.cards) {
-      card.rating = elo[card.details.name];
-    }
-
-    // setup draft
-    const bots = draftutil.getDraftBots(params);
-    const format = draftutil.getDraftFormat(params, cube);
-
-    const draft = new Draft();
-    const populated = draftutil.populateDraft(
-      format,
-      cube.cards,
-      bots,
-      params.seats,
-      req.user ? req.user : { username: 'Anonymous' },
-    );
-
-    draft.initial_state = populated.initial_state;
-    draft.unopenedPacks = populated.unopenedPacks;
-    draft.seats = populated.seats;
-    draft.cube = cube._id;
-
-    await draft.save();
-    return res.redirect(`/cube/draft/${draft._id}`);
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
-  }
-});
+  },
+);
 
 router.get('/draft/:id', async (req, res) => {
   try {
@@ -2743,22 +2735,14 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
-    if (!cube.decks) {
-      cube.decks = [];
-    }
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
 
-    cube.decks.push(deck._id);
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-
-    cube.numDecks += 1;
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
-
-    cube.decks.push(deck._id);
 
     if (user) {
       await util.addNotification(
@@ -2774,6 +2758,32 @@ router.post('/submitdeck/:id', async (req, res) => {
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
+router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
+  try {
+    const query = {
+      _id: req.params.id,
+    };
+
+    const deck = await Deck.findById(req.params.id);
+    const deckOwner = await User.findById(deck.seats[0].userid);
+
+    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+      req.flash('danger', 'Unauthorized');
+      return res.status(404).render('misc/404', {});
+    }
+
+    await Deck.deleteOne(query);
+
+    req.flash('success', 'Deck Deleted');
+    return res.send('Success');
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error deleting deck.',
+    });
   }
 });
 
@@ -2795,7 +2805,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       {
         cube: cube._id,
       },
-      '_id seats date',
+      '_id seats date cube',
     )
       .sort({
         date: -1,
@@ -2814,6 +2824,8 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       cube,
       cubeID: cubeid,
       decks,
+      userID: req.user ? req.user._id : null,
+      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,
     };
@@ -2865,15 +2877,15 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
-    cube.numDecks += 1;
+    cube.numDecks = await Deck.countDocuments({
+      cube: cube._id,
+    });
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
-
-    cube.decks.push(deck._id);
 
     if (!cubeOwner._id.equals(user._id)) {
       await util.addNotification(
@@ -3722,6 +3734,33 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
     });
   }
 });
+
+router.post(
+  '/:id/defaultdraftformat/:formatId',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cubeid = req.params.id;
+    const formatId = parseInt(req.params.formatId, 10);
+
+    const cube = await Cube.findOne(buildIdQuery(cubeid));
+    if (
+      !cube ||
+      cube.owner !== req.user.id ||
+      !Number.isInteger(formatId) ||
+      formatId >= cube.draft_formats.length ||
+      formatId < -1
+    ) {
+      return res.sendStatus(401);
+    }
+
+    cube.defaultDraftFormat = formatId;
+
+    await cube.save();
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
 
 router.post(
   '/api/savesorts/:id',
