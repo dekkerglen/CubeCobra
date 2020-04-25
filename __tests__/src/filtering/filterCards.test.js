@@ -563,7 +563,7 @@ describe('filter', () => {
 
     describe('mana filtering', () => {
       it('correctly filters by mana cost', () => {
-        const { filter } = makeFilter('mana:1W');
+        const { filter } = makeFilter('mana=1W');
         const oneAndAWhiteCards = exampleCube.cards.filter(filter);
         oneAndAWhiteCards.forEach((card) => {
           expect(card.details.parsed_cost).toEqual(expect.arrayContaining(['1', 'w']));
