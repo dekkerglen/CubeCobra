@@ -1,5 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
-import {cardDevotion} from 'utils/Card';
+import { cardDevotion } from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -361,7 +361,6 @@ function getLabelsRaw(cube, sort) {
     labels.push('No Price Available');
     return labels;
   } else if (sort === 'Devotion to White') {
-
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
