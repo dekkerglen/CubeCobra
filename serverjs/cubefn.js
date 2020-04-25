@@ -247,7 +247,6 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-
 function CSVtoCards(csvString, carddb) {
   let { data } = Papa.parse(csvString.trim(), { header: true });
   data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
@@ -312,7 +311,7 @@ function CSVtoCards(csvString, carddb) {
     }
   }
   return { newCards, newMaybe, missing };
-};
+}
 
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];

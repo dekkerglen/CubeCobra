@@ -1165,7 +1165,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
-    // list of cardids
     const added = [];
     for (let i = 0; i < 16; i++) {
       added.push([]);
@@ -3861,7 +3860,7 @@ router.get(
 router.get(
   '/api/p1p1/:id/:seed',
   util.wrapAsyncApi(async (req, res) => {
-    const result = await generatePack(req.params.id, carddb, req.params.seed);
+    const result = await generatePack(req.params.id, req.params.seed);
 
     return res.status(200).send({
       seed: req.params.seed,
