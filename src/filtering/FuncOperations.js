@@ -1,4 +1,5 @@
 import { arrayIsSubset, arraysAreEqualSets } from 'utils/Util';
+import { cardDevotion } from 'utils/Card';
 
 export const defaultOperation = (op, value) => {
   switch (op.toString()) {
@@ -228,6 +229,11 @@ export const castableCostOperation = (op, value) => {
     default:
       throw new Error(`Unrecognized operator '${op}'`);
   }
+};
+
+export const devotionOperation = (op, symbol, value) => {
+  const operation = defaultOperation(op, value);
+  return (card) => operation(cardDevotion(card, symbol));
 };
 
 export const setElementOperation = (value) => (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase() === value);

@@ -175,6 +175,11 @@ basicManaSymbol -> innerBasicManaSymbol {% id %}
 innerBasicManaSymbol -> [0-9]:+ {% ([digits]) => parseInt(digits.join('')) %}
   | ("w"i | "u"i | "b"i | "r"i | "g"i | "s"i | "c"i) {% ([[color]]) => color.toLowerCase() %}
 
+devotionOpValue -> anyOperator devotionValue {% ([op, [symbol, length]]) => devotionOperation(op, symbol, length) %}
+
+devotionValue -> ("w"i:+ | "u"i:+ |"b"i:+ | "r"i:+ | "g"i:+) {% ([[sequence]]) => [sequence[0], sequence.length] %}
+
 anyOperator -> ":" | "=" | "!=" | "<>" | "<" | "<=" | ">" | ">="  {% id %}
 
 equalityOperator -> ":" | "=" | "!=" | "<>" {% id %}
+
