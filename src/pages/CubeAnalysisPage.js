@@ -26,8 +26,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
-  const [suggestions, setSuggestions] = useState([]);
-  const [removes, setRemoves] = useState([]);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,10 +110,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 
   useEffect(() => {
     getData(`/cube/api/adds/${cubeID}`).then(({ toCut, toAdd }) => {
-      console.log('cuts', toCut);
-      console.log('adds', toAdd);
-      setSuggestions(toAdd);
-      setRemoves(toCut);
       setAdds(toAdd);
       setCuts(toCut);
       setLoading(false);

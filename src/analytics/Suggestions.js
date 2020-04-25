@@ -50,7 +50,6 @@ Suggestion.propTypes = {
 };
 
 const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
-  console.log(adds);
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
