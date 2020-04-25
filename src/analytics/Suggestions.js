@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import withAutocard from 'components/WithAutocard';
 import { encodeName } from 'utils/Card';
 import PagedList from 'components/PagedList';
 
-import { Col, Row, ListGroup, ListGroupItem, ListGroupItemHeading, Card, CardBody, CardHeader } from 'reactstrap';
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  Label,
+  ListGroup,
+  ListGroupItem,
+  ListGroupItemHeading,
+  Row,
+} from 'reactstrap';
+import useToggle from 'hooks/UseToggle';
 
 const AutocardA = withAutocard('a');
 
@@ -38,8 +49,24 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const Suggestions = ({ adds, cuts, loading }) => {
+const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
   console.log(adds);
+  const [maybeOnly, toggleMaybeOnly] = useToggle(false);
+
+  const filteredCuts = useMemo(() => {
+    const withIndex = cuts?.map((cut, index) => [cut, index]) ?? [];
+    return filter ? withIndex.filter(([card]) => filter(card)) : withIndex;
+  }, [cuts, filter]);
+
+  const filteredAdds = useMemo(() => {
+    let withIndex = adds?.map((add, index) => [add, index]) ?? [];
+    if (maybeOnly) {
+      withIndex = withIndex.filter(([card]) =>
+        cube.maybe.some((maybe) => maybe.details.name_lower === card.details.name_lower),
+      );
+    }
+    return filter ? withIndex.filter(([card]) => filter(card)) : withIndex;
+  }, [adds, maybeOnly, filter, cube.maybe]);
 
   return (
     <>
@@ -53,16 +80,18 @@ const Suggestions = ({ adds, cuts, loading }) => {
           <Card>
             <CardHeader>
               <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
+              <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
+              <input type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
             </CardHeader>
             <ListGroup>
               {loading && <em>Loading...</em>}
               {!loading &&
-                (adds.length > 0 ? (
+                (filteredAdds.length > 0 ? (
                   <PagedList
                     pageSize={20}
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
-                    rows={adds.slice(0).map((add, index) => (
+                    rows={filteredAdds.slice(0).map(([add, index]) => (
                       <Suggestion key={add.cardID} index={index} card={add} />
                     ))}
                   />
@@ -80,13 +109,13 @@ const Suggestions = ({ adds, cuts, loading }) => {
             <ListGroup>
               {loading && <em>Loading...</em>}
               {!loading &&
-                (cuts.length > 0 ? (
+                (filteredCuts.length > 0 ? (
                   <PagedList
                     pageSize={20}
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
-                    rows={cuts.slice(0).map((add, index) => (
-                      <Suggestion key={add.cardID} index={index} card={add} />
+                    rows={filteredCuts.slice(0).map(([card, index]) => (
+                      <Suggestion key={card.cardID} index={index} card={card} />
                     ))}
                   />
                 ) : (
@@ -104,6 +133,15 @@ Suggestions.propTypes = {
   adds: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   cuts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loading: PropTypes.bool.isRequired,
+  cube: PropTypes.shape({
+    maybe: PropTypes.arrayOf(
+      PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
+    ),
+  }).isRequired,
+  filter: PropTypes.func,
+};
+Suggestions.defaultProps = {
+  filter: null,
 };
 
 export default Suggestions;
