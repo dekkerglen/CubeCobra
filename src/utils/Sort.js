@@ -1,4 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
+import {cardDevotion} from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -108,6 +109,11 @@ export function getSorts() {
     'Toughness',
     'Type',
     'Types-Multicolor',
+    'Devotion to White',
+    'Devotion to Blue',
+    'Devotion to Black',
+    'Devotion to Red',
+    'Devotion to Green',
     'Unsorted',
   ];
 }
@@ -199,8 +205,18 @@ function getLabelsRaw(cube, sort) {
       }
     });
     return artists.sort();
-  } else if (sort == 'Rarity') {
+  } else if (sort === 'Rarity') {
     return ['Common', 'Uncommon', 'Rare', 'Mythic'];
+  } else if (sort === 'Devotion to White') {
+    return Array.from(Array(9).keys()).map((d) => d.toString());
+  } else if (sort === 'Devotion to Blue') {
+    return Array.from(Array(9).keys()).map((d) => d.toString());
+  } else if (sort === 'Devotion to Black') {
+    return Array.from(Array(9).keys()).map((d) => d.toString());
+  } else if (sort === 'Devotion to Red') {
+    return Array.from(Array(9).keys()).map((d) => d.toString());
+  } else if (sort === 'Devotion to Green') {
+    return Array.from(Array(9).keys()).map((d) => d.toString());
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Subtype') {
@@ -344,6 +360,8 @@ function getLabelsRaw(cube, sort) {
     }
     labels.push('No Price Available');
     return labels;
+  } else if (sort === 'Devotion to White') {
+
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
@@ -663,6 +681,16 @@ export function cardGetLabels(card, sort) {
     } else {
       return ['No Price Available'];
     }
+  } else if (sort === 'Devotion to White') {
+    return [cardDevotion(card, 'w').toString()];
+  } else if (sort === 'Devotion to Blue') {
+    return [cardDevotion(card, 'u').toString()];
+  } else if (sort === 'Devotion to Black') {
+    return [cardDevotion(card, 'b').toString()];
+  } else if (sort === 'Devotion to Red') {
+    return [cardDevotion(card, 'r').toString()];
+  } else if (sort === 'Devotion to Green') {
+    return [cardDevotion(card, 'g').toString()];
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {

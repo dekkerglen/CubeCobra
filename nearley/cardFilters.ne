@@ -34,7 +34,8 @@ import {
   cardLoyalty,
   cardRarity,
   cardStatus,
-  cardCost
+  cardCost,
+  cardDevotion,
 } from 'utils/Card';
 %} # %}
 
@@ -75,6 +76,7 @@ condition -> (
   | nameCondition
   | manaCostCondition
   | castableCostCondition
+  | devotionCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -128,6 +130,8 @@ nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCon
 manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
 castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
+
+devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) integerOpValue {% ([, [color], valuePred]) => genericCondition('parsed_cost', (card) => cardDevotion(card, color), valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
