@@ -5,7 +5,7 @@ const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 const util = require('./util');
 
-const { cardsFromIds, namesToCardDict } = require('./cards');
+const { cardsFromIds, namesToCardDict, mostReasonable, normalizeName } = require('./cards');
 const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
 
 function getCubeId(cube) {
@@ -247,12 +247,58 @@ async function getElo(cardnames, round) {
   return result;
 }
 
-function CSVtoCards(csvString, carddb) {
-  let { data } = Papa.parse(csvString.trim(), { header: true });
-  data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
-  let missing = '';
+const findCardPrintings = async (cards, defaultStatus = 'Owned') => {
   const newCards = [];
   const newMaybe = [];
+  let missing = '';
+  const dict = await namesToCardDict(cards.map((card) => card.name));
+
+  for (const card of cards) {
+    const potentials = dict[normalizeName(card.name)];
+    if (potentials && potentials.length > 0) {
+      const matchingSetAndNumber = potentials.find(
+        (dbCard) =>
+          card.set === dbCard.set.toUpperCase() && card.collectorNumber === dbCard.collector_number.toUpperCase(),
+      );
+      const matchingSet = potentials.find((dbCard) => dbCard.set.toUpperCase() === card.set);
+      const nonPromo = mostReasonable(potentials);
+      const first = potentials[0];
+      const selected = matchingSetAndNumber || matchingSet || nonPromo || first;
+      if (!selected.error) {
+        const newCard = {
+          tags: Array.isArray(card.tags) ? card.tags : [],
+          status: card.status || defaultStatus,
+          colors: Array.isArray(card.colors) ? card.colors : selected.color_identity,
+          cmc: Number.isFinite(card.cmc) ? card.cmc : selected.cmc,
+          type_line: card.type || selected.type,
+          addedTmsp: new Date(),
+          finish: card.finish || 'Non-foil',
+          cardID: selected._id,
+        };
+
+        delete newCard.maybeboard;
+        delete newCard.name;
+        delete newCard.set;
+        if (card.maybeboard) {
+          newMaybe.push(newCard);
+        } else {
+          newCards.push(newCard);
+        }
+      } else {
+        missing += `${card.name}\n`;
+      }
+    } else {
+      missing += `${card.name}\n`;
+    }
+  }
+  const added = newCards.concat(newMaybe);
+  return { missing, newCards, newMaybe, added };
+};
+
+async function CSVtoCards(csvString) {
+  let { data } = Papa.parse(csvString.trim(), { header: true });
+  data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
+  const cards = [];
   for (const {
     name,
     cmc,
@@ -271,7 +317,7 @@ function CSVtoCards(csvString, carddb) {
   } of data) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
-      const card = {
+      cards.push({
         name,
         cmc,
         type_line: type && type.replace('-', '—'),
@@ -285,32 +331,13 @@ function CSVtoCards(csvString, carddb) {
         notes,
         rarity,
         colorCategory,
-      };
-
-      const potentialIds = carddb.allIds(card);
-      if (potentialIds && potentialIds.length > 0) {
-        // First, try to find the correct set.
-        const matchingSetAndNumber = potentialIds.find((id) => {
-          const dbCard = carddb.cardFromId(id);
-          return (
-            upperSet === dbCard.set.toUpperCase() && card.collectorNumber === dbCard.collector_number.toUpperCase()
-          );
-        });
-        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === upperSet);
-        const nonPromo = potentialIds.find(carddb.reasonableId);
-        const first = potentialIds[0];
-        card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
-        if (maybeboard === 'true') {
-          newMaybe.push(card);
-        } else {
-          newCards.push(card);
-        }
-      } else {
-        missing += `${card.name}\n`;
-      }
+        maybeboard,
+        set: upperSet,
+      });
     }
   }
-  return { newCards, newMaybe, missing };
+
+  return findCardPrintings(cards);
 }
 
 async function compareCubes(cardsA, cardsB) {
@@ -575,6 +602,7 @@ const methods = {
   buildTagColors,
   maybeCards,
   getElo,
+  findCardPrintings,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,

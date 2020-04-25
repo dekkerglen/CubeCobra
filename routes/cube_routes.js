@@ -32,6 +32,7 @@ const {
   buildTagColors,
   maybeCards,
   getElo,
+  findCardPrintings,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
@@ -1252,58 +1253,39 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 async function bulkUpload(req, res, list, cube) {
   const cards = list.match(/[^\r\n]+/g);
   let missing = '';
-  const added = [];
+  let added = [];
   let changelog = '';
   if (cards) {
     if ((cards[0].match(/,/g) || []).length > 3) {
       let newCards = [];
       let newMaybe = [];
-      ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
-      changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
+      ({ newCards, newMaybe, missing, added } = await CSVtoCards(list, cube.defaultStatus));
+      const dict = await cardsFromIds(newCards.map((card) => card.cardID));
+      changelog = newCards.reduce((changes, card) => changes + addCardHtml(dict[card.cardID]), changelog);
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
-      added.concat(newCards, newMaybe);
     } else {
+      const incompleteCards = [];
       for (const itemUntrimmed of cards) {
         const item = itemUntrimmed.trim();
-        const numericMatch = item.match(/([0-9]+)x? (.*)/);
+        const numericMatch = item.match(/([0-9]+)x? ?(.*)/);
         if (numericMatch) {
           let count = parseInt(numericMatch[1], 10);
           if (!Number.isInteger(count)) {
             count = 1;
           }
           for (let j = 0; j < count; j++) {
-            cards.push(numericMatch[2]);
+            incompleteCards.push({ name: numericMatch[2] });
           }
-        } else {
-          let selected = null;
-          if (/(.*)( \((.*)\))/.test(item)) {
-            // has set info
-            const name = item.substring(0, item.indexOf('('));
-            const potentialIds = carddb.getIdsFromName(name);
-            if (potentialIds && potentialIds.length > 0) {
-              const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
-              // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-              const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
-              selected = matching || potentialIds[0];
-            }
-          } else {
-            // does not have set info
-            const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
-            selected = selectedCard ? selectedCard._id : null;
-          }
-          if (selected) {
-            const details = carddb.cardFromId(selected);
-            if (!details.error) {
-              util.addCardToCube(cube, details);
-              added.push(details);
-              changelog += addCardHtml(details);
-            } else {
-              missing += `${item}\n`;
-            }
-          }
+        } else if (/(.*)( \((.*)\))/.test(item)) {
+          // has set info
+          const name = item.substring(0, item.indexOf('('));
+          incompleteCards.push({ name });
         }
       }
+      let newCards = [];
+      ({ newCards, added, missing } = await findCardPrintings(incompleteCards, cube.defaultStatus));
+      cube.cards.push(...newCards);
     }
   }
   await updateCubeAndBlog(req, res, cube, changelog, added, missing);
@@ -1380,14 +1362,15 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       let newCards = [];
       let newMaybe = [];
       if ((lines[0].match(/,/g) || []).length > 3) {
-        ({ newCards, newMaybe, missing } = CSVtoCards(items, carddb));
+        ({ newCards, newMaybe, missing } = await CSVtoCards(items, cube.defaultStatus));
         cube.cards = newCards;
         cube.maybe = newMaybe;
         const pids = new Set();
         const cardNames = new Set();
+        const dict = await cardsFromIds(newCards.concat(cards).map(({ cardID }) => cardID));
         const addDetails = (cardList) =>
           cardList.map((card, index) => {
-            card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
+            card = { ...card, details: dict[card.cardID], index };
             if (!card.type_line) {
               card.type_line = card.details.type;
             }
@@ -1422,8 +1405,8 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         addPriceAndElo(cubeCards);
         addPriceAndElo(newDetails);
         const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
-        changelog += onlyA.map(({ cardID }) => removeCardHtml(carddb.cardFromId(cardID))).join('');
-        changelog += onlyB.map(({ cardID }) => addCardHtml(carddb.cardFromId(cardID))).join('');
+        changelog += onlyA.map(({ cardID }) => removeCardHtml(dict[cardID])).join('');
+        changelog += onlyB.map(({ cardID }) => addCardHtml(dict[cardID])).join('');
         added.push(...onlyB);
       } else {
         // Eventually add plaintext support here.

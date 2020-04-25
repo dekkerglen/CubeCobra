@@ -1,11 +1,11 @@
 let mongoose = require('mongoose');
 
 // card schema for analytics only. Use card objects for most use cases
-let cardSchema = mongoose.Schema({    
+let cardSchema = mongoose.Schema({
   // Scryfall ID
   scryfall_id: {
     index: true,
-    type: String
+    type: String,
   },
   // normalized to lowercase
   name_lower: {
