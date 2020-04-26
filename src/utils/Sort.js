@@ -200,7 +200,7 @@ function getLabelsRaw(cube, sort) {
     });
     return artists.sort();
   } else if (sort == 'Rarity') {
-    return ['Common', 'Uncommon', 'Rare', 'Mythic'];
+    return ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Subtype') {
