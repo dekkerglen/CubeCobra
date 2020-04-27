@@ -48,7 +48,10 @@ export function arrayDelete(arr, index) {
   return result;
 }
 
-export function arrayIsSubset(needles, haystack) {
+export function arrayIsSubset(needles, haystack, comparison) {
+  if (comparison) {
+    return needles.every((elem) => haystack.some((elem2) => comparison(elem, elem2)));
+  }
   return needles.every((x) => haystack.includes(x));
 }
 
