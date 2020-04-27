@@ -36,13 +36,15 @@ const makeInitialStacks = (playerDeck) => {
 };
 
 const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
-  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
+  const [deck, setDeck] = useState(
+    makeInitialStacks(initialDeck.seats[0].deck.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]))),
+  );
   const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.seats[0].sideboard;
+    const initial = initialDeck.seats[0].sideboard.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]));
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
     }
-    return [initialDeck.seats[0].sideboard.slice(0, 8)];
+    return [initial.slice(0, 8)];
   });
 
   const locationMap = {
@@ -128,7 +130,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
                   <DeckStacks
                     cards={deck}
                     title="Deck"
-                    subtitle={subtitle(deck.flat().flat())}
+                    subtitle={subtitle(deck.flat(2))}
                     locationType={Location.DECK}
                     canDrop={canDrop}
                     onMoveCard={handleMoveCard}
@@ -188,6 +190,7 @@ CubeDeckbuilderPage.propTypes = {
         name: PropTypes.string.isRequired,
       }),
     ).isRequired,
+    cards: PropTypes.array.isRequired,
   }).isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,

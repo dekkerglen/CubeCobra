@@ -9,9 +9,9 @@ import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
 
-const DeckStacksStatic = ({ cards }) => (
+const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
-    {cards.map((row, index) => (
+    {piles.map((row, index) => (
       <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
         {row.map((column, index2) => (
           <Col
@@ -23,13 +23,16 @@ const DeckStacksStatic = ({ cards }) => (
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
             <div className="stack">
-              {column.map((card, index3) => (
-                <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
-                  <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
-                    <FoilCardImage card={card} tags={[]} autocard />
-                  </a>
-                </div>
-              ))}
+              {column.map((cardIndex, index3) => {
+                const card = cards[cardIndex];
+                return (
+                  <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
+                    <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
+                      <FoilCardImage card={card} tags={[]} autocard />
+                    </a>
+                  </div>
+                );
+              })}
             </div>
           </Col>
         ))}
@@ -39,7 +42,8 @@ const DeckStacksStatic = ({ cards }) => (
 );
 
 DeckStacksStatic.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
+  piles: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
 };
 
 const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
@@ -100,7 +104,17 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
         <>
           <Row className="mt-3">
             <Col>
-              <DeckStacksStatic cards={stackedDeck} title="Deck" subtitle={makeSubtitle(seat.deck.flat().flat())} />
+              <DeckStacksStatic
+                piles={stackedDeck}
+                cards={deck.cards}
+                title="Deck"
+                subtitle={makeSubtitle(
+                  seat.deck
+                    .flat()
+                    .flat()
+                    .map((cardIndex) => draft.cards[cardIndex]),
+                )}
+              />
             </Col>
           </Row>
           {stackedSideboard && stackedSideboard.length > 0 && (
@@ -109,7 +123,7 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
                 <CardBody className="border-bottom">
                   <h4>Sideboard</h4>
                 </CardBody>
-                <DeckStacksStatic cards={stackedSideboard} title="Sideboard" />
+                <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="Sideboard" />
               </Col>
             </Row>
           )}
@@ -146,7 +160,8 @@ DeckCard.propTypes = {
   }).isRequired,
   userid: PropTypes.string,
   view: PropTypes.string,
-  draft: PropTypes.shape({}).isRequired,
+  draft: PropTypes.shape({ cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired })
+    .isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     seats: PropTypes.arrayOf(
@@ -162,6 +177,7 @@ DeckCard.propTypes = {
     ).isRequired,
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   seatIndex: PropTypes.string.isRequired,
 };

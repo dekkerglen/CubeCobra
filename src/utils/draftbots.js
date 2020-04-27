@@ -7,10 +7,9 @@ import {
   cardColorIdentity,
   cardName,
   cardType,
-  cardDevotion,
   cardCost,
 } from 'utils/Card';
-import { arraysAreEqualSets, fromEntries } from 'utils/Util';
+import { arraysAreEqualSets } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -139,13 +138,6 @@ export const isPlayableLand = (colors, card) =>
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
   (FETCH_LANDS[card.details.name] && FETCH_LANDS[card.details.name].some((c) => colors.includes(c)));
 
-const getDevotions = (card) =>
-  fromEntries(
-    cardType(card).toLowerCase().includes('land')
-      ? []
-      : cardColorIdentity(card).map((color) => [color, Math.max(1, cardDevotion(card, color))]),
-  );
-
 export const getCastingProbability = (card, lands) => {
   if (!card.details.cost_colors) {
     const colorSymbols = {};
@@ -222,8 +214,8 @@ export const getCastingProbability = (card, lands) => {
 
 // What is the raw power level of this card? Used to choose a card within a combination.
 // Scale is roughly 0-10.
-export const getRating = (card) => {
-  return 10 ** ((card?.rating ?? 1200) / 400 - 3);
+export const getRating = (card, cards) => {
+  return 10 ** ((cards[card]?.rating ?? 1200) / 400 - 3);
 };
 
 // How much does the card we're considering synergize with the cards we've picked?
@@ -238,8 +230,8 @@ export const getPickSynergy = (pickedInCombination, card, picked, synergies) => 
     for (const { index } of pickedInCombination) {
       // Don't count synergy for duplicate cards.
       // Maximum synergy is generally around .997 which corresponds to 10.
-      if (index !== card.index) {
-        synergy += getSynergy(index, card.index, synergies);
+      if (index !== card) {
+        synergy += getSynergy(index, card, synergies);
       }
     }
   }
@@ -364,6 +356,7 @@ const calculateRating = (
   lands,
   combination,
   card,
+  cards,
   ratingScore,
   picked,
   seen,
@@ -385,7 +378,7 @@ const calculateRating = (
       getInternalSynergy(pickedInCombination, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
       getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
       getColor(pickedInCombination, picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
-      getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState) +
+      getFixing(combination, cards[card]) * getFixingWeight(packNum, pickNum, initialState) +
       (ratingScore + pickSynergyScore) * cardCastingProbability
     );
   }
@@ -406,37 +399,29 @@ const calculateRating = (
 };
 
 // inPack is the number of cards in this pack
-export const botRatingAndCombination = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) => {
+export const botRatingAndCombination = (
+  cards,
+  card,
+  picked,
+  seen,
+  synergies,
+  initialState,
+  inPack = 1,
+  packNum = 1,
+) => {
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
-  const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
+  const weightedRatingScore = card ? getRating(card, cards) * getRatingWeight(packNum, pickNum, initialState) : 0;
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   // TODO: Only count dual lands in the combination we want to play.
   let currentLands = { ...picked.lands };
-  if (card) {
-    const devotions = getDevotions(card);
-    for (const [color, devotion] of Object.entries(devotions)) {
-      if (currentLands[color] < devotion) {
-        let remaining = devotion - currentLands[color];
-        currentLands[color] += remaining;
-        while (remaining > 0) {
-          for (const color2 of COLORS) {
-            if (currentLands[color2] > (devotions[color2] ?? 0)) {
-              currentLands[color2] -= 1;
-              break;
-            }
-          }
-          remaining -= 1;
-        }
-      }
-    }
-  }
   let currentCombination = getCombinationForLands(currentLands);
   let currentRating = calculateRating(
     currentLands,
     currentCombination,
     card,
+    cards,
     weightedRatingScore,
     picked,
     seen,
@@ -462,6 +447,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
               newLands,
               newCombination,
               card,
+              cards,
               weightedRatingScore,
               picked,
               seen,
@@ -480,11 +466,12 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
           }
         }
       }
-    }
-    if (!landCountsAreEqual(currentLands, nextLands)) {
-      currentLands = nextLands;
-      currentCombination = nextCombination;
-      currentRating = nextRating;
+      if (!landCountsAreEqual(currentLands, nextLands)) {
+        currentLands = nextLands;
+        currentCombination = nextCombination;
+        currentRating = nextRating;
+        break;
+      }
     }
   }
   return { rating: currentRating, colors: currentCombination, lands: currentLands };
