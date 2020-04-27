@@ -1989,7 +1989,7 @@ router.post(
       const format = draftutil.getDraftFormat(params, cube);
 
       const draft = new Draft();
-      const populated = draftutil.createDraft(
+      const { initial_state: initialState, unopenedPacks, seats, cards } = draftutil.createDraft(
         format,
         cube.cards,
         bots,
@@ -1997,9 +1997,10 @@ router.post(
         req.user ? req.user : { username: 'Anonymous' },
       );
 
-      draft.initial_state = populated.initial_state;
-      draft.unopenedPacks = populated.unopenedPacks;
-      draft.seats = populated.seats;
+      draft.initial_state = initialState;
+      draft.unopenedPacks = unopenedPacks;
+      draft.seats = seats;
+      draft.cards = cards;
       draft.cube = cube._id;
 
       await draft.save();
@@ -2031,26 +2032,8 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    // insert card details everywhere that needs them
-    for (const seat of draft.unopenedPacks) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
-        }
-      }
-    }
-
-    for (const seat of draft.seats) {
-      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
+    for (const card of draft.cards) {
+      card.details = carddb.cardFromId(card.cardID);
     }
 
     const reactProps = {
@@ -2723,6 +2706,7 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.cards = draft.cards;
 
     for (const seat of draft.seats) {
       deck.seats.push({
@@ -2991,17 +2975,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
     }
 
     // add images to cards
-    for (const seat of deck.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
+    for (const card of deck.cards) {
+      card.details = carddb.cardFromId(card.cardID);
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();

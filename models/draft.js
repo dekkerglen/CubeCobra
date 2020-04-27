@@ -6,18 +6,19 @@ const Seat = {
   bot: [String], //null bot value means human player
   name: String,
   userid: String,
-  drafted: [[cardSchema]], //organized draft picks
-  sideboard: [[cardSchema]], //organized draft picks
-  pickorder: [cardSchema],
-  packbacklog: [[cardSchema]],
+  drafted: [[Number]], //organized draft picks
+  sideboard: [[Number]], //organized draft picks
+  pickorder: [Number],
+  packbacklog: [[Number]],
 };
 
 // Cube schema
 let draftSchema = mongoose.Schema({
   cube: String,
-  initial_state: [[[cardSchema]]],
+  initial_state: [[[Number]]],
   seats: [Seat],
-  unopenedPacks: [[[cardSchema]]],
+  unopenedPacks: [[[Number]]],
+  cards: [cardSchema],
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));

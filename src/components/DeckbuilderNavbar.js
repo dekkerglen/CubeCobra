@@ -133,19 +133,21 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     const res = JSON.parse(JSON.stringify(deck));
 
     for (const seat of res.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
+      for (const collection of [seat.deck, seat.sideboard, res.playerdeck, res.playersideboard]) {
         for (const pack of collection) {
-          for (const card of pack) {
-            delete card.details;
-          }
-        }
-      }
-      if (seat.pickorder) {
-        for (const card of seat.pickorder) {
-          delete card.details;
+          pack.forEach((card, index) => {
+            if (!Number.isFinite(card)) {
+              pack[index] = res.cards.indexOf(card);
+            }
+          });
         }
       }
     }
+
+    for (const card of res.cards) {
+      delete card.details;
+    }
+    console.log(res);
 
     return res;
   }, [deck]);

@@ -271,6 +271,7 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
 
   draft.seats = [];
   draft.unopenedPacks = [];
+  draft.cards = [];
 
   // deep clone packs
   for (let i = 0; i < draft.initial_state.length; i++) {
@@ -278,7 +279,11 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
     for (let j = 0; j < draft.initial_state[i].length; j++) {
       draft.unopenedPacks[i].push([]);
       for (let k = 0; k < draft.initial_state[i][j].length; k++) {
-        draft.unopenedPacks[i][j].push(draft.initial_state[i][j][k]);
+        const card = { ...draft.initial_state[i][j][k] };
+        delete card.details;
+        draft.cards.push(card)
+        draft.unopenedPacks[i][j].push(draft.cards.length - 1);
+        draft.initial_state[i][j][k] = draft.cards.length - 1;
       }
     }
   }

@@ -1,6 +1,6 @@
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
-import { COLOR_COMBINATIONS } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardCmc } from 'utils/Card';
 
 let draft = null;
 
@@ -86,15 +86,22 @@ function addSeen(seen, cards) {
 function init(newDraft) {
   draft = newDraft;
   for (const seat of draft.seats) {
+    const { cards } = draft;
     seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     seat.seen.cards = 0;
-    addSeen(seat.seen, seat.packbacklog[0].slice());
+    addSeen(
+      seat.seen,
+      seat.packbacklog[0].map((cardIndex) => cards[cardIndex]),
+    );
     seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     seat.picked.cards = 0;
   }
   draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   draft.overallPool.cards = 0;
-  addSeen(draft.overallPool, draft.unopenedPacks.flat(3));
+  addSeen(
+    draft.overallPool,
+    draft.unopenedPacks.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+  );
 }
 
 function id() {
@@ -106,7 +113,7 @@ function cube() {
 }
 
 function pack() {
-  return draft.seats[0].packbacklog[0] || [];
+  return (draft.seats[0].packbacklog[0] || []).map((cardIndex) => draft.cards[cardIndex]);
 }
 
 function packPickNumber() {
@@ -125,8 +132,10 @@ function arrangePicks(picks) {
   if (!Array.isArray(picks) || picks.length !== 16) {
     throw new Error('Picks must be an array of length 16.');
   }
-
-  draft.seats[0].drafted = [...picks];
+  draft.seats[0].drafted = picks.map((pile) =>
+    pile.map((pileCard) => draft.cards.findIndex((card) => card.cardID === pileCard.cardID)),
+  );
+  console.log(draft.seats[0].drafted);
 }
 
 const considerInCombination = (combination) => (card) =>
@@ -172,23 +181,23 @@ const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inP
 const botColors = (...args) => botRatingAndCombination(...args)[1];
 const botRating = (...args) => botRatingAndCombination(...args)[0];
 
-function getSortFn(bot) {
+function getSortFn(bot, draftCards) {
   return (a, b) => {
     if (bot) {
-      return botCardRating(bot, b) - botCardRating(bot, a);
+      return botCardRating(bot, draftCards[b]) - botCardRating(bot, draftCards[a]);
     }
-    return b.rating - a.rating;
+    return draftCards[b].rating - draftCards[a].rating;
   };
 }
 
-async function buildDeck(cards, picked) {
-  let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
+async function buildDeck(cardIndices, picked, draftCards) {
+  let nonlands = cardIndices.filter((cardIndex) => !draftCards[cardIndex].details.type.toLowerCase().includes('land'));
+  const lands = cardIndices.filter((cardIndex) => draftCards[cardIndex].details.type.toLowerCase().includes('land'));
 
   const colors = botColors(null, null, picked, null);
-  const sortFn = getSortFn(colors);
-  const inColor = nonlands.filter(considerInCombination(colors));
-  const outOfColor = nonlands.filter((x) => !considerInCombination(colors)(x));
+  const sortFn = getSortFn(colors, draftCards);
+  const inColor = nonlands.filter((cardIndex) => considerInCombination(colors)(draftCards[cardIndex]));
+  const outOfColor = nonlands.filter((cardIndex) => !considerInCombination(colors)(draftCards[cardIndex]));
 
   inColor.sort(sortFn);
   outOfColor.sort(sortFn);
@@ -207,15 +216,16 @@ async function buildDeck(cards, picked) {
     }
   }
 
-  for (const card of main) {
+  for (const cardIndex of main) {
+    const card = draftCards[cardIndex];
     let index = Math.min(card.cmc ?? 0, 7);
     if (!card.details.type.toLowerCase().includes('creature')) {
       index += 8;
     }
-    deck[index].push(card);
+    deck[index].push(cardIndex);
   }
-  for (const card of side) {
-    sideboard[Math.min(card.cmc ?? 0, 7)].push(card);
+  for (const cardIndex of side) {
+    sideboard[Math.min(cardCmc(draftCards[cardIndex]) ?? 0, 7)].push(cardIndex);
   }
 
   return {
@@ -233,7 +243,7 @@ function botPicks() {
       picked,
       packbacklog: [packFrom],
     } = draft.seats[botIndex];
-    const { overallPool, initial_state } = draft;
+    const { cards, overallPool, initial_state } = draft;
     let ratedPicks = [];
     const unratedPicks = [];
     const seats = draft.seats.length;
@@ -241,7 +251,7 @@ function botPicks() {
     const [packNum] = packPickNumber();
     const numPacks = initial_state[0].length;
     for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-      if (packFrom[cardIndex].rating) {
+      if (cards[packFrom[cardIndex]].rating) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -249,7 +259,7 @@ function botPicks() {
     }
     ratedPicks = ratedPicks
       .map((cardIndex) => [
-        botRating(seen, packFrom[cardIndex], picked, overallPool, seats, inPack, packNum, numPacks),
+        botRating(seen, cards[packFrom[cardIndex]], picked, overallPool, seats, inPack, packNum, numPacks),
         cardIndex,
       ])
       .sort(([a], [b]) => b - a)
@@ -259,7 +269,7 @@ function botPicks() {
     const pickOrder = ratedPicks.concat(unratedPicks);
     const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
     draft.seats[botIndex].pickorder.push(pickedCard);
-    addSeen(picked, [pickedCard]);
+    addSeen(picked, [cards[pickedCard]]);
   }
 }
 
@@ -294,24 +304,29 @@ function passPack() {
       }
     }
   }
+  const { cards } = draft;
   for (const seat of draft.seats) {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
-      addSeen(seat.seen, seat.packbacklog[0]);
+      addSeen(
+        seat.seen,
+        seat.packbacklog[0].map((cardIndex) => cards[cardIndex]),
+      );
     }
   }
 }
 
 async function pick(cardIndex) {
-  const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
+  const ci = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
+  const card = draft.cards[ci];
   const packFrom = draft.seats[0].packbacklog[0];
-  draft.seats[0].pickorder.push(card);
+  draft.seats[0].pickorder.push(ci);
   passPack();
   await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: packFrom.map((c) => c.details.name),
+      pack: packFrom.map((c) => draft.cards[c].details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -321,8 +336,11 @@ async function pick(cardIndex) {
 
 async function finish() {
   // build bot decks
-  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.picked));
+  const decksPromise = draft.seats.map((seat) => {
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.cards);
+  });
   const decks = await Promise.all(decksPromise);
+  const { cards } = draft;
 
   for (let i = 0; i < draft.seats.length; i++) {
     if (draft.seats[i].bot) {
@@ -333,33 +351,22 @@ async function finish() {
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-      addSeen(picked, draft.seats[i].pickorder);
+      addSeen(
+        picked,
+        draft.seats[i].pickorder.map((cardIndex) => cards[cardIndex]),
+      );
       const colors = botColors(null, null, picked, null);
       draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
     }
   }
 
   for (const seat of draft.seats) {
-    for (const category of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-      for (const card of category) {
-        delete card.details;
-      }
-    }
-    for (const card of seat.pickorder) {
-      delete card.details;
-    }
     delete seat.seen;
     delete seat.picked;
   }
 
-  for (const category of [draft.initial_state, draft.unopenedPacks]) {
-    for (const seat of category) {
-      for (const col of seat) {
-        for (const card of col) {
-          delete card.details;
-        }
-      }
-    }
+  for (const card of draft.cards) {
+    delete card.details;
   }
   delete draft.overallPool;
 

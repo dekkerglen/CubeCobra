@@ -36,13 +36,15 @@ const makeInitialStacks = (playerDeck) => {
 };
 
 const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
-  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
+  const [deck, setDeck] = useState(
+    makeInitialStacks(initialDeck.seats[0].deck.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]))),
+  );
   const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.seats[0].sideboard;
+    const initial = initialDeck.seats[0].sideboard.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]));
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
     }
-    return [initialDeck.seats[0].sideboard.slice(0, 8)];
+    return [initialDeck.seats[0].sideboard.slice(0, 8).map((cardIndex) => initialDeck.cards[cardIndex])];
   });
 
   const locationMap = {
@@ -105,6 +107,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
 
   const [name, setName] = useState(initialDeck.seats[0].name);
   const [description, setDescription] = useState(initialDeck.seats[0].description);
+  console.log(deck);
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
@@ -125,7 +128,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
                   <DeckStacks
                     cards={deck}
                     title="Deck"
-                    subtitle={subtitle(deck.flat().flat())}
+                    subtitle={subtitle(deck.flat(2))}
                     locationType={Location.DECK}
                     canDrop={canDrop}
                     onMoveCard={handleMoveCard}
@@ -185,6 +188,7 @@ CubeDeckbuilderPage.propTypes = {
         name: PropTypes.string.isRequired,
       }),
     ).isRequired,
+    cards: PropTypes.array.isRequired,
   }).isRequired,
 };
 
