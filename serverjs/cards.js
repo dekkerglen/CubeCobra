@@ -103,6 +103,13 @@ const mostReasonable = (cards, printing = 'recent') => {
   return cards.find(reasonableCard);
 };
 
+const getCardTree = async () => {}; // TODO: finish this logic
+const getCardImages = async () => {}; // TODO: finish this logic
+
+const cardImageCrop = async (name) => {
+  return (await Card.findOne({ full_name: name })).art_crop;
+};
+
 module.exports = {
   getEnglishVersion,
   mostReasonable,
@@ -111,4 +118,7 @@ module.exports = {
   nameToCards,
   namesToCardDict,
   normalizeName,
+  getCardImages,
+  getCardTree,
+  cardImageCrop,
 };

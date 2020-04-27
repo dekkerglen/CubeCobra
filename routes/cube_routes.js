@@ -42,7 +42,17 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
-const { cardsFromIds, namesToCardDict, mostReasonable, normalizeName } = require('../serverjs/cards');
+const {
+  cardsFromIds,
+  namesToCardDict,
+  mostReasonable,
+  normalizeName,
+  getCardTree,
+  getCardImages,
+  cardImageCrop,
+  getFullNames,
+  getCardImageDict,
+} = require('../serverjs/cards');
 
 const util = require('../serverjs/util.js');
 const { GetPrices } = require('../serverjs/prices.js');
@@ -1428,8 +1438,11 @@ router.get('/download/cubecobra/:id', async (req, res) => {
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
+
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
+
     for (const card of cube.cards) {
-      res.write(`${carddb.cardFromId(card.cardID).full_name}\r\n`);
+      res.write(`${dict[card.cardID].full_name}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -1439,9 +1452,9 @@ router.get('/download/cubecobra/:id', async (req, res) => {
 
 function writeCard(res, card, maybe) {
   if (!card.type_line) {
-    card.type_line = carddb.cardFromId(card.cardID).type;
+    card.type_line = card.details.type;
   }
-  let { name } = carddb.cardFromId(card.cardID);
+  let { name } = card.details;
   name = name.replace(/"/, '""');
   let { imgUrl } = card;
   if (imgUrl) {
@@ -1453,8 +1466,8 @@ function writeCard(res, card, maybe) {
   res.write(`${card.cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${card.colors.join('')},`);
-  res.write(`"${carddb.cardFromId(card.cardID).set}",`);
-  res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`"${card.details.set}",`);
+  res.write(`"${card.details.collector_number}",`);
   res.write(`${card.rarity},`);
   res.write(`${card.colorCategory},`);
   res.write(`${card.status},`);
@@ -1468,15 +1481,16 @@ function writeCard(res, card, maybe) {
     res.write(tag);
   });
   res.write(`","${card.notes || ''}",`);
-  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''},`);
+  res.write(`${card.details.mtgo_id || ''},`);
   res.write('\r\n');
 }
 
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
     for (const card of cube.cards) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = dict[card.cardID];
       card.details = details;
     }
     cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
@@ -1503,6 +1517,7 @@ router.get('/download/csv/:id', async (req, res) => {
 router.get('/download/forge/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1511,8 +1526,7 @@ router.get('/download/forge/:id', async (req, res) => {
     res.write(`Name=${cube.name}\r\n`);
     res.write('[Main]\r\n');
     for (const card of cube.cards) {
-      const { name } = carddb.cardFromId(card.cardID);
-      const { set } = carddb.cardFromId(card.cardID);
+      const { name, set } = dict[card.cardID];
       res.write(`1 ${name}|${set.toUpperCase()}\r\n`);
     }
     return res.end();
@@ -1521,13 +1535,16 @@ router.get('/download/forge/:id', async (req, res) => {
   }
 });
 
-const exportToMtgo = (res, fileName, mainCards, sideCards) => {
+const exportToMtgo = async (res, fileName, mainCards, sideCards) => {
   res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
+
+  const dict = await cardsFromIds(mainCards.map((card) => card.cardID).concat(sideCards.map((card) => card.cardID)));
+
   const main = {};
   for (const card of mainCards) {
-    const { name } = carddb.cardFromId(card.cardID);
+    const { name } = dict[card.cardID];
     if (main[name]) {
       main[name] += 1;
     } else {
@@ -1542,7 +1559,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
 
   const side = {};
   for (const card of sideCards) {
-    const { name } = carddb.cardFromId(card.cardID);
+    const { name } = dict[card.cardID];
     if (side[name]) {
       side[name] += 1;
     } else {
@@ -1559,7 +1576,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
 router.get('/download/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
+    return await exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -1568,14 +1585,15 @@ router.get('/download/mtgo/:id', async (req, res) => {
 router.get('/download/xmage/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
+
     for (const card of cube.cards) {
-      const { name } = carddb.cardFromId(card.cardID);
-      const { set } = carddb.cardFromId(card.cardID);
-      const collectorNumber = carddb.cardFromId(card.cardID).collector_number;
+      const { name, set } = dict[card.cardID];
+      const collectorNumber = dict[card.cardID].collector_number;
       res.write(`1 [${set.toUpperCase()}:${collectorNumber}] ${name}\r\n`);
     }
     return res.end();
@@ -1587,12 +1605,13 @@ router.get('/download/xmage/:id', async (req, res) => {
 router.get('/download/plaintext/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of cube.cards) {
-      res.write(`${carddb.cardFromId(card.cardID).name}\r\n`);
+      res.write(`${dict[card.cardID].name}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -1639,11 +1658,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       pool.push([]);
     }
 
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
     for (const card of source) {
       let index = 0;
 
       // sort by color
-      const details = carddb.cardFromId(card.cardID);
+      const details = dict[card.cardID];
       const type = card.type_line || details.type;
       const colors = card.colors || details.colors;
 
@@ -1713,6 +1733,12 @@ router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const dict = await cardsFromIds(
+      seat.deck
+        .flat()
+        .map((card) => card.cardID)
+        .concat(seat.sideboard.flat().map((card) => card.cardID)),
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1721,7 +1747,7 @@ router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
     const main = {};
     for (const col of seat.deck) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
         if (main[name]) {
           main[name] += 1;
@@ -1737,7 +1763,7 @@ router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
     const side = {};
     for (const col of seat.sideboard) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
         if (side[name]) {
           side[name] += 1;
@@ -1759,6 +1785,12 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const dict = await cardsFromIds(
+      seat.deck
+        .flat()
+        .map((card) => card.cardID)
+        .concat(seat.sideboard.flat().map((card) => card.cardID)),
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1769,7 +1801,7 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
     const main = {};
     for (const col of seat.deck) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = deck[card.cardID];
         const name = `${details.name}|${details.set.toUpperCase()}`;
         if (main[name]) {
           main[name] += 1;
@@ -1786,7 +1818,7 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
     const side = {};
     for (const col of seat.sideboard) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = deck[card.cardID];
         const name = `${details.name}|${details.set.toUpperCase()}`;
         if (side[name]) {
           side[name] += 1;
@@ -1809,13 +1841,19 @@ router.get('/deck/download/txt/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const dict = await cardsFromIds(
+      seat.deck
+        .flat()
+        .map((card) => card.cardID)
+        .concat(seat.sideboard.flat().map((card) => card.cardID)),
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const col of seat.deck) {
       for (const card of col) {
-        const { name } = carddb.cardFromId(card.cardID);
+        const { name } = dict[card.cardID];
         res.write(`${name}\r\n`);
       }
     }
@@ -1839,6 +1877,12 @@ router.get('/deck/download/arena/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const dict = await cardsFromIds(
+      seat.deck
+        .flat()
+        .map((card) => card.cardID)
+        .concat(seat.sideboard.flat().map((card) => card.cardID)),
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -1847,7 +1891,7 @@ router.get('/deck/download/arena/:id/:seat', async (req, res) => {
     const main = {};
     for (const col of seat.deck) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
         if (main[name]) {
           main[name] += 1;
@@ -1864,7 +1908,7 @@ router.get('/deck/download/arena/:id/:seat', async (req, res) => {
     const side = {};
     for (const col of seat.sideboard) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
         if (side[name]) {
           side[name] += 1;
@@ -1887,6 +1931,12 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const dict = await cardsFromIds(
+      seat.deck
+        .flat()
+        .map((card) => card.cardID)
+        .concat(seat.sideboard.flat().map((card) => card.cardID)),
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -1894,7 +1944,7 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
     const main = {};
     for (const col of seat.deck) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `${details.name}`;
         if (main[name]) {
           main[name] += 1;
@@ -1911,7 +1961,7 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
     const side = {};
     for (const col of seat.sideboard) {
       for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
+        const details = dict[card.cardID];
         const name = `${details.name}`;
         if (side[name]) {
           side[name] += 1;
@@ -1953,10 +2003,11 @@ router.post(
       }
 
       const params = req.body;
+      const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
       // insert card details everywhere that needs them
       for (const card of cube.cards) {
-        card.details = carddb.cardFromId(card.cardID);
+        card.details = dict[card.cardID];
       }
       const elo = await getElo(cube.cards.map((card) => card.details.name));
       for (const card of cube.cards) {
@@ -1998,6 +2049,7 @@ router.get('/draft/:id', async (req, res) => {
     }
 
     const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -2014,7 +2066,7 @@ router.get('/draft/:id', async (req, res) => {
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+          card.details = dict[card.cardID];
         }
       }
     }
@@ -2023,12 +2075,12 @@ router.get('/draft/:id', async (req, res) => {
       for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
         for (const pack of collection) {
           for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
+            card.details = dict[card.cardID];
           }
         }
       }
       for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
+        card.details = dict[card.cardID];
       }
     }
 
@@ -2076,10 +2128,12 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const adds = [];
     let changelog = '';
 
+    const dict = await cardsFromIds(edits.map((edit) => edit.substring(1)));
+
     for (const edit of edits) {
       if (edit.charAt(0) === '+') {
         // add id
-        const details = carddb.cardFromId(edit.substring(1));
+        const details = dict[edit.substring(1)];
         if (!details) {
           req.logger.error(`Card not found: ${edit}`, req);
         } else {
@@ -2097,14 +2151,14 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         removes.add(indexOut);
         const card = cube.cards[indexOut];
         if (card.cardID === outID) {
-          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+          changelog += removeCardHtml(dict[card.cardID]);
         } else {
           req.flash('danger', 'Bad request format.');
           return res.redirect(`/cube/list/${req.params.id}`);
         }
       } else if (edit.charAt(0) === '/') {
         const [outStr, idIn] = edit.substring(1).split('>');
-        const detailsIn = carddb.cardFromId(idIn);
+        const detailsIn = dict[idIn];
         if (!detailsIn) {
           req.logger.error(`Card not found: ${edit}`, req);
         } else {
@@ -2120,7 +2174,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         removes.add(indexOut);
         const cardOut = cube.cards[indexOut];
         if (cardOut.cardID === outID) {
-          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+          changelog += replaceCardHtml(dict[cardOut.cardID], detailsIn);
         } else {
           req.flash('danger', 'Bad request format.');
           return res.redirect(`/cube/list/${req.params.id}`);
@@ -2158,7 +2212,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
-    cube = setCubeType(cube, carddb);
+    cube = await setCubeType(cube);
 
     await Promise.all([blogpost.save(), cube.save()]);
 
@@ -2170,18 +2224,18 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 });
 
 // API routes
-router.get('/api/cardnames', (req, res) => {
+router.get('/api/cardnames', async (req, res) => {
   return res.status(200).send({
     success: 'true',
-    cardnames: carddb.cardtree,
+    cardnames: await getCardTree(),
   });
 });
 
 // Get the full card images including image_normal and image_flip
-router.get('/api/cardimages', (req, res) => {
+router.get('/api/cardimages', async (req, res) => {
   return res.status(200).send({
     success: 'true',
-    cardimages: carddb.cardimages,
+    cardimages: await getCardImages(),
   });
 });
 
@@ -2297,7 +2351,7 @@ router.post(
     cube.privatePrices = updatedCube.privatePrices;
     cube.overrideCategory = updatedCube.overrideCategory;
 
-    const image = carddb.imagedict[updatedCube.image_name.toLowerCase()];
+    const image = await cardImageCrop(updatedCube.image_name);
 
     if (image) {
       cube.image_uri = updatedCube.image_uri;
@@ -2308,7 +2362,7 @@ router.post(
     cube.descriptionhtml = sanitize(updatedCube.descriptionhtml);
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    setCubeType(cube, carddb);
+    await setCubeType(cube);
 
     // cube category override
     if (cube.overrideCategory) {
@@ -2352,7 +2406,7 @@ router.post(
     await cube.save();
     return res.status(200).send({
       success: 'true',
-      descriptionhtml: addAutocard(cube.descriptionhtml, carddb, cube),
+      descriptionhtml: await addAutocard(cube.descriptionhtml, cube),
     });
   }),
 );
@@ -2520,17 +2574,17 @@ router.post(
   }),
 );
 
-router.get('/api/imagedict', (req, res) => {
+router.get('/api/imagedict', async (req, res) => {
   res.status(200).send({
     success: 'true',
-    dict: carddb.imagedict,
+    dict: await getCardImageDict(),
   });
 });
 
-router.get('/api/fullnames', (req, res) => {
+router.get('/api/fullnames', async (req, res) => {
   res.status(200).send({
     success: 'true',
-    cardnames: carddb.full_names,
+    cardnames: await getFullNames(),
   });
 });
 
@@ -2540,8 +2594,9 @@ router.get(
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const cardnames = [];
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
     for (const card of cube.cards) {
-      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
+      util.binaryInsert(dict[card.cardID].name, cardnames);
     }
 
     const result = util.turnToTree(cardnames);
@@ -2627,13 +2682,13 @@ router.get(
     cardname = cardutil.normalizeName(cardname);
 
     const cube = await Cube.findOne(buildIdQuery(cubeid)).lean();
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
 
     for (const card of cube.cards) {
-      if (carddb.cardFromId(card.cardID).name_lower === cardname) {
-        card.details = carddb.cardFromId(card.cardID);
+      if (dict[card.cardID].name_lower === cardname) {
         return res.status(200).send({
           success: 'true',
-          card: card.details,
+          card: dict[card.cardID],
         });
       }
     }
@@ -2651,8 +2706,8 @@ router.get(
     if (!cube) {
       return res.status(404).send('Cube not found.');
     }
-
-    const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
+    const names = cube.cards.map((card) => dict[card.cardID].name);
     res.contentType('text/plain');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
@@ -2935,12 +2990,14 @@ router.get('/redraft/:id', async (req, res) => {
       draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
     }
 
+    const dict = await cardsFromIds(draft.initial_state.flat().map((card) => card.cardID));
+
     // add ratings
     const names = [];
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
         for (const card of pack) {
-          names.push(carddb.cardFromId(card.cardID).name);
+          names.push(dict[card.cardID].name);
         }
       }
     }
