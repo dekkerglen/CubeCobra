@@ -3,25 +3,12 @@ import PropTypes from 'prop-types';
 
 import CubeLayout from 'layouts/CubeLayout';
 import DeckBuilder from 'components/DeckBuilder';
-import { CardBody, Row, Col, Card } from 'reactstrap';
 
 const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
+  console.log(initialDeck);
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DeckBuilder initialDeck={initialDeck} basics={basics}>
-        <Row>
-          <Col>
-            <Card>
-              <CardBody />
-            </Card>
-          </Col>
-          <Col>
-            <Card>
-              <CardBody />
-            </Card>
-          </Col>
-        </Row>
-      </DeckBuilder>
+      <DeckBuilder initialDeck={initialDeck} basics={basics} />
     </CubeLayout>
   );
 };

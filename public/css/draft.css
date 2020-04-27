@@ -19,3 +19,20 @@
   position: absolute;
   z-index: -10000;
 }
+
+.stacked {
+  transition: all 500ms ease;
+  box-sizing: border-box;
+}
+
+.img-hidden {
+  opacity:0;
+}
+
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-select: none;
+}

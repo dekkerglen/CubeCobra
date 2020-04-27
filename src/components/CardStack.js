@@ -1,36 +1,46 @@
-import React from 'react';
-import { useDrop } from 'react-dnd';
+import React, { forwardRef, useState } from 'react';
+import FoilCardImage from 'components/FoilCardImage';
 
-import { Col } from 'reactstrap';
+import FlipMove from 'react-flip-move';
 
-const CardStack = ({ location, children, ...props }) => {
-  const [{ isAcceptable }, drop] = useDrop({
-    accept: 'card',
-    drop: (item, monitor) => (monitor.didDrop() ? undefined : location),
-    canDrop: (item) => true,
-    collect: (monitor) => ({
-      isAcceptable: !!monitor.isOver({ shallow: true }) && !!monitor.canDrop(),
-    }),
-  });
+const CardItem = forwardRef(({ card, pickup, index, setHover }, ref) => (
+  <div ref={ref}>
+    <div className="stacked" key={card.cardID}>
+      <div className="position-relative">
+        <div className="clickable">
+          <FoilCardImage
+            card={card}
+            tags={[]}
+            onMouseDown={(event) => {
+              if (event.nativeEvent.which === 1) {
+                pickup(index);
+              }
+            }}
+            onMouseEnter={setHover}
+            className={card.hold ? 'img-hidden' : ''}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+));
 
-  let className = 'mt-3 col-md-1-5 col-low-padding';
-  if (isAcceptable) {
-    className += ' outline';
-  }
+const CardStack = ({ cards, pickup, onHover }) => {
+  const [hover, setHover] = useState(-1);
+
+  const handleHover = (index) => {
+    onHover(index);
+    setHover(index);
+  };
 
   return (
-    <Col className={className} xs={3} {...props}>
-      <div ref={drop}>
-        {!Array.isArray(children) ? (
-          ''
-        ) : (
-          <div className="w-100 text-center mb-1">
-            <b>{children.length > 0 ? children.length : ''}</b>
-          </div>
-        )}
-        <div className="stack">{children}</div>
-      </div>
-    </Col>
+    <div className="stack" onMouseLeave={() => handleHover(-1)}>
+      <FlipMove leaveAnimation={false}>
+        {cards.map((card, index) => (
+          <CardItem key={card.cardID} card={card} pickup={pickup} index={index} setHover={() => handleHover(index)} />
+        ))}
+      </FlipMove>
+    </div>
   );
 };
 

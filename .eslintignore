@@ -3,7 +3,7 @@ webpack.*.js
 models/blog.js
 models/card.js
 models/cardrating.js
-models/deck.js
+models/staf.js
 models/draft.js
 models/passwordreset.js
 models/user.js
@@ -22,7 +22,6 @@ src/components/CSRFForm.js
 src/components/CardModal.js
 src/components/CardModalContext.js
 src/components/CardModalForm.js
-src/components/CardStack.js
 src/components/Changelist.js
 src/components/ChangelistContext.js
 src/components/ClientOnly.js

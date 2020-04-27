@@ -1,19 +1,70 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-const DeckBuilder = ({ cube, cubeID, initialDeck, basics, children }) => {
-  const [hover, setHover] = useState(null);
+import CardStack from 'components/CardStack';
+import { CardBody, Row, Col, Card } from 'reactstrap';
 
-  const onMouseDown = (event) => {
-    console.log('Down');
-  };
+import useEventListener from 'hooks/useEventListener';
+
+const DeckBuilder = ({ cube, cubeID, initialDeck, basics }) => {
+  const [deck, setDeck] = useState(initialDeck.seats[0].deck);
+  // this is the location of the card we are holding
+  const [hold, setHold] = useState([-1, -1]);
+  // this is the location of the placeholder card
+  const [card, setCard] = useState(null);
+
   const onMouseUp = (event) => {
-    console.log('Up');
+    if (event.which === 1) {
+      if (hold[0] !== -1 && hold[1] !== -1) {
+        deck[hold[0]][hold[1]].hold = false;
+        setHold([-1, -1]);
+        setDeck([...deck]);
+      }
+    }
   };
+
+  const pickupStack = (stack, index) => {
+    deck[stack][index].hold = true;
+    setHold([stack, index]);
+    setDeck([...deck]);
+  };
+
+  const handleHover = (stack, index) => {
+    console.log(`Hovering ${stack}, ${index}`);
+    if (hold[0] !== -1 && hold[1] !== -1 && stack !== -1 && index !== -1) {
+      if (hold[0] !== stack || hold[1] !== index) {
+        const item = deck[hold[0]].splice(hold[1], 1)[0];
+        deck[stack].splice(index, 0, item);
+        setHold([stack, index]);
+      }
+    }
+  };
+
+  // Add event listener using our hook
+  useEventListener('mouseup', onMouseUp);
 
   return (
-    <div onMouseDown={onMouseDown} onMouseUp={onMouseUp}>
-      {React.cloneElement(children, { onHover: setHover })}
+    <div>
+      <Row className="mt-3">
+        <Col lg={3} xs={3}>
+          <Card>
+            <CardStack
+              cards={deck[6]}
+              pickup={(index) => pickupStack(6, index)}
+              onHover={(index) => handleHover(6, index)}
+            />
+          </Card>
+        </Col>
+        <Col lg={3} xs={3}>
+          <Card>
+            <CardStack
+              cards={deck[14]}
+              pickup={(index) => pickupStack(14, index)}
+              onHover={(index) => handleHover(14, index)}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };
@@ -35,7 +86,6 @@ DeckBuilder.propTypes = {
       }),
     ).isRequired,
   }).isRequired,
-  children: PropTypes.element.isRequired,
 };
 
 export default DeckBuilder;
