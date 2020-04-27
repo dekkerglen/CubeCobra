@@ -33,6 +33,8 @@ const {
   maybeCards,
   getElo,
   generateSamplepackImage,
+  addTagsToCube,
+  removeTagsFromCube,
 } = require('../serverjs/cubefn.js');
 
 const draftutil = require('../dist/utils/draftutil.js');
@@ -2125,6 +2127,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const edits = req.body.body.split(';');
     const removes = new Set();
     const adds = [];
+    const newTagColors = cube.tag_colors;
     let changelog = '';
 
     for (const edit of edits) {
@@ -2148,6 +2151,9 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         removes.add(indexOut);
         const card = cube.cards[indexOut];
         if (card.cardID === outID) {
+          // Remove tag references from cube tag colors
+          cube.tag_colors = removeTagsFromCube(cube, card.tags);
+
           changelog += removeCardHtml(carddb.cardFromId(card.cardID));
         } else {
           req.flash('danger', 'Bad request format.');
@@ -2191,6 +2197,9 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         newMaybe.splice(maybeIndex, 1);
       }
     }
+
+    cube.tag_colors = newTagColors;
+
     // Remove all invalid cards.
     cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
     cube.maybe = newMaybe;
@@ -3281,6 +3290,12 @@ router.post(
       card.type_line = carddb.cardFromId(card.cardID).type;
     }
 
+    // Update cube tag colors (does not work with duplicate tags)
+    const addedTags = updated.tags.filter((x) => !src.tags.includes(x));
+    const removedTags = src.tags.filter((x) => !updated.tags.includes(x));
+    cube.tag_colors = addTagsToCube(cube.tag_colors, addedTags);
+    cube.tag_colors = removeTagsFromCube(cube.tag_colors, removedTags);
+
     if (!cardsAreEquivalent(src, card)) {
       return res.status(400).send({
         success: 'false',
@@ -3365,12 +3380,14 @@ router.post(
             allUpdates.$addToSet = {};
           }
           allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
+          cube.tag_colors = addTagsToCube(cube.tag_colors, updated.tags);
         }
         if (updated.deleteTags) {
           if (!allUpdates.$pullAll) {
             allUpdates.$pullAll = {};
           }
           allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
+          cube.tag_colors = removeTagsFromCube(cube.tag_colors, updated.tags);
         }
       }
     }
