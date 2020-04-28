@@ -573,12 +573,15 @@ const methods = {
     }
     return src;
   },
-  generatePack: async (cubeId, carddb, seed) => {
+  generatePack: async (cubeId, seed) => {
     const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
     if (!seed) {
       seed = Date.now().toString();
     }
-    cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
+
+    const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
+
+    cube.cards = cube.cards.map((card) => ({ ...card, details: dict[card.cardID] }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
     const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);

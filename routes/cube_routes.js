@@ -44,6 +44,7 @@ const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
 const {
   cardsFromIds,
+  cardFromId,
   namesToCardDict,
   mostReasonable,
   normalizeName,
@@ -52,6 +53,7 @@ const {
   cardImageCrop,
   getFullNames,
   getCardImageDict,
+  nameToCards,
 } = require('../serverjs/cards');
 
 const util = require('../serverjs/util.js');
@@ -3026,17 +3028,24 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
+    const dict = await cardsFromIds(
+      deck.seats
+        .map((seat) => seat.pickorder.concat(seat.deck).concat(seat.sideboard))
+        .flat()
+        .map((card) => card.cardID),
+    );
+
     // add images to cards
     for (const seat of deck.seats) {
       for (const collection of [seat.deck, seat.sideboard]) {
         for (const pack of collection) {
           for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
+            card.details = dict[card.cardID];
           }
         }
       }
       for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
+        card.details = dict[card.cardID];
       }
     }
 
@@ -3051,7 +3060,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       cube,
       cubeID: getCubeId(cube),
       initialDeck: deck,
-      basics: getBasics(carddb),
+      basics: await getBasics(),
     };
 
     return res.render('cube/cube_deckbuilder', {
@@ -3099,17 +3108,24 @@ router.get('/deck/:id', async (req, res) => {
       drafter = deckUser.username;
     }
 
+    const dict = await cardsFromIds(
+      deck.seats
+        .map((seat) => seat.pickorder.concat(seat.deck).concat(seat.sideboard))
+        .flat()
+        .map((card) => card.cardID),
+    );
+
     for (const seat of deck.seats) {
       for (const collection of [seat.deck, seat.sideboard]) {
         for (const pack of collection) {
           for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
+            card.details = dict[card.cardID];
           }
         }
       }
       if (seat.pickorder) {
         for (const card of seat.pickorder) {
-          card.details = carddb.cardFromId(card.cardID);
+          card.details = dict[card.cardID];
         }
       }
     }
@@ -3142,7 +3158,7 @@ router.get(
   '/api/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id), 'defaultPrinting').lean();
-    const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
+    const card = mostReasonable(await nameToCards(req.params.name), cube.defaultPrinting);
     if (card) {
       return res.status(200).send({
         success: 'true',
@@ -3158,8 +3174,7 @@ router.get(
 router.get(
   '/api/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
-    const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
-    const img = reasonable ? carddb.imagedict[reasonable.name] : null;
+    const img = mostReasonable(await nameToCards(cardutil.decodeName(req.params.name)), cube.defaultPrinting).art_crop;
     if (!img) {
       return res.status(200).send({
         success: 'false',
@@ -3175,7 +3190,7 @@ router.get(
 router.get(
   '/api/getcardfromid/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const card = carddb.cardFromId(req.params.id);
+    const card = await cardFromId(req.params.id);
     // need to get the price of the card with the new version in here
     const tcg = [];
     if (card.tcgplayer_id) {
@@ -3203,9 +3218,7 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cardIds = carddb.allIds(carddb.cardFromId(req.params.id));
-    // eslint-disable-next-line prefer-object-spread
-    const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
+    const cards = await nameToCards(await cardFromId(req.params.id));
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
     const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
     const [priceDict, eloDict] = await Promise.all([GetPrices(tcg), getElo(names, true)]);
@@ -3237,16 +3250,21 @@ router.post(
   body('*', 'Each ID must be a valid UUID.').matches(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
-    const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
-    const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
-    const allVersionsFlat = [].concat(...allVersions);
-    const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
-    const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
+    const inputCards = await cardsFromIds(req.body);
+    const allDict = await namesToCardDict(Object.entries(inputCards).map((card) => card.name));
+    const allVersions = Object.entries(allDict);
+    const tcgplayerIds = new Set(
+      allVersions
+        .flat()
+        .map(({ tcgplayer_id }) => tcgplayer_id)
+        .filter((tid) => tid),
+    );
+    const names = Object.keys(allDict);
     const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
+
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
-        cardutil.normalizeName(allDetails[index].name),
+        cardutil.normalizeName(names[index]),
         versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({
           _id,
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
@@ -3304,7 +3322,7 @@ router.post(
 
     const card = cube.cards[src.index];
     if (!card.type_line) {
-      card.type_line = carddb.cardFromId(card.cardID).type;
+      card.type_line = (await cardFromId(card.cardID)).type;
     }
 
     if (!cardsAreEquivalent(src, card)) {
@@ -3326,7 +3344,7 @@ router.post(
     }
     cube.cards[src.index] = updated;
 
-    setCubeType(cube, carddb);
+    await setCubeType(cube);
 
     await cube.save();
     return res.status(200).send({
@@ -3422,23 +3440,10 @@ router.post('/resize/:id/:size', async (req, res) => {
     // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
     // const cuts = { ...additions };
 
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const pids = new Set();
     const cardNames = new Set();
-
-    const formatTuple = (tuple) => {
-      const details = carddb.getMostReasonable(tuple[0]);
-      const card = util.newCard(details);
-      card.details = details;
-
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      cardNames.add(card.details.name);
-
-      return card;
-    };
 
     const newSize = parseInt(req.params.size, 10);
 
@@ -3448,13 +3453,25 @@ router.post('/resize/:id/:size', async (req, res) => {
     }
 
     // we sort the reverse way depending on adding or removing
-    let list = Object.entries(newSize > cube.cards.length ? additions : cuts)
-      .sort((a, b) => {
-        if (a[1] > b[1]) return newSize > cube.cards.length ? -1 : 1;
-        if (a[1] < b[1]) return newSize > cube.cards.length ? 1 : -1;
-        return 0;
-      })
-      .map(formatTuple);
+    const result = Object.entries(newSize > cube.cards.length ? additions : cuts).sort((a, b) => {
+      if (a[1] > b[1]) return newSize > cube.cards.length ? -1 : 1;
+      if (a[1] < b[1]) return newSize > cube.cards.length ? 1 : -1;
+      return 0;
+    });
+
+    const namesToCards = await namesToCardDict(result.map((tuple) => tuple[0]));
+    let list = result.map((tuple) => {
+      const details = mostReasonable(namesToCards[tuple[0]]);
+      const card = util.newCard(details);
+      card.details = details;
+
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
+
+      return card;
+    });
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -3492,10 +3509,11 @@ router.post('/resize/:id/:size', async (req, res) => {
       });
       cube.cards = cube.cards.concat(toAdd);
     } else {
+      const dict = await cardsFromIds(cube.cards.map((card) => card.cardID));
       // we cut from cube
       for (const card of list) {
         for (let i = 0; i < cube.cards.length; i++) {
-          if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
+          if (dict[cube.cards[i].cardID].name === card.details.name) {
             changelog += removeCardHtml(card.details);
             cube.cards.splice(i, 1);
             i = cube.cards.length;
@@ -3504,7 +3522,7 @@ router.post('/resize/:id/:size', async (req, res) => {
       }
     }
 
-    cube = setCubeType(cube, carddb);
+    await setCubeType(cube);
 
     const blogpost = new Blog();
     blogpost.title = 'Resize - Automatic Post';
@@ -3546,8 +3564,24 @@ router.post(
     const pids = new Set();
     const cardNames = new Set();
 
-    const formatTuple = (tuple) => {
-      const details = carddb.getMostReasonable(tuple[0]);
+    const addsRaw = Object.entries(additions).sort((a, b) => {
+      if (a[1] > b[1]) return -1;
+      if (a[1] < b[1]) return 1;
+      return 0;
+    });
+
+    // this is sorted the opposite way, as lower numbers mean we want to cut it
+    const cutsRaw = Object.entries(cuts).sort((a, b) => {
+      if (a[1] > b[1]) return 1;
+      if (a[1] < b[1]) return -1;
+      return 0;
+    });
+
+    const namesToCards = await namesToCardDict(
+      addsRaw.map((tuple) => tuple[0]).concat(cutsRaw.map((tuple) => tuple[0])),
+    );
+    const addlist = addsRaw.map((tuple) => {
+      const details = mostReasonable(namesToCards[tuple[0]]);
       const card = util.newCard(details);
       card.details = details;
 
@@ -3557,24 +3591,19 @@ router.post(
       cardNames.add(card.details.name);
 
       return card;
-    };
+    });
+    const cutlist = cutsRaw.map((tuple) => {
+      const details = mostReasonable(namesToCards[tuple[0]]);
+      const card = util.newCard(details);
+      card.details = details;
 
-    const addlist = Object.entries(additions)
-      .sort((a, b) => {
-        if (a[1] > b[1]) return -1;
-        if (a[1] < b[1]) return 1;
-        return 0;
-      })
-      .map(formatTuple);
+      if (card.details.tcgplayer_id) {
+        pids.add(card.details.tcgplayer_id);
+      }
+      cardNames.add(card.details.name);
 
-    // this is sorted the opposite way, as lower numbers mean we want to cut it
-    const cutlist = Object.entries(cuts)
-      .sort((a, b) => {
-        if (a[1] > b[1]) return 1;
-        if (a[1] < b[1]) return -1;
-        return 0;
-      })
-      .map(formatTuple);
+      return card;
+    });
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -3609,7 +3638,7 @@ router.get(
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     return res.status(200).send({
       success: 'true',
-      maybe: maybeCards(cube, carddb),
+      maybe: await maybeCards(cube),
     });
   }),
 );
@@ -3685,7 +3714,7 @@ router.post(
     if (newVersion) {
       return res.status(200).send({
         success: 'true',
-        details: carddb.cardFromId(card.cardID),
+        details: await cardFromId(card.cardID),
       });
     }
 
@@ -3888,7 +3917,7 @@ router.post('/api/draftpick/:id', async (req, res) => {
 router.get(
   '/api/p1p1/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const result = await generatePack(req.params.id, carddb, false);
+    const result = await generatePack(req.params.id, false);
 
     return res.status(200).send({
       seed: result.seed,
