@@ -38,7 +38,7 @@ async function getCardCubes(value, carddb) {
 }
 
 async function fillInCardQuery(query, carddb) {
-  if (!query) {
+  if (!query || Array.isArray(query)) {
     return query;
   }
   if (query.CARD) {

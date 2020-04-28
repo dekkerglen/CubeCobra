@@ -12,6 +12,7 @@ const {
   manaCostOperation,
   setElementOperation,
 } = require('../../../serverjs/mongoOperations');
+
 const negated = ({ query, fieldsUsed }) => ({ query: { $not: query }, fieldsUsed });
 %} # %}
 
@@ -49,10 +50,39 @@ categoryCondition -> ("category"i) (prefixCategoryOpValue | overrideCategoryOpVa
 
 tagsCondition -> ("t"i | "tag"i | "tags"i) stringSetElementOpValue {% ([, condition]) => genericCondition('tags', condition) %}
 
-prefixCategoryOpValue -> ":" prefixCategoryValue {% ([, prefix]) => genericCondition('categoryPrefixes', { $regex: prefix, $options: 'i' }) %}
+@{%
+const categoryConditionFunc = (property, category, value) => ({ 
+  query: {
+    $or: [
+      {
+        $and: [
+          { overrideCategory:true },
+          category,
+        ],
+      },
+      {
+        $and: [
+          { overrideCategory:false },
+          { type: { $regex: value, $options:"i" } },
+        ],
+      },
+    ],
+  },
+  fieldsUsed: [
+    property,
+    'overrideCategory',
+    'type',
+  ],
+});
+%} # %}
 
-overrideCategoryOpValue -> ":" overrideCategoryValue {% ([, category]) => genericCondition('categoryOverride', { $regex: category, $options: 'i' }) %}
+prefixCategoryOpValue -> ":" prefixCategoryValue {% ([, prefix]) => categoryConditionFunc('categoryPrefixes', { categoryPrefixes: { $regex: prefix, $options: 'i' } }, prefix) %}
 
-prefixCategoryValue -> ("Powered"i | "Unpowered"i | "Pauper"i | "Peasant"i | "Budget"i | "Silver-bordered"i | "Commander"i) {% ([[prefix]]) => prefix %}
+overrideCategoryOpValue -> ":" overrideCategoryValue {% ([, category]) => categoryConditionFunc('categoryOverride', { categoryOverride: { $regex: category, $options: 'i' } }, category) %}
 
-overrideCategoryValue -> ("Vintage"i | "Legacy"i | "Modern"i | "Pioneer"i | "Standard"i) {% ([[category]]) => category %}
+prefixCategoryValue -> ("Powered"i | "Unpowered"i | "Pauper"i | "Peasant"i | "Budget"i | "Silver-bordered"i | "Commander"i | "Multiplayer"i) {% ([[prefix]]) => prefix %}
+  | "\"" ("Powered"i | "Unpowered"i | "Pauper"i | "Peasant"i | "Budget"i | "Silver-bordered"i | "Commander"i | "Judge Tower"i | "Multiplayer"i | "Battle Box"i) "\"" {% ([, [prefix]]) => prefix %}
+
+overrideCategoryValue -> ("Vintage"i | "Legacy"i | "Legacy+" | "Modern"i | "Pioneer"i | "Historic"i | "Standard"i  | "Set"i) {% ([[category]]) => category %}
+  | "\"" ("Vintage"i | "Legacy"i | "Legacy+" | "Modern"i | "Pioneer"i | "Historic"i | "Standard"i  | "Set"i) "\"" {% ([, [category]]) => category %}
+
