@@ -18,10 +18,12 @@ const processDeck = (deck) => {
   const main = [];
   const side = [];
 
-  if (deck.seats[0] && deck.seats[0].main) {
-    for (const col of deck.seats[0].main) {
+  if (deck.seats[0] && deck.seats[0].deck) {
+    for (const col of deck.seats[0].deck) {
       for (const card of col) {
-        main.push(carddb.cardFromId(card.cardID).name_lower);
+        if (card && card.cardID) {
+          main.push(carddb.cardFromId(card.cardID).name_lower);
+        }
       }
     }
   }
@@ -64,5 +66,6 @@ const processDeck = (deck) => {
     }
     mongoose.disconnect();
     console.log('done');
+    process.exit();
   });
 })();
