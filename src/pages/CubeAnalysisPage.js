@@ -23,11 +23,9 @@ import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
-  const [filter, setFilter] = useState([]);
+  const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [cards, setCards] = useState(cube.cards);
-  const [suggestions, setSuggestions] = useState([]);
-  const [removes, setRemoves] = useState([]);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +63,14 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     {
       name: 'Recommender',
       component: (collection, cubeObj, addCards, cutCards, isLoading) => (
-        <Suggestions cards={collection} cube={cubeObj} adds={addCards} cuts={cutCards} loading={isLoading} />
+        <Suggestions
+          cards={collection}
+          cube={cubeObj}
+          adds={addCards}
+          cuts={cutCards}
+          filter={filter}
+          loading={isLoading}
+        />
       ),
     },
     {
@@ -105,8 +110,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 
   useEffect(() => {
     getData(`/cube/api/adds/${cubeID}`).then(({ toCut, toAdd }) => {
-      setSuggestions(toAdd);
-      setRemoves(toCut);
       setAdds(toAdd);
       setCuts(toCut);
       setLoading(false);
@@ -116,8 +119,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const updateFilter = (val) => {
     setFilter(val);
     setCards(cube.cards.filter(val));
-    setAdds(suggestions.filter(val));
-    setCuts(removes.filter(val));
   };
 
   return (
