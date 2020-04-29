@@ -2,6 +2,7 @@ const sinon = require('sinon');
 const carddb = require('../../serverjs/cards');
 const Card = require('../../models/card');
 const { makeFilter } = require('../../serverjs/filterCubes');
+const { arraysAreEqualSets } = require('../../dist/utils/Util');
 
 const TEST_IDS = ['123', '456', '7890'];
 
@@ -56,8 +57,37 @@ describe('filterCubes', () => {
 
     expect(err).toBeFalsy();
     const { query, fieldsUsed } = filter;
-    expect(fieldsUsed).toEqual(['categoryPrefixes']);
-    expect(query).toEqual({ categoryPrefixes: { $regex: 'Commander', $options: 'i' } });
+    expect(arraysAreEqualSets(fieldsUsed, ['categoryPrefixes', 'type', 'overrideCategory'])).toBeTruthy();
+    expect(query).toEqual({
+      $or: [
+        {
+          $and: [
+            {
+              overrideCategory: true,
+            },
+            {
+              categoryPrefixes: {
+                $options: 'i',
+                $regex: 'Commander',
+              },
+            },
+          ],
+        },
+        {
+          $and: [
+            {
+              overrideCategory: false,
+            },
+            {
+              type: {
+                $options: 'i',
+                $regex: 'Commander',
+              },
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it('correctly parses categoryOverride condition', async () => {
@@ -65,8 +95,37 @@ describe('filterCubes', () => {
 
     expect(err).toBeFalsy();
     const { query, fieldsUsed } = filter;
-    expect(fieldsUsed).toEqual(['categoryOverride']);
-    expect(query).toEqual({ categoryOverride: { $regex: 'Legacy', $options: 'i' } });
+    expect(arraysAreEqualSets(fieldsUsed, ['categoryOverride', 'type', 'overrideCategory'])).toBeTruthy();
+    expect(query).toEqual({
+      $or: [
+        {
+          $and: [
+            {
+              overrideCategory: true,
+            },
+            {
+              categoryOverride: {
+                $options: 'i',
+                $regex: 'Legacy',
+              },
+            },
+          ],
+        },
+        {
+          $and: [
+            {
+              overrideCategory: false,
+            },
+            {
+              type: {
+                $options: 'i',
+                $regex: 'Legacy',
+              },
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it('correctly parses card condition', async () => {
