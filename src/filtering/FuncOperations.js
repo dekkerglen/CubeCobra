@@ -112,6 +112,7 @@ const convertParsedCost = (parsedCost) => parsedCost.map((symbol) => symbol.toLo
 export const manaCostOperation = (op, value) => {
   switch (op.toString()) {
     case ':':
+      return (fieldValue) => arrayIsSubset(value, convertParsedCost(fieldValue), arraysAreEqualSets);
     case '=':
       return (fieldValue) => arraysAreEqualSets(convertParsedCost(fieldValue), value, arraysAreEqualSets);
     case '!=':

@@ -920,6 +920,7 @@ router.get('/analysis/:id', async (req, res) => {
       return cards;
     };
     cube.cards = addDetails(cube.cards);
+    cube.maybe = addDetails(cube.maybe);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
@@ -3493,7 +3494,11 @@ router.post('/resize/:id/:size', async (req, res) => {
 router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const response = await fetch(`${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}`);
+    const response = await fetch(
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+        process.env.HOST,
+      )}`,
+    );
     if (!response.ok) {
       return res.status(500).send({
         success: 'false',
@@ -3523,20 +3528,12 @@ router.post(
     };
 
     const addlist = Object.entries(additions)
-      .sort((a, b) => {
-        if (a[1] > b[1]) return -1;
-        if (a[1] < b[1]) return 1;
-        return 0;
-      })
+      .sort((a, b) => b[1] - a[1])
       .map(formatTuple);
 
     // this is sorted the opposite way, as lower numbers mean we want to cut it
     const cutlist = Object.entries(cuts)
-      .sort((a, b) => {
-        if (a[1] > b[1]) return 1;
-        if (a[1] < b[1]) return -1;
-        return 0;
-      })
+      .sort((a, b) => a[1] - b[1])
       .map(formatTuple);
 
     const priceDictQ = GetPrices([...pids]);

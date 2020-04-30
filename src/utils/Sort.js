@@ -205,8 +205,6 @@ function getLabelsRaw(cube, sort) {
       }
     });
     return artists.sort();
-  } else if (sort === 'Rarity') {
-    return ['Common', 'Uncommon', 'Rare', 'Mythic'];
   } else if (sort === 'Devotion to White') {
     return Array.from(Array(9).keys()).map((d) => d.toString());
   } else if (sort === 'Devotion to Blue') {
@@ -217,6 +215,8 @@ function getLabelsRaw(cube, sort) {
     return Array.from(Array(9).keys()).map((d) => d.toString());
   } else if (sort === 'Devotion to Green') {
     return Array.from(Array(9).keys()).map((d) => d.toString());
+  } else if (sort == 'Rarity') {
+    return ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Subtype') {
