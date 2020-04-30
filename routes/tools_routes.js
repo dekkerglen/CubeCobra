@@ -83,10 +83,9 @@ async function matchingCards(filter) {
           cubes: cardData ? cardData.cubes.length : null,
         };
       });
-      cards = filterCardsDetails(cards, filter);
     }
   }
-  return cards;
+  return filterCardsDetails(cards, filter);
 }
 
 /* This is a Bayesian adjustment to the rating like IMDB does. */
@@ -109,7 +108,7 @@ async function topCards(filter) {
   });
 
   const ratingsQ = CardRating.find(
-    filter.length === 0
+    !filter
       ? {}
       : {
           name: {
@@ -122,7 +121,7 @@ async function topCards(filter) {
     .lean();
   const cardDataQ = CardHistory.aggregate()
     .match(
-      filter.length === 0
+      !filter
         ? {}
         : {
             cardName: {
