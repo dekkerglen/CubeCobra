@@ -48,7 +48,7 @@ rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op,
 
 rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i) {% ([[rarity]]) => rarity %}
 
-alphaNumericValue -> [a-zA-Z]:+ {% ([letters]) => letters.join('').toLowerCase() %}
+alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCase() %}
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}
 
