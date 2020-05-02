@@ -266,18 +266,18 @@ function CSVtoCards(csvString, carddb) {
       const upperSet = (set || '').toUpperCase();
       const card = {
         name,
-        cmc,
-        type_line: type && type.replace('-', '—'),
-        colors: color && color.split('').filter((c) => [...'WUBRG'].includes(c)),
+        cmc: cmc || null,
+        type_line: (type || null) && type.replace('-', '—'),
+        colors: (color || null) && color.split('').filter((c) => [...'WUBRG'].includes(c)),
         addedTmsp: new Date(),
         collector_number: collectorNumber && collectorNumber.toUpperCase(),
         status,
         finish,
-        imgUrl: imageUrl && imageUrl !== 'undefined' ? imageUrl : null,
+        imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
         tags: tags && tags.length > 0 ? tags.split(',') : [],
         notes,
-        rarity,
-        colorCategory,
+        rarity: rarity || null,
+        colorCategory: colorCategory || null,
       };
 
       const potentialIds = carddb.allIds(card);
