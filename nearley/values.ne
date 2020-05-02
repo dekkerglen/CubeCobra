@@ -33,15 +33,16 @@ dollarValue -> "$":? (
   | [0-9]:+ "." [0-9] [0-9]
 ) {% ([, [digits, ...decimal]]) => parseFloat(digits.concat(decimal).join(''), 10) %}
 
-finishOpValue -> equalityOperator finishValue {% ([, value]) => equalityOperation(op, value) %}
+finishOpValue -> equalityOperator finishValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-finishValue -> "foil"i | "non-foil"i {% id %}
+finishValue -> ("Foil"i | "Non-Foil"i) {% ([[finish]]) => finish.toLowerCase() %}
+  | "\"" ("Foil"i | "Non-Foil"i) "\"" {% ([, [finish]]) => finish.toLowerCase() %}
 
-statusOpValue -> equalityOperator statusValue {% ([, value]) => equalityOperation(op, value) %}
+statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
 statusValue -> ("owned"i | "proxied"i) {% ([[status]]) => status.toLowerCase() %} 
-  | "'" ("not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
-  | "\"" ("not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
+  | "'" ("owned"i | "proxied"i | "not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
+  | "\"" ("owned"i | "proxied"i | "not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
 
 rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op, value) %}
 
