@@ -36,7 +36,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
         currentSecondarySort = defSorts[1];
       }
       prevSorts.current = [currentPrimarySort, currentSecondarySort];
-      if(setSorts) {
+      if (setSorts) {
         setSorts(prevSorts.current);
       }
       changeSort({ primary: currentPrimarySort, secondary: currentSecondarySort });
