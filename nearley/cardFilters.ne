@@ -75,6 +75,8 @@ condition -> (
   | nameCondition
   | manaCostCondition
   | castableCostCondition
+  | picksCondition
+  | cubesCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -129,12 +131,12 @@ manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => g
 
 castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
+picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
+
+cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
 isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i) {% ([[category]]) => category.toLowerCase() %}
-
-# picksCondition -> "picks" integerOpValue 
-
-# cubesCondition -> "cubes" integerOpValue
