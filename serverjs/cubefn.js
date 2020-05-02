@@ -335,7 +335,7 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
-/* 
+/*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
 */

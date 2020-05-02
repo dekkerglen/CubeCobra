@@ -244,7 +244,7 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
   if (!seed) {
     seed = Date.now().toString();
   }
-  
+
   const draft = {};
 
   let nextCardFn = null;

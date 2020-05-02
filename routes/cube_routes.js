@@ -3500,6 +3500,7 @@ router.post(
       )}`,
     );
     if (!response.ok) {
+      req.logger.error('Flask server response not OK.');
       return res.status(500).send({
         success: 'false',
         result: {},
