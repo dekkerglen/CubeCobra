@@ -19,7 +19,7 @@ const Card = {
   colors: [
     {
       type: String,
-      enum: ['W', 'U', 'B', 'R', 'G'],
+      enum: ['W', 'U', 'B', 'R', 'G', 'C'],
     },
   ],
   cmc: {
