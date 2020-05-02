@@ -8,10 +8,10 @@ const { filterToString, makeFilter, operatorsRegex } = require('filtering/Filter
 var Sort = require('utils/Sort.js');
 
 function matchingCards(cards, filter) {
-  if (filter === null) {
-    return cards;
+  if (filter) {
+    return cards.filter(filter);
   }
-  return cards.filter(filter);
+  return cards;
 }
 
 function compileFilter(filterText) {
@@ -19,7 +19,7 @@ function compileFilter(filterText) {
     return null;
   }
 
-  const { filter, err } = makeFilter(filterText);
+  let { filter, err } = makeFilter(filterText);
   if (err || !operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
