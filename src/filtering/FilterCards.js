@@ -8,13 +8,9 @@ const ALL_OPERATORS = [':', '=', '!=', '<>', '<', '<=', '>', '>='];
 
 export const operatorsRegex = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
 
-export const filterUses = (filter, name) => filter.fieldsUsed.indexOf(name) >= 0;
+export const filterUses = (filter, name) => (filter?.fieldsUsed?.indexOf?.(name) ?? -1) >= 0;
 
-// TODO: Implement
-// eslint-disable-next-line no-unused-vars
-export function filterToString(filters) {
-  return null;
-}
+export const filterToString = (filter) => filter?.stringify ?? 'empty filter';
 
 export function makeFilter(filterText) {
   if (!filterText || filterText.trim() === '') {
@@ -33,6 +29,7 @@ export function makeFilter(filterText) {
   const { results } = filterParser;
   if (results.length === 1) {
     const [filter] = results;
+    filter.stringify = filterText;
     return {
       err: !filter,
       filter,

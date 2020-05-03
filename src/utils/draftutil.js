@@ -20,7 +20,7 @@ function compileFilter(filterText) {
   }
 
   let { filter, err } = makeFilter(filterText);
-  if (err || !operatorsRegex.test(filterText)) {
+  if (!operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
@@ -382,7 +382,6 @@ export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
       }
       asfanDict[card.cardID] = total;
     }
-    console.log(matchesDict);
 
     return {
       label: `Pack ${index + 1}`,
