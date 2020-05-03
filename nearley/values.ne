@@ -48,7 +48,7 @@ rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op,
 
 rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i) {% ([[rarity]]) => rarity %}
 
-alphaNumericValue -> [a-zA-Z]:+ {% ([letters]) => letters.join('').toLowerCase() %}
+alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCase() %}
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}
 
@@ -97,7 +97,7 @@ comb5NonEmpty[A, B, C, D, E] -> $A comb4[$B, $C, $D, $E] {% ([a, rest]) => [a, .
   | $E comb4[$A, $B, $C, $D] {% ([a, rest]) => [a, ...rest] %}
 
 colorCombinationValue ->
-    ("brown"i | "colorless"i) {% () => [] %}
+    ("c"i | "brown"i | "colorless"i) {% () => [] %}
   | "white"i {% () => ['w'] %}
   | "blue"i {% () => ['u'] %}
   | "black"i {% () => ['b'] %}
