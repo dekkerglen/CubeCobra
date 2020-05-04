@@ -167,13 +167,13 @@ app.use(fileUpload());
 // Body parser middleware
 app.use(
   bodyParser.urlencoded({
-    limit: '200mb',
+    limit: '50mb',
     extended: true,
   }),
 );
 app.use(
   bodyParser.json({
-    limit: '200mb',
+    limit: '50mb',
     extended: true,
   }),
 );
