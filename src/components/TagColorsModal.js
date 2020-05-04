@@ -19,7 +19,7 @@ import {
 import { arrayMove } from '../utils/Util';
 
 import LoadingButton from './LoadingButton';
-import TagContext, { getTagColorStyle, getTagColorClass, TAG_COLORS } from './TagContext';
+import TagContext, { getTagColorStyle } from './TagContext';
 
 function EnableShowTagColorView ({showTagColors, onChange}) {
   const [enabled, setEnabled] = useState(showTagColors)
@@ -52,24 +52,15 @@ function EditableTag({tagColor, onChange}) {
   const [pickedColor, setPickedColor] = useState(tagColor.color ? tagColor.color : "#fff")
   const [fontColor, setFontColor] = useState('black')
 
-  function calculateContrastColor (rgbColor) {
-    // Calculate the perceptive luminance (aka luma) - human eye favors green color... 
-    const luma = ((0.299 * rgbColor.r) + (0.587 * rgbColor.g) + (0.114 * rgbColor.b)) / 255;
-    // Return black for bright colors, white for dark colors
-    return luma > 0.5 ? 'black' : 'white';
+  function calculateContrastColor (color) {
+    const luma = (
+      (parseInt(color.substring(1, 3), 16) * 299) + 
+      (parseInt(color.substring(3, 5), 16) * 587) + 
+      (parseInt(color.substring(5, 7), 16) * 114)
+    ) / 1000;
+  
+    return luma > 200 ? 'black' : 'white'
   }
-
-
-function hex2luma(hex) {
-  console.log(hex)
-  const luma = (
-    (parseInt(hex.substring(1, 3), 16) * 299) + 
-    (parseInt(hex.substring(3, 5), 16) * 587) + 
-    (parseInt(hex.substring(5, 7), 16) * 114)
-  ) / 1000;
-  console.log(luma)
-  return luma > 200 ? 'black' : 'white';
-}
 
   function handleClick() {
     setDisplayColorPicker(!displayColorPicker)
@@ -80,11 +71,8 @@ function hex2luma(hex) {
   }
 
   function handleChangeComplete(color) {
-    setPickedColor(color.hex)
-    
-    setFontColor(hex2luma(color.hex))
-    
-    //setFontColor(calculateContrastColor(color.rgb))
+    setPickedColor(color.hex)  
+    setFontColor(calculateContrastColor(color.hex))
     tagColor.color = color.hex
     onChange(tagColor)
   }

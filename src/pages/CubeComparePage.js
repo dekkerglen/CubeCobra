@@ -11,7 +11,7 @@ import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortContextProvider } from 'components/SortContext';
-import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
+import { /* TAG_COLORS, */ TagContextProvider } from 'components/TagContext';
 
 const deduplicateTags = (tagColors) => {
   const used = new Set();
@@ -84,12 +84,12 @@ CubeComparePage.propTypes = {
   cubeB: PropTypes.shape({}).isRequired,
   cubeBID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
-    }),
-  ).isRequired,
+  // defaultTagColors: PropTypes.arrayOf(
+  //   PropTypes.shape({
+  //     tag: PropTypes.string.isRequired,
+  //     color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+  //   }),
+  // ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

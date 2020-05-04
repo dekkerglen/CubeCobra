@@ -122,12 +122,12 @@ const CubeListPageRaw = ({
 
 CubeListPageRaw.propTypes = {
   maybe: PropTypes.arrayOf(PropTypes.object).isRequired,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
-    }),
-  ).isRequired,
+  // defaultTagColors: PropTypes.arrayOf(
+  //   PropTypes.shape({
+  //     tag: PropTypes.string.isRequired,
+  //     color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+  //   }),
+  // ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
   defaultFilterText: PropTypes.string.isRequired,
