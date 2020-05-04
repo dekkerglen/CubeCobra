@@ -94,9 +94,9 @@ router.post('/add', ensureAuth, async (req, res) => {
     const { user } = req;
     const cubes = await Cube.find({
       owner: user._id,
-    });
+    }).lean();
 
-    if (cubes.length >= 24) {
+    if (cubes.length >= 48) {
       req.flash(
         'danger',
         'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
@@ -1709,9 +1709,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     await deck.save();
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks++;
 
     await cube.save();
 
@@ -2558,7 +2556,7 @@ router.get('/api/fullnames', (req, res) => {
 router.get(
   '/api/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     const cardnames = [];
     for (const card of cube.cards) {
@@ -2738,9 +2736,7 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks++;
 
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
@@ -2880,12 +2876,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks++;
 
     const userq = User.findById(req.user._id);
-    const baseuserq = User.findById(base.owner);
+    co;nst baseuserq = User.findById(base.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
@@ -3374,8 +3368,10 @@ router.post(
 
 router.post('/resize/:id/:size', async (req, res) => {
   try {
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
     const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&root=${encodeURIComponent(process.env.HOST)}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(0,req.params.size-cube.cards.length())}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
@@ -3386,7 +3382,6 @@ router.post('/resize/:id/:size', async (req, res) => {
     // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
     // const cuts = { ...additions };
 
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const pids = new Set();
     const cardNames = new Set();
@@ -3789,7 +3784,7 @@ const ELO_SPEED = 1000;
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const draftQ = Draft.findById({ _id: req.body.draft_id });
+    const draftQ = Draft.findById({ _id: req.body.draft_id }).lean();
     const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 
