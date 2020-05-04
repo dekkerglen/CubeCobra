@@ -44,7 +44,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
     if (!initial || !Array.isArray(initial) || initial.length === 0) {
       return [new Array(8).fill([])];
     }
-    return [initialDeck.seats[0].sideboard.slice(0, 8).map((cardIndex) => initialDeck.cards[cardIndex])];
+    return [initial.slice(0, 8)];
   });
 
   const locationMap = {
@@ -107,7 +107,6 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
 
   const [name, setName] = useState(initialDeck.seats[0].name);
   const [description, setDescription] = useState(initialDeck.seats[0].description);
-  console.log(deck);
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">

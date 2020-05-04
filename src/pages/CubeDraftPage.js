@@ -35,7 +35,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const canDrop = (source, target) => {
+const canDrop = (_, target) => {
   return target.type === Location.PICKS;
 };
 

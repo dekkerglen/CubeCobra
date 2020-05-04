@@ -135,7 +135,6 @@ function arrangePicks(picks) {
   draft.seats[0].drafted = picks.map((pile) =>
     pile.map((pileCard) => draft.cards.findIndex((card) => card.cardID === pileCard.cardID)),
   );
-  console.log(draft.seats[0].drafted);
 }
 
 const considerInCombination = (combination) => (card) =>

@@ -132,24 +132,21 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
   const stripped = useMemo(() => {
     const res = JSON.parse(JSON.stringify(deck));
 
-    for (const seat of res.seats) {
-      for (const collection of [seat.deck, seat.sideboard, res.playerdeck, res.playersideboard]) {
-        for (const pack of collection) {
-          pack.forEach((card, index) => {
-            if (!Number.isFinite(card)) {
-              pack[index] = res.cards.indexOf(card);
-            }
-          });
-        }
+    for (const collection of [res.playerdeck, res.playersideboard]) {
+      for (const pack of collection) {
+        pack.forEach((card, index) => {
+          if (!Number.isFinite(card)) {
+            pack[index] = deck.cards.findIndex((deckCard) => deckCard.cardID === card.cardID);
+          }
+        });
       }
     }
+    const result = JSON.stringify({
+      playersideboard: res.playersideboard,
+      playerdeck: res.playerdeck,
+    });
 
-    for (const card of res.cards) {
-      delete card.details;
-    }
-    console.log(res);
-
-    return res;
+    return result;
   }, [deck]);
 
   return (
@@ -162,7 +159,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
               Save Deck
             </NavLink>
             <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
-              <Input type="hidden" name="draftraw" value={JSON.stringify(stripped)} />
+              <Input type="hidden" name="draftraw" value={stripped} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />
             </CSRFForm>
@@ -192,6 +189,7 @@ DeckbuilderNavbar.propTypes = {
     cube: PropTypes.string.isRequired,
     playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
