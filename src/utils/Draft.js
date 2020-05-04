@@ -291,6 +291,7 @@ async function finish() {
     for (const card of seat.pickorder) {
       delete card.details;
     }
+    delete seat.seen;
   }
 
   for (const category of [draft.initial_state, draft.unopenedPacks]) {
