@@ -90,7 +90,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
             our .csv export.
           </p>
           <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
-          <Label for="customFile" className="sr-only">
+          <Label for="uploadBulkFile" className="sr-only">
             Choose file
           </Label>
         </ModalBody>
@@ -108,6 +108,38 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
 };
 
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
+
+const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadReplacementModalTitle">
+      <ModalHeader id="uploadReplacementModalTitle" toggle={toggle}>
+        Bulk Upload - Replace with CSV File Upload
+      </ModalHeader>
+      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} encType="multipart/form-data">
+        <ModalBody>
+          <p>
+            Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
+            .csv export.
+          </p>
+          <CustomInput type="file" id="uploadReplacementFile" type="file" name="document" />
+          <Label for="uploadReplacementFile" className="sr-only">
+            Choose file
+          </Label>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Upload
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
 
 const CubetutorImportModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
@@ -202,6 +234,11 @@ const CubeListNavbar = ({
   setCubeView,
   openCollapse,
   setOpenCollapse,
+  defaultPrimarySort,
+  defaultSecondarySort,
+  sorts,
+  setSorts,
+  defaultSorts,
   defaultFilterText,
   filter,
   setFilter,
@@ -351,6 +388,7 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Import</DropdownItem>
                     <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
                     <UploadBulkModalItem>Upload File</UploadBulkModalItem>
+                    <UploadBulkReplaceModalItem>Replace with CSV File Upload</UploadBulkReplaceModalItem>
                     <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
                     <DropdownItem divider />
                     <DropdownItem disabled>Export</DropdownItem>
@@ -364,6 +402,7 @@ const CubeListNavbar = ({
                   Comma-Separated (.csv)
                 </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cubeID}`}>MTGO (.txt)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
@@ -371,7 +410,14 @@ const CubeListNavbar = ({
         </Collapse>
       </Navbar>
       {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
-      <SortCollapse isOpen={openCollapse === 'sort'} />
+      <SortCollapse
+        defaultPrimarySort={defaultPrimarySort}
+        defaultSecondarySort={defaultSecondarySort}
+        sorts={sorts}
+        setSorts={setSorts}
+        defaultSorts={defaultSorts}
+        isOpen={openCollapse === 'sort'}
+      />
       <FilterCollapse
         defaultFilterText={defaultFilterText}
         filter={filter}

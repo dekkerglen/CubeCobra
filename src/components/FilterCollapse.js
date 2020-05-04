@@ -18,15 +18,15 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import Filter from '../utils/Filter';
-import Query from '../utils/Query';
-import { fromEntries } from '../utils/Util';
+import { makeFilter } from 'filtering/FilterCards';
+import Query from 'utils/Query';
+import { fromEntries } from 'utils/Util';
 
-import { ColorChecksAddon } from './ColorCheck';
-import LoadingButton from './LoadingButton';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import LoadingButton from 'components/LoadingButton';
 
-import TextField from './TextField';
-import NumericField from './NumericField';
+import TextField from 'components/TextField';
+import NumericField from 'components/NumericField';
 
 const allFields = [
   'name',
@@ -252,9 +252,11 @@ class FilterCollapse extends Component {
     this.handleApply = this.handleApply.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleReset = this.handleReset.bind(this);
+
+    if (this.props.defaultFilterText) this.updateFilters();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (prevProps.filter !== this.props.filter) {
       const { filterInput } = this.state;
       if (filterInput === '') {
@@ -305,22 +307,19 @@ class FilterCollapse extends Component {
   }
 
   async updateFilters(overrideFilter) {
-    const filterInput = typeof overrideFilter === 'undefined' ? this.state.filterInput : overrideFilter;
-    if (filterInput === '') {
-      this.props.setFilter([], '');
+    const filterInput = overrideFilter ?? this.state.filterInput;
+    if ((filterInput ?? '') === '') {
+      this.props.setFilter(null, '');
       return;
     }
-    const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
-    if (!valid) return;
 
-    if (tokens.length > 0) {
-      const filters = [Filter.parseTokens(tokens)];
-      // TODO: Copy to advanced filter boxes.
-      this.setState({ loading: true });
-      await this.props.setFilter(filters, filterInput);
-      this.setState({ loading: false });
-    }
+    const { filter, err } = makeFilter(filterInput);
+    if (err) return;
+
+    // TODO: Copy to advanced filter boxes.
+    this.setState({ loading: true });
+    await this.props.setFilter(() => filter, filterInput);
+    this.setState({ loading: false });
   }
 
   handleChange(event) {
@@ -345,16 +344,19 @@ class FilterCollapse extends Component {
     }
   }
 
-  handleReset(event) {
+  handleReset() {
     this.setState({ filterInput: '' });
-    this.props.setFilter([], '');
+    this.props.setFilter(null, '');
   }
 
   render() {
-    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, ...props } = this.props;
+    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, noCount, ...props } = this.props;
     const { loading, filterInput, advancedOpen } = this.state;
-    const tokens = [];
-    const valid = Filter.tokenizeInput(filterInput, tokens) && Filter.verifyTokens(tokens);
+    const { err } = makeFilter(filterInput);
+    const valid = !err;
+    if (err) {
+      console.warn(err);
+    }
     const appliedText =
       'Filters applied' +
       (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '') +
@@ -390,7 +392,9 @@ class FilterCollapse extends Component {
                 </InputGroup>
               </Form>
               <h5>Filters</h5>
-              <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
+              {!noCount && (
+                <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
+              )}
             </Col>
           </Row>
           <Row>

@@ -32,6 +32,7 @@ class CubeOverviewModal extends Component {
       isOpen: false,
       tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({ id: tag, text: tag })),
       cube: JSON.parse(JSON.stringify(props.cube)),
+      urlChanged: false,
       image_dict: {},
     };
 
@@ -141,6 +142,7 @@ class CubeOverviewModal extends Component {
         },
       }));
     } else {
+      if (target.name === 'urlAlias') this.setState({ urlChanged: true });
       this.setState((prevState) => ({
         cube: {
           ...prevState.cube,
@@ -165,6 +167,12 @@ class CubeOverviewModal extends Component {
     });
     const json = await response.json();
     if (response.ok) {
+      if (this.state.urlChanged) {
+        let cubeID = this.state.cube._id;
+        if (this.state.cube.shortID) cubeID = this.state.cube.shortID;
+        if (this.state.cube.urlAlias) cubeID = this.state.cube.urlAlias;
+        window.location.href = `/cube/overview/${cubeID}`;
+      }
       this.props.onCubeUpdate({
         ...this.state.cube,
         descriptionhtml: json.descriptionhtml,
@@ -247,21 +255,23 @@ class CubeOverviewModal extends Component {
                 <Row>
                   <Col>
                     <FormGroup tag="fieldset">
-                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Standard', 'Set'].map((label) => (
-                        <FormGroup check key={label}>
-                          <Label check>
-                            <Input
-                              type="radio"
-                              name="categoryOverride"
-                              value={label}
-                              disabled={cube.overrideCategory ? false : true}
-                              checked={cube.categoryOverride == label}
-                              onChange={this.handleChange}
-                            />{' '}
-                            {label}
-                          </Label>
-                        </FormGroup>
-                      ))}
+                      {['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'].map(
+                        (label) => (
+                          <FormGroup check key={label}>
+                            <Label check>
+                              <Input
+                                type="radio"
+                                name="categoryOverride"
+                                value={label}
+                                disabled={cube.overrideCategory ? false : true}
+                                checked={cube.categoryOverride == label}
+                                onChange={this.handleChange}
+                              />{' '}
+                              {label}
+                            </Label>
+                          </FormGroup>
+                        ),
+                      )}
                     </FormGroup>
                   </Col>
                   <Col>

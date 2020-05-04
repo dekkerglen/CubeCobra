@@ -9,7 +9,6 @@ import { csrfFetch } from 'utils/CSRF';
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
-    this.deleteModal = React.createRef();
     this.toggle = this.toggle.bind(this);
     this.toggleDeleteModal = this.toggleDeleteModal.bind(this);
     this.openDeleteModal = this.openDeleteModal.bind(this);
@@ -70,7 +69,6 @@ class BlogContextMenu extends React.Component {
           toggle={this.toggleDeleteModal}
           isOpen={this.state.deleteModalOpen}
           postID={this.props.post._id}
-          ref={this.deleteModal}
         ></BlogDeleteModal>
       </>
     );

@@ -147,8 +147,8 @@
 		padding: 2px 4px;
 	}
 	.table-col {
-		flex: 0 0 calc(100% / 8);
-		width: calc(100% / 8);
+		flex: 0 0 calc(100% / 9);
+		width: calc(100% / 9);
 	}
 }
 
@@ -594,6 +594,11 @@ body.busy-cursor {
 		max-width: 12.5%;
 	}
 
+	.col-md-2-4 {
+		flex: 0 0 20%;
+		max-width: 20%;
+	}
+
 	.col-md-1-4285 {
 		flex: 0 0 14.285%;
 		max-width: 14.285%;
@@ -719,3 +724,24 @@ img.mana-symbol {
   .noBreak {
 	white-space: nowrap;
   }
+  
+  .sortIcon {
+	max-height: 1rem;
+}
+
+.overflow-x{
+	overflow-x: auto;
+	overflow-y: visible;
+}
+.pagination {
+	justify-content: center;
+}
+
+.cube-id-btn {
+	border: none;
+	background-color: white;
+	margin: -8px;
+}
+.cube-id-btn:focus {
+	outline: 0;
+}

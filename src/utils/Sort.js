@@ -118,7 +118,7 @@ const ALL_CMCS = Array.from(Array(33).keys())
 
 function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
-    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'];
+    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
@@ -200,7 +200,7 @@ function getLabelsRaw(cube, sort) {
     });
     return artists.sort();
   } else if (sort == 'Rarity') {
-    return ['Common', 'Uncommon', 'Rare', 'Mythic'];
+    return ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Subtype') {
@@ -347,23 +347,30 @@ function getLabelsRaw(cube, sort) {
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
-    var items = [];
+    var elos = [];
     cube.forEach(function(card, index) {
       if (card.details.elo) {
-        const bucket = getEloBucket(card.details.elo);
-        if (!items.includes(bucket)) {
-          items.push(bucket);
+        if (!elos.includes(card.details.elo)) {
+          elos.push(card.details.elo);
         }
       }
     });
-    return items.sort(function(x, y) {
-      if (x > y) {
+    elos = elos.sort(function(x, y) {
+      if (x - y > 0) {
         return 1;
-      } else if (y > x) {
+      } else if (y - x > 0) {
         return -1;
       }
       return 1;
     });
+    const buckets = elos.map(getEloBucket);
+    const res = [];
+    for (const bucket of buckets) {
+      if (!res.includes(bucket)) {
+        res.push(bucket);
+      }
+    }
+    return res;
   }
 }
 
@@ -437,6 +444,7 @@ function typeLine(card) {
 
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
+    if (card.colorCategory) return [card.colorCategory];
     return [GetColorCategory(typeLine(card), colorIdentity(card))];
   }
   if (sort == 'Color Identity') {
@@ -529,7 +537,9 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Set') {
     return [card.details.set.toUpperCase()];
   } else if (sort == 'Rarity') {
-    return [card.details.rarity[0].toUpperCase() + card.details.rarity.slice(1)];
+    let { rarity } = card.details;
+    if (card.rarity) rarity = card.rarity;
+    return [rarity[0].toUpperCase() + rarity.slice(1)];
   } else if (sort == 'Subtype') {
     const split = typeLine(card).split(/[-–—]/);
     if (split.length > 1) {
@@ -582,12 +592,12 @@ export function cardGetLabels(card, sort) {
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
-      return [parseInt(card.details.power)];
+      return [card.details.power];
     }
     return [];
   } else if (sort == 'Toughness') {
     if (card.details.toughness) {
-      return [parseInt(card.details.toughness)];
+      return [card.details.toughness];
     }
     return [];
   } else if (sort == 'Loyalty') {

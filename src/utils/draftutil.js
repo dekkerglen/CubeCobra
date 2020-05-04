@@ -1,41 +1,39 @@
 'use strict';
+const seedrandom = require('seedrandom');
+const shuffleSeed = require('shuffle-seed');
 
-var Util = require('utils/Util.js');
+const Util = require('utils/Util.js');
 require('./Card.js');
-var Filter = require('utils/Filter.js');
+const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
+var Sort = require('utils/Sort.js');
 
 function matchingCards(cards, filter) {
-  if (filter === null || filter.length === 0 || filter[0] === null || filter[0] === '') {
-    return cards;
+  if (filter) {
+    return cards.filter(filter);
   }
-  return Filter.filterCards(cards, filter, true);
+  return cards;
 }
 
-function makeFilter(filterText) {
+function compileFilter(filterText) {
   if (!filterText || filterText === '' || filterText == '*') {
-    return [null];
+    return null;
   }
 
-  let tokens = [];
-  let valid = false;
-  valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
-
-  // backwards compatibilty: treat as tag
-  if (!valid || !Filter.operatorsRegex.test(filterText)) {
+  let { filter, err } = makeFilter(filterText);
+  if (!operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
       tagfilterText = `"${filterText}"`;
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
-    tokens = [];
-    valid = Filter.tokenizeInput(tagfilterText, tokens) && Filter.verifyTokens(tokens);
+    ({ filter, err } = makeFilter(tagfilterText));
   }
 
-  if (!valid) {
+  if (err) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  return [Filter.parseTokens(tokens)];
+  return filter;
 }
 
 /* Takes the raw data for custom format, converts to JSON and creates
@@ -49,7 +47,7 @@ export function parseDraftFormat(packsJSON, splitter = ',') {
     for (let k = 0; k < format[j].length; k++) {
       format[j][k] = format[j][k].split(splitter);
       for (let m = 0; m < format[j][k].length; m++) {
-        format[j][k][m] = makeFilter(format[j][k][m].trim());
+        format[j][k][m] = compileFilter(format[j][k][m].trim());
       }
     }
   }
@@ -57,11 +55,11 @@ export function parseDraftFormat(packsJSON, splitter = ',') {
 }
 
 // standard draft has no duplicates
-function standardDraft(cards, probabilistic = false) {
+function standardDraft(cards, seed = false) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = Util.arrayShuffle(cards);
+  cards = shuffleSeed.shuffle(cards, seed);
   return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
@@ -86,7 +84,11 @@ function standardDraftAsfan(cards) {
   };
 }
 
-function customDraft(cards, duplicates = false) {
+function customDraft(cards, duplicates = false, seed = false) {
+  if (!seed) {
+    seed = Date.now().toString();
+  }
+  const rng = seedrandom(seed);
   return function(cardFilters) {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
@@ -98,12 +100,12 @@ function customDraft(cards, duplicates = false) {
     const messages = [];
     if (cardFilters.length > 0) {
       do {
-        index = Math.floor(Math.random() * cardFilters.length);
+        index = Math.floor(rng() * cardFilters.length);
         const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
         if (validCards.length == 0) {
           // TODO: display warnings for players
-          messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+          messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
@@ -114,7 +116,7 @@ function customDraft(cards, duplicates = false) {
       throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
-    index = Math.floor(Math.random() * validCards.length);
+    index = Math.floor(rng() * validCards.length);
 
     // slice out the first card with the index, or error out
     const card = validCards[index];
@@ -238,7 +240,11 @@ function createPacks(draft, format, seats, nextCardFn) {
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function populateDraft(format, cards, bots, seats, user) {
+export function createDraft(format, cards, bots, seats, user, seed = false) {
+  if (!seed) {
+    seed = Date.now().toString();
+  }
+
   const draft = {};
 
   let nextCardFn = null;
@@ -246,17 +252,11 @@ export function populateDraft(format, cards, bots, seats, user) {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
-  if (bots.length === 0) {
-    throw new Error('Unable to create draft: no bots.');
-  }
-  if (seats < 2) {
-    throw new Error(`Unable to create draft: invalid seats: ${seats}`);
-  }
 
   if (format.custom === true) {
-    nextCardFn = customDraft(cards, format.multiples);
+    nextCardFn = customDraft(cards, format.multiples, seed);
   } else {
-    nextCardFn = standardDraft(cards);
+    nextCardFn = standardDraft(cards, seed);
   }
 
   const result = createPacks(draft, format, seats, nextCardFn);
@@ -304,22 +304,6 @@ export function populateDraft(format, cards, bots, seats, user) {
   return draft;
 }
 
-export function calculateAsfans(format, cards) {
-  let nextCardFn = null;
-
-  cards.forEach((card) => {
-    card.asfan = 0;
-  });
-
-  if (format.custom === true) {
-    nextCardFn = customDraftAsfan(cards, format.multiples);
-  } else {
-    nextCardFn = standardDraftAsfan(cards);
-  }
-
-  return createPacks({}, format, 1, nextCardFn);
-}
-
 export function checkFormat(format, cards) {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
@@ -328,7 +312,7 @@ export function checkFormat(format, cards) {
       const filter = cardFilters[i];
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
-        messages.push(`Warning: no cards matching filter: ${Filter.filterToString(filter)}`);
+        messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
       }
     }
     if (messages.length > 0) {
@@ -337,4 +321,76 @@ export function checkFormat(format, cards) {
     return { ok: messages.length === 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
+}
+
+export function average(arr) {
+  const total = arr.reduce((acc, c) => acc + c, 0);
+  return total / arr.length;
+}
+
+export function median(arr) {
+  const mid = Math.floor(arr.length / 2);
+  const nums = [...arr].sort((a, b) => a - b);
+  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+export function stddev(arr, avg) {
+  const squareDiffs = arr.map((value) => {
+    const diff = value - avg;
+    const sqrDiff = diff * diff;
+    return sqrDiff;
+  });
+
+  const avgSquareDiff = average(squareDiffs);
+
+  const stdDev = Math.sqrt(avgSquareDiff);
+  return stdDev;
+}
+
+export function calculateAsfans(cards, cube, sort) {
+  return [
+    {
+      label: '',
+      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
+        return {
+          label: tuple[0],
+          asfan: (tuple[1].length / cube.cards.length) * 15, // 15 cards a pack
+        };
+      }),
+    },
+  ];
+}
+
+export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
+  const matchesDict = {};
+  return draftFormat.map((pack, index) => {
+    const asfanDict = {};
+    for (const card of cards) {
+      let total = 0;
+      for (const slot of pack) {
+        let sum = 0;
+        for (const filter of slot) {
+          if (!matchesDict[JSON.stringify(filter)]) {
+            matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
+          }
+          const matches = matchesDict[JSON.stringify(filter)];
+          if (matches.includes(card)) {
+            sum += 1 / matches.length;
+          }
+        }
+        total += ((1 - total) * sum) / slot.length;
+      }
+      asfanDict[card.cardID] = total;
+    }
+
+    return {
+      label: `Pack ${index + 1}`,
+      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
+        return {
+          label: tuple[0],
+          asfan: tuple[1].reduce((acc, c) => acc + asfanDict[c.cardID], 0),
+        };
+      }),
+    };
+  });
 }

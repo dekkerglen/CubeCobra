@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import Filter from 'utils/Filter';
 import Query from 'utils/Query';
 
 import CardModalForm from 'components/CardModalForm';
@@ -37,14 +36,14 @@ const CubeComparePage = ({
   ...props
 }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
-  const [filter, setFilter] = useState([]);
+  const [filter, setFilter] = useState(null);
 
   const defaultTagSet = new Set([].concat(...cards.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({
     id: tag,
     text: tag,
   }));
-  const filteredCards = filter.length > 0 ? cards.filter((card) => Filter.filterCard(card, filter)) : cards;
+  const filteredCards = filter ? cards.filter(filter) : cards;
   return (
     <SortContextProvider defaultSorts={defaultSorts}>
       <DisplayContextProvider>

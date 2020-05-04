@@ -53,11 +53,8 @@ src/components/GroupModal.js
 src/components/GroupModalContext.js
 src/components/ImageFallback.js
 src/components/LoadingButton.js
-src/components/MassBuyButton.js
 src/components/MulticoloredAnalysis.js
 src/components/Notification.js
-src/components/PagedList.js
-src/components/PagedTable.js
 src/components/SortCollapse.js
 src/components/SortContext.js
 src/components/SortableTable.js
@@ -77,3 +74,4 @@ src/components/WithModal.js
 src/utils/draftutil.js
 src/utils/Filter.js
 src/utils/Sort.js
+src/generated

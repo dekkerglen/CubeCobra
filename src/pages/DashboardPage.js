@@ -8,7 +8,7 @@ import DeckPreview from 'components/DeckPreview';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
-const DashboardPage = ({ posts, cubes, decks, userId }) => (
+const DashboardPage = ({ posts, cubes, decks, canEdit, userId }) => (
   <Row className="mt-3">
     <Col xs="12" md="6">
       <Card>
@@ -43,7 +43,7 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
         </CardHeader>
         <CardBody className="p-0">
           {decks.length > 0 ? (
-            decks.map((deck) => <DeckPreview key={deck._id} deck={deck} />)
+            decks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" canEdit={canEdit} />)
           ) : (
             <p className="m-2">
               Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
@@ -63,6 +63,7 @@ const DashboardPage = ({ posts, cubes, decks, userId }) => (
       {posts.length > 0 ? (
         <PagedList
           pageSize={10}
+          showBottom
           rows={posts.slice(0).map((post) => (
             <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn />
           ))}
@@ -84,6 +85,7 @@ DashboardPage.propTypes = {
     }),
   ).isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  canEdit: PropTypes.bool.isRequired,
   userId: PropTypes.string.isRequired,
 };
 

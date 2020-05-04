@@ -25,30 +25,14 @@ VSCode (with the ESLint extension) is the recommended environment. When using th
 
 ### Initial Setup
 
-Clone the project into a folder of your choice. 
+Clone the project into a folder of your choice. Copy `.env-EXAMPLE` to `.env` and fill out your personal tokens. **NOTE** `TCG_PLAYER_PUBLIC_KEY` and `TCG_PLAYER_PRIVATE_KEY` can be left blank.
 
-You can either copy and rename the `cubecobrasecrets.example` folder outside the root folder such that the resulting directory structure looks like this:
-```sh
-.
-├── CubeCobra               # Cloned repository
-└── cubecobrasecrets        # link to `CubeCobra/cubecobrasecrets.example`
-    └── email.js            # Email secrets file
-    └── etc...
-```
-
-Or, you can create a symbolic link from `../cubecobrasecrets` to `cubecobrasecrets.example`:
-```bash
-cd CubeCobra/..
-ln -s CubeCobra/cubecobrasecrets.example cubecobrasecrets
-```
-
-
-Then, run the following commands in the root of the cloned repository:
+Once your `.env` file is filled out, run the following commands in the root of the cloned repository:
 
 ```sh
 npm install
-npm run setup               # This will bundle modules and download Scryfall assets.
-node seed.js                # This will create and seed the mongo database specified in cubecobrasecrets.
+npm run setup                  # This will bundle modules and download Scryfall assets.
+node one_shot_scripts/seed.js  # This will create and seed the mongo database specified in the .env file.
 ```
 
 If you are on Windows, you will need to set bash as your script shell:

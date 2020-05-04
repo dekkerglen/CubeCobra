@@ -157,12 +157,6 @@ test('arraysEqual returns false for unequal arrays', () => {
   expect(result).toBe(false);
 });
 
-test('CSVtoArray returns an array of the correct length when commas are included in values', () => {
-  const testCSV = '"a,g","b","c"';
-  const result = util.CSVtoArray(testCSV);
-  expect(result.length).toBe(3);
-});
-
 test('generateEditToken does not generate the same token on sequential calls', () => {
   const firstResult = util.generateEditToken();
   const secondResult = util.generateEditToken();

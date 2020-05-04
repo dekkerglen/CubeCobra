@@ -5,12 +5,12 @@ const serialize = require('serialize-javascript');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const { addPrices, GetPrices } = require('../serverjs/prices');
-const Filter = require('../dist/utils/Filter');
+const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CardRating = require('../models/cardrating');
-const Card = require('../models/card');
+const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 
 const router = express.Router();
@@ -35,11 +35,10 @@ function sortLimit(arr, k, keyF) {
 
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital);
-  cards = Filter.filterCardsDetails(cards, filter);
-  if (filter.length > 0) {
+  if (filter) {
     // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
     // In the seoncd pass, we add that information.
-    if (Filter.filterUses(filter, 'elo') || Filter.filterUses(filter, 'picks')) {
+    if (filterUses(filter, 'elo') || filterUses(filter, 'picks')) {
       const names = cards.map(({ name }) => name);
       const ratings = await CardRating.find({
         name: {
@@ -55,9 +54,8 @@ async function matchingCards(filter) {
           picks: rating ? rating.picks : null,
         };
       });
-      cards = Filter.filterCardsDetails(cards, filter);
     }
-    if (Filter.filterUses(filter, 'price') || Filter.filterUses(filter, 'price_foil')) {
+    if (filterUses(filter, 'price') || filterUses(filter, 'price_foil')) {
       const withPrices = await addPrices(cards);
       // null is a magic value that causes price filtering to always fail.
       cards = withPrices.map(({ price, price_foil, ...card }) => ({
@@ -65,11 +63,10 @@ async function matchingCards(filter) {
         price: price || null,
         price_foil: price_foil || null, // eslint-disable-line camelcase
       }));
-      cards = Filter.filterCardsDetails(cards, filter);
     }
-    if (Filter.filterUses(filter, 'cubes')) {
+    if (filterUses(filter, 'cubes')) {
       const names = cards.map(({ name }) => name.toLowerCase());
-      const cardDatas = await Card.find(
+      const cardDatas = await CardHistory.find(
         {
           cardName: {
             $in: names.map((name) => name.toLowerCase()),
@@ -86,10 +83,9 @@ async function matchingCards(filter) {
           cubes: cardData ? cardData.cubes.length : null,
         };
       });
-      cards = Filter.filterCardsDetails(cards, filter);
     }
   }
-  return cards;
+  return filterCardsDetails(cards, filter);
 }
 
 /* This is a Bayesian adjustment to the rating like IMDB does. */
@@ -112,7 +108,7 @@ async function topCards(filter) {
   });
 
   const ratingsQ = CardRating.find(
-    filter.length === 0
+    !filter
       ? {}
       : {
           name: {
@@ -123,9 +119,9 @@ async function topCards(filter) {
     .sort('-elo')
     .limit(MAX_RESULTS)
     .lean();
-  const cardDataQ = Card.aggregate()
+  const cardDataQ = CardHistory.aggregate()
     .match(
-      filter.length === 0
+      !filter
         ? {}
         : {
             cardName: {
@@ -180,7 +176,7 @@ function shuffle(a) {
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = Filter.makeFilter(req.query.f);
+    const { err, filter } = makeFilter(req.query.f);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -204,7 +200,7 @@ router.get('/api/topcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = Filter.makeFilter(req.query.f);
+    const { err, filter } = makeFilter(req.query.f);
 
     if (err) {
       req.flash('Invalid filter.');
@@ -244,7 +240,7 @@ router.get('/card/:id', async (req, res) => {
 
     // otherwise just go to this ID.
     const card = carddb.cardFromId(req.params.id);
-    const data = await Card.findOne({ cardName: card.name_lower });
+    const data = await CardHistory.findOne({ cardID: req.params.id });
     if (!data) {
       return res.status(404).render('misc/404', {});
     }

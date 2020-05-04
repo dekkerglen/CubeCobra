@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 
 import FoilCardImage from 'components/FoilCardImage';
+import CardGrid from 'components/CardGrid';
 import PropTypes from 'prop-types';
-import { encodeName } from 'utils/Card';
 import { arrayShuffle } from 'utils/Util';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button, Col, Row, NavLink } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader, Button, NavLink } from 'reactstrap';
 
 class SampleHandModal extends Component {
   constructor(props) {
@@ -80,19 +80,13 @@ class SampleHandModal extends Component {
         <Modal size="xl" isOpen={isOpen} toggle={this.close} centered>
           <ModalHeader toggle={this.close}>Sample Hand</ModalHeader>
           <ModalBody className="p-4">
-            <Row>
-              {hand.map((card, cardindex) => (
-                <Col
-                  key={/* eslint-disable-line react/no-array-index-key */ cardindex}
-                  xs={4}
-                  className="col-seventh p-1"
-                >
-                  <a href={`/tool/card/${encodeName(card.details.name)}`}>
-                    <FoilCardImage autocard data-in-modal card={card} className="clickable" />
-                  </a>
-                </Col>
-              ))}
-            </Row>
+            <CardGrid
+              cardList={hand}
+              Tag={FoilCardImage}
+              colProps={{ xs: 4, className: 'col-seventh' }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
           </ModalBody>
           <ModalFooter>
             <Button color="success" onClick={this.refresh}>
@@ -112,23 +106,8 @@ class SampleHandModal extends Component {
 }
 
 SampleHandModal.propTypes = {
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-        pickorder: PropTypes.array.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-  }).isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  deck: PropTypes.array.isRequired,
 };
 
 export default SampleHandModal;

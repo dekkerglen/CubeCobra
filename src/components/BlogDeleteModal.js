@@ -2,56 +2,39 @@ import PropTypes from 'prop-types';
 
 import React from 'react';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
-
 import { csrfFetch } from 'utils/CSRF';
+
+import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
 class BlogDeleteModal extends React.Component {
   constructor(props) {
     super(props);
-    this.toggle = props.toggle;
-    this.acceptButton = React.createRef();
+    this.postID = props.postID;
     this.confirm = this.confirm.bind(this);
-    this.focusAcceptButton = this.focusAcceptButton.bind(this);
   }
 
-  focusAcceptButton() {
-    if (this.acceptButton.current) {
-      this.acceptButton.current.focus();
+  async confirm() {
+    const response = await csrfFetch(`/cube/blog/remove/${this.postID}`, {
+      method: 'DELETE',
+      headers: {},
+    });
+
+    if (!response.ok) {
+      console.log(response);
+    } else {
+      window.location.href = '';
     }
   }
 
-  confirm() {
-    const { postID } = this.props;
-    csrfFetch(`/cube/blog/remove/${postID}`, {
-      method: 'DELETE',
-      headers: {},
-    }).then((response) => {
-      if (!response.ok) {
-        console.log(response);
-      } else {
-        window.location.href = '';
-      }
-    });
-  }
-
   render() {
-    const { isOpen } = this.props;
+    const { isOpen, toggle } = this.props;
     return (
-      <Modal isOpen={isOpen} toggle={this.toggle} onOpened={this.focusAcceptButton}>
-        <ModalHeader toggle={this.toggle}>Confirm Delete</ModalHeader>
-        <ModalBody>
-          <p>Are you sure you wish to delete this post? This action cannot be undone.</p>
-        </ModalBody>
-        <ModalFooter>
-          <Button innerRef={this.acceptButton} color="danger" onClick={this.confirm}>
-            Delete
-          </Button>{' '}
-          <Button color="secondary" onClick={this.toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
+      <ConfirmDeleteModal
+        toggle={toggle}
+        delete={this.confirm}
+        isOpen={isOpen}
+        text="Are you sure you wish to delete this post? This action cannot be undone."
+      />
     );
   }
 }

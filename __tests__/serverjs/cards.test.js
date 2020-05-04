@@ -169,6 +169,7 @@ test('normalizedName normalized ascii correctly', () => {
   const expected = 'garruk, primal hunter';
   const result = carddb.normalizedName({
     name: rawName,
+    name_lower: expected,
   });
   expect(result).toBe(expected);
 });
@@ -178,6 +179,7 @@ test('normalizedName normalizes unicode correctly', () => {
   const expected = 'ætherspouts';
   const result = carddb.normalizedName({
     name: rawName,
+    name_lower: expected,
   });
   expect(result).toBe(expected);
 });
