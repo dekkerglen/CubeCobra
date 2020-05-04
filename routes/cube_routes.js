@@ -1174,15 +1174,15 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     // list of cardids
     const added = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i += 1) {
       added.push([]);
     }
 
-    for (let i = 0; i < cards.length; i++) {
+    for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
       if (/([0-9]+x )(.*)/.test(item)) {
         const count = parseInt(item.substring(0, item.indexOf('x')), 10);
-        for (let j = 0; j < count; j++) {
+        for (let j = 0; j < count; j += 1) {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
       } else {
@@ -1276,7 +1276,7 @@ async function bulkUpload(req, res, list, cube) {
           if (!Number.isInteger(count)) {
             count = 1;
           }
-          for (let j = 0; j < count; j++) {
+          for (let j = 0; j < count; j += 1) {
             cards.push(numericMatch[2]);
           }
         } else {
@@ -1656,7 +1656,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const source = shuffle(cube.cards).slice(0, numCards);
     const pool = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i += 1) {
       pool.push([]);
     }
 
@@ -1709,7 +1709,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     await deck.save();
 
-    cube.numDecks++;
+    cube.numDecks += 1;
 
     await cube.save();
 
@@ -2352,7 +2352,7 @@ router.post(
         });
       }
 
-      for (let i = 0; i < updatedCube.categoryPrefixes.length; i++) {
+      for (let i = 0; i < updatedCube.categoryPrefixes.length; i += 1) {
         if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
           return res.status(400).send({
             success: 'false',
@@ -2736,7 +2736,7 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
-    cube.numDecks++;
+    cube.numDecks += 1;
 
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
@@ -2876,10 +2876,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
-    cube.numDecks++;
+    cube.numDecks += 1;
 
     const userq = User.findById(req.user._id);
-    co;nst baseuserq = User.findById(base.owner);
+    const baseuserq = User.findById(base.owner);
     const cubeOwnerq = User.findById(cube.owner);
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
@@ -2932,7 +2932,7 @@ router.get('/redraft/:id', async (req, res) => {
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
 
-    for (let i = 0; i < draft.seats.length; i++) {
+    for (let i = 0; i < draft.seats.length; i += 1) {
       if (!draft.seats[i].bot) {
         draft.seats[i].userid = req.user ? req.user._id : null;
         draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
@@ -2943,7 +2943,7 @@ router.get('/redraft/:id', async (req, res) => {
       draft.seats[i].pickorder = [];
       draft.seats[i].packbacklog = [];
 
-      for (let j = 0; j < 16; j++) {
+      for (let j = 0; j < 16; j += 1) {
         draft.seats[i].drafted.push([]);
       }
 
@@ -3371,7 +3371,10 @@ router.post('/resize/:id/:size', async (req, res) => {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(0,req.params.size-cube.cards.length())}&root=${encodeURIComponent(process.env.HOST)}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(
+        0,
+        req.params.size - cube.cards.length(),
+      )}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
@@ -3381,7 +3384,6 @@ router.post('/resize/:id/:size', async (req, res) => {
     // use this instead if you want debug data
     // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
     // const cuts = { ...additions };
-
 
     const pids = new Set();
     const cardNames = new Set();
@@ -3453,7 +3455,7 @@ router.post('/resize/:id/:size', async (req, res) => {
     } else {
       // we cut from cube
       for (const card of list) {
-        for (let i = 0; i < cube.cards.length; i++) {
+        for (let i = 0; i < cube.cards.length; i += 1) {
           if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
             changelog += removeCardHtml(card.details);
             cube.cards.splice(i, 1);
