@@ -459,6 +459,44 @@ const generateSamplepackImage = (sources = [], options = {}) =>
     );
   });
 
+function addTagsToCube(cubeTagColors, addedTags) {
+  const updatedTagColors = cubeTagColors.map((tagColor) => {
+    const i = addedTags.indexOf(tagColor.tag);
+    if (i > -1) {
+      addedTags.splice(i, 1);
+      tagColor.referenceCountInCards += 1;
+    }
+
+    return {
+      tag: tagColor.tag,
+      color: tagColor.color,
+      referenceCountInCards: tagColor.referenceCountInCards,
+    };
+  });
+
+  const newTagColors = addedTags.map((newTag) => {
+    return {
+      tag: newTag,
+      referenceCountInCards: 1,
+    };
+  });
+
+  return [...updatedTagColors, ...newTagColors];
+}
+
+function removeTagsFromCube(cubeTagColors, removedTags) {
+  return cubeTagColors
+    .map((tagColor) => {
+      if (removedTags.includes(tagColor.tag)) {
+        tagColor.referenceCountInCards -= 1;
+      }
+      return tagColor;
+    })
+    .filter((tagColor) => {
+      return tagColor.referenceCountInCards > 0;
+    });
+}
+
 const methods = {
   getBasics(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -567,6 +605,8 @@ const methods = {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  addTagsToCube,
+  removeTagsFromCube,
 };
 
 module.exports = methods;

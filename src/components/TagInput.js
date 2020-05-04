@@ -5,9 +5,9 @@ import TagContext from './TagContext';
 
 const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
   <TagContext.Consumer>
-    {({ allSuggestions, addSuggestion, tagColorClass }) => (
+    {({ allSuggestions, addSuggestion }) => (
       <ReactTags
-        tags={tags.map((tag) => ({ ...tag, className: tagColorClass(tag.text) }))}
+        tags={tags.map((tag) => ({ ...tag }))}
         suggestions={allSuggestions}
         handleAddition={(tag) => {
           addSuggestion(tag);

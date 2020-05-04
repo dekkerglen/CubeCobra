@@ -110,6 +110,7 @@ const cubeSchema = mongoose.Schema({
     {
       tag: String,
       color: String,
+      referenceCountInCards: { type: Number, default: 0 },
     },
   ],
   defaultDraftFormat: {
