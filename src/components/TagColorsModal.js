@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { Component, useState, useCallback, useRef } from 'react';
+import { TwitterPicker, ChromePicker } from 'react-color';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import {
@@ -18,7 +19,173 @@ import {
 import { arrayMove } from '../utils/Util';
 
 import LoadingButton from './LoadingButton';
-import TagContext, { getTagColorClass, TAG_COLORS } from './TagContext';
+import TagContext, { getTagColorStyle, getTagColorClass, TAG_COLORS } from './TagContext';
+
+function EnableShowTagColorView ({showTagColors, onChange}) {
+  const [enabled, setEnabled] = useState(showTagColors)
+
+  function handleChangeShowTagColors(event) {
+    const target = event.target;
+    setEnabled(target.checked)
+    onChange(target.checked)
+  }
+
+  return (
+    <Form inline className="mb-2">
+      <Label>
+        <Input type="checkbox" checked={enabled} onChange={handleChangeShowTagColors} />
+        Show Tag Colors in Card List
+      </Label>
+    </Form>
+  )
+}
+
+function Tag({tagColor}) {
+  const backgroundColor = tagColor.color ? tagColor.color : "#fff"
+  return (
+    <span className="mr-2 tag-item" style={{backgroundColor: backgroundColor}}>{tagColor.tag}</span>
+  )
+}
+
+function EditableTag({tagColor, onChange}) {
+  const [displayColorPicker, setDisplayColorPicker] = useState(false)
+  const [pickedColor, setPickedColor] = useState(tagColor.color ? tagColor.color : "#fff")
+  const [fontColor, setFontColor] = useState('black')
+
+  function calculateContrastColor (rgbColor) {
+    // Calculate the perceptive luminance (aka luma) - human eye favors green color... 
+    const luma = ((0.299 * rgbColor.r) + (0.587 * rgbColor.g) + (0.114 * rgbColor.b)) / 255;
+    // Return black for bright colors, white for dark colors
+    return luma > 0.5 ? 'black' : 'white';
+  }
+
+
+function hex2luma(hex) {
+  console.log(hex)
+  const luma = (
+    (parseInt(hex.substring(1, 3), 16) * 299) + 
+    (parseInt(hex.substring(3, 5), 16) * 587) + 
+    (parseInt(hex.substring(5, 7), 16) * 114)
+  ) / 1000;
+  console.log(luma)
+  return luma > 200 ? 'black' : 'white';
+}
+
+  function handleClick() {
+    setDisplayColorPicker(!displayColorPicker)
+  }
+
+  function handleClose() {
+    setDisplayColorPicker(false);
+  }
+
+  function handleChangeComplete(color) {
+    setPickedColor(color.hex)
+    
+    setFontColor(hex2luma(color.hex))
+    
+    //setFontColor(calculateContrastColor(color.rgb))
+    tagColor.color = color.hex
+    onChange(tagColor)
+  }
+
+  const popover = {
+    position: 'absolute',
+    zIndex: '1100',
+  }
+  const cover = {
+    position: 'fixed',
+    top: '0px',
+    right: '0px',
+    bottom: '0px',
+    left: '0px',
+  }
+
+  return (
+    <Row className="tag-color-row" style={{color: fontColor, backgroundColor: pickedColor}}>
+      <Col>{tagColor.tag}</Col>
+      <Col className="text-md-right">
+      <Button style={{backgroundImage: "url(/content/paint-brush-icon.jpg)", backgroundSize: "contain"}} onClick={handleClick}>O</Button>
+      { displayColorPicker ?
+        <div style={ popover }>
+        <div style={ cover } onClick={ handleClose }/>
+          <TwitterPicker
+            color={ pickedColor }
+            onChangeComplete={ handleChangeComplete }
+          />
+        </div>
+      : null }
+      </Col>
+    </Row>
+  )
+}
+
+function TagColorsView ({tagColors}) {
+  return (
+    <div>
+      {tagColors.map((tagColor) => 
+        <Tag key={tagColor.tag}
+             tagColor={tagColor} />
+      )}
+    </div>
+  );
+}
+
+class EditableTagColorsView extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      tagColors: this.props.tagColors,
+      onChange: this.props.onChange,
+    };
+
+    this.handleChangeTagColor = this.handleChangeTagColor.bind(this);
+    this.handleSortEnd = this.handleSortEnd.bind(this);
+  }
+
+  handleChangeTagColor(changedTagColor) {
+    const { tagColors, onChange } = this.state;
+    const index = tagColors.findIndex((tagColor) => changedTagColor.tag === tagColor.tag);
+    if (index > -1) {
+      tagColors[index] = changedTagColor;
+    }
+
+    onChange(tagColors)
+  }
+
+  handleSortEnd({ oldIndex, newIndex }) {
+    const { tagColors, onChange } = this.state;
+    const newTagColors = arrayMove(tagColors, oldIndex, newIndex)
+    this.setState({
+      tagColors: newTagColors
+    });
+    onChange(newTagColors)
+  }
+
+  render() {
+    const { tagColors } = this.state;
+    const editableTags = tagColors.map((tagColor) => {
+      return {
+        element: <EditableTag tagColor={tagColor} onChange={this.handleChangeTagColor}/>,
+        key: tagColor.tag,
+      };
+    });
+
+    return (
+      <div>
+        <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
+        <Row className="tag-color-container">
+          <Col>
+            <SortableList items={editableTags}
+                          distance={5}
+                          onSortEnd={this.handleSortEnd}/>
+          </Col>
+        </Row>
+      </div>
+    )
+  }
+}
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
@@ -32,36 +199,30 @@ const SortableList = SortableContainer(({ items }) => {
   );
 });
 
-const TagColorRow = ({ tag, tagClass, value, onChange }) => (
-  <Row className="tag-color-row">
-    <Col>
-      <div className={tagClass}>{tag}</div>
-    </Col>
-    <Col className="d-flex flex-column justify-content-center">
-      <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
-        {TAG_COLORS.map(([name, value]) => (
-          <option key={value || 'none'} value={value || 'none'}>
-            {name}
-          </option>
-        ))}
-      </Input>
-    </Col>
-  </Row>
-);
-
-class TagColorsModalRaw extends Component {
+class TagColorsModalRaw extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      tagColors: this.props.savedTagColors,
       showTagColors: this.props.savedShowTagColors,
+      tagColors: this.props.savedTagColors,
     };
 
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChangeColor = this.handleChangeColor.bind(this);
     this.handleChangeShowTagColors = this.handleChangeShowTagColors.bind(this);
-    this.handleSortEnd = this.handleSortEnd.bind(this);
+    this.handleChangeTagColors = this.handleChangeTagColors.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChangeShowTagColors(showTagColors) {
+    this.setState({
+      showTagColors: showTagColors,
+    });
+  }
+
+  handleChangeTagColors(tagColors) {
+    this.setState({
+      tagColors: tagColors,
+    });
   }
 
   handleSubmit(event) {
@@ -76,104 +237,28 @@ class TagColorsModalRaw extends Component {
     }
   }
 
-  handleChangeColor(event) {
-    const target = event.target;
-    const name = target.getAttribute('name');
-    if (!name.startsWith('tagcolor-')) {
-      return;
-    }
-    const tag = name.slice('tagcolor-'.length);
-    const color = target.value === 'none' ? null : target.value;
-
-    this.setState(({ tagColors }) => {
-      const result = [...tagColors];
-      const index = tagColors.findIndex((tagColor) => tag === tagColor.tag);
-      if (index > -1) {
-        result[index] = { tag, color };
-      } else {
-        result.push({ tag, color });
-      }
-      return {
-        tagColors: result,
-      };
-    });
-  }
-
-  handleChangeShowTagColors(event) {
-    const target = event.target;
-    this.setState({
-      showTagColors: target.checked,
-    });
-  }
-
-  handleSortEnd({ oldIndex, newIndex }) {
-    const { allTags } = this.props;
-    const { tagColors } = this.state;
-    const filteredTags = allTags.filter((tag) => !tagColors.some((tagColor) => tag === tagColor.tag));
-    const allTagColors = [...this.state.tagColors, ...filteredTags.map((tag) => ({ tag, color: null }))];
-    this.setState({
-      tagColors: arrayMove(allTagColors, oldIndex, newIndex),
-    });
-  }
-
   render() {
-    const { canEdit, isOpen, toggle, allTags } = this.props;
+    const { canEdit, isOpen, toggle } = this.props;
     const { tagColors, showTagColors } = this.state;
-
-    const knownTags = tagColors.map(({ tag, color }) => tag);
-    const unknownTags = allTags.filter((tag) => !knownTags.includes(tag));
-    const unknownTagColors = unknownTags.map((tag) => ({ tag, color: null }));
-    const orderedTags = [...tagColors, ...unknownTagColors];
-
-    const editableRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `tag-item ${getTagColorClass(tagColors, tag)}`;
-      return {
-        element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={this.handleChangeColor} />,
-        key: tag,
-      };
-    });
-
-    const staticRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
-      return (
-        <span key={tag} className={tagClass}>
-          {tag}
-        </span>
-      );
-    });
 
     return (
       <Modal isOpen={isOpen} toggle={toggle}>
-        <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
-        <ModalBody>
-          <Form inline className="mb-2">
-            <Label>
-              <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
-              Show Tag Colors in Card List
-            </Label>
-          </Form>
-          {!canEdit ? (
-            ''
-          ) : (
-            <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
-          )}
-          {!canEdit ? (
-            staticRows
-          ) : (
-            <Row className="tag-color-container">
-              <Col>
-                <SortableList onSortEnd={this.handleSortEnd} items={editableRows} />
-              </Col>
-            </Row>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
-            Submit
-          </LoadingButton>
-        </ModalFooter>
-      </Modal>
-    );
+      <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
+      <ModalBody>
+        <EnableShowTagColorView showTagColors={showTagColors}  onChange={this.handleChangeShowTagColors}/>
+        {!canEdit ? (
+          <TagColorsView tagColors={tagColors}/>
+        ) : (
+          <EditableTagColorsView tagColors={tagColors} onChange={this.handleChangeTagColors}/>
+        )}
+      </ModalBody>
+      <ModalFooter>
+        <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
+          Submit
+        </LoadingButton>
+      </ModalFooter>
+    </Modal>
+    )
   }
 }
 

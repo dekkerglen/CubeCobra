@@ -27,8 +27,8 @@ export class TagContextProvider extends Component {
     this.addTag = this.addTag.bind(this);
     this.setTagColors = this.setTagColors.bind(this);
     this.setShowTagColors = this.setShowTagColors.bind(this);
-    this.cardColorClass = this.cardColorClass.bind(this);
-    this.tagColorClass = this.tagColorClass.bind(this);
+    this.getTagColorStyle = this.getTagColorStyle.bind(this);
+    this.getCardColorClass = getCardColorClass.bind(this);
   }
 
   addTag(tag) {
@@ -78,19 +78,18 @@ export class TagContextProvider extends Component {
     });
   }
 
-  cardColorClass(card) {
-    if (this.state.showTagColors) {
-      return getCardTagColorClass(this.state.tagColors, card);
+  getTagColorStyle(tags) {
+    const tagColor = this.state.tagColors.find(({ tag }) => (tags || []).includes(tag));
+    if (tagColor && tagColor.color) {
+      const luma = (
+        (parseInt(tagColor.color.substring(1, 3), 16) * 299) + 
+        (parseInt(tagColor.color.substring(3, 5), 16) * 587) + 
+        (parseInt(tagColor.color.substring(5, 7), 16) * 114)
+      ) / 1000;
+    
+      return {color: (luma > 200 ? 'black' : 'white'), backgroundColor: tagColor.color}
     } else {
-      return getCardColorClass(card);
-    }
-  }
-
-  tagColorClass(tag) {
-    if (this.state.showTagColors) {
-      return getTagColorClass(this.state.tagColors, tag);
-    } else {
-      return 'tag-no-color';
+      return {}
     }
   }
 
@@ -104,8 +103,7 @@ export class TagContextProvider extends Component {
       setTagColors: this.setTagColors,
       showTagColors,
       setShowTagColors: this.setShowTagColors,
-      cardColorClass: this.cardColorClass,
-      tagColorClass: this.tagColorClass,
+      getTagColorStyle: this.getTagColorStyle,
     };
     return <TagContext.Provider value={value}>{this.props.children}</TagContext.Provider>;
   }
@@ -131,37 +129,5 @@ export const getCardColorClass = (card) => {
     }[colors[0]];
   }
 };
-
-export const getCardTagColorClass = (tagColors, card) => {
-  const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
-  if (tagColor && tagColor.color) {
-    return `tag-color tag-${tagColor.color}`;
-  } else {
-    return getCardColorClass(card);
-  }
-};
-
-export const getTagColorClass = (tagColors, tag) => {
-  const tagColor = tagColors.find((tagColor) => tag === tagColor.tag);
-  if (tagColor && tagColor.color) {
-    return `tag-color tag-${tagColor.color}`;
-  } else {
-    return 'tag-no-color';
-  }
-};
-
-export const TAG_COLORS = [
-  ['None', null],
-  ['Red', 'red'],
-  ['Brown', 'brown'],
-  ['Orange', 'orange'],
-  ['Yellow', 'yellow'],
-  ['Green', 'green'],
-  ['Turquoise', 'turquoise'],
-  ['Blue', 'blue'],
-  ['Purple', 'purple'],
-  ['Violet', 'violet'],
-  ['Pink', 'pink'],
-];
 
 export default TagContext;
