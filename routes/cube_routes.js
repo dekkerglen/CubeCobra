@@ -394,55 +394,55 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-
     const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    for (const card of cube.cards) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-    }
-    const pids = new Set();
-    const allVersions = [];
-    for (const card of cube.cards) {
-      const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
-      allVersions.push(...allVersionsOfCard.map((id) => ({ cardID: id, related: card.cardID })));
-    }
-    for (const card of allVersions) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-    }
-    const priceDictQ = GetPrices([...pids]);
+
     const blogsQ = Blog.find({
       cube: cube._id,
     })
       .sort('date')
       .lean();
+
     const followersQ = User.find(
       {
         _id: { $in: cube.users_following },
       },
       '_id username image artist users_following',
     ).lean();
-    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
-    const allVersionsLookup = {};
-    for (const card of allVersions) {
-      if (card.tcgplayer_id) {
-        card.details.price = priceDict[card.tcgplayer_id];
-        card.details.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
-      }
-      if (!allVersionsLookup[card.related]) {
-        allVersionsLookup[card.related] = [];
-      }
-      allVersionsLookup[card.related].push(card.details);
-    }
+
+    // calc cube prices
     for (const card of cube.cards) {
-      const withPrice = allVersions.find((pricedCard) => pricedCard.cardID === card.cardID);
-      if (withPrice) {
-        card.details = withPrice.details;
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+    }
+    const pids = new Set();
+    const nameToCard = {};
+    for (const card of cube.cards) {
+      if (!nameToCard[card.details.name]) {
+        const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
+        nameToCard[card.details.name] = allVersionsOfCard.map((id) => carddb.cardFromId(id));
+
+        for (const version of nameToCard[card.details.name]) {
+          if (version.tcgplayer_id) {
+            pids.add(version.tcgplayer_id);
+          }
+        }
+      }
+    }
+    const priceDictQ = GetPrices([...pids]);
+    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
+
+    const cheapestDict = {};
+    for (const card of cube.cards) {
+      if (!cheapestDict[card.details.name]) {
+        for (const version of nameToCard[card.details.name]) {
+          const price = priceDict[version.tcgplayer_id];
+          if (!cheapestDict[version.name] || price < cheapestDict[version.name]) {
+            cheapestDict[version.name] = price;
+          }
+        }
       }
     }
 
@@ -452,21 +452,14 @@ router.get('/overview/:id', async (req, res) => {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
-          priceOwned = card.details.price_foil || card.details.price || 0;
+          priceOwned = priceDict[`${card.details.tcgplayer_id}_foil`] || priceDict[card.details.tcgplayer_id] || 0;
         } else {
-          priceOwned = card.details.price || card.details.price_foil || 0;
+          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
         }
         totalPriceOwned += priceOwned;
       }
 
-      if (allVersionsLookup[card.cardID]) {
-        const allPrices = allVersionsLookup[card.cardID]
-          .reduce((lst, { price, priceFoil }) => lst.concat([price, priceFoil]), [])
-          .filter((p) => p && p > 0.001);
-        if (allPrices.length > 0) {
-          totalPricePurchase += Math.min(...allPrices) || 0;
-        }
-      }
+      totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
     if (blogs) {
@@ -508,7 +501,6 @@ router.get('/overview/:id', async (req, res) => {
       pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
       admin,
     };
-
     return res.render('cube/cube_overview', {
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Overview`,
