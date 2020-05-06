@@ -114,9 +114,7 @@ router.get('/explore', async (req, res) => {
 router.get('/random', async (req, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne()
-    .skip(random)
-    .lean();
+  const cube = await Cube.findOne().skip(random).lean();
   res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
 });
 
