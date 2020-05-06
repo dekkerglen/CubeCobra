@@ -8,10 +8,10 @@ block content
   dl.row
     .accordion#syntax-accordion
       .card
-        #general-syntax.card-header(data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne")
-          button(class="btn btn-link" type="button" )
+        #general-syntax.card-header(data-toggle="collapse" data-target="#collapseGeneral" aria-expanded="true" aria-controls="collapseGeneral")
+          button(class="btn btn-link" type="button")
             h5 General
-        #collapseOne.collapse.show(aria-labelledby="general-syntax" data-parent="#syntax-accordion")
+        #collapseGeneral.collapse.show(aria-labelledby="general-syntax" data-parent="#syntax-accordion")
           p You can combine any number of filters together, using AND, or OR.
           p #[code t:instant or t:sorcery] cards that are either #[code instants] or #[code sorceries].
           p #[code t:instant t:tribal] cards that are both #[code instants] and #[code tribal].
@@ -37,10 +37,10 @@ block content
               td(scope="col") Cards which do not have bob in their names
 
       .card
-        #color-syntax.card-header(data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo")
-          button(class="btn btn-link" type="button" )
+        #color-syntax.card-header(data-toggle="collapse" data-target="#collapseColor" aria-expanded="true" aria-controls="collapseColor")
+          button(class="btn btn-link" type="button")
             h5 Color and Color Identity
-        #collapseTwo.collapse(aria-labelledby="color-syntax" data-parent="#syntax-accordion")
+        #collapseColor.collapse(aria-labelledby="color-syntax" data-parent="#syntax-accordion")
           p You can find cards that are a certain color by using #[code c:] or #[code color:], and cards with a certain color identity by using #[code ci:], #[code id:] or #[code identity:].
           p Operators supported: #[code :], #[code =], #[code <], #[code >], #[code <=], #[code >=].
           p In addition to #[code w], #[code u], #[code b], #[code r], #[code g] and #[code c], you can use color words like #[code white], #[code blue], #[code green], etc.
@@ -66,10 +66,10 @@ block content
               td(scope="col") #[code ci>1] 
               td(scope="col") Cards with more than 1 color in their identity
       .card
-        #card-type-syntax.card-header(data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree")
-          button(class="btn btn-link" type="button" )
+        #card-type-syntax.card-header(data-toggle="collapse" data-target="#collapseCardTypes" aria-expanded="true" aria-controls="collapseCardTypes")
+          button(class="btn btn-link" type="button")
             h5 Card Types
-        #collapseThree.collapse(aria-labelledby="card-type-syntax" data-parent="#syntax-accordion")
+        #collapseCardTypes.collapse(aria-labelledby="card-type-syntax" data-parent="#syntax-accordion")
           p You can search for card types with #[code t:] or #[code type:].
           p Operators supported: #[code :], #[code =].
           p Search for any part of the typeline, i.e. #[code legendary], or #[code human].
@@ -86,10 +86,10 @@ block content
               td(scope="col") #[code t:sha] 
               td(scope="col") Cards that are shamans, or shapeshifters, spellshapers.
       .card
-        #card-text-syntax.card-header(data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour")
-          button(class="btn btn-link" type="button" )
+        #card-text-syntax.card-header(data-toggle="collapse" data-target="#collapseCardTextAndSet" aria-expanded="true" aria-controls="collapseCardTextAndSet")
+          button(class="btn btn-link" type="button")
             h5 Card Text and Set
-        #collapseFour.collapse(aria-labelledby="card-text-syntax" data-parent="#syntax-accordion")
+        #collapseCardTextAndSet.collapse(aria-labelledby="card-text-syntax" data-parent="#syntax-accordion")
           p You can use #[code o:] or #[code oracle:] to search oracle text, and #[code s:] or #[code set:] to search for a specific set code.
           p Operators Supported: #[code :], #[code =].
           p This searches the full oracle text, including reminder text. The set code can be either upper or lower case.
@@ -105,10 +105,10 @@ block content
               td(scope="col") #[code s:war]
               td(scope="col") Cards from War of the Spark.
       .card
-        #mana-cost-syntax.card-header(data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive")
-          button(class="btn btn-link" type="button" )
+        #mana-cost-syntax.card-header(data-toggle="collapse" data-target="#collapseManaCosts" aria-expanded="true" aria-controls="collapseManaCosts")
+          button(class="btn btn-link" type="button")
             h5 Mana Costs
-        #collapseFive.collapse(aria-labelledby="mana-cost-syntax" data-parent="#syntax-accordion")
+        #collapseManaCosts.collapse(aria-labelledby="mana-cost-syntax" data-parent="#syntax-accordion")
           p You can use #[code m:] or #[code mana:] to search for cards with specific mana costs.
           p Operators Supported: #[code :], #[code =].
           p You can use plain numbers and letters for the 5 basic colors, snow, colorless, and x, y, and z costs.
@@ -134,10 +134,10 @@ block content
               td(scope="col") #[code is:phyrexian]
               td(scope="col") Cards with one or more Phyrexian mana symbols.
       .card
-        #cmc-syntax.card-header(data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix")
-          button(class="btn btn-link" type="button" )
+        #cmc-syntax.card-header(data-toggle="collapse" data-target="#collapseCmc" aria-expanded="true" aria-controls="collapseCmc")
+          button(class="btn btn-link" type="button")
             h5 Converted Mana Cost
-        #collapseSix.collapse(aria-labelledby="cmc-syntax" data-parent="#syntax-accordion")
+        #collapseCmc.collapse(aria-labelledby="cmc-syntax" data-parent="#syntax-accordion")
           p You can use #[code cmc:] to search for specific converted mana costs.
           p Operators supported: #[code :], #[code =], #[code <], #[code >], #[code <=], #[code >=].
           p #[strong Examples:]
@@ -149,10 +149,10 @@ block content
               td(scope="col") #[code cmc=3] 
               td(scope="col") Cards with converted mana cost of exactly 3.
       .card
-        #power-toughness-syntax.card-header(data-toggle="collapse" data-target="#collapseSeven" aria-expanded="true" aria-controls="collapseSeven")
-          button(class="btn btn-link" type="button" )
+        #power-toughness-syntax.card-header(data-toggle="collapse" data-target="#collapsePower" aria-expanded="true" aria-controls="collapsePower")
+          button(class="btn btn-link" type="button")
             h5 Power, Toughness, and Loyalty
-        #collapseSeven.collapse(aria-labelledby="power-toughness-syntax" data-parent="#syntax-accordion")
+        #collapsePower.collapse(aria-labelledby="power-toughness-syntax" data-parent="#syntax-accordion")
           p You can use #[code pow:] or #[code power:] to search for cards with certain powers.
           p You can use #[code tou:] or #[code toughness:] to search for cards with certain toughness.
           p You can use #[code loy:] or #[coode loyalty:] to search for cards with certain starting loyalty.
@@ -169,10 +169,10 @@ block content
               td(scope="col") #[code loy:3 or loy:4]
                 td(scope="col") Cards with a starting loyalty of 3 or 4.
       .card
-        #rarity-syntax.card-header(data-toggle="collapse" data-target="#collapseEight" aria-expanded="true" aria-controls="collapseEight")
-          button(class="btn btn-link" type="button" )
+        #rarity-syntax.card-header(data-toggle="collapse" data-target="#collapseRarity" aria-expanded="true" aria-controls="collapseRarity")
+          button(class="btn btn-link" type="button")
             h5 Rarity
-        #collapseEight.collapse(aria-labelledby="rarity-syntax" data-parent="#syntax-accordion")
+        #collapseRarity.collapse(aria-labelledby="rarity-syntax" data-parent="#syntax-accordion")
           p You can use #[code r:] or #[code rarity:] to search for cards with a specific rarity.
           p Operators supported: #[code :], #[code =], #[code <], #[code >], #[code <=], #[code >=].
           p #[strong Examples:]
@@ -188,7 +188,7 @@ block content
               td(scope="col") Common or rare cards.
       .card
         #collapseArtist-syntax.card-header(data-toggle="collapse" data-target="#collapseArtist" aria-expanded="true" aria-controls="collapseArtist")
-          button(class="btn btn-link" type="button" )
+          button(class="btn btn-link" type="button")
             h5 Artist
         #collapseArtist.collapse(aria-labelledby="collapseArtist-syntax" data-parent="#syntax-accordion")
           p You can use #[code a:], #[code art:], or #[code artist:] to search for cards illustrated by a specific artist.
@@ -200,3 +200,14 @@ block content
               tr
                 td(scope="col") #[code a:reb]
                 td(scope="col") All cards illustrated by artists with "reb" in their name.
+      .card
+        #collapseMiscellaneous-syntax.card-header(data-toggle="collapse" data-target="#collapseMiscellaneous" aria-expanded="true" aria-controls="collapseMiscellaneous")
+          button(class="btn btn-link" type="button")
+            h5 Miscellaneous
+        #collapseMiscellaneous.collapse(aria-labelledby="collapseMiscellaneous-syntax" data-parent="#syntax-accordion")
+          p You can use #[code elo:] to filter cards by their ELO rating.
+          p #[strong Examples:]
+            table.table
+              tr
+                td(scope="col") #[code elo>=1500]
+                td(scope="col") All cards with an ELO rating above 1500.
