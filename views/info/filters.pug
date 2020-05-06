@@ -12,30 +12,51 @@ block content
           button(class="btn btn-link" type="button")
             h5 General
         #collapseGeneral.collapse.show(aria-labelledby="general-syntax" data-parent="#syntax-accordion")
-          p You can combine any number of filters together, using AND, or OR.
-          p #[code t:instant or t:sorcery] cards that are either #[code instants] or #[code sorceries].
-          p #[code t:instant t:tribal] cards that are both #[code instants] and #[code tribal].
-          p You can also use quotes to ignore spaces.
-          p #[code goblin blood] cards whose names contain both #[code blood] and #[code goblin].
-          p #[code "goblin blood"] cards whose names contain #[code goblin blood].
-          p #[code o:destroy o:target o:creature] cards whose oracle text contains #[code destroy] and #[code target] and #[code creature].
-          p #[code o:"destroy target creature"] cards whose oracle text contains #[code destroy target creature].
-          p You can also use parentheses.
-          p #[code t:instant OR (t:creature o:flash)] cards which are instants, or cards which are creatures with flash.
-          p #[code (t:artifact t:creature) OR (t:instant OR t:sorcery)] cards which are instants or sorceries, or cards which are artifact creatures.
-          p You can put - before anything to negate it.
+          p You can combine any number of filters together using #[code AND] or #[code OR].
+          p #[strong Examples:]
+          table.table
+            tr
+              td(scope="col") #[code t:instant OR t:sorcery]
+              td(scope="col") Cards that are either instants or sorceries.
+            tr
+              td(scope="col") #[code t:instant t:tribal]
+              td(scope="col") Cards that are both instants and tribal.
+          p You can use quotes to ignore spaces.
+          p #[strong Examples:]
+          table.table
+            tr
+              td(scope="col") #[code goblin blood]
+              td(scope="col") Cards whose names contain both "blood" and "goblin".
+            tr
+              td(scope="col") #[code "goblin blood"]
+              td(scope="col") Cards whose names contain exactly "goblin blood".
+            tr
+              td(scope="col") #[code o:destroy o:target o:creature] 
+              td(scope="col") Cards whose oracle text contains each of "destroy", "target", and "creature".
+            tr
+              td(scope="col") #[code o:"destroy target creature"]
+              td(scope="col") Cards whose oracle text contains exactly "destroy target creature".
+          p You can also use parentheses to combine clauses.
+          p #[strong Examples:]
+          table.table
+            tr
+              td(scope="col") #[code t:instant OR (t:creature o:flash)]
+              td(scope="col") Cards which are instants, or cards which are creatures with flash.
+            tr
+              td(scope="col") #[code (t:artifact t:creature) OR (-t:creature o:create)]
+              td(scope="col") Cards which are artifact creatures, or cards that aren't creatures and have "create" in their oracle text.
+          p You can put #[code -] before anything to negate it.
           p #[strong Examples:]
           table.table
             tr
               td(scope="col") #[code -c:w] 
-              td(scope="col") Cards that are not white
+              td(scope="col") Cards that are not white.
             tr
               td(scope="col") #[code -o:draw] 
-              td(scope="col") Cards which do not have draw in their oracle text
+              td(scope="col") Cards which do not have draw in their oracle text.
             tr
               td(scope="col") #[code -bob] 
-              td(scope="col") Cards which do not have bob in their names
-
+              td(scope="col") Cards which do not have bob in their names.
       .card
         #color-syntax.card-header(data-toggle="collapse" data-target="#collapseColor" aria-expanded="true" aria-controls="collapseColor")
           button(class="btn btn-link" type="button")
@@ -46,25 +67,24 @@ block content
           p In addition to #[code w], #[code u], #[code b], #[code r], #[code g] and #[code c], you can use color words like #[code white], #[code blue], #[code green], etc.
           p You can also use all shard, wedge, or guild names, like #[code azorius], #[code bant], #[code dimir], etc.
           p You can also compare by number of colors by using numbers instead of color names.
-          p Color Identity searches will respect any color identity overrides you have set.
-          p 
-            b Examples:
+          p Color Identity searches will respect any color identity overrides you have set while filtering in your cube.
+          p #[strong Examples:]
           table.table
             tr
-              td(scope="col") #[code c:wubrg] 
-              td(scope="col") Cards that are all 5 colors
+              td(scope="col") #[code c=wubrg] 
+              td(scope="col") Cards that are all 5 colors.
             tr
-              td(scope="col") #[code c < wub] 
-              td(scope="col") Cards that are #[code wu], #[code ub], #[code bw], #[code w], #[code u], or #[code b]
+              td(scope="col") #[code c<esper] 
+              td(scope="col") Cards who colors are a subset of Esper (UB, WB, WU, U, B, or W).
             tr
               td(scope="col") #[code ci:wu] 
-              td(scope="col") Only #[code uw] color identity cards
+              td(scope="col") Cards whose color identities are exactly white blue.
             tr
-              td(scope="col") #[code ci>wu] 
-              td(scope="col") 3+ color cards that contain #[code uw]
+              td(scope="col") #[code ci>azorius]
+              td(scope="col") Cards whose color identities contain white, blue, and at least one other color.
             tr
               td(scope="col") #[code ci>1] 
-              td(scope="col") Cards with more than 1 color in their identity
+              td(scope="col") Cards with more than 1 color in their identity.
       .card
         #card-type-syntax.card-header(data-toggle="collapse" data-target="#collapseCardTypes" aria-expanded="true" aria-controls="collapseCardTypes")
           button(class="btn btn-link" type="button")
@@ -77,7 +97,7 @@ block content
           p #[strong Examples:]
           table.table
             tr
-              td(scope="col") #[code t:legendary] 
+              td(scope="col") #[code type=legendary] 
               td(scope="col") Cards that are legendary.
             tr
               td(scope="col") #[code t:legendary t:creature] 
@@ -97,10 +117,10 @@ block content
           table.table
             tr
               td(scope="col") #[code o:"draw a card"] 
-              td(scope="col") Cards with oracle text draw a card.
+              td(scope="col") Cards whose oracle text contains "draw a card".
             tr
-              td(scope="col") #[code o:"token with Sacrifice"] 
-              td(scope="col") Cards with oracle text #[code token with Sacrifice].
+              td(scope="col") #[code o:":"] 
+              td(scope="col") Cards whose oracle text contains ":" (cards with activated abilities).
             tr
               td(scope="col") #[code s:war]
               td(scope="col") Cards from War of the Spark.
@@ -201,13 +221,36 @@ block content
                 td(scope="col") #[code a:reb]
                 td(scope="col") All cards illustrated by artists with "reb" in their name.
       .card
+        #collapsePrice-syntax.card-header(data-toggle="collapse" data-target="#collapsePrice" aria-expanded="true" aria-controls="collapsePrice")
+          button(class="btn btn-link" type="button")
+            h5 Price
+        #collapsePrice.collapse(aria-labelledby="collapsePrice-syntax" data-parent="#syntax-accordion")
+          p You can use #[code price:] or #[code priceFoil:] to filter cards by price.
+          p #[strong Examples:]
+            table.table
+              tr
+                td(scope="col") #[code price>10.5]
+                td(scope="col") All non-foil cards with a price over $10.50.
+              tr
+                td(scope="col") #[code foilPrice<10 OR price<10]
+                td(scope="col") All cards with a price under $10.
+      .card
         #collapseMiscellaneous-syntax.card-header(data-toggle="collapse" data-target="#collapseMiscellaneous" aria-expanded="true" aria-controls="collapseMiscellaneous")
           button(class="btn btn-link" type="button")
             h5 Miscellaneous
         #collapseMiscellaneous.collapse(aria-labelledby="collapseMiscellaneous-syntax" data-parent="#syntax-accordion")
           p You can use #[code elo:] to filter cards by their ELO rating.
+          p #[strong Filters for individual cubes:]
+          p You can use #[code finish:] to filter by cards with the given finish. Available options are "Non-foil" and "Foil".
+          p You can use #[code status:] to filter by cards with the given status. Available options are "Not Owned", "Ordered", "Owned", "Premium Owned", and "Proxied".
           p #[strong Examples:]
             table.table
               tr
-                td(scope="col") #[code elo>=1500]
+                td(scope="col") #[code elo>1500]
                 td(scope="col") All cards with an ELO rating above 1500.
+              tr
+                td(scope="col") #[code finish:non-foil]
+                td(scope="col") All cards with the non-foil finish selected.
+              tr
+                td(scope="col") #[code status:"Premium Owned"]
+                td(scope="col") All cards marked with the "Premium Owned" status.
