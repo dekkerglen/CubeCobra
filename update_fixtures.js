@@ -15,7 +15,7 @@ const err = 1;
 const success = 0;
 
 // rebuild the fixtures based on the previous subset of cards
-(async function() {
+(async function () {
   const cardJSON = JSON.parse(fs.readFileSync(cardsPath));
   // make id based list
   let cardJSONById = {};
@@ -87,7 +87,7 @@ const fixExampleCube = () => {
   let exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
   let reasonableCards = [];
   carddb.initializeCardDb('private', true).then(() => {
-    exampleCube.cards.forEach(function(card, index) {
+    exampleCube.cards.forEach(function (card, index) {
       let name = carddb.cardFromId(card.cardID).name;
       let reasonable = carddb.getMostReasonable(name);
       if (card.cardID !== reasonable._id) {

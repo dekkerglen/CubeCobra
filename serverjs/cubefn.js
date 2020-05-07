@@ -335,7 +335,7 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
-/* 
+/*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
 */
@@ -546,7 +546,7 @@ const methods = {
     const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.unopenedPacks[0][0],
+      pack: draft.initial_state[0][0],
     };
   },
   generateShortId,

@@ -109,7 +109,7 @@ function cloneIfNecessary(value, optionsArgument) {
 
 function defaultArrayMerge(target, source, optionsArgument) {
   const destination = target.slice();
-  source.forEach(function(e, i) {
+  source.forEach(function (e, i) {
     if (typeof destination[i] === 'undefined') {
       destination[i] = cloneIfNecessary(e, optionsArgument);
     } else if (isMergeableObject(e)) {
@@ -124,11 +124,11 @@ function defaultArrayMerge(target, source, optionsArgument) {
 function mergeObject(target, source, optionsArgument) {
   const destination = {};
   if (isMergeableObject(target)) {
-    Object.keys(target).forEach(function(key) {
+    Object.keys(target).forEach(function (key) {
       destination[key] = cloneIfNecessary(target[key], optionsArgument);
     });
   }
-  Object.keys(source).forEach(function(key) {
+  Object.keys(source).forEach(function (key) {
     if (!isMergeableObject(source[key]) || !target[key]) {
       destination[key] = cloneIfNecessary(source[key], optionsArgument);
     } else {
@@ -160,7 +160,7 @@ deepmerge.all = function deepmergeAll(array, optionsArgument) {
   }
 
   // we are sure there are at least 2 values, so it is safe to have no initial value
-  return array.reduce(function(prev, next) {
+  return array.reduce(function (prev, next) {
     return deepmerge(prev, next, optionsArgument);
   });
 };
