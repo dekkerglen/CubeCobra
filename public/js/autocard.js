@@ -4,12 +4,18 @@ var autocardTimeout = null;
 window.globalTagColors = window.globalTagColors || [];
 window.globalShowTagColors = window.globalShowTagColors !== false;
 
-function getTagColorClass(tag) {
+function getTagColorStyle(tag) {
   const tagColor = window.globalTagColors.find((tagColor) => tag === tagColor.tag);
-  if (window.globalShowTagColors && tagColor && tagColor.color) {
-    return `tag-color tag-${tagColor.color}`;
+  if (tagColor && tagColor.color) {
+    const luma = (
+      (parseInt(tagColor.color.substring(1, 3), 16) * 299) + 
+      (parseInt(tagColor.color.substring(3, 5), 16) * 587) + 
+      (parseInt(tagColor.color.substring(5, 7), 16) * 114)
+    ) / 1000;
+  
+    return "color: " + (luma > 200 ? 'black' : 'white') + ";background-color: " + tagColor.color
   } else {
-    return 'tag-no-color';
+    return ''
   }
 }
 
@@ -126,7 +132,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
   if (tags) {
     let tagsText = '<div class="autocard-tags">';
     tags.forEach(function(tag, index) {
-      tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + '</span>';
+      tagsText += "<span class='tag' style='" + getTagColorStyle(tag.trim()) + "'>" + tag.trim() + '</span>';
     });
     tagsText += '</div>';
     document.getElementById('autocardTags').innerHTML = tagsText;
