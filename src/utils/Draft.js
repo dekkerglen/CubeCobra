@@ -136,7 +136,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.33, 0.15, 0.1];
+const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
 const botRatingAndCombination = (
   card,
   picked,
@@ -157,16 +157,16 @@ const botRatingAndCombination = (
     if (!card || considerFunc(card)) {
       const scaling = COLOR_SCALING_FACTOR[combination.length];
 
-      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 0;
+      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 1;
 
-      let internalSynergy = 0.01;
-      let synergy = 0.01;
+      let internalSynergy = 0.0000001;
+      let synergy = 0.00000001;
       if (synergies) {
         const pickedInCombo = picked.cards.filter(({ index }) => considerFunc(cards[index]));
         let count = 0;
         for (let i = 1; i < pickedInCombo.length; i++) {
           for (let j = 0; j < i; j++) {
-            internalSynergy += synergies[i][j];
+            internalSynergy += similarity(synergies[pickedInCombo[i]], synergies[pickedInCombo[j]]) ** 10;
             count += 1;
           }
         }
@@ -174,16 +174,16 @@ const botRatingAndCombination = (
           internalSynergy /= count;
         }
         if (card) {
-          const similarityExponent = pickedIndices.length / 5;
+          const similarityExponent = pickedIndices.length / 3;
           for (const index of pickedInCombo) {
-            synergy += similarity(synergy[index], synergy[cardIndex]) ** similarityExponent;
+            synergy += similarity(synergies[index], synergies[cardIndex]) ** similarityExponent;
           }
           if (pickedInCombo.length) {
             synergy /= pickedInCombo.length;
           }
         }
       }
-      const synergyWeight = packNum;
+      const synergyWeight = (picked?.cards ?? 9) / 12;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -200,8 +200,10 @@ const botRatingAndCombination = (
       // Roughly the number of cards left that we expect to get from this pack.
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
+      console.log(poolRating, openness, opennessWeight, internalSynergy, synergy, synergyWeight);
       const rating =
-        scaling * poolRating ** 2 * openness ** opennessWeight * internalSynergy * synergy ** synergyWeight;
+        scaling * poolRating ** 3 * openness ** opennessWeight * internalSynergy ** 2 * synergy ** synergyWeight;
+      console.log('rating', rating, 'colors', combination);
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -236,12 +238,51 @@ async function buildDeck(cards, picked, synergies) {
   const outOfColor = nonlands.filter((card) => !considerFunc(card));
 
   inColor.sort(sortFn);
-  outOfColor.sort(sortFn);
+  nonlands = inColor;
+  let side = outOfColor;
+  if (nonlands.length < 23) {
+    outOfColor.sort(sortFn);
+    nonlands.push(...outOfColor.splice(0, 23 - nonlands.length));
+    side = [...outOfColor];
+  }
   lands.sort(sortFn);
-  nonlands = inColor.concat(outOfColor);
+  const chosen = [];
+  const totalSynergy = nonlands.map((card) => {
+    let synergy = 0.0000001;
+    if (synergies) {
+      for (const { index: otherIndex } of nonlands) {
+        if (card.index !== otherIndex) {
+          synergy += similarity(synergies[card.index], synergies[otherIndex]) ** 20;
+        }
+      }
+    }
+    return [(card.rating ? toValue(botCardRating(colors, card)) : 1) * synergy ** 4, card];
+  });
+  totalSynergy.sort((a, b) => b - a);
+  const [[, mostSynergy]] = totalSynergy.splice(0, 1);
+  chosen.push(mostSynergy);
+  let remaining = totalSynergy.map(([, index]) => index);
+  while (remaining.length > 0 && chosen.length < 23) {
+    const nonlandsWithValue = remaining.map(({ index, rating }) => {
+      let synergy = 0.0000001;
+      if (synergies) {
+        for (const { index: otherIndex } of chosen) {
+          if (index !== otherIndex) {
+            synergy += similarity(synergies[index], synergies[otherIndex]) ** 15;
+          }
+        }
+      }
+      return [rating ?? 1 * synergy ** 2, index];
+    });
+    nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
+    const [[, bestValue]] = nonlandsWithValue.splice(0, 1);
+    chosen.push(bestValue);
+    remaining = nonlandsWithValue.map(([, index]) => index);
+  }
 
-  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
-  const side = nonlands.slice(23).concat(lands.slice(17));
+  const main = chosen.concat(lands.slice(0, 17));
+  side.push(...lands.slice(17));
+  side.push(...remaining);
 
   const deck = [];
   const sideboard = [];
@@ -378,7 +419,9 @@ async function pick(cardIndex) {
 
 async function finish() {
   // build bot decks
-  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.picked, draft.synergies));
+  const decksPromise = draft.seats.map((seat) => {
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies);
+  });
   const decks = await Promise.all(decksPromise);
 
   for (let i = 0; i < draft.seats.length; i++) {
@@ -431,4 +474,4 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors, buildDeck, addSeen };
