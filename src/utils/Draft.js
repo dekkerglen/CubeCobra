@@ -168,7 +168,7 @@ const botRatingAndCombination = (
     if (!card || considerFunc(card)) {
       const scaling = COLOR_SCALING_FACTOR[combination.length];
 
-      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 0;
+      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 1;
 
       let internalSynergy = 0.01;
       let synergy = 0.01;
@@ -285,21 +285,48 @@ function getSortFn(bot, draftCards) {
 }
 
 async function buildDeck(cardIndices, picked, draftCards, synergies) {
-  let nonlands = cardIndices.filter((cardIndex) => !draftCards[cardIndex].details.type.toLowerCase().includes('land'));
-  const lands = cardIndices.filter((cardIndex) => draftCards[cardIndex].details.type.toLowerCase().includes('land'));
-
   const colors = botColors(draftCards, null, picked, cardIndices, null, synergies);
+  const considerFunc = considerInCombination(colors);
+
+  let nonlands = cardIndices.filter((cardIndex) => !draftCards[cardIndex].details.type.toLowerCase().includes('land'));
+  const lands = cardIndices.filter((cardIndex) => {
+    const card = draftCards[cardIndex];
+    return card.details.type.toLowerCase().includes('land') && considerFunc(card);
+  });
+
   const sortFn = getSortFn(colors, draftCards);
-  const inColor = nonlands.filter((cardIndex) => considerInCombination(colors)(draftCards[cardIndex]));
-  const outOfColor = nonlands.filter((cardIndex) => !considerInCombination(colors)(draftCards[cardIndex]));
+  const inColor = nonlands.filter((cardIndex) => considerFunc(draftCards[cardIndex]));
+  const outOfColor = nonlands.filter((cardIndex) => !considerFunc(draftCards[cardIndex]));
 
   inColor.sort(sortFn);
-  outOfColor.sort(sortFn);
+  nonlands = inColor;
+  let side = outOfColor;
+  if (nonlands.length < 23) {
+    outOfColor.sort(sortFn);
+    nonlands.push(...outOfColor);
+    side = [];
+  }
   lands.sort(sortFn);
-  nonlands = inColor.concat(outOfColor);
+  while (nonlands.length > 23) {
+    const curNonlands = nonlands;
+    const nonlandsWithValue = nonlands.map((cardIndex) => {
+      let synergy = 0.01;
+      if (synergies) {
+        for (const otherIndex of curNonlands) {
+          if (cardIndex !== otherIndex) {
+            synergy += similarity(synergies[cardIndex], synergies[otherIndex]);
+          }
+        }
+      }
+      return [(draftCards[cardIndex].rating ?? 1) * synergy, cardIndex];
+    });
+    nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
+    side.push(nonlandsWithValue[nonlands.length - 1][1]);
+    nonlands = nonlandsWithValue.slice(0, nonlands.length - 1).map(([, index]) => index);
+  }
 
-  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
-  const side = nonlands.slice(23).concat(lands.slice(17));
+  const main = nonlands.concat(lands.slice(0, 17));
+  side.push(...lands.slice(17));
 
   const deck = [];
   const sideboard = [];
