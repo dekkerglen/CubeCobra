@@ -21,7 +21,7 @@ block content
             tr
               td(scope="col") #[code t:instant t:tribal]
               td(scope="col") Cards that are both instants and tribal.
-          p You can use quotes to ignore spaces.
+          p You can use quotes to require an exact match. To match names in quotes, you must use the #[code name:] operator.
           p #[strong Examples:]
           table.table
             tr
@@ -55,8 +55,8 @@ block content
               td(scope="col") #[code -o:draw] 
               td(scope="col") Cards which do not have draw in their oracle text.
             tr
-              td(scope="col") #[code -bob] 
-              td(scope="col") Cards which do not have bob in their names.
+              td(scope="col") #[code -t:creature] 
+              td(scope="col") Cards which are not creatures.
       .card
         #color-syntax.card-header(data-toggle="collapse" data-target="#collapseColor" aria-expanded="true" aria-controls="collapseColor")
           button(class="btn btn-link" type="button")
@@ -225,14 +225,14 @@ block content
           button(class="btn btn-link" type="button")
             h5 Price
         #collapsePrice.collapse(aria-labelledby="collapsePrice-syntax" data-parent="#syntax-accordion")
-          p You can use #[code price:], #[code priceNormal:], or #[code priceFoil:] to filter cards by price.
+          p You can use #[code price:], #[code priceNormal:], or #[code priceFoil:] to filter cards by price. When filtering in individual cubes, #[code price:] uses the printing specified for the cube.
           p #[strong Examples:]
             table.table
               tr
                 td(scope="col") #[code price>10.5]
                 td(scope="col") All cards in a cube whose specified printing has a price over $10.50.
               tr
-                td(scope="col") #[code priceFoil<10 OR price<10]
+                td(scope="col") #[code priceFoil<10 OR priceNormal<10]
                 td(scope="col") All cards with a price under $10.
       .card
         #collapseMiscellaneous-syntax.card-header(data-toggle="collapse" data-target="#collapseMiscellaneous" aria-expanded="true" aria-controls="collapseMiscellaneous")
