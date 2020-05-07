@@ -46,6 +46,7 @@
     "canvas": "^2.6.1",
     "chart.js": "^2.9.2",
     "cheerio": "^1.0.0-rc.3",
+    "compute-cosine-similarity": "^1.0.0",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.2.0",
     "core-js": "^3.6.3",
