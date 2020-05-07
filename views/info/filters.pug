@@ -12,7 +12,7 @@ block content
           button(class="btn btn-link" type="button")
             h5 General
         #collapseGeneral.collapse.show(aria-labelledby="general-syntax" data-parent="#syntax-accordion")
-          p You can combine any number of filters together using #[code AND] or #[code OR].
+          p You can combine any number of filters together using #[code AND] or #[code OR]. Operators are case-insensitive, as are all filtering conditions. So #[code TYPE:instant and o:DESTROY] will work just as well.
           p #[strong Examples:]
           table.table
             tr
@@ -28,7 +28,7 @@ block content
               td(scope="col") #[code goblin blood]
               td(scope="col") Cards whose names contain both "blood" and "goblin".
             tr
-              td(scope="col") #[code "goblin blood"]
+              td(scope="col") #[code name:"goblin blood"]
               td(scope="col") Cards whose names contain exactly "goblin blood".
             tr
               td(scope="col") #[code o:destroy o:target o:creature] 
@@ -75,7 +75,7 @@ block content
               td(scope="col") Cards that are all 5 colors.
             tr
               td(scope="col") #[code c<esper] 
-              td(scope="col") Cards who colors are a subset of Esper (UB, WB, WU, U, B, or W).
+              td(scope="col") Cards who colors are a subset of Esper (UB, WB, WU, U, B, W, or colorless).
             tr
               td(scope="col") #[code ci:wu] 
               td(scope="col") Cards whose color identities are exactly white blue.
@@ -225,12 +225,12 @@ block content
           button(class="btn btn-link" type="button")
             h5 Price
         #collapsePrice.collapse(aria-labelledby="collapsePrice-syntax" data-parent="#syntax-accordion")
-          p You can use #[code price:] or #[code priceFoil:] to filter cards by price.
+          p You can use #[code price:], #[code priceNormal:], or #[code priceFoil:] to filter cards by price.
           p #[strong Examples:]
             table.table
               tr
                 td(scope="col") #[code price>10.5]
-                td(scope="col") All non-foil cards with a price over $10.50.
+                td(scope="col") All cards in a cube whose specified printing has a price over $10.50.
               tr
                 td(scope="col") #[code priceFoil<10 OR price<10]
                 td(scope="col") All cards with a price under $10.
