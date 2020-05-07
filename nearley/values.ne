@@ -40,9 +40,9 @@ finishValue -> ("Foil"i | "Non-Foil"i) {% ([[finish]]) => finish.toLowerCase() %
 
 statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-statusValue -> ("owned"i | "proxied"i) {% ([[status]]) => status.toLowerCase() %} 
-  | "'" ("owned"i | "proxied"i | "not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
-  | "\"" ("owned"i | "proxied"i | "not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
+statusValue -> ("owned"i | "proxied"i | "ordered"i) {% ([[status]]) => status.toLowerCase() %} 
+  | "'" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
+  | "\"" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
 
 rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op, value) %}
 
@@ -137,7 +137,7 @@ stringContainOpValue -> equalityOperator stringValue {% ([op, value]) => stringC
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
 # anything that isn't a special character and isn't "and" or "or"
-noQuoteStringValue -> ([^aAoO \t\n"'\\=<>:] 
+noQuoteStringValue -> ([^aAoO\- \t\n"'\\=<>:] 
   | "a"i [^nN \t\n"'\\=<>:] 
   | "an"i:+ [^dD \t\n"'\\=<>:] 
   | "and"i:+ [^ \t\n"'\\=<>:] 
