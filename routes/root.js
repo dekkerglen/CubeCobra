@@ -114,7 +114,7 @@ router.get('/explore', async (req, res) => {
 router.get('/random', async (req, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne().skip(random);
+  const cube = await Cube.findOne().skip(random).lean();
   res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
 });
 
@@ -130,9 +130,11 @@ router.get('/dashboard', async (req, res) => {
         owner: user._id,
       },
       CUBE_PREVIEW_FIELDS,
-    ).sort({
-      date_updated: -1,
-    });
+    )
+      .lean()
+      .sort({
+        date_updated: -1,
+      });
     const postsq = Blog.find({
       $or: [
         {
@@ -207,6 +209,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
     const cubes = await Cube.find({
       owner: user._id,
     })
+      .lean()
       .sort({
         date_updated: -1,
       })
@@ -346,10 +349,10 @@ router.get('/search/:query/:page', async (req, res) => {
   const count = await Cube.count(query);
 
   const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
+    .lean()
     .sort(sort)
     .skip(perPage * page)
-    .limit(perPage)
-    .lean();
+    .limit(perPage);
 
   const reactProps = {
     query: req.params.query,
