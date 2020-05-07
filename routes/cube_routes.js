@@ -2022,9 +2022,7 @@ router.post(
       });
       if (response.ok) {
         draft.synergies = await response.json();
-        console.warn(draft.synergies);
       } else {
-        console.warn(response);
         draft.synergies = null;
       }
 
