@@ -1,5 +1,5 @@
-import React, { Component, useState, useCallback, useRef } from 'react';
-import { TwitterPicker, ChromePicker } from 'react-color';
+import React, { useState } from 'react';
+import { TwitterPicker } from 'react-color';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import {
