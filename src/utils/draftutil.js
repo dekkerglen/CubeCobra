@@ -44,10 +44,10 @@ function compileFilter(filterText) {
 export function parseDraftFormat(packsJSON, splitter = ',') {
   const format = JSON.parse(packsJSON);
   for (let j = 0; j < format.length; j++) {
-    for (let k = 0; k < format[j].length; k++) {
-      format[j][k] = format[j][k].split(splitter);
-      for (let m = 0; m < format[j][k].length; m++) {
-        format[j][k][m] = compileFilter(format[j][k][m].trim());
+    for (let k = 0; k < format[j].filters.length; k++) {
+      format[j].filters[k] = format[j].filters[k].split(splitter);
+      for (let m = 0; m < format[j].filters[k].length; m++) {
+        format[j].filters[k][m] = compileFilter(format[j].filters[k][m].trim());
       }
     }
   }
@@ -206,9 +206,9 @@ export function getDraftFormat(params, cube) {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = [];
+      format[pack] = { trash: 0, filters: [] };
       for (let card = 0; card < params.cards; card++) {
-        format[pack].push('*'); // any card
+        format[pack].filters.push('*'); // any card
       }
     }
   }
@@ -226,8 +226,8 @@ function createPacks(draft, format, seats, nextCardFn) {
     for (let packNum = 0; packNum < format.length; packNum++) {
       draft.initial_state[seat].push([]);
       let pack = [];
-      for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
-        const result = nextCardFn(format[packNum][cardNum]);
+      for (let cardNum = 0; cardNum < format[packNum].filters.length; cardNum++) {
+        const result = nextCardFn(format[packNum].filters[cardNum]);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
@@ -237,7 +237,8 @@ function createPacks(draft, format, seats, nextCardFn) {
           ok = false;
         }
       }
-      draft.initial_state[seat][packNum] = pack;
+      draft.initial_state[seat][packNum].trash = format[packNum].trash;
+      draft.initial_state[seat][packNum].cards = pack;
     }
   }
   return { ok, messages };
@@ -277,20 +278,17 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
   draft.unopenedPacks = [];
   draft.cards = [];
 
-  let index = 0;
   // deep clone packs
   for (let i = 0; i < draft.initial_state.length; i++) {
     draft.unopenedPacks.push([]);
     for (let j = 0; j < draft.initial_state[i].length; j++) {
-      draft.unopenedPacks[i].push([]);
-      for (let k = 0; k < draft.initial_state[i][j].length; k++) {
-        draft.initial_state[i][j][k].index = index;
-        index += 1;
-        const card = { ...draft.initial_state[i][j][k], index: draft.cards.length };
+      draft.unopenedPacks[i].push({ cards: [], trash: draft.initial_state[i][j].trash });
+      for (let k = 0; k < draft.initial_state[i][j].cards.length; k++) {
+        const card = { ...draft.initial_state[i][j].cards[k], index: draft.cards.length };
         delete card.details;
         draft.cards.push(card);
-        draft.unopenedPacks[i][j].push(card.index);
-        draft.initial_state[i][j][k] = card.index;
+        draft.unopenedPacks[i][j].cards.push(card.index);
+        draft.initial_state[i][j].cards[k] = card.index;
       }
     }
   }

@@ -84,7 +84,9 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
 DecksPickBreakdown.propTypes = {
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
+    initial_state: PropTypes.arrayOf(
+      PropTypes.arrayOf(PropTypes.shape({ cards: PropTypes.array, trash: PropTypes.number })),
+    ).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   deck: PropTypes.shape({

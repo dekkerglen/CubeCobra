@@ -3161,7 +3161,7 @@ router.get('/redraft/:id', async (req, res) => {
     const names = [];
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
-        for (const card of pack) {
+        for (const card of pack.cards) {
           names.push(carddb.cardFromId(card.cardID).name);
         }
       }
@@ -3223,8 +3223,8 @@ router.post('/api/redraft/:id', async (req, res) => {
     for (const card of draft.cards) {
       card.details = carddb.cardFromId(card.cardID);
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    for (const card of Object.values(draft.basics)) {
+      card.details = carddb.cardFromId(card.cardID);
     }
     return res.status(200).send({
       success: 'true',
@@ -3322,6 +3322,9 @@ router.get('/deck/:id', async (req, res) => {
         for (const card of draft.cards) {
           card.details = carddb.cardFromId(card.cardID);
         }
+      }
+      for (const card of draft.cards) {
+        card.details = carddb.cardFromId(card.cardID);
       }
     }
 

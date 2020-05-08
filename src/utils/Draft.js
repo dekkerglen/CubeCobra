@@ -99,15 +99,18 @@ function cube() {
 }
 
 function pack() {
-  return (draft.seats[0].packbacklog[0] || []).map((cardIndex) => draft.cards[cardIndex]);
+  return (draft.seats[0].packbacklog[0] || { trash: 0, cards: [] }).cards.map((cardIndex) => draft.cards[cardIndex]);
 }
 
 function packPickNumber() {
   let picks = draft.seats[draft.seats.length - 1].pickorder.length;
   let packnum = 0;
 
-  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
-    picks -= draft.initial_state[0][packnum].length;
+  while (
+    draft.initial_state[0][packnum] &&
+    picks >= draft.initial_state[0][packnum].cards.length - draft.initial_state[0][packnum].trash
+  ) {
+    picks -= draft.initial_state[0][packnum].cards.length - draft.initial_state[0][packnum].trash;
     packnum += 1;
   }
 
@@ -456,7 +459,7 @@ function botPicks() {
 function passPack() {
   botPicks();
   // check if pack is done
-  if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
+  if (draft.seats.every((seat) => seat.packbacklog[0].cards.length <= seat.packbacklog[0].trash)) {
     // splice the first pack out
     for (const seat of draft.seats) {
       seat.packbacklog.splice(0, 1);
@@ -498,7 +501,7 @@ function sleep(ms) {
 
 async function pick(cardIndex) {
   await sleep(0);
-  const ci = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
+  const ci = draft.seats[0].packbacklog[0].cards.splice(cardIndex, 1)[0];
   const card = draft.cards[ci];
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(ci);
@@ -510,7 +513,7 @@ async function pick(cardIndex) {
       draft_id: draft._id,
       pick: card.details.name,
       packNum,
-      pack: packFrom.map((c) => draft.cards[c].details.name),
+      pack: packFrom.cards.map((c) => draft.cards[c].details.name),
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -566,7 +569,7 @@ export async function allBotsDraft(noFinish) {
   for (const seat of draft.seats) {
     seat.bot = [];
   }
-  while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].length > 0) {
+  while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].cards.length > 0) {
     passPack();
   }
   if (!noFinish) {

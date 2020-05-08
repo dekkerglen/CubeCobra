@@ -35,18 +35,18 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   const cardsInPack = [];
 
   let start = 0;
-  let end = initialState[0][0].length;
+  let end = initialState[0][0].cards.length;
   let pack = 0;
   let current = parseInt(seatIndex, 10);
   let picks = parseInt(index, 10);
 
-  while (picks >= initialState[0][pack].length) {
+  while (picks >= initialState[0][pack].cards.length - initialState[0][pack].trash) {
     start = end;
-    end += initialState[0][pack].length;
-    picks -= initialState[0][pack].length;
+    end += initialState[0][pack].cards.length - initialState[0][pack].trash;
+    picks -= initialState[0][pack].cards.length - initialState[0][pack].trash;
     pack += 1;
   }
-
+  console.log(start, picks, end);
   for (let i = start + picks; i < end; i += 1) {
     cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
     if (pack % 2 !== initialState[0].length % 2) {
@@ -66,8 +66,9 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   let ind = 0;
   let added = 0;
   for (const list of initialState[0]) {
-    picksList.push(seat.pickorder.slice(added, added + list.length).map((ci) => ({ ...deck.cards[ci] })));
-    added += list.length;
+    const newAdded = added + list.cards.length;
+    picksList.push(seat.pickorder.slice(added, newAdded).map((ci) => ({ ...deck.cards[ci] })));
+    added = newAdded;
   }
   for (const list of picksList) {
     for (const card of list) {

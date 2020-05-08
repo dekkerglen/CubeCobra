@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useRef, useState } from 'react';
+import React, { useContext, useCallback, useRef } from 'react';
 
 import {
   Button,
@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   Col,
+  Form,
   FormGroup,
   FormText,
   Input,
@@ -30,6 +31,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
+  const defaultPack = { filters: [''], trash: 0 };
 
   const handleChangeDescription = useCallback((event) => {
     setFormat((format) => ({
@@ -42,8 +44,9 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     const index = parseInt(event.currentTarget.getAttribute('data-index'));
     setFormat((format) => {
       const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs[index] = [...newFormat.packs[index], ''];
+      newFormat.packs = [...(newFormat.packs ?? [{ ...defaultPack }])];
+      newFormat.packs[index] = { ...newFormat.packs[index] };
+      newFormat.packs[index].filters = [...newFormat.packs[index].filters, ''];
       return newFormat;
     });
   }, []);
@@ -54,27 +57,30 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       // don't remove the last card from a pack
       if (format.packs[packIndex].length <= 1) return format;
       const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
-      newFormat.packs[packIndex].splice(index, 1);
+      newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
+      newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
+      newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
+      newFormat.packs[packIndex].filters.splice(index, 1);
       return newFormat;
     });
   }, []);
   const handleChangeCard = useCallback(() => {
     const packIndex = parseInt(event.target.getAttribute('data-pack'));
     const index = parseInt(event.target.getAttribute('data-index'));
+    const value = event.target.value;
     setFormat((format) => {
       const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
-      newFormat.packs[packIndex][index] = event.target.value;
+      newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
+      newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
+      newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
+      newFormat.packs[packIndex].filters[index] = value;
       return newFormat;
     });
   }, []);
   const handleAddPack = useCallback(() => {
     setFormat(({ packs, ...format }) => ({
       ...format,
-      packs: [...(packs || [['']]), ['']],
+      packs: [...(packs || [{ ...defaultPack }]), { ...defaultPack }],
     }));
   }, []);
   const handleDuplicatePack = useCallback((event) => {
@@ -93,8 +99,17 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
     }));
   }, []);
+  const handleChangeTrash = useCallback((event) => {
+    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+    const value = parseInt(event.target.value, 10);
+    setFormat(({ ...format }) => {
+      format.packs = [...(format.packs || [{ ...defaultPack }])];
+      format.packs[packIndex].trash = Number.isInteger(value) ? value : 0;
+      return format;
+    });
+  });
 
-  const packs = format.packs || [['']];
+  const packs = format.packs || [{ ...defaultPack }];
   const description = format.html || '';
 
   return (
@@ -142,7 +157,23 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                {pack.map((card, cardIndex) => (
+                <Form inline className="mb-3">
+                  <Label>
+                    Discard last
+                    <Input
+                      type="number"
+                      size="sm"
+                      className="mr-2 ml-2"
+                      value={pack.trash}
+                      min={0}
+                      max={pack.filters.length - 1}
+                      onChange={handleChangeTrash}
+                      data-index={index}
+                    />
+                    cards left in the pack during drafting.
+                  </Label>
+                </Form>
+                {pack.filters.map((card, cardIndex) => (
                   <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex + 1}</InputGroupText>

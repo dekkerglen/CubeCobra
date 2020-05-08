@@ -402,8 +402,6 @@ const calculateRating = (
 
 // inPack is the number of cards in this pack
 export const botRatingAndCombination = (cards, card, picked, seen, initialState, inPack = 1, packNum = 1) => {
-  // Find the color combination that gives us the highest score1
-  // that'll be the color combination we want to play currently.
   const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
   const weightedRatingScore = card ? getRating(card, cards) * getRatingWeight(packNum, pickNum, initialState) : 0;
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };

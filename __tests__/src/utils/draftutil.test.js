@@ -72,31 +72,31 @@ describe('getDraftFormat', () => {
         }
         expectedFormat.push([filterText]);
       });
-      return expectedFormat;
+      return { trash: 0, filters: expectedFormat };
     };
 
     describe.each([
       [
         'example filters - 1 pack, 1 card',
-        '[["rarity:Mythic,tag:New,identity>1"]]', // filter JSON
+        '[{ trash: 0, filters: ["rarity:Mythic,tag:New,identity>1"] }]', // filter JSON
         false, // multiples
         [[expectedFilters('rarity:Mythic', 'tag:New', 'identity>1')]],
       ],
       [
         'example filters - 1 pack, 2 cards, allow multiples',
-        '[["rarity:Mythic,tag:New,identity>1", "tag:mytag"]]', // filter JSON
+        '[{ trash: 0, filters: ["rarity:Mythic,tag:New,identity>1", "tag:mytag"] }]', // filter JSON
         true, // multiples
         [[expectedFilters('rarity:Mythic', 'tag:New', 'identity>1'), expectedFilters('tag:mytag')]],
       ],
       [
         'backwards compatible tags',
-        '[["mytag,*,*"]]', // filter JSON
+        '[{ trash: 0, filters: { ["mytag,*,*"] }]', // filter JSON
         false, // multiples
         [[expectedFilters('tag:mytag', null, null)]],
       ],
       [
         'mixed filters and tags with multiple packs with different card counts',
-        '[["rarity:Mythic,mytag"],["*"],["rarity:mythic,rarity:common","*"]]', // filter JSON
+        '[{ trash: 0, filters: ["rarity:Mythic,mytag"] }, { trash: 0, filters: ["*"] }, { trash: 0, filters: ["rarity:mythic,rarity:common","*"] }]', // filter JSON
         false, // multiples
         [
           [expectedFilters('rarity:Mythic', 'tag:mytag')], // pack 1
@@ -221,7 +221,8 @@ describe('createDraft', () => {
       bots = ['mockbot'];
       seats = 8;
       // cube only contains 65 cards, so 8 * 2 * 5 = 80, should run out if multiples = false
-      exampleCube.draft_formats[0].packs = '[["*","*","*","*","*"],["*","*","*","*","*"]]';
+      exampleCube.draft_formats[0].packs =
+        '[{ trash: 0, filters: ["*","*","*","*","*"] },{ trash: 0, filters: ["*","*","*","*","*"] }]';
       format = getDraftFormat({ id: 0 }, exampleCube);
       expect(() => {
         createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
@@ -233,7 +234,8 @@ describe('createDraft', () => {
       bots = ['mockbot'];
       seats = 6;
       // cube only contains 65 cards, so 6 * 5 = 30 > 13 blue cards, should run out if multiples = false
-      exampleCube.draft_formats[0].packs = '[["c>=u","c>=u","c:u","c:u","c:u"],["*"]]';
+      exampleCube.draft_formats[0].packs =
+        '[{ "trash": 0, "filters": ["c>=u","c>=u","c:u","c:u","c:u"] },{ "trash": 0, "filters": ["*"] }]';
       format = getDraftFormat({ id: 0 }, exampleCube);
       format.multiples = true;
       expect(() => {
