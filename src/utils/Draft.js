@@ -144,7 +144,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.55, 0.25, 0.1, 0.07];
+const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
 const botRatingAndCombination = (
   cards,
   cardIndex,
@@ -185,7 +185,7 @@ const botRatingAndCombination = (
           internalSynergy /= count;
         }
         if (card) {
-          const similarityExponent = pickedIndices.length / 4;
+          const similarityExponent = pickedIndices.length / 3;
           for (const index of pickedInCombo) {
             synergy += similarity(synergies[index], synergies[cardIndex]) ** similarityExponent;
           }
@@ -194,7 +194,7 @@ const botRatingAndCombination = (
           }
         }
       }
-      const synergyWeight = packNum;
+      const synergyWeight = picked.cards / 9;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -212,7 +212,7 @@ const botRatingAndCombination = (
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
       const rating =
-        scaling * poolRating ** 2 * openness ** opennessWeight * internalSynergy * synergy ** synergyWeight;
+        scaling * poolRating ** 2 * openness ** opennessWeight * internalSynergy ** 3 * synergy ** synergyWeight;
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -303,30 +303,48 @@ async function buildDeck(cardIndices, picked, draftCards, synergies) {
   let side = outOfColor;
   if (nonlands.length < 23) {
     outOfColor.sort(sortFn);
-    nonlands.push(...outOfColor);
-    side = [];
+    nonlands.push(...outOfColor.splice(0, 23 - nonlands.length));
+    side = [...outOfColor];
   }
   lands.sort(sortFn);
-  while (nonlands.length > 23) {
-    const curNonlands = nonlands;
-    const nonlandsWithValue = nonlands.map((cardIndex) => {
-      let synergy = 0.0000001;
-      if (synergies) {
-        for (const otherIndex of curNonlands) {
-          if (cardIndex !== otherIndex) {
-            synergy += similarity(synergies[cardIndex], synergies[otherIndex]) ** 15;
-          }
+  const chosen = [];
+  const totalSynergy = nonlands.map((cardIndex) => {
+    let synergy = 0.0000001;
+    if (synergies) {
+      for (const otherIndex of nonlands) {
+        if (cardIndex !== otherIndex) {
+          synergy += similarity(synergies[cardIndex], synergies[otherIndex]) ** 20;
         }
       }
-      return [(draftCards[cardIndex].rating ?? 1) * synergy, cardIndex];
+    }
+    return [
+      (draftCards[cardIndex].rating ? toValue(botCardRating(colors, draftCards[cardIndex])) : 1) * synergy ** 4,
+      cardIndex,
+    ];
+  });
+  totalSynergy.sort((a, b) => b - a);
+  const [[, mostSynergy]] = totalSynergy.splice(0, 1);
+  chosen.push(mostSynergy);
+  let remaining = totalSynergy.map(([, index]) => index);
+  while (remaining.length > 0 && chosen.length < 23) {
+    const nonlandsWithValue = remaining.map((cardIndex) => {
+      let synergy = 0.0000001;
+      if (synergies) {
+        for (const otherIndex of chosen) {
+          synergy += similarity(synergies[cardIndex], synergies[otherIndex]) ** 15;
+        }
+      }
+      return [(draftCards[cardIndex].rating ?? 1) * synergy ** 2, cardIndex];
     });
     nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
-    side.push(nonlandsWithValue[nonlands.length - 1][1]);
-    nonlands = nonlandsWithValue.slice(0, nonlands.length - 1).map(([, index]) => index);
+    const [[, bestValue]] = nonlandsWithValue.splice(0, 1);
+    chosen.push(bestValue);
+    remaining = nonlandsWithValue.map(([, index]) => index);
   }
 
-  const main = nonlands.concat(lands.slice(0, 17));
+  const main = chosen.concat(lands.slice(0, 17));
   side.push(...lands.slice(17));
+  side.push(...remaining);
 
   const deck = [];
   const sideboard = [];
@@ -339,7 +357,7 @@ async function buildDeck(cardIndices, picked, draftCards, synergies) {
 
   for (const cardIndex of main) {
     const card = draftCards[cardIndex];
-    let index = Math.min(card.cmc ?? 0, 7);
+    let index = Math.min(cardCmc(card) ?? 0, 7);
     if (!card.details.type.toLowerCase().includes('creature')) {
       index += 8;
     }
