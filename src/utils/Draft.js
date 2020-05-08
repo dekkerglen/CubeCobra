@@ -471,7 +471,7 @@ async function pick(cardIndex) {
 async function finish() {
   // build bot decks
   const decksPromise = draft.seats.map((seat) => {
-    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.cards);
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.cards, draft.synergies);
   });
   const decks = await Promise.all(decksPromise);
   const { cards } = draft;
