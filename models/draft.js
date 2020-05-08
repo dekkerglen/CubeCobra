@@ -1,6 +1,15 @@
 let mongoose = require('mongoose');
 let cardSchema = require('./cardSchema');
 
+// Details on each pack, how to draft and what's in it.
+const Pack = {
+  trash: {
+    type: Number,
+    default: 0,
+  },
+  cards: [Number],
+};
+
 //data for each seat, human or bot
 const Seat = {
   bot: [String], //null bot value means human player
@@ -9,15 +18,15 @@ const Seat = {
   drafted: [[Number]], //organized draft picks
   sideboard: [[Number]], //organized draft picks
   pickorder: [Number],
-  packbacklog: [[Number]],
+  packbacklog: [Pack],
 };
 
 // Cube schema
 let draftSchema = mongoose.Schema({
   cube: String,
-  initial_state: [[[Number]]],
+  initial_state: [[Pack]],
   seats: [Seat],
-  unopenedPacks: [[[Number]]],
+  unopenedPacks: [[Pack]],
   cards: [cardSchema],
   synergies: [[Number]],
 });

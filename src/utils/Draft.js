@@ -93,7 +93,7 @@ function init(newDraft) {
     seat.seen.cards = 0;
     addSeen(
       seat.seen,
-      seat.packbacklog[0].map((cardIndex) => cards[cardIndex]),
+      seat.packbacklog[0].cards.map((cardIndex) => cards[cardIndex]),
     );
     seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     seat.picked.cards = 0;
@@ -102,7 +102,11 @@ function init(newDraft) {
   draft.overallPool.cards = 0;
   addSeen(
     draft.overallPool,
-    draft.unopenedPacks.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+    draft.unopenedPacks
+      .flat()
+      .map((p) => p.cards)
+      .flat()
+      .map((cardIndex) => draft.cards[cardIndex]),
   );
 }
 
@@ -115,15 +119,18 @@ function cube() {
 }
 
 function pack() {
-  return (draft.seats[0].packbacklog[0] || []).map((cardIndex) => draft.cards[cardIndex]);
+  return (draft.seats[0].packbacklog[0] || { trash: 0, cards: [] }).cards.map((cardIndex) => draft.cards[cardIndex]);
 }
 
 function packPickNumber() {
   let picks = draft.seats[0].pickorder.length;
   let packnum = 0;
 
-  while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
-    picks -= draft.initial_state[0][packnum].length;
+  while (
+    draft.initial_state[0][packnum] &&
+    picks >= draft.initial_state[0][packnum].cards.length - draft.initial_state[0][packnum].trash
+  ) {
+    picks -= draft.initial_state[0][packnum].cards.length - draft.initial_state[0][packnum].trash;
     packnum += 1;
   }
 
@@ -387,11 +394,11 @@ function botPicks() {
     let ratedPicks = [];
     const unratedPicks = [];
     const seats = draft.seats.length;
-    const inPack = packFrom.length;
+    const inPack = packFrom.cards.length;
     const [packNum] = packPickNumber();
     const numPacks = initial_state[0].length;
-    for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-      if (cards[packFrom[cardIndex]].rating) {
+    for (let cardIndex = 0; cardIndex < inPack; cardIndex++) {
+      if (cards[packFrom.cards[cardIndex]].rating) {
         ratedPicks.push(cardIndex);
       } else {
         unratedPicks.push(cardIndex);
@@ -401,7 +408,7 @@ function botPicks() {
       .map((cardIndex) => [
         botRating(
           cards,
-          packFrom[cardIndex],
+          packFrom.cards[cardIndex],
           picked,
           pickorder,
           seen,
@@ -419,7 +426,7 @@ function botPicks() {
     arrayShuffle(unratedPicks);
 
     const pickOrder = ratedPicks.concat(unratedPicks);
-    const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+    const pickedCard = draft.seats[botIndex].packbacklog[0].cards.splice(pickOrder[0], 1)[0];
     draft.seats[botIndex].pickorder.push(pickedCard);
     addSeen(picked, [cards[pickedCard]]);
   }
@@ -428,7 +435,7 @@ function botPicks() {
 function passPack() {
   botPicks();
   // check if pack is done
-  if (draft.seats.every((seat) => seat.packbacklog[0].length === 0)) {
+  if (draft.seats.every((seat) => seat.packbacklog[0].cards.length <= seat.packbacklog[0].trash)) {
     // splice the first pack out
     for (const seat of draft.seats) {
       seat.packbacklog.splice(0, 1);
@@ -461,14 +468,14 @@ function passPack() {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
       addSeen(
         seat.seen,
-        seat.packbacklog[0].map((cardIndex) => cards[cardIndex]),
+        seat.packbacklog[0].cards.map((cardIndex) => cards[cardIndex]),
       );
     }
   }
 }
 
 async function pick(cardIndex) {
-  const ci = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
+  const ci = draft.seats[0].packbacklog[0].cards.splice(cardIndex, 1)[0];
   const card = draft.cards[ci];
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(ci);
@@ -478,7 +485,7 @@ async function pick(cardIndex) {
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
-      pack: packFrom.map((c) => draft.cards[c].details.name),
+      pack: packFrom.cards.map((c) => draft.cards[c].details.name),
     }),
     headers: {
       'Content-Type': 'application/json',

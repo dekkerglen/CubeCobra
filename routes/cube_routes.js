@@ -2996,7 +2996,7 @@ router.get('/redraft/:id', async (req, res) => {
     const names = [];
     for (const seat of draft.initial_state) {
       for (const pack of seat) {
-        for (const card of pack) {
+        for (const card of pack.cards) {
           names.push(carddb.cardFromId(card.cardID).name);
         }
       }

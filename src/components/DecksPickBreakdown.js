@@ -44,7 +44,7 @@ class DecksPickBreakdown extends Component {
     const cardsInPack = [];
 
     let start = 0;
-    let end = draft.initial_state[0][0].length;
+    let end = draft.initial_state[0][0].cards.length;
     let picks = parseInt(index, 10);
     let pack = 0;
     let current = parseInt(seatIndex, 10);
@@ -52,10 +52,10 @@ class DecksPickBreakdown extends Component {
     let added = 0;
     let ind = 0;
 
-    while (picks >= draft.initial_state[0][pack].length) {
+    while (picks >= draft.initial_state[0][pack].cards.length) {
       start = end;
-      end += draft.initial_state[0][pack].length;
-      picks -= draft.initial_state[0][pack].length;
+      end += draft.initial_state[0][pack].cards.length;
+      picks -= draft.initial_state[0][pack].cards.length;
       pack += 1;
     }
 
@@ -73,8 +73,9 @@ class DecksPickBreakdown extends Component {
     }
 
     for (const list of draft.initial_state[0]) {
-      picksList.push(seat.pickorder.slice(added, added + list.length).map((cardIndex) => draft.cards[cardIndex]));
-      added += list.length;
+      const endIndex = added + list.cards.length - list.trash;
+      picksList.push(seat.pickorder.slice(added, endIndex).map((cardIndex) => draft.cards[cardIndex]));
+      added = endIndex;
     }
 
     for (const list of picksList) {
@@ -129,7 +130,7 @@ class DecksPickBreakdown extends Component {
 
 DecksPickBreakdown.propTypes = {
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({ cards: PropTypes.array }))).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   deck: PropTypes.shape({
