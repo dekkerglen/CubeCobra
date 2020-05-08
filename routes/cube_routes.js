@@ -37,6 +37,7 @@ const {
   generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
+const deckutil = require('../dist/utils/Draft.js');
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
@@ -2025,6 +2026,7 @@ router.post(
       } else {
         draft.synergies = null;
       }
+      console.warn('draft-synergies', draft.synergies);
 
       await draft.save();
       return res.redirect(`/cube/draft/${draft._id}`);
@@ -2865,25 +2867,57 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
     const cube = await Cube.findById(base.cube);
+    const srcDraft = await Draft.findById(base.draft).lean();
 
     const deck = new Deck();
     deck.cube = base.cube;
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.comments = [];
+    deck.draft = base.draft;
     deck.cards = base.cards;
-    deck.seats = [
-      {
-        userid: req.user._id,
-        username: req.user.username,
-        pickorder: base.seats[req.params.index].pickorder,
-        name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
-        description: 'This deck was rebuilt from another draft deck.',
-        cols: base.seats[req.params.index].cols,
-        deck: base.seats[req.params.index].deck,
-        sideboard: base.seats[req.params.index].sideboard,
-      },
-    ];
+    deck.seats = [];
+    deck.seats.push({
+      userid: req.user._id,
+      username: req.user.username,
+      pickorder: base.seats[req.params.index].pickorder,
+      name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
+      description: 'This deck was rebuilt from another draft deck.',
+      cols: base.seats[req.params.index].cols,
+      deck: base.seats[req.params.index].deck,
+      sideboard: base.seats[req.params.index].sideboard,
+    });
+    let botNumber = 1;
+    for (let i = 0; i < base.seats.length; i++) {
+      if (i !== parseInt(req.params.index, 10)) {
+        const { cards } = base;
+        const cardsWithDetails = cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+        const picked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+        deckutil.default.addSeen(
+          picked,
+          base.seats[i].pickorder.map((cardIndex) => cardsWithDetails[cardIndex]),
+        );
+        console.warn('base-synergies', srcDraft.synergies);
+        // eslint-disable-next-line no-await-in-loop
+        const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
+          base.seats[i].pickorder,
+          picked,
+          cardsWithDetails,
+          srcDraft.synergies,
+        );
+        deck.seats.push({
+          userid: null,
+          username: `Bot ${botNumber}: ${colors.join(', ')}`,
+          pickorder: base.seats[i].pickorder,
+          name: `Draft of ${cube.name}`,
+          description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
+          cols: base.seats[i].cols,
+          deck: builtDeck,
+          sideboard,
+        });
+        botNumber += 1;
+      }
+    }
 
     cube.numDecks += 1;
 

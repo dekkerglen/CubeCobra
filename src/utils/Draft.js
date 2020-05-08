@@ -144,7 +144,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.33, 0.15, 0.1];
+const COLOR_SCALING_FACTOR = [1, 1, 0.55, 0.25, 0.1, 0.07];
 const botRatingAndCombination = (
   cards,
   cardIndex,
@@ -170,14 +170,14 @@ const botRatingAndCombination = (
 
       const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 1;
 
-      let internalSynergy = 0.01;
-      let synergy = 0.01;
+      let internalSynergy = 0.0000001;
+      let synergy = 0.00000001;
       if (synergies) {
         const pickedInCombo = pickedIndices.filter((index) => considerFunc(cards[index]));
         let count = 0;
         for (let i = 1; i < pickedInCombo.length; i++) {
           for (let j = 0; j < i; j++) {
-            internalSynergy += synergies[i][j];
+            internalSynergy += similarity(synergies[pickedInCombo[i]], synergies[pickedInCombo[j]]) ** 10;
             count += 1;
           }
         }
@@ -185,9 +185,9 @@ const botRatingAndCombination = (
           internalSynergy /= count;
         }
         if (card) {
-          const similarityExponent = pickedIndices.length / 5;
+          const similarityExponent = pickedIndices.length / 4;
           for (const index of pickedInCombo) {
-            synergy += similarity(synergy[index], synergy[cardIndex]) ** similarityExponent;
+            synergy += similarity(synergies[index], synergies[cardIndex]) ** similarityExponent;
           }
           if (pickedInCombo.length) {
             synergy /= pickedInCombo.length;
@@ -310,11 +310,11 @@ async function buildDeck(cardIndices, picked, draftCards, synergies) {
   while (nonlands.length > 23) {
     const curNonlands = nonlands;
     const nonlandsWithValue = nonlands.map((cardIndex) => {
-      let synergy = 0.01;
+      let synergy = 0.0000001;
       if (synergies) {
         for (const otherIndex of curNonlands) {
           if (cardIndex !== otherIndex) {
-            synergy += similarity(synergies[cardIndex], synergies[otherIndex]);
+            synergy += similarity(synergies[cardIndex], synergies[otherIndex]) ** 15;
           }
         }
       }
@@ -514,4 +514,4 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors };
+export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors, buildDeck, addSeen };

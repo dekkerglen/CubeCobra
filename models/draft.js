@@ -19,6 +19,7 @@ let draftSchema = mongoose.Schema({
   seats: [Seat],
   unopenedPacks: [[[Number]]],
   cards: [cardSchema],
+  synergies: [[Number]],
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));
