@@ -2026,7 +2026,6 @@ router.post(
       } else {
         draft.synergies = null;
       }
-      console.warn('draft-synergies', draft.synergies);
 
       await draft.save();
       return res.redirect(`/cube/draft/${draft._id}`);
@@ -2897,7 +2896,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           picked,
           base.seats[i].pickorder.map((cardIndex) => cardsWithDetails[cardIndex]),
         );
-        console.warn('base-synergies', srcDraft.synergies);
         // eslint-disable-next-line no-await-in-loop
         const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
           base.seats[i].pickorder,
