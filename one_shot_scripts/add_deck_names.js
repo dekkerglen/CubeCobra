@@ -28,7 +28,7 @@ async function addVars(deck) {
 }
 
 (async () => {
-  mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
+  mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const count = await Deck.countDocuments();
     const cursor = Deck.find().cursor();
 
@@ -37,12 +37,14 @@ async function addVars(deck) {
       const decks = [];
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {
+          // eslint-disable-next-line no-await-in-loop
           const deck = await cursor.next();
           if (deck) {
             decks.push(deck);
           }
         }
       }
+      // eslint-disable-next-line no-await-in-loop
       await Promise.all(decks.map((deck) => addVars(deck)));
       console.log(`Finished: ${i} of ${count} decks`);
     }
