@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 // eslint-disable-next-line import/extensions
-import Deck from '../models/draft.js';
+import Deck from '../models/deck.js';
 
 dotenv.config();
 

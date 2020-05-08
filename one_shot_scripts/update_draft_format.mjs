@@ -13,7 +13,6 @@ const migrateDraft = async (draft) => {
     return null;
   }
   const cards = draft.initial_state.flat();
-  console.log(cards);
   draft.cards = cards;
   const replaceWithIndex = (card) => cards.findIndex((card2) => card.cardID === card2.cardID);
   draft.initial_state = draft.initial_state.map((seat) => seat.map((pack) => pack.map(replaceWithIndex)));
