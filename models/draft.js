@@ -7,7 +7,10 @@ const Pack = {
     type: Number,
     default: 0,
   },
-  cards: [Number],
+  cards: [{
+    type: Number,
+    min: 0,
+  }],
 };
 
 //data for each seat, human or bot
