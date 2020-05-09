@@ -38,7 +38,7 @@ const genericCondition = (property, valuePred) => ({ query: { [property]: valueP
 ownerNameCondition -> ("owner"i | "owner_name"i | "ownername"i) stringOpValue {% ([, valuePred]) => genericCondition('owner_name', valuePred) %}
 
 nameCondition -> ("n"i | "name"i | "cubename"i | "cube_name"i) stringOpValue {% ([, valuePred]) => genericCondition('name', valuePred) %}
-  | noQuoteStringValue {% ([value]) => genericCondition('name', stringOperation(':', value)) %}
+  | stringValue {% ([value]) => genericCondition('name', stringOperation(':', value)) %}
 
 numDecksCondition -> ("numdecks"i | "num_decks"i | "decks"i | "d"i) integerOpValue {% ([, valuePred]) => genericCondition('numDecks', valuePred) %}
 

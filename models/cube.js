@@ -116,7 +116,10 @@ const cubeSchema = mongoose.Schema({
     type: Number,
     default: -1,
   },
-  numDecks: Number,
+  numDecks: {
+    type: Number,
+    default: 0,
+  },
   description: String,
   descriptionhtml: String,
   image_uri: String,
