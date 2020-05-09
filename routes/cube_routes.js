@@ -1569,6 +1569,25 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
   return res.end();
 };
 
+const writeDeckPart = (deck, res, resultFormat, nameFormatter) => {
+  const deckPart = {};
+  for (const col of deck) {
+    for (const card of col) {
+      const details = carddb.cardFromId(card.cardID);
+      const name = nameFormatter(details);
+      if (deckPart[name]) {
+        deckPart[name] += 1;
+      } else {
+        deckPart[name] = 1;
+      }
+    }
+  }
+  for (const [key, value] of Object.entries(deckPart)) {
+    res.write(String.format(resultFormat, value, key));
+  }
+  return res;
+};
+
 router.get('/download/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
@@ -1724,42 +1743,16 @@ router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const nameFormatter = (details) => {
+      return `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
+    };
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`NAME:${seat.name}\r\n`);
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
-    }
-
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`SB: ${value} ${key}\r\n`);
-    }
+    res = writeDeckPart(seat.deck, res, `${0} ${1}\r\n`, nameFormatter);
+    res = writeDeckPart(seat.sideboard, res, `SB: ${0} ${1}\r\n`, nameFormatter);
     return res.end();
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -1770,6 +1763,9 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const nameFormatter = (details) => {
+      return `${details.name}|${details.set.toUpperCase()}`;
+    };
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1777,39 +1773,10 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
     res.write('[metadata]\r\n');
     res.write(`Name=${seat.name}\r\n`);
     res.write('[Main]\r\n');
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}|${details.set.toUpperCase()}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
-    }
+    res = writeDeckPart(seat.deck, res, `${0} ${1}\r\n`, nameFormatter);
 
     res.write('[Side]\r\n');
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}|${details.set.toUpperCase()}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
-    }
-
+    res = writeDeckPart(seat.sideboard, res, `${0} ${1}\r\n`, nameFormatter);
     return res.end();
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -1850,43 +1817,17 @@ router.get('/deck/download/arena/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const nameFormatter = (details) => {
+      return `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
+    };
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('Deck\r\n');
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
-    }
-
+    res = writeDeckPart(seat.deck, res, `${0} ${1}\r\n`, nameFormatter);
     res.write('\r\nSideboard\r\n');
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
-    }
+    res = writeDeckPart(seat.sideboard, res, `${0} ${1}\r\n`, nameFormatter);
 
     return res.end();
   } catch (err) {
@@ -1898,43 +1839,16 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const nameFormatter = (details) => {
+      return `${details.name}`;
+    };
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value}x ${key}\r\n`);
-    }
-
+    res = writeDeckPart(seat.deck, res, `${0}x ${1}\r\n`, nameFormatter);
     res.write('Sideboard\r\n');
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value}x ${key}\r\n`);
-    }
-
+    res = writeDeckPart(seat.sideboard, res, `${0}`, `${0}x ${1}\r\n`, nameFormatter);
     return res.end();
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -1945,42 +1859,16 @@ router.get('/deck/download/dr4ft/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
     const seat = deck.seats[req.params.seat];
+    const nameFormatter = (details) => {
+      return `${details.name}`;
+    };
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
-    }
-
+    res = writeDeckPart(seat.deck, res, `${0}`, `${0} ${1}\r\n`, nameFormatter);
     res.write('Sideboard\r\n');
-    const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
-    }
+    res = writeDeckPart(seat.sideboard, res, `${0}`, `${0} ${1}\r\n`, nameFormatter);
 
     return res.end();
   } catch (err) {
