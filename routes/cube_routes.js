@@ -1941,6 +1941,53 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
+router.get('/deck/download/dr4ft/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Deck.findById(req.params.id).lean();
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    const main = {};
+    for (const col of seat.deck) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}`;
+        if (main[name]) {
+          main[name] += 1;
+        } else {
+          main[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    res.write('Sideboard\r\n');
+    const side = {};
+    for (const col of seat.sideboard) {
+      for (const card of col) {
+        const details = carddb.cardFromId(card.cardID);
+        const name = `${details.name}`;
+        if (side[name]) {
+          side[name] += 1;
+        } else {
+          side[name] = 1;
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value} ${key}\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
 router.post(
   '/startdraft/:id',
   body('id').toInt(),

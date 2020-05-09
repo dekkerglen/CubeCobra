@@ -104,6 +104,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
                   <DropdownItem href={`/cube/deck/download/cockatrice/${deck._id}/${seatIndex}`}>
                     Cockatrice (.txt)
                   </DropdownItem>
+                  <DropdownItem href={`/cube/deck/download/dr4ft/${deck._id}/${seatIndex}`}>dr4ft (.txt)</DropdownItem>
                 </DropdownMenu>
               </UncontrolledDropdown>
             </Nav>
