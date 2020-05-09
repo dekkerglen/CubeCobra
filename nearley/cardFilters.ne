@@ -125,7 +125,7 @@ artistCondition -> ("a"i | "art"i | "artist"i) stringOpValue {% ([, valuePred]) 
 eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('elo', cardElo, valuePred) %}
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
-  | noQuoteStringValue {% ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
+  | stringValue {% ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
 
 manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
