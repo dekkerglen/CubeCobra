@@ -79,11 +79,15 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
           <Card>
             <CardHeader>
               <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
+              <input className="mr-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
               <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
-              <input type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
             </CardHeader>
             <ListGroup>
-              {loading && <em>Loading...</em>}
+              {loading && (
+                <CardBody>
+                  <em>Loading...</em>
+                </CardBody>
+              )}
               {!loading &&
                 (filteredAdds.length > 0 ? (
                   <PagedList
@@ -95,7 +99,9 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
                     ))}
                   />
                 ) : (
-                  <em>No results with the given filter.</em>
+                  <CardBody>
+                    <em>No results with the given filter.</em>
+                  </CardBody>
                 ))}
             </ListGroup>
           </Card>
@@ -106,7 +112,11 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
               <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
             </CardHeader>
             <ListGroup>
-              {loading && <em>Loading...</em>}
+              {loading && (
+                <CardBody>
+                  <em>Loading...</em>
+                </CardBody>
+              )}
               {!loading &&
                 (filteredCuts.length > 0 ? (
                   <PagedList
@@ -118,7 +128,9 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
                     ))}
                   />
                 ) : (
-                  <em>No results with the given filter.</em>
+                  <CardBody>
+                    <em>No results with the given filter.</em>
+                  </CardBody>
                 ))}
             </ListGroup>
           </Card>

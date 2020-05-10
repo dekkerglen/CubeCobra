@@ -94,9 +94,9 @@ router.post('/add', ensureAuth, async (req, res) => {
     const { user } = req;
     const cubes = await Cube.find({
       owner: user._id,
-    });
+    }).lean();
 
-    if (cubes.length >= 24) {
+    if (cubes.length >= 48) {
       req.flash(
         'danger',
         'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
@@ -394,55 +394,55 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-
     const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-    for (const card of cube.cards) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-    }
-    const pids = new Set();
-    const allVersions = [];
-    for (const card of cube.cards) {
-      const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
-      allVersions.push(...allVersionsOfCard.map((id) => ({ cardID: id, related: card.cardID })));
-    }
-    for (const card of allVersions) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-    }
-    const priceDictQ = GetPrices([...pids]);
+
     const blogsQ = Blog.find({
       cube: cube._id,
     })
       .sort('date')
       .lean();
+
     const followersQ = User.find(
       {
         _id: { $in: cube.users_following },
       },
       '_id username image artist users_following',
     ).lean();
-    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
-    const allVersionsLookup = {};
-    for (const card of allVersions) {
-      if (card.tcgplayer_id) {
-        card.details.price = priceDict[card.tcgplayer_id];
-        card.details.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
-      }
-      if (!allVersionsLookup[card.related]) {
-        allVersionsLookup[card.related] = [];
-      }
-      allVersionsLookup[card.related].push(card.details);
-    }
+
+    // calc cube prices
     for (const card of cube.cards) {
-      const withPrice = allVersions.find((pricedCard) => pricedCard.cardID === card.cardID);
-      if (withPrice) {
-        card.details = withPrice.details;
+      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+    }
+    const pids = new Set();
+    const nameToCard = {};
+    for (const card of cube.cards) {
+      if (!nameToCard[card.details.name]) {
+        const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
+        nameToCard[card.details.name] = allVersionsOfCard.map((id) => carddb.cardFromId(id));
+
+        for (const version of nameToCard[card.details.name]) {
+          if (version.tcgplayer_id) {
+            pids.add(version.tcgplayer_id);
+          }
+        }
+      }
+    }
+    const priceDictQ = GetPrices([...pids]);
+    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
+
+    const cheapestDict = {};
+    for (const card of cube.cards) {
+      if (!cheapestDict[card.details.name]) {
+        for (const version of nameToCard[card.details.name]) {
+          const price = priceDict[version.tcgplayer_id];
+          if (!cheapestDict[version.name] || price < cheapestDict[version.name]) {
+            cheapestDict[version.name] = price;
+          }
+        }
       }
     }
 
@@ -452,21 +452,14 @@ router.get('/overview/:id', async (req, res) => {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
         let priceOwned = 0;
         if (card.finish === 'Foil') {
-          priceOwned = card.details.price_foil || card.details.price || 0;
+          priceOwned = priceDict[`${card.details.tcgplayer_id}_foil`] || priceDict[card.details.tcgplayer_id] || 0;
         } else {
-          priceOwned = card.details.price || card.details.price_foil || 0;
+          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
         }
         totalPriceOwned += priceOwned;
       }
 
-      if (allVersionsLookup[card.cardID]) {
-        const allPrices = allVersionsLookup[card.cardID]
-          .reduce((lst, { price, priceFoil }) => lst.concat([price, priceFoil]), [])
-          .filter((p) => p && p > 0.001);
-        if (allPrices.length > 0) {
-          totalPricePurchase += Math.min(...allPrices) || 0;
-        }
-      }
+      totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
     if (blogs) {
@@ -508,7 +501,6 @@ router.get('/overview/:id', async (req, res) => {
       pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
       admin,
     };
-
     return res.render('cube/cube_overview', {
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Overview`,
@@ -1174,15 +1166,15 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     // list of cardids
     const added = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i += 1) {
       added.push([]);
     }
 
-    for (let i = 0; i < cards.length; i++) {
+    for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
       if (/([0-9]+x )(.*)/.test(item)) {
         const count = parseInt(item.substring(0, item.indexOf('x')), 10);
-        for (let j = 0; j < count; j++) {
+        for (let j = 0; j < count; j += 1) {
           cards.push(item.substring(item.indexOf('x') + 1));
         }
       } else {
@@ -1276,7 +1268,7 @@ async function bulkUpload(req, res, list, cube) {
           if (!Number.isInteger(count)) {
             count = 1;
           }
-          for (let j = 0; j < count; j++) {
+          for (let j = 0; j < count; j += 1) {
             cards.push(numericMatch[2]);
           }
         } else {
@@ -1656,7 +1648,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const source = shuffle(cube.cards).slice(0, numCards);
     const pool = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i += 1) {
       pool.push([]);
     }
 
@@ -1709,9 +1701,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     await deck.save();
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks += 1;
 
     await cube.save();
 
@@ -2354,7 +2344,7 @@ router.post(
         });
       }
 
-      for (let i = 0; i < updatedCube.categoryPrefixes.length; i++) {
+      for (let i = 0; i < updatedCube.categoryPrefixes.length; i += 1) {
         if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
           return res.status(400).send({
             success: 'false',
@@ -2558,7 +2548,7 @@ router.get('/api/fullnames', (req, res) => {
 router.get(
   '/api/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     const cardnames = [];
     for (const card of cube.cards) {
@@ -2738,9 +2728,7 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks += 1;
 
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
@@ -2880,9 +2868,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
-    cube.numDecks = await Deck.countDocuments({
-      cube: cube._id,
-    });
+    cube.numDecks += 1;
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
@@ -2938,7 +2924,7 @@ router.get('/redraft/:id', async (req, res) => {
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
 
-    for (let i = 0; i < draft.seats.length; i++) {
+    for (let i = 0; i < draft.seats.length; i += 1) {
       if (!draft.seats[i].bot) {
         draft.seats[i].userid = req.user ? req.user._id : null;
         draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
@@ -2949,7 +2935,7 @@ router.get('/redraft/:id', async (req, res) => {
       draft.seats[i].pickorder = [];
       draft.seats[i].packbacklog = [];
 
-      for (let j = 0; j < 16; j++) {
+      for (let j = 0; j < 16; j += 1) {
         draft.seats[i].drafted.push([]);
       }
 
@@ -3374,8 +3360,13 @@ router.post(
 
 router.post('/resize/:id/:size', async (req, res) => {
   try {
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
     const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&root=${encodeURIComponent(process.env.HOST)}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(
+        0,
+        req.params.size - cube.cards.length(),
+      )}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
@@ -3385,8 +3376,6 @@ router.post('/resize/:id/:size', async (req, res) => {
     // use this instead if you want debug data
     // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
     // const cuts = { ...additions };
-
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const pids = new Set();
     const cardNames = new Set();
@@ -3458,7 +3447,7 @@ router.post('/resize/:id/:size', async (req, res) => {
     } else {
       // we cut from cube
       for (const card of list) {
-        for (let i = 0; i < cube.cards.length; i++) {
+        for (let i = 0; i < cube.cards.length; i += 1) {
           if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
             changelog += removeCardHtml(card.details);
             cube.cards.splice(i, 1);
@@ -3500,6 +3489,7 @@ router.post(
       )}`,
     );
     if (!response.ok) {
+      req.logger.error('Flask server response not OK.');
       return res.status(500).send({
         success: 'false',
         result: {},
@@ -3788,7 +3778,7 @@ const ELO_SPEED = 1000;
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const draftQ = Draft.findById({ _id: req.body.draft_id });
+    const draftQ = Draft.findById({ _id: req.body.draft_id }).lean();
     const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
 

@@ -173,8 +173,8 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort == 'Tags') {
     var tags = [];
-    cube.forEach(function(card, index) {
-      card.tags.forEach(function(tag, index2) {
+    cube.forEach(function (card, index) {
+      card.tags.forEach(function (tag, index2) {
         if (tag.length > 0 && !tags.includes(tag)) {
           tags.push(tag);
         }
@@ -199,7 +199,7 @@ function getLabelsRaw(cube, sort) {
     return ['0', '1', '2', '3', '4', '5'];
   } else if (sort == 'Set') {
     var sets = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (!sets.includes(card.details.set.toUpperCase())) {
         sets.push(card.details.set.toUpperCase());
       }
@@ -207,7 +207,7 @@ function getLabelsRaw(cube, sort) {
     return sets.sort();
   } else if (sort == 'Artist') {
     var artists = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (!artists.includes(card.details.artist)) {
         artists.push(card.details.artist);
       }
@@ -274,14 +274,14 @@ function getLabelsRaw(cube, sort) {
     return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pauper'];
   } else if (sort == 'Power') {
     var items = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (card.details.power) {
         if (!items.includes(card.details.power)) {
           items.push(card.details.power);
         }
       }
     });
-    return items.sort(function(x, y) {
+    return items.sort(function (x, y) {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
@@ -299,14 +299,14 @@ function getLabelsRaw(cube, sort) {
     });
   } else if (sort == 'Toughness') {
     var items = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (card.details.toughness) {
         if (!items.includes(card.details.toughness)) {
           items.push(card.details.toughness);
         }
       }
     });
-    return items.sort(function(x, y) {
+    return items.sort(function (x, y) {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
@@ -324,14 +324,14 @@ function getLabelsRaw(cube, sort) {
     });
   } else if (sort == 'Loyalty') {
     var items = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (card.details.loyalty) {
         if (!items.includes(card.details.loyalty)) {
           items.push(card.details.loyalty);
         }
       }
     });
-    return items.sort(function(x, y) {
+    return items.sort(function (x, y) {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
           return 1;
@@ -372,14 +372,14 @@ function getLabelsRaw(cube, sort) {
     return ['All'];
   } else if (sort == 'Elo') {
     var elos = [];
-    cube.forEach(function(card, index) {
+    cube.forEach(function (card, index) {
       if (card.details.elo) {
         if (!elos.includes(card.details.elo)) {
           elos.push(card.details.elo);
         }
       }
     });
-    elos = elos.sort(function(x, y) {
+    elos = elos.sort(function (x, y) {
       if (x - y > 0) {
         return 1;
       } else if (y - x > 0) {
@@ -642,11 +642,7 @@ export function cardGetLabels(card, sort) {
     }
     return [];
   } else if (sort == 'Creature/Non-Creature') {
-    return typeLine(card)
-      .toLowerCase()
-      .includes('creature')
-      ? ['Creature']
-      : ['Non-Creature'];
+    return typeLine(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   } else if (sort == 'Price') {
     var price = null;
     if (card.details.price) {

@@ -36,7 +36,7 @@ const CubeComparePage = ({
   ...props
 }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
-  const [filter, setFilter] = useState([]);
+  const [filter, setFilter] = useState(null);
 
   const defaultTagSet = new Set([].concat(...cards.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({

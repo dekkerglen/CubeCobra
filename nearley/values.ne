@@ -33,21 +33,22 @@ dollarValue -> "$":? (
   | [0-9]:+ "." [0-9] [0-9]
 ) {% ([, [digits, ...decimal]]) => parseFloat(digits.concat(decimal).join(''), 10) %}
 
-finishOpValue -> equalityOperator finishValue {% ([, value]) => equalityOperation(op, value) %}
+finishOpValue -> equalityOperator finishValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-finishValue -> "foil"i | "non-foil"i {% id %}
+finishValue -> ("Foil"i | "Non-Foil"i) {% ([[finish]]) => finish.toLowerCase() %}
+  | "\"" ("Foil"i | "Non-Foil"i) "\"" {% ([, [finish]]) => finish.toLowerCase() %}
 
-statusOpValue -> equalityOperator statusValue {% ([, value]) => equalityOperation(op, value) %}
+statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-statusValue -> ("owned"i | "proxied"i) {% ([[status]]) => status.toLowerCase() %} 
-  | "'" ("not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
-  | "\"" ("not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
+statusValue -> ("owned"i | "proxied"i | "ordered"i) {% ([[status]]) => status.toLowerCase() %} 
+  | "'" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
+  | "\"" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
 
 rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op, value) %}
 
 rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i) {% ([[rarity]]) => rarity %}
 
-alphaNumericValue -> [a-zA-Z]:+ {% ([letters]) => letters.join('').toLowerCase() %}
+alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCase() %}
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}
 
@@ -96,7 +97,7 @@ comb5NonEmpty[A, B, C, D, E] -> $A comb4[$B, $C, $D, $E] {% ([a, rest]) => [a, .
   | $E comb4[$A, $B, $C, $D] {% ([a, rest]) => [a, ...rest] %}
 
 colorCombinationValue ->
-    ("brown"i | "colorless"i) {% () => [] %}
+    ("c"i | "brown"i | "colorless"i) {% () => [] %}
   | "white"i {% () => ['w'] %}
   | "blue"i {% () => ['u'] %}
   | "black"i {% () => ['b'] %}
@@ -127,7 +128,7 @@ colorCombinationValue ->
 
 @builtin "string.ne"
 
-stringSetElementOpValue -> ":" stringValue {% ([, value]) => setElementOperation(value) %}
+stringSetElementOpValue -> equalityOperator stringValue {% ([op, value]) => setElementOperation(op, value) %}
 
 stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperation(op, value) %}
 
@@ -136,7 +137,7 @@ stringContainOpValue -> equalityOperator stringValue {% ([op, value]) => stringC
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
 # anything that isn't a special character and isn't "and" or "or"
-noQuoteStringValue -> ([^aAoO \t\n"'\\=<>:] 
+noQuoteStringValue -> ([^aAoO\- \t\n"'\\=<>:] 
   | "a"i [^nN \t\n"'\\=<>:] 
   | "an"i:+ [^dD \t\n"'\\=<>:] 
   | "and"i:+ [^ \t\n"'\\=<>:] 

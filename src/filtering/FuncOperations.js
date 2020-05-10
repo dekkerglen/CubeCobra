@@ -237,4 +237,15 @@ export const devotionOperation = (op, symbol, value) => {
   return (card) => operation(cardDevotion(card, symbol));
 };
 
-export const setElementOperation = (value) => (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase() === value);
+export const setElementOperation = (op, value) => {
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase() === value);
+    case '<>':
+    case '!=':
+      return (fieldValue) => !(fieldValue ?? []).some((elem) => elem?.toLowerCase() === value);
+    default:
+      throw new Error(`Unrecognized operator '${op}'`);
+  }
+};

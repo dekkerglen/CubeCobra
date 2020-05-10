@@ -8,10 +8,10 @@ const { filterToString, makeFilter, operatorsRegex } = require('filtering/Filter
 var Sort = require('utils/Sort.js');
 
 function matchingCards(cards, filter) {
-  if (filter === null) {
-    return cards;
+  if (filter) {
+    return cards.filter(filter);
   }
-  return cards.filter(filter);
+  return cards;
 }
 
 function compileFilter(filterText) {
@@ -19,8 +19,8 @@ function compileFilter(filterText) {
     return null;
   }
 
-  const { filter, err } = makeFilter(filterText);
-  if (err || !operatorsRegex.test(filterText)) {
+  let { filter, err } = makeFilter(filterText);
+  if (!operatorsRegex.test(filterText)) {
     let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
@@ -89,7 +89,7 @@ function customDraft(cards, duplicates = false, seed = false) {
     seed = Date.now().toString();
   }
   const rng = seedrandom(seed);
-  return function(cardFilters) {
+  return function (cardFilters) {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
@@ -241,6 +241,10 @@ function createPacks(draft, format, seats, nextCardFn) {
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
 export function createDraft(format, cards, bots, seats, user, seed = false) {
+  if (!seed) {
+    seed = Date.now().toString();
+  }
+
   const draft = {};
 
   let nextCardFn = null;
@@ -378,7 +382,6 @@ export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
       }
       asfanDict[card.cardID] = total;
     }
-    console.log(matchesDict);
 
     return {
       label: `Pack ${index + 1}`,

@@ -4,7 +4,7 @@ module.exports = {
     type: String,
     enum: ['Foil', 'Non-foil'],
   },
-  colors: [{ type: String, enum: ['W', 'U', 'B', 'R', 'G'] }],
+  colors: [{ type: String, enum: ['W', 'U', 'B', 'R', 'G', 'C'] }],
   status: {
     type: String,
     enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],

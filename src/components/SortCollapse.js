@@ -15,7 +15,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
   const { primary, secondary, changeSort } = useContext(SortContext);
 
   const [defSorts, setDefSorts] = useState(
-    defaultSorts.length > 1 ? [...defaultSorts] : ['Color Category', 'Types-Multicolor'],
+    defaultSorts && defaultSorts.length > 1 ? [...defaultSorts] : ['Color Category', 'Types-Multicolor'],
   );
 
   const prevSorts = useRef(defSorts);
@@ -36,7 +36,9 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
         currentSecondarySort = defSorts[1];
       }
       prevSorts.current = [currentPrimarySort, currentSecondarySort];
-      setSorts(prevSorts.current);
+      if (setSorts) {
+        setSorts(prevSorts.current);
+      }
       changeSort({ primary: currentPrimarySort, secondary: currentSecondarySort });
     }
   }, [defaultPrimarySort, defaultSecondarySort, setSorts]);

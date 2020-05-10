@@ -15,29 +15,35 @@ const Card = {
   status: {
     type: String,
     enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],
+    default: 'Not Owned',
   },
-  colors: [
-    {
-      type: String,
-      enum: ['W', 'U', 'B', 'R', 'G'],
-    },
-  ],
+  colors: {
+    type: [
+      {
+        type: String,
+        enum: ['W', 'U', 'B', 'R', 'G', 'C', ''],
+      },
+    ],
+    default: null,
+  },
   cmc: {
     type: Number,
     min: 0,
+    default: null,
   },
   cardID: String,
   type_line: String,
   rarity: {
     type: String,
-    enum: ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'],
+    default: null,
   },
   addedTmsp: Date,
   imgUrl: String,
   notes: String,
   colorCategory: {
     type: String,
-    enum: ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
+    enum: [null, 'White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
+    default: null,
   },
 };
 
@@ -110,7 +116,10 @@ const cubeSchema = mongoose.Schema({
     type: Number,
     default: -1,
   },
-  numDecks: Number,
+  numDecks: {
+    type: Number,
+    default: 0,
+  },
   description: String,
   descriptionhtml: String,
   image_uri: String,
