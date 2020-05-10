@@ -122,6 +122,14 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
+const allDevotions = (cube, color) => {
+  const counts = new Set();
+  for (const card in cube) {
+    counts.add(cardDevotion(card, color));
+  }
+  return  [...counts].sort((a, b) => b - a);
+};
+
 function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
@@ -205,16 +213,6 @@ function getLabelsRaw(cube, sort) {
       }
     });
     return artists.sort();
-  } else if (sort === 'Devotion to White') {
-    return Array.from(Array(9).keys()).map((d) => d.toString());
-  } else if (sort === 'Devotion to Blue') {
-    return Array.from(Array(9).keys()).map((d) => d.toString());
-  } else if (sort === 'Devotion to Black') {
-    return Array.from(Array(9).keys()).map((d) => d.toString());
-  } else if (sort === 'Devotion to Red') {
-    return Array.from(Array(9).keys()).map((d) => d.toString());
-  } else if (sort === 'Devotion to Green') {
-    return Array.from(Array(9).keys()).map((d) => d.toString());
   } else if (sort == 'Rarity') {
     return ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort == 'Unsorted') {
@@ -361,6 +359,15 @@ function getLabelsRaw(cube, sort) {
     labels.push('No Price Available');
     return labels;
   } else if (sort === 'Devotion to White') {
+    return allDevotions(cube, 'W');
+  } else if (sort === 'Devotion to Blue') {
+    return allDevotions(cube, 'U');
+  } else if (sort === 'Devotion to Black') {
+    return allDevotions(cube, 'B');
+  } else if (sort === 'Devotion to Red') {
+    return allDevotions(cube, 'R');
+  } else if (sort === 'Devotion to Green') {
+    return allDevotions(cube, 'G');
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
