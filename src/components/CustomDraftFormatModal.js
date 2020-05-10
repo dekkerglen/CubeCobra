@@ -160,7 +160,16 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                 <Form inline className="mb-3">
                   <Label>
                     Discard last
-                    <Input type="number" size="sm" className="mr-2 ml-2" value={pack.trash} min={0} max={pack.filters.length - 1} onChange={handleChangeTrash} data-index={index} />
+                    <Input
+                      type="number"
+                      size="sm"
+                      className="mr-2 ml-2"
+                      value={pack.trash}
+                      min={0}
+                      max={pack.filters.length - 1}
+                      onChange={handleChangeTrash}
+                      data-index={index}
+                    />
                     cards left in the pack during drafting.
                   </Label>
                 </Form>
