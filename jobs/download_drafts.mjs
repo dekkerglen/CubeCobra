@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 import Deck from '../models/deck.js';
 import Draft from '../models/draft.js';
 import carddb from '../serverjs/cards.js';
-import deckutils from '../dist/utils/deckutils.js';
+import deckutils from '../src/utils/deckutils.js';
 
 dotenv.config();
 
@@ -21,14 +21,14 @@ const processDeck = async (deck) => {
   const draft = await Draft.findOne({ _id: deck.draft }).lean();
 
   if (deck.seats[0] && deck.seats[0].pickorder) {
-    deck.seats[0].pickorder.forEach((cardIndex, index) => {
+    deck.seats[0].pickorder.forEach((card, index) => {
+      // named import doesn't work for some reason
+      // eslint-disable-next-line import/no-named-as-default-member
       const { cardsInPack, pack, pick } = deckutils
         .getCardsInPack(0, index, deck, draft)
-        .map((ci) => carddb.cardFromId(deck.cards[ci].cardID).name_lower);
-      const pool = deck.seats[0].pickorder
-        .slice(0, index)
-        .map((ci) => carddb.cardFromId(deck.cards[ci].cardID).name_lower);
-      const picked = carddb.cardFromId(deck.cards[cardIndex].cardID).name_lower;
+        .map((c) => carddb.cardFromId(c.cardID).name_lower);
+      const pool = deck.seats[0].pickorder.slice(0, index).map((c) => carddb.cardFromId(c.cardID).name_lower);
+      const picked = carddb.cardFromId(card.cardID).name_lower;
       picks.push({ pack, pick, pool, cardsInPack, picked });
     });
   }
