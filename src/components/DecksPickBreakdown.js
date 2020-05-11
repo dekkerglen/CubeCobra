@@ -6,6 +6,7 @@ import withAutocard from 'components/WithAutocard';
 import PropTypes from 'prop-types';
 import FoilCardImage from 'components/FoilCardImage';
 import { encodeName } from 'utils/Card';
+import { getCardsInPack } from 'utils/deckutils';
 import { getCardColorClass } from 'components/TagContext';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -40,37 +41,10 @@ class DecksPickBreakdown extends Component {
     if (!draft) {
       return <h4>This deck does not have a related draft log.</h4>;
     }
-
-    const cardsInPack = [];
-
-    let start = 0;
-    let end = draft.initial_state[0][0].length;
-    let picks = parseInt(index, 10);
-    let pack = 0;
-    let current = seatIndex;
+    const { pack, pick, cardsInPack } = getCardsInPack(index, seatIndex, draft, deck);
     const picksList = [];
     let added = 0;
     let ind = 0;
-
-    while (picks >= draft.initial_state[0][pack].length) {
-      start = end;
-      end += draft.initial_state[0][pack].length;
-      picks -= draft.initial_state[0][pack].length;
-      pack += 1;
-    }
-
-    for (let i = start + picks; i < end; i += 1) {
-      cardsInPack.push(deck.seats[current].pickorder[i]);
-      if (pack % 2 === 0) {
-        current += 1;
-        current %= draft.initial_state.length;
-      } else {
-        current -= 1;
-        if (current < 0) {
-          current = draft.initial_state.length - 1;
-        }
-      }
-    }
 
     for (const list of draft.initial_state[0]) {
       picksList.push(seat.pickorder.slice(added, added + list.length));
@@ -111,7 +85,7 @@ class DecksPickBreakdown extends Component {
           ))}
         </Col>
         <Col xs={12} sm={9}>
-          <h4>{`Pack ${pack + 1}: Pick ${picks + 1}`}</h4>
+          <h4>{`Pack ${pack + 1}: Pick ${pick + 1}`}</h4>
           <Row noGutters>
             {cardsInPack.map((card, cardindex) => (
               <Col key={/* eslint-disable-line react/no-array-index-key */ cardindex} xs={4} sm={2}>
