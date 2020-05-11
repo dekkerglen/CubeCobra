@@ -127,7 +127,7 @@ const allDevotions = (cube, color) => {
   for (const card in cube) {
     counts.add(cardDevotion(card, color));
   }
-  return  [...counts].sort((a, b) => b - a);
+  return [...counts].sort((a, b) => b - a);
 };
 
 function getLabelsRaw(cube, sort) {
