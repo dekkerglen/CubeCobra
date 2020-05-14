@@ -7,9 +7,9 @@ const Cloud = ({ cards }) => {
   cards.forEach((card) =>
     card.tags.forEach((tag) => {
       if (tags[tag]) {
-        tags[tag] += 1;
+        tags[tag] += card.asfan;
       } else {
-        tags[tag] = 1;
+        tags[tag] = card.asfan;
       }
     }),
   );

@@ -63,7 +63,11 @@ const Chart = ({ cards, characteristics }) => {
     labels,
     datasets: Object.keys(groups).map((key, index) => ({
       label: key,
-      data: labels.map((label) => groups[key].filter((card) => cardIsLabel(card, label, characteristic)).length),
+      data: labels.map((label) =>
+        groups[key]
+          .filter((card) => cardIsLabel(card, label, characteristic))
+          .reduce((acc, card) => acc + card.asfan, 0),
+      ),
       backgroundColor: getColor(key, index),
       borderColor: getColor(key, index),
     })),

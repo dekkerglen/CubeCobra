@@ -16,10 +16,16 @@ const AnalyticTable = ({ cards }) => {
     const groups = sortIntoGroups(pool, sort);
 
     for (const key of Object.keys(groups)) {
-      groups[key] = groups[key].length;
+      groups[key] = groups[key].reduce((acc, card) => acc + card.asfan, 0);
+      if (!Number.isInteger(groups[key])) {
+        groups[key] = groups[key].toFixed(2);
+      }
     }
 
-    groups.Total = pool.length;
+    groups.Total = pool.reduce((acc, card) => acc + card.asfan, 0);
+    if (!Number.isInteger(groups.Total)) {
+      groups.Total = groups.Total.toFixed(2);
+    }
 
     return groups;
   };
@@ -34,11 +40,19 @@ const AnalyticTable = ({ cards }) => {
         if (!groups.Total[subkey]) {
           groups.Total[subkey] = 0;
         }
-        groups.Total[subkey] += groups[key][subkey];
+        groups.Total[subkey] += parseFloat(groups[key][subkey], 10);
       }
     }
   }
-  groups.Total.Total = cards.length;
+  for (const subkey of Object.keys(groups.Total)) {
+    if (!Number.isInteger(groups.Total[subkey])) {
+      groups.Total[subkey] = groups.Total[subkey].toFixed(2);
+    }
+  }
+  groups.Total.Total = cards.reduce((acc, card) => acc + card.asfan, 0);
+  if (!Number.isInteger(groups.Total.Total)) {
+    groups.Total.Total = groups.Total.Total.toFixed(2);
+  }
 
   const primaryGroups = sortIntoGroups(cards, primary);
   const secondaryGroups = sortIntoGroups(cards, secondary);

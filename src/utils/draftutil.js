@@ -153,15 +153,19 @@ function customDraftAsfan(cards, duplicates = false) {
     }
     for (const validCards of validCardGroups) {
       if (duplicates) {
+        // This one's simple 1 / number of cards to pick from / number of filters to choose from
         const poolCount = validCards.length;
         const poolWeight = 1 / poolCount / validCardGroups.length;
         for (const card of validCards) {
           card.asfan += poolWeight;
         }
       } else {
+        // This is the expected number of cards to still be in the pool we're pulling out of
+        // otherwise this is the same as above for poolWeight.
         const poolCount = validCards.reduce((sum, card) => sum + (1 - card.asfan), 0);
         const poolWeight = 1 / poolCount / validCardGroups.length;
         for (const card of validCards) {
+          // The 1 - card.asfan is the odds that it is still in the pool.
           card.asfan += (1 - card.asfan) * poolWeight;
         }
       }
@@ -323,74 +327,72 @@ export function checkFormat(format, cards) {
   return createPacks({}, format, 1, checkFn);
 }
 
-export function average(arr) {
-  const total = arr.reduce((acc, c) => acc + c, 0);
-  return total / arr.length;
+export function weightedAverage(arr) {
+  const [count, total] = arr.reduce(([c, t], [weight, value]) => [c + weight, t + weight * value], [0, 0]);
+  return total / (count || 1);
 }
 
-export function median(arr) {
-  const mid = Math.floor(arr.length / 2);
-  const nums = [...arr].sort((a, b) => a - b);
-  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+export function weightedMedian(arr) {
+  const count = arr.reduce((acc, [weight]) => acc + weight, 0);
+  const nums = [...arr].sort(([, a], [, b]) => a - b);
+  const mid = count / 2;
+  let total = 0;
+  let prevValue = arr[0]?.[1] ?? 0;
+  for (const [weight, value] of nums) {
+    const newTotal = total + weight;
+    // We can assume that total < mid since otherwise we would've already returned
+    // Small exception happens if mid = 0 due to zero weights or empty array
+    // which we do handle correctly.
+    if (newTotal > mid) return (prevValue + value) / 2;
+    if (newTotal === mid) return value;
+    prevValue = value;
+    total = newTotal;
+  }
+  return 0;
 }
 
-export function stddev(arr, avg) {
-  const squareDiffs = arr.map((value) => {
-    const diff = value - avg;
-    const sqrDiff = diff * diff;
-    return sqrDiff;
-  });
+export function weightedStdDev(arr, avg = null) {
+  if (avg === null) {
+    avg = weightedAverage(arr);
+  }
+  const squareDiffs = arr.map(([weight, value]) => [weight, (value - avg) ** 2]);
 
-  const avgSquareDiff = average(squareDiffs);
+  const count = arr.filter(([weight]) => weight).length;
+  // Don't take stddev of 0 or 1 length vectors. The normalization is correct
+  // something about degrees of freedom.
+  const avgSquareDiff = weightedAverage(squareDiffs) * count/ ((count - 1) || 1);
 
   const stdDev = Math.sqrt(avgSquareDiff);
   return stdDev;
 }
 
-export function calculateAsfans(cards, cube, sort) {
-  return [
-    {
-      label: '',
-      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
-        return {
-          label: tuple[0],
-          asfan: (tuple[1].length / cube.cards.length) * 15, // 15 cards a pack
-        };
-      }),
-    },
-  ];
-}
+export const calculateAsfans = (cube, draftFormat) => {
+  const draft = {};
 
-export function calculateCustomAsfans(cards, cube, sort, draftFormat) {
-  const matchesDict = {};
-  return draftFormat.map((pack, index) => {
-    const asfanDict = {};
-    for (const card of cards) {
-      let total = 0;
-      for (const slot of pack) {
-        let sum = 0;
-        for (const filter of slot) {
-          if (!matchesDict[JSON.stringify(filter)]) {
-            matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
-          }
-          const matches = matchesDict[JSON.stringify(filter)];
-          if (matches.includes(card)) {
-            sum += 1 / matches.length;
-          }
-        }
-        total += ((1 - total) * sum) / slot.length;
-      }
-      asfanDict[card.cardID] = total;
-    }
+  let nextCardFn = null;
 
-    return {
-      label: `Pack ${index + 1}`,
-      data: Object.entries(Sort.sortIntoGroups(cards, sort)).map((tuple) => {
-        return {
-          label: tuple[0],
-          asfan: tuple[1].reduce((acc, c) => acc + asfanDict[c.cardID], 0),
-        };
-      }),
-    };
-  });
+  const cards = cube.cards.map((card) => ({ ...card, asfan: 0 }));
+  const format = getDraftFormat({ id: draftFormat, packs: 3, cards: 15 }, cube );
+
+  if (cards.length === 0) {
+    throw new Error('Unable to create draft: no cards.');
+  }
+
+  if (format.custom === true) {
+    nextCardFn = customDraftAsfan(cards, format.multiples);
+  } else {
+    nextCardFn = standardDraftAsfan(cards);
+  }
+
+  const result = createPacks(draft, format, 1, nextCardFn);
+
+  if (result.messages.length > 0) {
+    draft.messages = result.messages.join('\n');
+  }
+
+  if (!result.ok) {
+    throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
+  }
+
+  return Util.fromEntries(cards.map((card) => [card.cardID, card.asfan]));
 }

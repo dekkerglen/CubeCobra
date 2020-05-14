@@ -1,7 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
+import {
+  Col,
+  Nav,
+  NavLink,
+  Row,
+  Card,
+  CardBody,
+  Label,
+  UncontrolledDropdown,
+  DropdownToggle,
+  DropdownItem,
+  DropdownMenu,
+} from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
@@ -15,36 +27,51 @@ import PivotTable from 'analytics/PivotTable';
 import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
-import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
-import { cardCmc } from 'utils/Card';
+import { cardCmc, cardFoilPrice, cardNormalPrice, cardPower, cardPrice, cardToughness } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
+import { calculateAsfans } from 'utils/draftutil';
+import { fromEntries } from 'utils/Util';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [cards, setCards] = useState(cube.cards);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
+  const [useAsfans, toggleUseAsfans] = useToggle(false);
+  const [draftFormat, setDraftFormat] = useState(cube.defaultDraftFormat ?? -1);
+
+  const setStandardDraftFormat = useCallback(() => setDraftFormat(-1), [setDraftFormat]);
+
+  const asfans = useMemo(() => {
+    if (useAsfans) {
+      try {
+        return calculateAsfans(cube, draftFormat);
+      } catch (e) {
+        console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
+        return fromEntries(cube.cards.map((card) => [card.cardID, 0]));
+      }
+    }
+    return fromEntries(cube.cards.map((card) => [card.cardID, 1]));
+  }, [cube, draftFormat, useAsfans]);
+
+  const cards = useMemo(
+    () => (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] })),
+    [asfans, cube, filter],
+  );
 
   const characteristics = {
     CMC: cardCmc,
-    Power: (card) => parseInt(card.details.power, 10),
-    Toughness: (card) => parseInt(card.details.toughness, 10),
+    Power: (card) => parseInt(cardPower(card), 10),
+    Toughness: (card) => parseInt(cardToughness(card), 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) =>
-      parseFloat(
-        card.finish === 'Foil'
-          ? card.details.price_foil ?? card.details.price
-          : card.details.price ?? card.details.price_foil,
-        10,
-      ),
-    'Price Foil': (card) => parseFloat(card.details.price_foil),
-    'Non-Foil Price': (card) => parseFloat(card.details.price),
+    Price: (card) => parseFloat(cardPrice(card), 10),
+    'Price Foil': (card) => parseFloat(cardFoilPrice(card)),
+    'Non-Foil Price': (card) => parseFloat(cardNormalPrice(card)),
   };
 
   const analytics = [
@@ -72,10 +99,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
           loading={isLoading}
         />
       ),
-    },
-    {
-      name: 'Asfans',
-      component: (collection, cubeObj) => <Asfans cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tokens',
@@ -116,11 +139,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     });
   }, [cubeID]);
 
-  const updateFilter = (val) => {
-    setFilter(val);
-    setCards(cube.cards.filter(val));
-  };
-
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
       <DynamicFlash />
@@ -143,10 +161,40 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
               <FilterCollapse
                 defaultFilterText={defaultFilterText}
                 filter={filter}
-                setFilter={updateFilter}
+                setFilter={setFilter}
                 numCards={cards.length}
                 isOpen={filterCollapseOpen}
               />
+            </CardBody>
+          </Card>
+          <Card className="mb-3">
+            <CardBody>
+              <Row>
+                <Col>
+                  <Label>
+                    <input type="checkbox" checked={useAsfans} onClick={toggleUseAsfans} /> Use expected count per
+                    player in a draft format instead of card count.
+                  </Label>
+                </Col>
+                <Col>
+                  {useAsfans && (
+                    <UncontrolledDropdown>
+                      <DropdownToggle caret>
+                        {draftFormat < 0 ? 'Standard Draft Format' : cube.draft_formats[draftFormat].title}
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem onClick={setStandardDraftFormat}>Standard Draft Format</DropdownItem>
+                        <DropdownItem header>Custom Formats</DropdownItem>
+                        {cube.draft_formats.map((format, index) => (
+                          <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
+                            {format.title}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
+                  )}
+                </Col>
+              </Row>
             </CardBody>
           </Card>
           <Card>
@@ -163,7 +211,8 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 CubeAnalysisPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({})),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    draft_formats: PropTypes.arrayOf(PropTypes.shape({ _id: PropTypes.string, title: PropTypes.string })),
+    defaultDraftFormat: PropTypes.number,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultFilterText: PropTypes.string,
