@@ -77,18 +77,22 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const analytics = [
     {
       name: 'Averages',
+      usesAsfan: true,
       component: (collection) => <Averages cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Table',
+      usesAsfan: true,
       component: (collection) => <Table cards={collection} />,
     },
     {
       name: 'Chart',
+      usesAsfan: true,
       component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Recommender',
+      usesAsfan: false,
       component: (collection, cubeObj, addCards, cutCards, isLoading) => (
         <Suggestions
           cards={collection}
@@ -102,18 +106,22 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     },
     {
       name: 'Tokens',
+      usesAsfan: false,
       component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',
+      usesAsfan: true,
       component: (collection) => <Cloud cards={collection} />,
     },
     {
       name: 'Pivot Table',
+      usesAsfan: false,
       component: (collection) => <PivotTable cards={collection} />,
     },
     {
       name: 'Hypergeometric Calculator',
+      usesAsfan: false,
       component: (collection) => <HyperGeom cards={collection} />,
     },
   ];
@@ -167,36 +175,38 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
               />
             </CardBody>
           </Card>
-          <Card className="mb-3">
-            <CardBody>
-              <Row>
-                <Col>
-                  <Label>
-                    <input type="checkbox" checked={useAsfans} onClick={toggleUseAsfans} /> Use expected count per
-                    player in a draft format instead of card count.
-                  </Label>
-                </Col>
-                <Col>
-                  {useAsfans && (
-                    <UncontrolledDropdown>
-                      <DropdownToggle caret>
-                        {draftFormat < 0 ? 'Standard Draft Format' : cube.draft_formats[draftFormat].title}
-                      </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem onClick={setStandardDraftFormat}>Standard Draft Format</DropdownItem>
-                        <DropdownItem header>Custom Formats</DropdownItem>
-                        {cube.draft_formats.map((format, index) => (
-                          <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                            {format.title}
-                          </DropdownItem>
-                        ))}
-                      </DropdownMenu>
-                    </UncontrolledDropdown>
-                  )}
-                </Col>
-              </Row>
-            </CardBody>
-          </Card>
+          {analytics[activeTab].usesAsfan && (
+            <Card className="mb-3">
+              <CardBody>
+                <Row>
+                  <Col>
+                    <Label>
+                      <input type="checkbox" checked={useAsfans} onClick={toggleUseAsfans} /> Use expected count per
+                      player in a draft format instead of card count.
+                    </Label>
+                  </Col>
+                  <Col>
+                    {useAsfans && (
+                      <UncontrolledDropdown>
+                        <DropdownToggle caret>
+                          {draftFormat < 0 ? 'Standard Draft Format' : cube.draft_formats[draftFormat].title}
+                        </DropdownToggle>
+                        <DropdownMenu>
+                          <DropdownItem onClick={setStandardDraftFormat}>Standard Draft Format</DropdownItem>
+                          <DropdownItem header>Custom Formats</DropdownItem>
+                          {cube.draft_formats.map((format, index) => (
+                            <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
+                              {format.title}
+                            </DropdownItem>
+                          ))}
+                        </DropdownMenu>
+                      </UncontrolledDropdown>
+                    )}
+                  </Col>
+                </Row>
+              </CardBody>
+            </Card>
+          )}
           <Card>
             <CardBody>
               <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
