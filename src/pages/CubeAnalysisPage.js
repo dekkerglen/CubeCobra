@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -33,17 +33,21 @@ import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
 import { calculateAsfans } from 'utils/draftutil';
+import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 
-const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
+const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, defaultFormatId }) => {
   const [filter, setFilter] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
   const [useAsfans, toggleUseAsfans] = useToggle(false);
-  const [draftFormat, setDraftFormat] = useState(cube.defaultDraftFormat ?? -1);
+  const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
+  const didMountRef1 = useRef(false);
+  const didMountRef2 = useRef(false);
+  console.log(activeTab);
 
   const setStandardDraftFormat = useCallback(() => setDraftFormat(-1), [setDraftFormat]);
 
@@ -58,6 +62,30 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     }
     return fromEntries(cube.cards.map((card) => [card.cardID, 1]));
   }, [cube, draftFormat, useAsfans]);
+
+  useEffect(() => {
+    if (didMountRef1.current) {
+      Query.set('tab', activeTab);
+    } else {
+      const queryTab = Query.get('tab');
+      if (queryTab || queryTab === 0) {
+        setActiveTab(queryTab);
+      }
+      didMountRef1.current = true;
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (didMountRef2.current) {
+      Query.set('formatId', draftFormat);
+    } else {
+      const queryFormat = Query.get('formatId');
+      if (queryFormat || queryFormat === 0) {
+        setDraftFormat(queryFormat);
+      }
+      didMountRef2.current = true;
+    }
+  }, [draftFormat]);
 
   const cards = useMemo(
     () => (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] })),
@@ -226,10 +254,14 @@ CubeAnalysisPage.propTypes = {
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultFilterText: PropTypes.string,
+  defaultTab: PropTypes.number,
+  defaultFormatId: PropTypes.number,
 };
 
 CubeAnalysisPage.defaultProps = {
   defaultFilterText: '',
+  defaultTab: 0,
+  defaultFormatId: null,
 };
 
 export default CubeAnalysisPage;
