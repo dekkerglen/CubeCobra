@@ -360,7 +360,7 @@ export function weightedStdDev(arr, avg = null) {
   const count = arr.filter(([weight]) => weight).length;
   // Don't take stddev of 0 or 1 length vectors. The normalization is correct
   // something about degrees of freedom.
-  const avgSquareDiff = weightedAverage(squareDiffs) * count/ ((count - 1) || 1);
+  const avgSquareDiff = (weightedAverage(squareDiffs) * count) / (count - 1 || 1);
 
   const stdDev = Math.sqrt(avgSquareDiff);
   return stdDev;
@@ -372,7 +372,7 @@ export const calculateAsfans = (cube, draftFormat) => {
   let nextCardFn = null;
 
   const cards = cube.cards.map((card) => ({ ...card, asfan: 0 }));
-  const format = getDraftFormat({ id: draftFormat, packs: 3, cards: 15 }, cube );
+  const format = getDraftFormat({ id: draftFormat, packs: 3, cards: 15 }, cube);
 
   if (cards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
@@ -395,4 +395,4 @@ export const calculateAsfans = (cube, draftFormat) => {
   }
 
   return Util.fromEntries(cards.map((card) => [card.cardID, card.asfan]));
-}
+};
