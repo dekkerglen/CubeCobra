@@ -99,8 +99,12 @@ function cube() {
 }
 
 function pack() {
-  return (draft.seats[0].packbacklog[0] || { trash: 0, cards: [] }).cards.map((cardIndex) => draft.cards[cardIndex]);
+  return (draft.seats[0].packbacklog[0] || { sealed: false, trash: 0, cards: [] }).cards.map(
+    (cardIndex) => draft.cards[cardIndex],
+  );
 }
+
+const sealed = () => draft.seats[0].packbacklog[0]?.sealed ?? false;
 
 function packPickNumber() {
   let picks = draft.seats[draft.seats.length - 1].pickorder.length;
@@ -456,8 +460,7 @@ function botPicks() {
   }
 }
 
-function passPack() {
-  botPicks();
+const passPackInternal = () => {
   // check if pack is done
   if (draft.seats.every((seat) => seat.packbacklog[0].cards.length <= seat.packbacklog[0].trash)) {
     // splice the first pack out
@@ -493,11 +496,31 @@ function passPack() {
       addSeen(seat.seen, seat.packbacklog[0], cards);
     }
   }
+};
+
+function passPack() {
+  botPicks();
+  passPackInternal();
 }
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const nextPack = () => {
+  const { cards } = draft;
+  for (const seat of draft.seats) {
+    const pickedCards = seat.packbacklog[0].cards.splice(0, seat.packbacklog[0].cards.length);
+    seat.pickorder.push(...pickedCards);
+    if (seat.bot) {
+      addSeen(
+        seat.picked,
+        pickedCards.map((cardIndex) => cards[cardIndex]),
+      );
+    }
+  }
+  passPackInternal();
+};
 
 async function pick(cardIndex) {
   await sleep(0);
@@ -589,9 +612,11 @@ export default {
   finish,
   id,
   init,
+  nextPack,
   pack,
   packPickNumber,
   pick,
   considerInCombination,
   isPlayableLand,
+  sealed,
 };

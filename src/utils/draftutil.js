@@ -206,7 +206,7 @@ export function getDraftFormat(params, cube) {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = { trash: 0, filters: [] };
+      format[pack] = { sealed: 0, trash: 0, filters: [] };
       for (let card = 0; card < params.cards; card++) {
         format[pack].filters.push('*'); // any card
       }
@@ -238,6 +238,7 @@ function createPacks(draft, format, seats, nextCardFn) {
         }
       }
       draft.initial_state[seat][packNum].trash = format[packNum].trash;
+      draft.initial_state[seat][packNum].sealed = format[packNum].sealed;
       draft.initial_state[seat][packNum].cards = pack;
     }
   }
@@ -282,7 +283,11 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
   for (let i = 0; i < draft.initial_state.length; i++) {
     draft.unopenedPacks.push([]);
     for (let j = 0; j < draft.initial_state[i].length; j++) {
-      draft.unopenedPacks[i].push({ cards: [], trash: draft.initial_state[i][j].trash });
+      draft.unopenedPacks[i].push({
+        cards: [],
+        trash: draft.initial_state[i][j].trash,
+        sealed: draft.initial_state[i][j].sealed,
+      });
       for (let k = 0; k < draft.initial_state[i][j].cards.length; k++) {
         const card = { ...draft.initial_state[i][j].cards[k], index: draft.cards.length };
         delete card.details;
