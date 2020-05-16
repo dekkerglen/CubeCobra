@@ -20,7 +20,6 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
-  Right,
   Row,
 } from 'reactstrap';
 
@@ -32,7 +31,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
-  const defaultPack = { filters: [''], trash: 0, sealed: false };
+  const defaultPack = { filters: [''], trash: 0, sealed: false, pickAtTime: 1 };
 
   const handleChangeDescription = useCallback((event) => {
     setFormat((format) => ({
@@ -105,7 +104,16 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     const value = parseInt(event.target.value, 10);
     setFormat(({ ...format }) => {
       format.packs = [...(format.packs || [{ ...defaultPack }])];
-      format.packs[packIndex].trash = Number.isInteger(value) ? value : 0;
+      format.packs[packIndex].trash = Number.isInteger(value) ? value : null;
+      return format;
+    });
+  });
+  const handleChangePickAtTime = useCallback((event) => {
+    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+    const value = parseInt(event.target.value, 10);
+    setFormat(({ ...format }) => {
+      format.packs = [...(format.packs || [{ ...defaultPack }])];
+      format.packs[packIndex].pickAtTime = Number.isInteger(value) ? value : null;
       return format;
     });
   });
@@ -184,6 +192,22 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                   <Label className="ml-4">
                     <Input type="checkbox" checked={pack.sealed} onClick={handleChangeSealed} data-index={index} />
                     This pack is a sealed pack.
+                  </Label>
+                </Form>
+                <Form inline className="mb-3">
+                  <Label>
+                    Pick
+                    <Input
+                      type="number"
+                      size="sm"
+                      className="mr-2 ml-2"
+                      value={pack.pickAtTime}
+                      min={1}
+                      max={pack.filters.length}
+                      onChange={handleChangePickAtTime}
+                      data-index={index}
+                    />
+                    cards at a time.
                   </Label>
                 </Form>
                 {pack.filters.map((card, cardIndex) => (

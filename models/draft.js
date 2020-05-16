@@ -6,10 +6,16 @@ const Pack = {
   trash: {
     type: Number,
     default: 0,
+    min: 0,
   },
   sealed: {
     type: Boolean,
     default: false,
+  },
+  pickAtTime: {
+    type: Number,
+    default: 1,
+    min: 1,
   },
   cards: [
     {
