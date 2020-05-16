@@ -20,6 +20,7 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Right,
   Row,
 } from 'reactstrap';
 
@@ -31,7 +32,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
-  const defaultPack = { filters: [''], trash: 0 };
+  const defaultPack = { filters: [''], trash: 0, sealed: false };
 
   const handleChangeDescription = useCallback((event) => {
     setFormat((format) => ({
@@ -108,6 +109,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       return format;
     });
   });
+  const handleChangeSealed = useCallback((event) => {
+    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+    setFormat(({ ...format }) => {
+      format.packs = [...(format.packs || [{ ...defaultPack }])];
+      format.packs[packIndex].sealed = !format.packs[packIndex].sealed;
+      return format;
+    });
+  });
 
   const packs = format.packs || [{ ...defaultPack }];
   const description = format.html || '';
@@ -171,6 +180,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                       data-index={index}
                     />
                     cards left in the pack during drafting.
+                  </Label>
+                  <Label className="ml-4">
+                    <Input type="checkbox" checked={pack.sealed} onClick={handleChangeSealed} data-index={index} />
+                    This pack is a sealed pack.
                   </Label>
                 </Form>
                 {pack.filters.map((card, cardIndex) => (

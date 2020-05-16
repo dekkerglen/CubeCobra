@@ -7,6 +7,10 @@ const Pack = {
     type: Number,
     default: 0,
   },
+  sealed: {
+    type: Boolean,
+    default: false,
+  },
   cards: [
     {
       type: Number,
