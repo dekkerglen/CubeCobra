@@ -279,7 +279,11 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
   for (let i = 0; i < draft.initial_state.length; i++) {
     draft.unopenedPacks.push([]);
     for (let j = 0; j < draft.initial_state[i].length; j++) {
-      draft.unopenedPacks[i].push({ cards: [], trash: draft.initial_state[i][j].trash, sealed: draft.initial_state[i][j].sealed });
+      draft.unopenedPacks[i].push({
+        cards: [],
+        trash: draft.initial_state[i][j].trash,
+        sealed: draft.initial_state[i][j].sealed,
+      });
       for (let k = 0; k < draft.initial_state[i][j].cards.length; k++) {
         const card = { ...draft.initial_state[i][j].cards[k] };
         delete card.details;
