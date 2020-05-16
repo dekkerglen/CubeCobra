@@ -474,19 +474,25 @@ const passPackInternal = () => {
         draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
       }
     }
-  } else if (draft.unopenedPacks[0].length % 2 === 0) {
-    // pass left
-    for (let i = 0; i < draft.seats.length; i++) {
-      draft.seats[(i + 1) % draft.seats.length].packbacklog.push(draft.seats[i].packbacklog.splice(0, 1)[0]);
-    }
   } else {
-    // pass right
-    for (let i = draft.seats.length - 1; i >= 0; i--) {
-      const packFrom = draft.seats[i].packbacklog.splice(0, 1)[0];
-      if (i === 0) {
-        draft.seats[draft.seats.length - 1].packbacklog.push(packFrom);
-      } else {
-        draft.seats[i - 1].packbacklog.push(packFrom);
+    const [, pickNum] = packPickNumber();
+    if ((pickNum - 1) % draft.seats[0].packbacklog[0].pickAtTime !== 0) {
+      return;
+    }
+    if (draft.unopenedPacks[0].length % 2 === 0) {
+      // pass left
+      for (let i = 0; i < draft.seats.length; i++) {
+        draft.seats[(i + 1) % draft.seats.length].packbacklog.push(draft.seats[i].packbacklog.splice(0, 1)[0]);
+      }
+    } else {
+      // pass right
+      for (let i = draft.seats.length - 1; i >= 0; i--) {
+        const packFrom = draft.seats[i].packbacklog.splice(0, 1)[0];
+        if (i === 0) {
+          draft.seats[draft.seats.length - 1].packbacklog.push(packFrom);
+        } else {
+          draft.seats[i - 1].packbacklog.push(packFrom);
+        }
       }
     }
   }

@@ -410,7 +410,7 @@ const SamplePackCard = (props) => {
 };
 
 const DEFAULT_FORMAT = {
-  packs: [{ filters: ['rarity:Mythic', 'tag:new', 'identity>1'], trash: 0, sealed: false }],
+  packs: [{ filters: ['rarity:Mythic', 'tag:new', 'identity>1'], trash: 0, sealed: false, pickAtTime: 1 }],
 };
 const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }) => {
   const { alerts, addAlert } = useAlerts();

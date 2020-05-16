@@ -46,16 +46,17 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
     picks -= initialState[0][pack].cards.length - initialState[0][pack].trash;
     pack += 1;
   }
-  console.log(start, picks, end);
   for (let i = start + picks; i < end; i += 1) {
     cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
-    if (pack % 2 !== initialState[0].length % 2) {
-      current += 1;
-      current %= initialState.length;
-    } else {
-      current -= 1;
-      if (current < 0) {
-        current = initialState.length - 1;
+    if (!initialState[0][pack].sealed && (i + 1) % initialState[0][pack].pickAtTime === 0) {
+      if (pack % 2 !== initialState[0].length % 2) {
+        current += 1;
+        current %= initialState.length;
+      } else {
+        current -= 1;
+        if (current < 0) {
+          current = initialState.length - 1;
+        }
       }
     }
   }

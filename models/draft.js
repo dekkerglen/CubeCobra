@@ -9,6 +9,11 @@ const Pack = {
       min: 0,
     },
   ],
+  pickAtTime: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
   sealed: {
     type: Boolean,
     default: false,

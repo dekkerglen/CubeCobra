@@ -5,7 +5,6 @@ const shuffleSeed = require('shuffle-seed');
 const Util = require('utils/Util.js');
 require('./Card.js');
 const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
-var Sort = require('utils/Sort.js');
 
 export function matchingCards(cards, filter) {
   if (filter) {
@@ -206,7 +205,7 @@ export function getDraftFormat(params, cube) {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = { sealed: 0, trash: 0, filters: [] };
+      format[pack] = { sealed: false, trash: 0, filters: [], pickAtTime: 1 };
       for (let card = 0; card < params.cards; card++) {
         format[pack].filters.push('*'); // any card
       }
@@ -238,6 +237,7 @@ function createPacks(draft, format, seats, nextCardFn) {
         }
       }
       draft.initial_state[seat][packNum].trash = format[packNum].trash;
+      draft.initial_state[seat][packNum].pickAtTime = format[packNum].pickAtTime;
       draft.initial_state[seat][packNum].sealed = format[packNum].sealed;
       draft.initial_state[seat][packNum].cards = pack;
     }
@@ -287,6 +287,7 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
         cards: [],
         trash: draft.initial_state[i][j].trash,
         sealed: draft.initial_state[i][j].sealed,
+        pickAtTime: draft.initial_state[i][j].pickAtTime,
       });
       for (let k = 0; k < draft.initial_state[i][j].cards.length; k++) {
         const card = { ...draft.initial_state[i][j].cards[k], index: draft.cards.length };
