@@ -202,7 +202,7 @@ export function getDraftFormat(params, cube) {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = { sealed: 0, trash: 0, filters: [] };
+      format[pack] = { sealed: false, trash: 0, filters: [] };
       for (let card = 0; card < params.cards; card++) {
         format[pack].filters.push('*'); // any card
       }
