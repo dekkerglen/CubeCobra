@@ -61,13 +61,15 @@ class DecksPickBreakdown extends Component {
 
     for (let i = start + picks; i < end; i += 1) {
       cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
-      if (pack % 2 === 0) {
-        current += 1;
-        current %= draft.initial_state.length;
-      } else {
-        current -= 1;
-        if (current < 0) {
-          current = draft.initial_state.length - 1;
+      if (!draft.initial_state[0][pack].sealed) {
+        if (pack % 2 === 0) {
+          current += 1;
+          current %= draft.initial_state.length;
+        } else {
+          current -= 1;
+          if (current < 0) {
+            current = draft.initial_state.length - 1;
+          }
         }
       }
     }
@@ -130,7 +132,9 @@ class DecksPickBreakdown extends Component {
 
 DecksPickBreakdown.propTypes = {
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({ cards: PropTypes.array }))).isRequired,
+    initial_state: PropTypes.arrayOf(
+      PropTypes.arrayOf(PropTypes.shape({ cards: PropTypes.array, sealed: PropTypes.bool })),
+    ).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   deck: PropTypes.shape({
