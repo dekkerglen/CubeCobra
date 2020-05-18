@@ -155,7 +155,7 @@ const considerInCombination = (combination) => (card) =>
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
+const COLOR_SCALING_FACTOR = [1, 1, 0.7, 0.36, 0.1, 0.07];
 const botRatingAndCombination = (
   cards,
   cardIndex,
