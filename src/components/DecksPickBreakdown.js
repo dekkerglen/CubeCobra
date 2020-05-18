@@ -52,10 +52,10 @@ class DecksPickBreakdown extends Component {
     let added = 0;
     let ind = 0;
 
-    while (picks >= draft.initial_state[0][pack].cards.length) {
+    while (picks >= draft.initial_state[0][pack].cards.length - draft.initial_state[0][pack].trash) {
       start = end;
-      end += draft.initial_state[0][pack].cards.length;
-      picks -= draft.initial_state[0][pack].cards.length;
+      end += draft.initial_state[0][pack].cards.length - draft.initial_state[0][pack].trash;
+      picks -= draft.initial_state[0][pack].cards.length - draft.initial_state[0][pack].trash;
       pack += 1;
     }
 
@@ -133,7 +133,13 @@ class DecksPickBreakdown extends Component {
 DecksPickBreakdown.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(
-      PropTypes.arrayOf(PropTypes.shape({ cards: PropTypes.array, sealed: PropTypes.bool })),
+      PropTypes.arrayOf(
+        PropTypes.shape({
+          cards: PropTypes.array.isRequired,
+          sealed: PropTypes.bool,
+          trash: PropTypes.number.isRequired,
+        }),
+      ),
     ).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
