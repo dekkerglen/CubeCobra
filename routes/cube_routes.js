@@ -2133,9 +2133,20 @@ router.post(
       draft.initial_state = populated.initialState;
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
-      draft.cards = populated.cards;
-      draft.cube = cube._id;
       draft.basics = getBasics(carddb);
+      draft.cards = populated.cards.concat([
+        draft.basics.Plains,
+        draft.basics.Island,
+        draft.basics.Swamp,
+        draft.basics.Mountain,
+        draft.basics.Forest,
+      ]);
+      draft.basics.Plains.index = draft.cards.length - 5;
+      draft.basics.Island.index = draft.cards.length - 4;
+      draft.basics.Swamp.index = draft.cards.length - 3;
+      draft.basics.Mountain.index = draft.cards.length - 2;
+      draft.basics.Forest.index = draft.cards.length - 1;
+      draft.cube = cube._id;
 
       await draft.save();
       if (req.body.botsOnly) {
@@ -2765,6 +2776,10 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.seats = [];
     deck.owner = draft.seats[0].userid;
     deck.cards = draft.cards;
+    const basics = getBasics(carddb);
+    for (const basic of Object.values(basics)) {
+      delete basic.details;
+    }
 
     for (const seat of draft.seats) {
       deck.seats.push({

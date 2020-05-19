@@ -453,7 +453,7 @@ const methods = {
     const res = {};
     for (const name of names) {
       let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
+      const options = carddb.getIdsFromName(name);
       for (const option of options) {
         const card = carddb.cardFromId(option);
         if (!found && card.set.toLowerCase() === set) {
@@ -465,6 +465,20 @@ const methods = {
             details: card,
           };
         }
+      }
+    }
+    let found = false;
+    const options = carddb.nameToId.wastes;
+    for (const option of options) {
+      const card = carddb.cardFromId(option);
+      if (!found && card.set.toLowerCase() === 'ogw') {
+        found = true;
+        res.Wastes = {
+          cardID: option,
+          type_line: card.type,
+          cmc: 0,
+          details: card,
+        };
       }
     }
 
@@ -533,7 +547,10 @@ const methods = {
     const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0],
+      pack: draft.initial_state[0][0].map((cardIndex) => ({
+        ...draft.cards[cardIndex],
+        details: carddb.cardFromId(draft.cards[cardIndex].cardID),
+      })),
     };
   },
   generateShortId,
