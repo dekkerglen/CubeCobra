@@ -131,7 +131,7 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
                   seat.deck
                     .flat()
                     .flat()
-                    .map((cardIndex) => draft.cards[cardIndex]),
+                    .map((cardIndex) => deck.cards[cardIndex]),
                 )}
               />
             </Col>

@@ -2729,7 +2729,15 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
-    deck.cards = draft.cards;
+    const basics = getBasics(carddb);
+    deck.cards = draft.cards.concat([
+      basics.Plains,
+      basics.Island,
+      basics.Swamp,
+      basics.Mountain,
+      basics.Forest,
+      basics.Wastes,
+    ]);
 
     for (const seat of draft.seats) {
       deck.seats.push({
