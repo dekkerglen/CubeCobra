@@ -2718,6 +2718,9 @@ router.post('/submitdeck/:id', async (req, res) => {
     deck.cubename = cube.name;
     deck.seats = [];
     const basics = getBasics(carddb);
+    for (const basic of Object.values(basics)) {
+      delete basic.details;
+    }
     deck.cards = draft.cards.concat([
       basics.Plains,
       basics.Island,
