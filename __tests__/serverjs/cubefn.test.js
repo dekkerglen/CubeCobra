@@ -163,6 +163,7 @@ test('getBasics returns the expected set of basic lands', () => {
     forest: ['19e71532-3f79-4fec-974f-b0e85c7fe701'],
     swamp: ['8365ab45-6d78-47ad-a6ed-282069b0fabc'],
     island: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
+    wastes: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
   };
   const expectedDisplayImages = {
     plains: 'https://img.scryfall.com/cards/normal/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
@@ -170,6 +171,7 @@ test('getBasics returns the expected set of basic lands', () => {
     forest: 'https://img.scryfall.com/cards/normal/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
     swamp: 'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
     island: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
+    wastes: 'https://img.scryfall.com/cards/normal/front/6/0/60682c00-c661-4a9d-8326-f3f014a04e3e.jpg?1562914528',
   };
   const mockCarddict = {};
   const expected = {};
