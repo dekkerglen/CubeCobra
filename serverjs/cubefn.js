@@ -480,6 +480,20 @@ const methods = {
         }
       }
     }
+    let found = false;
+    const options = carddb.nameToId.wastes;
+    for (const option of options) {
+      const card = carddb.cardFromId(option);
+      if (!found && card.set.toLowerCase() === 'ogw') {
+        found = true;
+        res.Wastes = {
+          cardID: option,
+          type_line: card.type,
+          cmc: 0,
+          details: card,
+        };
+      }
+    }
 
     return res;
   },
