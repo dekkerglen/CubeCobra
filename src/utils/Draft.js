@@ -194,7 +194,7 @@ const botRatingAndCombination = (
           }
         }
       }
-      const synergyWeight = picked.cards / 9;
+      const synergyWeight = (picked?.cards ?? 9) / 12;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -211,8 +211,10 @@ const botRatingAndCombination = (
       // Roughly the number of cards left that we expect to get from this pack.
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
+      console.log(poolRating, openness, opennessWeight, internalSynergy, synergy, synergyWeight);
       const rating =
-        scaling * poolRating ** 2 * openness ** opennessWeight * internalSynergy ** 3 * synergy ** synergyWeight;
+        scaling * poolRating ** 3 * openness ** opennessWeight * internalSynergy ** 2 * synergy ** synergyWeight;
+      console.log('rating', rating, 'colors', combination);
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -503,6 +505,7 @@ async function finish() {
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+      picked.cards = 0;
       addSeen(
         picked,
         draft.seats[i].pickorder.map((cardIndex) => cards[cardIndex]),

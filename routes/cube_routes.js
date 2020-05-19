@@ -2876,6 +2876,21 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const cube = await Cube.findById(base.cube);
     const srcDraft = await Draft.findById(base.draft).lean();
 
+    const { cards } = base;
+    const cardsWithDetails = cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
+    const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    userPicked.cards = 0;
+    deckutil.default.addSeen(
+      userPicked,
+      base.seats[req.params.index].pickorder.map((cardIndex) => cardsWithDetails[cardIndex]),
+    );
+    const { colors: userColors } = await deckutil.default.buildDeck(
+      base.seats[req.params.index].pickorder,
+      userPicked,
+      cardsWithDetails,
+      srcDraft.synergies,
+    );
+
     const deck = new Deck();
     deck.cube = base.cube;
     deck.date = Date.now();
@@ -2886,7 +2901,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.seats = [];
     deck.seats.push({
       userid: req.user._id,
-      username: req.user.username,
+      username: `${req.user.username}: ${userColors}`,
       pickorder: base.seats[req.params.index].pickorder,
       name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
       description: 'This deck was rebuilt from another draft deck.',
@@ -2897,9 +2912,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     let botNumber = 1;
     for (let i = 0; i < base.seats.length; i++) {
       if (i !== parseInt(req.params.index, 10)) {
-        const { cards } = base;
-        const cardsWithDetails = cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
         const picked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+        picked.cards = 0;
         deckutil.default.addSeen(
           picked,
           base.seats[i].pickorder.map((cardIndex) => cardsWithDetails[cardIndex]),
