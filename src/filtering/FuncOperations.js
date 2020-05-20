@@ -86,22 +86,23 @@ export const setOperation = (op, value) => {
 
 export const rarityOperation = (op, value) => {
   const rarityMap = { c: 0, u: 1, r: 2, m: 3, s: 4 };
-  const mappedRarity = rarityMap[value.charAt(0)];
+  const mappedRarity = rarityMap[value.charAt(0).toLowerCase()];
+  console.log('mapped', mappedRarity);
   switch (op.toString()) {
     case ':':
     case '=':
-      return (fieldValue) => fieldValue === value;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] === mappedRarity;
     case '!=':
     case '<>':
-      return (fieldValue) => fieldValue !== value;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] !== mappedRarity;
     case '<':
-      return (fieldValue) => rarityMap[fieldValue.charAt(0)] < mappedRarity;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] < mappedRarity;
     case '<=':
-      return (fieldValue) => rarityMap[fieldValue.charAt(0)] <= mappedRarity;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] <= mappedRarity;
     case '>':
-      return (fieldValue) => rarityMap[fieldValue.charAt(0)] > mappedRarity;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] > mappedRarity;
     case '>=':
-      return (fieldValue) => rarityMap[fieldValue.charAt(0)] >= mappedRarity;
+      return (fieldValue) => rarityMap[fieldValue.charAt(0).toLowerCase()] >= mappedRarity;
     default:
       throw new Error(`Unrecognized operator '${op}'`);
   }

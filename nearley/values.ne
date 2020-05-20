@@ -131,7 +131,7 @@ colorCombinationValue ->
   | "jeskai"i {% () => ['w', 'u', 'r'] %}
   | "sultai"i {% () => ['u', 'b', 'g'] %}
   | ("rainbow"i | "fivecolor"i) {% () => ['w', 'u', 'b', 'r', 'g'] %}
-  | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([comb]) => comb %}
+  | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([comb]) => comb.map((c) => c.toLowerCase()) %}
 
 @builtin "string.ne"
 

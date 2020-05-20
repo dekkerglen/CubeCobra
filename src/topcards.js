@@ -69,7 +69,7 @@ class TopCards extends Component {
           <FilterCollapse
             isOpen
             defaultFilterText={defaultFilterText}
-            filter={filter}
+            filter
             setFilter={this.setFilter}
             numCards={numResults}
             numShown={data.length}
