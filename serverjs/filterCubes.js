@@ -38,8 +38,11 @@ async function getCardCubes(value, carddb) {
 }
 
 async function fillInCardQuery(query, carddb) {
-  if (!query || Array.isArray(query)) {
+  if (!query) {
     return query;
+  }
+  if (Array.isArray(query)) {
+    return Promise.all(query.map(async (q) => fillInCardQuery(q, carddb)));
   }
   if (query.CARD) {
     return getCardCubes(query.CARD, carddb);

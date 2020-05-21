@@ -4,6 +4,8 @@ const express = require('express');
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 
+const util = require('../serverjs/util.js');
+
 const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
@@ -114,7 +116,9 @@ router.get('/explore', async (req, res) => {
 router.get('/random', async (req, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne().skip(random).lean();
+  const cube = await Cube.findOne()
+    .skip(random)
+    .lean();
   res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
 });
 
@@ -295,8 +299,7 @@ router.get('/version', async (req, res) => {
       loginCallback: '/version',
     });
   } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send(err);
+    return util.handleRouteError(req, res, err, `/landing`);
   }
 });
 
@@ -312,61 +315,79 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/search/:query/:page', async (req, res) => {
-  const perPage = 36;
-  const page = Math.max(0, req.params.page);
+  try {
+    const perPage = 36;
+    const page = Math.max(0, req.params.page);
 
-  const { order } = req.query;
+    const { order } = req.query;
 
-  let sort = {
-    date_updated: -1,
-  };
+    let sort = {
+      date_updated: -1,
+    };
 
-  switch (order) {
-    case 'pop':
-      sort = {
-        numDecks: -1,
-      };
-      break;
-    case 'alpha':
-      sort = {
-        name: -1,
-      };
-      break;
-    default:
-      break;
+    switch (order) {
+      case 'pop':
+        sort = {
+          numDecks: -1,
+        };
+        break;
+      case 'alpha':
+        sort = {
+          name: -1,
+        };
+        break;
+      default:
+        break;
+    }
+
+    let {
+      filter: { query },
+    } = await makeFilter(req.params.query, carddb);
+    const listedQuery = { isListed: true };
+    if (query.$and) {
+      query.$and.push(listedQuery);
+    } else {
+      query = { $and: [{ isListed: true }, query] };
+    }
+
+    const count = await Cube.count(query);
+
+    const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
+      .lean()
+      .sort(sort)
+      .skip(perPage * page)
+      .limit(perPage);
+
+    const reactProps = {
+      query: req.params.query,
+      cubes,
+      count,
+      perPage,
+      page,
+      order,
+    };
+
+    return res.render('search', {
+      reactProps: serialize(reactProps),
+      loginCallback: `/search/${req.params.id}`,
+    });
+  } catch (err) {
+    const reactProps = {
+      query: req.params.query,
+      cubes: [],
+      count: 0,
+      perPage: 0,
+      page: 0,
+    };
+
+    req.logger.error(null, { error: err });
+    req.flash('danger', 'Invalid Search Syntax');
+
+    return res.render('search', {
+      reactProps: serialize(reactProps),
+      loginCallback: `/search/${req.params.id}`,
+    });
   }
-
-  let {
-    filter: { query },
-  } = await makeFilter(req.params.query, carddb);
-  const listedQuery = { isListed: true };
-  if (query.$and) {
-    query.$and.push(listedQuery);
-  } else {
-    query = { $and: [{ isListed: true }, query] };
-  }
-
-  const count = await Cube.count(query);
-
-  const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
-    .lean()
-    .sort(sort)
-    .skip(perPage * page)
-    .limit(perPage);
-
-  const reactProps = {
-    query: req.params.query,
-    cubes,
-    count,
-    perPage,
-    page,
-    order,
-  };
-
-  return res.render('search', {
-    reactProps: serialize(reactProps),
-    loginCallback: `/search/${req.params.id}`,
-  });
 });
 
 router.get('/contact', (req, res) => {

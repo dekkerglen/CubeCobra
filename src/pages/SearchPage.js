@@ -6,6 +6,7 @@ import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
 import Paginate from 'components/Paginate';
+import DynamicFlash from 'components/DynamicFlash';
 
 const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
   const pages = Math.ceil(count / perPage);
@@ -14,6 +15,7 @@ const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
     <>
       <CubeSearchNavBar query={query} order={order} title="Cube Search" />
       <br />
+      <DynamicFlash />
       {(cubes && cubes.length) > 0 ? (
         <Card>
           <CardHeader>
