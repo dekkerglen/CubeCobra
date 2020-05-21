@@ -1,34 +1,37 @@
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+require('dotenv').config();
+const mongoose = require('mongoose');
 
 // eslint-disable-next-line import/extensions
-import Deck from '../models/deck.js';
-
-dotenv.config();
+const Deck = require('../models/deck.js');
+const carddb = require('../serverjs/cards');
+const cubefn = require('../serverjs/cubefn');
 
 const batchSize = 100;
 
+const basics = cubefn.getBasics(carddb);
+const basicsList = [basics.Plains, basics.Island, basics.Swamp, basics.Mountain, basics.Forest, basics.Wastes];
+
 const migrateDeck = async (deck) => {
-  if (deck.cards) {
+  if (deck.cards || deck.cards.length === 0) {
     return null;
   }
   const cards = [];
-  for (const seat of deck.seats) {
-    seat.deck = seat.deck.map((pack) =>
+  for (const seat of deck.seats || []) {
+    seat.deck = (seat.deck || []).map((pack) =>
       pack.map((card) => {
         cards.push(card);
         return cards.length - 1;
       }),
     );
-    seat.sideboard = seat.sideboard.map((pack) =>
+    seat.sideboard = (seat.sideboard || []).map((pack) =>
       pack.map((card) => {
         cards.push(card);
         return cards.length - 1;
       }),
     );
-    seat.pickorder = seat.pickorder.map((card) => cards.findIndex((card2) => card.cardID === card2.cardID));
+    seat.pickorder = (seat.pickorder || []).map((card) => cards.findIndex((card2) => card.cardID === card2.cardID));
   }
-  deck.cards = cards;
+  deck.cards = cards.concat(basicsList);
   return deck;
 };
 
