@@ -9,7 +9,6 @@ import FilterCollapse from 'components/FilterCollapse';
 import SortableTable from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
 
-import { makeFilter } from 'filtering/FilterCards';
 import { encodeName } from 'utils/Card';
 import Query from 'utils/Query';
 
