@@ -13,6 +13,7 @@ import {
   manaCostOperation,
   castableCostOperation,
   setElementOperation,
+  devotionOperation,
 } from 'filtering/FuncOperations';
 import {
   cardCmc,
@@ -34,7 +35,8 @@ import {
   cardLoyalty,
   cardRarity,
   cardStatus,
-  cardCost
+  cardCost,
+  cardDevotion,
 } from 'utils/Card';
 %} # %}
 
@@ -75,6 +77,7 @@ condition -> (
   | nameCondition
   | manaCostCondition
   | castableCostCondition
+  | devotionCondition
   | picksCondition
   | cubesCondition
 ) {% ([[condition]]) => condition %}
@@ -130,6 +133,9 @@ nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCon
 manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
 castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
+
+devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) anyOperator integerValue {% ([, [color], op, value]) => genericCondition('parsed_cost', (c) => c, devotionOperation(op, color, value)) %}
+  | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
 
 picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
 
