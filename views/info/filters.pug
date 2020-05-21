@@ -12,7 +12,7 @@ block content
           button(class="btn btn-link" type="button")
             h5 General
         #collapseGeneral.collapse.show(aria-labelledby="general-syntax" data-parent="#syntax-accordion")
-          p You can combine any number of filters together using #[code AND] or #[code OR]. Operators are case-insensitive, as are all filtering conditions. So #[code TYPE:instant and o:DESTROY] will work just as well.
+          p You can combine any number of filters together using #[code AND] or #[code OR]. Operators are case-insensitive, as are all filtering conditions (#[code TYPE:instant and o:DESTROY] will still work, for example).
           p #[strong Examples:]
           table.table
             tr
@@ -21,14 +21,14 @@ block content
             tr
               td(scope="col") #[code t:instant t:tribal]
               td(scope="col") Cards that are both instants and tribal.
-          p You can use quotes to require an exact match. To match names in quotes, you must use the #[code name:] operator.
+          p Text without a filtering condition is treated as a name. You can use quotes to require an exact match.
           p #[strong Examples:]
           table.table
             tr
               td(scope="col") #[code goblin blood]
               td(scope="col") Cards whose names contain both "blood" and "goblin".
             tr
-              td(scope="col") #[code name:"goblin blood"]
+              td(scope="col") #[code "goblin blood"]
               td(scope="col") Cards whose names contain exactly "goblin blood".
             tr
               td(scope="col") #[code o:destroy o:target o:creature] 
@@ -57,6 +57,9 @@ block content
             tr
               td(scope="col") #[code -t:creature] 
               td(scope="col") Cards which are not creatures.
+            tr
+              td(scope="col") #[code -mox] 
+              td(scope="col") Cards whose names do not include "mox".
       .card
         #color-syntax.card-header(data-toggle="collapse" data-target="#collapseColor" aria-expanded="true" aria-controls="collapseColor")
           button(class="btn btn-link" type="button")
@@ -220,6 +223,21 @@ block content
               tr
                 td(scope="col") #[code a:reb]
                 td(scope="col") All cards illustrated by artists with "reb" in their name.
+      .card
+        #collapseDevotion-syntax.card-header(data-toggle="collapse" data-target="#collapseDevotion" aria-expanded="true" aria-controls="collapseDevotion")
+          button(class="btn btn-link" type="button" )
+            h5 Devotion
+        #collapseDevotion.collapse(aria-labelledby="collapseDevotion-syntax" data-parent="#syntax-accordion")
+          p You can use #[code d:], #[code dev:], or #[code devotion:] to search for cards with a given mono-color devotion.
+          p You can also append a color to the query to use numbers instead like #[code dw:] or #[code devotiontow:].
+          p #[strong Examples:]
+            table.table
+              tr
+                td(scope="col") #[code d:www]
+                td(scope="col") All cards with exactly 3 white devotion
+              tr
+                td(scope="col") #[code devotiontor>2]
+                td(scope="col") All cards with more than 2 devotion to red.
       .card
         #collapsePrice-syntax.card-header(data-toggle="collapse" data-target="#collapsePrice" aria-expanded="true" aria-controls="collapsePrice")
           button(class="btn btn-link" type="button")

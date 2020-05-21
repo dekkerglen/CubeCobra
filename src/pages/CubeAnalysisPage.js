@@ -28,7 +28,7 @@ import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
-import { cardCmc, cardFoilPrice, cardNormalPrice, cardPower, cardPrice, cardToughness } from 'utils/Card';
+import { cardCmc, cardDevotion, cardFoilPrice, cardNormalPrice, cardPower, cardPrice, cardToughness } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
@@ -100,6 +100,11 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
     Price: (card) => parseFloat(cardPrice(card), 10),
     'Price Foil': (card) => parseFloat(cardFoilPrice(card)),
     'Non-Foil Price': (card) => parseFloat(cardNormalPrice(card)),
+    'Devotion to White': (card) => cardDevotion(card, 'w'),
+    'Devotion to Blue': (card) => cardDevotion(card, 'u'),
+    'Devotion to Black': (card) => cardDevotion(card, 'b'),
+    'Devotion to Red': (card) => cardDevotion(card, 'r'),
+    'Devotion to Green': (card) => cardDevotion(card, 'g'),
   };
 
   const analytics = [

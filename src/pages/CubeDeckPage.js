@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -24,10 +24,37 @@ import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
 import SampleHandModal from 'components/SampleHandModal';
+import Query from 'utils/Query';
 
-const CubeDeckPage = ({ cube, deck, canEdit, userid, draft }) => {
-  const [seatIndex, setSeatIndex] = useState(0);
-  const [view, setView] = useState('deck');
+const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, defaultView }) => {
+  const [seatIndex, setSeatIndex] = useState(defaultSeat ?? 0);
+  const [view, setView] = useState(defaultView ?? 'deck');
+  const didMountRef1 = useRef(false);
+  const didMountRef2 = useRef(false);
+
+  useEffect(() => {
+    if (didMountRef1.current) {
+      Query.set('seat', seatIndex);
+    } else {
+      const querySeat = Query.get('seat');
+      if (querySeat || querySeat === 0) {
+        setSeatIndex(querySeat);
+      }
+      didMountRef1.current = true;
+    }
+  }, [seatIndex, setSeatIndex]);
+
+  useEffect(() => {
+    if (didMountRef2.current) {
+      Query.set('view', view);
+    } else {
+      const queryView = Query.get('view');
+      if (queryView) {
+        setView(queryView);
+      }
+      didMountRef2.current = true;
+    }
+  }, [view, setView]);
 
   const handleChangeSeat = (event) => {
     setSeatIndex(event.target.value);
@@ -150,11 +177,15 @@ CubeDeckPage.propTypes = {
   canEdit: PropTypes.bool,
   userid: PropTypes.string,
   draft: PropTypes.shape({}).isRequired,
+  defaultSeat: PropTypes.number,
+  defaultView: PropTypes.string,
 };
 
 CubeDeckPage.defaultProps = {
   canEdit: false,
   userid: null,
+  defaultSeat: 0,
+  defaultView: 'deck',
 };
 
 export default CubeDeckPage;
