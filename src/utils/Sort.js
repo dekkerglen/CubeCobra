@@ -1,4 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
+import { cardDevotion } from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -108,6 +109,11 @@ export function getSorts() {
     'Toughness',
     'Type',
     'Types-Multicolor',
+    'Devotion to White',
+    'Devotion to Blue',
+    'Devotion to Black',
+    'Devotion to Red',
+    'Devotion to Green',
     'Unsorted',
   ];
 }
@@ -115,6 +121,14 @@ export function getSorts() {
 const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
+
+const allDevotions = (cube, color) => {
+  const counts = new Set();
+  for (const card in cube) {
+    counts.add(cardDevotion(card, color));
+  }
+  return [...counts].sort((a, b) => b - a);
+};
 
 function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
@@ -344,6 +358,16 @@ function getLabelsRaw(cube, sort) {
     }
     labels.push('No Price Available');
     return labels;
+  } else if (sort === 'Devotion to White') {
+    return allDevotions(cube, 'W');
+  } else if (sort === 'Devotion to Blue') {
+    return allDevotions(cube, 'U');
+  } else if (sort === 'Devotion to Black') {
+    return allDevotions(cube, 'B');
+  } else if (sort === 'Devotion to Red') {
+    return allDevotions(cube, 'R');
+  } else if (sort === 'Devotion to Green') {
+    return allDevotions(cube, 'G');
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
@@ -659,6 +683,16 @@ export function cardGetLabels(card, sort) {
     } else {
       return ['No Price Available'];
     }
+  } else if (sort === 'Devotion to White') {
+    return [cardDevotion(card, 'w').toString()];
+  } else if (sort === 'Devotion to Blue') {
+    return [cardDevotion(card, 'u').toString()];
+  } else if (sort === 'Devotion to Black') {
+    return [cardDevotion(card, 'b').toString()];
+  } else if (sort === 'Devotion to Red') {
+    return [cardDevotion(card, 'r').toString()];
+  } else if (sort === 'Devotion to Green') {
+    return [cardDevotion(card, 'g').toString()];
   } else if (sort == 'Unsorted') {
     return ['All'];
   } else if (sort == 'Elo') {
