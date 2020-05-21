@@ -147,7 +147,10 @@ test('generateShortId returns a valid short ID with profanity', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const initialHasProfanity = util.hasProfanity;
-  const mockHasProfanity = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+  const mockHasProfanity = jest
+    .fn()
+    .mockReturnValue(false)
+    .mockReturnValueOnce(true);
   util.hasProfanity = mockHasProfanity;
   const result = await cubefn.generateShortId();
   expect(result).toBe('1z');

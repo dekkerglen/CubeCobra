@@ -42,7 +42,7 @@ class BlogContextMenu extends React.Component {
       headers: {},
     })
       .then((response) => response.json())
-      .then(function (json) {
+      .then(function(json) {
         $('#editor').html(json.src || json.body || '');
 
         $('#postBlogTitleInput').val(json.title);

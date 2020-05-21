@@ -54,7 +54,7 @@ function autocard_init(classname) {
   }
 }
 
-document.onmousemove = function (e) {
+document.onmousemove = function(e) {
   popupElement = document.getElementById('autocardPopup');
 
   var leftPixelSpace = e.clientX;
@@ -125,7 +125,7 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
 
   if (tags) {
     let tagsText = '<div class="autocard-tags">';
-    tags.forEach(function (tag, index) {
+    tags.forEach(function(tag, index) {
       tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + '</span>';
     });
     tagsText += '</div>';

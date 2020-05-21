@@ -129,7 +129,7 @@ class CubeOverviewModal extends Component {
       var prefixes = this.state.cube.categoryPrefixes;
 
       if (prefixes.includes(id) && !value) {
-        prefixes = prefixes.filter(function (e) {
+        prefixes = prefixes.filter(function(e) {
           return e !== id;
         });
       } else if (!prefixes.includes(id) && value) {

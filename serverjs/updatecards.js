@@ -342,7 +342,11 @@ function getTokens(card, catalogCard) {
             const candidate = catalog.dict[dbHit];
             const areColorsValid = arraySetEqual(tokenColor, candidate.colors);
 
-            const candidateTypes = candidate.type.toLowerCase().replace(' —', '').replace('token ', '').split(' ');
+            const candidateTypes = candidate.type
+              .toLowerCase()
+              .replace(' —', '')
+              .replace('token ', '')
+              .split(' ');
 
             const creatureTypes = [];
             tokenSuperTypesString
