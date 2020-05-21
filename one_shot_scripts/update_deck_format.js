@@ -1,10 +1,7 @@
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+require('dotenv').config();
 
-// eslint-disable-next-line import/extensions
-import Deck from '../models/deck.js';
-
-dotenv.config();
+const mongoose = require('mongoose');
+const Deck = require('../models/deck');
 
 const batchSize = 100;
 
@@ -35,7 +32,9 @@ const migrateDeck = async (deck) => {
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const count = await Deck.countDocuments();
-    const cursor = Deck.find().lean().cursor();
+    const cursor = Deck.find()
+      .lean()
+      .cursor();
     for (let i = 0; i < count; i += batchSize) {
       const decks = [];
       for (let j = 0; j < batchSize; j++) {
