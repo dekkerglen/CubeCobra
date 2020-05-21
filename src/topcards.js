@@ -46,7 +46,7 @@ class TopCards extends Component {
 
   render() {
     const { defaultFilterText } = this.props;
-    const { data, filter, numResults } = this.state;
+    const { data, numResults } = this.state;
 
     const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
       <tr key={name}>
