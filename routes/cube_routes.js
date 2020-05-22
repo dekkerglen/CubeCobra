@@ -911,8 +911,8 @@ router.get('/analysis/:id', async (req, res) => {
       });
       return cards;
     };
-    cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe);
+    cube.cards = addDetails(cube.cards || []);
+    cube.maybe = addDetails(cube.maybe || []);
 
     const priceDictQ = GetPrices([...pids]);
     const eloDictQ = getElo([...cardNames], true);
