@@ -560,7 +560,7 @@ const methods = {
     const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0],
+      pack: draft.initial_state[0][0].map((cardIndex) => draft.cards[cardIndex]),
     };
   },
   generateShortId,

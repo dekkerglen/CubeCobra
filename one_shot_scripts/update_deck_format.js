@@ -1,8 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-// eslint-disable-next-line import/extensions
-const Deck = require('../models/deck.js');
+const Deck = require('../models/deck');
 const carddb = require('../serverjs/cards');
 const cubefn = require('../serverjs/cubefn');
 
