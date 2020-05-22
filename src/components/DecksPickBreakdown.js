@@ -44,7 +44,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   let end = draft.initial_state[0][0].length;
   let picks = parseInt(index, 10);
   let pack = 0;
-  let current = seatIndex;
+  let current = parseInt(seatIndex, 10);
   const picksList = [];
   let added = 0;
   let ind = 0;
