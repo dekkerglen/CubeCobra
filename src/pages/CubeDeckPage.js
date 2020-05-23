@@ -175,7 +175,7 @@ CubeDeckPage.propTypes = {
     ).isRequired,
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({}).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }).isRequired,
   canEdit: PropTypes.bool,
   userid: PropTypes.string,
