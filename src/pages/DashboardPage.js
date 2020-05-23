@@ -26,7 +26,7 @@ const DashboardPage = ({ posts, cubes, decks, canEdit, userId }) => (
             ) : (
               <p className="m-2">
                 You don't have any cubes.{' '}
-                <Button tag="button" data-toggle="modal" data-target="#cubeModal" color="success">
+                <Button data-toggle="modal" data-target="#cubeModal" color="success">
                   Add a new cube?
                 </Button>
               </p>
