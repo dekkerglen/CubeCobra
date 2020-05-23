@@ -466,7 +466,7 @@ const methods = {
     const res = {};
     for (const name of names) {
       let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
+      const options = carddb.getIdsFromName(name);
       for (const option of options) {
         const card = carddb.cardFromId(option);
         if (!found && card.set.toLowerCase() === set) {

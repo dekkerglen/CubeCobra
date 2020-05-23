@@ -10,7 +10,7 @@ const migrateDraft = async (draft) => {
   if (draft.cards) {
     return null;
   }
-  const cards = draft.initial_state.flat();
+  const cards = draft.initial_state.flat(3);
   const replaceWithIndex = (card) => cards.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
   draft.initial_state = (draft.initial_state || []).map((seat) => seat.map((pack) => pack.map(replaceWithIndex)));
   draft.unopenedPacks = (draft.initial_state || []).map((seat) => seat.map((pack) => pack.map(replaceWithIndex)));
