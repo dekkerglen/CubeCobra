@@ -48,8 +48,6 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const picksList = [];
   let added = 0;
   let ind = 0;
-  console.log('draft cards', draft.cards);
-  console.log('flattened', draft.initial_state.flat(3));
 
   while (picks >= draft.initial_state[0][pack].length) {
     start = end;
@@ -60,7 +58,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   for (let i = start + picks; i < end; i += 1) {
     cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
-    if (pack % 2 === 0) {
+    if (pack % 2 === 1) {
       current += 1;
       current %= draft.initial_state.length;
     } else {
