@@ -222,10 +222,8 @@ const botRatingAndCombination = (
       // Roughly the number of cards left that we expect to get from this pack.
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
-      console.log(poolRating, openness, opennessWeight, internalSynergy, synergy, synergyWeight);
       const rating =
         scaling * poolRating ** 3 * openness ** opennessWeight * internalSynergy ** 2 * synergy ** synergyWeight;
-      console.log('rating', rating, 'colors', combination);
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -314,6 +312,7 @@ async function buildDeck(cardIndices, picked, draftCards, synergies) {
   inColor.sort(sortFn);
   nonlands = inColor;
   let side = outOfColor;
+  // We want 23 nonlands for an average limited deck.
   if (nonlands.length < 23) {
     outOfColor.sort(sortFn);
     nonlands.push(...outOfColor.splice(0, 23 - nonlands.length));
