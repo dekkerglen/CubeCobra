@@ -2101,17 +2101,17 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         // remove id
         const [indexOutStr, outID] = edit.substring(1).split('$');
         const indexOut = parseInt(indexOutStr, 10);
+
         if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-          req.flash('danger', 'Bad request format.');
-          return res.redirect(`/cube/list/${req.params.id}`);
-        }
-        removes.add(indexOut);
-        const card = cube.cards[indexOut];
-        if (card.cardID === outID) {
-          changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+          req.flash('danger', `Unable to remove card due to invalid index: ${carddb.cardFromId(outID).name}`);
         } else {
-          req.flash('danger', 'Bad request format.');
-          return res.redirect(`/cube/list/${req.params.id}`);
+          const card = cube.cards[indexOut];
+          if (card.cardID === outID) {
+            removes.add(indexOut);
+            changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+          } else {
+            req.flash('danger', `Unable to remove card due outdated index: ${carddb.cardFromId(outID).name}`);
+          }
         }
       } else if (edit.charAt(0) === '/') {
         const [outStr, idIn] = edit.substring(1).split('>');
@@ -2125,19 +2125,20 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         const [indexOutStr, outID] = outStr.split('$');
         const indexOut = parseInt(indexOutStr, 10);
         if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-          req.flash('danger', 'Bad request format.');
-          return res.redirect(`/cube/list/${req.params.id}`);
-        }
-        removes.add(indexOut);
-        const cardOut = cube.cards[indexOut];
-        if (cardOut.cardID === outID) {
-          changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+          req.flash('danger', `Unable to replace card due to invalid index: ${carddb.cardFromId(outID).name}`);
+          changelog += addCardHtml(detailsIn);
         } else {
-          req.flash('danger', 'Bad request format.');
-          return res.redirect(`/cube/list/${req.params.id}`);
+          const cardOut = cube.cards[indexOut];
+          if (cardOut.cardID === outID) {
+            removes.add(indexOut);
+            changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+          } else {
+            req.flash('danger', `Unable to replace card due outdated index: ${carddb.cardFromId(outID).name}`);
+            changelog += addCardHtml(detailsIn);
+          }
         }
       } else {
-        req.flash('danger', 'Bad request format.');
+        req.flash('danger', 'Bad request format, all operations must be add, remove, or replace.');
         return res.redirect(`/cube/list/${req.params.id}`);
       }
     }
