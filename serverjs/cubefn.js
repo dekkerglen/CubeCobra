@@ -225,6 +225,16 @@ function maybeCards(cube, carddb) {
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
+async function getCardElo(cardname) {
+  const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } });
+
+  if (!rating || Number.isNaN(rating.elo)) {
+    return 1200;
+  }
+
+  return round ? Math.round(rating.elo) : rating.elo;
+}
+
 async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
   const result = {};
@@ -563,6 +573,7 @@ const methods = {
   saveEdit,
   buildTagColors,
   maybeCards,
+  getCardElo,
   getElo,
   CSVtoCards,
   compareCubes,
