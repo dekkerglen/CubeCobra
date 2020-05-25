@@ -1001,12 +1001,15 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
     const imgScale = 0.9;
+    // Try to make it roughly 5 times as wide as it is tall in cards.
+    const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
+    const height = Math.ceil(pack.pack.length / width);
 
     const srcArray = pack.pack.map((card, index) => {
       return {
         src: card.imgUrl || card.details.image_normal,
-        x: imgScale * CARD_WIDTH * (index % 5),
-        y: imgScale * CARD_HEIGHT * Math.floor(index / 5),
+        x: imgScale * CARD_WIDTH * (index % width),
+        y: imgScale * CARD_HEIGHT * Math.floor(index / width),
         w: imgScale * CARD_WIDTH,
         h: imgScale * CARD_HEIGHT,
         rX: imgScale * 0.065 * CARD_WIDTH,
@@ -1015,8 +1018,8 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     });
 
     return generateSamplepackImage(srcArray, {
-      width: imgScale * CARD_WIDTH * 5,
-      height: imgScale * CARD_HEIGHT * 3,
+      width: imgScale * CARD_WIDTH * width,
+      height: imgScale * CARD_HEIGHT * height,
       Canvas,
     })
       .then((image) => {
