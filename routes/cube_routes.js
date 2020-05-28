@@ -99,7 +99,7 @@ router.post('/add', ensureAuth, async (req, res) => {
     if (cubes.length >= 48) {
       req.flash(
         'danger',
-        'Cannot create a cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
+        'Cannot create a cube: Users can only have 48 cubes. Please delete one or more cubes to create new cubes.',
       );
       return res.redirect(`/user/view/${req.user.id}`);
     }
@@ -140,10 +140,10 @@ router.get('/clone/:id', async (req, res) => {
       owner: req.user._id,
     }).lean();
 
-    if (cubes.length >= 24) {
+    if (cubes.length >= 48) {
       req.flash(
         'danger',
-        'Cannot clone this cube: Users can only have 24 cubes. Please delete one or more cubes to create new cubes.',
+        'Cannot clone this cube: Users can only have 48 cubes. Please delete one or more cubes to create new cubes.',
       );
       return res.redirect(`/cube/list/${req.params.id}`);
     }
@@ -1704,6 +1704,9 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     await deck.save();
 
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
     cube.numDecks += 1;
 
     await cube.save();
@@ -2732,6 +2735,9 @@ router.post('/submitdeck/:id', async (req, res) => {
       });
     }
 
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
     cube.numDecks += 1;
 
     const userq = User.findById(deck.seats[0].userid);
@@ -2872,6 +2878,9 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       },
     ];
 
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
     cube.numDecks += 1;
 
     const userq = User.findById(req.user._id);
