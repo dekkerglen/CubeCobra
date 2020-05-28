@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
+
+import AsfanDropdown from 'components/AsfanDropdown';
 import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
 
-const Chart = ({ cards, characteristics }) => {
+const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
   const sorts = getSorts();
 
   const [sort, setSort] = useState('Color Identity');
@@ -109,6 +111,7 @@ const Chart = ({ cards, characteristics }) => {
           </InputGroup>
         </Col>
       </Row>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ChartComponent options={options} data={data} type="bar" />
     </>
   );
@@ -116,6 +119,21 @@ const Chart = ({ cards, characteristics }) => {
 Chart.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    defaultDraftFormat: PropTypes.number,
+  }).isRequired,
+  defaultFormatId: PropTypes.number,
+  setAsfans: PropTypes.func.isRequired,
+};
+Chart.defaultProps = {
+  defaultFormatId: null,
 };
 
 export default Chart;

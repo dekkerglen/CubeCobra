@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { sortIntoGroups, getSorts, getLabels } from 'utils/Sort';
+import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
+import { sortIntoGroups, getSorts, getLabels } from 'utils/Sort';
 
-const AnalyticTable = ({ cards }) => {
+const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
   const sorts = getSorts();
 
   const [primary, setPrimary] = useState('Color Identity');
@@ -96,6 +97,7 @@ const AnalyticTable = ({ cards }) => {
           </InputGroup>
         </Col>
       </Row>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <Table bordered responsive className="mt-lg-3">
           <thead>
@@ -133,6 +135,21 @@ const AnalyticTable = ({ cards }) => {
 
 AnalyticTable.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    defaultDraftFormat: PropTypes.number,
+  }).isRequired,
+  defaultFormatId: PropTypes.number,
+  setAsfans: PropTypes.func.isRequired,
+};
+AnalyticTable.defaultProps = {
+  defaultFormatId: null,
 };
 
 export default AnalyticTable;

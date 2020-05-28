@@ -1,19 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Col,
-  Nav,
-  NavLink,
-  Row,
-  Card,
-  CardBody,
-  Label,
-  UncontrolledDropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownMenu,
-} from 'reactstrap';
+import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
 import CubeLayout from 'layouts/CubeLayout';
 
@@ -32,9 +20,7 @@ import { cardCmc, cardDevotion, cardFoilPrice, cardNormalPrice, cardPower, cardP
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
-import { calculateAsfans } from 'utils/draftutil';
 import Query from 'utils/Query';
-import { fromEntries } from 'utils/Util';
 
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, defaultFormatId }) => {
   const [filter, setFilter] = useState(null);
@@ -43,54 +29,25 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
-  const [useAsfans, toggleUseAsfans] = useToggle(false);
-  const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
-  const didMountRef1 = useRef(false);
-  const didMountRef2 = useRef(false);
-  console.log(activeTab);
-
-  const setStandardDraftFormat = useCallback(() => setDraftFormat(-1), [setDraftFormat]);
-
-  const asfans = useMemo(() => {
-    if (useAsfans) {
-      try {
-        return calculateAsfans(cube, draftFormat);
-      } catch (e) {
-        console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
-        return fromEntries(cube.cards.map((card) => [card.cardID, 0]));
-      }
-    }
-    return fromEntries(cube.cards.map((card) => [card.cardID, 1]));
-  }, [cube, draftFormat, useAsfans]);
+  const [asfans, setAsfans] = useState({});
+  const didMountRef = useRef(false);
 
   useEffect(() => {
-    if (didMountRef1.current) {
+    if (didMountRef.current) {
       Query.set('tab', activeTab);
     } else {
       const queryTab = Query.get('tab');
       if (queryTab || queryTab === 0) {
         setActiveTab(queryTab);
       }
-      didMountRef1.current = true;
+      didMountRef.current = true;
     }
   }, [activeTab]);
 
-  useEffect(() => {
-    if (didMountRef2.current) {
-      Query.set('formatId', draftFormat);
-    } else {
-      const queryFormat = Query.get('formatId');
-      if (queryFormat || queryFormat === 0) {
-        setDraftFormat(queryFormat);
-      }
-      didMountRef2.current = true;
-    }
-  }, [draftFormat]);
-
-  const cards = useMemo(
-    () => (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] })),
-    [asfans, cube, filter],
-  );
+  const cards = useMemo(() => {
+    console.log('asfans', asfans);
+    return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
+  }, [asfans, cube, filter]);
 
   const characteristics = {
     CMC: cardCmc,
@@ -110,22 +67,36 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
   const analytics = [
     {
       name: 'Averages',
-      usesAsfan: true,
-      component: (collection) => <Averages cards={collection} characteristics={characteristics} />,
+      component: (collection) => (
+        <Averages
+          cards={collection}
+          characteristics={characteristics}
+          defaultFormatId={defaultFormatId}
+          cube={cube}
+          setAsfans={setAsfans}
+        />
+      ),
     },
     {
       name: 'Table',
-      usesAsfan: true,
-      component: (collection) => <Table cards={collection} />,
+      component: (collection) => (
+        <Table cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+      ),
     },
     {
       name: 'Chart',
-      usesAsfan: true,
-      component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
+      component: (collection) => (
+        <Chart
+          cards={collection}
+          characteristics={characteristics}
+          setAsfans={setAsfans}
+          defaultFormatId={defaultFormatId}
+          cube={cube}
+        />
+      ),
     },
     {
       name: 'Recommender',
-      usesAsfan: false,
       component: (collection, cubeObj, addCards, cutCards, isLoading) => (
         <Suggestions
           cards={collection}
@@ -139,22 +110,20 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
     },
     {
       name: 'Tokens',
-      usesAsfan: false,
       component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',
-      usesAsfan: true,
-      component: (collection) => <Cloud cards={collection} />,
+      component: (collection) => (
+        <Cloud cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+      ),
     },
     {
       name: 'Pivot Table',
-      usesAsfan: false,
       component: (collection) => <PivotTable cards={collection} />,
     },
     {
       name: 'Hypergeometric Calculator',
-      usesAsfan: false,
       component: (collection) => <HyperGeom cards={collection} />,
     },
   ];
@@ -208,38 +177,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
               />
             </CardBody>
           </Card>
-          {analytics[activeTab].usesAsfan && (
-            <Card className="mb-3">
-              <CardBody>
-                <Row>
-                  <Col>
-                    <Label>
-                      <input type="checkbox" checked={useAsfans} onClick={toggleUseAsfans} /> Use expected count per
-                      player in a draft format instead of card count.
-                    </Label>
-                  </Col>
-                  <Col>
-                    {useAsfans && (
-                      <UncontrolledDropdown>
-                        <DropdownToggle caret>
-                          {draftFormat < 0 ? 'Standard Draft Format' : cube.draft_formats[draftFormat].title}
-                        </DropdownToggle>
-                        <DropdownMenu>
-                          <DropdownItem onClick={setStandardDraftFormat}>Standard Draft Format</DropdownItem>
-                          <DropdownItem header>Custom Formats</DropdownItem>
-                          {cube.draft_formats.map((format, index) => (
-                            <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                              {format.title}
-                            </DropdownItem>
-                          ))}
-                        </DropdownMenu>
-                      </UncontrolledDropdown>
-                    )}
-                  </Col>
-                </Row>
-              </CardBody>
-            </Card>
-          )}
           <Card>
             <CardBody>
               <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>

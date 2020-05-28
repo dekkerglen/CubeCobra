@@ -3,14 +3,15 @@ import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { cardType } from 'utils/Card';
-import { sortIntoGroups, getSorts } from 'utils/Sort';
-import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
+import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
-import useSortableData from 'hooks/UseSortableData';
 import HeaderCell from 'components/HeaderCell';
+import useSortableData from 'hooks/UseSortableData';
+import { cardType } from 'utils/Card';
+import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
+import { sortIntoGroups, getSorts } from 'utils/Sort';
 
-const Averages = ({ cards, characteristics }) => {
+const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
   const sorts = getSorts();
   const [sort, setSort] = useState('Color');
   const [characteristic, setCharacteristic] = useState('CMC');
@@ -90,6 +91,7 @@ const Averages = ({ cards, characteristics }) => {
           </InputGroup>
         </Col>
       </Row>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <Table bordered responsive className="mt-lg-3">
           <thead>
@@ -127,6 +129,21 @@ const Averages = ({ cards, characteristics }) => {
 Averages.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    defaultDraftFormat: PropTypes.number,
+  }).isRequired,
+  defaultFormatId: PropTypes.number,
+  setAsfans: PropTypes.func.isRequired,
+};
+Averages.defaultProps = {
+  defaultFormatId: null,
 };
 
 export default Averages;
