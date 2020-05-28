@@ -355,7 +355,7 @@ class FilterCollapse extends Component {
     const { err } = makeFilter(filterInput);
     const valid = !err;
     if (err) {
-      console.warn(err);
+      console.warn('Error parsing', err);
     }
     const appliedText =
       'Filters applied' +
