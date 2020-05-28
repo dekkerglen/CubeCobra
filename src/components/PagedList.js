@@ -6,10 +6,9 @@ import Paginate from 'components/Paginate';
 const PagedList = ({ pageSize, rows, showBottom, pageWrap }) => {
   const [page, setPage] = useState(0);
 
-  const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
-
   const current = Math.min(page, validPages.length - 1);
+  const displayRows = rows.slice(current * pageSize, (current + 1) * pageSize);
 
   return (
     <>

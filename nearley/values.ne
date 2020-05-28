@@ -72,29 +72,36 @@ colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { 
   | ("=" | ":") "m"i {% ([op]) => { normalizeCombination(fieldValue).length > 1; } %}
   | ("!=" | "<>") "m"i {% ([op]) => { normalizeCombination(fieldValue).length < 2; } %}
 
+# At each step it wraps the previous in another array layer
+# so we have to unwrap them as we step back up.
 comb1[A] -> null {% () => [] %}
-  | $A {% (comb) => comb %}
+  | $A {% ([comb]) => comb %}
 
 comb2[A, B] -> null {% () => [] %}
-  | $A comb1[$B] {% ([a, rest]) => [a, ...rest] %}
-  | $B comb1[$A] {% ([b, rest]) => [b, ...rest] %}
+  | ( $A comb1[$B]
+    | $B comb1[$A]
+    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
 comb3[A, B, C] -> null {% () => [] %}
-  | $A comb2[$B, $C] {% ([a, rest]) => [a, ...rest] %}
-  | $B comb2[$A, $C] {% ([b, rest]) => [b, ...rest] %}
-  | $C comb2[$B, $C] {% ([c, rest]) => [c, ...rest] %}
+  | ( $A comb2[$B, $C]
+    | $B comb2[$A, $C]
+    | $C comb2[$B, $C]
+    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
 comb4[A, B, C, D] -> null {% () => [] %}
-  | $A comb3[$B, $C, $D] {% ([a, rest]) => [a, ...rest] %}
-  | $B comb3[$A, $C, $D] {% ([b, rest]) => [b, ...rest] %}
-  | $C comb3[$A, $B, $D] {% ([c, rest]) => [c, ...rest] %}
-  | $D comb3[$A, $B, $C] {% ([d, rest]) => [d, ...rest] %}
+  | ( $A comb3[$B, $C, $D]
+    | $B comb3[$A, $C, $D]
+    | $C comb3[$A, $B, $D]
+    | $D comb3[$A, $B, $C]
+    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
-comb5NonEmpty[A, B, C, D, E] -> $A comb4[$B, $C, $D, $E] {% ([a, rest]) => [a, ...rest] %}
-  | $B comb4[$A, $C, $D, $E] {% ([a, rest]) => [a, ...rest] %}
-  | $C comb4[$A, $B, $D, $E] {% ([a, rest]) => [a, ...rest] %}
-  | $D comb4[$A, $B, $C, $E] {% ([a, rest]) => [a, ...rest] %}
-  | $E comb4[$A, $B, $C, $D] {% ([a, rest]) => [a, ...rest] %}
+comb5NonEmpty[A, B, C, D, E] -> (
+    $A comb4[$B, $C, $D, $E]
+  | $B comb4[$A, $C, $D, $E]
+  | $C comb4[$A, $B, $D, $E]
+  | $D comb4[$A, $B, $C, $E]
+  | $E comb4[$A, $B, $C, $D]
+) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
 colorCombinationValue ->
     ("c"i | "brown"i | "colorless"i) {% () => [] %}
@@ -103,7 +110,7 @@ colorCombinationValue ->
   | "black"i {% () => ['b'] %}
   | "red"i {% () => ['r'] %}
   | "green"i {% () => ['g'] %}
-  | "azorious"i {% () => ['w', 'u'] %}
+  | ("azorious"i | "azorius") {% () => ['w', 'u'] %}
   | "dimir"i {% () => ['u', 'b'] %}
   | "rakdos"i {% () => ['b', 'r'] %}
   | ("gruul"i | "grul"i) {% () => ['r', 'g'] %}
@@ -124,7 +131,7 @@ colorCombinationValue ->
   | "jeskai"i {% () => ['w', 'u', 'r'] %}
   | "sultai"i {% () => ['u', 'b', 'g'] %}
   | ("rainbow"i | "fivecolor"i) {% () => ['w', 'u', 'b', 'r', 'g'] %}
-  | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([[comb]]) => comb %}
+  | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([comb]) => comb.map((c) => c.toLowerCase()) %}
 
 @builtin "string.ne"
 

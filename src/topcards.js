@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import URLSearchParams from 'core-js-pure/features/url-search-params';
 
-import { encodeName } from 'utils/Card';
-import { makeFilter } from 'filtering/FilterCards';
-
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
 import SortableTable from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
+
+import { encodeName } from 'utils/Card';
+import Query from 'utils/Query';
 
 const AutocardA = withAutocard('a');
 
@@ -21,7 +21,7 @@ class TopCards extends Component {
     const { defaultData, defaultNumResults, defaultFilterText } = props;
 
     this.state = {
-      filter: (defaultFilterText && makeFilter(defaultFilterText).filter) || null,
+      filter: defaultFilterText,
       data: defaultData || [],
       numResults: defaultNumResults || 0,
     };
@@ -29,16 +29,24 @@ class TopCards extends Component {
     this.setFilter = this.setFilter.bind(this);
   }
 
-  async setFilter(filter, filterInput) {
+  componentDidMount() {
+    const queryFilter = Query.get('f');
+    if (queryFilter) {
+      this.setFilter(null, queryFilter);
+    }
+  }
+
+  async setFilter(_, filterInput) {
     const params = new URLSearchParams([['f', filterInput]]);
-    this.setState({ filter });
     const response = await fetch(`/tool/api/topcards?${params.toString()}`);
     if (!response.ok) {
       return;
     }
+    Query.set('f', filterInput);
 
     const json = await response.json();
     this.setState({
+      filter: filterInput,
       data: json.data,
       numResults: json.numResults,
     });
