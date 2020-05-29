@@ -1457,17 +1457,14 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  const details = carddb.cardFromId(card.cardID);
-  let { name } = details;
-  const { rarity, colorcategory } = details;
-  name = name.replace(/"/, '""');
+  const { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
   }
-  res.write(`"${name}",`);
+  res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${(card.colors || []).join('')},`);
