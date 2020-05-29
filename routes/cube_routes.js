@@ -1457,7 +1457,9 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  let { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
+  const details = carddb.cardFromId(card.cardID);
+  let { name } = details;
+  const { rarity, colorcategory } = details;
   name = name.replace(/"/, '""');
   let { imgUrl } = card;
   if (imgUrl) {
