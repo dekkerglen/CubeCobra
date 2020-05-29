@@ -1457,22 +1457,21 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  let { name } = carddb.cardFromId(card.cardID);
-  name = name.replace(/"/, '""');
+  const { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
   }
-  res.write(`"${name}",`);
+  res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${card.colors.join('')},`);
+  res.write(`${(card.colors || []).join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
-  res.write(`${card.rarity},`);
-  res.write(`${card.colorCategory},`);
+  res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
+  res.write(`${card.colorCategory || colorcategory},`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
