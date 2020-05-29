@@ -135,7 +135,7 @@ export const cardNotes = (card) => card.notes;
 export const cardColorCategory = (card) => card.colorCategory ?? card.details.color_category;
 
 export const cardPrice = (card) =>
-  cardFinish() === 'Foil'
+  cardFinish(card) === 'Foil'
     ? card.details.price_foil ?? card.details.price
     : card.details.price ?? card.details.price_foil;
 
