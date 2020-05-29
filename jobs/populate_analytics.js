@@ -7,7 +7,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const { GetPrices } = require('../serverjs/prices');
-const { getElo } = require('../serverjs/cubefn.js');
+const { getCardElo } = require('../serverjs/cubefn.js');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
@@ -201,7 +201,7 @@ async function processCard(cardname) {
   const prices = await GetPrices(pids);
 
   const current = {};
-  current.elo = (await getElo([cardname], true))[cardname];
+  current.elo = await getCardElo(cardname, true);
 
   current.total = cardUses[cardname] ? [cardUses[cardname], cardUses[cardname] / cubeCounts.total] : [0, 0];
   current.size180 = cardSizeUses.size180[cardname]
@@ -335,7 +335,7 @@ async function processCard(cardname) {
     // save card models
     const totalCards = carddb.cardnames.length;
     for (let i = 0; i < totalCards; i += 1) {
-      await processCard(carddb.cardnames.slice(i, i + 1)[0].toLowerCase());
+      await processCard(carddb.cardnames.slice(i, i + 1)[0]);
       console.log(`Finished: ${i + 1} of ${totalCards} cards.`);
     }
 
