@@ -225,7 +225,7 @@ function maybeCards(cube, carddb) {
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
-async function getCardElo(cardname) {
+async function getCardElo(cardname, round) {
   const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } });
 
   if (!rating || Number.isNaN(rating.elo)) {
