@@ -6,7 +6,7 @@ import 'react-pivottable/pivottable.css';
 const PivotTable = ({ cards }) => {
   const data = cards.map((card) => ({
     CMC: card.cmc ?? card.details.cmc,
-    Color: card.colors.join(),
+    Color: (card.colors || []).join(),
     Finish: card.finish,
     'Type Line': card.type_line,
     Status: card.status,
