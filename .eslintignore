@@ -67,7 +67,6 @@ src/components/TextEntry.js
 src/components/TokenAnalysis.js
 src/components/Tooltip.js
 src/components/TypeAnalysis.js
-src/components/VisualSpoiler.js
 src/components/WithAutocard.js
 src/components/WithLoading.js
 src/components/WithModal.js
