@@ -5,10 +5,13 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
+  Form,
   InputGroup,
   InputGroupAddon,
   InputGroupText,
   Label,
+  Nav,
+  NavLink,
   Row,
   UncontrolledDropdown,
 } from 'reactstrap';
@@ -22,6 +25,16 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
   const [useAsfans, toggleUseAsfans, enableUseAsfans, disableUseAsfans] = useToggle(!!defaultFormatId);
   const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
   const didMountRef = useRef(false);
+
+  const labelText = (useAsfans) => {
+    if (useAsfans) {
+      if (draftFormat < 0) {
+        return 'Standard Draft Format';
+      }
+      return cube.draft_formats[draftFormat].title;
+    }
+    return 'Count';
+  };
 
   useEffect(() => {
     if (useAsfans) {
@@ -66,27 +79,23 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
         </Label>
       </Col>
       <Col>
-        {useAsfans && (
-          <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Draft Format: </InputGroupText>
-            </InputGroupAddon>
-            <UncontrolledDropdown>
-              <DropdownToggle caret nav>
-                {draftFormat < 0 ? 'Standard Draft Format' : cube.draft_formats[draftFormat].title}
-              </DropdownToggle>
-              <DropdownMenu>
-                <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
-                {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
-                {cube.draft_formats.map((format, index) => (
-                  <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                    {format.title}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </UncontrolledDropdown>
-          </InputGroup>
-        )}
+        <Form inline>
+          Draft Format:
+          <UncontrolledDropdown disabled={!useAsfans} className="ml-2">
+            <DropdownToggle caret={useAsfans} color={useAsfans ? 'success' : 'disabled'}>
+              {labelText(useAsfans)}
+            </DropdownToggle>
+            <DropdownMenu>
+              <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
+              {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
+              {cube.draft_formats.map((format, index) => (
+                <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
+                  {format.title}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </UncontrolledDropdown>
+        </Form>
       </Col>
     </Row>
   );
