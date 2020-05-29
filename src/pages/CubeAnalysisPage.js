@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
@@ -25,7 +25,6 @@ import useToggle from 'hooks/UseToggle';
 const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [cards, setCards] = useState(cube.cards);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -121,10 +120,9 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     });
   }, [cubeID]);
 
-  const updateFilter = (val) => {
-    setFilter(val);
-    setCards(cube.cards.filter(val));
-  };
+  const filteredCards = useMemo(() => {
+    return filter ? cube.cards.filter(filter) : cube.cards;
+  }, [filter, cube]);
 
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
@@ -151,15 +149,17 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
                 <FilterCollapse
                   defaultFilterText={defaultFilterText}
                   filter={filter}
-                  setFilter={updateFilter}
-                  numCards={cards.length}
+                  setFilter={setFilter}
+                  numCards={filteredCards.length}
                   isOpen={filterCollapseOpen}
                 />
               </CardBody>
             </Card>
             <Card>
               <CardBody>
-                <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+                <ErrorBoundary>
+                  {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
+                </ErrorBoundary>
               </CardBody>
             </Card>
           </Col>
