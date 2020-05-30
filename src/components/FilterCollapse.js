@@ -324,16 +324,8 @@ class FilterCollapse extends Component {
   }
 
   async applyQuick(event) {
+    event.preventDefault();
     const tokens = [];
-    for (const name of ['type', 'text']) {
-      let value = this.state[`${name}Quick`];
-      if (!value) continue;
-      if (value.includes(' ')) {
-        value = value.replace('"', '\\"');
-        value = `"${value}"`;
-      }
-      tokens.push(`${name}:${value}`);
-    }
 
     const colors = [];
     for (const color of [...'WUBRGC']) {
@@ -347,6 +339,16 @@ class FilterCollapse extends Component {
 
     if (this.state.cmcQuick) {
       tokens.push(`cmc${this.state.cmcQuickOp}${this.state.cmcQuick}`);
+    }
+
+    for (const name of ['type', 'text']) {
+      let value = this.state[`${name}Quick`];
+      if (!value) continue;
+      if (value.includes(' ')) {
+        value = value.replace('"', '\\"');
+        value = `"${value}"`;
+      }
+      tokens.push(`${name}:${value}`);
     }
 
     const filterInput = tokens.join(' ');
@@ -441,81 +443,83 @@ class FilterCollapse extends Component {
           </Col>
         </Row>
         <Row style={{ margin: '0 -5px' }}>
-          <Col xs="auto" style={{ padding: '0 5px' }}>
-            <ColorChecksControl
-              size="sm"
-              className="mb-3"
-              colorless
-              prefix="colorQuick"
-              values={this.state}
-              onChange={this.handleChange}
-            />
-          </Col>
-          <Col xs="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
-              </InputGroupAddon>
-              <Input
-                name="typeQuick"
-                id="typeQuick"
-                value={this.state.typeQuick}
+          <Form inline>
+            <Col xs="auto" style={{ padding: '0 5px' }}>
+              <ColorChecksControl
+                size="sm"
+                className="mb-3"
+                colorless
+                prefix="colorQuick"
+                values={this.state}
                 onChange={this.handleChange}
-                style={{ width: '8rem' }}
               />
-            </InputGroup>
-          </Col>
-          <Col xs="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="cmcQuick">CMC</InputGroupText>
-              </InputGroupAddon>
-              <CustomInput
-                type="select"
-                name="cmcQuickOp"
-                value={this.state.cmcQuickOp}
-                onChange={this.handleChange}
-                bsSize="sm"
-                style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
-              >
-                <option>{'>'}</option>
-                <option>{'>='}</option>
-                <option>{'='}</option>
-                <option>{'<='}</option>
-                <option>{'<'}</option>
-              </CustomInput>
-              <InputGroupAddon addonType="append">
-                <Input
-                  name="cmcQuick"
-                  id="cmcQuick"
-                  value={this.state.cmcQuick}
+            </Col>
+            <Col xs="auto" style={{ padding: '0 5px' }}>
+              <InputGroup size="sm" className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText htmlFor="cmcQuick">CMC</InputGroupText>
+                </InputGroupAddon>
+                <CustomInput
+                  type="select"
+                  name="cmcQuickOp"
+                  value={this.state.cmcQuickOp}
                   onChange={this.handleChange}
-                  size="sm"
-                  className="square-left"
-                  style={{ width: '3rem' }}
+                  bsSize="sm"
+                  style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+                >
+                  <option>{'>'}</option>
+                  <option>{'>='}</option>
+                  <option>{'='}</option>
+                  <option>{'<='}</option>
+                  <option>{'<'}</option>
+                </CustomInput>
+                <InputGroupAddon addonType="append">
+                  <Input
+                    name="cmcQuick"
+                    id="cmcQuick"
+                    value={this.state.cmcQuick}
+                    onChange={this.handleChange}
+                    size="sm"
+                    className="square-left"
+                    style={{ width: '3rem' }}
+                  />
+                </InputGroupAddon>
+              </InputGroup>
+            </Col>
+            <Col xs="auto" style={{ padding: '0 5px' }}>
+              <InputGroup size="sm" className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
+                </InputGroupAddon>
+                <Input
+                  name="typeQuick"
+                  id="typeQuick"
+                  value={this.state.typeQuick}
+                  onChange={this.handleChange}
+                  style={{ width: '8rem' }}
                 />
-              </InputGroupAddon>
-            </InputGroup>
-          </Col>
-          <Col xs="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="textQuick">Text</InputGroupText>
-              </InputGroupAddon>
-              <Input
-                name="textQuick"
-                id="textQuick"
-                value={this.state.textQuick}
-                onChange={this.handleChange}
-                style={{ width: '8rem' }}
-              />
-            </InputGroup>
-          </Col>
-          <Col xs="auto" style={{ padding: '0 5px' }}>
-            <Button onClick={this.applyQuick} size="sm" color="primary">
-              Quick Filter
-            </Button>
-          </Col>
+              </InputGroup>
+            </Col>
+            <Col xs="auto" style={{ padding: '0 5px' }}>
+              <InputGroup size="sm" className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText htmlFor="textQuick">Text</InputGroupText>
+                </InputGroupAddon>
+                <Input
+                  name="textQuick"
+                  id="textQuick"
+                  value={this.state.textQuick}
+                  onChange={this.handleChange}
+                  style={{ width: '8rem' }}
+                />
+              </InputGroup>
+            </Col>
+            <Col xs="auto" style={{ padding: '0 5px' }}>
+              <Button type="submit" onClick={this.applyQuick} size="sm" color="primary" className="mb-3">
+                Quick Filter
+              </Button>
+            </Col>
+          </Form>
         </Row>
         <Row>
           <Col>
