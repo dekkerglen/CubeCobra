@@ -254,10 +254,16 @@ class FilterCollapse extends Component {
       ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
       ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
+      typeQuick: '',
+      cmcQuick: '',
+      cmcQuickOp: '<=',
+      textQuick: '',
+      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
     };
 
     this.toggleAdvanced = this.toggleAdvanced.bind(this);
     this.applyAdvanced = this.applyAdvanced.bind(this);
+    this.applyQuick = this.applyQuick.bind(this);
     this.updateFilters = this.updateFilters.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleApply = this.handleApply.bind(this);
@@ -290,7 +296,7 @@ class FilterCollapse extends Component {
     for (const name of allFields) {
       if (this.state[name]) {
         const op = numFields.includes(name) ? this.state[name + 'Op'] || '=' : ':';
-        let value = this.state[name].replace('"', '"');
+        let value = this.state[name].replace('"', '\\"');
         if (value.indexOf(' ') > -1) {
           value = `"${value}"`;
         }
@@ -317,8 +323,35 @@ class FilterCollapse extends Component {
     await this.updateFilters(filterInput);
   }
 
-  applySmall(event) {
+  async applyQuick(event) {
+    const tokens = [];
+    for (const name of ['type', 'text']) {
+      let value = this.state[`${name}Quick`];
+      if (!value) continue;
+      if (value.includes(' ')) {
+        value = value.replace('"', '\\"');
+        value = `"${value}"`;
+      }
+      tokens.push(`${name}:${value}`);
+    }
 
+    const colors = [];
+    for (const color of [...'WUBRGC']) {
+      if (this.state[`colorQuick${color}`]) {
+        colors.push(color);
+      }
+    }
+    if (colors.length > 0) {
+      tokens.push(`coloridentity=${colors.join('')}`);
+    }
+
+    if (this.state.cmcQuick) {
+      tokens.push(`cmc${this.state.cmcQuickOp}${this.state.cmcQuick}`);
+    }
+
+    const filterInput = tokens.join(' ');
+    this.setState({ filterInput });
+    await this.updateFilters(filterInput);
   }
 
   async updateFilters(overrideFilter) {
@@ -409,22 +442,42 @@ class FilterCollapse extends Component {
         </Row>
         <Row style={{ margin: '0 -5px' }}>
           <Col xs="auto" style={{ padding: '0 5px' }}>
-            <ColorChecksControl size="sm" className="mb-3" colorless prefix="smallColor" values={this.state} onChange={this.handleChange} />
+            <ColorChecksControl
+              size="sm"
+              className="mb-3"
+              colorless
+              prefix="colorQuick"
+              values={this.state}
+              onChange={this.handleChange}
+            />
           </Col>
           <Col xs="auto" style={{ padding: '0 5px' }}>
             <InputGroup size="sm" className="mb-3">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="smallType">Type</InputGroupText>
+                <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
               </InputGroupAddon>
-              <Input name="smallType" id="smallType" style={{ width: '8rem' }} />
+              <Input
+                name="typeQuick"
+                id="typeQuick"
+                value={this.state.typeQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
             </InputGroup>
           </Col>
           <Col xs="auto" style={{ padding: '0 5px' }}>
             <InputGroup size="sm" className="mb-3">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="smallCmc">CMC</InputGroupText>
+                <InputGroupText htmlFor="cmcQuick">CMC</InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" name="smallCmcOp" bsSize="sm" style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}>
+              <CustomInput
+                type="select"
+                name="cmcQuickOp"
+                value={this.state.cmcQuickOp}
+                onChange={this.handleChange}
+                bsSize="sm"
+                style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+              >
                 <option>{'>'}</option>
                 <option>{'>='}</option>
                 <option>{'='}</option>
@@ -432,17 +485,36 @@ class FilterCollapse extends Component {
                 <option>{'<'}</option>
               </CustomInput>
               <InputGroupAddon addonType="append">
-                <Input name="smallCmc" id="smallCmc" size="sm" style={{ width: '3rem' }} />
+                <Input
+                  name="cmcQuick"
+                  id="cmcQuick"
+                  value={this.state.cmcQuick}
+                  onChange={this.handleChange}
+                  size="sm"
+                  className="square-left"
+                  style={{ width: '3rem' }}
+                />
               </InputGroupAddon>
             </InputGroup>
           </Col>
           <Col xs="auto" style={{ padding: '0 5px' }}>
             <InputGroup size="sm" className="mb-3">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText htmlFor="smallText">Text</InputGroupText>
+                <InputGroupText htmlFor="textQuick">Text</InputGroupText>
               </InputGroupAddon>
-              <Input name="smallText" id="smallText" style={{ width: '8rem' }} />
+              <Input
+                name="textQuick"
+                id="textQuick"
+                value={this.state.textQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
             </InputGroup>
+          </Col>
+          <Col xs="auto" style={{ padding: '0 5px' }}>
+            <Button onClick={this.applyQuick} size="sm" color="primary">
+              Quick Filter
+            </Button>
           </Col>
         </Row>
         <Row>

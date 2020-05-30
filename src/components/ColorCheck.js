@@ -49,7 +49,7 @@ export const ColorCheckButton = ({ prefix, size, color, short, value, onChange }
     },
     [prefix, color, short, value, onChange],
   );
-  const symbolClassName = size ? `mana-symbol-${size}`: "mana-symbol" ;
+  const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
       className={'color-check-button' + (value ? ' active' : '')}
