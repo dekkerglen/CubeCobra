@@ -611,17 +611,26 @@ body.busy-cursor {
 
 .color-check-button {
 	border-color: #ced4da !important;
-	padding: 0 0.5rem;
+	background-color: #fff !important;
+	padding: 0 0.5rem !important;
 }
 
-.color-check-button.active,
 .color-check-button:hover {
+	border-color: #ced4da !important;
+	background-color: #f3f6f6 !important;
+}
+
+.color-check-button.active {
 	border-color: #ced4da !important;
 	background-color: #e9ecef !important;
 }
 
 img.mana-symbol {
 	height: 1.8rem;
+}
+
+img.mana-symbol-sm {
+	height: 1.3rem;
 }
 
 .square-left {
@@ -640,6 +649,14 @@ img.mana-symbol {
 
 .row-low-padding {
 	margin: 0 -2px;
+}
+
+.row-mid-padding {
+	margin: 0 -8px;
+}
+
+.row-mid-padding .col-md-6, .row-mid-padding .col-auto {
+	padding: 0 8px;
 }
 
 .list-view-table td {

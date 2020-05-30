@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import {
   Button,
   Col,
-  Container,
   Row,
   Collapse,
   CustomInput,
@@ -22,7 +21,7 @@ import { makeFilter } from 'filtering/FilterCards';
 import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 
-import { ColorChecksAddon } from 'components/ColorCheck';
+import { ColorChecksAddon, ColorChecksControl } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
 
 import TextField from 'components/TextField';
@@ -142,40 +141,52 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           value={values.tag}
           onChange={onChange}
         />
-        <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Status</InputGroupText>
-          </InputGroupAddon>
-          <Input type="select" name="status" value={values.status} onChange={onChange}>
-            {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
-              <option key={status}>{status}</option>
-            ))}
-          </Input>
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Finish</InputGroupText>
-          </InputGroupAddon>
-          <Input type="select" name="finish" value={values.finish} onChange={onChange}>
-            {['', 'Foil', 'Non-foil'].map((finish) => (
-              <option key={finish}>{finish}</option>
-            ))}
-          </Input>
-        </InputGroup>
-        <NumericField
-          name="price"
-          humanName="Price"
-          placeholder={'Any decimal number, e.g. "3.50"'}
-          value={values.price}
-          onChange={onChange}
-        />
-        <NumericField
-          name="priceFoil"
-          humanName="Foil Price"
-          placeholder={'Any decimal number, e.g. "14.00"'}
-          value={values.priceFoil}
-          onChange={onChange}
-        />
+        <Row className="row-mid-padding">
+          <Col md={6}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Status</InputGroupText>
+              </InputGroupAddon>
+              <Input type="select" name="status" value={values.status} onChange={onChange}>
+                {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </Input>
+            </InputGroup>
+          </Col>
+          <Col md={6}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Finish</InputGroupText>
+              </InputGroupAddon>
+              <Input type="select" name="finish" value={values.finish} onChange={onChange}>
+                {['', 'Foil', 'Non-foil'].map((finish) => (
+                  <option key={finish}>{finish}</option>
+                ))}
+              </Input>
+            </InputGroup>
+          </Col>
+        </Row>
+        <Row className="row-mid-padding">
+          <Col md={6}>
+            <NumericField
+              name="price"
+              humanName="Price"
+              placeholder={'Any decimal number, e.g. "3.50"'}
+              value={values.price}
+              onChange={onChange}
+            />
+          </Col>
+          <Col md={6}>
+            <NumericField
+              name="priceFoil"
+              humanName="Foil Price"
+              placeholder={'Any decimal number, e.g. "14.00"'}
+              value={values.priceFoil}
+              onChange={onChange}
+            />
+          </Col>
+        </Row>
         <NumericField
           name="elo"
           humanName="Elo"
@@ -306,6 +317,10 @@ class FilterCollapse extends Component {
     await this.updateFilters(filterInput);
   }
 
+  applySmall(event) {
+
+  }
+
   async updateFilters(overrideFilter) {
     const filterInput = overrideFilter ?? this.state.filterInput;
     if ((filterInput ?? '') === '') {
@@ -363,54 +378,93 @@ class FilterCollapse extends Component {
       (typeof numShown !== 'undefined' ? `, ${numShown} shown` : '') +
       '.';
     return (
-      <Collapse {...props}>
-        <Container>
-          <Row>
-            <Col>
-              <Form>
-                <InputGroup className="mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
-                  </InputGroupAddon>
-                  <Input
-                    type="text"
-                    id="filterInput"
-                    name="filterInput"
-                    placeholder={'name:"Ambush Viper"'}
-                    disabled={loading}
-                    valid={filterInput.length > 0 && valid}
-                    invalid={filterInput.length > 0 && !valid}
-                    value={this.state.filterInput}
-                    onChange={this.handleChange}
-                    onKeyDown={this.handleKeyDown}
-                  />
-                  <InputGroupAddon addonType="append">
-                    <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
-                      Apply
-                    </LoadingButton>
-                  </InputGroupAddon>
-                </InputGroup>
-              </Form>
-              <h5>Filters</h5>
-              {!noCount && (
-                <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
-              )}
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button color="success" className="mr-sm-2 mb-3" onClick={this.handleReset}>
-                Reset Filters
-              </Button>
-              <Button color="success" className="mr-sm-2 mb-3" onClick={this.toggleAdvanced}>
-                Advanced...
-              </Button>
-              <Button color="success" className="mr-sm-2 mb-3" href="/filters">
-                Syntax Guide
-              </Button>
-            </Col>
-          </Row>
-        </Container>
+      <Collapse className="px-3" {...props}>
+        <Row>
+          <Col>
+            <Form>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
+                </InputGroupAddon>
+                <Input
+                  type="text"
+                  id="filterInput"
+                  name="filterInput"
+                  placeholder={'name:"Ambush Viper"'}
+                  disabled={loading}
+                  valid={filterInput.length > 0 && valid}
+                  invalid={filterInput.length > 0 && !valid}
+                  value={this.state.filterInput}
+                  onChange={this.handleChange}
+                  onKeyDown={this.handleKeyDown}
+                />
+                <InputGroupAddon addonType="append">
+                  <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
+                    Apply
+                  </LoadingButton>
+                </InputGroupAddon>
+              </InputGroup>
+            </Form>
+          </Col>
+        </Row>
+        <Row style={{ margin: '0 -5px' }}>
+          <Col xs="auto" style={{ padding: '0 5px' }}>
+            <ColorChecksControl size="sm" className="mb-3" colorless prefix="smallColor" values={this.state} onChange={this.handleChange} />
+          </Col>
+          <Col xs="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText htmlFor="smallType">Type</InputGroupText>
+              </InputGroupAddon>
+              <Input name="smallType" id="smallType" style={{ width: '8rem' }} />
+            </InputGroup>
+          </Col>
+          <Col xs="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText htmlFor="smallCmc">CMC</InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" name="smallCmcOp" bsSize="sm" style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}>
+                <option>{'>'}</option>
+                <option>{'>='}</option>
+                <option>{'='}</option>
+                <option>{'<='}</option>
+                <option>{'<'}</option>
+              </CustomInput>
+              <InputGroupAddon addonType="append">
+                <Input name="smallCmc" id="smallCmc" size="sm" style={{ width: '3rem' }} />
+              </InputGroupAddon>
+            </InputGroup>
+          </Col>
+          <Col xs="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText htmlFor="smallText">Text</InputGroupText>
+              </InputGroupAddon>
+              <Input name="smallText" id="smallText" style={{ width: '8rem' }} />
+            </InputGroup>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            {!noCount && (
+              <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
+            )}
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Button color="success" className="mr-2 mb-3" onClick={this.handleReset}>
+              Reset Filters
+            </Button>
+            <Button color="success" className="mr-2 mb-3" onClick={this.toggleAdvanced}>
+              Advanced...
+            </Button>
+            <Button color="success" className="mr-2 mb-3" href="/filters">
+              Syntax Guide
+            </Button>
+          </Col>
+        </Row>
         <AdvancedFilterModal
           isOpen={advancedOpen}
           toggle={this.toggleAdvanced}
