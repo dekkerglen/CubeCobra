@@ -16,7 +16,7 @@ const DeckStacksStatic = ({ cards }) => (
         {row.map((column, index2) => (
           <Col
             key={/* eslint-disable-line react/no-array-index-key */ index2}
-            className="card-stack col-md-1-5 col-low-padding"
+            className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding"
             xs={3}
           >
             <div className="w-100 text-center mb-1">
