@@ -515,7 +515,7 @@ class FilterCollapse extends Component {
               </InputGroup>
             </Col>
             <Col xs="auto" style={{ padding: '0 5px' }}>
-              <Button type="submit" onClick={this.applyQuick} size="sm" color="primary" className="mb-3">
+              <Button type="submit" onClick={this.applyQuick} size="sm" color="success" className="mb-3">
                 Quick Filter
               </Button>
             </Col>
@@ -530,13 +530,13 @@ class FilterCollapse extends Component {
         </Row>
         <Row>
           <Col>
-            <Button color="success" className="mr-2 mb-3" onClick={this.handleReset}>
+            <Button color="danger" className="mr-2 mb-3" onClick={this.handleReset}>
               Reset Filters
             </Button>
-            <Button color="success" className="mr-2 mb-3" onClick={this.toggleAdvanced}>
+            <Button color="primary" className="mr-2 mb-3" onClick={this.toggleAdvanced}>
               Advanced...
             </Button>
-            <Button color="success" className="mr-2 mb-3" href="/filters">
+            <Button color="secondary" className="mr-2 mb-3" href="/filters">
               Syntax Guide
             </Button>
           </Col>
