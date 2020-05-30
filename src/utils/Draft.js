@@ -306,12 +306,14 @@ async function pick(cardIndex) {
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
   passPack();
-  await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
+  const [packNum] = packPickNumber();
+  csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
       pick: card.details.name,
       pack: packFrom.map((c) => c.details.name),
+      packNum,
     }),
     headers: {
       'Content-Type': 'application/json',
