@@ -36,17 +36,17 @@ function botCardRating(botColors, card) {
   // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
   if (isLand) {
     if ((subset || contains) && isFetch) {
-      rating += 191; // Increase value of picking by roughly 200%
+      rating += 280; // Increase value of picking by roughly 400%
     } else if (subset || contains) {
       switch (colors.length) {
         case 1:
-          rating += 176; // Increase value of picking by roughly 175%
+          rating += 191; // Increase value of picking by roughly 200%
           break;
         case 2:
-          rating += 218; // Increase value of picking by roughly 250%
+          rating += 262; // Increase value of picking by roughly 350%
           break;
         default:
-          rating += 265; // Increase value of picking by roughly 360%
+          rating += 311; // Increase value of picking by roughly 500%
           break;
       }
     } else if (overlap && isFetch) {

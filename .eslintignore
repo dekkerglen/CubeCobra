@@ -7,6 +7,13 @@ models/deck.js
 models/draft.js
 models/passwordreset.js
 models/user.js
+one_shot_scripts/add_blog_names.js
+one_shot_scripts/add_deck_names.js
+one_shot_scripts/generate_short_ids.js
+one_shot_scripts/import_ratings.js
+one_shot_scripts/remove_invalid_tags.js
+one_shot_scripts/seed.js
+one_shot_scripts/validate_colors.js
 public/js/autocard.js
 public/js/index.js
 public/js/toolbar.js
@@ -72,6 +79,5 @@ src/components/WithAutocard.js
 src/components/WithLoading.js
 src/components/WithModal.js
 src/utils/draftutil.js
-src/utils/Filter.js
 src/utils/Sort.js
 src/generated

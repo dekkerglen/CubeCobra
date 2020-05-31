@@ -62,7 +62,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       !draft.initial_state[current][pack].sealed &&
       (i + 1 - start) % draft.initial_state[current][pack].pickAtTime === 0
     ) {
-      if (pack % 2 === 0) {
+      if (pack % 2 === 1) {
         current += 1;
         current %= draft.initial_state.length;
       } else {
@@ -76,7 +76,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   for (const list of draft.initial_state[0]) {
     const endIndex = added + list.cards.length - list.trash;
-    picksList.push(seat.pickorder.slice(added, endIndex).map((cardIndex) => draft.cards[cardIndex]));
+    picksList.push(seat.pickorder.slice(added, endIndex).map((cardIndex) => deck.cards[cardIndex]));
     added = endIndex;
   }
 
