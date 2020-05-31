@@ -193,16 +193,16 @@ async function processCard(card) {
       : [0, 0];
   }
 
-  const cubes = cubesWithCard[correlationIndex[oracle_id]] ? cubesWithCard[correlationIndex[oracle_id]] : [];
+  const cubes = cubesWithCard[correlationIndex[oracle_id]] || [];
 
   // cubed with
   // create correl dict
   const cubedWith = [];
   for (const otherCard of carddb.allCards()) {
-    cubedWith.push([
-      otherCard.oracle_id,
-      correlations[correlationIndex[oracle_id]][correlationIndex[otherCard.oracle_id]],
-    ]);
+    cubedWith.push({
+      other: otherCard.oracle_id,
+      count: correlations[correlationIndex[oracle_id]][correlationIndex[otherCard.oracle_id]],
+    });
   }
 
   // quickselect isn't sorting correctly for some reason
