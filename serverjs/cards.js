@@ -134,6 +134,7 @@ function reasonableCard(card) {
   return (
     !card.promo &&
     !card.digital &&
+    !card.isToken &&
     card.border_color !== 'gold' &&
     card.language === 'en' &&
     card.tcgplayer_id &&
