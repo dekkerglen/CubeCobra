@@ -629,7 +629,7 @@ router.get('/blog/:userid', async (req, res) => {
     const reactProps = {
       user,
       posts,
-      canEdit: req.user && req.user._id.equals(req.user._id),
+      canEdit: req.user && req.user._id.equals(user._id),
       followers,
       following: req.user && req.user.followed_users.includes(user.id),
       userId: req.user._id,

@@ -12,7 +12,7 @@ const UserDecksPage = ({ user, followers, following, canEdit, posts, userId }) =
         pageSize={10}
         showBottom
         rows={posts.slice(0).map((post) => (
-          <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn />
+          <BlogPost key={post._id} post={post} canEdit={canEdit} userid={userId} loggedIn />
         ))}
       />
     ) : (
