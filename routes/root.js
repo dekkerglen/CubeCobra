@@ -116,7 +116,9 @@ router.get('/explore', async (req, res) => {
 router.get('/random', async (req, res) => {
   const count = await Cube.count();
   const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne().skip(random).lean();
+  const cube = await Cube.findOne()
+    .skip(random)
+    .lean();
   res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
 });
 
@@ -157,7 +159,7 @@ router.get('/dashboard', async (req, res) => {
       .sort({
         date: -1,
       })
-      .limit(50);
+      .limit(200);
 
     // We can do these queries in parallel
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
@@ -194,8 +196,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send(err);
+    return util.handleRouteError(req, res, err, '/landing');
   }
 });
 
