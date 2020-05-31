@@ -7,27 +7,16 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const { GetPrices } = require('../serverjs/prices');
-const { getCardElo } = require('../serverjs/cubefn.js');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
-
-const batchSize = 100;
+const CardRating = require('../models/cardrating');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
 const d = new Date();
 const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-
-// define .flat()
-Object.defineProperty(Array.prototype, 'flat', {
-  value(depth = 1) {
-    return this.reduce(function(flat, toFlatten) {
-      return flat.concat(Array.isArray(toFlatten) && depth > 1 ? toFlatten.flat(depth - 1) : toFlatten);
-    }, []);
-  },
-});
 
 const cardUses = {};
 const cardSizeUses = {
@@ -67,7 +56,7 @@ const cubesWithCard = [];
 function createCorrelations() {
   const totalCards = carddb.cardnames.length;
   for (let i = 0; i < totalCards; i += 1) {
-    correlationIndex[carddb.cardnames[i].toLowerCase()] = i;
+    correlationIndex[carddb.cardnames[i]] = i;
     correlations.push([]);
     cubesWithCard.push([]);
     for (let j = 0; j < totalCards; j += 1) {
@@ -94,14 +83,7 @@ async function processDeck(deck) {
     deck.seats[0].deck.forEach((col) => {
       col.forEach((row) => {
         if (row && row.cardID) {
-          deckCards.push(
-            carddb
-              .cardFromId(row.cardID)
-              .name.toLowerCase()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .trim(),
-          );
+          deckCards.push(carddb.cardFromId(row.cardID).oracle_id);
         }
       });
     });
@@ -148,103 +130,75 @@ async function processCube(cube) {
 
   const isPauper = false;
   if (cube.type) {
-    if (cube.type.toLowerCase().includes('standard')) {
+    if (cube.type.includes('standard')) {
       cubeLegalityDict = cardSizeUses.standard;
       cubeCounts.standard += 1;
-    } else if (cube.type.toLowerCase().includes('modern')) {
+    } else if (cube.type.includes('modern')) {
       cubeLegalityDict = cardSizeUses.modern;
       cubeCounts.modern += 1;
-    } else if (cube.type.toLowerCase().includes('legacy')) {
+    } else if (cube.type.includes('legacy')) {
       cubeLegalityDict = cardSizeUses.legacy;
       cubeCounts.legacy += 1;
-    } else if (cube.type.toLowerCase().includes('vintage')) {
+    } else if (cube.type.includes('vintage')) {
       cubeLegalityDict = cardSizeUses.vintage;
       cubeCounts.vintage += 1;
     }
 
-    if (cube.type.toLowerCase().includes('pauper')) {
+    if (cube.type.includes('pauper')) {
       cubeLegalityDict = cardSizeUses.pauper;
       cubeCounts.pauper += 1;
     }
   }
 
-  // cardnames = [];
   cube.cards.forEach((card) => {
-    const cardobj = carddb.cardFromId(card.cardID);
-    const cardname = cardobj.name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-    if (correlationIndex[cardname]) {
-      cubesWithCard[correlationIndex[cardname]].push(cube._id);
+    const { oracle_id } = carddb.cardFromId(card.cardID);
+    if (correlationIndex[oracle_id]) {
+      cubesWithCard[correlationIndex[oracle_id]].push(cube._id);
     }
 
     // total
-    attemptIncrement(cardUses, cardobj.name.toLowerCase());
+    attemptIncrement(cardUses, oracle_id);
 
-    // cube sizes
-    attemptIncrement(cubeSizeDict, cardobj.name.toLowerCase());
+    // card counts collated by cube sizes
+    attemptIncrement(cubeSizeDict, oracle_id);
 
-    // cube type
-    attemptIncrement(cubeLegalityDict, cardobj.name.toLowerCase());
+    // card counts collated by cube type
+    attemptIncrement(cubeLegalityDict, oracle_id);
     if (isPauper) {
-      attemptIncrement(cardSizeUses.pauper, cardobj.name.toLowerCase());
+      attemptIncrement(cardSizeUses.pauper, oracle_id);
     }
   });
 }
 
-async function processCard(cardname) {
-  const ids = carddb.nameToId[cardname];
+async function processCard(card) {
+  const versions = carddb.allVersions(card);
+  const tcgplayerIds = versions.map((id) => carddb.cardFromId(id).tcgplayer_id);
+  const { name, oracle_id } = card;
 
-  const pids = ids.map((id) => carddb.cardFromId(id).tcgplayer_id);
-  const prices = await GetPrices(pids);
+  const pricesQ = GetPrices(tcgplayerIds);
+  const ratingQ = CardRating.findOne({ cardName: name });
 
-  const current = {};
-  current.elo = await getCardElo(cardname, true);
+  const [prices, rating] = await Promise.all([pricesQ, ratingQ]);
 
-  current.total = cardUses[cardname] ? [cardUses[cardname], cardUses[cardname] / cubeCounts.total] : [0, 0];
-  current.size180 = cardSizeUses.size180[cardname]
-    ? [cardSizeUses.size180[cardname], cardSizeUses.size180[cardname] / cubeCounts.size180]
-    : [0, 0];
-  current.size360 = cardSizeUses.size360[cardname]
-    ? [cardSizeUses.size360[cardname], cardSizeUses.size360[cardname] / cubeCounts.size360]
-    : [0, 0];
-  current.size450 = cardSizeUses.size450[cardname]
-    ? [cardSizeUses.size450[cardname], cardSizeUses.size450[cardname] / cubeCounts.size450]
-    : [0, 0];
-  current.size540 = cardSizeUses.size540[cardname]
-    ? [cardSizeUses.size540[cardname], cardSizeUses.size540[cardname] / cubeCounts.size540]
-    : [0, 0];
-  current.size720 = cardSizeUses.size720[cardname]
-    ? [cardSizeUses.size720[cardname], cardSizeUses.size720[cardname] / cubeCounts.size720]
-    : [0, 0];
-  current.vintage = cardSizeUses.vintage[cardname]
-    ? [cardSizeUses.vintage[cardname], cardSizeUses.vintage[cardname] / cubeCounts.vintage]
-    : [0, 0];
-  current.legacy = cardSizeUses.legacy[cardname]
-    ? [cardSizeUses.legacy[cardname], cardSizeUses.legacy[cardname] / cubeCounts.legacy]
-    : [0, 0];
-  current.modern = cardSizeUses.modern[cardname]
-    ? [cardSizeUses.modern[cardname], cardSizeUses.modern[cardname] / cubeCounts.modern]
-    : [0, 0];
-  current.standard = cardSizeUses.standard[cardname]
-    ? [cardSizeUses.standard[cardname], cardSizeUses.standard[cardname] / cubeCounts.standard]
-    : [0, 0];
-  current.pauper = cardSizeUses.pauper[cardname]
-    ? [cardSizeUses.pauper[cardname], cardSizeUses.pauper[cardname] / cubeCounts.pauper]
-    : [0, 0];
+  const currentDatapoint = {};
+  currentDatapoint.elo = rating.elo;
 
-  const cubes = cubesWithCard[correlationIndex[cardname]] ? cubesWithCard[correlationIndex[cardname]] : [];
+  currentDatapoint.total = cardUses[oracle_id] ? [cardUses[oracle_id], cardUses[oracle_id] / cubeCounts.total] : [0, 0];
+  for (const cubeCategory of Object.keys(cardSizeUses)) {
+    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][oracle_id]
+      ? [cardSizeUses[cubeCategory][oracle_id], cardSizeUses[cubeCategory][oracle_id] / cubeCounts[cubeCategory]]
+      : [0, 0];
+  }
+
+  const cubes = cubesWithCard[correlationIndex[oracle_id]] ? cubesWithCard[correlationIndex[oracle_id]] : [];
 
   // cubed with
   // create correl dict
-  const totalCards = carddb.cardnames.length;
-  let cubedWith = [];
-  for (let i = 0; i < totalCards; i += 1) {
+  const cubedWith = [];
+  for (const otherCard of carddb.allCards()) {
     cubedWith.push([
-      carddb.cardnames[i].toLowerCase(),
-      correlations[correlationIndex[cardname]][correlationIndex[carddb.cardnames[i].toLowerCase()]],
+      otherCard.oracle_id,
+      correlations[correlationIndex[oracle_id]][correlationIndex[otherCard.oracle_id]],
     ]);
   }
 
@@ -253,64 +207,59 @@ async function processCard(cardname) {
     return second[1] - first[1];
   });
 
-  cubedWith = cubedWith.slice(0, 100);
+  let cardHistory = await CardHistory.findOne({ oracleId: oracle_id });
+  try {
+    if (!cardHistory) {
+      cardHistory = new CardHistory();
+      cardHistory.cardName = name;
+      cardHistory.oracleId = oracle_id; // eslint-disable-line camelcase
+      cardHistory.versions = versions;
+    }
 
-  await Promise.all(
-    ids.map(async (id) => {
-      let card = await CardHistory.findOne({ cardID: id });
-      try {
-        if (!card) {
-          card = new CardHistory();
-          card.cardName = carddb.cardFromId(id).name_lower;
-          card.cardID = id;
-        }
-        const pid = carddb.cardFromId(id).tcgplayer_id;
-
-        // set universals
-        const cur = { ...current };
-
-        if (prices[pid]) {
-          cur.price = prices[pid];
-        }
-        if (prices[`${pid}_foil`]) {
-          cur.price_foil = prices[`${pid}_foil`];
-        }
-
-        card.current = cur;
-        card.cubedWith = cubedWith;
-        card.cubes = cubes;
-        card.cubesLength = cubes.length;
-
-        if (!card.history) {
-          card.history = [];
-        }
-
-        card.history.push({
-          date: currentDate,
-          data: cur,
-        });
-
-        await card.save();
-      } catch (error) {
-        console.error(error);
-        console.log(card);
+    versions.map((id) => {
+      const versionPrice = { version: id };
+      const { tcgplayer_id } = carddb.cardFromId(id);
+      if (prices[tcgplayer_id]) {
+        versionPrice.price = prices[tcgplayer_id];
       }
-    }),
-  );
+      if (prices[`${tcgplayer_id}_foil`]) {
+        versionPrice.price_foil = prices[`${tcgplayer_id}_foil`];
+      }
+      return versionPrice;
+    });
+
+    cardHistory.current = currentDatapoint;
+    cardHistory.cubedWith = cubedWith.slice(0, 100);
+    cardHistory.cubes = cubes;
+    cardHistory.cubesLength = cubes.length;
+
+    if (!cardHistory.history) {
+      cardHistory.history = [];
+    }
+
+    cardHistory.history.push({
+      date: currentDate,
+      data: currentDatapoint,
+    });
+
+    await cardHistory.save();
+  } catch (error) {
+    console.error(error);
+    console.log(card);
+  }
 }
 
 (async () => {
   await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
+  mongoose.connect(process.env.MONGODB_URL).then(async () => {
     createCorrelations();
 
     // process all cube objects
     console.log('Started: cubes');
     let count = await Cube.countDocuments();
-    let cursor = Cube.find()
-      .lean()
-      .cursor();
+    let cursor = Cube.find().lean().cursor();
     for (let i = 0; i < count; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
       await processCube(await cursor.next());
       if ((i + 1) % 10 === 0) {
         console.log(`Finished: ${i + 1} of ${count} cubes.`);
@@ -321,10 +270,9 @@ async function processCard(cardname) {
     // process all deck objects
     console.log('Started: decks');
     count = await Deck.countDocuments();
-    cursor = Deck.find()
-      .lean()
-      .cursor();
+    cursor = Deck.find().lean().cursor();
     for (let i = 0; i < count; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
       await processDeck(await cursor.next());
       if ((i + 1) % 1000 === 0) {
         console.log(`Finished: ${i + 1} of ${count} decks.`);
@@ -333,10 +281,15 @@ async function processCard(cardname) {
     console.log('Finished: all decks');
 
     // save card models
-    const totalCards = carddb.cardnames.length;
-    for (let i = 0; i < totalCards; i += 1) {
-      await processCard(carddb.cardnames.slice(i, i + 1)[0]);
-      console.log(`Finished: ${i + 1} of ${totalCards} cards.`);
+    const allOracleIds = carddb.allOracleIds();
+    const totalCards = allOracleIds.length;
+    let processed = 0;
+    for (const oracleId of allOracleIds) {
+      const cardId = carddb.getVersionsByOracleId(oracleId)[0];
+      const card = carddb.getCardDetails(cardId);
+      await processCard(card); // eslint-disable-line no-await-in-loop
+      processed += 1;
+      console.log(`Finished: ${processed} of ${totalCards} cards.`);
     }
 
     mongoose.disconnect();

@@ -184,12 +184,12 @@ test('normalizedName normalizes unicode correctly', () => {
   expect(result).toBe(expected);
 });
 
-test('allIds correctly maps a cardname to an ID', () => {
+test('allVersions correctly maps a cardname to an ID', () => {
   expect.assertions(2);
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
     const expected = _RankleMasterofFixtures._id;
-    const result = carddb.allIds({
+    const result = carddb.allVersions({
       name: 'Rankle, Master of Pranks',
     });
     expect(result.length).toBe(1);
