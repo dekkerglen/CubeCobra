@@ -73,9 +73,10 @@ async function topCards(filter) {
   const oracleIds = [...oracleIdMap.keys()];
   const query = filter ? { oracleId: { $in: oracleIds } } : {};
   const selectedVersions = new Map(
-    oracleIdMap
-      .entries()
-      .map(([oracleId, versions]) => [oracleId, carddb.getFirstReasonable(versions.map(({ _id }) => _id))]),
+    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
+      oracleId,
+      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
+    ]),
   );
 
   const dataQ = Promise.all(
@@ -156,7 +157,7 @@ router.get('/topcards', async (req, res) => {
     const reactProps = {
       defaultNumResults: numResults,
       defaultData: data,
-      defaultFilterText: req.query.f,
+      defaultFilterText: req.query.f || '',
     };
     res.render('tool/topcards', {
       reactProps: serialize(reactProps),

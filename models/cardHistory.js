@@ -41,7 +41,7 @@ const cardHistorySchema = mongoose.Schema({
     index: true,
   },
   current: Datapoint,
-  cubedWith: [[String]], // this is list of card ids
+  cubedWith: [String], // this is list of card ids
   cubes: [String], // this is a list of cube ids
   history: {
     type: [

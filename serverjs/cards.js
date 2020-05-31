@@ -9,16 +9,17 @@ const data = {
   cardnames: [],
   full_names: [],
   nameToId: {},
+  oracleToId: {},
   english: {},
   _carddict: {},
 };
 
 const fileToAttribute = {
   'carddict.json': '_carddict',
-  'oracleToId.json': 'oracleToId',
   'cardtree.json': 'cardtree',
   'names.json': 'cardnames',
   'nameToId.json': 'nameToId',
+  'oracleToId.json': 'oracleToId',
   'full_names.json': 'full_names',
   'imagedict.json': 'imagedict',
   'cardimages.json': 'cardimages',

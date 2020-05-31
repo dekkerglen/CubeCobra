@@ -54,9 +54,10 @@ const correlations = [];
 const cubesWithCard = [];
 
 function createCorrelations() {
-  const totalCards = carddb.cardnames.length;
+  const allOracleIds = carddb.allOracleIds();
+  const totalCards = allOracleIds.length;
   for (let i = 0; i < totalCards; i += 1) {
-    correlationIndex[carddb.cardnames[i]] = i;
+    correlationIndex[allOracleIds[i]] = i;
     correlations.push([]);
     cubesWithCard.push([]);
     for (let j = 0; j < totalCards; j += 1) {
@@ -171,7 +172,7 @@ async function processCube(cube) {
 }
 
 async function processCard(card) {
-  const versions = carddb.allVersions(card);
+  const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const tcgplayerIds = versions.map((id) => carddb.cardFromId(id).tcgplayer_id);
   const { name, oracle_id } = card;
 
@@ -181,7 +182,9 @@ async function processCard(card) {
   const [prices, rating] = await Promise.all([pricesQ, ratingQ]);
 
   const currentDatapoint = {};
-  currentDatapoint.elo = rating.elo;
+  currentDatapoint.rating = rating ? rating.rating : null;
+  currentDatapoint.elo = rating ? rating.elo : null;
+  currentDatapoint.picks = rating ? rating.picks : 0;
 
   currentDatapoint.total = cardUses[oracle_id] ? [cardUses[oracle_id], cardUses[oracle_id] / cubeCounts.total] : [0, 0];
   for (const cubeCategory of Object.keys(cardSizeUses)) {
@@ -228,10 +231,12 @@ async function processCard(card) {
       return versionPrice;
     });
 
-    cardHistory.current = currentDatapoint;
-    cardHistory.cubedWith = cubedWith.slice(0, 100);
     cardHistory.cubes = cubes;
     cardHistory.cubesLength = cubes.length;
+    currentDatapoint.cubes = cubes.length;
+
+    cardHistory.current = currentDatapoint;
+    cardHistory.cubedWith = cubedWith.slice(0, 100);
 
     if (!cardHistory.history) {
       cardHistory.history = [];
@@ -286,7 +291,7 @@ async function processCard(card) {
     let processed = 0;
     for (const oracleId of allOracleIds) {
       const cardId = carddb.getVersionsByOracleId(oracleId)[0];
-      const card = carddb.getCardDetails(cardId);
+      const card = carddb.cardFromId(cardId);
       await processCard(card); // eslint-disable-line no-await-in-loop
       processed += 1;
       console.log(`Finished: ${processed} of ${totalCards} cards.`);
