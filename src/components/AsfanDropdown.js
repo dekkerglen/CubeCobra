@@ -1,20 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import {
-  Col,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
-  Form,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  Label,
-  Nav,
-  NavLink,
-  Row,
-  UncontrolledDropdown,
-} from 'reactstrap';
+import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';
 import { calculateAsfans } from 'utils/draftutil';
@@ -26,7 +12,7 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
   const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
   const didMountRef = useRef(false);
 
-  const labelText = (useAsfans) => {
+  const labelText = () => {
     if (useAsfans) {
       if (draftFormat < 0) {
         return 'Standard Draft Format';
