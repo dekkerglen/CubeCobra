@@ -3,7 +3,7 @@ const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
-const { addPrices, GetPrices } = require('../serverjs/prices');
+const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
@@ -27,30 +27,26 @@ async function matchingCards(filter) {
       filterUses(filter, 'rating') ||
       filterUses(filter, 'elo') ||
       filterUses(filter, 'picks') ||
-      filterUses(filter, 'cubes')
+      filterUses(filter, 'cubes') ||
+      filterUses(filter, 'price') ||
+      filterUses(filter, 'price_foil')
     ) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
-      const historyObjects = await CardHistory.find({ oracleId: { $in: oracleIds } }).lean();
+      const historyObjects = await CardHistory.find({ oracleId: { $in: oracleIds } }, 'current').lean();
       const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
       cards = cards.map((card) => {
         const history = historyDict.get(card.oracle_id);
+        const priceData = history ? history.current.find(({ version }) => version === card._id) : null;
         return {
           ...card,
-          rating: history ? history.rating : null,
-          elo: history ? history.elo : null,
-          picks: history ? history.picks : null,
-          cubes: history ? history.cubes : null,
+          rating: history ? history.current.rating : null,
+          elo: history ? history.current.elo : null,
+          picks: history ? history.current.picks : null,
+          cubes: history ? history.current.cubes : null,
+          price: priceData ? priceData.price : null,
+          price_foil: priceData ? priceData.price_foil : null,
         };
       });
-    }
-    if (filterUses(filter, 'price') || filterUses(filter, 'price_foil')) {
-      const withPrices = await addPrices(cards);
-      // null is a magic value that causes price filtering to always fail.
-      cards = withPrices.map(({ price, price_foil, ...card }) => ({
-        ...card,
-        price: price || null,
-        price_foil: price_foil || null, // eslint-disable-line camelcase
-      }));
     }
   }
   return filterCardsDetails(cards, filter);

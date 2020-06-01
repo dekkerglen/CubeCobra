@@ -194,6 +194,19 @@ async function processCard(card) {
   }
 
   const cubes = cubesWithCard[correlationIndex[oracle_id]] || [];
+  currentDatapoint.cubes = cubes.length;
+
+  currentDatapoint.prices = versions.map((id) => {
+    const versionPrice = { version: id };
+    const { tcgplayer_id } = carddb.cardFromId(id);
+    if (prices[tcgplayer_id]) {
+      versionPrice.price = prices[tcgplayer_id];
+    }
+    if (prices[`${tcgplayer_id}_foil`]) {
+      versionPrice.price_foil = prices[`${tcgplayer_id}_foil`];
+    }
+    return versionPrice;
+  });
 
   // cubed with
   // create correl dict
@@ -219,22 +232,7 @@ async function processCard(card) {
       cardHistory.versions = versions;
     }
 
-    versions.map((id) => {
-      const versionPrice = { version: id };
-      const { tcgplayer_id } = carddb.cardFromId(id);
-      if (prices[tcgplayer_id]) {
-        versionPrice.price = prices[tcgplayer_id];
-      }
-      if (prices[`${tcgplayer_id}_foil`]) {
-        versionPrice.price_foil = prices[`${tcgplayer_id}_foil`];
-      }
-      return versionPrice;
-    });
-
     cardHistory.cubes = cubes;
-    cardHistory.cubesLength = cubes.length;
-    currentDatapoint.cubes = cubes.length;
-
     cardHistory.current = currentDatapoint;
     cardHistory.cubedWith = cubedWith.slice(0, 100);
 
