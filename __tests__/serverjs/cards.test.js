@@ -62,6 +62,7 @@ test('unloadCardDb unloads the card database correctly', () => {
 const _RankleMasterofFixtures = {
   _id: '93c2c11d-dfc3-4ba9-8c0f-a98114090396',
   oracle_id: 'b8619990-9dc2-4fcc-bc7e-457b77cd2a8e',
+  mtgo_id: 78320,
   color_identity: ['B'],
   set: 'eld',
   collector_number: '101',

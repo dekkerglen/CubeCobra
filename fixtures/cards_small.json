@@ -55,8 +55,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -89,7 +89,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5122,
+    "edhrec_rank": 4691,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -97,7 +97,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473156",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Inspiring+Veteran&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Inspiring+Veteran&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Inspiring+Veteran",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Inspiring+Veteran"
     }
@@ -174,8 +174,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -208,7 +208,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8249,
+    "edhrec_rank": 6483,
     "preview": {
       "source": "Huey Jensen",
       "source_uri": "https://twitter.com/HueyJensen/status/1174420655242010624",
@@ -216,7 +216,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473155",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Improbable+Alliance&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Improbable+Alliance&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Improbable+Alliance",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Improbable+Alliance"
     }
@@ -273,8 +273,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -306,10 +306,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 3227,
+    "edhrec_rank": 1881,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473126",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Kenrith%27s+Transformation&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Kenrith%27s+Transformation&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Kenrith%27s+Transformation",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Kenrith%27s+Transformation"
     }
@@ -366,8 +366,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -400,7 +400,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12592,
+    "edhrec_rank": 11389,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
@@ -408,7 +408,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473105",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Slaying+Fire&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Slaying+Fire&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Slaying+Fire",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Slaying+Fire"
     }
@@ -465,8 +465,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -499,7 +499,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12142,
+    "edhrec_rank": 11379,
     "preview": {
       "source": "Mark Rosewater",
       "source_uri": "https://mobile.twitter.com/maro254/status/1172198040263741441",
@@ -507,7 +507,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472977",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Glass+Casket&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Glass+Casket&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Glass+Casket",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Glass+Casket"
     }
@@ -576,7 +576,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -584,8 +584,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -618,7 +618,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5025,
+    "edhrec_rank": 4002,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169279011639443457",
@@ -626,7 +626,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473062",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Piper+of+the+Swarm&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Piper+of+the+Swarm&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Piper+of+the+Swarm",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Piper+of+the+Swarm"
     }
@@ -679,8 +679,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -713,7 +713,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 825,
+    "edhrec_rank": 426,
     "preview": {
       "source": "Face to Face Games",
       "source_uri": "http://magic.facetofacegames.com/exclusive-throne-of-eldraine-spoiler-fabled-passage/",
@@ -721,7 +721,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473206",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fabled+Passage&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fabled+Passage&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Fabled+Passage",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Fabled+Passage"
     }
@@ -776,8 +776,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -810,7 +810,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1915,
+    "edhrec_rank": 999,
     "preview": {
       "source": "Amanda Yeo",
       "source_uri": "https://twitter.com/amandamyeo/status/1173867462036611072",
@@ -818,7 +818,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473204",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Vantress&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Vantress&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Castle+Vantress",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Castle+Vantress"
     }
@@ -873,8 +873,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -907,7 +907,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2006,
+    "edhrec_rank": 1087,
     "preview": {
       "source": "Stopgame",
       "source_uri": "https://youtu.be/ymiqozyqUuE",
@@ -915,7 +915,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473203",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Locthwain&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Locthwain&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Castle+Locthwain",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Castle+Locthwain"
     }
@@ -970,8 +970,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1004,7 +1004,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2293,
+    "edhrec_rank": 1235,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/colors-costs-tempo-building-better-castle-2019-09-17",
@@ -1012,7 +1012,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473202",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Garenbrig&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Garenbrig&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Castle+Garenbrig",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Castle+Garenbrig"
     }
@@ -1067,8 +1067,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1101,7 +1101,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3588,
+    "edhrec_rank": 2055,
     "preview": {
       "source": "Hareruya",
       "source_uri": "https://article.hareruyamtg.com/article/31458/?lang=en",
@@ -1109,7 +1109,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473201",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Embereth&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Embereth&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Castle+Embereth",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Castle+Embereth"
     }
@@ -1182,8 +1182,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1216,7 +1216,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3107,
+    "edhrec_rank": 1719,
     "preview": {
       "source": "ESPN Brazil",
       "source_uri": "https://es.pn/2LDfNEd",
@@ -1224,7 +1224,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473200",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Ardenvale&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Castle+Ardenvale&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Castle+Ardenvale",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Castle+Ardenvale"
     }
@@ -1279,8 +1279,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1313,7 +1313,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4094,
+    "edhrec_rank": 2736,
     "preview": {
       "source": "Anoa",
       "source_uri": "http://mtg.anoad.com/?p=7533",
@@ -1321,7 +1321,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473197",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stonecoil+Serpent&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stonecoil+Serpent&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Stonecoil+Serpent",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Stonecoil+Serpent"
     }
@@ -1374,8 +1374,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1407,7 +1407,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4803,
+    "edhrec_rank": 4794,
     "preview": {
       "source": "Geektenango",
       "source_uri": "https://www.facebook.com/geektenango/videos/2277811855673952",
@@ -1415,7 +1415,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473195",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sorcerous+Spyglass&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sorcerous+Spyglass&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Sorcerous+Spyglass",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Sorcerous+Spyglass"
     }
@@ -1476,8 +1476,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1510,7 +1510,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5416,
+    "edhrec_rank": 4082,
     "preview": {
       "source": "Bigweb",
       "source_uri": "https://mtg.bigweb.co.jp/article/preview/ELD",
@@ -1518,7 +1518,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473165",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stormfist+Crusader&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stormfist+Crusader&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Stormfist+Crusader",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Stormfist+Crusader"
     }
@@ -1611,8 +1611,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1644,7 +1644,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7336,
+    "edhrec_rank": 5287,
     "preview": {
       "source": "Gaby Spartz",
       "source_uri": "https://www.youtube.com/watch?v=OCPU11hC2Dc",
@@ -1652,7 +1652,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473160",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Outlaws%27+Merriment&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Outlaws%27+Merriment&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Outlaws%27+Merriment",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Outlaws%27+Merriment"
     }
@@ -1713,8 +1713,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1746,7 +1746,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10190,
+    "edhrec_rank": 8571,
     "preview": {
       "source": "Tasca Do Magique",
       "source_uri": "https://www.youtube.com/watch?v=rGagRu_HW2w",
@@ -1754,7 +1754,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473157",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lochmere+Serpent&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lochmere+Serpent&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Lochmere+Serpent",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Lochmere+Serpent"
     }
@@ -1815,8 +1815,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1849,7 +1849,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1888,
+    "edhrec_rank": 1003,
     "preview": {
       "source": "cafe.daum.net",
       "source_uri": "http://cafe.daum.net/magin/9Uu6/4718",
@@ -1857,7 +1857,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473152",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Faeburrow+Elder&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Faeburrow+Elder&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Faeburrow+Elder",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Faeburrow+Elder"
     }
@@ -1908,7 +1908,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -1916,8 +1916,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -1950,7 +1950,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6680,
+    "edhrec_rank": 5060,
     "preview": {
       "source": "Brainstorm Brewery",
       "source_uri": "https://www.youtube.com/watch?v=S44bJNc42GM",
@@ -1958,7 +1958,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473151",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Escape+to+the+Wilds&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Escape+to+the+Wilds&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Escape+to+the+Wilds",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Escape+to+the+Wilds"
     }
@@ -2035,8 +2035,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2069,7 +2069,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8683,
+    "edhrec_rank": 7285,
     "preview": {
       "source": "Destructoid",
       "source_uri": "https://www.destructoid.com/check-out-magic-the-gathering-s-doom-foretold-our-exclusive-throne-of-eldraine-card-reveal-565657.phtml",
@@ -2077,7 +2077,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473149",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Doom+Foretold&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Doom+Foretold&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Doom+Foretold",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Doom+Foretold"
     }
@@ -2136,8 +2136,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2169,7 +2169,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3820,
+    "edhrec_rank": 2878,
     "preview": {
       "source": "Commanderin",
       "source_uri": "https://www.youtube.com/watch?v=oQaCw2LbsCg",
@@ -2177,7 +2177,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473148",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Dance+of+the+Manse&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Dance+of+the+Manse&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Dance+of+the+Manse",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Dance+of+the+Manse"
     }
@@ -2236,8 +2236,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2272,7 +2272,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6807,
+    "edhrec_rank": 5587,
     "preview": {
       "source": "IGN España",
       "source_uri": "https://es.ign.com/magic-the-gathering/155533/news/magic-una-carta-una-carta-del-nuevo-set-el-trono-de-eldraine-en-exclusiva",
@@ -2280,7 +2280,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473147",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Yorvo%2C+Lord+of+Garenbrig&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Yorvo%2C+Lord+of+Garenbrig&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Yorvo%2C+Lord+of+Garenbrig",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Yorvo%2C+Lord+of+Garenbrig"
     }
@@ -2331,7 +2331,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2339,8 +2339,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2372,7 +2372,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7006,
+    "edhrec_rank": 5972,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/wildborn-preserver-2019-09-10",
@@ -2380,7 +2380,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473144",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wildborn+Preserver&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wildborn+Preserver&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Wildborn+Preserver",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Wildborn+Preserver"
     }
@@ -2439,8 +2439,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2472,7 +2472,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10797,
+    "edhrec_rank": 10375,
     "preview": {
       "source": "NOT A WOLF",
       "source_uri": "https://twitter.com/SICKOFWOLVES/status/1171097721458946049",
@@ -2480,7 +2480,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473143",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wicked+Wolf&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wicked+Wolf&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Wicked+Wolf",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Wicked+Wolf"
     }
@@ -2529,7 +2529,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2537,8 +2537,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2571,7 +2571,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 1772,
+    "edhrec_rank": 858,
     "preview": {
       "source": "The Vorthos Cast",
       "source_uri": "https://twitter.com/TheVorthosCast/status/1174687113389989888",
@@ -2579,7 +2579,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473134",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Return+of+the+Wildspeaker&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Return+of+the+Wildspeaker&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Return+of+the+Wildspeaker",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Return+of+the+Wildspeaker"
     }
@@ -2638,8 +2638,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2674,7 +2674,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6193,
+    "edhrec_rank": 4561,
     "preview": {
       "source": "Day9TV",
       "source_uri": "https://twitter.com/day9tv/status/1171090892201086976?s=21",
@@ -2682,7 +2682,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473133",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Questing+Beast&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Questing+Beast&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Questing+Beast",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Questing+Beast"
     }
@@ -2705,12 +2705,12 @@
     "layout": "normal",
     "highres_image": true,
     "image_uris": {
-      "small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-      "normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-      "large": "https://img.scryfall.com/cards/large/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-      "png": "https://img.scryfall.com/cards/png/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.png?1578843782",
-      "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-      "border_crop": "https://img.scryfall.com/cards/border_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782"
+      "small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+      "normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+      "large": "https://img.scryfall.com/cards/large/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+      "png": "https://img.scryfall.com/cards/png/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.png?1583750155",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155"
     },
     "mana_cost": "{1}{G}",
     "cmc": 2,
@@ -2727,7 +2727,7 @@
       "future": "banned",
       "historic": "banned",
       "pioneer": "banned",
-      "modern": "legal",
+      "modern": "banned",
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
@@ -2739,8 +2739,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2772,7 +2772,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6349,
+    "edhrec_rank": 4991,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
@@ -2780,7 +2780,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473131",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Once+Upon+a+Time&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Once+Upon+a+Time&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Once+Upon+a+Time",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Once+Upon+a+Time"
     }
@@ -2837,8 +2837,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2873,7 +2873,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1422,
+    "edhrec_rank": 736,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/building-great-henge-2019-09-18",
@@ -2881,7 +2881,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473123",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Great+Henge&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Great+Henge&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=The+Great+Henge",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=The+Great+Henge"
     }
@@ -2934,11 +2934,11 @@
       },
       {
         "object": "related_card",
-        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
+        "id": "bf36408d-ed85-497f-8e68-d3a922c388a0",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
+        "uri": "https://api.scryfall.com/cards/bf36408d-ed85-497f-8e68-d3a922c388a0"
       }
     ],
     "legalities": {
@@ -2958,8 +2958,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -2991,7 +2991,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5492,
+    "edhrec_rank": 4380,
     "preview": {
       "source": "Kotaku",
       "source_uri": "https://www.kotaku.com.au/2019/09/magic-the-gathering-throne-of-eldraine-exclusive-reveal-gilded-goose-golden-egg/",
@@ -2999,7 +2999,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473122",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Gilded+Goose&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Gilded+Goose&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Gilded+Goose",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Gilded+Goose"
     }
@@ -3052,11 +3052,11 @@
       },
       {
         "object": "related_card",
-        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
+        "id": "bf36408d-ed85-497f-8e68-d3a922c388a0",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
+        "uri": "https://api.scryfall.com/cards/bf36408d-ed85-497f-8e68-d3a922c388a0"
       }
     ],
     "legalities": {
@@ -3068,7 +3068,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -3076,8 +3076,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3109,7 +3109,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9433,
+    "edhrec_rank": 8408,
     "preview": {
       "source": "Kanister",
       "source_uri": "https://www.twitch.tv/videos/479450583",
@@ -3117,7 +3117,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473114",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Feasting+Troll+King&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Feasting+Troll+King&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Feasting+Troll+King",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Feasting+Troll+King"
     }
@@ -3176,8 +3176,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3213,7 +3213,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2397,
+    "edhrec_rank": 1449,
     "preview": {
       "source": "ZiggyD Gaming",
       "source_uri": "https://twitter.com/ZiggyDStarcraft/status/1173553765070209024",
@@ -3221,7 +3221,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473109",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Torbran%2C+Thane+of+Red+Fell&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Torbran%2C+Thane+of+Red+Fell&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Torbran%2C+Thane+of+Red+Fell",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Torbran%2C+Thane+of+Red+Fell"
     }
@@ -3278,8 +3278,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3311,7 +3311,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9240,
+    "edhrec_rank": 8602,
     "preview": {
       "source": "John Rolf",
       "source_uri": "https://twitter.com/JRolfMTG/status/1172624112335958024?s=19",
@@ -3319,7 +3319,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473106",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sundering+Stroke&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sundering+Stroke&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Sundering+Stroke",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Sundering+Stroke"
     }
@@ -3378,8 +3378,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3411,7 +3411,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8603,
+    "edhrec_rank": 7539,
     "preview": {
       "source": "J-E Depraz",
       "source_uri": "https://twitter.com/JEDepraz/status/1171392737356197893",
@@ -3419,7 +3419,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473100",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Robber+of+the+Rich&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Robber+of+the+Rich&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Robber+of+the+Rich",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Robber+of+the+Rich"
     }
@@ -3478,8 +3478,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3511,7 +3511,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9288,
+    "edhrec_rank": 7826,
     "preview": {
       "source": "Sjow",
       "source_uri": "https://twitter.com/LiquidSjow/status/1171861699420413953",
@@ -3519,7 +3519,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473095",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Opportunistic+Dragon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Opportunistic+Dragon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Opportunistic+Dragon",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Opportunistic+Dragon"
     }
@@ -3570,7 +3570,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -3578,8 +3578,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3612,7 +3612,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7694,
+    "edhrec_rank": 5965,
     "preview": {
       "source": "CoolStuffInc",
       "source_uri": "https://www.coolstuffinc.com/a/aliaintrazi-09182019-watch-it-burn-preview-for-throne-of-eldraine",
@@ -3620,7 +3620,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473090",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Irencrag+Pyromancer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Irencrag+Pyromancer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Irencrag+Pyromancer",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Irencrag+Pyromancer"
     }
@@ -3677,8 +3677,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3711,7 +3711,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7806,
+    "edhrec_rank": 6087,
     "preview": {
       "source": "Matthew Nass",
       "source_uri": "https://twitter.com/MatthewLNass/status/1172527368600076289",
@@ -3719,7 +3719,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473089",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Irencrag+Feat&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Irencrag+Feat&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Irencrag+Feat",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Irencrag+Feat"
     }
@@ -3776,8 +3776,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3810,7 +3810,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6393,
+    "edhrec_rank": 4997,
     "preview": {
       "source": "Vandal",
       "source_uri": "https://vandal.elespanol.com/noticia/1350726991/os-desvelamos-una-carta-exclusiva-para-la-nueva-ampliacion-de-magic-the-gathering/",
@@ -3818,7 +3818,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473087",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fires+of+Invention&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fires+of+Invention&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Fires+of+Invention",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Fires+of+Invention"
     }
@@ -3877,8 +3877,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -3911,7 +3911,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6137,
+    "edhrec_rank": 5309,
     "preview": {
       "source": "Javier Domínguez",
       "source_uri": "https://twitter.com/JavierDmagic/status/1171904308041977862",
@@ -3919,7 +3919,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473086",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fervent+Champion&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fervent+Champion&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Fervent+Champion",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Fervent+Champion"
     }
@@ -3976,8 +3976,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4012,7 +4012,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3515,
+    "edhrec_rank": 2540,
     "preview": {
       "source": "Martin Jůza",
       "source_uri": "https://twitter.com/MartinJuza/status/1171095982068686848",
@@ -4020,7 +4020,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473082",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Embercleave&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Embercleave&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Embercleave",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Embercleave"
     }
@@ -4069,7 +4069,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4077,8 +4077,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4111,7 +4111,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10935,
+    "edhrec_rank": 10125,
     "preview": {
       "source": "The Masters of Modern",
       "source_uri": "https://twitter.com/theMMcast/status/1171115818630828033",
@@ -4119,7 +4119,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473073",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Witch%27s+Vengeance&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Witch%27s+Vengeance&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Witch%27s+Vengeance",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Witch%27s+Vengeance"
     }
@@ -4176,8 +4176,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4209,7 +4209,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3385,
+    "edhrec_rank": 2197,
     "preview": {
       "source": "Brian Kibler",
       "source_uri": "https://twitter.com/bmkibler/status/1171093966801866754",
@@ -4217,7 +4217,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473072",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wishclaw+Talisman&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Wishclaw+Talisman&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Wishclaw+Talisman",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Wishclaw+Talisman"
     }
@@ -4276,8 +4276,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4312,7 +4312,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4361,
+    "edhrec_rank": 3236,
     "preview": {
       "source": "TCGplayer",
       "source_uri": "https://twitter.com/MTGatTCGplayer/status/1169119200381689856",
@@ -4320,7 +4320,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473063",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rankle%2C+Master+of+Pranks&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rankle%2C+Master+of+Pranks&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Rankle%2C+Master+of+Pranks",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Rankle%2C+Master+of+Pranks"
     }
@@ -4379,8 +4379,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4412,7 +4412,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9492,
+    "edhrec_rank": 9090,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://www.twitch.tv/videos/480556742",
@@ -4420,7 +4420,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473060",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oathsworn+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oathsworn+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Oathsworn+Knight",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Oathsworn+Knight"
     }
@@ -4497,8 +4497,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4530,7 +4530,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6079,
+    "edhrec_rank": 4722,
     "preview": {
       "source": "Noxious",
       "source_uri": "https://www.youtube.com/watch?v=VYL28w0hmwg",
@@ -4538,7 +4538,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473046",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Clackbridge+Troll&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Clackbridge+Troll&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Clackbridge+Troll",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Clackbridge+Troll"
     }
@@ -4595,8 +4595,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4631,7 +4631,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5882,
+    "edhrec_rank": 4763,
     "preview": {
       "source": "Brian Braun-Duin",
       "source_uri": "https://twitter.com/BraunDuinIt/status/1173693988697542657",
@@ -4639,7 +4639,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473044",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Cauldron+of+Eternity&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Cauldron+of+Eternity&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=The+Cauldron+of+Eternity",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=The+Cauldron+of+Eternity"
     }
@@ -4690,7 +4690,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4698,8 +4698,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4732,7 +4732,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7342,
+    "edhrec_rank": 6689,
     "preview": {
       "source": "Malditos Nerds",
       "source_uri": "https://twitter.com/MalditosNerdsVX/status/1173676142269816833",
@@ -4740,7 +4740,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473041",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Blacklance+Paragon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Blacklance+Paragon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Blacklance+Paragon",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Blacklance+Paragon"
     }
@@ -4799,8 +4799,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4836,7 +4836,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2460,
+    "edhrec_rank": 1662,
     "preview": {
       "source": "Good Luck High Five",
       "source_uri": "https://youtu.be/qhWhI57on0Q",
@@ -4844,7 +4844,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473037",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Ayara%2C+First+of+Locthwain&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Ayara%2C+First+of+Locthwain&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Ayara%2C+First+of+Locthwain",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Ayara%2C+First+of+Locthwain"
     }
@@ -4903,8 +4903,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -4936,7 +4936,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9329,
+    "edhrec_rank": 8315,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
@@ -4944,7 +4944,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473033",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Vantress+Gargoyle&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Vantress+Gargoyle&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Vantress+Gargoyle",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Vantress+Gargoyle"
     }
@@ -5019,8 +5019,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5053,7 +5053,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6644,
+    "edhrec_rank": 5478,
     "preview": {
       "source": "Giga",
       "source_uri": "https://www.giga.de/artikel/magic-the-gathering-exklusive-preview-karte-zu-throne-of-eldraine/",
@@ -5061,7 +5061,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473028",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stolen+by+the+Fae&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Stolen+by+the+Fae&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Stolen+by+the+Fae",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Stolen+by+the+Fae"
     }
@@ -5110,7 +5110,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5118,8 +5118,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5152,7 +5152,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1981,
+    "edhrec_rank": 1219,
     "preview": {
       "source": "MTGGoldfish",
       "source_uri": "https://www.mtggoldfish.com/articles/mirrormade-exclusive-throne-of-eldraine-preview",
@@ -5160,7 +5160,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473017",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Mirrormade&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Mirrormade&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Mirrormade",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Mirrormade"
     }
@@ -5217,8 +5217,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5250,7 +5250,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4289,
+    "edhrec_rank": 2839,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169142807564640257/photo/1",
@@ -5258,7 +5258,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473016",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Midnight+Clock&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Midnight+Clock&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Midnight+Clock",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Midnight+Clock"
     }
@@ -5315,8 +5315,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5351,7 +5351,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3424,
+    "edhrec_rank": 2377,
     "preview": {
       "source": "Brad Nelson",
       "source_uri": "https://twitter.com/fffreakmtg/status/1172525989802283009",
@@ -5359,7 +5359,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473013",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Magic+Mirror&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Magic+Mirror&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=The+Magic+Mirror",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=The+Magic+Mirror"
     }
@@ -5418,8 +5418,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5455,7 +5455,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4470,
+    "edhrec_rank": 3031,
     "preview": {
       "source": "The Command Zone",
       "source_uri": "https://www.youtube.com/watch?v=RYzy2drIllM&feature=youtu.be",
@@ -5463,7 +5463,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473010",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Gadwick%2C+the+Wizened&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Gadwick%2C+the+Wizened&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Gadwick%2C+the+Wizened",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Gadwick%2C+the+Wizened"
     }
@@ -5520,8 +5520,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5553,7 +5553,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4098,
+    "edhrec_rank": 2790,
     "preview": {
       "source": "PCGamesN",
       "source_uri": "https://www.pcgamesn.com/magic-the-gathering-arena/throne-of-eldraine-folio-of-fancies",
@@ -5561,7 +5561,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473008",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Folio+of+Fancies&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Folio+of+Fancies&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Folio+of+Fancies",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Folio+of+Fancies"
     }
@@ -5620,8 +5620,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5656,7 +5656,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2767,
+    "edhrec_rank": 1863,
     "preview": {
       "source": "NGA",
       "source_uri": "https://bbs.nga.cn/read.php?&tid=18485267&rand=293",
@@ -5664,7 +5664,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473005",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Emry%2C+Lurker+of+the+Loch&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Emry%2C+Lurker+of+the+Loch&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Emry%2C+Lurker+of+the+Loch",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Emry%2C+Lurker+of+the+Loch"
     }
@@ -5733,7 +5733,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5741,8 +5741,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5775,7 +5775,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6605,
+    "edhrec_rank": 6077,
     "preview": {
       "source": "GameSpot",
       "source_uri": "https://www.gamespot.com/articles/new-magic-the-gathering-throne-of-eldraine-cards-p/1100-6469732/",
@@ -5783,7 +5783,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472998",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Worthy+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Worthy+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Worthy+Knight",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Worthy+Knight"
     }
@@ -5834,7 +5834,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -5842,8 +5842,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5879,7 +5879,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7707,
+    "edhrec_rank": 6032,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/singing-eldraine-2019-09-16",
@@ -5887,7 +5887,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472982",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Linden%2C+the+Steadfast+Queen&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Linden%2C+the+Steadfast+Queen&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Linden%2C+the+Steadfast+Queen",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Linden%2C+the+Steadfast+Queen"
     }
@@ -5946,8 +5946,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -5980,7 +5980,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4257,
+    "edhrec_rank": 2862,
     "preview": {
       "source": "LadyLavinias",
       "source_uri": "https://twitter.com/LadyLavinias/status/1174775658695864322",
@@ -5988,7 +5988,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472980",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Hushbringer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Hushbringer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Hushbringer",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Hushbringer"
     }
@@ -6065,8 +6065,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6099,7 +6099,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8443,
+    "edhrec_rank": 7215,
     "preview": {
       "source": "Jess Estephan",
       "source_uri": "https://twitter.com/jesstephan/status/1171786180666544130?s=20",
@@ -6107,7 +6107,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472979",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Harmonious+Archon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Harmonious+Archon&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Harmonious+Archon",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Harmonious+Archon"
     }
@@ -6164,8 +6164,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6197,7 +6197,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 7102,
+    "edhrec_rank": 6505,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/happily-ever-after-2019-09-19",
@@ -6205,7 +6205,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472978",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Happily+Ever+After&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Happily+Ever+After&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Happily+Ever+After",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Happily+Ever+After"
     }
@@ -6280,8 +6280,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6316,7 +6316,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5260,
+    "edhrec_rank": 4669,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.facebook.com/channelfireball/videos/366428504287148/",
@@ -6324,7 +6324,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472971",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Circle+of+Loyalty&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Circle+of+Loyalty&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=The+Circle+of+Loyalty",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=The+Circle+of+Loyalty"
     }
@@ -6383,8 +6383,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6416,7 +6416,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5145,
+    "edhrec_rank": 3596,
     "preview": {
       "source": "Reid Duke",
       "source_uri": "https://www.twitch.tv/videos/479548512",
@@ -6424,7 +6424,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472970",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Charming+Prince&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Charming+Prince&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Charming+Prince",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Charming+Prince"
     }
@@ -6447,12 +6447,12 @@
     "layout": "normal",
     "highres_image": true,
     "image_uris": {
-      "small": "https://img.scryfall.com/cards/small/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-      "normal": "https://img.scryfall.com/cards/normal/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-      "large": "https://img.scryfall.com/cards/large/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-      "png": "https://img.scryfall.com/cards/png/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.png?1572489601",
-      "art_crop": "https://img.scryfall.com/cards/art_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-      "border_crop": "https://img.scryfall.com/cards/border_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601"
+      "small": "https://img.scryfall.com/cards/small/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+      "normal": "https://img.scryfall.com/cards/normal/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+      "large": "https://img.scryfall.com/cards/large/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+      "png": "https://img.scryfall.com/cards/png/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.png?1582021671",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671"
     },
     "mana_cost": "{2}{W}",
     "cmc": 3,
@@ -6483,8 +6483,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6516,7 +6516,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5403,
+    "edhrec_rank": 4769,
     "preview": {
       "source": "Rei Sato",
       "source_uri": "https://www.twitch.tv/videos/482593745",
@@ -6524,7 +6524,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472963",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Acclaimed+Contender&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Acclaimed+Contender&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Acclaimed+Contender",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Acclaimed+Contender"
     }
@@ -6537,7 +6537,7 @@
       473174
     ],
     "mtgo_id": 78568,
-    "arena_id": 70499,
+    "arena_id": 70359,
     "tcgplayer_id": 198889,
     "name": "Oakhame Ranger // Bring Back",
     "lang": "en",
@@ -6625,8 +6625,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6659,7 +6659,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11613,
+    "edhrec_rank": 10748,
     "preview": {
       "source": "Formação Fireball",
       "source_uri": "https://www.youtube.com/watch?v=rPJLKVyOnIE",
@@ -6667,7 +6667,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473174",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oakhame+Ranger&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oakhame+Ranger&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Oakhame+Ranger",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Oakhame+Ranger"
     }
@@ -6680,7 +6680,7 @@
       473142
     ],
     "mtgo_id": 78502,
-    "arena_id": 70498,
+    "arena_id": 70327,
     "tcgplayer_id": 199212,
     "name": "Tuinvale Treefolk // Oaken Boon",
     "lang": "en",
@@ -6749,8 +6749,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6783,7 +6783,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12007,
+    "edhrec_rank": 11450,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -6791,7 +6791,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473142",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Tuinvale+Treefolk&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Tuinvale+Treefolk&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Tuinvale+Treefolk",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Tuinvale+Treefolk"
     }
@@ -6804,7 +6804,7 @@
       473136
     ],
     "mtgo_id": 78488,
-    "arena_id": 70497,
+    "arena_id": 70321,
     "tcgplayer_id": 198551,
     "name": "Rosethorn Acolyte // Seasonal Ritual",
     "lang": "en",
@@ -6873,8 +6873,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -6907,7 +6907,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8160,
+    "edhrec_rank": 7712,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -6915,7 +6915,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473136",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rosethorn+Acolyte&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rosethorn+Acolyte&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Rosethorn+Acolyte",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Rosethorn+Acolyte"
     }
@@ -6928,7 +6928,7 @@
       473127
     ],
     "mtgo_id": 78468,
-    "arena_id": 70496,
+    "arena_id": 70312,
     "tcgplayer_id": 198578,
     "name": "Lovestruck Beast // Heart's Desire",
     "lang": "en",
@@ -7015,8 +7015,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7049,7 +7049,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10547,
+    "edhrec_rank": 9740,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169022264182038531",
@@ -7057,7 +7057,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473127",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lovestruck+Beast&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lovestruck+Beast&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Lovestruck+Beast",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Lovestruck+Beast"
     }
@@ -7070,7 +7070,7 @@
       473118
     ],
     "mtgo_id": 78448,
-    "arena_id": 70495,
+    "arena_id": 70303,
     "tcgplayer_id": 199347,
     "name": "Garenbrig Carver // Shield's Might",
     "lang": "en",
@@ -7139,8 +7139,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7173,7 +7173,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 14524,
+    "edhrec_rank": 14246,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174052806459707393?s=21",
@@ -7181,7 +7181,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473118",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Garenbrig+Carver&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Garenbrig+Carver&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Garenbrig+Carver",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Garenbrig+Carver"
     }
@@ -7194,7 +7194,7 @@
       473117
     ],
     "mtgo_id": 78444,
-    "arena_id": 70494,
+    "arena_id": 70302,
     "tcgplayer_id": 198574,
     "name": "Flaxen Intruder // Welcome Home",
     "lang": "en",
@@ -7281,8 +7281,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7315,7 +7315,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9081,
+    "edhrec_rank": 8014,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1168992065994334208",
@@ -7323,7 +7323,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473117",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Flaxen+Intruder&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Flaxen+Intruder&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Flaxen+Intruder",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Flaxen+Intruder"
     }
@@ -7336,7 +7336,7 @@
       473112
     ],
     "mtgo_id": 78432,
-    "arena_id": 70493,
+    "arena_id": 70297,
     "tcgplayer_id": 198863,
     "name": "Curious Pair // Treats to Share",
     "lang": "en",
@@ -7399,11 +7399,11 @@
       },
       {
         "object": "related_card",
-        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
+        "id": "bf36408d-ed85-497f-8e68-d3a922c388a0",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
+        "uri": "https://api.scryfall.com/cards/bf36408d-ed85-497f-8e68-d3a922c388a0"
       }
     ],
     "legalities": {
@@ -7423,8 +7423,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7457,7 +7457,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12510,
+    "edhrec_rank": 12240,
     "preview": {
       "source": "CNEWS",
       "source_uri": "https://www.cnews.fr/vie-numerique/2019-09-10/magic-gathering-revisite-les-contes-de-fees-avec-le-trone-deldraine-876392",
@@ -7465,7 +7465,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473112",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Curious+Pair&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Curious+Pair&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Curious+Pair",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Curious+Pair"
     }
@@ -7478,7 +7478,7 @@
       473111
     ],
     "mtgo_id": 78428,
-    "arena_id": 70492,
+    "arena_id": 70296,
     "tcgplayer_id": 198419,
     "name": "Beanstalk Giant // Fertile Footsteps",
     "lang": "en",
@@ -7546,8 +7546,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7579,7 +7579,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3869,
+    "edhrec_rank": 2773,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
@@ -7587,7 +7587,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473111",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Beanstalk+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Beanstalk+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Beanstalk+Giant",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Beanstalk+Giant"
     }
@@ -7600,7 +7600,7 @@
       473099
     ],
     "mtgo_id": 78402,
-    "arena_id": 70491,
+    "arena_id": 70284,
     "tcgplayer_id": 199534,
     "name": "Rimrock Knight // Boulder Rush",
     "lang": "en",
@@ -7668,8 +7668,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7701,10 +7701,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10242,
+    "edhrec_rank": 9433,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473099",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rimrock+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Rimrock+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Rimrock+Knight",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Rimrock+Knight"
     }
@@ -7717,7 +7717,7 @@
       473093
     ],
     "mtgo_id": 78388,
-    "arena_id": 70490,
+    "arena_id": 70278,
     "tcgplayer_id": 198998,
     "name": "Merchant of the Vale // Haggle",
     "lang": "en",
@@ -7786,8 +7786,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7820,7 +7820,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7836,
+    "edhrec_rank": 6281,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
@@ -7828,7 +7828,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473093",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Merchant+of+the+Vale&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Merchant+of+the+Vale&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Merchant+of+the+Vale",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Merchant+of+the+Vale"
     }
@@ -7841,7 +7841,7 @@
       473084
     ],
     "mtgo_id": 78368,
-    "arena_id": 70489,
+    "arena_id": 70269,
     "tcgplayer_id": 198550,
     "name": "Embereth Shieldbreaker // Battle Display",
     "lang": "en",
@@ -7910,8 +7910,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -7944,7 +7944,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5948,
+    "edhrec_rank": 5364,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.youtube.com/watch?v=lKBtbDYICcU&t=2m21s",
@@ -7952,7 +7952,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473084",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Embereth+Shieldbreaker&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Embereth+Shieldbreaker&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Embereth+Shieldbreaker",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Embereth+Shieldbreaker"
     }
@@ -7965,7 +7965,7 @@
       473077
     ],
     "mtgo_id": 78352,
-    "arena_id": 70488,
+    "arena_id": 70262,
     "tcgplayer_id": 199035,
     "name": "Bonecrusher Giant // Stomp",
     "lang": "en",
@@ -8034,8 +8034,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8068,7 +8068,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8092,
+    "edhrec_rank": 6818,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
@@ -8076,7 +8076,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473077",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Bonecrusher+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Bonecrusher+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Bonecrusher+Giant",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Bonecrusher+Giant"
     }
@@ -8089,7 +8089,7 @@
       473067
     ],
     "mtgo_id": 78330,
-    "arena_id": 70487,
+    "arena_id": 70252,
     "tcgplayer_id": 198401,
     "name": "Smitten Swordmaster // Curry Favor",
     "lang": "en",
@@ -8158,8 +8158,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8192,7 +8192,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5559,
+    "edhrec_rank": 5116,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8200,7 +8200,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473067",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Smitten+Swordmaster&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Smitten+Swordmaster&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Smitten+Swordmaster",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Smitten+Swordmaster"
     }
@@ -8213,7 +8213,7 @@
       473064
     ],
     "mtgo_id": 78322,
-    "arena_id": 70486,
+    "arena_id": 70249,
     "tcgplayer_id": 199528,
     "name": "Reaper of Night // Harvest Fear",
     "lang": "en",
@@ -8281,8 +8281,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8314,10 +8314,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12859,
+    "edhrec_rank": 12254,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473064",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Reaper+of+Night&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Reaper+of+Night&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Reaper+of+Night",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Reaper+of+Night"
     }
@@ -8330,7 +8330,7 @@
       473061
     ],
     "mtgo_id": 78314,
-    "arena_id": 70485,
+    "arena_id": 70246,
     "tcgplayer_id": 198405,
     "name": "Order of Midnight // Alter Fate",
     "lang": "en",
@@ -8398,8 +8398,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8431,7 +8431,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5082,
+    "edhrec_rank": 4604,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8439,7 +8439,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473061",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Order+of+Midnight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Order+of+Midnight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Order+of+Midnight",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Order+of+Midnight"
     }
@@ -8452,7 +8452,7 @@
       473059
     ],
     "mtgo_id": 78308,
-    "arena_id": 70484,
+    "arena_id": 70244,
     "tcgplayer_id": 198749,
     "name": "Murderous Rider // Swift End",
     "lang": "en",
@@ -8520,8 +8520,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8553,7 +8553,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2613,
+    "edhrec_rank": 1728,
     "preview": {
       "source": "StarCityGames",
       "source_uri": "https://twitter.com/StarCityGames/status/1171077240102313988",
@@ -8561,7 +8561,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473059",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Murderous+Rider&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Murderous+Rider&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Murderous+Rider",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Murderous+Rider"
     }
@@ -8574,7 +8574,7 @@
       473052
     ],
     "mtgo_id": 78292,
-    "arena_id": 70483,
+    "arena_id": 70237,
     "tcgplayer_id": 198404,
     "name": "Foulmire Knight // Profane Insight",
     "lang": "en",
@@ -8642,8 +8642,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8675,7 +8675,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5792,
+    "edhrec_rank": 5067,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -8683,7 +8683,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473052",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Foulmire+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Foulmire+Knight&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Foulmire+Knight",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Foulmire+Knight"
     }
@@ -8696,7 +8696,7 @@
       473023
     ],
     "mtgo_id": 78232,
-    "arena_id": 70482,
+    "arena_id": 70208,
     "tcgplayer_id": 199512,
     "name": "Queen of Ice // Rage of Winter",
     "lang": "en",
@@ -8764,8 +8764,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8797,10 +8797,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10989,
+    "edhrec_rank": 10451,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473023",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Queen+of+Ice&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Queen+of+Ice&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Queen+of+Ice",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Queen+of+Ice"
     }
@@ -8813,7 +8813,7 @@
       473015
     ],
     "mtgo_id": 78214,
-    "arena_id": 70481,
+    "arena_id": 70200,
     "tcgplayer_id": 199509,
     "name": "Merfolk Secretkeeper // Venture Deeper",
     "lang": "en",
@@ -8882,8 +8882,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -8916,10 +8916,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9338,
+    "edhrec_rank": 8203,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473015",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Merfolk+Secretkeeper&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Merfolk+Secretkeeper&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Merfolk+Secretkeeper",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Merfolk+Secretkeeper"
     }
@@ -8932,7 +8932,7 @@
       473011
     ],
     "mtgo_id": 78204,
-    "arena_id": 70480,
+    "arena_id": 70196,
     "tcgplayer_id": 198792,
     "name": "Hypnotic Sprite // Mesmeric Glare",
     "lang": "en",
@@ -9000,8 +9000,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9033,7 +9033,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7514,
+    "edhrec_rank": 6499,
     "preview": {
       "source": "StarCityGames",
       "source_uri": "http://www.starcitygames.com/articles/39065_How-To-Approach-Hypnotic-Sprite-In-Throne-Of-Eldraine-Standard.html",
@@ -9041,7 +9041,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473011",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Hypnotic+Sprite&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Hypnotic+Sprite&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Hypnotic+Sprite",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Hypnotic+Sprite"
     }
@@ -9054,7 +9054,7 @@
       473006
     ],
     "mtgo_id": 78192,
-    "arena_id": 70479,
+    "arena_id": 70191,
     "tcgplayer_id": 199346,
     "name": "Fae of Wishes // Granted",
     "lang": "en",
@@ -9122,8 +9122,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9155,7 +9155,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10258,
+    "edhrec_rank": 9689,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "",
@@ -9163,7 +9163,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473006",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fae+of+Wishes&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Fae+of+Wishes&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Fae+of+Wishes",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Fae+of+Wishes"
     }
@@ -9176,7 +9176,7 @@
       473001
     ],
     "mtgo_id": 78180,
-    "arena_id": 70478,
+    "arena_id": 70186,
     "tcgplayer_id": 199387,
     "name": "Brazen Borrower // Petty Theft",
     "lang": "en",
@@ -9244,8 +9244,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9277,7 +9277,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7352,
+    "edhrec_rank": 5648,
     "preview": {
       "source": "/r/MagicArena",
       "source_uri": "https://www.reddit.com/r/MagicArena/comments/d60peu/eld_brazen_borrower_official_rmagicarena_spoiler/",
@@ -9285,7 +9285,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473001",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Brazen+Borrower&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Brazen+Borrower&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Brazen+Borrower",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Brazen+Borrower"
     }
@@ -9298,7 +9298,7 @@
       473000
     ],
     "mtgo_id": 78176,
-    "arena_id": 70477,
+    "arena_id": 70185,
     "tcgplayer_id": 198549,
     "name": "Animating Faerie // Bring to Life",
     "lang": "en",
@@ -9367,8 +9367,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9401,7 +9401,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8478,
+    "edhrec_rank": 8230,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
@@ -9409,7 +9409,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473000",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Animating+Faerie&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Animating+Faerie&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Animating+Faerie",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Animating+Faerie"
     }
@@ -9422,7 +9422,7 @@
       472993
     ],
     "mtgo_id": 78160,
-    "arena_id": 70476,
+    "arena_id": 70178,
     "tcgplayer_id": 199211,
     "name": "Silverflame Squire // On Alert",
     "lang": "en",
@@ -9491,8 +9491,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9525,7 +9525,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 13202,
+    "edhrec_rank": 12610,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -9533,7 +9533,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472993",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Silverflame+Squire&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Silverflame+Squire&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Silverflame+Squire",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Silverflame+Squire"
     }
@@ -9546,7 +9546,7 @@
       472990
     ],
     "mtgo_id": 78152,
-    "arena_id": 70475,
+    "arena_id": 70175,
     "tcgplayer_id": 199345,
     "name": "Shepherd of the Flock // Usher to Safety",
     "lang": "en",
@@ -9615,8 +9615,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9649,7 +9649,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9997,
+    "edhrec_rank": 9091,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174065513636474880",
@@ -9657,7 +9657,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472990",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Shepherd+of+the+Flock&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Shepherd+of+the+Flock&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Shepherd+of+the+Flock",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Shepherd+of+the+Flock"
     }
@@ -9670,7 +9670,7 @@
       472988
     ],
     "mtgo_id": 78146,
-    "arena_id": 70474,
+    "arena_id": 70173,
     "tcgplayer_id": 199302,
     "name": "Realm-Cloaked Giant // Cast Off",
     "lang": "en",
@@ -9738,8 +9738,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9771,7 +9771,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7379,
+    "edhrec_rank": 5846,
     "preview": {
       "source": "Tolarian Community College",
       "source_uri": "https://www.youtube.com/watch?v=d4Zm4JzNiVs",
@@ -9779,7 +9779,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472988",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Realm-Cloaked+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Realm-Cloaked+Giant&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Realm-Cloaked+Giant",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Realm-Cloaked+Giant"
     }
@@ -9792,7 +9792,7 @@
       472983
     ],
     "mtgo_id": 78134,
-    "arena_id": 70473,
+    "arena_id": 70168,
     "tcgplayer_id": 199217,
     "name": "Lonesome Unicorn // Rider in Need",
     "lang": "en",
@@ -9878,8 +9878,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -9911,7 +9911,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 12959,
+    "edhrec_rank": 12640,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -9919,7 +9919,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472983",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lonesome+Unicorn&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Lonesome+Unicorn&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Lonesome+Unicorn",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Lonesome+Unicorn"
     }
@@ -9932,7 +9932,7 @@
       472976
     ],
     "mtgo_id": 78118,
-    "arena_id": 70472,
+    "arena_id": 70161,
     "tcgplayer_id": 198743,
     "name": "Giant Killer // Chop Down",
     "lang": "en",
@@ -10001,8 +10001,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10035,7 +10035,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8121,
+    "edhrec_rank": 6884,
     "preview": {
       "source": "Amaz",
       "source_uri": "https://twitter.com/Amaz/status/1171122126486757381",
@@ -10043,7 +10043,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472976",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Giant+Killer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Giant+Killer&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Giant+Killer",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Giant+Killer"
     }
@@ -10056,7 +10056,7 @@
       472973
     ],
     "mtgo_id": 78110,
-    "arena_id": 70471,
+    "arena_id": 70158,
     "tcgplayer_id": 198707,
     "name": "Faerie Guidemother // Gift of the Fae",
     "lang": "en",
@@ -10125,8 +10125,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10159,7 +10159,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9560,
+    "edhrec_rank": 8751,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
@@ -10167,7 +10167,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472973",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Faerie+Guidemother&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Faerie+Guidemother&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Faerie+Guidemother",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Faerie+Guidemother"
     }
@@ -10180,7 +10180,7 @@
       472967
     ],
     "mtgo_id": 78096,
-    "arena_id": 70470,
+    "arena_id": 70152,
     "tcgplayer_id": 198997,
     "name": "Ardenvale Tactician // Dizzying Swoop",
     "lang": "en",
@@ -10249,8 +10249,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10283,7 +10283,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9192,
+    "edhrec_rank": 8468,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
@@ -10291,7 +10291,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472967",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Ardenvale+Tactician&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Ardenvale+Tactician&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Ardenvale+Tactician",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Ardenvale+Tactician"
     }
@@ -10351,8 +10351,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10384,7 +10384,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6410,
+    "edhrec_rank": 4937,
     "preview": {
       "source": "RiotPixels",
       "source_uri": "http://riotpixels.com/magicheskij-vestnik-vypusk-s-eksklyuzivami/",
@@ -10392,7 +10392,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473161",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Royal+Scions&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=The+Royal+Scions&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=The+Royal+Scions",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=The+Royal+Scions"
     }
@@ -10446,11 +10446,11 @@
       },
       {
         "object": "related_card",
-        "id": "261aed78-2d57-4ed4-b3d2-53b139b6bd44",
+        "id": "bf36408d-ed85-497f-8e68-d3a922c388a0",
         "component": "token",
         "name": "Food",
         "type_line": "Token Artifact — Food",
-        "uri": "https://api.scryfall.com/cards/261aed78-2d57-4ed4-b3d2-53b139b6bd44"
+        "uri": "https://api.scryfall.com/cards/bf36408d-ed85-497f-8e68-d3a922c388a0"
       }
     ],
     "legalities": {
@@ -10470,8 +10470,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10503,7 +10503,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3782,
+    "edhrec_rank": 2134,
     "preview": {
       "source": "Card Kingdom",
       "source_uri": "https://twitter.com/Card_Kingdom/status/1168967403805511680",
@@ -10511,7 +10511,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473159",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oko%2C+Thief+of+Crowns&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Oko%2C+Thief+of+Crowns&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Oko%2C+Thief+of+Crowns",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Oko%2C+Thief+of+Crowns"
     }
@@ -10597,8 +10597,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -10630,7 +10630,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4609,
+    "edhrec_rank": 3380,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169264113412972544",
@@ -10638,7 +10638,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473153",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Garruk%2C+Cursed+Huntsman&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Garruk%2C+Cursed+Huntsman&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Garruk%2C+Cursed+Huntsman",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Garruk%2C+Cursed+Huntsman"
     }
@@ -10690,8 +10690,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": false,
@@ -10732,7 +10732,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476051",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Command+Tower&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Command+Tower&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Command+Tower",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Command+Tower"
     }
@@ -10784,8 +10784,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": false,
@@ -10817,7 +10817,7 @@
     "textless": false,
     "booster": false,
     "story_spotlight": false,
-    "edhrec_rank": 4920,
+    "edhrec_rank": 3362,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/inside-throne-eldraine-brawl-decks-2019-09-04",
@@ -10825,7 +10825,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476050",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Tome+of+Legends&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Tome+of+Legends&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Tome+of+Legends",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Tome+of+Legends"
     }
@@ -10877,8 +10877,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": false,
@@ -10911,7 +10911,7 @@
     "textless": false,
     "booster": false,
     "story_spotlight": false,
-    "edhrec_rank": 156,
+    "edhrec_rank": 47,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/new-era-brawl-2019-07-22",
@@ -10919,7 +10919,7 @@
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476049",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Arcane+Signet&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Arcane+Signet&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Arcane+Signet",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Arcane+Signet"
     }
@@ -10973,8 +10973,8 @@
     },
     "games": [
       "arena",
-      "mtgo",
-      "paper"
+      "paper",
+      "mtgo"
     ],
     "reserved": false,
     "foil": true,
@@ -11006,10 +11006,10 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4803,
+    "edhrec_rank": 4794,
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=435407",
-      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sorcerous+Spyglass&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Sorcerous+Spyglass&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall",
       "edhrec": "https://edhrec.com/route/?cc=Sorcerous+Spyglass",
       "mtgtop8": "https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Sorcerous+Spyglass"
     }

@@ -2,7 +2,7 @@ const fs = require('fs');
 const winston = require('winston');
 const util = require('./util.js');
 
-const data = {
+let data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
@@ -197,7 +197,8 @@ function getVersionsByOracleId(oracleId) {
   return data.oracleToId[oracleId];
 }
 
-module.exports = {
+data = {
+  ...data,
   cardFromId,
   getCardDetails,
   getIdsFromName,
@@ -215,5 +216,7 @@ module.exports = {
   getFirstReasonable,
   reasonableId,
   reasonableCard,
-  noramlizedName: (card) => card.name_lower,
+  normalizedName: (card) => card.name_lower,
 };
+
+module.exports = data;
