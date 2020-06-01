@@ -194,16 +194,20 @@ const botRatingAndCombination = (
       // all cards dealt out to players to see what the trends
       // for colors are. This is in value as well.
       const overallCount = overallPool?.[combination.join('')] || 1;
+      const overallCountWeight = numPacks - packNum + 1;
       // The ratio of seen to overall gives us an idea what is
       // being taken.
       const openness = seenCount / overallCount;
       // Roughly the number of cards left that we expect to get from this pack.
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
-      console.log(poolRating, openness, opennessWeight, internalSynergy, synergy, synergyWeight);
       const rating =
-        scaling * poolRating ** 3 * openness ** opennessWeight * internalSynergy ** 2 * synergy ** synergyWeight;
-      console.log('rating', rating, 'colors', combination);
+        scaling *
+        poolRating ** 3 *
+        openness ** opennessWeight *
+        internalSynergy ** 2 *
+        overallCount ** overallCountWeight *
+        synergy ** synergyWeight;
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
