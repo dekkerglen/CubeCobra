@@ -210,13 +210,10 @@ async function processCard(card) {
 
   // cubed with
   // create correl dict
-  const cubedWith = [];
-  for (const otherCard of carddb.allCards()) {
-    cubedWith.push({
-      other: otherCard.oracle_id,
-      count: correlations[correlationIndex[oracle_id]][correlationIndex[otherCard.oracle_id]],
-    });
-  }
+  const cubedWith = carddb.allOracleIds().map((otherOracleId) => ({
+    other: otherOracleId,
+    count: correlations[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
+  }));
 
   // quickselect isn't sorting correctly for some reason
   cubedWith.sort((first, second) => {
