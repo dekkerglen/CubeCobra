@@ -131,21 +131,21 @@ async function processCube(cube) {
 
   const isPauper = false;
   if (cube.type) {
-    if (cube.type.includes('standard')) {
+    if (cube.type.toLowerCase().includes('standard')) {
       cubeLegalityDict = cardSizeUses.standard;
       cubeCounts.standard += 1;
-    } else if (cube.type.includes('modern')) {
+    } else if (cube.type.toLowerCase().includes('modern')) {
       cubeLegalityDict = cardSizeUses.modern;
       cubeCounts.modern += 1;
-    } else if (cube.type.includes('legacy')) {
+    } else if (cube.type.toLowerCase().includes('legacy')) {
       cubeLegalityDict = cardSizeUses.legacy;
       cubeCounts.legacy += 1;
-    } else if (cube.type.includes('vintage')) {
+    } else if (cube.type.toLowerCase().includes('vintage')) {
       cubeLegalityDict = cardSizeUses.vintage;
       cubeCounts.vintage += 1;
     }
 
-    if (cube.type.includes('pauper')) {
+    if (cube.type.toLowerCase().includes('pauper')) {
       cubeLegalityDict = cardSizeUses.pauper;
       cubeCounts.pauper += 1;
     }
