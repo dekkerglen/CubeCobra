@@ -32,11 +32,14 @@ async function matchingCards(filter) {
       filterUses(filter, 'price_foil')
     ) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
-      const historyObjects = await CardHistory.find({ oracleId: { $in: oracleIds } }, 'current').lean();
+      const historyObjects = await CardHistory.find(
+        { oracleId: { $in: oracleIds } },
+        'oracleId current.rating current.elo current.picks current.cubes current.prices',
+      ).lean();
       const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
       cards = cards.map((card) => {
         const history = historyDict.get(card.oracle_id);
-        const priceData = history ? history.current.find(({ version }) => version === card._id) : null;
+        const priceData = history ? history.current.prices.find(({ version }) => version === card._id) : null;
         return {
           ...card,
           rating: history ? history.current.rating : null,
