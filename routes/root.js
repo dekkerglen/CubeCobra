@@ -157,7 +157,7 @@ router.get('/dashboard', async (req, res) => {
       .sort({
         date: -1,
       })
-      .limit(50);
+      .limit(200);
 
     // We can do these queries in parallel
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
@@ -194,8 +194,7 @@ router.get('/dashboard', async (req, res) => {
       loginCallback: '/',
     });
   } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send(err);
+    return util.handleRouteError(req, res, err, '/landing');
   }
 });
 
