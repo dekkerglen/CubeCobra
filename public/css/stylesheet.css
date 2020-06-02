@@ -290,7 +290,6 @@
 #autocardPopup {
 	position: absolute;
 	pointer-events: none;
-	user-drag: none;
 	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-drag: none;
@@ -302,6 +301,14 @@
 
 #autocardPopup img {
 	width: 15rem;
+}
+
+#autocardPopup {
+	width: 15rem;
+}
+
+#autocardPopup.double-width {
+	width: 30rem;
 }
 
 .autocard-background {
