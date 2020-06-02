@@ -162,11 +162,11 @@ const botRatingAndCombination = (
       let internalSynergy = 0.0000001;
       let synergy = 0.00000001;
       if (synergies) {
-        const pickedInCombo = picked.cards.filter(({ index }) => considerFunc(cards[index]));
+        const pickedInCombo = picked.cards.filter((card2) => considerFunc(card2));
         let count = 0;
         for (let i = 1; i < pickedInCombo.length; i++) {
           for (let j = 0; j < i; j++) {
-            internalSynergy += similarity(synergies[pickedInCombo[i]], synergies[pickedInCombo[j]]) ** 10;
+            internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 10;
             count += 1;
           }
         }
@@ -174,16 +174,16 @@ const botRatingAndCombination = (
           internalSynergy /= count;
         }
         if (card) {
-          const similarityExponent = pickedIndices.length / 3;
-          for (const index of pickedInCombo) {
-            synergy += similarity(synergies[index], synergies[cardIndex]) ** similarityExponent;
+          const similarityExponent = picked.cards.length / 3;
+          for (const { index } of pickedInCombo) {
+            synergy += similarity(synergies[index], synergies[card.index]) ** similarityExponent;
           }
           if (pickedInCombo.length) {
             synergy /= pickedInCombo.length;
           }
         }
       }
-      const synergyWeight = (picked?.cards ?? 9) / 12;
+      const synergyWeight = (picked?.cards.length ?? 9) / 12;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -251,33 +251,24 @@ async function buildDeck(cards, picked, synergies) {
   }
   lands.sort(sortFn);
   const chosen = [];
-  const totalSynergy = nonlands.map((card) => {
+  const calculateSynergy = (others, weight) => (card) => {
     let synergy = 0.0000001;
     if (synergies) {
-      for (const { index: otherIndex } of nonlands) {
+      for (const { index: otherIndex } of others) {
         if (card.index !== otherIndex) {
           synergy += similarity(synergies[card.index], synergies[otherIndex]) ** 20;
         }
       }
     }
-    return [(card.rating ? toValue(botCardRating(colors, card)) : 1) * synergy ** 4, card];
-  });
-  totalSynergy.sort((a, b) => b - a);
+    return [(card.rating ? toValue(botCardRating(colors, card)) : 1) * synergy ** weight, card];
+  };
+  const totalSynergy = nonlands.map(calculateSynergy(nonlands, 4));
+  totalSynergy.sort(([a], [b]) => b - a);
   const [[, mostSynergy]] = totalSynergy.splice(0, 1);
   chosen.push(mostSynergy);
-  let remaining = totalSynergy.map(([, index]) => index);
+  let remaining = totalSynergy.map(([, card]) => card);
   while (remaining.length > 0 && chosen.length < 23) {
-    const nonlandsWithValue = remaining.map(({ index, rating }) => {
-      let synergy = 0.0000001;
-      if (synergies) {
-        for (const { index: otherIndex } of chosen) {
-          if (index !== otherIndex) {
-            synergy += similarity(synergies[index], synergies[otherIndex]) ** 15;
-          }
-        }
-      }
-      return [rating ?? 1 * synergy ** 2, index];
-    });
+    const nonlandsWithValue = remaining.map(calculateSynergy(chosen, 2));
     nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
     const [[, bestValue]] = nonlandsWithValue.splice(0, 1);
     chosen.push(bestValue);
@@ -322,7 +313,6 @@ function botPicks() {
       seen,
       picked,
       packbacklog: [packFrom],
-      pickorder,
     } = draft.seats[botIndex];
     const { overallPool, initial_state, synergies } = draft;
     let ratedPicks = [];
@@ -340,18 +330,7 @@ function botPicks() {
     }
     ratedPicks = ratedPicks
       .map((cardIndex) => [
-        botRating(
-          packFrom[cardIndex],
-          picked,
-          pickorder,
-          seen,
-          overallPool,
-          synergies,
-          seats,
-          inPack,
-          packNum,
-          numPacks,
-        ),
+        botRating(packFrom[cardIndex], picked, seen, overallPool, synergies, seats, inPack, packNum, numPacks),
         cardIndex,
       ])
       .sort(([a], [b]) => b - a)
@@ -408,7 +387,7 @@ async function pick(cardIndex) {
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
   passPack();
-  await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
+  csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,

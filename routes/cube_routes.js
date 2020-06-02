@@ -1998,6 +1998,8 @@ router.post(
       draft.seats = populated.seats;
       draft.cube = cube._id;
 
+      const cards = draft.initial_state.flat(3);
+
       const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
@@ -2008,7 +2010,6 @@ router.post(
       } else {
         draft.synergies = null;
       }
-      console.warn('draft-synergies', draft.synergies);
 
       await draft.save();
       return res.redirect(`/cube/draft/${draft._id}`);

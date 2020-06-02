@@ -15,4 +15,5 @@ module.exports = {
   imgUrl: String,
   notes: String,
   rating: Number,
+  index: Number,
 };
