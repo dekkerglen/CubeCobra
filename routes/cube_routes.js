@@ -975,6 +975,9 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       pack: pack.pack,
     };
 
+    const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
+    const height = Math.ceil(pack.pack.length / width);
+
     return res.render('cube/cube_samplepack', {
       cube,
       title: `${abbreviate(cube.name)} - Sample Pack`,
@@ -985,8 +988,8 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
         `A sample pack from ${cube.name}`,
         `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
         `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
-        CARD_WIDTH * 5,
-        CARD_HEIGHT * 3,
+        CARD_WIDTH * width,
+        CARD_HEIGHT * height,
       ),
       loginCallback: `/cube/samplepack/${req.params.id}`,
     });
