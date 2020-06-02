@@ -30,6 +30,10 @@
 	border: 1px solid #dee2e6;
 }
 
+.autocard-tags {
+  max-width: 230px;
+}
+
 .tag-color,
 .tag-color .tdname,
 .tag-color > a {
