@@ -2877,11 +2877,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const { cards } = base;
     const cardsWithDetails = cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
     const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    userPicked.cards = 0;
-    deckutil.default.addSeen(
-      userPicked,
-      base.seats[req.params.index].pickorder.map((cardIndex) => cardsWithDetails[cardIndex]),
-    );
+    userPicked.cards = [];
+    deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
     const { colors: userColors } = await deckutil.default.buildDeck(
       base.seats[req.params.index].pickorder,
       userPicked,
