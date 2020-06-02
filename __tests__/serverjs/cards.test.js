@@ -198,11 +198,25 @@ test('allVersions correctly maps a cardname to an ID', () => {
   });
 });
 
-test('getMostReasonable correctly gets a card', async () => {
+test('allVersions correctly maps a cardname to an ID', () => {
+  expect.assertions(2);
+  const promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(() => {
+    const expected = _RankleMasterofFixtures._id;
+    const result = carddb.allVersions({
+      name: 'Rankle, Master of Pranks',
+    });
+    expect(result.length).toBe(1);
+    expect(result[0]).toBe(expected);
+  });
+});
+
+test('getVersionsByOracleId correctly gets all printings of a card', async () => {
   expect.assertions(1);
   await carddb.initializeCardDb(fixturesPath, true);
-  const expected = _RankleMasterofFixtures;
-  const result = carddb.getMostReasonable('Rankle, Master of Pranks');
+  // Sorcerous Spyglass: two printings in IXN and ELD.
+  const expected = new Set(['e47e85d1-8c4a-43a9-92b3-7cb2a5b89219', '85506a24-8d60-475c-9f43-65994caca7d4']);
+  const result = new Set(carddb.getVersionsByOracleId('b2187f45-80ae-4ac4-9f83-5eb7a00978e2'));
   expect(result).toEqual(expected);
 });
 
