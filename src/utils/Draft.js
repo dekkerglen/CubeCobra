@@ -151,7 +151,6 @@ const findBestValueArray = (weights, pickNumPercent) => {
 
 const findBestValue2d = (weights, packNum, pickNum, initialState) => {
   const packNumPercent = (packNum - 1) / initialState[0].length;
-  console.log(pickNum);
   const pickNumPercent = (pickNum - 1) / initialState[0][packNum - 1].length;
   const index = weights.length * packNumPercent;
   const ceilIndex = Math.ceil(index);
@@ -386,7 +385,7 @@ function botPicks() {
       packbacklog: [packFrom],
       bot,
     } = draft.seats[botIndex];
-    if (bot) {
+    if (packFrom.length > 0 && bot) {
       const { overallPool, initial_state, synergies } = draft;
       let ratedPicks = [];
       const unratedPicks = [];
@@ -454,7 +453,12 @@ function passPack() {
   }
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function pick(cardIndex) {
+  await sleep(0);
   const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
@@ -540,7 +544,7 @@ async function finish() {
 
 async function allBotsDraft() {
   for (const seat of draft.seats) {
-    seat.bot = true;
+    seat.bot = [];
   }
   while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].length > 0) {
     passPack();

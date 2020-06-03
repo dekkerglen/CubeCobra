@@ -2986,6 +2986,7 @@ router.get('/redraft/:id', async (req, res) => {
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
+    draft.seats[0].bot = null;
 
     for (let i = 0; i < draft.seats.length; i += 1) {
       if (!draft.seats[i].bot) {
