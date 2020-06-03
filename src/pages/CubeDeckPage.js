@@ -112,6 +112,9 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
               <NavItem>
                 <NavLink href={`/cube/redraft/${deck._id}`}>Redraft</NavLink>
               </NavItem>
+              <NavItem>
+                <NavLink href={`/cube/redraftbots/${deck._id}`}>Redraft Bots Only</NavLink>
+              </NavItem>
               <NavItem className="mr-auto">
                 <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
               </NavItem>

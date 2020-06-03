@@ -2874,16 +2874,14 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const cube = await Cube.findById(base.cube);
     const srcDraft = await Draft.findById(base.draft).lean();
 
-    const { cards } = base;
-    const cardsWithDetails = cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
     const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     userPicked.cards = [];
     deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
     const { colors: userColors } = await deckutil.default.buildDeck(
       base.seats[req.params.index].pickorder,
       userPicked,
-      cardsWithDetails,
       srcDraft.synergies,
+      srcDraft.initial_state,
     );
 
     const deck = new Deck();
@@ -2984,6 +2982,7 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
+    draft.synergies = srcDraft.synergies;
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3020,6 +3019,121 @@ router.get('/redraft/:id', async (req, res) => {
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
+router.get('/redraftbots/:id', async (req, res) => {
+  try {
+    const base = await Deck.findById(req.params.id).lean();
+
+    if (!base) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const srcDraft = await Draft.findById(base.draft).lean();
+
+    if (!srcDraft) {
+      req.flash('danger', 'This deck is not able to be redrafted.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
+    let draft = new Draft();
+    draft.cube = srcDraft.cube;
+    draft.seats = srcDraft.seats.slice();
+    draft.synergies = srcDraft.synergies;
+
+    draft.initial_state = srcDraft.initial_state.slice();
+    draft.unopenedPacks = srcDraft.initial_state.slice();
+
+    for (let i = 0; i < draft.seats.length; i += 1) {
+      draft.seats[i].bot = [];
+      draft.seats[i].drafted = [];
+      draft.seats[i].sideboard = [];
+      draft.seats[i].pickorder = [];
+      draft.seats[i].packbacklog = [];
+
+      for (let j = 0; j < 16; j += 1) {
+        draft.seats[i].drafted.push([]);
+      }
+
+      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
+    }
+
+    // add ratings
+    const names = [];
+    for (const seat of draft.initial_state) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          names.push(carddb.cardFromId(card.cardID).name);
+        }
+      }
+    }
+
+    draft.ratings = await getElo(names);
+
+    await draft.save();
+
+    draft = await Draft.findById(draft._id).lean();
+    // insert card details everywhere that needs them
+    for (const seat of draft.unopenedPacks) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+        }
+      }
+    }
+
+    for (const seat of draft.seats) {
+      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+    deckutil.default.init(draft);
+    await deckutil.default.allBotsDraft();
+    await Draft.updateOne({ _id: draft._id }, draft);
+
+    const deck = new Deck();
+    deck.cube = draft.cube;
+    deck.date = Date.now();
+    deck.comments = [];
+    deck.draft = draft._id;
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    for (const seat of draft.seats) {
+      deck.seats.push({
+        bot: seat.bot,
+        userid: seat.userid,
+        username: seat.name,
+        pickorder: seat.pickorder,
+        name: `Draft of ${cube.name}`,
+        description: '',
+        cols: 16,
+        deck: seat.drafted,
+        sideboard: seat.sideboard ? seat.sideboard : [],
+      });
+    }
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+    cube.numDecks += 1;
+
+    await Promise.all([cube.save(), deck.save()]);
+
+    return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
