@@ -134,22 +134,89 @@ function arrangePicks(picks) {
 const considerInCombination = (combination) => (card) =>
   card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
+const findBestValueArray = (weights, pickNumPerc) => {
+  const x = weights.length * pickNumPerc;
+  const ceilX = Math.ceil(x);
+  const floorX = Math.floor(x);
+  if (x === floorX || ceilX === weights.length) {
+    return weights[floorX];
+  }
+  const xMod = x - floorX;
+  return xMod * weights[ceilX] + (1 - xMod) * weights[floorX];
+};
+
+const findBestValue2d = (weights, packNum, pickNum, initialState) => {
+  const packNumPerc = (packNum - 1) / initialState[0].length;
+  const pickNumPerc = pickNum / initialState[0][packNum].length;
+  const x = weights.length * packNumPerc;
+  const ceilX = Math.ceil(x);
+  const floorX = Math.floor(x);
+  if (x === floorX || ceilX === weights.length) {
+    return findBestValueArray(weights[floorX], pickNumPerc);
+  }
+  const xMod = x - floorX;
+  return (
+    xMod * findBestValueArray(weights[ceilX], pickNumPerc) +
+    (1 - xMod) * findBestValueArray(weights[floorX], pickNumPerc)
+  );
+};
+
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
 const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
-const botRatingAndCombination = (
-  card,
-  picked,
-  seen,
-  overallPool,
-  synergies,
-  seats = 1,
-  inPack = 1,
-  packNum = 1,
-  numPacks = 1,
-) => {
+const COLORS_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+];
+const VALUE_WEIGHTS = [
+  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+];
+const INTERNAL_SYNERGY_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+];
+const SYNERGY_WEIGHTS = [
+  [1 / 12, 1 / 6, 1 / 4, 1 / 3, 5 / 12, 1 / 2, 7 / 12, 2 / 3, 3 / 4, 5 / 6, 11 / 12, 1, 13 / 12, 7 / 6, 5 / 4],
+  [4 / 3, 17 / 12, 3 / 2, 19 / 12, 5 / 3, 7 / 4, 11 / 6, 23 / 12, 2, 25 / 12, 13 / 6, 9 / 4, 7 / 3, 29 / 12, 5 / 2],
+  [
+    31 / 12,
+    8 / 3,
+    11 / 4,
+    17 / 6,
+    35 / 12,
+    3,
+    37 / 12,
+    19 / 6,
+    39 / 12,
+    10 / 3,
+    41 / 12,
+    7 / 2,
+    43 / 12,
+    11 / 3,
+    15 / 4,
+  ],
+];
+const OPENNESS_WEIGHTS = [
+  [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
+  [3, 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.7, 3.6, 3.4, 3.2, 3, 2.8, 2.6],
+  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0],
+];
+const OVERALL_COUNT_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+];
+
+const botRatingAndCombination = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
+  const seats = initialState.length;
+  const numPacks = initialState?.[0]?.length ?? 1;
+  const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
   let bestRating = -1;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
@@ -183,7 +250,6 @@ const botRatingAndCombination = (
           }
         }
       }
-      const synergyWeight = (picked?.cards.length ?? 9) / 12;
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -194,7 +260,6 @@ const botRatingAndCombination = (
       // all cards dealt out to players to see what the trends
       // for colors are. This is in value as well.
       const overallCount = overallPool?.[combination.join('')] || 1;
-      const overallCountWeight = numPacks - packNum + 1;
       // The ratio of seen to overall gives us an idea what is
       // being taken.
       const openness = seenCount / overallCount;
@@ -202,12 +267,12 @@ const botRatingAndCombination = (
       const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
       const rating =
-        scaling *
-        poolRating ** 3 *
-        openness ** opennessWeight *
-        internalSynergy ** 2 *
-        overallCount ** overallCountWeight *
-        synergy ** synergyWeight;
+        scaling ** findBestValue2d(COLORS_WEIGHTS, packNum, pickNum, initialState) *
+        poolRating ** findBestValue2d(VALUE_WEIGHTS, packNum, pickNum, initialState) *
+        openness ** findBestValue2d(OPENNESS_WEIGHTS, packNum, pickNum, initialState) *
+        internalSynergy ** findBestValue2d(INTERNAL_SYNERGY_WEIGHTS, packNum, pickNum, initialState) *
+        overallCount ** findBestValue2d(OVERALL_COUNT_WEIGHTS, packNum, pickNum, initialState) *
+        synergy ** findBestValue2d(SYNERGY_WEIGHTS, packNum, pickNum, initialState);
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
