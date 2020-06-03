@@ -3006,7 +3006,7 @@ router.get('/redraft/:id', async (req, res) => {
         draft.seats[i].drafted.push([]);
       }
 
-      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
+      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
     }
 
     // add ratings
