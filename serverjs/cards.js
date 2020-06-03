@@ -2,13 +2,14 @@ const fs = require('fs');
 const winston = require('winston');
 const util = require('./util.js');
 
-const data = {
+let data = {
   cardtree: {},
   imagedict: {},
   cardimages: {},
   cardnames: [],
   full_names: [],
   nameToId: {},
+  oracleToId: {},
   english: {},
   _carddict: {},
 };
@@ -18,6 +19,7 @@ const fileToAttribute = {
   'cardtree.json': 'cardtree',
   'names.json': 'cardnames',
   'nameToId.json': 'nameToId',
+  'oracleToId.json': 'oracleToId',
   'full_names.json': 'full_names',
   'imagedict.json': 'imagedict',
   'cardimages.json': 'cardimages',
@@ -184,25 +186,38 @@ function getMostReasonableById(id, printing = 'recent') {
   return getMostReasonable(card.name, printing);
 }
 
+function getFirstReasonable(ids) {
+  return cardFromId(ids.find(reasonableId) || ids[0]);
+}
+
 function getEnglishVersion(id) {
   return data.english[id];
 }
 
-data.cardFromId = cardFromId;
-data.getCardDetails = getCardDetails;
-data.getIdsFromName = getIdsFromName;
-data.getEnglishVersion = getEnglishVersion;
-data.allIds = (card) => getIdsFromName(card.name);
-data.allCards = () => Object.values(data._carddict);
-data.initializeCardDb = initializeCardDb;
-data.loadJSONFile = loadJSONFile;
-data.getPlaceholderCard = getPlaceholderCard;
-data.unloadCardDb = unloadCardDb;
-data.getMostReasonable = getMostReasonable;
-data.getMostReasonableById = getMostReasonableById;
-data.reasonableId = reasonableId;
-data.reasonableCard = reasonableCard;
+function getVersionsByOracleId(oracleId) {
+  return data.oracleToId[oracleId];
+}
 
-data.normalizedName = (card) => card.name_lower;
+data = {
+  ...data,
+  cardFromId,
+  getCardDetails,
+  getIdsFromName,
+  getEnglishVersion,
+  getVersionsByOracleId,
+  allVersions: (card) => getIdsFromName(card.name),
+  allCards: () => Object.values(data._carddict),
+  allOracleIds: () => Object.keys(data.oracleToId),
+  initializeCardDb,
+  loadJSONFile,
+  getPlaceholderCard,
+  unloadCardDb,
+  getMostReasonable,
+  getMostReasonableById,
+  getFirstReasonable,
+  reasonableId,
+  reasonableCard,
+  normalizedName: (card) => card.name_lower,
+};
 
 module.exports = data;

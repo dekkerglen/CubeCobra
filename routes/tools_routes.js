@@ -1,15 +1,13 @@
 const express = require('express');
-const quickselect = require('quickselect');
 const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
-const { addPrices, GetPrices } = require('../serverjs/prices');
+const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 
-const CardRating = require('../models/cardrating');
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 
@@ -20,67 +18,36 @@ const MIN_PICKS = 100;
 /* Maximum results to return on a vague filter string. */
 const MAX_RESULTS = 400;
 
-/* Gets k sorted minimum elements of arr. */
-/* Modifies arr. */
-function sortLimit(arr, k, keyF) {
-  keyF = keyF || ((x) => x);
-  const compareF = (x, y) => keyF(x) - keyF(y);
-  if (k < arr.length) {
-    quickselect(arr, k, 0, arr.length - 1, compareF);
-  }
-  const result = arr.slice(0, k);
-  result.sort(compareF);
-  return result;
-}
-
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital);
   if (filter) {
     // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
     // In the seoncd pass, we add that information.
-    if (filterUses(filter, 'elo') || filterUses(filter, 'picks')) {
-      const names = cards.map(({ name }) => name);
-      const ratings = await CardRating.find({
-        name: {
-          $in: names,
-        },
-      }).lean();
-      const ratingDict = new Map(ratings.map((r) => [r.name, r]));
-      cards = cards.map((card) => {
-        const rating = ratingDict.get(card.name);
-        return {
-          ...card,
-          elo: rating ? rating.elo : null,
-          picks: rating ? rating.picks : null,
-        };
-      });
-    }
-    if (filterUses(filter, 'price') || filterUses(filter, 'price_foil')) {
-      const withPrices = await addPrices(cards);
-      // null is a magic value that causes price filtering to always fail.
-      cards = withPrices.map(({ price, price_foil, ...card }) => ({
-        ...card,
-        price: price || null,
-        price_foil: price_foil || null, // eslint-disable-line camelcase
-      }));
-    }
-    if (filterUses(filter, 'cubes')) {
-      const names = cards.map(({ name }) => name.toLowerCase());
-      const cardDatas = await CardHistory.find(
-        {
-          cardName: {
-            $in: names.map((name) => name.toLowerCase()),
-          },
-        },
-        'cardName cubes',
+    if (
+      filterUses(filter, 'rating') ||
+      filterUses(filter, 'elo') ||
+      filterUses(filter, 'picks') ||
+      filterUses(filter, 'cubes') ||
+      filterUses(filter, 'price') ||
+      filterUses(filter, 'price_foil')
+    ) {
+      const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
+      const historyObjects = await CardHistory.find(
+        { oracleId: { $in: oracleIds } },
+        'oracleId current.rating current.elo current.picks current.cubes current.prices',
       ).lean();
-
-      const cardDataDict = new Map(cardDatas.map((c) => [c.cardName, c]));
+      const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
       cards = cards.map((card) => {
-        const cardData = cardDataDict.get(card.name.toLowerCase());
+        const history = historyDict.get(card.oracle_id);
+        const priceData = history ? history.current.prices.find(({ version }) => version === card._id) : null;
         return {
           ...card,
-          cubes: cardData ? cardData.cubes.length : null,
+          rating: history ? history.current.rating : null,
+          elo: history ? history.current.elo : null,
+          picks: history ? history.current.picks : null,
+          cubes: history ? history.current.cubes : null,
+          price: priceData ? priceData.price : null,
+          price_foil: priceData ? priceData.price_foil : null,
         };
       });
     }
@@ -93,76 +60,55 @@ const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PIC
 
 async function topCards(filter) {
   const cards = await matchingCards(filter);
-  const nameMap = new Map();
+  const oracleIdMap = new Map();
   for (const card of cards) {
-    if (nameMap.has(card.name)) {
-      nameMap.get(card.name).push(card);
+    if (oracleIdMap.has(card.oracle_id)) {
+      oracleIdMap.get(card.oracle_id).push(card);
     } else {
-      nameMap.set(card.name, [card]);
+      oracleIdMap.set(card.oracle_id, [card]);
     }
   }
-  const names = [...nameMap.keys()];
-  const versions = [...nameMap.values()].map((possible) => {
-    const nonPromo = possible.find((card) => carddb.reasonableCard(card));
-    return nonPromo || possible[0];
-  });
 
-  const ratingsQ = CardRating.find(
-    !filter
-      ? {}
-      : {
-          name: {
-            $in: names,
-          },
-        },
-  )
-    .sort('-elo')
-    .limit(MAX_RESULTS)
-    .lean();
-  const cardDataQ = CardHistory.aggregate()
-    .match(
-      !filter
-        ? {}
-        : {
-            cardName: {
-              $in: names.map((name) => name.toLowerCase()),
-            },
-          },
-    )
-    .addFields({
-      cubesLength: {
-        $size: '$cubes',
-      },
-    })
-    .project('cardName cubesLength')
-    .sort({ cubesLength: -1 })
-    .limit(4 * MAX_RESULTS);
+  const oracleIds = [...oracleIdMap.keys()];
+  const query = filter ? { oracleId: { $in: oracleIds } } : {};
+  const selectedVersions = new Map(
+    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
+      oracleId,
+      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
+    ]),
+  );
 
-  const [ratings, cardData] = await Promise.all([ratingsQ, cardDataQ]);
+  const dataQ = Promise.all(
+    ['rating', 'elo', 'picks', 'cubes'].map(async (field) => {
+      const sorted = await CardHistory.find(query).sort(`-current.${field}`).limit(MAX_RESULTS).lean();
+      return sorted.map(({ oracleId, current }) => {
+        const { rating, elo, picks, cubes } = current;
+        const qualifies = picks !== undefined && picks > MIN_PICKS;
+        const version = selectedVersions.get(oracleId);
+        return [
+          version.name,
+          version.image_normal,
+          version.image_flip || null,
+          qualifies && rating !== undefined ? adjust(rating) : null,
+          picks !== undefined ? picks : 0,
+          qualifies && elo !== undefined ? elo : null,
+          cubes !== undefined ? cubes : 0,
+        ];
+      });
+    }),
+  );
+  const numResultsQ = CardHistory.estimatedDocumentCount(query);
+  const [allData, numResults] = await Promise.all([dataQ, numResultsQ]);
+  const [dataByRating, dataByElo, dataByPicks, dataByCubes] = allData;
 
-  const ratingDict = new Map(ratings.map((r) => [r.name, r]));
-  const cardDataDict = new Map(cardData.map((c) => [c.cardName, c]));
-  const fullData = versions.map((v) => {
-    const rating = ratingDict.get(v.name);
-    const card = cardDataDict.get(v.name.toLowerCase());
-    const qualifies = rating && rating.picks !== undefined && rating.picks > MIN_PICKS;
-    return [
-      v.name,
-      v.image_normal,
-      v.image_flip || null,
-      qualifies && rating.value ? adjust(rating) : null,
-      rating && rating.picks !== undefined ? rating.picks : 0,
-      qualifies && rating.elo ? rating.elo : null,
-      card ? card.cubesLength : null,
-    ];
-  });
-  /* Sort by number of picks for limit. */
-  const data = sortLimit(fullData, MAX_RESULTS, (x) => (x[5] === null ? 1 : -x[5]));
   return {
-    ratings,
-    versions,
-    names,
-    data,
+    numResults,
+    data: {
+      rating: dataByRating,
+      elo: dataByElo,
+      picks: dataByPicks,
+      cubes: dataByCubes,
+    },
   };
 }
 
@@ -184,11 +130,10 @@ router.get('/api/topcards', async (req, res) => {
       return;
     }
 
-    const { data, names } = await topCards(filter, res);
+    const results = await topCards(filter, res);
     res.status(200).send({
       success: 'true',
-      numResults: names.length,
-      data,
+      ...results,
     });
   } catch (err) {
     req.logger.error(err);
@@ -206,12 +151,12 @@ router.get('/topcards', async (req, res) => {
       req.flash('Invalid filter.');
     }
 
-    const { data, names } = await topCards(filter, res);
+    const { data, numResults } = await topCards(filter, res);
 
     const reactProps = {
-      defaultNumResults: names.length,
+      defaultNumResults: numResults,
       defaultData: data,
-      defaultFilterText: req.query.f,
+      defaultFilterText: req.query.f || '',
     };
     res.render('tool/topcards', {
       reactProps: serialize(reactProps),

@@ -1128,7 +1128,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     let missing = '';
     let changelog = '';
     for (const card of cards) {
-      const potentialIds = carddb.allIds(card);
+      const potentialIds = carddb.allVersions(card);
       if (potentialIds && potentialIds.length > 0) {
         const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
         const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
@@ -3220,7 +3220,7 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cardIds = carddb.allIds(carddb.cardFromId(req.params.id));
+    const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
     // eslint-disable-next-line prefer-object-spread
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
