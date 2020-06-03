@@ -132,7 +132,7 @@ class TagColorsModalRaw extends Component {
     const orderedTags = this.layoutTagColors();
 
     const editableRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `tag-item ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
       return {
         element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={this.handleChangeColor} />,
         key: tag,
@@ -140,7 +140,7 @@ class TagColorsModalRaw extends Component {
     });
 
     const staticRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `mr-2 tag ${getTagColorClass(tagColors, tag)}`;
       return (
         <span key={tag} className={tagClass}>
           {tag}
