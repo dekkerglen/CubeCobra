@@ -134,33 +134,39 @@ function arrangePicks(picks) {
 const considerInCombination = (combination) => (card) =>
   card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
-const findBestValueArray = (weights, pickNumPerc) => {
-  const x = weights.length * pickNumPerc;
-  const ceilX = Math.ceil(x);
-  const floorX = Math.floor(x);
-  console.log('y', x, ceilX, floorX);
-  if (x === floorX || ceilX === weights.length) {
-    return weights[floorX];
+const findBestValueArray = (weights, pickNumPercent) => {
+  const index = weights.length * pickNumPercent;
+  const ceilIndex = Math.ceil(index);
+  const floorIndex = Math.floor(index);
+  // Is an integer or is past the end by less than 1
+  if (index === floorIndex || ceilIndex === weights.length) {
+    return weights[floorIndex];
   }
-  const xMod = x - floorX;
-  return xMod * weights[ceilX] + (1 - xMod) * weights[floorX];
+  // The fractional part of index.
+  const indexModOne = index - floorIndex;
+  // If is fractional and not past the end we weight it by the two
+  // closest points by how close it is to that point.
+  return indexModOne * weights[ceilIndex] + (1 - indexModOne) * weights[floorIndex];
 };
 
 const findBestValue2d = (weights, packNum, pickNum, initialState) => {
-  const packNumPerc = (packNum - 1) / initialState[0].length;
+  const packNumPercent = (packNum - 1) / initialState[0].length;
   console.log(pickNum);
-  const pickNumPerc = (pickNum - 1) / initialState[0][packNum - 1].length;
-  const x = weights.length * packNumPerc;
-  const ceilX = Math.ceil(x);
-  const floorX = Math.floor(x);
-  console.log('x', x, ceilX, floorX);
-  if (x === floorX || ceilX === weights.length) {
-    return findBestValueArray(weights[floorX], pickNumPerc);
+  const pickNumPercent = (pickNum - 1) / initialState[0][packNum - 1].length;
+  const index = weights.length * packNumPercent;
+  const ceilIndex = Math.ceil(index);
+  const floorIndex = Math.floor(index);
+  // Is either an integer or is past the end by less than 1 so we can use floor as our index
+  if (index === floorIndex || ceilIndex === weights.length) {
+    return findBestValueArray(weights[floorIndex], pickNumPercent);
   }
-  const xMod = x - floorX;
+  // The fractional part of index.
+  const indexModOne = index - floorIndex;
+  // If is fractional and not past the end we weight it by the two
+  // closest points by how close it is to that point.
   return (
-    xMod * findBestValueArray(weights[ceilX], pickNumPerc) +
-    (1 - xMod) * findBestValueArray(weights[floorX], pickNumPerc)
+    indexModOne * findBestValueArray(weights[ceilIndex], pickNumPercent) +
+    (1 - indexModOne) * findBestValueArray(weights[floorIndex], pickNumPercent)
   );
 };
 
@@ -217,8 +223,6 @@ const OVERALL_COUNT_WEIGHTS = [
 const botRatingAndCombination = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
-  const seats = initialState.length;
-  const numPacks = initialState?.[0]?.length ?? 1;
   const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
   let bestRating = -1;
   let bestCombination = [];
@@ -266,18 +270,8 @@ const botRatingAndCombination = (card, picked, seen, overallPool, synergies, ini
       // The ratio of seen to overall gives us an idea what is
       // being taken.
       const openness = seenCount / overallCount;
-      // Roughly the number of cards left that we expect to get from this pack.
-      const opennessWeight = (numPacks * inPack) / seats / packNum;
       // We weigh the factors with exponents to get a final score.
-      console.log(
-        scaling,
-        poolRating,
-        openness,
-        internalSynergy,
-        overallCount,
-        synergy,
-        findBestValue2d(COLORS_WEIGHTS, packNum, pickNum, initialState),
-      );
+      // Everything uses exponents since that's how you weight a product.
       const rating =
         scaling ** findBestValue2d(COLORS_WEIGHTS, packNum, pickNum, initialState) *
         poolRating ** findBestValue2d(VALUE_WEIGHTS, packNum, pickNum, initialState) *
