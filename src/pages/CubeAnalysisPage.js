@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
@@ -15,35 +15,47 @@ import PivotTable from 'analytics/PivotTable';
 import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
-import Asfans from 'analytics/Asfans';
 import Suggestions from 'analytics/Suggestions';
-import { cardCmc, cardDevotion } from 'utils/Card';
+import { cardCmc, cardDevotion, cardFoilPrice, cardNormalPrice, cardPower, cardPrice, cardToughness } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
+import Query from 'utils/Query';
 
-const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
+const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, defaultFormatId }) => {
   const [filter, setFilter] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
+  const [asfans, setAsfans] = useState({});
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    if (didMountRef.current) {
+      Query.set('tab', activeTab);
+    } else {
+      const queryTab = Query.get('tab');
+      if (queryTab || queryTab === 0) {
+        setActiveTab(queryTab);
+      }
+      didMountRef.current = true;
+    }
+  }, [activeTab]);
+
+  const cards = useMemo(() => {
+    return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
+  }, [asfans, cube, filter]);
 
   const characteristics = {
     CMC: cardCmc,
-    Power: (card) => parseInt(card.details.power, 10),
-    Toughness: (card) => parseInt(card.details.toughness, 10),
+    Power: (card) => parseInt(cardPower(card), 10),
+    Toughness: (card) => parseInt(cardToughness(card), 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) =>
-      parseFloat(
-        card.finish === 'Foil'
-          ? card.details.price_foil ?? card.details.price
-          : card.details.price ?? card.details.price_foil,
-        10,
-      ),
-    'Price Foil': (card) => parseFloat(card.details.price_foil),
-    'Non-Foil Price': (card) => parseFloat(card.details.price),
+    Price: (card) => parseFloat(cardPrice(card), 10),
+    'Price Foil': (card) => parseFloat(cardFoilPrice(card)),
+    'Non-Foil Price': (card) => parseFloat(cardNormalPrice(card)),
     'Devotion to White': (card) => cardDevotion(card, 'w'),
     'Devotion to Blue': (card) => cardDevotion(card, 'u'),
     'Devotion to Black': (card) => cardDevotion(card, 'b'),
@@ -54,15 +66,33 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
   const analytics = [
     {
       name: 'Averages',
-      component: (collection) => <Averages cards={collection} characteristics={characteristics} />,
+      component: (collection) => (
+        <Averages
+          cards={collection}
+          characteristics={characteristics}
+          defaultFormatId={defaultFormatId}
+          cube={cube}
+          setAsfans={setAsfans}
+        />
+      ),
     },
     {
       name: 'Table',
-      component: (collection) => <Table cards={collection} />,
+      component: (collection) => (
+        <Table cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+      ),
     },
     {
       name: 'Chart',
-      component: (collection) => <Chart cards={collection} characteristics={characteristics} />,
+      component: (collection) => (
+        <Chart
+          cards={collection}
+          characteristics={characteristics}
+          setAsfans={setAsfans}
+          defaultFormatId={defaultFormatId}
+          cube={cube}
+        />
+      ),
     },
     {
       name: 'Recommender',
@@ -78,16 +108,14 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
       ),
     },
     {
-      name: 'Asfans',
-      component: (collection, cubeObj) => <Asfans cards={collection} cube={cubeObj} />,
-    },
-    {
       name: 'Tokens',
       component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',
-      component: (collection) => <Cloud cards={collection} />,
+      component: (collection) => (
+        <Cloud cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+      ),
     },
     {
       name: 'Pivot Table',
@@ -120,10 +148,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
     });
   }, [cubeID]);
 
-  const filteredCards = useMemo(() => {
-    return filter ? cube.cards.filter(filter) : cube.cards;
-  }, [filter, cube]);
-
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
       <DynamicFlash />
@@ -150,16 +174,14 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
                   defaultFilterText={defaultFilterText}
                   filter={filter}
                   setFilter={setFilter}
-                  numCards={filteredCards.length}
+                  numCards={cards.length}
                   isOpen={filterCollapseOpen}
                 />
               </CardBody>
             </Card>
             <Card>
               <CardBody>
-                <ErrorBoundary>
-                  {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
-                </ErrorBoundary>
+                <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
               </CardBody>
             </Card>
           </Col>
@@ -172,14 +194,19 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText }) => {
 CubeAnalysisPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({})),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    draft_formats: PropTypes.arrayOf(PropTypes.shape({ _id: PropTypes.string, title: PropTypes.string })),
+    defaultDraftFormat: PropTypes.number,
   }).isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultFilterText: PropTypes.string,
+  defaultTab: PropTypes.number,
+  defaultFormatId: PropTypes.number,
 };
 
 CubeAnalysisPage.defaultProps = {
   defaultFilterText: '',
+  defaultTab: 0,
+  defaultFormatId: null,
 };
 
 export default CubeAnalysisPage;

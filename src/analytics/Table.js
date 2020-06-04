@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { sortIntoGroups, getSorts, getLabels } from 'utils/Sort';
+import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
+import { sortIntoGroups, getSorts, getLabels } from 'utils/Sort';
 
-const AnalyticTable = ({ cards }) => {
+const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
   const sorts = getSorts();
 
   const [primary, setPrimary] = useState('Color Identity');
@@ -16,10 +17,16 @@ const AnalyticTable = ({ cards }) => {
     const groups = sortIntoGroups(pool, sort);
 
     for (const key of Object.keys(groups)) {
-      groups[key] = groups[key].length;
+      groups[key] = groups[key].reduce((acc, card) => acc + card.asfan, 0);
+      if (!Number.isInteger(groups[key])) {
+        groups[key] = groups[key].toFixed(2);
+      }
     }
 
-    groups.Total = pool.length;
+    groups.Total = pool.reduce((acc, card) => acc + card.asfan, 0);
+    if (!Number.isInteger(groups.Total)) {
+      groups.Total = groups.Total.toFixed(2);
+    }
 
     return groups;
   };
@@ -34,11 +41,19 @@ const AnalyticTable = ({ cards }) => {
         if (!groups.Total[subkey]) {
           groups.Total[subkey] = 0;
         }
-        groups.Total[subkey] += groups[key][subkey];
+        groups.Total[subkey] += parseFloat(groups[key][subkey], 10);
       }
     }
   }
-  groups.Total.Total = cards.length;
+  for (const subkey of Object.keys(groups.Total)) {
+    if (!Number.isInteger(groups.Total[subkey])) {
+      groups.Total[subkey] = groups.Total[subkey].toFixed(2);
+    }
+  }
+  groups.Total.Total = cards.reduce((acc, card) => acc + card.asfan, 0);
+  if (!Number.isInteger(groups.Total.Total)) {
+    groups.Total.Total = groups.Total.Total.toFixed(2);
+  }
 
   const primaryGroups = sortIntoGroups(cards, primary);
   const secondaryGroups = sortIntoGroups(cards, secondary);
@@ -82,6 +97,7 @@ const AnalyticTable = ({ cards }) => {
           </InputGroup>
         </Col>
       </Row>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <Table bordered responsive className="mt-lg-3">
           <thead>
@@ -119,6 +135,21 @@ const AnalyticTable = ({ cards }) => {
 
 AnalyticTable.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    defaultDraftFormat: PropTypes.number,
+  }).isRequired,
+  defaultFormatId: PropTypes.number,
+  setAsfans: PropTypes.func.isRequired,
+};
+AnalyticTable.defaultProps = {
+  defaultFormatId: null,
 };
 
 export default AnalyticTable;

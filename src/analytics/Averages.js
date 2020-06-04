@@ -1,51 +1,57 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { sortIntoGroups, getSorts } from 'utils/Sort';
-import { average, median, stddev } from 'utils/draftutil';
+import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
-import useSortableData from 'hooks/UseSortableData';
 import HeaderCell from 'components/HeaderCell';
+import useSortableData from 'hooks/UseSortableData';
+import { cardType } from 'utils/Card';
+import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
+import { sortIntoGroups, getSorts } from 'utils/Sort';
 
-const Averages = ({ cards, characteristics }) => {
+const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
   const sorts = getSorts();
   const [sort, setSort] = useState('Color');
-  const [characteristic, setcharacteristic] = useState('CMC');
+  const [characteristic, setCharacteristic] = useState('CMC');
 
-  const groups = sortIntoGroups(cards, sort);
+  const groups = useMemo(() => sortIntoGroups(cards, sort), [cards, sort]);
 
-  const counts = Object.entries(groups)
-    .map((tuple) => {
-      const vals = tuple[1]
-        .filter((card) => {
-          if (characteristic === 'CMC') {
-            /* If we are calculating the average cmc, we don't want to include lands in the average.
-               We can't just filter out 0 cmc cards, so we need to check the type here. */
-            const type = card.type_line || card.details.type;
-            if (type.toLowerCase().includes('land')) return false;
-          }
-          return true;
+  const counts = useMemo(
+    () =>
+      Object.entries(groups)
+        .map((tuple) => {
+          const vals = tuple[1]
+            .filter((card) => {
+              if (characteristic === 'CMC') {
+                /* If we are calculating the average cmc, we don't want to include lands in the average.
+                   We can't just filter out 0 cmc cards, so we need to check the type here. */
+                const type = cardType(card);
+                if (type.toLowerCase().includes('land')) return false;
+              }
+              return true;
+            })
+            .map((card) => {
+              return [card.asfan, characteristics[characteristic](card)];
+            })
+            .filter(([weight, x]) => {
+              // Don't include null, undefined, or NaN values, but we still want to include 0 values.
+              return weight && weight > 0 && (x || x === 0);
+            });
+          const avg = weightedAverage(vals);
+          return {
+            label: tuple[0],
+            mean: avg.toFixed(2),
+            median: weightedMedian(vals).toFixed(2),
+            stddev: weightedStdDev(vals, avg).toFixed(2),
+            count: vals.length,
+            sum: (vals.length * avg).toFixed(2),
+          };
         })
-        .map((card) => {
-          return characteristics[characteristic](card);
-        })
-        .filter((x) => {
-          // Don't include null, undefined, or NaN values, but we still want to include 0 values.
-          return x || x === 0;
-        });
-      const avg = average(vals);
-      return {
-        label: tuple[0],
-        mean: avg.toFixed(2),
-        median: median(vals).toFixed(2),
-        stddev: stddev(vals, avg).toFixed(2),
-        count: vals.length,
-        sum: (vals.length * avg).toFixed(2),
-      };
-    })
-    .filter((row) => row.count > 0);
+        .filter((row) => row.count > 0),
+    [characteristic, characteristics, groups],
+  );
 
   const { items, requestSort, sortConfig } = useSortableData(counts);
 
@@ -74,7 +80,7 @@ const Averages = ({ cards, characteristics }) => {
             <CustomInput
               type="select"
               value={characteristic}
-              onChange={(event) => setcharacteristic(event.target.value)}
+              onChange={(event) => setCharacteristic(event.target.value)}
             >
               {Object.keys(characteristics).map((key) => (
                 <option key={key} value={key}>
@@ -85,6 +91,7 @@ const Averages = ({ cards, characteristics }) => {
           </InputGroup>
         </Col>
       </Row>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <Table bordered responsive className="mt-lg-3">
           <thead>
@@ -122,6 +129,21 @@ const Averages = ({ cards, characteristics }) => {
 Averages.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
+  cube: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        _id: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    defaultDraftFormat: PropTypes.number,
+  }).isRequired,
+  defaultFormatId: PropTypes.number,
+  setAsfans: PropTypes.func.isRequired,
+};
+Averages.defaultProps = {
+  defaultFormatId: null,
 };
 
 export default Averages;
