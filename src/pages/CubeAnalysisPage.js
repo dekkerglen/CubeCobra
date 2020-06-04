@@ -45,7 +45,6 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
   }, [activeTab]);
 
   const cards = useMemo(() => {
-    console.log('asfans', asfans);
     return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
   }, [asfans, cube, filter]);
 
@@ -182,9 +181,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
             </Card>
             <Card>
               <CardBody>
-                <ErrorBoundary>
-                  {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
-                </ErrorBoundary>
+                <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
               </CardBody>
             </Card>
           </Col>
