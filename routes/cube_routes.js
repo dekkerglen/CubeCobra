@@ -2991,6 +2991,10 @@ router.get('/redraft/:id', async (req, res) => {
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
 
+    for (let i = 0; i < 3; i++) {
+      console.log(draft.initial_state[0][i].map((card) => carddb.cardFromId(card.cardID).name));
+    }
+
     for (let i = 0; i < draft.seats.length; i += 1) {
       if (!draft.seats[i].bot) {
         draft.seats[i].userid = req.user ? req.user._id : null;
