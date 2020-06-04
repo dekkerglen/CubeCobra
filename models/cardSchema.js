@@ -15,5 +15,13 @@ module.exports = {
   imgUrl: String,
   notes: String,
   rating: Number,
+  picks: {
+    type: [[Number]],
+    default: [],
+  },
+  passed: {
+    type: Number,
+    default: 0,
+  },
   index: Number,
 };

@@ -3967,11 +3967,34 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft) {
-      let picks = draft.seats[0].length;
-      let packnum = 1;
-      while (picks > draft.initial_state[packnum - 1].length) {
-        picks -= draft.initial_state[packnum - 1].length;
-        packnum += 1;
+      const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+      if (cube) {
+        const picked = [];
+        const passed = [];
+        for (const card of cube.cards) {
+          const { name } = carddb.cardFromId(card.cardID);
+          if (name === req.body.pick) {
+            picked.push(card);
+          }
+          if (req.body.pack.indexOf(name) !== -1) {
+            passed.push(card);
+          }
+        }
+        const pick = draft.initial_state[0][req.body.packNum - 1].length - req.body.pack.length;
+        for (const card of picked) {
+          if (!card.picks) {
+            card.picks = [];
+          }
+          card.picks.push([req.body.packNum, pick]);
+        }
+        for (const card of passed) {
+          if (!card.passed) {
+            card.passed = 0;
+          }
+          card.passed += 1;
+        }
+        await cube.save();
       }
 
       if (!rating.elo) {
