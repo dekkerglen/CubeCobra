@@ -1,6 +1,6 @@
 import React, { Fragment, useCallback } from 'react';
 
-import { Button, FormGroup, Input, InputGroupAddon, Label } from 'reactstrap';
+import { Button, ButtonGroup, FormGroup, Input, InputGroupAddon, Label } from 'reactstrap';
 
 import { COLORS } from '../utils/Util';
 
@@ -21,7 +21,7 @@ export const ColorChecks = ({ prefix, values, onChange }) =>
     </FormGroup>
   ));
 
-export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
+export const ColorCheckButton = ({ prefix, size, color, short, value, onChange }) => {
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
@@ -49,19 +49,50 @@ export const ColorCheckButton = ({ prefix, color, short, value, onChange }) => {
     },
     [prefix, color, short, value, onChange],
   );
+  const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
       className={'color-check-button' + (value ? ' active' : '')}
       outline={!value}
+      size={size}
       onClick={handleClick}
       aria-label={color}
     >
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className="mana-symbol" />
+      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className={symbolClassName} />
     </Button>
   );
 };
 
-export const ColorChecksAddon = ({ addonType, colorless, prefix, values, onChange }) => {
+export const ColorChecksControl = ({ colorless, prefix, size, values, onChange, ...props }) => {
+  const colors = colorless ? [...COLORS, ['Colorless', 'C']] : COLORS;
+  const style = props.style || {};
+  if (size === 'sm') {
+    style.height = 'calc(1.5em + .5rem + 2px)';
+    style.fontSize = '0.875rem';
+  }
+  return (
+    <ButtonGroup size={size} style={style} {...props}>
+      {colors.map(([color, short]) => (
+        <ColorCheckButton
+          key={short}
+          prefix={prefix}
+          size={size}
+          color={color}
+          short={short}
+          value={values[prefix + short]}
+          onChange={onChange}
+        />
+      ))}
+    </ButtonGroup>
+  );
+};
+
+ColorChecksControl.defaultProps = {
+  colorless: false,
+  prefix: 'color',
+};
+
+export const ColorChecksAddon = ({ addonType, colorless, prefix, size, values, onChange }) => {
   const colors = [...COLORS];
   if (colorless) {
     colors.push(['Colorless', 'C']);
@@ -72,6 +103,7 @@ export const ColorChecksAddon = ({ addonType, colorless, prefix, values, onChang
         <InputGroupAddon key={short} addonType={addonType}>
           <ColorCheckButton
             prefix={prefix}
+            size={size}
             color={color}
             short={short}
             value={values[prefix + short]}

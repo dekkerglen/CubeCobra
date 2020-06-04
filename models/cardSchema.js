@@ -23,4 +23,5 @@ module.exports = {
     type: Number,
     default: 0,
   },
+  index: Number,
 };

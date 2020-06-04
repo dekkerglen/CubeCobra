@@ -290,7 +290,7 @@ function CSVtoCards(csvString, carddb) {
         colorCategory: colorCategory || null,
       };
 
-      const potentialIds = carddb.allIds(card);
+      const potentialIds = carddb.allVersions(card);
       if (potentialIds && potentialIds.length > 0) {
         // First, try to find the correct set.
         const matchingSetAndNumber = potentialIds.find((id) => {
@@ -526,8 +526,8 @@ const methods = {
         const possible = carddb.nameToId[cardname.toLowerCase()];
         let cardID = null;
         if (cube && cube.cards) {
-          const allIds = cube.cards.map((card) => card.cardID);
-          const matchingNameIds = allIds.filter((id) => possible.includes(id));
+          const allVersions = cube.cards.map((card) => card.cardID);
+          const matchingNameIds = allVersions.filter((id) => possible.includes(id));
           [cardID] = matchingNameIds;
         }
         if (!cardID) {

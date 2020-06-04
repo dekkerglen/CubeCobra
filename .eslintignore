@@ -1,5 +1,8 @@
 webpack.*.js
 
+jobs/download_cubes.js
+jobs/download_decks.js
+jobs/test_routes.js
 models/blog.js
 models/card.js
 models/cardrating.js

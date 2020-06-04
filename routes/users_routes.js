@@ -12,10 +12,12 @@ const carddb = require('../serverjs/cards.js');
 const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
+const Blog = require('../models/blog');
 const Deck = require('../models/deck');
 
 const router = express.Router();
 
+const { addAutocard } = require('../serverjs/cubefn');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
@@ -594,8 +596,52 @@ router.get('/decks/:userid/:page', async (req, res) => {
       loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send(err);
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/blog/:userid', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userid, '_id username users_following').lean();
+
+    const posts = await Blog.find({
+      owner: user._id,
+    }).sort({
+      date: -1,
+    });
+
+    // autocard the posts
+    if (posts) {
+      for (const post of posts) {
+        if (post.html) {
+          post.html = addAutocard(post.html, carddb);
+        }
+      }
+    }
+
+    const followers = await User.find(
+      { _id: { $in: user.users_following } },
+      '_id username image_name image artist users_following',
+    );
+
+    delete user.users_following;
+
+    const reactProps = {
+      user,
+      posts,
+      canEdit: req.user && req.user._id.equals(user._id),
+      followers,
+      following: req.user && req.user.followed_users.includes(user.id),
+      userId: req.user._id,
+    };
+
+    return res.render('user/user_blog', {
+      reactProps: serialize(reactProps),
+      title: user.username,
+      loginCallback: `/user/blog/${req.params.userid}`,
+    });
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 

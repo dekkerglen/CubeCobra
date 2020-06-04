@@ -22,7 +22,7 @@ class TopCards extends Component {
 
     this.state = {
       filter: defaultFilterText,
-      data: defaultData || [],
+      data: defaultData,
       numResults: defaultNumResults || 0,
     };
 
@@ -55,6 +55,13 @@ class TopCards extends Component {
   render() {
     const { defaultFilterText } = this.props;
     const { data, filter, numResults } = this.state;
+
+    const mappedData = {
+      Rating: data.rating,
+      Elo: data.elo,
+      'Total Picks': data.picks,
+      Cubes: data.cubes,
+    };
 
     const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
       <tr key={name}>
@@ -99,7 +106,7 @@ class TopCards extends Component {
             'Total Picks': { style: { width: '8rem' }, tooltip: 'Total picks across all cubes' },
             Cubes: { style: { width: '8rem' }, tooltip: 'Cubes containing this card' },
           }}
-          data={data}
+          data={mappedData}
           rowF={rowF}
         />
       </>
@@ -108,7 +115,12 @@ class TopCards extends Component {
 }
 
 TopCards.propTypes = {
-  defaultData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  defaultData: PropTypes.shape({
+    rating: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+    elo: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+    picks: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+    cubes: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  }).isRequired,
   defaultNumResults: PropTypes.number.isRequired,
   defaultFilterText: PropTypes.string.isRequired,
 };

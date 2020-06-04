@@ -51,6 +51,11 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
             Decks
           </NavLink>
         </NavItem>
+        <NavItem className="px-2 align-self-end">
+          <NavLink active={activeLink === 'blog'} href={`/user/blog/${user._id}`}>
+            Blog
+          </NavLink>
+        </NavItem>
       </Nav>
       {canEdit && (
         <Navbar light className="usercontrols">

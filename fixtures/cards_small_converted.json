@@ -38,6 +38,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78532,
     "tcgplayer_id": 198561,
     "power": "2",
     "toughness": "2",
@@ -85,16 +86,14 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78530,
     "tcgplayer_id": 199403,
     "image_small": "https://img.scryfall.com/cards/small/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770",
     "image_normal": "https://img.scryfall.com/cards/normal/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/0/4/0461867b-ec35-4d37-a398-5247e06c4afe.jpg?1572490770",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099",
-        "sourceCardId": "0461867b-ec35-4d37-a398-5247e06c4afe"
-      }
+      "bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099"
     ]
   },
   {
@@ -134,6 +133,7 @@
     "type": "Enchantment — Aura",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78466,
     "tcgplayer_id": 199539,
     "image_small": "https://img.scryfall.com/cards/small/front/6/d/6da7cd39-1f8a-4f68-adb7-df2beac02263.jpg?1572490600",
     "image_normal": "https://img.scryfall.com/cards/normal/front/6/d/6da7cd39-1f8a-4f68-adb7-df2beac02263.jpg?1572490600",
@@ -177,6 +177,7 @@
     "type": "Instant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78416,
     "tcgplayer_id": 198422,
     "image_small": "https://img.scryfall.com/cards/small/front/8/3/83b5b110-c430-4ffe-9fc1-8e6987f52d1e.jpg?1572490469",
     "image_normal": "https://img.scryfall.com/cards/normal/front/8/3/83b5b110-c430-4ffe-9fc1-8e6987f52d1e.jpg?1572490469",
@@ -220,6 +221,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78122,
     "tcgplayer_id": 199004,
     "image_small": "https://img.scryfall.com/cards/small/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690",
     "image_normal": "https://img.scryfall.com/cards/normal/front/5/6/562f1c51-d245-4771-bf61-415297e4f9d5.jpg?1572489690",
@@ -263,6 +265,7 @@
     "type": "Creature — Human Warlock",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78318,
     "tcgplayer_id": 198582,
     "power": "1",
     "toughness": "3",
@@ -271,10 +274,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/0/a/0a7962fe-b715-4981-86c3-223bad9b1899.jpg?1573503584",
     "colorcategory": "b",
     "tokens": [
-      {
-        "tokenId": "e43a205e-43ea-4b3e-92ab-c2ee2172a50a",
-        "sourceCardId": "0a7962fe-b715-4981-86c3-223bad9b1899"
-      }
+      "e43a205e-43ea-4b3e-92ab-c2ee2172a50a"
     ]
   },
   {
@@ -309,6 +309,7 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78634,
     "tcgplayer_id": 199428,
     "image_small": "https://img.scryfall.com/cards/small/front/b/8/b841bfa8-7c17-4df2-8466-780ab9a4a53a.jpg?1572491204",
     "image_normal": "https://img.scryfall.com/cards/normal/front/b/8/b841bfa8-7c17-4df2-8466-780ab9a4a53a.jpg?1572491204",
@@ -349,6 +350,7 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78630,
     "tcgplayer_id": 199284,
     "image_small": "https://img.scryfall.com/cards/small/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190",
     "image_normal": "https://img.scryfall.com/cards/normal/front/0/a/0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b.jpg?1572491190",
@@ -389,6 +391,7 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78628,
     "tcgplayer_id": 199388,
     "image_small": "https://img.scryfall.com/cards/small/front/1/9/195383c1-4723-40b0-ba53-298dfd8e30d0.jpg?1572491183",
     "image_normal": "https://img.scryfall.com/cards/normal/front/1/9/195383c1-4723-40b0-ba53-298dfd8e30d0.jpg?1572491183",
@@ -429,6 +432,7 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78626,
     "tcgplayer_id": 199288,
     "image_small": "https://img.scryfall.com/cards/small/front/e/3/e3c2c66c-f7f0-41d5-a805-a129aeaf1b75.jpg?1572491176",
     "image_normal": "https://img.scryfall.com/cards/normal/front/e/3/e3c2c66c-f7f0-41d5-a805-a129aeaf1b75.jpg?1572491176",
@@ -469,6 +473,7 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78624,
     "tcgplayer_id": 199286,
     "image_small": "https://img.scryfall.com/cards/small/front/8/b/8bb8512e-6913-4be6-8828-24cfcbec042e.jpg?1572491168",
     "image_normal": "https://img.scryfall.com/cards/normal/front/8/b/8bb8512e-6913-4be6-8828-24cfcbec042e.jpg?1572491168",
@@ -509,16 +514,14 @@
     "type": "Land",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78622,
     "tcgplayer_id": 199390,
     "image_small": "https://img.scryfall.com/cards/small/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161",
     "image_normal": "https://img.scryfall.com/cards/normal/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161",
     "colorcategory": "l",
     "tokens": [
-      {
-        "tokenId": "94057dc6-e589-4a29-9bda-90f5bece96c4",
-        "sourceCardId": "7f910495-8bd7-4134-a281-c16fd666d5cc"
-      }
+      "94057dc6-e589-4a29-9bda-90f5bece96c4"
     ]
   },
   {
@@ -553,6 +556,7 @@
     "type": "Artifact Creature — Snake",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78616,
     "tcgplayer_id": 199257,
     "power": "0",
     "toughness": "0",
@@ -593,6 +597,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78612,
     "tcgplayer_id": 198975,
     "image_small": "https://img.scryfall.com/cards/small/front/e/4/e47e85d1-8c4a-43a9-92b3-7cb2a5b89219.jpg?1572491099",
     "image_normal": "https://img.scryfall.com/cards/normal/front/e/4/e47e85d1-8c4a-43a9-92b3-7cb2a5b89219.jpg?1572491099",
@@ -638,6 +643,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78550,
     "tcgplayer_id": 199425,
     "power": "2",
     "toughness": "2",
@@ -687,24 +693,16 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78540,
     "tcgplayer_id": 198849,
     "image_small": "https://img.scryfall.com/cards/small/front/5/d/5d7585ab-a364-471c-8ef1-318e459b4020.jpg?1572490798",
     "image_normal": "https://img.scryfall.com/cards/normal/front/5/d/5d7585ab-a364-471c-8ef1-318e459b4020.jpg?1572490798",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/5/d/5d7585ab-a364-471c-8ef1-318e459b4020.jpg?1572490798",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "db951f76-b785-453e-91b9-b3b8a5c1cfd4",
-        "sourceCardId": "5d7585ab-a364-471c-8ef1-318e459b4020"
-      },
-      {
-        "tokenId": "cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447",
-        "sourceCardId": "5d7585ab-a364-471c-8ef1-318e459b4020"
-      },
-      {
-        "tokenId": "c994ea90-71f4-403f-9418-2b72cc2de14d",
-        "sourceCardId": "5d7585ab-a364-471c-8ef1-318e459b4020"
-      }
+      "db951f76-b785-453e-91b9-b3b8a5c1cfd4",
+      "cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447",
+      "c994ea90-71f4-403f-9418-2b72cc2de14d"
     ]
   },
   {
@@ -747,6 +745,7 @@
     "type": "Creature — Serpent",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78534,
     "tcgplayer_id": 198775,
     "power": "7",
     "toughness": "7",
@@ -795,6 +794,7 @@
     "type": "Creature — Treefolk Druid",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78524,
     "tcgplayer_id": 199026,
     "power": "0",
     "toughness": "0",
@@ -843,6 +843,7 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78522,
     "tcgplayer_id": 199297,
     "image_small": "https://img.scryfall.com/cards/small/front/3/e/3e26c10b-179f-4a6e-bc8d-3ec1d6783fb9.jpg?1572490745",
     "image_normal": "https://img.scryfall.com/cards/normal/front/3/e/3e26c10b-179f-4a6e-bc8d-3ec1d6783fb9.jpg?1572490745",
@@ -889,16 +890,14 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78518,
     "tcgplayer_id": 198873,
     "image_small": "https://img.scryfall.com/cards/small/front/e/7/e76c0c83-3e87-474d-bc72-1677eed32cfa.jpg?1572490732",
     "image_normal": "https://img.scryfall.com/cards/normal/front/e/7/e76c0c83-3e87-474d-bc72-1677eed32cfa.jpg?1572490732",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/e/7/e76c0c83-3e87-474d-bc72-1677eed32cfa.jpg?1572490732",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "703e7ecf-3d73-40c1-8cfe-0758778817cf",
-        "sourceCardId": "e76c0c83-3e87-474d-bc72-1677eed32cfa"
-      }
+      "703e7ecf-3d73-40c1-8cfe-0758778817cf"
     ]
   },
   {
@@ -941,6 +940,7 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78516,
     "tcgplayer_id": 199024,
     "image_small": "https://img.scryfall.com/cards/small/front/5/d/5dca90ef-1c17-4dcc-9fef-dab9ee92f590.jpg?1572490726",
     "image_normal": "https://img.scryfall.com/cards/normal/front/5/d/5dca90ef-1c17-4dcc-9fef-dab9ee92f590.jpg?1572490726",
@@ -985,6 +985,7 @@
     "type": "Legendary Creature — Giant Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78514,
     "tcgplayer_id": 199295,
     "power": "0",
     "toughness": "0",
@@ -1030,6 +1031,7 @@
     "type": "Creature — Elf Archer",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78508,
     "tcgplayer_id": 198781,
     "power": "2",
     "toughness": "2",
@@ -1076,6 +1078,7 @@
     "type": "Creature — Wolf",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78506,
     "tcgplayer_id": 198764,
     "power": "3",
     "toughness": "3",
@@ -1121,6 +1124,7 @@
     "type": "Instant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78484,
     "tcgplayer_id": 199415,
     "image_small": "https://img.scryfall.com/cards/small/front/b/8/b88a4943-bd1b-4d10-9cd3-b2ab91b25c10.jpg?1572490646",
     "image_normal": "https://img.scryfall.com/cards/normal/front/b/8/b88a4943-bd1b-4d10-9cd3-b2ab91b25c10.jpg?1572490646",
@@ -1165,6 +1169,7 @@
     "type": "Legendary Creature — Beast",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78482,
     "tcgplayer_id": 198763,
     "power": "4",
     "toughness": "4",
@@ -1210,10 +1215,11 @@
     "type": "Instant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78478,
     "tcgplayer_id": 198710,
-    "image_small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1578843782",
+    "image_small": "https://img.scryfall.com/cards/small/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+    "image_normal": "https://img.scryfall.com/cards/normal/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
+    "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/0/4034e5ba-9974-43e3-bde7-8d9b4586c3a4.jpg?1583750155",
     "colorcategory": "g"
   },
   {
@@ -1254,6 +1260,7 @@
     "type": "Legendary Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78460,
     "tcgplayer_id": 199361,
     "image_small": "https://img.scryfall.com/cards/small/front/a/f/af915ed2-1f34-43f6-85f5-2430325b720f.jpg?1572490580",
     "image_normal": "https://img.scryfall.com/cards/normal/front/a/f/af915ed2-1f34-43f6-85f5-2430325b720f.jpg?1572490580",
@@ -1296,6 +1303,7 @@
     "type": "Creature — Bird",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78458,
     "tcgplayer_id": 198394,
     "power": "0",
     "toughness": "2",
@@ -1304,14 +1312,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/0/30377bf0-d9b1-4c14-8dde-f74b1e02d604.jpg?1572490572",
     "colorcategory": "g",
     "tokens": [
-      {
-        "tokenId": "bf36408d-ed85-497f-8e68-d3a922c388a0",
-        "sourceCardId": "30377bf0-d9b1-4c14-8dde-f74b1e02d604"
-      },
-      {
-        "tokenId": "bf36408d-ed85-497f-8e68-d3a922c388a0",
-        "sourceCardId": "30377bf0-d9b1-4c14-8dde-f74b1e02d604"
-      }
+      "bf36408d-ed85-497f-8e68-d3a922c388a0"
     ]
   },
   {
@@ -1354,6 +1355,7 @@
     "type": "Creature — Troll Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78438,
     "tcgplayer_id": 198776,
     "power": "7",
     "toughness": "6",
@@ -1362,10 +1364,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/9/a/9a6bb435-1205-416a-a5a0-ca6d37b4dcb2.jpg?1572490524",
     "colorcategory": "g",
     "tokens": [
-      {
-        "tokenId": "bf36408d-ed85-497f-8e68-d3a922c388a0",
-        "sourceCardId": "9a6bb435-1205-416a-a5a0-ca6d37b4dcb2"
-      }
+      "bf36408d-ed85-497f-8e68-d3a922c388a0"
     ]
   },
   {
@@ -1407,6 +1406,7 @@
     "type": "Legendary Creature — Dwarf Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78424,
     "tcgplayer_id": 199556,
     "power": "2",
     "toughness": "4",
@@ -1452,6 +1452,7 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78418,
     "tcgplayer_id": 199108,
     "image_small": "https://img.scryfall.com/cards/small/front/2/4/24b7a774-ca49-4291-8a19-cb5e475b10d5.jpg?1572490475",
     "image_normal": "https://img.scryfall.com/cards/normal/front/2/4/24b7a774-ca49-4291-8a19-cb5e475b10d5.jpg?1572490475",
@@ -1495,6 +1496,7 @@
     "type": "Creature — Human Archer Rogue",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78406,
     "tcgplayer_id": 198777,
     "power": "2",
     "toughness": "2",
@@ -1541,6 +1543,7 @@
     "type": "Creature — Dragon",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78394,
     "tcgplayer_id": 198952,
     "power": "4",
     "toughness": "3",
@@ -1586,6 +1589,7 @@
     "type": "Creature — Human Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78382,
     "tcgplayer_id": 199359,
     "power": "0",
     "toughness": "4",
@@ -1633,6 +1637,7 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78380,
     "tcgplayer_id": 199036,
     "image_small": "https://img.scryfall.com/cards/small/front/b/5/b5bcf822-e129-45f6-9403-310ce9410f3b.jpg?1572490374",
     "image_normal": "https://img.scryfall.com/cards/normal/front/b/5/b5bcf822-e129-45f6-9403-310ce9410f3b.jpg?1572490374",
@@ -1676,6 +1681,7 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78376,
     "tcgplayer_id": 199255,
     "image_small": "https://img.scryfall.com/cards/small/front/a/1/a12b16b0-f75f-42d8-9b24-947c1908e0f7.jpg?1572490362",
     "image_normal": "https://img.scryfall.com/cards/normal/front/a/1/a12b16b0-f75f-42d8-9b24-947c1908e0f7.jpg?1572490362",
@@ -1718,6 +1724,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78374,
     "tcgplayer_id": 198973,
     "power": "1",
     "toughness": "1",
@@ -1764,6 +1771,7 @@
     "type": "Legendary Artifact — Equipment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78364,
     "tcgplayer_id": 198755,
     "image_small": "https://img.scryfall.com/cards/small/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333",
     "image_normal": "https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333",
@@ -1808,6 +1816,7 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78344,
     "tcgplayer_id": 198750,
     "image_small": "https://img.scryfall.com/cards/small/front/d/b/dbf16457-3444-4130-b220-834b69d9faa3.jpg?1572490276",
     "image_normal": "https://img.scryfall.com/cards/normal/front/d/b/dbf16457-3444-4130-b220-834b69d9faa3.jpg?1572490276",
@@ -1851,6 +1860,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78342,
     "tcgplayer_id": 198745,
     "image_small": "https://img.scryfall.com/cards/small/front/0/7/07c17b01-ee5d-491a-8403-b3f819b778c4.jpg?1572490271",
     "image_normal": "https://img.scryfall.com/cards/normal/front/0/7/07c17b01-ee5d-491a-8403-b3f819b778c4.jpg?1572490271",
@@ -1895,6 +1905,7 @@
     "type": "Legendary Creature — Faerie Rogue",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78320,
     "tcgplayer_id": 198584,
     "power": "3",
     "toughness": "3",
@@ -1941,6 +1952,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78312,
     "tcgplayer_id": 199020,
     "power": "0",
     "toughness": "0",
@@ -1987,6 +1999,7 @@
     "type": "Creature — Troll",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78280,
     "tcgplayer_id": 198782,
     "power": "8",
     "toughness": "8",
@@ -1995,10 +2008,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/8/5/85929131-4df6-415c-b592-aefb2943c477.jpg?1572490116",
     "colorcategory": "b",
     "tokens": [
-      {
-        "tokenId": "36cd5f96-5683-4959-b973-37f3c2fcf9bf",
-        "sourceCardId": "85929131-4df6-415c-b592-aefb2943c477"
-      }
+      "213be25c-88db-440b-83c3-973586a4f320"
     ]
   },
   {
@@ -2039,6 +2049,7 @@
     "type": "Legendary Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78276,
     "tcgplayer_id": 199279,
     "image_small": "https://img.scryfall.com/cards/small/front/e/b/eb69473f-de99-43a7-b094-429465ae735c.jpg?1572490105",
     "image_normal": "https://img.scryfall.com/cards/normal/front/e/b/eb69473f-de99-43a7-b094-429465ae735c.jpg?1572490105",
@@ -2082,6 +2093,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78270,
     "tcgplayer_id": 199277,
     "power": "3",
     "toughness": "1",
@@ -2128,6 +2140,7 @@
     "type": "Legendary Creature — Elf Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78262,
     "tcgplayer_id": 198909,
     "power": "2",
     "toughness": "3",
@@ -2173,6 +2186,7 @@
     "type": "Artifact Creature — Gargoyle",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78254,
     "tcgplayer_id": 199034,
     "power": "5",
     "toughness": "4",
@@ -2219,16 +2233,14 @@
     "type": "Sorcery",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78244,
     "tcgplayer_id": 198981,
     "image_small": "https://img.scryfall.com/cards/small/front/a/9/a98a7698-57fb-41f6-86d4-251c7d444c6a.jpg?1572490003",
     "image_normal": "https://img.scryfall.com/cards/normal/front/a/9/a98a7698-57fb-41f6-86d4-251c7d444c6a.jpg?1572490003",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/a/9/a98a7698-57fb-41f6-86d4-251c7d444c6a.jpg?1572490003",
     "colorcategory": "u",
     "tokens": [
-      {
-        "tokenId": "bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099",
-        "sourceCardId": "a98a7698-57fb-41f6-86d4-251c7d444c6a"
-      }
+      "bcd82cb0-ff4b-4f4d-b3d0-3ac53883b099"
     ]
   },
   {
@@ -2269,6 +2281,7 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78220,
     "tcgplayer_id": 199057,
     "image_small": "https://img.scryfall.com/cards/small/front/a/1/a10c1407-d397-4caa-b7b7-e7d91ffd4ee9.jpg?1572489939",
     "image_normal": "https://img.scryfall.com/cards/normal/front/a/1/a10c1407-d397-4caa-b7b7-e7d91ffd4ee9.jpg?1572489939",
@@ -2312,6 +2325,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78218,
     "tcgplayer_id": 198581,
     "image_small": "https://img.scryfall.com/cards/small/front/0/f/0f7f1148-7b1b-4969-a2f8-428de1e2e8ff.jpg?1572489934",
     "image_normal": "https://img.scryfall.com/cards/normal/front/0/f/0f7f1148-7b1b-4969-a2f8-428de1e2e8ff.jpg?1572489934",
@@ -2357,6 +2371,7 @@
     "type": "Legendary Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78210,
     "tcgplayer_id": 199031,
     "image_small": "https://img.scryfall.com/cards/small/front/0/8/08b89af1-7b22-4153-b42d-a2ea4e0f320c.jpg?1572489916",
     "image_normal": "https://img.scryfall.com/cards/normal/front/0/8/08b89af1-7b22-4153-b42d-a2ea4e0f320c.jpg?1572489916",
@@ -2402,6 +2417,7 @@
     "type": "Legendary Creature — Human Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78202,
     "tcgplayer_id": 198943,
     "power": "3",
     "toughness": "3",
@@ -2447,6 +2463,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78198,
     "tcgplayer_id": 199019,
     "image_small": "https://img.scryfall.com/cards/small/front/6/a/6afc67d1-1018-4a15-ab5f-377fd11dcd3d.jpg?1572489881",
     "image_normal": "https://img.scryfall.com/cards/normal/front/6/a/6afc67d1-1018-4a15-ab5f-377fd11dcd3d.jpg?1572489881",
@@ -2490,6 +2507,7 @@
     "type": "Legendary Creature — Merfolk Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78190,
     "tcgplayer_id": 198857,
     "power": "1",
     "toughness": "2",
@@ -2535,6 +2553,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78172,
     "tcgplayer_id": 198811,
     "power": "2",
     "toughness": "2",
@@ -2543,10 +2562,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/b/4b2bde2d-e5df-407e-993c-85880dbb6045.jpg?1572489821",
     "colorcategory": "w",
     "tokens": [
-      {
-        "tokenId": "94057dc6-e589-4a29-9bda-90f5bece96c4",
-        "sourceCardId": "4b2bde2d-e5df-407e-993c-85880dbb6045"
-      }
+      "94057dc6-e589-4a29-9bda-90f5bece96c4"
     ]
   },
   {
@@ -2587,6 +2603,7 @@
     "type": "Legendary Creature — Human Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78132,
     "tcgplayer_id": 199209,
     "power": "3",
     "toughness": "3",
@@ -2632,6 +2649,7 @@
     "type": "Creature — Faerie",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78128,
     "tcgplayer_id": 199465,
     "power": "1",
     "toughness": "2",
@@ -2678,6 +2696,7 @@
     "type": "Creature — Archon",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78126,
     "tcgplayer_id": 198854,
     "power": "4",
     "toughness": "5",
@@ -2686,10 +2705,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/c/7/c7093834-9627-4da2-9322-c03bfd5b3a71.jpg?1572489703",
     "colorcategory": "w",
     "tokens": [
-      {
-        "tokenId": "94057dc6-e589-4a29-9bda-90f5bece96c4",
-        "sourceCardId": "c7093834-9627-4da2-9322-c03bfd5b3a71"
-      }
+      "94057dc6-e589-4a29-9bda-90f5bece96c4"
     ]
   },
   {
@@ -2729,6 +2745,7 @@
     "type": "Enchantment",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78124,
     "tcgplayer_id": 199413,
     "image_small": "https://img.scryfall.com/cards/small/front/d/3/d32d85d5-a6f0-4cc5-9fd6-6b329aae2e5b.jpg?1572489697",
     "image_normal": "https://img.scryfall.com/cards/normal/front/d/3/d32d85d5-a6f0-4cc5-9fd6-6b329aae2e5b.jpg?1572489697",
@@ -2773,16 +2790,14 @@
     "type": "Legendary Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78106,
     "tcgplayer_id": 198557,
     "image_small": "https://img.scryfall.com/cards/small/front/7/9/79093d00-362d-4d07-8a0a-cf5e1ccf9c0f.jpg?1572489653",
     "image_normal": "https://img.scryfall.com/cards/normal/front/7/9/79093d00-362d-4d07-8a0a-cf5e1ccf9c0f.jpg?1572489653",
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/7/9/79093d00-362d-4d07-8a0a-cf5e1ccf9c0f.jpg?1572489653",
     "colorcategory": "w",
     "tokens": [
-      {
-        "tokenId": "703e7ecf-3d73-40c1-8cfe-0758778817cf",
-        "sourceCardId": "79093d00-362d-4d07-8a0a-cf5e1ccf9c0f"
-      }
+      "703e7ecf-3d73-40c1-8cfe-0758778817cf"
     ]
   },
   {
@@ -2822,6 +2837,7 @@
     "type": "Creature — Human Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78104,
     "tcgplayer_id": 198860,
     "power": "2",
     "toughness": "2",
@@ -2867,12 +2883,13 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78088,
     "tcgplayer_id": 199292,
     "power": "3",
     "toughness": "3",
-    "image_small": "https://img.scryfall.com/cards/small/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-    "image_normal": "https://img.scryfall.com/cards/normal/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
-    "art_crop": "https://img.scryfall.com/cards/art_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1572489601",
+    "image_small": "https://img.scryfall.com/cards/small/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+    "image_normal": "https://img.scryfall.com/cards/normal/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
+    "art_crop": "https://img.scryfall.com/cards/art_crop/front/f/b/fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e.jpg?1582021671",
     "colorcategory": "w"
   },
   {
@@ -2921,6 +2938,7 @@
     "type": "Creature — Elf Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78568,
     "tcgplayer_id": 198889,
     "power": "2",
     "toughness": "2",
@@ -2929,10 +2947,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/8/a/8a665794-513f-4f78-92c9-1844ec27c79c.jpg?1572490907",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "94057dc6-e589-4a29-9bda-90f5bece96c4",
-        "sourceCardId": "8a665794-513f-4f78-92c9-1844ec27c79c"
-      }
+      "94057dc6-e589-4a29-9bda-90f5bece96c4"
     ]
   },
   {
@@ -2975,6 +2990,7 @@
     "type": "Creature — Treefolk Druid",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78502,
     "tcgplayer_id": 199212,
     "power": "6",
     "toughness": "5",
@@ -3022,6 +3038,7 @@
     "type": "Creature — Elf Druid",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78488,
     "tcgplayer_id": 198551,
     "power": "2",
     "toughness": "3",
@@ -3069,6 +3086,7 @@
     "type": "Creature — Beast Noble",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78468,
     "tcgplayer_id": 198578,
     "power": "5",
     "toughness": "5",
@@ -3077,10 +3095,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/c/4ccdef9c-1e85-4358-8059-8972479f7556.jpg?1572490606",
     "colorcategory": "g",
     "tokens": [
-      {
-        "tokenId": "94057dc6-e589-4a29-9bda-90f5bece96c4",
-        "sourceCardId": "4ccdef9c-1e85-4358-8059-8972479f7556"
-      }
+      "94057dc6-e589-4a29-9bda-90f5bece96c4"
     ]
   },
   {
@@ -3123,6 +3138,7 @@
     "type": "Creature — Human Warrior",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78448,
     "tcgplayer_id": 199347,
     "power": "3",
     "toughness": "2",
@@ -3171,6 +3187,7 @@
     "type": "Creature — Human Berserker",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78444,
     "tcgplayer_id": 198574,
     "power": "1",
     "toughness": "2",
@@ -3179,10 +3196,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543",
     "colorcategory": "g",
     "tokens": [
-      {
-        "tokenId": "b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e",
-        "sourceCardId": "06bd1ad2-fb5d-4aef-87d1-13a341c686fa"
-      }
+      "b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e"
     ]
   },
   {
@@ -3224,6 +3238,7 @@
     "type": "Creature — Human Peasant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78432,
     "tcgplayer_id": 198863,
     "power": "1",
     "toughness": "3",
@@ -3232,10 +3247,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/7/f/7f78a570-d776-42f2-a609-6da0156c8de7.jpg?1572490513",
     "colorcategory": "g",
     "tokens": [
-      {
-        "tokenId": "bf36408d-ed85-497f-8e68-d3a922c388a0",
-        "sourceCardId": "7f78a570-d776-42f2-a609-6da0156c8de7"
-      }
+      "bf36408d-ed85-497f-8e68-d3a922c388a0"
     ]
   },
   {
@@ -3278,6 +3290,7 @@
     "type": "Creature — Giant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78428,
     "tcgplayer_id": 198419,
     "power": "*",
     "toughness": "*",
@@ -3325,6 +3338,7 @@
     "type": "Creature — Dwarf Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78402,
     "tcgplayer_id": 199534,
     "power": "3",
     "toughness": "1",
@@ -3372,6 +3386,7 @@
     "type": "Creature — Human Peasant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78388,
     "tcgplayer_id": 198998,
     "power": "2",
     "toughness": "3",
@@ -3419,6 +3434,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78368,
     "tcgplayer_id": 198550,
     "power": "2",
     "toughness": "1",
@@ -3467,6 +3483,7 @@
     "type": "Creature — Giant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78352,
     "tcgplayer_id": 199035,
     "power": "4",
     "toughness": "3",
@@ -3514,6 +3531,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78330,
     "tcgplayer_id": 198401,
     "power": "2",
     "toughness": "1",
@@ -3563,6 +3581,7 @@
     "type": "Creature — Specter",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78322,
     "tcgplayer_id": 199528,
     "power": "4",
     "toughness": "5",
@@ -3611,6 +3630,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78314,
     "tcgplayer_id": 198405,
     "power": "2",
     "toughness": "2",
@@ -3661,6 +3681,7 @@
     "type": "Creature — Zombie Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78308,
     "tcgplayer_id": 198749,
     "power": "2",
     "toughness": "3",
@@ -3708,6 +3729,7 @@
     "type": "Creature — Zombie Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78292,
     "tcgplayer_id": 198404,
     "power": "1",
     "toughness": "1",
@@ -3756,6 +3778,7 @@
     "type": "Creature — Human Noble Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78232,
     "tcgplayer_id": 199512,
     "power": "2",
     "toughness": "3",
@@ -3802,6 +3825,7 @@
     "type": "Creature — Merfolk Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78214,
     "tcgplayer_id": 199509,
     "power": "0",
     "toughness": "4",
@@ -3850,6 +3874,7 @@
     "type": "Creature — Faerie",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78204,
     "tcgplayer_id": 198792,
     "power": "2",
     "toughness": "1",
@@ -3898,6 +3923,7 @@
     "type": "Creature — Faerie Wizard",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78192,
     "tcgplayer_id": 199346,
     "power": "1",
     "toughness": "4",
@@ -3947,6 +3973,7 @@
     "type": "Creature — Faerie Rogue",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78180,
     "tcgplayer_id": 199387,
     "power": "3",
     "toughness": "1",
@@ -3995,6 +4022,7 @@
     "type": "Creature — Faerie",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78176,
     "tcgplayer_id": 198549,
     "power": "2",
     "toughness": "2",
@@ -4043,6 +4071,7 @@
     "type": "Creature — Human Soldier",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78160,
     "tcgplayer_id": 199211,
     "power": "2",
     "toughness": "1",
@@ -4090,6 +4119,7 @@
     "type": "Creature — Human Peasant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78152,
     "tcgplayer_id": 199345,
     "power": "3",
     "toughness": "1",
@@ -4140,6 +4170,7 @@
     "type": "Creature — Giant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78146,
     "tcgplayer_id": 199302,
     "power": "7",
     "toughness": "7",
@@ -4188,6 +4219,7 @@
     "type": "Creature — Unicorn",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78134,
     "tcgplayer_id": 199217,
     "power": "3",
     "toughness": "3",
@@ -4196,10 +4228,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/9/9/99083707-2152-42c0-b5c3-b4f97ec20190.jpg?1572489726",
     "colorcategory": "w",
     "tokens": [
-      {
-        "tokenId": "703e7ecf-3d73-40c1-8cfe-0758778817cf",
-        "sourceCardId": "99083707-2152-42c0-b5c3-b4f97ec20190"
-      }
+      "703e7ecf-3d73-40c1-8cfe-0758778817cf"
     ]
   },
   {
@@ -4241,6 +4270,7 @@
     "type": "Creature — Human Peasant",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78118,
     "tcgplayer_id": 198743,
     "power": "1",
     "toughness": "2",
@@ -4288,6 +4318,7 @@
     "type": "Creature — Faerie",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78110,
     "tcgplayer_id": 198707,
     "power": "1",
     "toughness": "1",
@@ -4337,6 +4368,7 @@
     "type": "Creature — Human Knight",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78096,
     "tcgplayer_id": 198997,
     "power": "2",
     "toughness": "3",
@@ -4385,6 +4417,7 @@
     "type": "Legendary Planeswalker — Will Rowan",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78542,
     "tcgplayer_id": 198882,
     "loyalty": "5",
     "image_small": "https://img.scryfall.com/cards/small/front/6/a/6a7111f3-01a6-4311-bc08-036a1fba60f5.jpg?1572490808",
@@ -4432,6 +4465,7 @@
     "type": "Legendary Planeswalker — Oko",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78538,
     "tcgplayer_id": 198356,
     "loyalty": "4",
     "image_small": "https://img.scryfall.com/cards/small/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
@@ -4439,10 +4473,7 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/3/4/3462a3d0-5552-49fa-9eb7-100960c55891.jpg?1578911629",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "bf36408d-ed85-497f-8e68-d3a922c388a0",
-        "sourceCardId": "3462a3d0-5552-49fa-9eb7-100960c55891"
-      }
+      "bf36408d-ed85-497f-8e68-d3a922c388a0"
     ]
   },
   {
@@ -4485,6 +4516,7 @@
     "type": "Legendary Planeswalker — Garruk",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 78526,
     "tcgplayer_id": 198500,
     "loyalty": "5",
     "image_small": "https://img.scryfall.com/cards/small/front/a/b/abef512f-8f1d-4257-b16f-c0eed58670ec.jpg?1572490758",
@@ -4492,10 +4524,8 @@
     "art_crop": "https://img.scryfall.com/cards/art_crop/front/a/b/abef512f-8f1d-4257-b16f-c0eed58670ec.jpg?1572490758",
     "colorcategory": "m",
     "tokens": [
-      {
-        "tokenId": "88452ed7-1065-41c3-94a6-dc41108c45c1",
-        "sourceCardId": "abef512f-8f1d-4257-b16f-c0eed58670ec"
-      }
+      "88452ed7-1065-41c3-94a6-dc41108c45c1",
+      "d6c65749-1774-4b36-891e-abf762c95cec"
     ]
   },
   {
@@ -4644,6 +4674,7 @@
     "type": "Artifact",
     "full_art": false,
     "language": "en",
+    "mtgo_id": 65522,
     "tcgplayer_id": 142033,
     "image_small": "https://img.scryfall.com/cards/small/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
     "image_normal": "https://img.scryfall.com/cards/normal/front/8/5/85506a24-8d60-475c-9f43-65994caca7d4.jpg?1564096143",
