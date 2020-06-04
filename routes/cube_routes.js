@@ -1301,9 +1301,9 @@ async function bulkUpload(req, res, list, cube) {
               util.addCardToCube(cube, details);
               added.push(details);
               changelog += addCardHtml(details);
-            } else {
-              missing += `${item}\n`;
             }
+          } else {
+            missing += `${item}\n`;
           }
         }
       }
