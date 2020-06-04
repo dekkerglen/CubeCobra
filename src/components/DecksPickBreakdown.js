@@ -58,7 +58,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   for (let i = start + picks; i < end; i += 1) {
     cardsInPack.push(deck.seats[current].pickorder[i]);
-    if (pack % 2 === 0) {
+    if (pack % 2 !== draft.initial_state[0].length % 2) {
       current += 1;
       current %= draft.initial_state.length;
     } else {
