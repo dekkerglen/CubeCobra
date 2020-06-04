@@ -35,7 +35,7 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import { csrfFetch } from 'utils/CSRF';
-import Draft, { init } from 'utils/Draft';
+import Draft, { allBotsDraft, init } from 'utils/Draft';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -118,7 +118,7 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
         const json = await response.json();
         init(json.draft);
         setDraftId(Draft.id());
-        await Draft.allBotsDraft();
+        await allBotsDraft();
         submitDeckForm.current.submit();
       }
     },

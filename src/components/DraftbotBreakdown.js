@@ -48,7 +48,7 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   }
 
   for (let i = start + picks; i < end; i += 1) {
-    cardsInPack.push(deck.seats[current].pickorder[i]);
+    cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
     if (pack % 2 !== initialState[0].length % 2) {
       current += 1;
       current %= initialState.length;
@@ -66,7 +66,7 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   let ind = 0;
   let added = 0;
   for (const list of initialState[0]) {
-    picksList.push(seat.pickorder.slice(added, added + list.length).map((c) => ({ ...c })));
+    picksList.push(seat.pickorder.slice(added, added + list.length).map((ci) => ({ ...deck.cards[ci] })));
     added += list.length;
   }
   for (const list of picksList) {
@@ -85,21 +85,21 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (_, card) => getRating(card),
+    function: (_, card, __, cards) => getRating(card, cards),
   },
   {
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (_, __, picked, synergies, ___, ____, pickedInCombination) =>
-      getInternalSynergy(pickedInCombination, picked, synergies),
+    function: (_, __, picked, cards, ___, ____, pickedInCombination) =>
+      getInternalSynergy(pickedInCombination, picked, cards),
   },
   {
     name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (_, card, picked, synergies, __, ___, pickedInCombination) =>
-      getPickSynergy(pickedInCombination, card, picked, synergies),
+    function: (_, card, picked, cards, __, ___, pickedInCombination) =>
+      getPickSynergy(pickedInCombination, card, picked, cards),
   },
   {
     name: 'Openness',
@@ -111,20 +111,20 @@ const TRAITS = [
     name: 'Color',
     description: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (_, _____, picked, __, ___, ____, pickedInCombination, probabilities) =>
-      getColor(pickedInCombination, picked, probabilities),
+    function: (_, _____, picked, cards, ___, ____, pickedInCombination, probabilities) =>
+      getColor(pickedInCombination, picked, probabilities, cards),
   },
   {
     name: 'Fixing',
     description: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
-    function: (combination, card) => getFixing(combination, card),
+    function: (combination, card, _, cards) => getFixing(combination, card, cards),
   },
   {
     name: 'Casting Probability',
     description:
       'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    function: (_, card, __, ___, ____, lands) => getCastingProbability(card, lands),
+    function: (_, card, __, cards, ____, lands) => getCastingProbability(cards[card], lands),
   },
   {
     name: 'Lands',
@@ -153,10 +153,10 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
   for (const card of cardsInPack) {
     card.scores = [];
     const { rating, colors, lands } = botRatingAndCombination(
-      card,
+      draft.cards,
+      card.index,
       picked,
       seen,
-      draft.synergies,
       draft.initial_state,
       cardsInPack.length,
       pack + 1,
@@ -169,7 +169,7 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
 
     for (let i = 0; i < TRAITS.length - 2; i++) {
       card.scores.push(
-        TRAITS[i].function(colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities),
+        TRAITS[i].function(colors, card.index, picked, draft.cards, seen, lands, pickedInCombination, probabilities),
       );
     }
     card.scores.push(JSON.stringify(fromEntries(Object.entries(lands).filter(([, c]) => c))));
@@ -277,7 +277,7 @@ Internal.propTypes = {
     .isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   pack: PropTypes.number.isRequired,
   picks: PropTypes.number.isRequired,
@@ -316,14 +316,14 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
   const picked = createSeen();
-  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
+  addSeen(picked, seat.pickorder.slice(0, index), draft.cards);
 
   const seen = useMemo(() => {
     const res = createSeen();
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.cards);
     }
     return res;
   }, [deck, draft, index, seatIndex]);
@@ -365,7 +365,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 DraftbotBreakdown.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
@@ -383,6 +383,7 @@ DraftbotBreakdown.propTypes = {
     ).isRequired,
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
   }).isRequired,
   seatIndex: PropTypes.string.isRequired,
   defaultIndex: PropTypes.number,

@@ -17,7 +17,7 @@ import {
 } from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
-import { cardType, cardIsSpecialZoneType } from 'utils/Card';
+import { cardCmc, cardType, cardIsSpecialZoneType } from 'utils/Card';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
@@ -148,7 +148,7 @@ for (let index = 0; index < 3; index++) {
 const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
-  const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
+  const [pack, setPack] = useState(initialDraft.unopenedPacks[0].map((c) => initialDraft.cards[c]));
   const [packNumber, setPackNumber] = useState(1);
   const [pickNumber, setPickNumber] = useState(1);
   const [picks, setPicks] = useState([[[], [], [], [], [], [], [], []]]);
@@ -160,8 +160,8 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   const submitDeckForm = useRef();
 
   const makeBotPick = (tempPack) => {
-    const cardsSeen = tempPack.filter((card) => card);
-    addSeen(seen, cardsSeen, initialDraft.synergies);
+    const cardsSeen = tempPack.filter((card) => card).map((c) => c.index);
+    addSeen(seen, cardsSeen, initialDraft.cards);
 
     const ratings = options.map((mask) => {
       const cards = mask.map((include, index) => (include ? tempPack[index] : null)).filter((card) => card);
@@ -170,10 +170,10 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
 
       for (const card of cards) {
         rating += botRatingAndCombination(
-          card,
+          initialDraft.cards,
+          card.index,
           picked,
           seen,
-          initialDraft.synergies,
           [initialDraft.initial_state],
           cardsSeen.length,
           packNumber,
@@ -188,13 +188,13 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
 
     for (let i = 0; i < 9; i++) {
       if (mask[i] && tempPack[i]) {
-        tempPicks.push(tempPack[i]);
+        tempPicks.push(tempPack[i].index);
         tempPack[i] = null;
       }
     }
 
     setBotPickOrder(botPickOrder.concat([tempPicks]));
-    addSeen(picked, tempPicks, initialDraft.synergies);
+    addSeen(picked, tempPicks, initialDraft.cards);
 
     return [tempPack, tempPicks];
   };
@@ -206,7 +206,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
 
     setPackNumber(packNumber + 1);
 
-    return initialDraft.unopenedPacks[packNumber];
+    return initialDraft.unopenedPacks[packNumber].map((c) => initialDraft.cards[c]);
   };
 
   const finish = async () => {
@@ -214,15 +214,16 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
 
     if (initialDraft.draftType === 'bot') {
       const { deck, sideboard, colors } = await buildDeck(
+        initialDraft.cards,
         botPicks.flat(3),
         picked,
-        initialDraft.synergies,
         initialDraft.basics,
       );
 
       updatedDraft.seats[1].drafted = deck;
       updatedDraft.seats[1].sideboard = sideboard;
       updatedDraft.seats[1].pickorder = botPickOrder;
+      console.log(JSON.stringify(botPickOrder));
       updatedDraft.seats[1].name = `Bot: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
     } else {
       updatedDraft.seats[1].drafted = botPicks.flat();
@@ -234,6 +235,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
     updatedDraft.seats[0].drafted = picks.flat();
     updatedDraft.seats[0].sideboard = [];
     updatedDraft.seats[0].pickorder = pickOrder;
+    console.log(JSON.stringify(pickOrder));
 
     await csrfFetch(`/cube/api/submitgriddraft/${initialDraft.cube}`, {
       method: 'POST',
@@ -255,8 +257,8 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
       if (mask[i] && tempPack[i]) {
         const card = tempPack[i];
         tempPack[i] = null;
-        tempPicks[0][Math.min(card.cmc || card.details.cmc || 0, 7)].push(card);
-        newPicks.push(card);
+        tempPicks[0][Math.min(cardCmc(card), 7)].push(card.index);
+        newPicks.push(card.index);
       }
     }
 
@@ -270,7 +272,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
         const tempBotPicks = JSON.parse(JSON.stringify(botPicks));
 
         for (const pick of newBotPicks.concat(bot2)) {
-          tempBotPicks[0][Math.min(pick.cmc || pick.details.cmc || 0, 7)].push(pick);
+          tempBotPicks[0][Math.min(cardCmc(initialDraft.cards[pick]), 7)].push(pick);
         }
 
         setBotPicks(tempBotPicks);
@@ -373,9 +375,14 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
           <ErrorBoundary className="mt-3">
             <Card className="mt-3">
               <DeckStacks
-                cards={picks}
+                cards={picks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
                 title="Picks"
-                subtitle={subtitle(picks.flat().flat())}
+                subtitle={subtitle(
+                  picks
+                    .flat()
+                    .flat()
+                    .map((c) => initialDraft.cards[c]),
+                )}
                 locationType={Location.PICKS}
                 canDrop={() => false}
                 onMoveCard={() => {}}
@@ -383,9 +390,14 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
             </Card>
             <Card className="mt-3">
               <DeckStacks
-                cards={botPicks}
+                cards={botPicks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
                 title="Bot Picks"
-                subtitle={subtitle(botPicks.flat().flat())}
+                subtitle={subtitle(
+                  botPicks
+                    .flat()
+                    .flat()
+                    .map((c) => initialDraft.cards[c]),
+                )}
                 locationType={Location.PICKS}
                 canDrop={() => false}
                 onMoveCard={() => {}}
@@ -402,11 +414,11 @@ GridDraftPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
   initialDraft: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.array.isRequired,
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
-    synergies: PropTypes.array.isRequired,
     basics: PropTypes.shape([]),
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,

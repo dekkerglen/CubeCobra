@@ -52,7 +52,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
   const calculateBasics = useCallback(async () => {
     const main = deck.flat(2);
     init(draft);
-    const { lands: basics } = calculateBasicCounts(main, draft.synergies);
+    const { lands: basics } = calculateBasicCounts(main, draft.cards);
     for (const [basic, count] of Object.entries(basics)) {
       const opts = refs[basic].current.options;
       for (let i = 0; i < opts.length; i++) {
@@ -105,8 +105,9 @@ BasicsModal.propTypes = {
   toggle: PropTypes.func.isRequired,
   addBasics: PropTypes.func.isRequired,
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
+    cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }).isRequired,
   deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
 };
@@ -187,8 +188,8 @@ const DeckbuilderNavbar = ({
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
     init(draft);
     const picked = createSeen();
-    addSeen(picked, main, draft.synergies);
-    const { sideboard: side, deck: newDeck } = await buildDeck(main, picked, draft.synergies, draft.basics);
+    addSeen(picked, main, draft.synergies, draft.cards);
+    const { sideboard: side, deck: newDeck } = await buildDeck(draft.cards, main, picked, draft.basics);
     setSideboard([side]);
     setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
   }, [deck, draft, setDeck, setSideboard]);
@@ -251,9 +252,10 @@ DeckbuilderNavbar.propTypes = {
   description: PropTypes.string.isRequired,
   className: PropTypes.string,
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
     basics: PropTypes.shape({}),
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
   }).isRequired,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,

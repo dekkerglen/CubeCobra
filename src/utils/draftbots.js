@@ -112,14 +112,13 @@ export const setSynergyMatrix = (size) => {
   }
 };
 
-export const getSynergy = (index1, index2, synergies) => {
-  if (!synergies) return 0;
+export const getSynergy = (index1, index2, cards) => {
   if (synergyMatrix[index1][index2] === null) {
-    const similarityValue = similarity(synergies[index1], synergies[index2]);
+    const similarityValue = similarity(cards[index1].details.embedding, cards[index2].details.embedding);
     if (Number.isFinite(similarityValue)) {
       synergyMatrix[index1][index2] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
     }
-    // This happens when similarityValue is 1, usually because a card is a duplicate.
+    // This happens when similarityValue is 1, usually because a card is a duplicate or one is 0s.
     if (!Number.isFinite(synergyMatrix[index1][index2])) {
       synergyMatrix[index1][index2] = synergyMatrix[index1][index2] > 0 ? MAX_SYNERGY : 0;
     }
@@ -220,18 +219,18 @@ export const getRating = (card, cards) => {
 
 // How much does the card we're considering synergize with the cards we've picked?
 // Scale is roughly 0-10. Used to select a card within a combination.
-export const getPickSynergy = (pickedInCombination, card, picked, synergies) => {
-  if (picked.cards.WUBRG.length === 0 || !synergies) {
+export const getPickSynergy = (pickedInCombination, card, picked, cards) => {
+  if (picked.cards.WUBRG.length === 0) {
     return 0;
   }
 
   let synergy = 0;
-  if (synergies && card) {
+  if (card) {
     for (const { index } of pickedInCombination) {
       // Don't count synergy for duplicate cards.
       // Maximum synergy is generally around .997 which corresponds to 10.
       if (index !== card) {
-        synergy += getSynergy(index, card, synergies);
+        synergy += getSynergy(index, card, cards);
       }
     }
   }
@@ -241,8 +240,9 @@ export const getPickSynergy = (pickedInCombination, card, picked, synergies) => 
 // Does this help us fix for this combination of colors?
 // Scale from 0-10. Perfect is five-color land in 5 color combination.
 // Used to select a card within a color combination.
-export const getFixing = (combination, card) => {
-  const colors = FETCH_LANDS[card.details.name] ?? cardColorIdentity(card);
+export const getFixing = (combination, card, cards) => {
+  card = cards[card];
+  const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
   const typeLine = cardType(card);
   const isLand = typeLine.includes('Land');
   const isFetch = !!FETCH_LANDS[cardName(card)];
@@ -264,8 +264,8 @@ export const getFixing = (combination, card) => {
 // How much do the cards we've already picked in this combo synergize with each other?
 // Scale is roughly 0-10. Used to select a color combination.
 // Tends to recommend what we've already picked before.
-export const getInternalSynergy = (pickedInCombination, picked, synergies) => {
-  if (picked.cards.WUBRG.length === 0) {
+export const getInternalSynergy = (pickedInCombination, picked, cards) => {
+  if (pickedInCombination.length < 2) {
     return 0;
   }
 
@@ -275,7 +275,7 @@ export const getInternalSynergy = (pickedInCombination, picked, synergies) => {
   for (const { index: index1 } of pickedInCombination) {
     for (const { index: index2 } of pickedInCombination) {
       if (index1 !== index2) {
-        synergy += getSynergy(index1, index2, synergies);
+        synergy += getSynergy(index1, index2, cards);
       }
     }
   }
@@ -303,13 +303,16 @@ export const getOpenness = (combination, seen) => {
 // How good are the cards we've already picked in this color combo?
 // Scale from 0-1. Used to select a color combination.
 // Tends to recommend what we've already picked before.
-export const getColor = (pickedInCombination, picked, probabilities) => {
+export const getColor = (pickedInCombination, picked, probabilities, cards) => {
   const count = picked.cards.WUBRG.length - picked.cards[''].length;
   if (count === 0) {
     return 0;
   }
 
-  return pickedInCombination.reduce((acc, card) => acc + getRating(card) * probabilities[card.cardID], 0) / count;
+  return (
+    pickedInCombination.reduce((acc, card) => acc + getRating(card.index, cards) * probabilities[card.cardID], 0) /
+    count
+  );
 };
 
 const getCoordPairs = (pack, pick, initialState) => [
@@ -360,7 +363,6 @@ const calculateRating = (
   ratingScore,
   picked,
   seen,
-  synergies,
   packNum,
   pickNum,
   initialState,
@@ -371,14 +373,14 @@ const calculateRating = (
   }
   const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
   if (card) {
-    const cardCastingProbability = getCastingProbability(card, lands);
+    const cardCastingProbability = getCastingProbability(cards[card], lands);
     const pickSynergyScore =
-      getPickSynergy(pickedInCombination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState);
+      getPickSynergy(pickedInCombination, card, picked, cards) * getSynergyWeight(packNum, pickNum, initialState);
     return (
-      getInternalSynergy(pickedInCombination, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
+      getInternalSynergy(pickedInCombination, picked, cards) * getSynergyWeight(packNum, pickNum, initialState) +
       getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
-      getColor(pickedInCombination, picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
-      getFixing(combination, cards[card]) * getFixingWeight(packNum, pickNum, initialState) +
+      getColor(pickedInCombination, picked, probabilities, cards) * getColorWeight(packNum, pickNum, initialState) +
+      getFixing(combination, card, cards) * getFixingWeight(packNum, pickNum, initialState) +
       (ratingScore + pickSynergyScore) * cardCastingProbability
     );
   }
@@ -391,7 +393,7 @@ const calculateRating = (
     return (
       // We can't just do pickedInCombination since that'll be empty
       // sometimes and more than 1 step from being non-empty
-      (getColor(nonlands, picked, probabilities) + getInternalSynergy(pickedInCombination, picked, synergies)) *
+      (getColor(nonlands, picked, probabilities, cards) + getInternalSynergy(pickedInCombination, picked, cards)) *
       totalProbability
     );
   }
@@ -399,16 +401,7 @@ const calculateRating = (
 };
 
 // inPack is the number of cards in this pack
-export const botRatingAndCombination = (
-  cards,
-  card,
-  picked,
-  seen,
-  synergies,
-  initialState,
-  inPack = 1,
-  packNum = 1,
-) => {
+export const botRatingAndCombination = (cards, card, picked, seen, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
@@ -425,7 +418,6 @@ export const botRatingAndCombination = (
     weightedRatingScore,
     picked,
     seen,
-    synergies,
     packNum,
     pickNum,
     initialState,
@@ -441,7 +433,7 @@ export const botRatingAndCombination = (
           const newLands = { ...prevLands };
           newLands[increaseColor] += 1;
           newLands[decreaseColor] -= 1;
-          if (!landCountsAreEqual(newLands, prevLands) && (!card || getCastingProbability(card, newLands) > 0)) {
+          if (!landCountsAreEqual(newLands, prevLands) && (!card || getCastingProbability(cards[card], newLands) > 0)) {
             const newCombination = getCombinationForLands(newLands);
             const newRating = calculateRating(
               newLands,
@@ -451,7 +443,6 @@ export const botRatingAndCombination = (
               weightedRatingScore,
               picked,
               seen,
-              synergies,
               packNum,
               pickNum,
               initialState,

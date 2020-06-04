@@ -17,13 +17,13 @@ const draftSchema = mongoose.Schema({
   cube: String,
   initial_state: [[[Number]]],
   seats: [Seat],
-  synergies: [[Number]],
   basics: {
     Plains: cardSchema,
     Island: cardSchema,
     Swamp: cardSchema,
     Mountain: cardSchema,
     Forest: cardSchema,
+    Wastes: cardSchema,
   },
   unopenedPacks: [[[Number]]],
 });

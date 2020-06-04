@@ -199,7 +199,7 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   );
 
   const picked = createSeen();
-  addSeen(picked, getPicked(0));
+  addSeen(picked, getPicked(0), initialDraft.cards);
   const seen = getSeen(0);
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
@@ -281,6 +281,7 @@ CubeDraftPage.propTypes = {
   cube: PropTypes.shape({}).isRequired,
   cubeID: PropTypes.string.isRequired,
   initialDraft: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
     bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
     packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,

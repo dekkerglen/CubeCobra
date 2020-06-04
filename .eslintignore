@@ -1,9 +1,16 @@
 webpack.*.js
 
-jobs/*.js
+jobs/test_routes.js
+jobs/download_cubes.js
+jobs/populate_ratings.js
+jobs/populate_analytics.js
+jobs/populate_embeddings.js
 one_shot_scripts/add_blog_names.js
 one_shot_scripts/add_deck_names.js
 one_shot_scripts/generate_short_ids.js
+one_shot_scripts/add_deck_owners.js
+one_shot_scripts/fix_cube_deck_count.js
+one_shot_scripts/fix_deck_count.js
 one_shot_scripts/import_ratings.js
 one_shot_scripts/remove_invalid_tags.js
 one_shot_scripts/seed.js

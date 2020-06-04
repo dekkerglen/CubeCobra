@@ -120,6 +120,7 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
           draft={draft}
           setDeck={setDeck}
           setSideboard={setSideboard}
+          cards={initialDeck.cards}
         />
         <DynamicFlash />
         <Row>
@@ -190,10 +191,10 @@ CubeDeckbuilderPage.propTypes = {
         name: PropTypes.string.isRequired,
       }),
     ).isRequired,
-    cards: PropTypes.array.isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
   }).isRequired,
   draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
   }).isRequired,
 };
