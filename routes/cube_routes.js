@@ -3546,10 +3546,9 @@ router.post('/resize/:id/:size', async (req, res) => {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(
-        0,
-        req.params.size - cube.cards.length,
-      )}&root=${encodeURIComponent(process.env.HOST)}`,
+      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
+        process.env.HOST,
+      )}`,
     );
     if (!response.ok) {
       return util.handleRouteError(req, res, 'Error fetching suggestion data.', `/cube/list/${req.params.id}`);
