@@ -93,7 +93,7 @@ const CardPage = ({ card, data, prices, related }) => {
         <CardGrid
           cardList={cardList}
           Tag={CardImage}
-          colProps={{ xs: 6, sm: 4, className: 'col-md-1-5' }}
+          colProps={{ xs: 6, sm: 4, className: 'col-md-1-5 col-lg-1-5 col-xl-1-5' }}
           cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
           linkDetails
         />

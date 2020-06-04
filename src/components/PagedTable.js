@@ -28,15 +28,11 @@ const PagedTable = ({ pageSize, rows, children, ...props }) => {
 PagedTable.propTypes = {
   children: PropTypes.element.isRequired,
   pageSize: PropTypes.number,
-  showBottom: PropTypes.bool,
   rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  pageWrap: PropTypes.func,
 };
 
 PagedTable.defaultProps = {
   pageSize: 60,
-  showBottom: false,
-  pageWrap: (element) => element,
 };
 
 export default PagedTable;

@@ -1,21 +1,11 @@
 .tag {
 	background-color: #E9ECEF;
-}
-
-.autocard-tags .tag, .tag-item {
 	font-size: 85%;
 	padding: 0.5em .75em;
 	margin: .25em .1em;
 	display: inline-block;
 	border: 1px solid #DEE2E6;
 	transition: all .1s linear;
-}
-
-.autocard-tags {
-  width: 100%;
-  padding: 3px;
-  padding-left: 5px;
-  padding-right: 5px;
 }
 
 .tag-sort-placeholder {

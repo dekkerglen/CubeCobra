@@ -46,13 +46,18 @@ const Header = ({ header, headerProps, active, sorts, setSort }) => {
 const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) => {
   const [sort, setSort] = useState(defaultSort);
   const sortKeyF = sorts[sort];
-  let sortedData = data;
-  if (sortKeyF) {
-    sortedData = useMemo(() => {
-      const result = [...data];
-      result.sort((x, y) => sortKeyF(x) - sortKeyF(y));
-      return result;
-    }, [data, sortKeyF]);
+  let sortedData;
+  if (Array.isArray(data)) {
+    sortedData = data;
+    if (sortKeyF) {
+      sortedData = useMemo(() => {
+        const result = [...data];
+        result.sort((x, y) => sortKeyF(x) - sortKeyF(y));
+        return result;
+      }, [data, sortKeyF]);
+    }
+  } else {
+    sortedData = data[sort];
   }
 
   const rows = sortedData.map(rowF);

@@ -96,6 +96,12 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
   const popupImg = document.getElementById('autocardImageFront');
   const popupImgBack = document.getElementById('autocardImageBack');
 
+  if (card_flip) {
+    popup.classList.add('double-width');
+  } else {
+    popup.classList.remove('double-width');
+  }
+
   const overlays = popup.getElementsByClassName('foilOverlay');
   for (let i = 0; i < overlays.length; i++) {
     if (foil) {
@@ -124,11 +130,10 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
   popup.style.zIndex = in_modal ? 1500 : 500;
 
   if (tags) {
-    let tagsText = '<div class="autocard-tags">';
+    let tagsText = '';
     tags.forEach(function (tag, index) {
       tagsText += "<span class='tag " + getTagColorClass(tag.trim()) + "'>" + tag.trim() + '</span>';
     });
-    tagsText += '</div>';
     document.getElementById('autocardTags').innerHTML = tagsText;
   }
 
@@ -147,7 +152,6 @@ function autocard_show_card(card_image, card_flip, show_art_crop, tags, foil, in
       if (!popupImg.complete) {
         return;
       }
-      // only fill in tags area once the image is done loading
       if (autocardTimeout) autocardTimeout = clearTimeout(autocardTimeout);
       autocardTimeout = setTimeout(() => document.getElementById('autocardPopup').classList.remove('d-none'), 10);
     };

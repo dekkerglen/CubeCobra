@@ -1,22 +1,52 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
+import PropTypes from 'prop-types';
 
-import { Row, Col } from 'reactstrap';
+import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import { sortDeep } from 'utils/Sort';
 
-import { sortDeep } from '../utils/Sort';
+import SortContext from 'components/SortContext';
+import SpoilerImage from 'components/SpoilerImage';
+import CardGrid from 'components/CardGrid';
 
-import SortContext from './SortContext';
-import SpoilerImage from './SpoilerImage';
-import CardGrid from './CardGrid';
+const VisualSpoiler = ({ cards }) => {
+  const [scale, setScale] = useState('medium');
 
-const VisualSpoiler = ({ cards, ...props }) => {
   const { primary, secondary, tertiary } = useContext(SortContext);
   const sorted = sortDeep(cards, primary, secondary, tertiary);
   const cardList = sorted
-    .map(([label1, group1]) =>
-      group1.map(([label2, group2]) => group2.map(([label3, group3]) => group3.map((card) => card))),
-    )
+    .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);
-  return <CardGrid cardList={cardList} Tag={SpoilerImage} colProps={{ xs: 6, sm: 4, className: 'col-md-1-5' }} />;
+
+  const size = [6, 4];
+  let sizes = 'col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1-5';
+
+  if (scale === 'small') {
+    sizes = 'col-2 col-sm-2 col-md-1-5 col-lg-1-5 col-xl-1';
+  } else if (scale === 'large') {
+    sizes = 'col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3';
+  }
+
+  console.log(size);
+
+  return (
+    <>
+      <Pagination>
+        <PaginationItem active={scale === 'small'}>
+          <PaginationLink onClick={() => setScale('small')}>Small</PaginationLink>
+        </PaginationItem>
+        <PaginationItem active={scale === 'medium'}>
+          <PaginationLink onClick={() => setScale('medium')}>Medium</PaginationLink>
+        </PaginationItem>
+        <PaginationItem active={scale === 'large'}>
+          <PaginationLink onClick={() => setScale('large')}>Large</PaginationLink>
+        </PaginationItem>
+      </Pagination>
+      <CardGrid cardList={cardList} Tag={SpoilerImage} colProps={{ className: sizes }} />
+    </>
+  );
 };
 
+VisualSpoiler.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
 export default VisualSpoiler;

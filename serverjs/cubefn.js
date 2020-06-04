@@ -225,6 +225,16 @@ function maybeCards(cube, carddb) {
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
+async function getCardElo(cardname, round) {
+  const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } });
+
+  if (!rating || Number.isNaN(rating.elo)) {
+    return 1200;
+  }
+
+  return round ? Math.round(rating.elo) : rating.elo;
+}
+
 async function getElo(cardnames, round) {
   const ratings = await CardRating.find({ name: { $in: cardnames } });
   const result = {};
@@ -280,7 +290,7 @@ function CSVtoCards(csvString, carddb) {
         colorCategory: colorCategory || null,
       };
 
-      const potentialIds = carddb.allIds(card);
+      const potentialIds = carddb.allVersions(card);
       if (potentialIds && potentialIds.length > 0) {
         // First, try to find the correct set.
         const matchingSetAndNumber = potentialIds.find((id) => {
@@ -516,8 +526,8 @@ const methods = {
         const possible = carddb.nameToId[cardname.toLowerCase()];
         let cardID = null;
         if (cube && cube.cards) {
-          const allIds = cube.cards.map((card) => card.cardID);
-          const matchingNameIds = allIds.filter((id) => possible.includes(id));
+          const allVersions = cube.cards.map((card) => card.cardID);
+          const matchingNameIds = allVersions.filter((id) => possible.includes(id));
           [cardID] = matchingNameIds;
         }
         if (!cardID) {
@@ -563,6 +573,7 @@ const methods = {
   saveEdit,
   buildTagColors,
   maybeCards,
+  getCardElo,
   getElo,
   CSVtoCards,
   compareCubes,

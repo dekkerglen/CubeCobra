@@ -1,3 +1,5 @@
+import similarity from 'compute-cosine-similarity';
+
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
 import { COLOR_COMBINATIONS } from 'utils/Card';
@@ -34,17 +36,17 @@ function botCardRating(botColors, card) {
   // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
   if (isLand) {
     if ((subset || contains) && isFetch) {
-      rating += 191; // Increase value of picking by roughly 200%
+      rating += 280; // Increase value of picking by roughly 400%
     } else if (subset || contains) {
       switch (colors.length) {
         case 1:
-          rating += 176; // Increase value of picking by roughly 175%
+          rating += 191; // Increase value of picking by roughly 200%
           break;
         case 2:
-          rating += 218; // Increase value of picking by roughly 250%
+          rating += 262; // Increase value of picking by roughly 350%
           break;
         default:
-          rating += 265; // Increase value of picking by roughly 360%
+          rating += 311; // Increase value of picking by roughly 500%
           break;
       }
     } else if (overlap && isFetch) {
@@ -79,21 +81,21 @@ function addSeen(seen, cards) {
         }
       }
     }
+    seen.cards.push(card);
   }
-  seen.cards += cards.length;
 }
 
 function init(newDraft) {
   draft = newDraft;
   for (const seat of draft.seats) {
     seat.seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    seat.seen.cards = 0;
+    seat.seen.cards = [];
     addSeen(seat.seen, seat.packbacklog[0].slice());
     seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    seat.picked.cards = 0;
+    seat.picked.cards = [];
   }
   draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  draft.overallPool.cards = 0;
+  draft.overallPool.cards = [];
   addSeen(draft.overallPool, draft.unopenedPacks.flat(3));
 }
 
@@ -110,7 +112,7 @@ function pack() {
 }
 
 function packPickNumber() {
-  let picks = draft.seats[0].pickorder.length;
+  let picks = draft.seats[draft.seats.length - 1].pickorder.length;
   let packnum = 0;
 
   while (draft.initial_state[0][packnum] && picks >= draft.initial_state[0][packnum].length) {
@@ -132,17 +134,128 @@ function arrangePicks(picks) {
 const considerInCombination = (combination) => (card) =>
   card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
+const findBestValueArray = (weights, pickNumPercent) => {
+  const index = weights.length * pickNumPercent;
+  const ceilIndex = Math.ceil(index);
+  const floorIndex = Math.floor(index);
+  // Is an integer or is past the end by less than 1
+  if (index === floorIndex || ceilIndex === weights.length) {
+    return weights[floorIndex];
+  }
+  // The fractional part of index.
+  const indexModOne = index - floorIndex;
+  // If is fractional and not past the end we weight it by the two
+  // closest points by how close it is to that point.
+  return indexModOne * weights[ceilIndex] + (1 - indexModOne) * weights[floorIndex];
+};
+
+const findBestValue2d = (weights, packNum, pickNum, initialState) => {
+  const packNumPercent = (packNum - 1) / initialState[0].length;
+  const pickNumPercent = (pickNum - 1) / initialState[0][packNum - 1].length;
+  const index = weights.length * packNumPercent;
+  const ceilIndex = Math.ceil(index);
+  const floorIndex = Math.floor(index);
+  // Is either an integer or is past the end by less than 1 so we can use floor as our index
+  if (index === floorIndex || ceilIndex === weights.length) {
+    return findBestValueArray(weights[floorIndex], pickNumPercent);
+  }
+  // The fractional part of index.
+  const indexModOne = index - floorIndex;
+  // If is fractional and not past the end we weight it by the two
+  // closest points by how close it is to that point.
+  return (
+    indexModOne * findBestValueArray(weights[ceilIndex], pickNumPercent) +
+    (1 - indexModOne) * findBestValueArray(weights[floorIndex], pickNumPercent)
+  );
+};
+
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [0.8, 1, 0.6, 0.33, 0.15, 0.1];
-const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inPack = 1, packNum = 1, numPacks = 1) => {
+const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
+const COLORS_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+];
+const VALUE_WEIGHTS = [
+  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+];
+const INTERNAL_SYNERGY_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+];
+const SYNERGY_WEIGHTS = [
+  [1 / 12, 1 / 6, 1 / 4, 1 / 3, 5 / 12, 1 / 2, 7 / 12, 2 / 3, 3 / 4, 5 / 6, 11 / 12, 1, 13 / 12, 7 / 6, 5 / 4],
+  [4 / 3, 17 / 12, 3 / 2, 19 / 12, 5 / 3, 7 / 4, 11 / 6, 23 / 12, 2, 25 / 12, 13 / 6, 9 / 4, 7 / 3, 29 / 12, 5 / 2],
+  [
+    31 / 12,
+    8 / 3,
+    11 / 4,
+    17 / 6,
+    35 / 12,
+    3,
+    37 / 12,
+    19 / 6,
+    39 / 12,
+    10 / 3,
+    41 / 12,
+    7 / 2,
+    43 / 12,
+    11 / 3,
+    15 / 4,
+  ],
+];
+const OPENNESS_WEIGHTS = [
+  [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
+  [3, 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.7, 3.6, 3.4, 3.2, 3, 2.8, 2.6],
+  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0],
+];
+const OVERALL_COUNT_WEIGHTS = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+];
+
+const botRatingAndCombination = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score
   // that'll be the color combination we want to play currently.
+  const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
   let bestRating = -1;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
-    if (!card || considerInCombination(combination)(card)) {
-      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 0;
+    const considerFunc = considerInCombination(combination);
+    if (!card || considerFunc(card)) {
+      const scaling = COLOR_SCALING_FACTOR[combination.length];
+
+      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 1;
+
+      let internalSynergy = 0.0000001;
+      let synergy = 0.00000001;
+      if (synergies) {
+        const pickedInCombo = picked.cards.filter((card2) => considerFunc(card2));
+        let count = 0;
+        for (let i = 1; i < pickedInCombo.length; i++) {
+          for (let j = 0; j < i; j++) {
+            internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 10;
+            count += 1;
+          }
+        }
+        if (count) {
+          internalSynergy /= count;
+        }
+        if (card) {
+          const similarityExponent = picked.cards.length / 3;
+          for (const { index } of pickedInCombo) {
+            synergy += similarity(synergies[index], synergies[card.index]) ** similarityExponent;
+          }
+          if (pickedInCombo.length) {
+            synergy /= pickedInCombo.length;
+          }
+        }
+      }
       // The sum of the values of all cards in our pool, possibly
       // plus the card we are considering.
       const poolRating = picked[combination.join('')] + cardValue;
@@ -156,10 +269,15 @@ const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inP
       // The ratio of seen to overall gives us an idea what is
       // being taken.
       const openness = seenCount / overallCount;
-      const opennessWeight = (numPacks * inPack) / seats / packNum;
-      const scaling = COLOR_SCALING_FACTOR[combination.length];
       // We weigh the factors with exponents to get a final score.
-      const rating = scaling * poolRating ** 2 * openness ** opennessWeight;
+      // Everything uses exponents since that's how you weight a product.
+      const rating =
+        scaling ** findBestValue2d(COLORS_WEIGHTS, packNum, pickNum, initialState) *
+        poolRating ** findBestValue2d(VALUE_WEIGHTS, packNum, pickNum, initialState) *
+        openness ** findBestValue2d(OPENNESS_WEIGHTS, packNum, pickNum, initialState) *
+        internalSynergy ** findBestValue2d(INTERNAL_SYNERGY_WEIGHTS, packNum, pickNum, initialState) *
+        overallCount ** findBestValue2d(OVERALL_COUNT_WEIGHTS, packNum, pickNum, initialState) *
+        synergy ** findBestValue2d(SYNERGY_WEIGHTS, packNum, pickNum, initialState);
       if (rating > bestRating) {
         bestRating = rating;
         bestCombination = combination;
@@ -169,8 +287,10 @@ const botRatingAndCombination = (seen, card, picked, overallPool, seats = 1, inP
   return [bestRating, bestCombination];
 };
 
-const botColors = (...args) => botRatingAndCombination(...args)[1];
-const botRating = (...args) => botRatingAndCombination(...args)[0];
+const botRating = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
+  botRatingAndCombination(card, picked, seen, overallPool, synergies, initialState, inPack, packNum)[0];
+const botColors = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
+  botRatingAndCombination(card, picked, seen, overallPool, synergies, initialState, inPack, packNum)[1];
 
 function getSortFn(bot) {
   return (a, b) => {
@@ -181,22 +301,53 @@ function getSortFn(bot) {
   };
 }
 
-async function buildDeck(cards, picked) {
+async function buildDeck(cards, picked, synergies, initialState) {
   let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
 
-  const colors = botColors(null, null, picked, null);
+  const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);
-  const inColor = nonlands.filter(considerInCombination(colors));
-  const outOfColor = nonlands.filter((x) => !considerInCombination(colors)(x));
+  const considerFunc = considerInCombination(colors);
+  const inColor = nonlands.filter(considerFunc);
+  const outOfColor = nonlands.filter((card) => !considerFunc(card));
 
   inColor.sort(sortFn);
-  outOfColor.sort(sortFn);
+  nonlands = inColor;
+  let side = outOfColor;
+  if (nonlands.length < 23) {
+    outOfColor.sort(sortFn);
+    nonlands.push(...outOfColor.splice(0, 23 - nonlands.length));
+    side = [...outOfColor];
+  }
   lands.sort(sortFn);
-  nonlands = inColor.concat(outOfColor);
+  const chosen = [];
+  const calculateSynergy = (others, weight) => (card) => {
+    let synergy = 0.0000001;
+    if (synergies) {
+      for (const { index: otherIndex } of others) {
+        if (card.index !== otherIndex) {
+          synergy += similarity(synergies[card.index], synergies[otherIndex]) ** 20;
+        }
+      }
+    }
+    return [(card.rating ? toValue(botCardRating(colors, card)) : 1) * synergy ** weight, card];
+  };
+  const totalSynergy = nonlands.map(calculateSynergy(nonlands, 4));
+  totalSynergy.sort(([a], [b]) => b - a);
+  const [[, mostSynergy]] = totalSynergy.splice(0, 1);
+  chosen.push(mostSynergy);
+  let remaining = totalSynergy.map(([, card]) => card);
+  while (remaining.length > 0 && chosen.length < 23) {
+    const nonlandsWithValue = remaining.map(calculateSynergy(chosen, 2));
+    nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
+    const [[, bestValue]] = nonlandsWithValue.splice(0, 1);
+    chosen.push(bestValue);
+    remaining = nonlandsWithValue.map(([, index]) => index);
+  }
 
-  const main = nonlands.slice(0, 23).concat(lands.slice(0, 17));
-  const side = nonlands.slice(23).concat(lands.slice(17));
+  const main = chosen.concat(lands.slice(0, 17));
+  side.push(...lands.slice(17));
+  side.push(...remaining);
 
   const deck = [];
   const sideboard = [];
@@ -227,39 +378,40 @@ async function buildDeck(cards, picked) {
 
 function botPicks() {
   // make bots take one pick out of active packs
-  for (let botIndex = 1; botIndex < draft.seats.length; botIndex++) {
+  for (let botIndex = 0; botIndex < draft.seats.length; botIndex++) {
     const {
       seen,
       picked,
       packbacklog: [packFrom],
+      bot,
     } = draft.seats[botIndex];
-    const { overallPool, initial_state } = draft;
-    let ratedPicks = [];
-    const unratedPicks = [];
-    const seats = draft.seats.length;
-    const inPack = packFrom.length;
-    const [packNum] = packPickNumber();
-    const numPacks = initial_state[0].length;
-    for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-      if (packFrom[cardIndex].rating) {
-        ratedPicks.push(cardIndex);
-      } else {
-        unratedPicks.push(cardIndex);
+    if (packFrom.length > 0 && bot) {
+      const { overallPool, initial_state, synergies } = draft;
+      let ratedPicks = [];
+      const unratedPicks = [];
+      const inPack = packFrom.length;
+      const [packNum] = packPickNumber();
+      for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
+        if (packFrom[cardIndex].rating) {
+          ratedPicks.push(cardIndex);
+        } else {
+          unratedPicks.push(cardIndex);
+        }
       }
-    }
-    ratedPicks = ratedPicks
-      .map((cardIndex) => [
-        botRating(seen, packFrom[cardIndex], picked, overallPool, seats, inPack, packNum, numPacks),
-        cardIndex,
-      ])
-      .sort(([a], [b]) => b - a)
-      .map(([, cardIndex]) => cardIndex);
-    arrayShuffle(unratedPicks);
+      ratedPicks = ratedPicks
+        .map((cardIndex) => [
+          botRating(packFrom[cardIndex], picked, seen, overallPool, synergies, initial_state, inPack, packNum),
+          cardIndex,
+        ])
+        .sort(([a], [b]) => b - a)
+        .map(([, cardIndex]) => cardIndex);
+      arrayShuffle(unratedPicks);
 
-    const pickOrder = ratedPicks.concat(unratedPicks);
-    const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
-    draft.seats[botIndex].pickorder.push(pickedCard);
-    addSeen(picked, [pickedCard]);
+      const pickOrder = ratedPicks.concat(unratedPicks);
+      const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+      draft.seats[botIndex].pickorder.push(pickedCard);
+      addSeen(picked, [pickedCard]);
+    }
   }
 }
 
@@ -301,12 +453,17 @@ function passPack() {
   }
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function pick(cardIndex) {
+  await sleep(0);
   const card = draft.seats[0].packbacklog[0].splice(cardIndex, 1)[0];
   const packFrom = draft.seats[0].packbacklog[0];
   draft.seats[0].pickorder.push(card);
   passPack();
-  await csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
+  csrfFetch(`/cube/api/draftpickcard/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify({
       draft_id: draft._id,
@@ -321,7 +478,9 @@ async function pick(cardIndex) {
 
 async function finish() {
   // build bot decks
-  const decksPromise = draft.seats.map((seat) => buildDeck(seat.pickorder, seat.picked));
+  const decksPromise = draft.seats.map((seat) => {
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.initial_state);
+  });
   const decks = await Promise.all(decksPromise);
 
   for (let i = 0; i < draft.seats.length; i++) {
@@ -333,8 +492,18 @@ async function finish() {
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+      picked.cards = [];
       addSeen(picked, draft.seats[i].pickorder);
-      const colors = botColors(null, null, picked, null);
+      const colors = botColors(
+        null,
+        picked,
+        null,
+        null,
+        draft.synergies,
+        draft.initial_state,
+        1,
+        draft.initial_state[0].length,
+      );
       draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
     }
   }
@@ -373,4 +542,27 @@ async function finish() {
   });
 }
 
-export default { init, id, cube, pack, packPickNumber, arrangePicks, pick, finish, botColors };
+async function allBotsDraft() {
+  for (const seat of draft.seats) {
+    seat.bot = [];
+  }
+  while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].length > 0) {
+    passPack();
+  }
+  finish();
+}
+
+export default {
+  addSeen,
+  allBotsDraft,
+  arrangePicks,
+  botColors,
+  buildDeck,
+  cube,
+  finish,
+  id,
+  init,
+  pack,
+  packPickNumber,
+  pick,
+};

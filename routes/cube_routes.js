@@ -37,6 +37,7 @@ const {
   generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
+const deckutil = require('../dist/utils/Draft.js');
 const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
@@ -976,6 +977,9 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       pack: pack.pack,
     };
 
+    const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
+    const height = Math.ceil(pack.pack.length / width);
+
     return res.render('cube/cube_samplepack', {
       cube,
       title: `${abbreviate(cube.name)} - Sample Pack`,
@@ -986,8 +990,8 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
         `A sample pack from ${cube.name}`,
         `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
         `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
-        CARD_WIDTH * 5,
-        CARD_HEIGHT * 3,
+        CARD_WIDTH * width,
+        CARD_HEIGHT * height,
       ),
       loginCallback: `/cube/samplepack/${req.params.id}`,
     });
@@ -1125,7 +1129,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     let missing = '';
     let changelog = '';
     for (const card of cards) {
-      const potentialIds = carddb.allIds(card);
+      const potentialIds = carddb.allVersions(card);
       if (potentialIds && potentialIds.length > 0) {
         const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
         const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
@@ -1458,22 +1462,21 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
-  let { name } = carddb.cardFromId(card.cardID);
-  name = name.replace(/"/, '""');
+  const { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
   let { imgUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
   }
-  res.write(`"${name}",`);
+  res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${card.colors.join('')},`);
+  res.write(`${(card.colors || []).join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
-  res.write(`${card.rarity},`);
-  res.write(`${card.colorCategory},`);
+  res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
+  res.write(`${card.colorCategory || colorcategory},`);
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
@@ -1998,6 +2001,19 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
+
+      const cards = draft.initial_state.flat(3);
+
+      const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
+      });
+      if (response.ok) {
+        draft.synergies = await response.json();
+      } else {
+        draft.synergies = null;
+      }
 
       await draft.save();
       return res.redirect(`/cube/draft/${draft._id}`);
@@ -2860,24 +2876,60 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
     const cube = await Cube.findById(base.cube);
+    const srcDraft = await Draft.findById(base.draft).lean();
+
+    const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    userPicked.cards = [];
+    deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
+    const { colors: userColors } = await deckutil.default.buildDeck(
+      base.seats[req.params.index].pickorder,
+      userPicked,
+      srcDraft.synergies,
+      srcDraft.initial_state,
+    );
 
     const deck = new Deck();
     deck.cube = base.cube;
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.comments = [];
-    deck.seats = [
-      {
-        userid: req.user._id,
-        username: req.user.username,
-        pickorder: base.seats[req.params.index].pickorder,
-        name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
-        description: 'This deck was rebuilt from another draft deck.',
-        cols: base.seats[req.params.index].cols,
-        deck: base.seats[req.params.index].deck,
-        sideboard: base.seats[req.params.index].sideboard,
-      },
-    ];
+    deck.draft = base.draft;
+    deck.seats = [];
+    deck.seats.push({
+      userid: req.user._id,
+      username: `${req.user.username}: ${userColors}`,
+      pickorder: base.seats[req.params.index].pickorder,
+      name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
+      description: 'This deck was rebuilt from another draft deck.',
+      cols: base.seats[req.params.index].cols,
+      deck: base.seats[req.params.index].deck,
+      sideboard: base.seats[req.params.index].sideboard,
+    });
+    let botNumber = 1;
+    for (let i = 0; i < base.seats.length; i++) {
+      if (i !== parseInt(req.params.index, 10)) {
+        const picked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+        picked.cards = [];
+        deckutil.default.addSeen(picked, base.seats[i].pickorder);
+        // eslint-disable-next-line no-await-in-loop
+        const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
+          base.seats[i].pickorder,
+          picked,
+          srcDraft.synergies,
+        );
+        deck.seats.push({
+          userid: null,
+          username: `Bot ${botNumber}: ${colors.join(', ')}`,
+          pickorder: base.seats[i].pickorder,
+          name: `Draft of ${cube.name}`,
+          description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
+          cols: base.seats[i].cols,
+          deck: builtDeck,
+          sideboard,
+        });
+        botNumber += 1;
+      }
+    }
 
     if (!cube.numDecks) {
       cube.numDecks = 0;
@@ -2934,9 +2986,11 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
+    draft.synergies = srcDraft.synergies;
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
+    draft.seats[0].bot = null;
 
     for (let i = 0; i < draft.seats.length; i += 1) {
       if (!draft.seats[i].bot) {
@@ -2944,6 +2998,63 @@ router.get('/redraft/:id', async (req, res) => {
         draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
       }
 
+      draft.seats[i].drafted = [];
+      draft.seats[i].sideboard = [];
+      draft.seats[i].pickorder = [];
+      draft.seats[i].packbacklog = [];
+
+      for (let j = 0; j < 16; j += 1) {
+        draft.seats[i].drafted.push([]);
+      }
+
+      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
+    }
+
+    // add ratings
+    const names = [];
+    for (const seat of draft.initial_state) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          names.push(carddb.cardFromId(card.cardID).name);
+        }
+      }
+    }
+
+    draft.ratings = await getElo(names);
+
+    await draft.save();
+    return res.redirect(`/cube/draft/${draft._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
+router.get('/redraftbots/:id', async (req, res) => {
+  try {
+    const base = await Deck.findById(req.params.id).lean();
+
+    if (!base) {
+      req.flash('danger', 'Deck not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const srcDraft = await Draft.findById(base.draft).lean();
+
+    if (!srcDraft) {
+      req.flash('danger', 'This deck is not able to be redrafted.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
+    let draft = new Draft();
+    draft.cube = srcDraft.cube;
+    draft.seats = srcDraft.seats.slice();
+    draft.synergies = srcDraft.synergies;
+
+    draft.initial_state = srcDraft.initial_state.slice();
+    draft.unopenedPacks = srcDraft.initial_state.slice();
+
+    for (let i = 0; i < draft.seats.length; i += 1) {
+      draft.seats[i].bot = [];
       draft.seats[i].drafted = [];
       draft.seats[i].sideboard = [];
       draft.seats[i].pickorder = [];
@@ -2969,7 +3080,65 @@ router.get('/redraft/:id', async (req, res) => {
     draft.ratings = await getElo(names);
 
     await draft.save();
-    return res.redirect(`/cube/draft/${draft._id}`);
+
+    draft = await Draft.findById(draft._id).lean();
+    // insert card details everywhere that needs them
+    for (const seat of draft.unopenedPacks) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+        }
+      }
+    }
+
+    for (const seat of draft.seats) {
+      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+    deckutil.default.init(draft);
+    await deckutil.default.allBotsDraft();
+    await Draft.updateOne({ _id: draft._id }, draft);
+
+    const deck = new Deck();
+    deck.cube = draft.cube;
+    deck.date = Date.now();
+    deck.comments = [];
+    deck.draft = draft._id;
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    for (const seat of draft.seats) {
+      deck.seats.push({
+        bot: seat.bot,
+        userid: seat.userid,
+        username: seat.name,
+        pickorder: seat.pickorder,
+        name: `Draft of ${cube.name}`,
+        description: '',
+        cols: 16,
+        deck: seat.drafted,
+        sideboard: seat.sideboard ? seat.sideboard : [],
+      });
+    }
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+    cube.numDecks += 1;
+
+    await Promise.all([cube.save(), deck.save()]);
+
+    return res.redirect(`/cube/deck/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
@@ -3167,7 +3336,7 @@ router.get(
 router.get(
   '/api/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cardIds = carddb.allIds(carddb.cardFromId(req.params.id));
+    const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
     // eslint-disable-next-line prefer-object-spread
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
     const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];

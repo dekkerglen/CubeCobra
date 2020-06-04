@@ -86,6 +86,7 @@ describe('filter', () => {
             name: 'Castle Ardenvale',
             name_lower: 'castle ardenvale',
             oracle_id: 'f8f4fc60-725d-46d8-8e8f-e68e00d20589',
+            mtgo_id: 78622,
             full_name: 'Castle Ardenvale [eld-238]',
             artist: 'Volkan Baǵa',
             scryfall_uri: 'https://scryfall.com/card/eld/238/castle-ardenvale?utm_source=api',
@@ -107,12 +108,7 @@ describe('filter', () => {
             full_art: false,
             language: 'en',
             tcgplayer_id: 199390,
-            tokens: [
-              {
-                sourceCardId: '7f910495-8bd7-4134-a281-c16fd666d5cc',
-                tokenId: '94057dc6-e589-4a29-9bda-90f5bece96c4',
-              },
-            ],
+            tokens: ['94057dc6-e589-4a29-9bda-90f5bece96c4'],
             image_small:
               'https://img.scryfall.com/cards/small/front/7/f/7f910495-8bd7-4134-a281-c16fd666d5cc.jpg?1572491161',
             image_normal:
@@ -141,6 +137,7 @@ describe('filter', () => {
             name: 'Castle Embereth',
             name_lower: 'castle embereth',
             oracle_id: '91fbb25b-8521-483f-88b0-77778d25f7fd',
+            mtgo_id: 78624,
             full_name: 'Castle Embereth [eld-239]',
             artist: 'Jaime Jones',
             scryfall_uri: 'https://scryfall.com/card/eld/239/castle-embereth?utm_source=api',
@@ -190,6 +187,7 @@ describe('filter', () => {
             name: 'Castle Garenbrig',
             name_lower: 'castle garenbrig',
             oracle_id: 'de75e5dd-8a52-406c-b55c-96d686885500',
+            mtgo_id: 78626,
             full_name: 'Castle Garenbrig [eld-240]',
             artist: 'Adam Paquette',
             scryfall_uri: 'https://scryfall.com/card/eld/240/castle-garenbrig?utm_source=api',
@@ -239,6 +237,7 @@ describe('filter', () => {
             name: 'Castle Locthwain',
             name_lower: 'castle locthwain',
             oracle_id: 'be811e70-aaaa-41f3-bf9e-5d3f9f719b49',
+            mtgo_id: 78628,
             full_name: 'Castle Locthwain [eld-241]',
             artist: 'Titus Lunter',
             scryfall_uri: 'https://scryfall.com/card/eld/241/castle-locthwain?utm_source=api',
@@ -288,6 +287,7 @@ describe('filter', () => {
             name: 'Castle Vantress',
             name_lower: 'castle vantress',
             oracle_id: 'cdf41cf4-4e77-453d-be5b-0abbbd358934',
+            mtgo_id: 78630,
             full_name: 'Castle Vantress [eld-242]',
             artist: 'John Avon',
             scryfall_uri: 'https://scryfall.com/card/eld/242/castle-vantress?utm_source=api',

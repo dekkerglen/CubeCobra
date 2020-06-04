@@ -58,7 +58,7 @@ const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }
           <Col
             key={/* eslint-disable-line react/no-array-index-key */ `${packNumber}:${pickNumber}:${index}`}
             xs={3}
-            className="col-md-1-5 d-flex justify-content-center align-items-center"
+            className="col-md-1-5 col-lg-1-5 col-xl-1-5 d-flex justify-content-center align-items-center"
           >
             {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard

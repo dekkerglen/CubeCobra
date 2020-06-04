@@ -182,7 +182,9 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
             </Card>
             <Card>
               <CardBody>
-                <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+                <ErrorBoundary>
+                  {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
+                </ErrorBoundary>
               </CardBody>
             </Card>
           </Col>
