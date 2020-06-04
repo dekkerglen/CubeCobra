@@ -3547,7 +3547,7 @@ router.post('/resize/:id/:size', async (req, res) => {
     const response = await fetch(
       `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${Math.max(
         0,
-        req.params.size - cube.cards.length(),
+        req.params.size - cube.cards.length,
       )}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
@@ -3616,7 +3616,7 @@ router.post('/resize/:id/:size', async (req, res) => {
     if (err) {
       return util.handleRouteError(req, res, 'Error parsing filter.', `/cube/list/${req.params.id}`);
     }
-    list = list.filter(filter).slice(0, Math.abs(newSize - cube.cards.length));
+    list = (filter ? list.filter(filter) : list).slice(0, Math.abs(newSize - cube.cards.length));
 
     let changelog = '';
     if (newSize > cube.cards.length) {
