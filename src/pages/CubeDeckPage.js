@@ -109,12 +109,16 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                 </NavItem>
               )}
-              <NavItem>
-                <NavLink href={`/cube/redraft/${deck._id}`}>Redraft</NavLink>
-              </NavItem>
-              <NavItem className="mr-auto">
-                <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
-              </NavItem>
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>
+                  Rebuild/Redraft
+                </DropdownToggle>
+                <DropdownMenu right>
+                  <DropdownItem href={`/cube/redraft/${deck._id}`}>Redraft</DropdownItem>
+                  <DropdownItem href={`/cube/redraftbots/${deck._id}`}>Have Bots Redraft</DropdownItem>
+                  <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
+                </DropdownMenu>
+              </UncontrolledDropdown>
               <CustomImageToggler />
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
