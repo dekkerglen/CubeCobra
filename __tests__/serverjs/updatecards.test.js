@@ -419,7 +419,7 @@ describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribu
 
   test('for a double-faced card', () => {
     const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
-    expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace[attribute]);
+    expect(result).toEqual(convertedExampleDoubleFacedCard[attribute]);
   });
 
   test("for Adventure card's creature", () => {
