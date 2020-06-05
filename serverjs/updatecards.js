@@ -733,7 +733,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
     fs.mkdirSync(basePath);
   }
 
-  await downloadDefaultCards(basePath, defaultPath, allPath);
+  await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
   winston.info('Updating cardbase, this might take a little while...');
   await saveAllCards(basePath, defaultPath, allPath);
