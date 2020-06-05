@@ -4,6 +4,7 @@ const https = require('https'); // eslint-disable-line import/no-extraneous-depe
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 const winston = require('winston');
+const fetch = require('node-fetch');
 const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
@@ -88,8 +89,20 @@ function downloadFile(url, filePath) {
 }
 
 async function downloadDefaultCards(basePath = 'private', defaultSourcePath = null, allSourcePath = null) {
-  const defaultUrl = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
-  const allUrl = 'https://archive.scryfall.com/json/scryfall-all-cards.json';
+  let defaultUrl = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
+  let allUrl = 'https://archive.scryfall.com/json/scryfall-all-cards.json';
+
+  const res = await fetch(`https://api.scryfall.com/bulk-data`);
+  const json = await res.json();
+
+  for (const data of json.data) {
+    if (data.name === 'Default Cards') {
+      defaultUrl = data.download_uri;
+    } else if (data.name === 'All Cards') {
+      allUrl = data.download_uri;
+    }
+  }
+
   return Promise.all([
     downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
     downloadFile(allUrl, allSourcePath || path.resolve(basePath, 'all-cards.json')),
@@ -562,6 +575,7 @@ function convertCard(card, isExtra) {
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.collector_number = card.collector_number;
+
   newcard.promo =
     card.promo ||
     (card.frame_effects && card.frame_effects.includes('extendedart')) ||
@@ -719,7 +733,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
     fs.mkdirSync(basePath);
   }
 
-  await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+  await downloadDefaultCards(basePath, defaultPath, allPath);
 
   winston.info('Updating cardbase, this might take a little while...');
   await saveAllCards(basePath, defaultPath, allPath);
