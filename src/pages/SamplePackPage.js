@@ -36,7 +36,7 @@ const SamplePackPage = ({ cube_id, seed, pack }) => {
               <CardGrid
                 cardList={pack}
                 Tag={CardImage}
-                colProps={{ className: 'col-md-2-4', sm: '3', xs: '4' }}
+                colProps={{ className: 'col-md-2-4 col-lg-2-4 col-xl-2-4', sm: '3', xs: '4' }}
                 cardProps={{ autocard: true }}
                 className="sample"
               />
