@@ -108,7 +108,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   rarity: 'common',
   oracle_text:
-    '\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
+    'Vigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   cmc: 0,
