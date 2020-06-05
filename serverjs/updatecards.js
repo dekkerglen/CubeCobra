@@ -733,6 +733,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
     fs.mkdirSync(basePath);
   }
 
+  // the module.exports line is necessary to correctly mock this function in unit tests
   await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
   winston.info('Updating cardbase, this might take a little while...');
