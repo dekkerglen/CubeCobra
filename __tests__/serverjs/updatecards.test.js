@@ -295,7 +295,7 @@ test('updateCardbase creates the expected files', () => {
     expect(fs.existsSync('private-test/full_names.json')).toBe(true);
     updatecards.downloadDefaultCards = initialDownloadDefaultCards;
   });
-});
+}, 10000);
 
 test("addCardToCatalog successfully adds a card's information to the internal structures", () => {
   const card = convertedExampleCard;
