@@ -122,11 +122,16 @@ const CustomDraftCard = ({
             className="description-area"
             dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
           />
-          <LabelRow htmlFor={`seats-${index}`} label="Total Seats" className="mb-0">
+          <LabelRow htmlFor={`seats-${index}`} label="Total Seats">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
-              {rangeOptions(4, 17)}
+              {rangeOptions(2, 17)}
             </Input>
           </LabelRow>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="botsOnly" /> Have just bots draft.
+            </Label>
+          </FormGroup>
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value={index} />
@@ -188,14 +193,19 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
           </LabelRow>
           <LabelRow htmlFor="cards" label="Cards per Pack">
             <Input type="select" name="cards" id="cards" defaultValue="15">
-              {rangeOptions(5, 21)}
+              {rangeOptions(1, 21)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="seats" label="Total Seats" className="mb-0">
+          <LabelRow htmlFor="seats" label="Total Seats">
             <Input type="select" name="seats" id="seats" defaultValue="8">
-              {rangeOptions(4, 17)}
+              {rangeOptions(2, 17)}
             </Input>
           </LabelRow>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="botsOnly" /> Have just bots draft.
+            </Label>
+          </FormGroup>
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value="-1" />

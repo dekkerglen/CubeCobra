@@ -485,13 +485,15 @@ async function finish() {
   });
   const decks = await Promise.all(decksPromise);
 
+  let botIndex = 1;
   for (let i = 0; i < draft.seats.length; i++) {
     if (draft.seats[i].bot) {
       const { deck, sideboard, colors } = decks[i];
       draft.seats[i].drafted = deck;
       draft.seats[i].sideboard = sideboard;
-      draft.seats[i].name = `Bot ${i === 0 ? draft.seats.length : i}: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
+      draft.seats[i].name = `Bot ${botIndex}: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
+      botIndex += 1;
     } else {
       const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
       picked.cards = [];
