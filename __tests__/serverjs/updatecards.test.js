@@ -121,7 +121,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   },
   mtgo_id: 43357,
   parsed_cost: [],
-  colors: ['G'],
+  colors: [],
   type: 'Creature — Werewolf',
   tcgplayer_id: 57617,
   power: '2',
