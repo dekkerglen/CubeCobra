@@ -108,7 +108,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   rarity: 'common',
   oracle_text:
-    '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
+    'Vigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
   _id: '6f35e364-81d9-4888-993b-acc7a53d963c2',
   oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   cmc: 0,
@@ -121,12 +121,11 @@ const convertedExampleDoubleFacedCardFlipFace = {
   },
   mtgo_id: 43357,
   parsed_cost: [],
-  colors: ['G'],
+  colors: [],
   type: 'Creature — Werewolf',
   tcgplayer_id: 57617,
   power: '2',
   toughness: '2',
-  image_flip: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   image_normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   image_small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
@@ -419,8 +418,8 @@ describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribu
   });
 
   test('for a double-faced card', () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, true);
-    expect(result).toEqual(convertedExampleDoubleFacedCardFlipFace[attribute]);
+    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, false);
+    expect(result).toEqual(convertedExampleDoubleFacedCard[attribute]);
   });
 
   test("for Adventure card's creature", () => {

@@ -466,7 +466,7 @@ function convertParsedCost(card, isExtra = false) {
       .split('}{')
       .reverse();
   } else {
-    winston.error(`Error converting parsed colors: (isExtra:${isExtra}) card.name`);
+    winston.error(`Error converting parsed colors: (isExtra:${isExtra}) ${card.name}`);
   }
 
   if (parsedCost) {
@@ -480,7 +480,6 @@ function convertParsedCost(card, isExtra = false) {
 function convertColors(card, isExtra = false) {
   if (isExtra) {
     if (typeof card.card_faces === 'undefined' || card.card_faces.length < 2) {
-      winston.error(`Error converting colors: (isExtra:${isExtra}) card.name`);
       return [];
     }
     // special case: Adventure faces currently do not have colors on Scryfall (but probably should)
@@ -552,6 +551,8 @@ function convertCard(card, isExtra) {
   const newcard = {};
   if (isExtra) {
     [, faceAttributeSource] = card.card_faces;
+    card = { ...card };
+    card.card_faces = [faceAttributeSource];
   } else if (card.card_faces) {
     [faceAttributeSource] = card.card_faces;
   } else {
