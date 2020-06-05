@@ -241,7 +241,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-schedule.scheduleJob('0 0 * * *', () => {
+schedule.scheduleJob('0 8 * * *', () => {
   winston.info('Starting midnight cardbase update...');
   updatedb.updateCardbase();
 });
