@@ -2078,7 +2078,6 @@ router.post(
       }
 
       await draft.save();
-      console.log('botsOnly', req.body.botsOnly);
       if (req.body.botsOnly) {
         return doBotOnlyDraft(res, draft._id);
       }
@@ -3147,7 +3146,7 @@ router.get('/redraftbots/:id', async (req, res) => {
 
     await draft.save();
 
-    doBotOnlyDraft(res, draft._id);
+    return doBotOnlyDraft(res, draft._id);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
