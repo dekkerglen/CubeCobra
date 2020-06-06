@@ -1951,9 +1951,71 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
+const doBotOnlyDraft = async (res, draftId) => {
+  const draft = await Draft.findById(draftId).lean();
+  // insert card details everywhere that needs them
+  for (const seat of draft.unopenedPacks) {
+    for (const pack of seat) {
+      for (const card of pack) {
+        card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+      }
+    }
+  }
+
+  for (const seat of draft.seats) {
+    for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+      for (const pack of collection) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
+      }
+    }
+    for (const card of seat.pickorder) {
+      card.details = carddb.cardFromId(card.cardID);
+    }
+  }
+  const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+  deckutil.default.init(draft);
+  await deckutil.default.allBotsDraft();
+  await Draft.updateOne({ _id: draft._id }, draft);
+
+  const deck = new Deck();
+  deck.cube = draft.cube;
+  deck.date = Date.now();
+  deck.comments = [];
+  deck.draft = draft._id;
+  deck.cubename = cube.name;
+  deck.seats = [];
+
+  for (const seat of draft.seats) {
+    deck.seats.push({
+      bot: seat.bot,
+      userid: seat.userid,
+      username: seat.name,
+      pickorder: seat.pickorder,
+      name: `Draft of ${cube.name}`,
+      description: '',
+      cols: 16,
+      deck: seat.drafted,
+      sideboard: seat.sideboard ? seat.sideboard : [],
+    });
+  }
+
+  if (!cube.numDecks) {
+    cube.numDecks = 0;
+  }
+  cube.numDecks += 1;
+
+  await Promise.all([cube.save(), deck.save()]);
+
+  return res.redirect(`/cube/deck/${deck._id}`);
+};
+
 router.post(
   '/startdraft/:id',
   body('id').toInt(),
+  body('botsOnly').toBoolean(),
   body('seats').toInt({ min: 2, max: 16 }),
   body('packs').toInt({ min: 1, max: 36 }),
   body('cards').toInt({ min: 1, max: 90 }),
@@ -2016,6 +2078,9 @@ router.post(
       }
 
       await draft.save();
+      if (req.body.botsOnly) {
+        return doBotOnlyDraft(res, draft._id);
+      }
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
@@ -3045,7 +3110,7 @@ router.get('/redraftbots/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    let draft = new Draft();
+    const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
@@ -3081,64 +3146,7 @@ router.get('/redraftbots/:id', async (req, res) => {
 
     await draft.save();
 
-    draft = await Draft.findById(draft._id).lean();
-    // insert card details everywhere that needs them
-    for (const seat of draft.unopenedPacks) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
-        }
-      }
-    }
-
-    for (const seat of draft.seats) {
-      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
-    }
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
-
-    deckutil.default.init(draft);
-    await deckutil.default.allBotsDraft();
-    await Draft.updateOne({ _id: draft._id }, draft);
-
-    const deck = new Deck();
-    deck.cube = draft.cube;
-    deck.date = Date.now();
-    deck.comments = [];
-    deck.draft = draft._id;
-    deck.cubename = cube.name;
-    deck.seats = [];
-
-    for (const seat of draft.seats) {
-      deck.seats.push({
-        bot: seat.bot,
-        userid: seat.userid,
-        username: seat.name,
-        pickorder: seat.pickorder,
-        name: `Draft of ${cube.name}`,
-        description: '',
-        cols: 16,
-        deck: seat.drafted,
-        sideboard: seat.sideboard ? seat.sideboard : [],
-      });
-    }
-
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
-    await Promise.all([cube.save(), deck.save()]);
-
-    return res.redirect(`/cube/deck/${deck._id}`);
+    return doBotOnlyDraft(res, draft._id);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
