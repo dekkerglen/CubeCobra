@@ -3230,6 +3230,23 @@ router.get('/deck/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft).lean();
+      if (!draft.synergies) {
+        // put in synergies for old drafts that don't have em.
+        const cards = draft.initial_state.flat(3);
+
+        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+          method: 'post',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
+        });
+        if (response.ok) {
+          // we want to save this for later so we don't have to do this every time
+          draft.synergies = await response.json();
+          await draft.save();
+        } else {
+          draft.synergies = null;
+        }
+      }
     }
 
     let drafter = 'Anonymous';

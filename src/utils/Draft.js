@@ -4,72 +4,11 @@ import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
 import { COLOR_COMBINATIONS } from 'utils/Card';
 
+import { getRating, getAdjustedElo, botRatingAndCombination } from 'utils/draftbots';
+
 let draft = null;
 
-const fetchLands = {
-  'Arid Mesa': ['W', 'R'],
-  'Bloodstained Mire': ['B', 'R'],
-  'Flooded Strand': ['W', 'U'],
-  'Marsh Flats': ['W', 'B'],
-  'Misty Rainforest': ['U', 'G'],
-  'Polluted Delta': ['U', 'B'],
-  'Scalding Tarn': ['U', 'R'],
-  'Verdant Catacombs': ['B', 'G'],
-  'Windswept Heath': ['W', 'G'],
-  'Wooded Foothills': ['R', 'G'],
-  'Prismatic Vista': ['W', 'U', 'B', 'R', 'G'],
-  'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
-};
-
-function botCardRating(botColors, card) {
-  let { rating } = card;
-  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
-  const colorless = colors.length === 0;
-  const subset = arrayIsSubset(colors, botColors) && !colorless;
-  const contains = arrayIsSubset(botColors, colors);
-  const overlap = botColors.some((c) => colors.includes(c));
-  const typeLine = card.type_line ?? card.details.type;
-  const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = !!fetchLands[card.details.name];
-
-  // If you add x to a rating you roughly increase the estimated value
-  // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
-  if (isLand) {
-    if ((subset || contains) && isFetch) {
-      rating += 280; // Increase value of picking by roughly 400%
-    } else if (subset || contains) {
-      switch (colors.length) {
-        case 1:
-          rating += 191; // Increase value of picking by roughly 200%
-          break;
-        case 2:
-          rating += 262; // Increase value of picking by roughly 350%
-          break;
-        default:
-          rating += 311; // Increase value of picking by roughly 500%
-          break;
-      }
-    } else if (overlap && isFetch) {
-      rating += 241; // Increase value of picking by roughly 300%
-    } else if (overlap || colorless) {
-      rating += 159; // Increase value of picking by roughly 150%
-    }
-  } else if (colorless) {
-    rating += 205; // Increase value of picking by roughly 225%
-  } else if (subset) {
-    rating += 191; // Increase value of picking by roughly 200%
-  } else if (contains) {
-    rating += 141; // Increase value of picking by roughly 125%
-  } else if (overlap) {
-    rating += 70; // Increase value of picking by roughly 50%
-  }
-
-  return rating;
-}
-
-const toValue = (elo) => 10 ** (elo / 400);
-
-function addSeen(seen, cards) {
+export function addSeen(seen, cards) {
   for (const card of cards) {
     const colors = card.colors ?? card.details.colors ?? [];
     // We ignore colorless because they just reduce variance by
@@ -77,7 +16,7 @@ function addSeen(seen, cards) {
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += card.rating ? toValue(botCardRating(comb, card, card)) : 0;
+          seen[comb.join('')] += getRating(comb, card);
         }
       }
     }
@@ -134,143 +73,6 @@ function arrangePicks(picks) {
 const considerInCombination = (combination) => (card) =>
   card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
 
-const findBestValueArray = (weights, pickNumPercent) => {
-  const index = weights.length * pickNumPercent;
-  const ceilIndex = Math.ceil(index);
-  const floorIndex = Math.floor(index);
-  // Is an integer or is past the end by less than 1
-  if (index === floorIndex || ceilIndex === weights.length) {
-    return weights[floorIndex];
-  }
-  // The fractional part of index.
-  const indexModOne = index - floorIndex;
-  // If is fractional and not past the end we weight it by the two
-  // closest points by how close it is to that point.
-  return indexModOne * weights[ceilIndex] + (1 - indexModOne) * weights[floorIndex];
-};
-
-const findBestValue2d = (weights, packNum, pickNum, initialState) => {
-  const packNumPercent = (packNum - 1) / initialState[0].length;
-  const pickNumPercent = (pickNum - 1) / initialState[0][packNum - 1].length;
-  const index = weights.length * packNumPercent;
-  const ceilIndex = Math.ceil(index);
-  const floorIndex = Math.floor(index);
-  // Is either an integer or is past the end by less than 1 so we can use floor as our index
-  if (index === floorIndex || ceilIndex === weights.length) {
-    return findBestValueArray(weights[floorIndex], pickNumPercent);
-  }
-  // The fractional part of index.
-  const indexModOne = index - floorIndex;
-  // If is fractional and not past the end we weight it by the two
-  // closest points by how close it is to that point.
-  return (
-    indexModOne * findBestValueArray(weights[ceilIndex], pickNumPercent) +
-    (1 - indexModOne) * findBestValueArray(weights[floorIndex], pickNumPercent)
-  );
-};
-
-// We want to discourage playing more colors so they get less
-// value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.6, 0.3, 0.1, 0.07];
-const COLORS_WEIGHTS = [
-  [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.5],
-];
-const VALUE_WEIGHTS = [
-  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5],
-];
-const INTERNAL_SYNERGY_WEIGHTS = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-];
-const SYNERGY_WEIGHTS = [
-  [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
-  [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-  [3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 0],
-];
-const OPENNESS_WEIGHTS = [
-  [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
-  [3, 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.7, 3.6, 3.4, 3.2, 3, 2.8, 2.6],
-  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0],
-];
-const OVERALL_COUNT_WEIGHTS = [
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-];
-
-const botRatingAndCombination = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) => {
-  // Find the color combination that gives us the highest score
-  // that'll be the color combination we want to play currently.
-  const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
-  let bestRating = -1;
-  let bestCombination = [];
-  for (const combination of COLOR_COMBINATIONS) {
-    const considerFunc = considerInCombination(combination);
-    if (!card || considerFunc(card)) {
-      const scaling = COLOR_SCALING_FACTOR[combination.length];
-
-      const cardValue = card?.rating ? toValue(botCardRating(combination, card)) : 1;
-
-      let internalSynergy = 0.0000001;
-      let synergy = 0.00000001;
-      if (synergies) {
-        const pickedInCombo = picked.cards.filter((card2) => considerFunc(card2));
-        let count = 0;
-        for (let i = 1; i < pickedInCombo.length; i++) {
-          for (let j = 0; j < i; j++) {
-            internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 10;
-            count += 1;
-          }
-        }
-        if (count) {
-          internalSynergy /= count;
-        }
-        if (card) {
-          const similarityExponent = picked.cards.length / 3;
-          for (const { index } of pickedInCombo) {
-            synergy += similarity(synergies[index], synergies[card.index]) ** similarityExponent;
-          }
-          if (pickedInCombo.length) {
-            synergy /= pickedInCombo.length;
-          }
-        }
-      }
-      // The sum of the values of all cards in our pool, possibly
-      // plus the card we are considering.
-      const poolRating = picked[combination.join('')] + cardValue;
-      // The sum of the values of all cards we've seen passed to
-      // us times the number of times we've seen them.
-      const seenCount = seen?.[combination.join('')] ?? 1;
-      // This is technically cheating, but looks at the set of
-      // all cards dealt out to players to see what the trends
-      // for colors are. This is in value as well.
-      const overallCount = overallPool?.[combination.join('')] || 1;
-      // The ratio of seen to overall gives us an idea what is
-      // being taken.
-      const openness = seenCount / overallCount;
-      // We weigh the factors with exponents to get a final score.
-      // Everything uses exponents since that's how you weight a product.
-      const rating =
-        scaling ** findBestValue2d(COLORS_WEIGHTS, packNum, pickNum, initialState) *
-        poolRating ** findBestValue2d(VALUE_WEIGHTS, packNum, pickNum, initialState) *
-        openness ** findBestValue2d(OPENNESS_WEIGHTS, packNum, pickNum, initialState) *
-        internalSynergy ** findBestValue2d(INTERNAL_SYNERGY_WEIGHTS, packNum, pickNum, initialState) *
-        overallCount ** findBestValue2d(OVERALL_COUNT_WEIGHTS, packNum, pickNum, initialState) *
-        synergy ** findBestValue2d(SYNERGY_WEIGHTS, packNum, pickNum, initialState);
-      if (rating > bestRating) {
-        bestRating = rating;
-        bestCombination = combination;
-      }
-    }
-  }
-  return [bestRating, bestCombination];
-};
-
 const botRating = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
   botRatingAndCombination(card, picked, seen, overallPool, synergies, initialState, inPack, packNum)[0];
 const botColors = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
@@ -279,7 +81,7 @@ const botColors = (card, picked, seen, overallPool, synergies, initialState, inP
 function getSortFn(bot) {
   return (a, b) => {
     if (bot) {
-      return botCardRating(bot, b) - botCardRating(bot, a);
+      return getAdjustedElo(bot, b) - getAdjustedElo(bot, a);
     }
     return b.rating - a.rating;
   };
@@ -314,7 +116,7 @@ async function buildDeck(cards, picked, synergies, initialState) {
         }
       }
     }
-    return [(card.rating ? toValue(botCardRating(colors, card)) : 1) * synergy ** weight, card];
+    return [(card.rating ? getRating(colors, card) : 1) * synergy ** weight, card];
   };
   const totalSynergy = nonlands.map(calculateSynergy(nonlands, 4));
   totalSynergy.sort(([a], [b]) => b - a);
