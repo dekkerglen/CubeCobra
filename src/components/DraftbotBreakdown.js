@@ -128,7 +128,9 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   }, [index]);
 
   const click = (event) => {
-    setIndex(event.target.getAttribute('index'));
+    if (index !== event.target.getAttribute('index')) {
+      setIndex(event.target.getAttribute('index'));
+    }
   };
 
   if (!draft) {
@@ -186,9 +188,10 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       picked,
       seen,
       overallPool,
+      draft.synergies,
       draft.initial_state,
       cardsInPack.length,
-      pack,
+      pack + 1,
     );
 
     for (let i = 0; i < traits.length - 2; i++) {

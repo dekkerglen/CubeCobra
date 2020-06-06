@@ -179,7 +179,7 @@ export const getOpenness = (combination, seen, overallPool) => {
   const overallCount = overallPool?.[combination.join('')] || 1;
   // The ratio of seen to overall gives us an idea what is
   // being taken.
-  return seenCount / overallCount;
+  return 1 + seenCount / overallCount;
 };
 
 export const getColor = (combination) => {
@@ -235,21 +235,19 @@ export const botRatingAndCombination = (
   let bestRating = -1;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
-    if (!card) {
-      const sumScore = picked[combination.join('')] + getRating(combination, card);
+    const sumScore = picked[combination.join('')] + getRating(combination, card);
 
-      const rating =
-        sumScore ** getRatingWeight(packNum, pickNum, initialState) *
-        getSynergy(combination, card, picked, synergies) ** getSynergyWeight(packNum, pickNum, initialState) *
-        getOpenness(combination, seen, overallPool) ** getOpennessWeight(packNum, pickNum, initialState) *
-        getColor(combination) ** getColorWeight(packNum, pickNum, initialState) *
-        getFixing(combination, card) ** getFixingWeight(packNum, pickNum, initialState) *
-        getFormatInfluence(combination, overallPool) ** getFormatInfluenceWeight(packNum, pickNum, initialState);
+    const rating =
+      sumScore ** getRatingWeight(packNum, pickNum, initialState) *
+      getSynergy(combination, card, picked, synergies) ** getSynergyWeight(packNum, pickNum, initialState) *
+      getOpenness(combination, seen, overallPool) ** getOpennessWeight(packNum, pickNum, initialState) *
+      getColor(combination) ** getColorWeight(packNum, pickNum, initialState) *
+      getFixing(combination, card) ** getFixingWeight(packNum, pickNum, initialState) *
+      getFormatInfluence(combination, overallPool) ** getFormatInfluenceWeight(packNum, pickNum, initialState);
 
-      if (rating > bestRating) {
-        bestRating = rating;
-        bestCombination = combination;
-      }
+    if (rating > bestRating) {
+      bestRating = rating;
+      bestCombination = combination;
     }
   }
   return [bestRating, bestCombination];
