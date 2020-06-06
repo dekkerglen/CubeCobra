@@ -166,7 +166,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // this is an O(n^3) operation, but it should be ok
   addSeen(overallPool, deck.seats.map((item) => item.pickorder).flat());
-  for (let i = 0; i < parseInt(index, 10); i++) {
+  for (let i = 0; i <= parseInt(index, 10); i++) {
     addSeen(seen, getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex)[0]);
   }
 
@@ -176,7 +176,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     weights.push({
       name: traits[i].name,
       description: traits[i].description,
-      value: traits[i].weight(pack + 1, picks + 1, draft.initial_state),
+      value: traits[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
     });
   }
 
@@ -195,10 +195,12 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     );
 
     for (let i = 0; i < traits.length - 2; i++) {
-      card.scores.push(traits[i].function(combination, card, picked, draft.synergies, overallPool, seen).toFixed(2));
+      card.scores.push(
+        Math.log(traits[i].function(combination, card, picked, draft.synergies, overallPool, seen)).toFixed(2),
+      );
     }
     card.scores.push(combination);
-    card.scores.push(score.toFixed(2));
+    card.scores.push(Math.log(score).toFixed(2));
   }
 
   return (
