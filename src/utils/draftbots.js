@@ -201,20 +201,20 @@ export const getFixing = (combination, picked, card) => {
     score /= COLOR_SCALING_FACTOR[combination.length];
 
     if ((subset || contains) && isFetch) {
-      score *= 1.2;
+      score *= 1.5;
     } else if (subset || contains) {
       switch (colors.length) {
         case 2:
-          score *= 1.1;
+          score *= 1.5;
           break;
         default:
-          score *= 1.2;
+          score *= 2;
           break;
       }
     } else if (overlap && isFetch) {
-      score *= 1.3;
+      score *= 2;
     } else if (overlap) {
-      score *= 1.05;
+      score *= 1.2;
     }
   } else {
     score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];

@@ -140,7 +140,6 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
 
   // add basics
   if (basics) {
-    console.log(basics);
     // add up colors
     const symbols = {
       W: 0,
@@ -152,7 +151,6 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
 
     for (const card of main) {
       for (const symbol of card.colors ?? card.details.color_identity) {
-        console.log(symbol);
         symbols[symbol] += 1;
       }
     }
@@ -168,11 +166,18 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
       G: 'Forest',
     };
 
+    console.log(colorWeights);
+    console.log(totalColor);
+    console.log(40 - main.length);
     for (let i = 0; i < 5; i++) {
-      const amount = (colorWeights[i] / totalColor) * (40 - main.length);
+      const amount = Math.floor((colorWeights[i] / totalColor) * (40 - main.length));
+      console.log(`Adding ${amount} ${landDict[Object.keys(symbols)[i]]}`);
       for (let j = 0; j < amount; j++) {
         main.push(basics[landDict[Object.keys(symbols)[i]]]);
       }
+    }
+    for (let i = main.length; i < 40; i++) {
+      main.push(basics[landDict[colors[i % colors.length]]]);
     }
   }
 
@@ -192,6 +197,10 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
     }
     deck[index].push(card);
   }
+
+  // sort the basic land col
+  deck[0].sort((a, b) => a.details.name.localeCompare(b.details.name));
+
   for (const card of side) {
     sideboard[Math.min(card.cmc ?? 0, 7)].push(card);
   }
