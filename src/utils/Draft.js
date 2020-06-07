@@ -116,7 +116,7 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
   const size = Math.min(22, nonlands.length);
   for (let i = 0; i < size; i++) {
     // add in new synergy data
-    const scores = nonlands.map((card) => 10 * getSynergy(colors, card, played, synergies) + getRating(colors, card));
+    const scores = nonlands.map((card) => getSynergy(colors, card, played, synergies));
 
     let best = 0;
 
@@ -133,10 +133,6 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
   const playableLands = lands.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
 
-  console.log(colors);
-  console.log(playableLands.map((card) => card.details.name));
-  console.log(unplayableLands.map((card) => card.details.name));
-
   const main = chosen.concat(playableLands.slice(0, 17));
   side.push(...playableLands.slice(17));
   side.push(...unplayableLands);
@@ -144,9 +140,41 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
 
   // add basics
   if (basics) {
-  }
+    console.log(basics);
+    // add up colors
+    const symbols = {
+      W: 0,
+      U: 0,
+      B: 0,
+      R: 0,
+      G: 0,
+    };
 
-  console.log(side.map((card) => card.details.name));
+    for (const card of main) {
+      for (const symbol of card.colors ?? card.details.color_identity) {
+        console.log(symbol);
+        symbols[symbol] += 1;
+      }
+    }
+    const colorWeights = Object.keys(symbols).map((c) => symbols[c]);
+    const totalColor = colorWeights.reduce((a, b) => {
+      return a + b;
+    }, 0);
+    const landDict = {
+      W: 'Plains',
+      U: 'Island',
+      B: 'Swamp',
+      R: 'Mountain',
+      G: 'Forest',
+    };
+
+    for (let i = 0; i < 5; i++) {
+      const amount = (colorWeights[i] / totalColor) * (40 - main.length);
+      for (let j = 0; j < amount; j++) {
+        main.push(basics[landDict[Object.keys(symbols)[i]]]);
+      }
+    }
+  }
 
   const deck = [];
   const sideboard = [];
@@ -159,7 +187,7 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
 
   for (const card of main) {
     let index = Math.min(card.cmc ?? 0, 7);
-    if (!card.details.type.toLowerCase().includes('creature')) {
+    if (!card.details.type.toLowerCase().includes('creature') && !card.details.type.toLowerCase().includes('basic')) {
       index += 8;
     }
     deck[index].push(card);
@@ -280,7 +308,7 @@ async function pick(cardIndex) {
 async function finish() {
   // build bot decks
   const decksPromise = draft.seats.map((seat) => {
-    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.initial_state);
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.initial_state, draft.basics);
   });
   const decks = await Promise.all(decksPromise);
 

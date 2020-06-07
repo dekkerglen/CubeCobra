@@ -1974,6 +1974,10 @@ const doBotOnlyDraft = async (res, draftId) => {
       card.details = carddb.cardFromId(card.cardID);
     }
   }
+  for (const key of Object.keys(draft.basics)) {
+    draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+  }
+
   const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
   deckutil.default.init(draft);
@@ -2063,6 +2067,7 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
+      draft.basics = getBasics(carddb);
 
       const cards = draft.initial_state.flat(3);
 
@@ -2129,6 +2134,9 @@ router.get('/draft/:id', async (req, res) => {
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
       }
+    }
+    for (const key of Object.keys(draft.basics)) {
+      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
     }
 
     const reactProps = {
@@ -3052,6 +3060,7 @@ router.get('/redraft/:id', async (req, res) => {
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
+    draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3114,6 +3123,7 @@ router.get('/redraftbots/:id', async (req, res) => {
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
+    draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3121,6 +3131,7 @@ router.get('/redraftbots/:id', async (req, res) => {
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].bot = [];
       draft.seats[i].drafted = [];
+      1;
       draft.seats[i].sideboard = [];
       draft.seats[i].pickorder = [];
       draft.seats[i].packbacklog = [];
