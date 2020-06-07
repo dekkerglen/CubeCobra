@@ -25,7 +25,7 @@ let draftSchema = mongoose.Schema({
     Swamp: cardSchema,
     Mountain: cardSchema,
     Forest: cardSchema,
-  }
+  },
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));
