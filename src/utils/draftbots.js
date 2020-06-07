@@ -1,10 +1,10 @@
 import { arrayIsSubset } from 'utils/Util';
 import similarity from 'compute-cosine-similarity';
-import { COLOR_COMBINATIONS } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils/Card';
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.9, 0.7, 0.5, 0.2];
+const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.4, 0.2, 0.1];
 const COLORS_WEIGHTS = [
   [0, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8],
   [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -86,12 +86,12 @@ export const fetchLands = {
 
 export const getAdjustedElo = (botColors, card) => {
   let { rating } = card;
-  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
+  const colors = fetchLands[cardName(card)] ?? cardColorIdentity(card);
   const colorless = colors.length === 0;
   const subset = arrayIsSubset(colors, botColors) && !colorless;
   const contains = arrayIsSubset(botColors, colors);
   const overlap = botColors.some((c) => colors.includes(c));
-  const typeLine = card.type_line ?? card.details.type;
+  const typeLine = cardType(card);
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
 
@@ -131,57 +131,62 @@ export const getAdjustedElo = (botColors, card) => {
 };
 
 export const getRating = (combination, card) => {
-  return (COLOR_SCALING_FACTOR[combination.length] * (card.rating - 500 || 1000)) / 100;
+  return Math.log(COLOR_SCALING_FACTOR[combination.length] * 10 ** ((card?.rating ?? 0) / 400));
 };
 
 export const considerInCombination = (combination, card) =>
-  card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
+  card && arrayIsSubset(cardColorIdentity(card) ?? [], combination);
 
 export const getSynergy = (combination, card, picked, synergies) => {
   if (picked.cards.length === 0) {
     return 0;
   }
 
-  let synergy = 0;
+  let synergy = 0.000001;
+  let internalSynergy = 0.000001;
   if (synergies) {
     const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
+    let count = 0;
+    for (let i = 1; i < pickedInCombo.length; i++) {
+      for (let j = 0; j < i; j++) {
+        internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 10;
+        count += 1;
+      }
+    }
+    if (count) {
+      internalSynergy /= count;
+    }
     if (card) {
       for (const { index } of pickedInCombo) {
-        synergy += similarity(synergies[index], synergies[card.index]);
+        synergy += similarity(synergies[index], synergies[card.index]) ** 10;
       }
       if (pickedInCombo.length) {
         synergy /= pickedInCombo.length;
       }
     }
   }
-  return synergy * 10;
+  return Math.log(internalSynergy * synergy);
 };
 
 export const getOpenness = (combination, seen) => {
-  if (seen.cards.length <= 15) {
+  if (seen.cards.length === 0) {
     return 0;
   }
 
   const seenCount = seen[combination.join('')] / seen.cards.length;
-  // This is technically cheating, but looks at the set of
-  // all cards dealt out to players to see what the trends
-  // for colors are. This is in value as well.
-  // const overallCount = (overallPool[combination.join('')];
-  // The ratio of seen to overall gives us an idea what is
-  // being taken.
-  return seenCount * 3;
+  return Math.log(seenCount);
 };
 
 export const getColor = (combination, picked, card) => {
-  return (
-    (COLOR_SCALING_FACTOR[combination.length] / 10) * (picked[combination.join('')] + getRating(combination, card))
+  return Math.log(
+    COLOR_SCALING_FACTOR[combination.length] * (picked[combination.join('')] + 10 ** ((card?.rating ?? 0) / 400)),
   );
 };
 
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
 export const getFixing = (combination, picked, card) => {
-  let score = card.rating;
+  let score = 10 ** ((card?.rating ?? 0) / 400);
 
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
@@ -191,13 +196,7 @@ export const getFixing = (combination, picked, card) => {
   const isFetch = !!fetchLands[card.details.name];
   const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
 
-  if (isLand && contains) {
-    if (colorless && !isFetch) {
-      return 0;
-    }
-    if (colors.length === 1 && !isFetch) {
-      return 1;
-    }
+  if (isLand && contains && (isFetch || colors.length > 1)) {
     score /= COLOR_SCALING_FACTOR[combination.length];
 
     if (hasBasicTypes) {
@@ -219,7 +218,7 @@ export const getFixing = (combination, picked, card) => {
     score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];
   }
 
-  return Math.min(10, score / 1000);
+  return Math.log(score);
 };
 
 export const getRatingWeight = (pack, pick, initialState) => {
@@ -258,7 +257,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
         getColor(combination, picked, card) * getColorWeight(packNum, pickNum, initialState) +
         getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState);
     } else if (!card) {
-      rating = picked[combination.join('')];
+      rating = Math.log(COLOR_SCALING_FACTOR[combination.length] * picked[combination.join('')]);
     }
     if (rating > bestRating) {
       bestRating = rating;

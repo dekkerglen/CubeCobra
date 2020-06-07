@@ -1957,7 +1957,10 @@ const doBotOnlyDraft = async (res, draftId) => {
   for (const seat of draft.unopenedPacks) {
     for (const pack of seat) {
       for (const card of pack) {
-        card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+        card.details = carddb.cardFromId(
+          card.cardID,
+          'cmc parsed_cost type image_normal image_flip name color_identity',
+        );
       }
     }
   }

@@ -1,6 +1,6 @@
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
-import { COLOR_COMBINATIONS } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion } from 'utils/Card';
 
 import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
 
@@ -8,13 +8,13 @@ let draft = null;
 
 export function addSeen(seen, cards) {
   for (const card of cards) {
-    const colors = card.colors ?? card.details.colors ?? [];
+    const colors = cardColorIdentity(card);
     // We ignore colorless because they just reduce variance by
     // being in all color combinations.
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += getRating(comb, card);
+          seen[comb.join('')] += 10 ** ((card?.rating ?? 0) / 400);
         }
       }
     }
@@ -112,11 +112,7 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
   for (let i = 0; i < size; i++) {
     // add in new synergy data
     const scores = [];
-    if (played.cards.length > 0) {
-      scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
-    } else {
-      scores.push(nonlands.map((card) => getSynergy(colors, card, picked, synergies)));
-    }
+    scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
 
     let best = 0;
 
@@ -150,11 +146,11 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
     };
 
     for (const card of main) {
-      for (const symbol of card.colors ?? card.details.color_identity) {
-        symbols[symbol] += 1;
+      for (const symbol of ['W', 'U', 'B', 'R', 'G']) {
+        symbols[symbol] += cardDevotion(card, symbol);
       }
     }
-    const colorWeights = Object.keys(symbols).map((c) => symbols[c]);
+    const colorWeights = Object.values(symbols);
     const totalColor = colorWeights.reduce((a, b) => {
       return a + b;
     }, 0);
@@ -166,12 +162,9 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
       G: 'Forest',
     };
 
-    console.log(colorWeights);
-    console.log(totalColor);
-    console.log(40 - main.length);
+    const toAdd = 40 - main.length;
     for (let i = 0; i < 5; i++) {
-      const amount = Math.floor((colorWeights[i] / totalColor) * (40 - main.length));
-      console.log(`Adding ${amount} ${landDict[Object.keys(symbols)[i]]}`);
+      const amount = Math.floor((colorWeights[i] / totalColor) * toAdd);
       for (let j = 0; j < amount; j++) {
         main.push(basics[landDict[Object.keys(symbols)[i]]]);
       }
