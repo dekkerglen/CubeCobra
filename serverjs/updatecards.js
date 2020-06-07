@@ -585,6 +585,7 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'mps' || // kaladesh masterpieces
     card.set.toLowerCase() === 'mp2' || // invocations
     card.set.toLowerCase() === 'exp'; // expeditions
+  newcard.prices = card.prices;
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
