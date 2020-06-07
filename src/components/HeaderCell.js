@@ -43,4 +43,8 @@ HeaderCell.propTypes = {
   tooltip: PropTypes.string,
 };
 
+HeaderCell.defaultProps = {
+  tooltip: null,
+};
+
 export default HeaderCell;

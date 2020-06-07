@@ -1,5 +1,3 @@
-import similarity from 'compute-cosine-similarity';
-
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
 import { COLOR_COMBINATIONS } from 'utils/Card';

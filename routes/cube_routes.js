@@ -3131,7 +3131,6 @@ router.get('/redraftbots/:id', async (req, res) => {
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].bot = [];
       draft.seats[i].drafted = [];
-      1;
       draft.seats[i].sideboard = [];
       draft.seats[i].pickorder = [];
       draft.seats[i].packbacklog = [];
