@@ -70,35 +70,32 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       name: 'Rating',
       description: 'The rating based on the Elo and current color commitments.',
       weight: getRatingWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) => getRating(combination, card).toFixed(2),
+      function: (combination, card) => getRating(combination, card).toFixed(2),
     },
     {
       name: 'Synergy',
       description: 'A score of how well this card synergizes with the current picks.',
       weight: getSynergyWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) =>
-        getSynergy(combination, card, picked, synergies).toFixed(2),
+      function: (combination, card, picked, synergies) => getSynergy(combination, card, picked, synergies).toFixed(2),
     },
     {
       name: 'Openness',
       description: 'A score of how open these colors appear to be.',
       weight: getOpennessWeight,
       function: (combination, card, picked, synergies, overallPool, seen) =>
-        getOpenness(combination, seen, overallPool).toFixed(2),
+        getOpenness(combination, seen, overallPool, card, picked, synergies).toFixed(2),
     },
     {
       name: 'Color',
       description: 'A score of how well these colors fit in with the current picks.',
       weight: getColorWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) =>
-        getColor(combination, picked, card).toFixed(2),
+      function: (combination, card, picked) => getColor(combination, picked, card).toFixed(2),
     },
     {
       name: 'Fixing',
       description: 'The value of how well this card solves mana issues.',
       weight: getFixingWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) =>
-        getFixing(combination, picked, card).toFixed(2),
+      function: (combination, card, picked) => getFixing(combination, picked, card).toFixed(2),
     },
     {
       name: 'Combination',
@@ -127,10 +124,6 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       setIndex(event.target.getAttribute('index'));
     }
   };
-
-  if (!draft) {
-    return <h4>This deck does not have a related draft log.</h4>;
-  }
 
   const seat = deck.seats[seatIndex];
 
@@ -265,7 +258,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
                   </a>
                 </AutocardItem>
               </th>
-              {traits.map((trait, traitIndex) => (
+              {traits.map((trait) => (
                 <td key={trait.name}>{item[trait.name]}</td>
               ))}
             </tr>

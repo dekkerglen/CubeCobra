@@ -114,7 +114,11 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          {draft ? (
+            <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          ) : (
+            <h4>This deck does not have a related draft log.</h4>
+          )}
         </CardBody>
       )}
       {view === 'deck' && (
@@ -138,7 +142,11 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
       )}
       {view === 'draftbot' && (
         <CardBody>
-          <DraftbotBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          {draft ? (
+            <DraftbotBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          ) : (
+            <h4>This deck does not have a related draft log.</h4>
+          )}
         </CardBody>
       )}
       <CardBody>
