@@ -1974,6 +1974,10 @@ const doBotOnlyDraft = async (res, draftId) => {
       card.details = carddb.cardFromId(card.cardID);
     }
   }
+  for (const key of Object.keys(draft.basics)) {
+    draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+  }
+
   const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
   deckutil.default.init(draft);
@@ -2063,6 +2067,7 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
+      draft.basics = getBasics(carddb);
 
       const cards = draft.initial_state.flat(3);
 
@@ -2129,6 +2134,9 @@ router.get('/draft/:id', async (req, res) => {
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
       }
+    }
+    for (const key of Object.keys(draft.basics)) {
+      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
     }
 
     const reactProps = {
@@ -3052,6 +3060,7 @@ router.get('/redraft/:id', async (req, res) => {
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
+    draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3114,6 +3123,7 @@ router.get('/redraftbots/:id', async (req, res) => {
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
+    draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3230,6 +3240,23 @@ router.get('/deck/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft).lean();
+      if (!draft.synergies) {
+        // put in synergies for old drafts that don't have em.
+        const cards = draft.initial_state.flat(3);
+
+        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+          method: 'post',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
+        });
+        if (response.ok) {
+          // we want to save this for later so we don't have to do this every time
+          draft.synergies = await response.json();
+          await draft.save();
+        } else {
+          draft.synergies = null;
+        }
+      }
     }
 
     let drafter = 'Anonymous';

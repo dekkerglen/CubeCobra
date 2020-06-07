@@ -19,6 +19,13 @@ let draftSchema = mongoose.Schema({
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
   synergies: [[Number]],
+  basics: {
+    Plains: cardSchema,
+    Island: cardSchema,
+    Swamp: cardSchema,
+    Mountain: cardSchema,
+    Forest: cardSchema,
+  },
 });
 
 let Draft = (module.exports = mongoose.model('Draft', draftSchema));

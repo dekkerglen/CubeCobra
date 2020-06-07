@@ -2,8 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { NavLink } from 'reactstrap';
+import Tooltip from 'components/Tooltip';
 
-const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
+const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
   let icon = '/content/nosort.png';
 
   if (sortConfig && sortConfig.key === fieldName) {
@@ -17,7 +18,15 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort }) => {
   return (
     <th scope="col">
       <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {label} <img src={icon} className="sortIcon" alt="" />
+        {tooltip ? (
+          <Tooltip text={tooltip}>
+            {label} <img src={icon} className="sortIcon" alt="" />
+          </Tooltip>
+        ) : (
+          <>
+            {label} <img src={icon} className="sortIcon" alt="" />
+          </>
+        )}
       </NavLink>
     </th>
   );
@@ -31,6 +40,11 @@ HeaderCell.propTypes = {
     direction: PropTypes.string.isRequired,
   }).isRequired,
   requestSort: PropTypes.string.isRequired,
+  tooltip: PropTypes.string,
+};
+
+HeaderCell.defaultProps = {
+  tooltip: null,
 };
 
 export default HeaderCell;

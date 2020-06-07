@@ -807,3 +807,8 @@ img.mana-symbol-sm {
 .cube-id-btn:focus {
 	outline: 0;
 }
+
+.small-table td, .small-table th, .small-table li {
+	padding: .25rem;
+	font-size: .85rem;
+}

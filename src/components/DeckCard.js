@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'react
 
 import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
+import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
@@ -111,11 +112,16 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
           )}
         </CardTitle>
       </CardHeader>
-      {view === 'picks' ? (
+      {view === 'picks' && (
         <CardBody>
-          <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          {draft ? (
+            <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          ) : (
+            <h4>This deck does not have a related draft log.</h4>
+          )}
         </CardBody>
-      ) : (
+      )}
+      {view === 'deck' && (
         <>
           <Row className="mt-3">
             <Col>
@@ -133,6 +139,15 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
             </Row>
           )}
         </>
+      )}
+      {view === 'draftbot' && (
+        <CardBody>
+          {draft ? (
+            <DraftbotBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+          ) : (
+            <h4>This deck does not have a related draft log.</h4>
+          )}
+        </CardBody>
       )}
       <CardBody>
         <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />

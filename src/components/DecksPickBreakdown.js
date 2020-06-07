@@ -30,7 +30,9 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   }, [index]);
 
   const click = (event) => {
-    setIndex(event.target.getAttribute('index'));
+    if (index !== event.target.getAttribute('index')) {
+      setIndex(event.target.getAttribute('index'));
+    }
   };
   const seat = deck.seats[seatIndex];
 
