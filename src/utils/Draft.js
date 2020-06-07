@@ -4,7 +4,7 @@ import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
 import { COLOR_COMBINATIONS } from 'utils/Card';
 
-import { getRating, getAdjustedElo, botRatingAndCombination } from 'utils/draftbots';
+import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
 
 let draft = null;
 
@@ -33,9 +33,6 @@ function init(newDraft) {
     seat.picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     seat.picked.cards = [];
   }
-  draft.overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  draft.overallPool.cards = [];
-  addSeen(draft.overallPool, draft.unopenedPacks.flat(3));
 }
 
 function id() {
@@ -70,34 +67,36 @@ function arrangePicks(picks) {
   draft.seats[0].drafted = [...picks];
 }
 
-const considerInCombination = (combination) => (card) =>
-  card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
-
-const botRating = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(card, picked, seen, overallPool, synergies, initialState, inPack, packNum)[0];
-const botColors = (card, picked, seen, overallPool, synergies, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(card, picked, seen, overallPool, synergies, initialState, inPack, packNum)[1];
+const botRating = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
+  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[0];
+const botColors = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
+  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[1];
 
 function getSortFn(bot) {
   return (a, b) => {
     if (bot) {
-      return getAdjustedElo(bot, b) - getAdjustedElo(bot, a);
+      return getRating(bot, b) - getRating(bot, a);
     }
     return b.rating - a.rating;
   };
 }
 
-async function buildDeck(cards, picked, synergies, initialState) {
+const isPlayableLand = (colors, card) =>
+  considerInCombination(colors, card) ||
+  (fetchLands[card.details.name] && fetchLands[card.details.name].some((c) => colors.includes(c)));
+
+async function buildDeck(cards, picked, synergies, initialState, basics) {
   let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
 
   const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);
-  const considerFunc = considerInCombination(colors);
-  const inColor = nonlands.filter(considerFunc);
-  const outOfColor = nonlands.filter((card) => !considerFunc(card));
+  const inColor = nonlands.filter((item) => considerInCombination(colors, item));
+  const outOfColor = nonlands.filter((item) => !considerInCombination(colors, item));
 
+  lands.sort(sortFn);
   inColor.sort(sortFn);
+
   nonlands = inColor;
   let side = outOfColor;
   if (nonlands.length < 23) {
@@ -105,35 +104,49 @@ async function buildDeck(cards, picked, synergies, initialState) {
     nonlands.push(...outOfColor.splice(0, 23 - nonlands.length));
     side = [...outOfColor];
   }
-  lands.sort(sortFn);
+
+  // add highest rated card, then add cards based on a combo of elo and synergy
   const chosen = [];
-  const calculateSynergy = (others, weight) => (card) => {
-    let synergy = 0.0000001;
-    if (synergies) {
-      for (const { index: otherIndex } of others) {
-        if (card.index !== otherIndex) {
-          synergy += similarity(synergies[card.index], synergies[otherIndex]) ** 20;
-        }
+  chosen.push(nonlands.shift());
+
+  const played = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+  played.cards = [];
+  addSeen(played, [chosen[0]]);
+
+  const size = Math.min(22, nonlands.length);
+  for (let i = 0; i < size; i++) {
+    // add in new synergy data
+    const scores = nonlands.map((card) => 10 * getSynergy(colors, card, played, synergies) + getRating(colors, card));
+
+    let best = 0;
+
+    for (let j = 1; j < nonlands.length; j++) {
+      if (scores[j] > scores[best]) {
+        best = j;
       }
     }
-    return [(card.rating ? getRating(colors, card) : 1) * synergy ** weight, card];
-  };
-  const totalSynergy = nonlands.map(calculateSynergy(nonlands, 4));
-  totalSynergy.sort(([a], [b]) => b - a);
-  const [[, mostSynergy]] = totalSynergy.splice(0, 1);
-  chosen.push(mostSynergy);
-  let remaining = totalSynergy.map(([, card]) => card);
-  while (remaining.length > 0 && chosen.length < 23) {
-    const nonlandsWithValue = remaining.map(calculateSynergy(chosen, 2));
-    nonlandsWithValue.sort(([valueA], [valueB]) => valueB - valueA);
-    const [[, bestValue]] = nonlandsWithValue.splice(0, 1);
-    chosen.push(bestValue);
-    remaining = nonlandsWithValue.map(([, index]) => index);
+    const current = nonlands.splice(best, 1)[0];
+    addSeen(played, [current]);
+    chosen.push(current);
   }
 
-  const main = chosen.concat(lands.slice(0, 17));
-  side.push(...lands.slice(17));
-  side.push(...remaining);
+  const playableLands = lands.filter((land) => isPlayableLand(colors, land));
+  const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
+
+  console.log(colors);
+  console.log(playableLands.map((card) => card.details.name));
+  console.log(unplayableLands.map((card) => card.details.name));
+
+  const main = chosen.concat(playableLands.slice(0, 17));
+  side.push(...playableLands.slice(17));
+  side.push(...unplayableLands);
+  side.push(...nonlands);
+
+  // add basics
+  if (basics) {
+  }
+
+  console.log(side.map((card) => card.details.name));
 
   const deck = [];
   const sideboard = [];
@@ -172,7 +185,7 @@ function botPicks() {
       bot,
     } = draft.seats[botIndex];
     if (packFrom.length > 0 && bot) {
-      const { overallPool, initial_state, synergies } = draft;
+      const { initial_state, synergies } = draft;
       let ratedPicks = [];
       const unratedPicks = [];
       const inPack = packFrom.length;
@@ -186,7 +199,7 @@ function botPicks() {
       }
       ratedPicks = ratedPicks
         .map((cardIndex) => [
-          botRating(packFrom[cardIndex], picked, seen, overallPool, synergies, initial_state, inPack, packNum),
+          botRating(packFrom[cardIndex], picked, seen, synergies, initial_state, inPack, packNum),
           cardIndex,
         ])
         .sort(([a], [b]) => b - a)
@@ -320,7 +333,6 @@ async function finish() {
       }
     }
   }
-  delete draft.overallPool;
 
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {

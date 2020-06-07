@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 import { Row, Col, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
@@ -9,6 +9,8 @@ import { encodeName, COLOR_COMBINATIONS } from 'utils/Card';
 import { addSeen } from 'utils/Draft';
 import { fromEntries } from 'utils/Util';
 import { getCardColorClass } from 'components/TagContext';
+import useSortableData from 'hooks/UseSortableData';
+import HeaderCell from 'components/HeaderCell';
 
 import Query from 'utils/Query';
 import {
@@ -16,14 +18,12 @@ import {
   getColor,
   getSynergy,
   getOpenness,
-  getFormatInfluence,
   getFixing,
   getRatingWeight,
   getSynergyWeight,
   getOpennessWeight,
   getColorWeight,
   getFixingWeight,
-  getFormatInfluenceWeight,
   botRatingAndCombination,
 } from 'utils/draftbots';
 
@@ -70,44 +70,39 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       name: 'Rating',
       description: 'The rating based on the Elo and current color commitments.',
       weight: getRatingWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) => getRating(combination, card),
+      function: (combination, card, picked, synergies, overallPool, seen) => getRating(combination, card).toFixed(2),
     },
     {
       name: 'Synergy',
       description: 'A score of how well this card synergizes with the current picks.',
       weight: getSynergyWeight,
       function: (combination, card, picked, synergies, overallPool, seen) =>
-        getSynergy(combination, card, picked, synergies),
+        getSynergy(combination, card, picked, synergies).toFixed(2),
     },
     {
       name: 'Openness',
       description: 'A score of how open these colors appear to be.',
       weight: getOpennessWeight,
       function: (combination, card, picked, synergies, overallPool, seen) =>
-        getOpenness(combination, seen, overallPool),
+        getOpenness(combination, seen, overallPool).toFixed(2),
     },
     {
       name: 'Color',
       description: 'A score of how well these colors fit in with the current picks.',
       weight: getColorWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) => getColor(combination),
+      function: (combination, card, picked, synergies, overallPool, seen) =>
+        getColor(combination, picked, card).toFixed(2),
     },
     {
       name: 'Fixing',
       description: 'The value of how well this card solves mana issues.',
       weight: getFixingWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) => getFixing(),
-    },
-    {
-      name: 'Format',
-      description: 'The influence of how well these colors fit into this format.',
-      weight: getFormatInfluenceWeight,
       function: (combination, card, picked, synergies, overallPool, seen) =>
-        getFormatInfluence(combination, overallPool),
+        getFixing(combination, picked, card).toFixed(2),
     },
     {
       name: 'Combination',
-      description: 'This is the color combination the bot is assuming all the previous values on.',
+      description: 'This is the color combination the bot is assuming that will maximize the total score.',
     },
     {
       name: 'Total',
@@ -158,7 +153,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [cardsInPack, picks, pack] = getPackAsSeen(draft.initial_state, seat, index, deck, seatIndex);
   const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   picked.cards = [];
-  addSeen(picked, seat.pickorder.slice(0, picks));
+  addSeen(picked, seat.pickorder.slice(0, index));
   const seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   seen.cards = [];
   const overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
@@ -166,7 +161,8 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // this is an O(n^3) operation, but it should be ok
   addSeen(overallPool, deck.seats.map((item) => item.pickorder).flat());
-  for (let i = 0; i < parseInt(index, 10); i++) {
+  for (let i = 0; i <= parseInt(index, 10); i++) {
+    console.log(getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex));
     addSeen(seen, getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex)[0]);
   }
 
@@ -176,18 +172,16 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     weights.push({
       name: traits[i].name,
       description: traits[i].description,
-      value: traits[i].weight(pack + 1, picks + 1, draft.initial_state),
+      value: traits[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
     });
   }
 
   for (const card of cardsInPack) {
     card.scores = [];
-
     const [score, combination] = botRatingAndCombination(
       card,
       picked,
       seen,
-      overallPool,
       draft.synergies,
       draft.initial_state,
       cardsInPack.length,
@@ -195,87 +189,107 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     );
 
     for (let i = 0; i < traits.length - 2; i++) {
-      card.scores.push(traits[i].function(combination, card, picked, draft.synergies, overallPool, seen).toFixed(2));
+      card.scores.push(traits[i].function(combination, card, picked, draft.synergies, overallPool, seen));
     }
-    card.scores.push(combination);
+    card.scores.push(combination.join(''));
     card.scores.push(score.toFixed(2));
   }
 
+  const counts = useMemo(() => {
+    const res = [];
+
+    for (const card of cardsInPack) {
+      const row = { card };
+      for (let i = 0; i < card.scores.length; i++) {
+        row[traits[i].name] = card.scores[i];
+      }
+      res.push(row);
+    }
+    return res;
+  }, [cardsInPack, traits]);
+  console.log(counts);
+
+  const { items, requestSort, sortConfig } = useSortableData(counts);
+
   return (
-    <Row>
-      <Col xs={12} sm={3}>
-        <h4>Pick Order</h4>
+    <>
+      <h4>Pick Order</h4>
+      <Row>
         {picksList.map((list, listindex) => (
-          <ListGroup key={/* eslint-disable-line react/no-array-index-key */ listindex} className="list-outline">
-            <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
-            {list.map((card) => (
-              <AutocardItem
-                key={card.index}
-                card={card}
-                className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
-                data-in-modal
-                onClick={click}
-                index={card.index}
-              >
-                {parseInt(card.index, 10) === parseInt(index, 10) ? (
-                  <strong>{card.details.name}</strong>
-                ) : (
-                  <>{card.details.name}</>
-                )}
-              </AutocardItem>
-            ))}
-          </ListGroup>
+          <Col xs={6} sm={3}>
+            <ListGroup key={/* eslint-disable-line react/no-array-index-key */ listindex} className="list-outline">
+              <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
+              {list.map((card) => (
+                <AutocardItem
+                  key={card.index}
+                  card={card}
+                  className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
+                  data-in-modal
+                  onClick={click}
+                  index={card.index}
+                >
+                  {parseInt(card.index, 10) === parseInt(index, 10) ? (
+                    <strong>{card.details.name}</strong>
+                  ) : (
+                    <>{card.details.name}</>
+                  )}
+                </AutocardItem>
+              ))}
+            </ListGroup>
+          </Col>
         ))}
-      </Col>
-      <Col xs={12} sm={9}>
-        <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
-        <Table bordered className="small-table">
-          <thead>
-            <tr>
-              <th scope="col"> </th>
-              {traits.map((trait) => (
-                <th key={trait.name} scope="col">
-                  <Tooltip text={trait.description}>{trait.name}</Tooltip>
-                </th>
+      </Row>
+      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
+      <Table bordered responsive className="small-table mt-lg-3">
+        <thead>
+          <tr>
+            <td />
+            {traits.map((trait) => (
+              <HeaderCell
+                label={trait.name}
+                fieldName={trait.name}
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                tooltip={trait.description}
+              />
+            ))}
+          </tr>
+        </thead>
+        <tbody className="breakdown">
+          {items.map((item) => (
+            <tr key={item.card.details.cardID}>
+              <th scope="col">
+                <AutocardItem key={item.card.index} card={item.card} data-in-modal index={item.card.index}>
+                  <a href={`/tool/card/${encodeName(item.card.cardID)}`} target="_blank" rel="noopener noreferrer">
+                    {item.card.details.name}
+                  </a>
+                </AutocardItem>
+              </th>
+              {traits.map((trait, traitIndex) => (
+                <td key={trait.name}>{item[trait.name]}</td>
               ))}
             </tr>
-          </thead>
-          <tbody className="breakdown">
-            {cardsInPack.map((card) => (
-              <tr key={card.details.cardID}>
-                <th scope="col">
-                  <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
-                    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
-                      {card.details.name}
-                    </a>
-                  </AutocardItem>
-                </th>
-                {traits.map((trait, traitIndex) => (
-                  <td key={trait.name}>{card.scores[traitIndex]}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
-        <Row>
-          <Col xs={6}>
-            <Table bordered className="small-table">
-              <tbody className="breakdown">
-                {weights.map((weight) => (
-                  <tr key={weight.name}>
-                    <th>
-                      <Tooltip text={weight.description}>{weight.name}</Tooltip>
-                    </th>
-                    <td>{weight.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </Col>
-        </Row>
-      </Col>
-    </Row>
+          ))}
+        </tbody>
+      </Table>
+      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
+      <Row>
+        <Col xs={6}>
+          <Table bordered className="small-table">
+            <tbody className="breakdown">
+              {weights.map((weight) => (
+                <tr key={weight.name}>
+                  <th>
+                    <Tooltip text={weight.description}>{weight.name}</Tooltip>
+                  </th>
+                  <td>{weight.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
+    </>
   );
 };
 
