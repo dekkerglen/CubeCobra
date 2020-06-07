@@ -178,43 +178,42 @@ export const getColor = (combination, picked, card) => {
   );
 };
 
+const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
+
 export const getFixing = (combination, picked, card) => {
   let score = card.rating;
 
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
   const colorless = colors.length === 0;
-  const subset = arrayIsSubset(colors, combination) && !colorless;
   const contains = arrayIsSubset(combination, colors);
-  const overlap = combination.some((c) => colors.includes(c));
   const typeLine = card.type_line ?? card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[card.details.name];
+  const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
 
-  if (isLand) {
+  if (isLand && contains) {
     if (colorless && !isFetch) {
       return 0;
     }
     if (colors.length === 1 && !isFetch) {
       return 1;
     }
-
     score /= COLOR_SCALING_FACTOR[combination.length];
 
-    if ((subset || contains) && isFetch) {
+    if (hasBasicTypes) {
       score *= 1.5;
-    } else if (subset || contains) {
-      switch (colors.length) {
-        case 2:
-          score *= 1.5;
-          break;
-        default:
-          score *= 2;
-          break;
-      }
-    } else if (overlap && isFetch) {
+    }
+    if (isFetch) {
       score *= 2;
-    } else if (overlap) {
-      score *= 1.2;
+    }
+
+    switch (colors.length) {
+      case 2:
+        score *= 2;
+        break;
+      default:
+        score *= 3;
+        break;
     }
   } else {
     score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];

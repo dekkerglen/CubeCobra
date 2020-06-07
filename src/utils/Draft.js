@@ -105,18 +105,20 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
     side = [...outOfColor];
   }
 
-  // add highest rated card, then add cards based on a combo of elo and synergy
+  // add highest synergy card, then add cards based on a combo of elo and synergy
   const chosen = [];
-  chosen.push(nonlands.shift());
-
   const played = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   played.cards = [];
-  addSeen(played, [chosen[0]]);
 
-  const size = Math.min(22, nonlands.length);
+  const size = Math.min(23, nonlands.length);
   for (let i = 0; i < size; i++) {
     // add in new synergy data
-    const scores = nonlands.map((card) => getSynergy(colors, card, played, synergies));
+    const scores = [];
+    if (played.cards.length > 0) {
+      scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
+    } else {
+      scores.push(nonlands.map((card) => getSynergy(colors, card, picked, synergies)));
+    }
 
     let best = 0;
 
