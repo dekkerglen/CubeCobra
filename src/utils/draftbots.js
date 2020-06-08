@@ -189,7 +189,6 @@ export const getFixing = (combination, picked, card) => {
   let score = 10 ** ((card?.rating ?? 0) / 400);
 
   const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
-  const colorless = colors.length === 0;
   const contains = arrayIsSubset(combination, colors);
   const typeLine = card.type_line ?? card.details.type;
   const isLand = typeLine.indexOf('Land') > -1;
