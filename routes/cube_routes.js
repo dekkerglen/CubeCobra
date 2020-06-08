@@ -2763,7 +2763,6 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
 router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
   try {
-    console.log('submit deck');
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
@@ -4061,7 +4060,6 @@ router.post(
 
 router.post('/api/draftpick/:id', async (req, res) => {
   await Draft.updateOne({ _id: req.body._id }, req.body);
-  console.log('Updated one with', req.body);
 
   return res.status(200).send({
     success: 'true',
