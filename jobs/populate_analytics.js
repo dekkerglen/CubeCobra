@@ -6,7 +6,6 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const { GetPrices } = require('../serverjs/prices');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
@@ -173,13 +172,7 @@ async function processCube(cube) {
 
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
-  const tcgplayerIds = versions.map((id) => carddb.cardFromId(id).tcgplayer_id);
   const { name, oracle_id } = card;
-
-  const pricesQ = GetPrices(tcgplayerIds);
-  const ratingQ = CardRating.findOne({ cardName: name });
-
-  const [prices, rating] = await Promise.all([pricesQ, ratingQ]);
 
   const currentDatapoint = {};
   currentDatapoint.rating = rating ? rating.rating : null;
@@ -198,12 +191,12 @@ async function processCard(card) {
 
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
-    const { tcgplayer_id } = carddb.cardFromId(id);
-    if (prices[tcgplayer_id]) {
-      versionPrice.price = prices[tcgplayer_id];
+    const { prices } = carddb.cardFromId(id);
+    if (prices.usd) {
+      versionPrice.price = prices.usd;
     }
-    if (prices[`${tcgplayer_id}_foil`]) {
-      versionPrice.price_foil = prices[`${tcgplayer_id}_foil`];
+    if (prices.usd_foil) {
+      versionPrice.price_foil = prices.usd_foil;
     }
     return versionPrice;
   });

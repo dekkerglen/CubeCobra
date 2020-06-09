@@ -226,7 +226,7 @@ function maybeCards(cube, carddb) {
 }
 
 async function getCardElo(cardname, round) {
-  const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } });
+  const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } }).lean();
 
   if (!rating || Number.isNaN(rating.elo)) {
     return 1200;
@@ -236,7 +236,7 @@ async function getCardElo(cardname, round) {
 }
 
 async function getElo(cardnames, round) {
-  const ratings = await CardRating.find({ name: { $in: cardnames } });
+  const ratings = await CardRating.find({ name: { $in: cardnames } }).lean();
   const result = {};
 
   for (const cardname of cardnames) {

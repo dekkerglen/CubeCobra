@@ -136,12 +136,12 @@ export const cardColorCategory = (card) => card.colorCategory ?? card.details.co
 
 export const cardPrice = (card) =>
   cardFinish(card) === 'Foil'
-    ? card.details.price_foil ?? card.details.price
-    : card.details.price ?? card.details.price_foil;
+    ? card.details.prices.usd_foil ?? card.details.prices.usd
+    : card.details.prices.usd ?? card.details.prices.usd_foil;
 
-export const cardNormalPrice = (card) => card.details.price;
+export const cardNormalPrice = (card) => card.details.prices.usd;
 
-export const cardFoilPrice = (card) => card.details.price_foil;
+export const cardFoilPrice = (card) => card.details.prices.usd_foil;
 
 export const cardIsFullArt = (card) => card.details.full_art;
 

@@ -3,7 +3,6 @@ const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
-const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
@@ -169,6 +168,8 @@ router.get('/topcards', async (req, res) => {
 });
 
 router.get('/card/:id', async (req, res) => {
+  const card = carddb.cardFromId(req.params.id);
+  console.log(card);
   try {
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(req.params.id);
@@ -185,6 +186,7 @@ router.get('/card/:id', async (req, res) => {
 
     // otherwise just go to this ID.
     const card = carddb.cardFromId(req.params.id);
+    console.log(card);
     const data = await CardHistory.findOne({ cardID: req.params.id });
     if (!data) {
       return res.status(404).render('misc/404', {});
@@ -197,12 +199,10 @@ router.get('/card/:id', async (req, res) => {
     );
 
     const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    const prices = await GetPrices(pids);
     card.elo = (await getElo([card.name], true))[card.name];
     const reactProps = {
       card,
       data,
-      prices,
       cubes,
       related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
     };

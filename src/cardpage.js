@@ -12,7 +12,7 @@ import CountTableRow from 'components/CountTableRow';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-const CardPage = ({ card, data, prices, related }) => {
+const CardPage = ({ card, data, related }) => {
   const cardList = related.map((item) => ({ details: item }));
   return (
     <Card className="mt-2">
@@ -43,14 +43,10 @@ const CardPage = ({ card, data, prices, related }) => {
               alt={card.name}
             />
             <div className="price-area">
-              {prices[card.tcgplayer_id] && (
-                <div className="card-price">TCGPlayer Market: {prices[card.tcgplayer_id].toFixed(2)}</div>
-              )}
-              {prices[`${card.tcgplayer_id}_foil`] && (
-                <div className="card-price">
-                  Foil TCGPlayer Market: {prices[`${card.tcgplayer_id}_foil`].toFixed(2)}
-                </div>
-              )}
+              {card.prices.usd && <div className="card-price">USD: {card.prices.usd.toFixed(2)}</div>}
+              {card.prices.usd_foil && <div className="card-price">USD Foil: {card.prices.usd_foil.toFixed(2)}</div>}
+              {card.prices.eur && <div className="card-price">EUR: {card.prices.eur.toFixed(2)}</div>}
+              {card.prices.tix && <div className="card-price">TIX: {card.prices.tix.toFixed(2)}</div>}
               {card.elo && <div className="card-price">Elo: {card.elo}</div>}
             </div>
           </Col>
@@ -109,6 +105,12 @@ CardPage.propTypes = {
     image_normal: PropTypes.string.isRequired,
     scryfall_uri: PropTypes.string.isRequired,
     tcgplayer_id: PropTypes.string.isRequired,
+    prices: PropTypes.shape({
+      usd: PropTypes.number,
+      usd_foil: PropTypes.number,
+      eur: PropTypes.number,
+      tix: PropTypes.number,
+    }).isRequired,
   }).isRequired,
   data: PropTypes.shape({
     current: PropTypes.shape({
@@ -125,7 +127,6 @@ CardPage.propTypes = {
       total: PropTypes.arrayOf(PropTypes.number).isRequired,
     }),
   }).isRequired,
-  prices: PropTypes.objectOf(PropTypes.number).isRequired,
   related: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

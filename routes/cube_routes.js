@@ -45,7 +45,6 @@ const filterutil = require('../dist/filtering/FilterCards.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
-const { GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
@@ -3374,9 +3373,6 @@ router.get(
     const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
     // eslint-disable-next-line prefer-object-spread
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
-    const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
-    const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
-    const [priceDict, eloDict] = await Promise.all([GetPrices(tcg), getElo(names, true)]);
     for (const card of cards) {
       if (card.tcgplayer_id) {
         const cardPriceData = priceDict[card.tcgplayer_id];
@@ -3409,20 +3405,18 @@ router.post(
     const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
     const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
     const allVersionsFlat = [].concat(...allVersions);
-    const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
-    const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
-    const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
+
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({
+        versions.map(({ _id, name, full_name, image_normal, image_flip, prices, elo }) => ({
           _id,
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
           image_normal,
           image_flip,
-          price: priceDict[tcgplayer_id],
-          price_foil: priceDict[`${tcgplayer_id}_foil`],
-          elo: eloDict[cardutil.normalizeName(name)],
+          price: prices.usd,
+          price_foil: prices.usd_foil,
+          elo,
         })),
       ]),
     );
@@ -3626,27 +3620,6 @@ router.post('/resize/:id/:size', async (req, res) => {
       })
       .map(formatTuple);
 
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
-    addPriceAndElo(list);
-
     const { filter, err } = filterutil.makeFilter(req.body.filter);
     if (err) {
       return util.handleRouteError(req, res, 'Error parsing filter.', `/cube/list/${req.params.id}`);
@@ -3743,28 +3716,9 @@ router.post(
       .sort((a, b) => a[1] - b[1])
       .map(formatTuple);
 
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
     return res.status(200).send({
       success: 'true',
-      result: { toAdd: addPriceAndElo(addlist), toCut: addPriceAndElo(cutlist) },
+      result: { toAdd: addlist, toCut: cutlist },
     });
   }),
 );

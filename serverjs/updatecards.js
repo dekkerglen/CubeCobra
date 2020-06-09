@@ -9,6 +9,7 @@ const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
 const carddb = require('./cards.js');
+const CardRating = require('../models/cardrating');
 
 const catalog = {};
 
@@ -74,6 +75,7 @@ function initializeCatalog() {
   catalog.cardimages = {};
   catalog.oracleToId = {};
   catalog.english = {};
+  catalog.elodict = {};
 }
 
 initializeCatalog();
@@ -586,6 +588,7 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'mp2' || // invocations
     card.set.toLowerCase() === 'exp'; // expeditions
   newcard.prices = card.prices;
+  newcard.elo = catalog.elodict[name];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -709,6 +712,14 @@ function saveEnglishCard(card) {
 }
 
 async function saveAllCards(basePath = 'private', defaultPath = null, allPath = null) {
+  winston.info('Fetching Elo...');
+  // create Elo dict
+  const ratings = await CardRating.find({}, 'name elo').lean();
+  for (const rating of ratings) {
+    catalog.elodict[rating.name] = rating.elo;
+  }
+
+  winston.info('Processing cards...');
   await new Promise((resolve) =>
     fs
       .createReadStream(defaultPath || path.resolve(basePath, 'cards.json'))
@@ -733,11 +744,13 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
+  winston.info('Updating cardbase, this might take a little while...');
 
+  winston.info('Downloading files...');
   // the module.exports line is necessary to correctly mock this function in unit tests
   await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
-  winston.info('Updating cardbase, this might take a little while...');
+  winston.info('Creating objects...');
   await saveAllCards(basePath, defaultPath, allPath);
 
   winston.info('Finished cardbase update...');
