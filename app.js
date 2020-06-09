@@ -241,12 +241,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-schedule.scheduleJob('0 8 * * *', () => {
-  winston.info('Starting midnight cardbase update...');
+// scryfall updates this data at 9, so his will minimize staleness
+schedule.scheduleJob('0 10  * *', () => {
+  winston.info('String midnight cardbase update...');
   updatedb.updateCardbase();
 });
 
-// Start server after carddb is initialized.
+// Start serer after carddb is initialized.
 carddb.initializeCardDb().then(() => {
   http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
     winston.info(`Server started on port ${process.env.PORT || 5000}...`);
