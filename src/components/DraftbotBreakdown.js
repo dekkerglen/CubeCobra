@@ -93,8 +93,8 @@ const TRAITS = [
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, card, picked, synergies, overallPool, seen) =>
-      getOpenness(combination, seen, overallPool, card, picked, synergies).toFixed(2),
+    function: (combination, card, picked, synergies, seen) =>
+      getOpenness(combination, seen, card, picked, synergies).toFixed(2),
   },
   {
     name: 'Color',
@@ -154,10 +154,10 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex)[0]);
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
     }
     return res;
-  }, [deck, draft, index, seat, seatIndex]);
+  }, [deck, draft, index, seatIndex]);
 
   // load the weights for the selected pack
   const weights = useMemo(() => {
