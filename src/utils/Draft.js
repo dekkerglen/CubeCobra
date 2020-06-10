@@ -1,6 +1,6 @@
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
-import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType } from 'utils/Card';
 
 import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
 
@@ -107,7 +107,7 @@ export const calculateBasicCounts = (main, colors) => {
     R: 'Mountain',
     G: 'Forest',
   };
-  const desiredLength = Math.floor((40 * main.length) / 23);
+  const desiredLength = Math.floor((40 * main.filter((c) => cardType(c).toLowerCase().includes('land').length)) / 23);
   const toAdd = desiredLength - main.length;
   let added = 0;
   for (const [symbol, weight] of Object.entries(symbols)) {

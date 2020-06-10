@@ -4,11 +4,11 @@ import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.4, 0.2, 0.1];
+const COLOR_SCALING_FACTOR = [1, 1, 0.7, 0.45, 0.2, 0.1];
 const COLORS_WEIGHTS = [
-  [0, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+  [0, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.1, 2.2, 2.3, 2.4, 2.5],
+  [3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5],
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 const RATING_WEIGHTS = [
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
@@ -21,17 +21,14 @@ const FIXING_WEIGHTS = [
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 const SYNERGY_WEIGHTS = [
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  // [0, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3],
-  // [2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3, 3, 3, 3],
-  // [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 const OPENNESS_WEIGHTS = [
   [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
   [3, 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.7, 3.6, 3.4, 3.2, 3, 2.8, 2.6],
-  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0],
+  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.3, 0],
 ];
 
 const findBestValueArray = (weights, pickNumPercent) => {
@@ -84,52 +81,6 @@ export const fetchLands = {
   'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
 };
 
-export const getAdjustedElo = (botColors, card) => {
-  let { rating } = card;
-  const colors = fetchLands[cardName(card)] ?? cardColorIdentity(card);
-  const colorless = colors.length === 0;
-  const subset = arrayIsSubset(colors, botColors) && !colorless;
-  const contains = arrayIsSubset(botColors, colors);
-  const overlap = botColors.some((c) => colors.includes(c));
-  const typeLine = cardType(card);
-  const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = !!fetchLands[card.details.name];
-
-  // If you add x to a rating you roughly increase the estimated value
-  // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
-  if (isLand) {
-    if ((subset || contains) && isFetch) {
-      rating += 280; // Increase value of picking by roughly 400%
-    } else if (subset || contains) {
-      switch (colors.length) {
-        case 1:
-          rating += 191; // Increase value of picking by roughly 200%
-          break;
-        case 2:
-          rating += 262; // Increase value of picking by roughly 350%
-          break;
-        default:
-          rating += 311; // Increase value of picking by roughly 500%
-          break;
-      }
-    } else if (overlap && isFetch) {
-      rating += 241; // Increase value of picking by roughly 300%
-    } else if (overlap || colorless) {
-      rating += 159; // Increase value of picking by roughly 150%
-    }
-  } else if (colorless) {
-    rating += 205; // Increase value of picking by roughly 225%
-  } else if (subset) {
-    rating += 191; // Increase value of picking by roughly 200%
-  } else if (contains) {
-    rating += 141; // Increase value of picking by roughly 125%
-  } else if (overlap) {
-    rating += 70; // Increase value of picking by roughly 50%
-  }
-
-  return rating;
-};
-
 export const getRating = (combination, card) => {
   return Math.log(COLOR_SCALING_FACTOR[combination.length] * 10 ** ((card?.rating ?? 0) / 400));
 };
@@ -138,7 +89,7 @@ export const considerInCombination = (combination, card) =>
   card && arrayIsSubset(cardColorIdentity(card) ?? [], combination);
 
 export const getSynergy = (combination, card, picked, synergies) => {
-  if (picked.cards.length === 0) {
+  if (picked.cards.length === 0 || !synergies) {
     return 0;
   }
 
@@ -173,7 +124,7 @@ export const getOpenness = (combination, seen) => {
     return 0;
   }
 
-  const seenCount = seen[combination.join('')] / seen.cards.length;
+  const seenCount = COLOR_SCALING_FACTOR[combination.length] * seen[combination.join('')];
   return Math.log(seenCount);
 };
 
@@ -185,19 +136,17 @@ export const getColor = (combination, picked, card) => {
 
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
-export const getFixing = (combination, picked, card) => {
-  let score = 10 ** ((card?.rating ?? 0) / 400);
-
-  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
-  const contains = arrayIsSubset(combination, colors);
-  const typeLine = card.type_line ?? card.details.type;
+export const getFixing = (combination, _, card) => {
+  const colors = fetchLands[card.details.name] ?? cardColorIdentity(card);
+  const typeLine = cardType(card);
   const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = !!fetchLands[card.details.name];
-  const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
+  const isFetch = !!fetchLands[cardName(card)];
 
-  if (isLand && contains && (isFetch || colors.length > 1)) {
-    score /= COLOR_SCALING_FACTOR[combination.length];
+  // Guaranteed contains by botRatingAndCombination
+  if (isLand || isFetch) {
+    let score = 1 / COLOR_SCALING_FACTOR[combination.length];
 
+    const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
     if (hasBasicTypes) {
       score *= 1.5;
     }
@@ -206,18 +155,20 @@ export const getFixing = (combination, picked, card) => {
     }
 
     switch (colors.length) {
+      case 0:
+        return 0;
+      case 1:
+        break;
       case 2:
         score *= 2;
         break;
       default:
-        score *= 3;
+        score *= Math.min(colors.length, combination.length);
         break;
     }
-  } else {
-    score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];
+    return score;
   }
-
-  return Math.log(score);
+  return 0;
 };
 
 export const getRatingWeight = (pack, pick, initialState) => {

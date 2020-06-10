@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-
+import PropTypes from 'prop-types';
 import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
-import withAutocard from 'components/WithAutocard';
-import PropTypes from 'prop-types';
+import { getPackAsSeen } from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
-import { encodeName } from 'utils/Card';
 import { getCardColorClass } from 'components/TagContext';
-
+import withAutocard from 'components/WithAutocard';
+import { encodeName } from 'utils/Card';
 import Query from 'utils/Query';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -40,48 +39,7 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     return <h4>This deck does not have a related draft log.</h4>;
   }
 
-  const cardsInPack = [];
-
-  let start = 0;
-  let end = draft.initial_state[0][0].length;
-  let picks = parseInt(index, 10);
-  let pack = 0;
-  let current = parseInt(seatIndex, 10);
-  const picksList = [];
-  let added = 0;
-  let ind = 0;
-
-  while (picks >= draft.initial_state[0][pack].length) {
-    start = end;
-    end += draft.initial_state[0][pack].length;
-    picks -= draft.initial_state[0][pack].length;
-    pack += 1;
-  }
-
-  for (let i = start + picks; i < end; i += 1) {
-    cardsInPack.push(deck.seats[current].pickorder[i]);
-    if (pack % 2 !== draft.initial_state[0].length % 2) {
-      current += 1;
-      current %= draft.initial_state.length;
-    } else {
-      current -= 1;
-      if (current < 0) {
-        current = draft.initial_state.length - 1;
-      }
-    }
-  }
-
-  for (const list of draft.initial_state[0]) {
-    picksList.push(seat.pickorder.slice(added, added + list.length));
-    added += list.length;
-  }
-
-  for (const list of picksList) {
-    for (const card of list) {
-      card.index = ind;
-      ind += 1;
-    }
-  }
+  const [cardsInPack, picks, pack, picksList] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
 
   return (
     <Row>
