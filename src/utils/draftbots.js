@@ -228,7 +228,6 @@ export default {
   getOpennessWeight,
   getColorWeight,
   getFixingWeight,
-  getAdjustedElo,
   botRatingAndCombination,
   considerInCombination,
 };

@@ -33,7 +33,6 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       setIndex(event.target.getAttribute('index'));
     }
   };
-  const seat = deck.seats[seatIndex];
 
   if (!draft) {
     return <h4>This deck does not have a related draft log.</h4>;
