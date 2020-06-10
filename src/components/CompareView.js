@@ -43,8 +43,6 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 };
 
-const CompareOverview = ({});
-
 const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
   let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
@@ -186,7 +184,6 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
             </Row>
           );
         })}
-      }
     </>
   );
 };
