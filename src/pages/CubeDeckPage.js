@@ -16,6 +16,7 @@ import {
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
+  Spinner,
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -76,19 +77,24 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
     [isOpen],
   );
 
+  const [loading, setLoading] = useState(false);
+
   const submitDeckForm = useRef();
   const [draftId, setDraftId] = useState('');
 
   const haveBotsRedraft = useCallback(async () => {
-    const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
-      method: 'POST',
-    });
-    const json = await response.json();
-    Draft.init(json.draft);
-    setDraftId(Draft.id());
-    await Draft.allBotsDraft();
-    submitDeckForm.current.submit();
-  }, [draft._id]);
+    if (!loading) {
+      setLoading(true);
+      const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      Draft.init(json.draft);
+      setDraftId(Draft.id());
+      await Draft.allBotsDraft();
+      submitDeckForm.current.submit();
+    }
+  }, [draft._id, loading]);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
@@ -137,6 +143,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                 </NavItem>
               )}
+              {loading && <Spinner className="position-absolute" />}
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
                   Rebuild/Redraft
