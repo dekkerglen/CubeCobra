@@ -46,9 +46,9 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
 const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
   let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
-  let bothCounts = {'total': 0};
-  let onlyACounts = {'total': 0};
-  let onlyBCounts = {'total': 0};
+  let bothCounts = { total: 0 };
+  let onlyACounts = { total: 0 };
+  let onlyBCounts = { total: 0 };
 
   let both_copy = both.slice(0);
   let only_a_copy = onlyA.slice(0);
