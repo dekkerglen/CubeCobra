@@ -1951,74 +1951,6 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
-const doBotOnlyDraft = async (res, draftId) => {
-  const draft = await Draft.findById(draftId).lean();
-  // insert card details everywhere that needs them
-  for (const seat of draft.unopenedPacks) {
-    for (const pack of seat) {
-      for (const card of pack) {
-        card.details = carddb.cardFromId(
-          card.cardID,
-          'cmc parsed_cost type image_normal image_flip name color_identity',
-        );
-      }
-    }
-  }
-
-  for (const seat of draft.seats) {
-    for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-      for (const pack of collection) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID);
-        }
-      }
-    }
-    for (const card of seat.pickorder) {
-      card.details = carddb.cardFromId(card.cardID);
-    }
-  }
-  for (const key of Object.keys(draft.basics)) {
-    draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
-  }
-
-  const cube = await Cube.findOne(buildIdQuery(draft.cube));
-
-  deckutil.default.init(draft);
-  await deckutil.default.allBotsDraft();
-  await Draft.updateOne({ _id: draft._id }, draft);
-
-  const deck = new Deck();
-  deck.cube = draft.cube;
-  deck.date = Date.now();
-  deck.comments = [];
-  deck.draft = draft._id;
-  deck.cubename = cube.name;
-  deck.seats = [];
-
-  for (const seat of draft.seats) {
-    deck.seats.push({
-      bot: seat.bot,
-      userid: seat.userid,
-      username: seat.name,
-      pickorder: seat.pickorder,
-      name: `Draft of ${cube.name}`,
-      description: '',
-      cols: 16,
-      deck: seat.drafted,
-      sideboard: seat.sideboard ? seat.sideboard : [],
-    });
-  }
-
-  if (!cube.numDecks) {
-    cube.numDecks = 0;
-  }
-  cube.numDecks += 1;
-
-  await Promise.all([cube.save(), deck.save()]);
-
-  return res.redirect(`/cube/deck/${deck._id}`);
-};
-
 router.post(
   '/startdraft/:id',
   body('id').toInt(),
@@ -2057,7 +1989,7 @@ router.post(
       const bots = draftutil.getDraftBots(params);
       const format = draftutil.getDraftFormat(params, cube);
 
-      const draft = new Draft();
+      let draft = new Draft();
       const populated = draftutil.createDraft(
         format,
         cube.cards,
@@ -2084,10 +2016,40 @@ router.post(
       } else {
         draft.synergies = null;
       }
-
       await draft.save();
       if (req.body.botsOnly) {
-        return doBotOnlyDraft(res, draft._id);
+        draft = await Draft.findById(draft._id).lean();
+        // insert card details everywhere that needs them
+        for (const seat of draft.unopenedPacks) {
+          for (const pack of seat) {
+            for (const card of pack) {
+              card.details = carddb.cardFromId(
+                card.cardID,
+                'cmc type image_normal parsed_cost image_flip name color_identity',
+              );
+            }
+          }
+        }
+
+        for (const seat of draft.seats) {
+          for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+            for (const pack of collection) {
+              for (const card of pack) {
+                card.details = carddb.cardFromId(card.cardID);
+              }
+            }
+          }
+          for (const card of seat.pickorder) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+        for (const key of Object.keys(draft.basics)) {
+          draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+        }
+        return res.status(200).send({
+          success: 'true',
+          draft,
+        });
       }
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
@@ -2799,7 +2761,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.post('/submitdeck/:id', async (req, res) => {
+router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
   try {
     // req.body contains a draft
     const draftid = req.body.body;
@@ -2848,7 +2810,9 @@ router.post('/submitdeck/:id', async (req, res) => {
     }
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
-
+    if (req.body.skipDeckbuilder) {
+      return res.redirect(`/cube/deck/${deck._id}`);
+    }
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
@@ -3118,23 +3082,16 @@ router.get('/redraft/:id', async (req, res) => {
   }
 });
 
-router.get('/redraftbots/:id', async (req, res) => {
+router.post('/api/redraft/:id', async (req, res) => {
   try {
-    const base = await Deck.findById(req.params.id).lean();
-
-    if (!base) {
-      req.flash('danger', 'Deck not found');
-      return res.status(404).render('misc/404', {});
-    }
-
-    const srcDraft = await Draft.findById(base.draft).lean();
+    const srcDraft = await Draft.findById(req.params.id).lean();
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    const draft = new Draft();
+    let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
     draft.synergies = srcDraft.synergies;
@@ -3171,7 +3128,38 @@ router.get('/redraftbots/:id', async (req, res) => {
 
     await draft.save();
 
-    return doBotOnlyDraft(res, draft._id);
+    draft = await Draft.findById(draft._id).lean();
+    // insert card details everywhere that needs them
+    for (const seat of draft.unopenedPacks) {
+      for (const pack of seat) {
+        for (const card of pack) {
+          card.details = carddb.cardFromId(
+            card.cardID,
+            'cmc type image_normal parsed_cost image_flip name color_identity',
+          );
+        }
+      }
+    }
+
+    for (const seat of draft.seats) {
+      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
+    for (const key of Object.keys(draft.basics)) {
+      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    }
+    return res.status(200).send({
+      success: 'true',
+      draft,
+    });
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }

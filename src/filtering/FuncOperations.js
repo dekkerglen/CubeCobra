@@ -238,6 +238,11 @@ export const devotionOperation = (op, symbol, value) => {
   return (card) => operation(cardDevotion(card, symbol));
 };
 
+export const setCountOperation = (op, value) => {
+  const operation = defaultOperation(op, value);
+  return (fieldValue) => operation(fieldValue.length);
+};
+
 export const setElementOperation = (op, value) => {
   switch (op.toString()) {
     case ':':

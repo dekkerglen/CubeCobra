@@ -135,7 +135,8 @@ colorCombinationValue ->
 
 @builtin "string.ne"
 
-stringSetElementOpValue -> equalityOperator stringValue {% ([op, value]) => setElementOperation(op, value) %}
+stringSetElementOpValue -> ":" stringValue {% ([op, value]) => setElementOperation(op, value) %}
+  | ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
 
 stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperation(op, value) %}
 

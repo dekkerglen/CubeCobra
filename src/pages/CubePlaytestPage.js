@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo, useState } from 'react';
+import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -24,8 +24,6 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
-
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'components/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
@@ -33,7 +31,10 @@ import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
 import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
+import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
+import { csrfFetch } from 'utils/CSRF';
+import Draft from 'utils/Draft';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -98,6 +99,32 @@ LabelRow.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+const useBotsOnlyCallback = (botsOnly, cubeID) => {
+  const formRef = useRef();
+  const submitDeckForm = useRef();
+  const [draftId, setDraftId] = useState('');
+  const submitForm = useCallback(
+    async (e) => {
+      if (botsOnly) {
+        e.preventDefault();
+        const body = new FormData(formRef.current);
+        const response = await csrfFetch(`/cube/startdraft/${cubeID}`, {
+          method: 'POST',
+          body,
+        });
+        const json = await response.json();
+        Draft.init(json.draft);
+        setDraftId(Draft.id());
+        await Draft.allBotsDraft();
+        submitDeckForm.current.submit();
+      }
+    },
+    [botsOnly, cubeID, formRef, setDraftId, submitDeckForm],
+  );
+
+  return [submitForm, draftId, submitDeckForm, formRef];
+};
+
 const CustomDraftCard = ({
   format,
   onEditFormat,
@@ -108,9 +135,27 @@ const CustomDraftCard = ({
 }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
   const { index } = format;
+  const [botsOnly, toggleBotsOnly] = useToggle(false);
+  const [submitForm, draftId, submitDeckForm, formRef] = useBotsOnlyCallback(botsOnly, cubeID);
   return (
     <Card {...props}>
-      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm
+        key="submitdeck"
+        className="d-none"
+        innerRef={submitDeckForm}
+        method="POST"
+        action={`/cube/submitdeck/${cubeID}`}
+      >
+        <Input type="hidden" name="body" value={draftId} />
+        <Input type="hidden" name="skipDeckbuilder" value="true" />
+      </CSRFForm>
+      <CSRFForm
+        method="POST"
+        key="createDraft"
+        action={`/cube/startdraft/${cubeID}`}
+        innerRef={formRef}
+        onSubmit={submitForm}
+      >
         <CardHeader>
           <CardTitleH5>
             {defaultDraftFormat === index && 'Default Format: '}
@@ -129,7 +174,7 @@ const CustomDraftCard = ({
           </LabelRow>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="botsOnly" /> Have just bots draft.
+              <Input type="checkbox" name="botsOnly" value={botsOnly} onClick={toggleBotsOnly} /> Have just bots draft.
             </Label>
           </FormGroup>
         </CardBody>
@@ -179,9 +224,21 @@ CustomDraftCard.propTypes = {
 
 const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
+  const [botsOnly, toggleBotsOnly] = useToggle(false);
+  const [submitForm, draftId, submitDeckForm, formRef] = useBotsOnlyCallback(botsOnly, cubeID);
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm
+        key="submitdeck"
+        className="d-none"
+        innerRef={submitDeckForm}
+        method="POST"
+        action={`/cube/submitdeck/${cubeID}`}
+      >
+        <Input type="hidden" name="body" value={draftId} />
+        <Input type="hidden" name="skipDeckbuilder" value="true" />
+      </CSRFForm>
+      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`} onSubmit={submitForm} innerRef={formRef}>
         <CardHeader>
           <CardTitleH5>{defaultDraftFormat === -1 && 'Default Format: '}Standard Draft</CardTitleH5>
         </CardHeader>
@@ -203,7 +260,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
           </LabelRow>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="botsOnly" /> Have just bots draft.
+              <Input type="checkbox" name="botsOnly" onClick={toggleBotsOnly} value={botsOnly} /> Have just bots draft.
             </Label>
           </FormGroup>
         </CardBody>
@@ -237,13 +294,13 @@ const SealedCard = () => {
           <CardTitleH5>Standard Sealed</CardTitleH5>
         </CardHeader>
         <CardBody>
-          <LabelRow htmlFor="packs" label="Number of Packs">
-            <Input type="select" name="packs" id="packs" defaultValue="6">
+          <LabelRow htmlFor="packs-sealed" label="Number of Packs">
+            <Input type="select" name="packs" id="packs-sealed" defaultValue="6">
               {rangeOptions(1, 11)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="cards" label="Cards per Pack">
-            <Input type="select" name="cards" id="cards" defaultValue="15">
+          <LabelRow htmlFor="cards-sealed" label="Cards per Pack">
+            <Input type="select" name="cards" id="cards-sealed" defaultValue="15">
               {rangeOptions(5, 21)}
             </Input>
           </LabelRow>
@@ -446,9 +503,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
           <SealedCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && (
-            <DecksCard decks={decks} canEdit={canEdit} userID={userID} cubeID={cubeID} className="mb-3" />
-          )}
+          {decks.length !== 0 && <DecksCard decks={decks} canEdit={canEdit} userID={userID} className="mb-3" />}
           <SamplePackCard className="mb-3" />
         </Col>
       </Row>

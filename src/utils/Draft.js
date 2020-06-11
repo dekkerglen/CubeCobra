@@ -391,7 +391,7 @@ async function allBotsDraft() {
   while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].length > 0) {
     passPack();
   }
-  finish();
+  await finish();
 }
 
 export default {
