@@ -46,9 +46,9 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
 const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
   let columns = sortIntoGroups(cards, primary);
   let columnCounts = {};
-  let bothCounts = {};
-  let onlyACounts = {};
-  let onlyBCounts = {};
+  let bothCounts = { total: 0 };
+  let onlyACounts = { total: 0 };
+  let onlyBCounts = { total: 0 };
 
   let both_copy = both.slice(0);
   let only_a_copy = onlyA.slice(0);
@@ -73,17 +73,48 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
 
     columnCounts[columnLabel] = columns[columnLabel].length;
     bothCounts[columnLabel] = bothCount;
+    bothCounts['total'] += bothCount;
     onlyACounts[columnLabel] = onlyACount;
+    onlyACounts['total'] += onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
+    onlyBCounts['total'] += onlyBCount;
     columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
   }
-
   const bothCopy = both.slice(0);
   const onlyACopy = onlyA.slice(0);
   const onlyBCopy = onlyB.slice(0);
 
   return (
     <>
+      {
+        <div className="compare-header pt-2">
+          <Row>
+            <Col>
+              <h6 className="text-center">Total</h6>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs="4">
+              <h6 className="text-center">
+                In Both Cubes
+                <br />({bothCounts['total']})
+              </h6>
+            </Col>
+            <Col xs="4">
+              <h6 className="text-center">
+                Only in Base Cube
+                <br />({onlyACounts['total']})
+              </h6>
+            </Col>
+            <Col xs="4">
+              <h6 className="text-center">
+                Only in Comparison Cube
+                <br />({onlyBCounts['total']})
+              </h6>
+            </Col>
+          </Row>
+        </div>
+      }
       {getLabels(cards, primary)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
