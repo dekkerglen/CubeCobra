@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-
+import PropTypes from 'prop-types';
 import { Button, Spinner } from 'reactstrap';
 
 const LoadingButton = ({ onClick, loading, ...props }) => {
@@ -24,6 +24,13 @@ const LoadingButton = ({ onClick, loading, ...props }) => {
       <Button {...props} onClick={renderOnClick} disabled={renderLoading} />
     </div>
   );
+};
+LoadingButton.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
+};
+LoadingButton.defaultProps = {
+  loading: undefined,
 };
 
 export default LoadingButton;

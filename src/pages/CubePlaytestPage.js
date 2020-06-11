@@ -21,6 +21,7 @@ import {
   ModalFooter,
   ModalHeader,
   Row,
+  Spinner,
   UncontrolledCollapse,
 } from 'reactstrap';
 
@@ -103,9 +104,11 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
   const formRef = useRef();
   const submitDeckForm = useRef();
   const [draftId, setDraftId] = useState('');
+  const [loading, setLoading] = useState(false);
   const submitForm = useCallback(
     async (e) => {
       if (botsOnly) {
+        setLoading(true);
         e.preventDefault();
         const body = new FormData(formRef.current);
         const response = await csrfFetch(`/cube/startdraft/${cubeID}`, {
@@ -117,12 +120,13 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
         setDraftId(Draft.id());
         await Draft.allBotsDraft();
         submitDeckForm.current.submit();
+        setLoading(false);
       }
     },
     [botsOnly, cubeID, formRef, setDraftId, submitDeckForm],
   );
 
-  return [submitForm, draftId, submitDeckForm, formRef];
+  return [submitForm, draftId, submitDeckForm, formRef, loading];
 };
 
 const CustomDraftCard = ({
@@ -136,7 +140,7 @@ const CustomDraftCard = ({
   const { cubeID, canEdit } = useContext(CubeContext);
   const { index } = format;
   const [botsOnly, toggleBotsOnly] = useToggle(false);
-  const [submitForm, draftId, submitDeckForm, formRef] = useBotsOnlyCallback(botsOnly, cubeID);
+  const [submitForm, draftId, submitDeckForm, formRef, loading] = useBotsOnlyCallback(botsOnly, cubeID);
   return (
     <Card {...props}>
       <CSRFForm
@@ -180,6 +184,7 @@ const CustomDraftCard = ({
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value={index} />
+          {loading && <Spinner className="position-absolute" />}
           <Button type="submit" color="success" className="mr-2">
             Start Draft
           </Button>
@@ -225,7 +230,7 @@ CustomDraftCard.propTypes = {
 const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
   const [botsOnly, toggleBotsOnly] = useToggle(false);
-  const [submitForm, draftId, submitDeckForm, formRef] = useBotsOnlyCallback(botsOnly, cubeID);
+  const [submitForm, draftId, submitDeckForm, formRef, loading] = useBotsOnlyCallback(botsOnly, cubeID);
   return (
     <Card className="mb-3">
       <CSRFForm
@@ -266,6 +271,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value="-1" />
+          {loading && <Spinner className="position-absolute" />}
           <Button color="success" className="mr-2">
             Start Draft
           </Button>
