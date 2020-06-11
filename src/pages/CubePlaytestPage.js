@@ -120,7 +120,6 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
         setDraftId(Draft.id());
         await Draft.allBotsDraft();
         submitDeckForm.current.submit();
-        setLoading(false);
       }
     },
     [botsOnly, cubeID, formRef, setDraftId, submitDeckForm],
@@ -184,10 +183,12 @@ const CustomDraftCard = ({
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value={index} />
-          {loading && <Spinner className="position-absolute" />}
-          <Button type="submit" color="success" className="mr-2">
-            Start Draft
-          </Button>
+          <div className="justify-content-center align-items-center">
+            {loading && <Spinner className="position-absolute" />}
+            <Button type="submit" color="success" className="mr-2" disabled={loading}>
+              Start Draft
+            </Button>
+          </div>
           {canEdit && (
             <>
               <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
@@ -271,10 +272,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value="-1" />
-          {loading && <Spinner className="position-absolute" />}
-          <Button color="success" className="mr-2">
-            Start Draft
-          </Button>
+          <div className="justify-content-center align-items-center">
+            {loading && <Spinner className="position-absolute" />}
+            <Button color="success" className="mr-2" disabled={loading}>
+              Start Draft
+            </Button>
+          </div>
           {canEdit && defaultDraftFormat !== -1 && (
             <Button color="success" className="mr-3" onClick={onSetDefaultFormat} data-index={-1}>
               Make Default

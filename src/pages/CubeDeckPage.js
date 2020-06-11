@@ -83,17 +83,18 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
   const [draftId, setDraftId] = useState('');
 
   const haveBotsRedraft = useCallback(async () => {
-    setLoading(true);
-    const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
-      method: 'POST',
-    });
-    const json = await response.json();
-    Draft.init(json.draft);
-    setDraftId(Draft.id());
-    await Draft.allBotsDraft();
-    submitDeckForm.current.submit();
-    setLoading(false);
-  }, [draft._id]);
+    if (!loading) {
+      setLoading(true);
+      const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      Draft.init(json.draft);
+      setDraftId(Draft.id());
+      await Draft.allBotsDraft();
+      submitDeckForm.current.submit();
+    }
+  }, [draft._id, loading]);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">

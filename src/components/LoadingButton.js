@@ -14,7 +14,7 @@ const LoadingButton = ({ onClick, loading, ...props }) => {
     [onClick],
   );
 
-  const loadingControlled = typeof loading !== 'undefined';
+  const loadingControlled = loading !== null;
   const renderLoading = loadingControlled ? loading : stateLoading;
   const renderOnClick = loadingControlled ? onClick : handleClick;
 
@@ -30,7 +30,7 @@ LoadingButton.propTypes = {
   loading: PropTypes.bool,
 };
 LoadingButton.defaultProps = {
-  loading: undefined,
+  loading: null,
 };
 
 export default LoadingButton;
