@@ -253,6 +253,23 @@ block content
                 td(scope="col") #[code priceFoil<10 OR priceNormal<10]
                 td(scope="col") All cards with a price under $10.
       .card
+        #collapseTags-syntax.card-header(data-toggle="collapse" data-target="#collapseTags" aria-expanded="true" aria-controls="collapseTags")
+          button(class="btn btn-link" type="button")
+            h5 Tags
+        #collapseTags.collapse(aria-labelledby="collapsePrice-syntax" data-parent="#syntax-accordion")
+          p You can use #[code t:], #[code tag:], or #[code tags:] to filter cards by tag or tag count when in a cube.
+          p #[strong Examples:]
+            table.table
+              tr
+                td(scope="col") #[code t:Signed]
+                td(scope="col") All cards in a cube who have a tag named Signed, case insensitive.
+              tr
+                td(scope="col") #[code tags=0]
+                td(scope="col") All cards with no tags.
+              tr
+                td(scope="col") #[code tags>0]
+                td(scope="col") All cards with at least one tag.
+      .card
         #collapseMiscellaneous-syntax.card-header(data-toggle="collapse" data-target="#collapseMiscellaneous" aria-expanded="true" aria-controls="collapseMiscellaneous")
           button(class="btn btn-link" type="button")
             h5 Miscellaneous

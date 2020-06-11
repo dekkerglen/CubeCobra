@@ -13,6 +13,7 @@ import {
   manaCostOperation,
   castableCostOperation,
   setElementOperation,
+  setCountOperation,
   devotionOperation,
 } from 'filtering/FuncOperations';
 import {
@@ -107,7 +108,7 @@ powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => gener
 
 toughnessCondition -> ("tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', cardToughness, valuePred) %}
 
-tagCondition -> "tag"i stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
+tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
