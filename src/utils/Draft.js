@@ -91,7 +91,7 @@ export const calculateBasicCounts = (main, colors) => {
 
   for (const card of main) {
     for (const symbol of ['W', 'U', 'B', 'R', 'G']) {
-      symbols[symbol] += cardDevotion(card, symbol);
+      symbols[symbol] += cardDevotion(card, symbol) ?? 0;
     }
   }
   const colorWeights = Object.values(symbols);
