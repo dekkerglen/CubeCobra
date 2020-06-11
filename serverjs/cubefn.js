@@ -296,7 +296,7 @@ function CSVtoCards(csvString, carddb) {
         const matchingSetAndNumber = potentialIds.find((id) => {
           const dbCard = carddb.cardFromId(id);
           return (
-            upperSet === dbCard.set.toUpperCase() && card.collectorNumber === dbCard.collector_number.toUpperCase()
+            upperSet === dbCard.set.toUpperCase() && card.collector_number === dbCard.collector_number.toUpperCase()
           );
         });
         const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === upperSet);
