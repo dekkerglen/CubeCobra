@@ -116,7 +116,7 @@ export const getSynergy = (combination, card, picked, synergies) => {
       }
     }
   }
-  return Math.log(internalSynergy * synergy);
+  return Math.log(internalSynergy + synergy) + 13;
 };
 
 export const getOpenness = (combination, seen) => {

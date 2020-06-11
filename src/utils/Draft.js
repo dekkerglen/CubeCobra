@@ -107,7 +107,7 @@ export const calculateBasicCounts = (main, colors) => {
     R: 'Mountain',
     G: 'Forest',
   };
-  const desiredLength = Math.floor((40 * main.filter((c) => cardType(c).toLowerCase().includes('land').length)) / 23);
+  const desiredLength = Math.floor((40 * main.filter((c) => !cardType(c).toLowerCase().includes('land')).length) / 23);
   const toAdd = desiredLength - main.length;
   let added = 0;
   for (const [symbol, weight] of Object.entries(symbols)) {
