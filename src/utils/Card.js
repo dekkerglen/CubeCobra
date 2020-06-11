@@ -202,7 +202,7 @@ export const cardTokens = (card) => card.details.tokens;
 export const cardElo = (card) => card.details.elo;
 
 export const cardDevotion = (card, color) =>
-  cardCost(card).reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0);
+  cardCost(card)?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 
 export default {
   cardTags,

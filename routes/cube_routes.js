@@ -2918,6 +2918,12 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const cube = await Cube.findById(base.cube);
     const srcDraft = await Draft.findById(base.draft).lean();
 
+    for (const card of base.seats[req.params.index].pickorder) {
+      card.details = carddb.cardFromId(card.cardID);
+    }
+    for (const card of Object.values(srcDraft.basics)) {
+      card.details = carddb.cardFromId(card.cardID);
+    }
     const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
     userPicked.cards = [];
     deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
@@ -2926,6 +2932,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       userPicked,
       srcDraft.synergies,
       srcDraft.initial_state,
+      srcDraft.basics,
     );
 
     const deck = new Deck();
@@ -2948,6 +2955,9 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     let botNumber = 1;
     for (let i = 0; i < base.seats.length; i++) {
       if (i !== parseInt(req.params.index, 10)) {
+        for (const card of base.seats[i].pickorder) {
+          card.details = carddb.cardFromId(card.cardID);
+        }
         const picked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
         picked.cards = [];
         deckutil.default.addSeen(picked, base.seats[i].pickorder);
@@ -2956,6 +2966,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           base.seats[i].pickorder,
           picked,
           srcDraft.synergies,
+          srcDraft.initial_state,
+          srcDraft.basics,
         );
         deck.seats.push({
           userid: null,
@@ -3160,6 +3172,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
+    const draft = await Draft.findById(deck.draft);
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 
@@ -3194,6 +3207,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       cubeID: getCubeId(cube),
       initialDeck: deck,
       basics: getBasics(carddb),
+      draft,
     };
 
     return res.render('cube/cube_deckbuilder', {

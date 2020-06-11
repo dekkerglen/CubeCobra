@@ -184,7 +184,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
               deckid={deck._id}
               userid={userid}
               deck={deck}
-              seatIndex={seatIndex}
+              seatIndex={`${seatIndex}`}
               draft={draft}
               view={view}
             />

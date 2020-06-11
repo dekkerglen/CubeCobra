@@ -1,6 +1,6 @@
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
-import { COLOR_COMBINATIONS } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType } from 'utils/Card';
 
 import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
 
@@ -8,13 +8,13 @@ let draft = null;
 
 export function addSeen(seen, cards) {
   for (const card of cards) {
-    const colors = card.colors ?? card.details.colors ?? [];
+    const colors = cardColorIdentity(card);
     // We ignore colorless because they just reduce variance by
     // being in all color combinations.
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += getRating(comb, card);
+          seen[comb.join('')] += 10 ** ((card?.rating ?? 0) / 400);
         }
       }
     }
@@ -79,11 +79,53 @@ function getSortFn(bot) {
   };
 }
 
+export const calculateBasicCounts = (main, colors) => {
+  // add up colors
+  const symbols = {
+    W: 0,
+    U: 0,
+    B: 0,
+    R: 0,
+    G: 0,
+  };
+
+  for (const card of main) {
+    for (const symbol of ['W', 'U', 'B', 'R', 'G']) {
+      symbols[symbol] += cardDevotion(card, symbol) ?? 0;
+    }
+  }
+  const colorWeights = Object.values(symbols);
+  const totalColor = colorWeights.reduce((a, b) => {
+    return a + b;
+  }, 0);
+  const result = {};
+
+  const landDict = {
+    W: 'Plains',
+    U: 'Island',
+    B: 'Swamp',
+    R: 'Mountain',
+    G: 'Forest',
+  };
+  const desiredLength = Math.floor((40 * main.filter((c) => !cardType(c).toLowerCase().includes('land')).length) / 23);
+  const toAdd = desiredLength - main.length;
+  let added = 0;
+  for (const [symbol, weight] of Object.entries(symbols)) {
+    const amount = Math.floor((weight / totalColor) * toAdd);
+    result[landDict[symbol]] = amount;
+    added += amount;
+  }
+  for (let i = main.length + added; i < desiredLength; i++) {
+    result[landDict[colors[i % colors.length]]] += 1;
+  }
+  return result;
+};
+
 const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
   (fetchLands[card.details.name] && fetchLands[card.details.name].some((c) => colors.includes(c)));
 
-async function buildDeck(cards, picked, synergies, initialState, basics) {
+export async function buildDeck(cards, picked, synergies, initialState, basics) {
   let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
 
@@ -112,11 +154,7 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
   for (let i = 0; i < size; i++) {
     // add in new synergy data
     const scores = [];
-    if (played.cards.length > 0) {
-      scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
-    } else {
-      scores.push(nonlands.map((card) => getSynergy(colors, card, picked, synergies)));
-    }
+    scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
 
     let best = 0;
 
@@ -138,49 +176,14 @@ async function buildDeck(cards, picked, synergies, initialState, basics) {
   side.push(...unplayableLands);
   side.push(...nonlands);
 
-  // add basics
   if (basics) {
-    // add up colors
-    const symbols = {
-      W: 0,
-      U: 0,
-      B: 0,
-      R: 0,
-      G: 0,
-    };
-
-    for (const card of main) {
-      for (const symbol of card.colors ?? card.details.color_identity) {
-        symbols[symbol] += 1;
+    const basicsToAdd = calculateBasicCounts(main, colors);
+    for (const [basic, count] of Object.entries(basicsToAdd)) {
+      for (let i = 0; i < count; i++) {
+        main.push(basics[[basic]]);
       }
-    }
-    const colorWeights = Object.keys(symbols).map((c) => symbols[c]);
-    const totalColor = colorWeights.reduce((a, b) => {
-      return a + b;
-    }, 0);
-    const landDict = {
-      W: 'Plains',
-      U: 'Island',
-      B: 'Swamp',
-      R: 'Mountain',
-      G: 'Forest',
-    };
-
-    console.log(colorWeights);
-    console.log(totalColor);
-    console.log(40 - main.length);
-    for (let i = 0; i < 5; i++) {
-      const amount = Math.floor((colorWeights[i] / totalColor) * (40 - main.length));
-      console.log(`Adding ${amount} ${landDict[Object.keys(symbols)[i]]}`);
-      for (let j = 0; j < amount; j++) {
-        main.push(basics[landDict[Object.keys(symbols)[i]]]);
-      }
-    }
-    for (let i = main.length; i < 40; i++) {
-      main.push(basics[landDict[colors[i % colors.length]]]);
     }
   }
-
   const deck = [];
   const sideboard = [];
   for (let i = 0; i < 16; i += 1) {
@@ -397,6 +400,7 @@ export default {
   arrangePicks,
   botColors,
   buildDeck,
+  calculateBasicCounts,
   cube,
   finish,
   id,

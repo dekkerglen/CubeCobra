@@ -1,18 +1,14 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-
-import { Row, Col, ListGroup, ListGroupItem, Table } from 'reactstrap';
-
-import withAutocard from 'components/WithAutocard';
-import Tooltip from 'components/Tooltip';
 import PropTypes from 'prop-types';
+import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
+
+import HeaderCell from 'components/HeaderCell';
+import { getCardColorClass } from 'components/TagContext';
+import Tooltip from 'components/Tooltip';
+import withAutocard from 'components/WithAutocard';
+import useSortableData from 'hooks/UseSortableData';
 import { encodeName, COLOR_COMBINATIONS } from 'utils/Card';
 import { addSeen } from 'utils/Draft';
-import { fromEntries } from 'utils/Util';
-import { getCardColorClass } from 'components/TagContext';
-import useSortableData from 'hooks/UseSortableData';
-import HeaderCell from 'components/HeaderCell';
-
-import Query from 'utils/Query';
 import {
   getRating,
   getColor,
@@ -26,10 +22,13 @@ import {
   getFixingWeight,
   botRatingAndCombination,
 } from 'utils/draftbots';
+import Query from 'utils/Query';
+import { fromEntries } from 'utils/Util';
+import useToggle from 'hooks/UseToggle';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const getPackAsSeen = (initialState, seat, index, deck, seatIndex) => {
+export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   const cardsInPack = [];
 
   let start = 0;
@@ -58,54 +57,72 @@ const getPackAsSeen = (initialState, seat, index, deck, seatIndex) => {
     }
   }
 
-  return [cardsInPack, picks, pack];
+  // establish list of picks sepearted by packs
+  const seat = deck.seats[seatIndex];
+  const picksList = [];
+  let ind = 0;
+  let added = 0;
+  for (const list of initialState[0]) {
+    picksList.push(seat.pickorder.slice(added, added + list.length));
+    added += list.length;
+  }
+  for (const list of picksList) {
+    for (const card of list) {
+      card.index = ind;
+      ind += 1;
+    }
+  }
+
+  return [cardsInPack, picks, pack, picksList, seat];
 };
+
+const TRAITS = [
+  {
+    name: 'Rating',
+    description: 'The rating based on the Elo and current color commitments.',
+    weight: getRatingWeight,
+    function: (combination, card) => getRating(combination, card).toFixed(2),
+  },
+  {
+    name: 'Synergy',
+    description: 'A score of how well this card synergizes with the current picks.',
+    weight: getSynergyWeight,
+    function: (combination, card, picked, synergies) => getSynergy(combination, card, picked, synergies).toFixed(2),
+  },
+  {
+    name: 'Openness',
+    description: 'A score of how open these colors appear to be.',
+    weight: getOpennessWeight,
+    function: (combination, card, picked, synergies, seen) =>
+      getOpenness(combination, seen, card, picked, synergies).toFixed(2),
+  },
+  {
+    name: 'Color',
+    description: 'A score of how well these colors fit in with the current picks.',
+    weight: getColorWeight,
+    function: (combination, card, picked) => getColor(combination, picked, card).toFixed(2),
+  },
+  {
+    name: 'Fixing',
+    description: 'The value of how well this card solves mana issues.',
+    weight: getFixingWeight,
+    function: (combination, card, picked) => getFixing(combination, picked, card).toFixed(2),
+  },
+  {
+    name: 'Combination',
+    description: 'This is the color combination the bot is assuming that will maximize the total score.',
+  },
+  {
+    name: 'Total',
+    description: 'The total calculated score.',
+  },
+];
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [index, setIndex] = useState(defaultIndex ?? 0);
   const didMountRef1 = useRef(false);
+  const [normalized, toggleNormalized] = useToggle(false);
 
-  const traits = [
-    {
-      name: 'Rating',
-      description: 'The rating based on the Elo and current color commitments.',
-      weight: getRatingWeight,
-      function: (combination, card) => getRating(combination, card).toFixed(2),
-    },
-    {
-      name: 'Synergy',
-      description: 'A score of how well this card synergizes with the current picks.',
-      weight: getSynergyWeight,
-      function: (combination, card, picked, synergies) => getSynergy(combination, card, picked, synergies).toFixed(2),
-    },
-    {
-      name: 'Openness',
-      description: 'A score of how open these colors appear to be.',
-      weight: getOpennessWeight,
-      function: (combination, card, picked, synergies, overallPool, seen) =>
-        getOpenness(combination, seen, overallPool, card, picked, synergies).toFixed(2),
-    },
-    {
-      name: 'Color',
-      description: 'A score of how well these colors fit in with the current picks.',
-      weight: getColorWeight,
-      function: (combination, card, picked) => getColor(combination, picked, card).toFixed(2),
-    },
-    {
-      name: 'Fixing',
-      description: 'The value of how well this card solves mana issues.',
-      weight: getFixingWeight,
-      function: (combination, card, picked) => getFixing(combination, picked, card).toFixed(2),
-    },
-    {
-      name: 'Combination',
-      description: 'This is the color combination the bot is assuming that will maximize the total score.',
-    },
-    {
-      name: 'Total',
-      description: 'The total calculated score.',
-    },
-  ];
   useEffect(() => {
     if (didMountRef1.current) {
       Query.set('pick', index);
@@ -125,49 +142,35 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     }
   };
 
-  const seat = deck.seats[seatIndex];
-
-  // establish list of picks sepearted by packs
-  const picksList = [];
-  let ind = 0;
-  let added = 0;
-  for (const list of draft.initial_state[0]) {
-    picksList.push(seat.pickorder.slice(added, added + list.length));
-    added += list.length;
-  }
-  for (const list of picksList) {
-    for (const card of list) {
-      card.index = ind;
-      ind += 1;
-    }
-  }
-
   // find the information for the selected pack
-  const [cardsInPack, picks, pack] = getPackAsSeen(draft.initial_state, seat, index, deck, seatIndex);
+  const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
   const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   picked.cards = [];
   addSeen(picked, seat.pickorder.slice(0, index));
-  const seen = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  seen.cards = [];
-  const overallPool = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  overallPool.cards = [];
 
-  // this is an O(n^3) operation, but it should be ok
-  addSeen(overallPool, deck.seats.map((item) => item.pickorder).flat());
-  for (let i = 0; i <= parseInt(index, 10); i++) {
-    console.log(getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex));
-    addSeen(seen, getPackAsSeen(draft.initial_state, seat, i, deck, seatIndex)[0]);
-  }
+  const seen = useMemo(() => {
+    const res = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    res.cards = [];
+
+    // this is an O(n^3) operation, but it should be ok
+    for (let i = 0; i <= parseInt(index, 10); i++) {
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
+    }
+    return res;
+  }, [deck, draft, index, seatIndex]);
 
   // load the weights for the selected pack
-  const weights = [];
-  for (let i = 0; i < traits.length - 2; i++) {
-    weights.push({
-      name: traits[i].name,
-      description: traits[i].description,
-      value: traits[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
-    });
-  }
+  const weights = useMemo(() => {
+    const res = [];
+    for (let i = 0; i < TRAITS.length - 2; i++) {
+      res.push({
+        name: TRAITS[i].name,
+        description: TRAITS[i].description,
+        value: TRAITS[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
+      });
+    }
+    return res;
+  }, [draft, pack, picks]);
 
   for (const card of cardsInPack) {
     card.scores = [];
@@ -181,11 +184,28 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       pack + 1,
     );
 
-    for (let i = 0; i < traits.length - 2; i++) {
-      card.scores.push(traits[i].function(combination, card, picked, draft.synergies, overallPool, seen));
+    for (let i = 0; i < TRAITS.length - 2; i++) {
+      card.scores.push(TRAITS[i].function(combination, card, picked, draft.synergies, seen));
     }
     card.scores.push(combination.join(''));
     card.scores.push(score.toFixed(2));
+  }
+  if (normalized) {
+    for (let i = 0; i < TRAITS.length - 2; i++) {
+      let minScore = cardsInPack[0].scores[i];
+      let maxScore = cardsInPack[0].scores[i];
+      for (const card of cardsInPack) {
+        if (card.scores[i] < minScore) {
+          minScore = card.scores[i];
+        }
+        if (card.scores[i] > maxScore) {
+          maxScore = card.scores[i];
+        }
+      }
+      for (const card of cardsInPack) {
+        card.scores[i] = `+${(card.scores[i] - minScore).toFixed(2)}`;
+      }
+    }
   }
 
   const counts = useMemo(() => {
@@ -194,13 +214,12 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     for (const card of cardsInPack) {
       const row = { card };
       for (let i = 0; i < card.scores.length; i++) {
-        row[traits[i].name] = card.scores[i];
+        row[TRAITS[i].name] = card.scores[i];
       }
       res.push(row);
     }
     return res;
-  }, [cardsInPack, traits]);
-  console.log(counts);
+  }, [cardsInPack]);
 
   const { items, requestSort, sortConfig } = useSortableData(counts);
 
@@ -209,8 +228,8 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       <h4>Pick Order</h4>
       <Row>
         {picksList.map((list, listindex) => (
-          <Col xs={6} sm={3}>
-            <ListGroup key={/* eslint-disable-line react/no-array-index-key */ listindex} className="list-outline">
+          <Col xs={6} sm={3} key={/* eslint-disable-line react/no-array-index-key */ listindex}>
+            <ListGroup className="list-outline">
               <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
               {list.map((card) => (
                 <AutocardItem
@@ -233,11 +252,14 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
         ))}
       </Row>
       <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
+      <Label check>
+        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
+      </Label>
       <Table bordered responsive className="small-table mt-lg-3">
         <thead>
           <tr>
             <td />
-            {traits.map((trait) => (
+            {TRAITS.map((trait) => (
               <HeaderCell
                 label={trait.name}
                 fieldName={trait.name}
@@ -258,7 +280,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
                   </a>
                 </AutocardItem>
               </th>
-              {traits.map((trait) => (
+              {TRAITS.map((trait) => (
                 <td key={trait.name}>{item[trait.name]}</td>
               ))}
             </tr>
@@ -289,7 +311,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 DraftbotBreakdown.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    synergies: PropTypes.shape({}).isRequired,
+    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
   }).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
@@ -308,7 +330,7 @@ DraftbotBreakdown.propTypes = {
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
-  seatIndex: PropTypes.number.isRequired,
+  seatIndex: PropTypes.string.isRequired,
   defaultIndex: PropTypes.number,
 };
 
