@@ -2,7 +2,18 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, Input, Button } from 'reactstrap';
+import {
+  Col,
+  Row,
+  Table,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
+  Input,
+  Button,
+  Form,
+} from 'reactstrap';
 
 import calculate from 'utils/CalculateHyperGeom';
 
@@ -66,7 +77,8 @@ const HyperGeom = () => {
     setData([]);
   };
 
-  const submit = () => {
+  const submit = (event) => {
+    event.preventDefault();
     try {
       const { equalTo, lessThan, lessThanEqual, greaterThan, greaterThanEqual } = calculate(
         populationSize,
@@ -220,37 +232,39 @@ const HyperGeom = () => {
         .
       </p>
       <>
-        <TextField
-          name="1"
-          humanName="Population size"
-          placeholder="e.g. the size of the cube"
-          value={populationSize}
-          onChange={(event) => setPopulationSize(event.target.value)}
-        />
-        <TextField
-          name="2"
-          humanName="Number of successes in population"
-          placeholder="e.g. the amount of cards of a certain type in the cube"
-          value={popSuccesses}
-          onChange={(event) => setPopSuccesses(event.target.value, 10)}
-        />
-        <TextField
-          name="2"
-          humanName="Sample size"
-          placeholder="e.g. the amount of cards in the draft pod"
-          value={sampleSize}
-          onChange={(event) => setSampleSize(event.target.value, 10)}
-        />
-        <TextField
-          name="2"
-          humanName="Number of successes in sample (x)"
-          placeholder="e.g. the amount of cards in the draft pod that should be of the type"
-          value={sampleSuccesses}
-          onChange={(event) => setSampleSuccesses(event.target.value, 10)}
-        />
-        <Button className="mb-3" color="success" block onClick={submit}>
-          Calculate
-        </Button>
+        <Form onSubmit={submit}>
+          <TextField
+            name="1"
+            humanName="Population size"
+            placeholder="e.g. the size of the cube"
+            value={populationSize}
+            onChange={(event) => setPopulationSize(event.target.value)}
+          />
+          <TextField
+            name="2"
+            humanName="Number of successes in population"
+            placeholder="e.g. the amount of cards of a certain type in the cube"
+            value={popSuccesses}
+            onChange={(event) => setPopSuccesses(event.target.value, 10)}
+          />
+          <TextField
+            name="2"
+            humanName="Sample size"
+            placeholder="e.g. the amount of cards in the draft pod"
+            value={sampleSize}
+            onChange={(event) => setSampleSize(event.target.value, 10)}
+          />
+          <TextField
+            name="2"
+            humanName="Number of successes in sample (x)"
+            placeholder="e.g. the amount of cards in the draft pod that should be of the type"
+            value={sampleSuccesses}
+            onChange={(event) => setSampleSuccesses(event.target.value, 10)}
+          />
+          <Button className="mb-3" color="success" block>
+            Calculate
+          </Button>
+        </Form>
         <TextDisplay humanName={`Hypergeometric Probability: P(X = ${sampleSuccesses})`} value={et} />
         <TextDisplay humanName={`Cumulative Probability: P(X < ${sampleSuccesses})`} value={lt} />
         <TextDisplay humanName={`Cumulative Probability: P(X <= ${sampleSuccesses})`} value={lte} />
