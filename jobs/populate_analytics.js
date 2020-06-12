@@ -5,6 +5,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
+const fetch = require('node-fetch');
 
 const { GetPrices } = require('../serverjs/prices');
 const carddb = require('../serverjs/cards.js');
@@ -17,6 +18,8 @@ const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
 const d = new Date();
 const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+const embeddings = {};
 
 const cardUses = {};
 const cardSizeUses = {
@@ -185,6 +188,7 @@ async function processCard(card) {
   currentDatapoint.rating = rating ? rating.rating : null;
   currentDatapoint.elo = rating ? rating.elo : null;
   currentDatapoint.picks = rating ? rating.picks : 0;
+  // currentDatapoint.embedding = embeddings[card.name_lower];
 
   currentDatapoint.total = cardUses[oracle_id] ? [cardUses[oracle_id], cardUses[oracle_id] / cubeCounts.total] : [0, 0];
   for (const cubeCategory of Object.keys(cardSizeUses)) {
@@ -252,7 +256,39 @@ async function processCard(card) {
 (async () => {
   await carddb.initializeCardDb();
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
+    console.log('creating correlation matrix...');
     createCorrelations();
+
+    /*
+    console.log('fetching embeddings...');
+
+    const allIds = carddb.allOracleIds();
+    const batchSize = 500;
+    for (let i = 0; i < allIds.length; i += batchSize) {
+      const batch = allIds.slice(i * batchSize, (i + 1) * batchSize);
+
+      const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cards: batch.map((oracleId) => carddb.getVersionsByOracleId(oracleId)[0].name_lower),
+        }),
+      });
+      if (response.ok) {
+        const json = await response.json();
+
+        for (const key of Object.keys(json)) {
+          embeddings[key] = json[key];
+        }
+      } else {
+        console.log(`Missed an embedding batch`);
+        i -= batchSize;
+      }
+    }
+
+    console.log(embeddings);
+
+    */
 
     // process all cube objects
     console.log('Started: cubes');

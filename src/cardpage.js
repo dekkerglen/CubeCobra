@@ -12,8 +12,20 @@ import CountTableRow from 'components/CountTableRow';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-const CardPage = ({ card, data, prices, related }) => {
+const CardPage = ({ card, data, related }) => {
   const cardList = related.map((item) => ({ details: item }));
+
+  let prices = {};
+
+  console.log(card);
+  console.log(data);
+
+  for (const price of data.current.prices) {
+    if (price.version === card._id) {
+      prices = price;
+    }
+  }
+
   return (
     <Card className="mt-2">
       <CardHeader>
@@ -43,13 +55,9 @@ const CardPage = ({ card, data, prices, related }) => {
               alt={card.name}
             />
             <div className="price-area">
-              {prices[card.tcgplayer_id] && (
-                <div className="card-price">TCGPlayer Market: {prices[card.tcgplayer_id].toFixed(2)}</div>
-              )}
-              {prices[`${card.tcgplayer_id}_foil`] && (
-                <div className="card-price">
-                  Foil TCGPlayer Market: {prices[`${card.tcgplayer_id}_foil`].toFixed(2)}
-                </div>
+              {prices.price && <div className="card-price">TCGPlayer Market: {prices.price.toFixed(2)}</div>}
+              {prices.price_foil && (
+                <div className="card-price">Foil TCGPlayer Market: {prices.price_foil.toFixed(2)}</div>
               )}
               {card.elo && <div className="card-price">Elo: {card.elo}</div>}
             </div>
@@ -125,7 +133,6 @@ CardPage.propTypes = {
       total: PropTypes.arrayOf(PropTypes.number).isRequired,
     }),
   }).isRequired,
-  prices: PropTypes.objectOf(PropTypes.number).isRequired,
   related: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
