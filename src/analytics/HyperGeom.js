@@ -44,7 +44,7 @@ const inputs = [
 
 const HyperGeom = () => {
   const [populationSize, setPopulationSize] = useState('');
-  const [popSuccesses, sePopSuccesses] = useState('');
+  const [popSuccesses, setPopSuccesses] = useState('');
   const [sampleSize, setSampleSize] = useState('');
   const [sampleSuccesses, setSampleSuccesses] = useState('');
   const [data, setData] = useState([]);
@@ -95,9 +95,11 @@ const HyperGeom = () => {
     return Math.min(Math.max(val, min), max);
   };
 
-  const calculate = (N, S, n, s) => {
-    const keys = [...Array(parseInt(s, 10) + 1).keys()];
-    const values = keys.map((x) => hyp(parseInt(N, 10), parseInt(S, 10), parseInt(n, 10), x));
+  const calculate = (populationSize, sampleSize, popSuccesses, sampleSuccesses) => {
+    const keys = [...Array(parseInt(sampleSuccesses, 10) + 1).keys()];
+    const values = keys.map((x) =>
+      hyp(parseInt(populationSize, 10), parseInt(sampleSize, 10), parseInt(popSuccesses, 10), x),
+    );
     const equalTo = clamp(values[values.length - 1], 0, 1);
     const lessThan = clamp(values.reduce((a, b) => a + b, 0) - equalTo, 0, 1);
     const lessThanEqual = clamp(lessThan + equalTo, 0, 1);
@@ -119,8 +121,8 @@ const HyperGeom = () => {
     try {
       const { equalTo, lessThan, lessThanEqual, greaterThan, greaterThanEqual } = calculate(
         populationSize,
-        popSuccesses,
         sampleSize,
+        popSuccesses,
         sampleSuccesses,
       );
 
@@ -200,28 +202,28 @@ const HyperGeom = () => {
   const plotPopSize = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(i, dataset.popSuccesses, dataset.sampleSize, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(i, dataset.sampleSize, dataset.popSuccesses, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotPopSuccess = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, i, dataset.sampleSize, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, dataset.sampleSize, i, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotSampleSize = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, dataset.popSuccesses, i, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, i, dataset.popSuccesses, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotSampleSuccess = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, dataset.popSuccesses, dataset.sampleSize, i).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, dataset.sampleSize, dataset.popSuccesses, i).greaterThanEqual);
     }
     return res;
   };
@@ -277,7 +279,7 @@ const HyperGeom = () => {
           humanName="Number of successes in population"
           placeholder=""
           value={popSuccesses}
-          onChange={(event) => sePopSuccesses(event.target.value, 10)}
+          onChange={(event) => setPopSuccesses(event.target.value, 10)}
         />
         <TextField
           name="2"
