@@ -3244,7 +3244,7 @@ router.get('/deck/:id', async (req, res) => {
 
     let draft = null;
     if (deck.draft) {
-      draft = await Draft.findById(deck.draft).lean();
+      draft = await Draft.findById(deck.draft);
       if (!draft.synergies) {
         // put in synergies for old drafts that don't have em.
         const cards = draft.initial_state.flat(3);
