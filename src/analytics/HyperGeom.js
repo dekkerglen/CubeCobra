@@ -261,7 +261,7 @@ const HyperGeom = () => {
             value={sampleSuccesses}
             onChange={(event) => setSampleSuccesses(event.target.value, 10)}
           />
-          <Button className="mb-3" color="success" block>
+          <Button type="submit" className="mb-3" color="success" block>
             Calculate
           </Button>
         </Form>
