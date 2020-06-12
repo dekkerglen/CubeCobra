@@ -219,7 +219,7 @@ async function processCard(card) {
 
   // quickselect isn't sorting correctly for some reason
   cubedWith.sort((first, second) => {
-    return second[1] - first[1];
+    return second.count - first.count;
   });
 
   let cardHistory = await CardHistory.findOne({ oracleId: oracle_id });

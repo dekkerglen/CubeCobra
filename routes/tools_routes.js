@@ -3,9 +3,7 @@ const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
-const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
-const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 
