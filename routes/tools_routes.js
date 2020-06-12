@@ -159,7 +159,7 @@ router.get('/topcards', async (req, res) => {
       defaultData: data,
       defaultFilterText: req.query.f || '',
     };
-    res.render('tool/topcards', {
+    return res.render('tool/topcards', {
       reactProps: serialize(reactProps),
       title: 'Top Cards',
     });
