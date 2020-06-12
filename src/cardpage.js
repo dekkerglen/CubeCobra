@@ -17,9 +17,6 @@ const CardPage = ({ card, data, related }) => {
 
   let prices = {};
 
-  console.log(card);
-  console.log(data);
-
   for (const price of data.current.prices) {
     if (price.version === card._id) {
       prices = price;
@@ -117,9 +114,16 @@ CardPage.propTypes = {
     image_normal: PropTypes.string.isRequired,
     scryfall_uri: PropTypes.string.isRequired,
     tcgplayer_id: PropTypes.string.isRequired,
+    _id: PropTypes.string.isRequired,
   }).isRequired,
   data: PropTypes.shape({
     current: PropTypes.shape({
+      prices: PropTypes.arrayOf(
+        PropTypes.shape({
+          price: PropTypes.number,
+          price_foil: PropTypes.number,
+        }),
+      ).isRequired,
       vintage: PropTypes.bool.isRequired,
       legacy: PropTypes.bool.isRequired,
       modern: PropTypes.bool.isRequired,
