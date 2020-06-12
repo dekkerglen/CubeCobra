@@ -5,7 +5,6 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const fetch = require('node-fetch');
 
 const { GetPrices } = require('../serverjs/prices');
 const carddb = require('../serverjs/cards.js');
@@ -19,9 +18,8 @@ const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 const d = new Date();
 const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
-const embeddings = {};
-
 const cardUses = {};
+
 const cardSizeUses = {
   size180: {},
   size360: {},
@@ -180,7 +178,7 @@ async function processCard(card) {
   const { name, oracle_id } = card;
 
   const pricesQ = GetPrices(tcgplayerIds);
-  const ratingQ = CardRating.findOne({ cardName: name });
+  const ratingQ = CardRating.findOne({ name });
 
   const [prices, rating] = await Promise.all([pricesQ, ratingQ]);
 
