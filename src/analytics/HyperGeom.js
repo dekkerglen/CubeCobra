@@ -258,6 +258,10 @@ const HyperGeom = () => {
       <h4 className="d-lg-block d-none">Hypergeometric Calculator</h4>
       <p>
         This Hypergeometric Calculator makes it easy to compute individual and cumulative hypergeometric probabilities.
+        This can be useful to determine the probabilty to have a minimum amount of a certain type of card (e.g.
+        cantrips) in a draft pool given the amount of those cards in the cube overall. Another use case is to calculate
+        the probabilty of having cards of a certain type (e.g. aggro one-drops) in an opening hand of a deck, given the
+        amount of those cards in the deck.
       </p>
       <p>
         View information on how to use this tool{' '}
@@ -270,28 +274,28 @@ const HyperGeom = () => {
         <TextField
           name="1"
           humanName="Population size"
-          placeholder=""
+          placeholder="e.g. the size of the cube"
           value={populationSize}
           onChange={(event) => setPopulationSize(event.target.value)}
         />
         <TextField
           name="2"
           humanName="Number of successes in population"
-          placeholder=""
+          placeholder="e.g. the amount of cards of a certain type in the cube"
           value={popSuccesses}
           onChange={(event) => setPopSuccesses(event.target.value, 10)}
         />
         <TextField
           name="2"
           humanName="Sample size"
-          placeholder=""
+          placeholder="e.g. the amount of cards in the draft pod"
           value={sampleSize}
           onChange={(event) => setSampleSize(event.target.value, 10)}
         />
         <TextField
           name="2"
           humanName="Number of successes in sample (x)"
-          placeholder=""
+          placeholder="e.g. the amount of cards in the draft pod that should be of the type"
           value={sampleSuccesses}
           onChange={(event) => setSampleSuccesses(event.target.value, 10)}
         />
