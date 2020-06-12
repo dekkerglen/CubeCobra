@@ -7,6 +7,7 @@ const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
+const util = require('../serverjs/util.js');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
@@ -158,13 +159,12 @@ router.get('/topcards', async (req, res) => {
       defaultData: data,
       defaultFilterText: req.query.f || '',
     };
-    res.render('tool/topcards', {
+    return res.render('tool/topcards', {
       reactProps: serialize(reactProps),
       title: 'Top Cards',
     });
   } catch (err) {
-    req.logger.error(err);
-    res.sendStatus(500);
+    return util.handleRouteError(req, res, err, `/404`);
   }
 });
 
