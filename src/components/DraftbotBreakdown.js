@@ -63,7 +63,7 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   let ind = 0;
   let added = 0;
   for (const list of initialState[0]) {
-    picksList.push(seat.pickorder.slice(added, added + list.length));
+    picksList.push(seat.pickorder.slice(added, added + list.length).map((c) => ({ ...c })));
     added += list.length;
   }
   for (const list of picksList) {
