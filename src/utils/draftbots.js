@@ -160,7 +160,7 @@ export const getFixing = (combination, _, card) => {
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[cardName(card)];
   const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
-  let score = card.rating;
+  let score = 1;
   // Guaranteed contains by botRatingAndCombination
   if (isLand || isFetch) {
     score /= COLOR_SCALING_FACTOR[combination.length];
@@ -187,7 +187,7 @@ export const getFixing = (combination, _, card) => {
   } else {
     score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];
   }
-  return Math.min(10, score / 1000);
+  return Math.min(10, score);
 };
 
 export const getRatingWeight = (pack, pick, initialState) => {
