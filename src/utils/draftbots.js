@@ -118,7 +118,7 @@ export const getSynergy = (combination, card, picked, synergies) => {
       }
     }
   }
-  return Math.max(0, (synergy + internalSynergy) * 10);
+  return Math.max(0, (synergy + internalSynergy) * 7);
 };
 
 export const getOpenness = (combination, seen) => {
