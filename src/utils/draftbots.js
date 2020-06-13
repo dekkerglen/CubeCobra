@@ -11,19 +11,19 @@ const COLORS_WEIGHTS = [
   [5, 5.2, 5.4, 5.5, 5.6, 5.8, 6, 6.2, 6.4, 6.5, 6.6, 6.8, 7, 7.2, 7.5],
 ];
 const RATING_WEIGHTS = [
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 const FIXING_WEIGHTS = [
+  [0.1, 0.3, 0.6, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 const SYNERGY_WEIGHTS = [
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4],
-  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7],
+  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 const OPENNESS_WEIGHTS = [
   [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
@@ -93,30 +93,32 @@ export const getSynergy = (combination, card, picked, synergies) => {
     return 0;
   }
 
-  let synergy = 0.000001;
-  let internalSynergy = 0.000001;
+  let synergy = 0;
+  let internalSynergy = 0;
   if (synergies) {
     const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
+
     let count = 0;
     for (let i = 1; i < pickedInCombo.length; i++) {
       for (let j = 0; j < i; j++) {
-        internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 10;
+        internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 5;
         count += 1;
       }
     }
     if (count) {
       internalSynergy /= count;
     }
+
     if (card) {
       for (const { index } of pickedInCombo) {
-        synergy += similarity(synergies[index], synergies[card.index]) ** 10;
+        synergy += similarity(synergies[index], synergies[card.index]) ** 5;
       }
       if (pickedInCombo.length) {
         synergy /= pickedInCombo.length;
       }
     }
   }
-  return Math.log(internalSynergy + synergy) + 13;
+  return Math.max(0, (synergy + internalSynergy) * 7);
 };
 
 export const getOpenness = (combination, seen) => {
@@ -129,9 +131,16 @@ export const getOpenness = (combination, seen) => {
 };
 
 export const getColor = (combination, picked, card) => {
-  return Math.log(
-    COLOR_SCALING_FACTOR[combination.length] * (picked[combination.join('')] + 10 ** ((card?.rating ?? 0) / 400)),
-  );
+  if (picked.cards.length === 0) {
+    return 0;
+  }
+  let count = picked.cards.filter((card2) => considerInCombination(combination, card2)).length;
+
+  if (considerInCombination(combination, card)) {
+    count += 1;
+  }
+
+  return (count / picked.cards.length) * 10 * COLOR_SCALING_FACTOR[combination.length];
 };
 
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
@@ -141,34 +150,40 @@ export const getFixing = (combination, _, card) => {
   const typeLine = cardType(card);
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[cardName(card)];
+  const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
+  const isRainbow = card.details.oracle_text && card.details.oracle_text.includes('mana of any color');
+  const fetchesBasics =
+    card.details.oracle_text &&
+    card.details.oracle_text.includes('basic land') &&
+    card.details.oracle_text.includes('basic land');
 
+  let score = 1;
   // Guaranteed contains by botRatingAndCombination
   if (isLand || isFetch) {
-    let score = 1 / COLOR_SCALING_FACTOR[combination.length];
+    score /= COLOR_SCALING_FACTOR[combination.length];
 
-    const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
     if (hasBasicTypes) {
       score *= 1.5;
     }
     if (isFetch) {
       score *= 2;
     }
-
-    switch (colors.length) {
-      case 0:
-        return 0;
-      case 1:
-        break;
-      case 2:
-        score *= 2;
-        break;
-      default:
-        score *= Math.min(colors.length, combination.length);
-        break;
+    if (fetchesBasics) {
+      score *= 3;
     }
-    return score;
+    if (isRainbow) {
+      score *= 4;
+    }
+    if (colors.length === 2) {
+      score *= 2;
+    }
+    if (colors.length === 3) {
+      score *= 2.5;
+    }
+  } else {
+    score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];
   }
-  return 0;
+  return Math.min(10, score);
 };
 
 export const getRatingWeight = (pack, pick, initialState) => {
@@ -207,7 +222,11 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
         getColor(combination, picked, card) * getColorWeight(packNum, pickNum, initialState) +
         getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState);
     } else if (!card) {
-      rating = Math.log(COLOR_SCALING_FACTOR[combination.length] * picked[combination.join('')]);
+      rating = Math.log(
+        COLOR_SCALING_FACTOR[combination.length] *
+          picked[combination.join('')] *
+          picked.cards.filter((card2) => considerInCombination(combination, card2)).length,
+      );
     }
     if (rating > bestRating) {
       bestRating = rating;
