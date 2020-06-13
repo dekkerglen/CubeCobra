@@ -12,7 +12,8 @@ import { addSeen } from 'utils/Draft';
 import {
   getRating,
   getColor,
-  getSynergy,
+  getInternalSynergy,
+  getPickSynergy,
   getOpenness,
   getFixing,
   getRatingWeight,
@@ -84,10 +85,16 @@ const TRAITS = [
     function: (combination, card) => getRating(combination, card).toFixed(2),
   },
   {
+    name: 'Internal Synergy',
+    description: 'A score of how well current picks in these colors synergize with each other.',
+    weight: getSynergyWeight,
+    function: (combination, card, picked, synergies) => getInternalSynergy(combination, picked, synergies).toFixed(2),
+  },
+  {
     name: 'Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (combination, card, picked, synergies) => getSynergy(combination, card, picked, synergies).toFixed(2),
+    function: (combination, card, picked, synergies) => getPickSynergy(combination, card, picked, synergies).toFixed(2),
   },
   {
     name: 'Openness',

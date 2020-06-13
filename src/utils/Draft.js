@@ -2,10 +2,11 @@ import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
 import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType } from 'utils/Card';
 
-import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
+import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getPickSynergy } from 'utils/draftbots';
 
 let draft = null;
 
+// This function tracks the total goodness of the cards we've seen or picked in this color.
 export function addSeen(seen, cards) {
   for (const card of cards) {
     const colors = cardColorIdentity(card);
@@ -14,7 +15,8 @@ export function addSeen(seen, cards) {
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += 10 ** ((card?.rating ?? 0) / 400);
+          // Bad cards (under 1200) should count as 0. Above that, exponential approach to 1.
+          seen[comb.join('')] += 1 - Math.exp(-Math.max((card?.rating ?? 1200) / 400 - 3, 0));
         }
       }
     }
@@ -154,7 +156,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   for (let i = 0; i < size; i++) {
     // add in new synergy data
     const scores = [];
-    scores.push(nonlands.map((card) => getSynergy(colors, card, played, synergies)));
+    scores.push(nonlands.map((card) => getPickSynergy(colors, card, played, synergies)));
 
     let best = 0;
 
