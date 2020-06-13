@@ -137,19 +137,10 @@ export const getColor = (combination, picked, card) => {
   let count = picked.cards.filter((card2) => considerInCombination(combination, card2)).length;
 
   if (considerInCombination(combination, card)) {
-    count++;
+    count += 1;
   }
 
   return (count / picked.cards.length) * 10 * COLOR_SCALING_FACTOR[combination.length];
-
-  return Math.max(
-    0,
-    (Math.log(
-      COLOR_SCALING_FACTOR[combination.length] * (picked[combination.join('')] + 10 ** ((card?.rating ?? 0) / 400)),
-    ) -
-      12) *
-      5,
-  );
 };
 
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
