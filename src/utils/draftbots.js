@@ -170,37 +170,23 @@ export const getColor = (combination, picked) => {
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
 // Does this help us fix for this combination of colors?
-// Scale from 0-1.
+// Scale from 0-1. Perfect is double-on-color fetch.
 export const getFixing = (combination, _, card) => {
   const colors = fetchLands[card.details.name] ?? cardColorIdentity(card);
   const typeLine = cardType(card);
   const isLand = typeLine.indexOf('Land') > -1;
   const isFetch = !!fetchLands[cardName(card)];
 
-  // Guaranteed contains by botRatingAndCombination
-  if (isLand || isFetch) {
-    let score = 0.25;
-
+  if (isLand) {
+    const overlap = colors.filter((c) => combination.includes(c)).length;
     const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
+    if (isFetch) {
+      return overlap;
+    }
     if (hasBasicTypes) {
-      score *= 1.5;
-    } else if (isFetch) {
-      score *= 2;
+      return 0.75 * overlap;
     }
-
-    switch (colors.length) {
-      case 0:
-        return 0;
-      case 1:
-        break;
-      case 2:
-        score *= 2;
-        break;
-      default:
-        score *= Math.min(colors.length, combination.length);
-        break;
-    }
-    return score;
+    return 0.5 * overlap;
   }
   return 0;
 };
@@ -230,7 +216,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
-  let bestRating = -1;
+  let bestRating = -10000;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
     let rating = 0;
