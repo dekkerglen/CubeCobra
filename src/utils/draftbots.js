@@ -94,8 +94,20 @@ export const getSynergy = (combination, card, picked, synergies) => {
   }
 
   let synergy = 0;
+  let internalSynergy = 0;
   if (synergies) {
     const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
+
+    let count = 0;
+    for (let i = 1; i < pickedInCombo.length; i++) {
+      for (let j = 0; j < i; j++) {
+        internalSynergy += similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]) ** 5;
+        count += 1;
+      }
+    }
+    if (count) {
+      internalSynergy /= count;
+    }
 
     if (card) {
       for (const { index } of pickedInCombo) {
@@ -106,7 +118,7 @@ export const getSynergy = (combination, card, picked, synergies) => {
       }
     }
   }
-  return Math.max(0, synergy * 10);
+  return Math.max(0, (synergy + internalSynergy) * 10);
 };
 
 export const getOpenness = (combination, seen) => {
