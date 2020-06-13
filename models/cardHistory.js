@@ -5,6 +5,7 @@ const Datapoint = {
   rating: Number,
   picks: Number,
   cubes: Number,
+  embedding: [Number],
   prices: [
     {
       version: String,

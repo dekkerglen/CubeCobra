@@ -59,7 +59,7 @@ function cardFromId(id, fields) {
     details = data._carddict[id];
   } else {
     // TODO: replace this back with error. it was clogging the logs.
-    winston.info(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
+    // winston.info(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
