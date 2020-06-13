@@ -3,9 +3,7 @@ const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
-const { GetPrices } = require('../serverjs/prices');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
-const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 
@@ -82,20 +80,22 @@ async function topCards(filter) {
   const dataQ = Promise.all(
     ['rating', 'elo', 'picks', 'cubes'].map(async (field) => {
       const sorted = await CardHistory.find(query).sort(`-current.${field}`).limit(MAX_RESULTS).lean();
-      return sorted.map(({ oracleId, current }) => {
-        const { rating, elo, picks, cubes } = current;
-        const qualifies = picks !== undefined && picks > MIN_PICKS;
-        const version = selectedVersions.get(oracleId);
-        return [
-          version.name,
-          version.image_normal,
-          version.image_flip || null,
-          qualifies && rating !== undefined ? adjust(rating) : null,
-          picks !== undefined ? picks : 0,
-          qualifies && elo !== undefined ? elo : null,
-          cubes !== undefined ? cubes : 0,
-        ];
-      });
+      return sorted
+        .filter(({ oracleId }) => selectedVersions.has(oracleId))
+        .map(({ oracleId, current }) => {
+          const { rating, elo, picks, cubes } = current;
+          const qualifies = picks !== undefined && picks > MIN_PICKS;
+          const version = selectedVersions.get(oracleId);
+          return [
+            version.name,
+            version.image_normal,
+            version.image_flip || null,
+            qualifies && rating !== undefined ? adjust(rating) : null,
+            picks !== undefined ? picks : 0,
+            qualifies && elo !== undefined ? elo : null,
+            cubes !== undefined ? cubes : 0,
+          ];
+        });
     }),
   );
   const numResultsQ = CardHistory.estimatedDocumentCount(query);
@@ -183,9 +183,15 @@ router.get('/card/:id', async (req, res) => {
       return res.redirect(`/tool/card/${english}`);
     }
 
+    // if id is a scryfall ID, redirect to oracle
+    const scryfall = carddb.cardFromId(req.params.id);
+    if (!scryfall.error) {
+      return res.redirect(`/tool/card/${scryfall.oracle_id}`);
+    }
+
     // otherwise just go to this ID.
-    const card = carddb.cardFromId(req.params.id);
-    const data = await CardHistory.findOne({ cardID: req.params.id });
+    const card = carddb.getMostReasonableById(carddb.oracleToId[req.params.id][0]);
+    const data = await CardHistory.findOne({ oracleId: req.params.id });
     if (!data) {
       return res.status(404).render('misc/404', {});
     }
@@ -196,15 +202,11 @@ router.get('/card/:id', async (req, res) => {
         .map((id) => Cube.findOne({ _id: id })),
     );
 
-    const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    const prices = await GetPrices(pids);
-    card.elo = (await getElo([card.name], true))[card.name];
     const reactProps = {
       card,
       data,
-      prices,
       cubes,
-      related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
+      related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),
