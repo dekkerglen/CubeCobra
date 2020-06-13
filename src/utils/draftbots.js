@@ -86,7 +86,7 @@ export const fetchLands = {
 };
 
 // What is the raw power level of this card?
-// Scale is roughly 2-6, linear.
+// Scale is roughly 0-1, linear. Black Lotus should be ~1.
 export const getRating = (combination, card) => {
   return (card?.rating ?? 1200) / 1200 - 1;
 };
@@ -99,6 +99,9 @@ const SIMILARITY_CLIP = 0.8;
 const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 
 const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
+
+// Scale to get similarity range to approximately [0, 1]
+const SYNERGY_SCALE = 4.2;
 
 // How much do the cards we've already picked in this combo synergize with each other?
 // Scale is roughly 0-1.
@@ -113,7 +116,7 @@ export const getInternalSynergy = (combination, picked, synergies) => {
     for (let i = 1; i < pickedInCombo.length; i++) {
       for (let j = 0; j < i; j++) {
         const similarityValue = similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]);
-        internalSynergy += -Math.log(1 - scaleSimilarity(similarityValue)) / 4;
+        internalSynergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
       }
     }
   }
@@ -137,7 +140,7 @@ export const getPickSynergy = (combination, card, picked, synergies) => {
       // Maximum synergy is generally around .997 which corresponds to ~1.
       if (index !== card.index) {
         const similarityValue = similarity(synergies[index], synergies[card.index]);
-        synergy += -Math.log(1 - scaleSimilarity(similarityValue)) / 4;
+        synergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
       }
     }
   }
