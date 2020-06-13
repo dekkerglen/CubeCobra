@@ -11,19 +11,19 @@ const COLORS_WEIGHTS = [
   [5, 5.2, 5.4, 5.5, 5.6, 5.8, 6, 6.2, 6.4, 6.5, 6.6, 6.8, 7, 7.2, 7.5],
 ];
 const RATING_WEIGHTS = [
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 const FIXING_WEIGHTS = [
+  [0.1, 0.3, 0.6, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 const SYNERGY_WEIGHTS = [
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4],
-  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7],
+  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 const OPENNESS_WEIGHTS = [
   [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
@@ -241,7 +241,11 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
         getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState) +
         getColorScaling(combination) * getColorScalingWeight(packNum, pickNum, initialState);
     } else if (!card) {
-      rating = Math.log(COLOR_SCALING_FACTOR[combination.length] * picked[combination.join('')]);
+      rating = Math.log(
+        COLOR_SCALING_FACTOR[combination.length] *
+          picked[combination.join('')] *
+          picked.cards.filter((card2) => considerInCombination(combination, card2)).length,
+      );
     }
     if (rating > bestRating) {
       bestRating = rating;
