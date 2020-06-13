@@ -4,7 +4,7 @@ import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.7, 0.45, 0.2, 0.1];
+const COLOR_SCALING_FACTOR = [1, 1, 0.9, 0.7, 0.4, 0.3];
 const COLORS_WEIGHTS = [
   [0, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.1, 2.2, 2.3, 2.4, 2.5],
   [3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5],
@@ -85,10 +85,14 @@ export const fetchLands = {
   'Evolving Wilds': [...'WUBRG'],
 };
 
+export const getColorScaling = (combination) => {
+  return Math.log(COLOR_SCALING_FACTOR[combination.length]);
+};
+
 // What is the raw power level of this card?
-// Scale is roughly 0-1, linear. Black Lotus should be ~1.
-export const getRating = (combination, card) => {
-  return (card?.rating ?? 1200) / 1200 - 1;
+// Scale is roughly 0-100, linear. Black Lotus should be ~100.
+export const getRating = (_, card) => {
+  return 10 ** ((card?.rating ?? 1200) / 400 - 4);
 };
 
 export const considerInCombination = (combination, card) =>
@@ -211,6 +215,13 @@ export const getFixingWeight = (pack, pick, initialState) => {
   return interpolateWeight2d(FIXING_WEIGHTS, pack, pick, initialState);
 };
 
+export const getColorScalingWeight = (pack, pick, initialState) => {
+  return (
+    interpolateWeight2d(COLORS_WEIGHTS, pack, pick, initialState) +
+    interpolateWeight2d(OPENNESS_WEIGHTS, pack, pick, initialState)
+  );
+};
+
 // inPack is the number of cards in this pack
 export const botRatingAndCombination = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score1
@@ -219,8 +230,8 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
   let bestRating = -10000;
   let bestCombination = [];
   for (const combination of COLOR_COMBINATIONS) {
-    let rating = 0;
-    if (card && considerInCombination(combination, card)) {
+    let rating = -100000;
+    if (card && combination.length > 0 && considerInCombination(combination, card)) {
       rating =
         getRating(combination, card, initialState) * getRatingWeight(packNum, pickNum, initialState) +
         getPickSynergy(combination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
@@ -228,7 +239,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
         getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
         getColor(combination, picked) * getColorWeight(packNum, pickNum, initialState) +
         getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState) +
-        Math.log(COLOR_SCALING_FACTOR[combination.length]);
+        getColorScaling(combination) * getColorScalingWeight(packNum, pickNum, initialState);
     } else if (!card) {
       rating = Math.log(COLOR_SCALING_FACTOR[combination.length] * picked[combination.join('')]);
     }

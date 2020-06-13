@@ -10,18 +10,20 @@ import useSortableData from 'hooks/UseSortableData';
 import { encodeName, COLOR_COMBINATIONS } from 'utils/Card';
 import { addSeen } from 'utils/Draft';
 import {
-  getRating,
+  botRatingAndCombination,
   getColor,
-  getInternalSynergy,
-  getPickSynergy,
-  getOpenness,
+  getColorScaling,
+  getColorScalingWeight,
+  getColorWeight,
   getFixing,
+  getFixingWeight,
+  getInternalSynergy,
+  getOpenness,
+  getOpennessWeight,
+  getPickSynergy,
+  getRating,
   getRatingWeight,
   getSynergyWeight,
-  getOpennessWeight,
-  getColorWeight,
-  getFixingWeight,
-  botRatingAndCombination,
 } from 'utils/draftbots';
 import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
@@ -82,38 +84,43 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (combination, card) => getRating(combination, card).toFixed(2),
+    function: (combination, card) => getRating(combination, card),
   },
   {
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (combination, card, picked, synergies) => getInternalSynergy(combination, picked, synergies).toFixed(2),
+    function: (combination, _, picked, synergies) => getInternalSynergy(combination, picked, synergies),
   },
   {
     name: 'Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (combination, card, picked, synergies) => getPickSynergy(combination, card, picked, synergies).toFixed(2),
+    function: (combination, card, picked, synergies) => getPickSynergy(combination, card, picked, synergies),
   },
   {
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, card, picked, synergies, seen) =>
-      getOpenness(combination, seen, card, picked, synergies).toFixed(2),
+    function: (combination, card, picked, synergies, seen) => getOpenness(combination, seen, card, picked, synergies),
   },
   {
     name: 'Color',
     description: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (combination, card, picked) => getColor(combination, picked, card).toFixed(2),
+    function: (combination, card, picked) => getColor(combination, picked, card),
+  },
+  {
+    name: 'Color Scaling',
+    description: 'A score of how much it costs to play this many colors.',
+    weight: getColorScalingWeight,
+    function: (combination) => getColorScaling(combination),
   },
   {
     name: 'Fixing',
     description: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
-    function: (combination, card, picked) => getFixing(combination, picked, card).toFixed(2),
+    function: (combination, card, picked) => getFixing(combination, picked, card),
   },
   {
     name: 'Combination',
@@ -195,7 +202,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       card.scores.push(TRAITS[i].function(combination, card, picked, draft.synergies, seen));
     }
     card.scores.push(combination.join(''));
-    card.scores.push(score.toFixed(2));
+    card.scores.push(score);
   }
   if (normalized) {
     for (let i = 0; i < TRAITS.length - 2; i++) {
@@ -211,6 +218,12 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       }
       for (const card of cardsInPack) {
         card.scores[i] = `+${(card.scores[i] - minScore).toFixed(2)}`;
+      }
+    }
+  } else {
+    for (let i = 0; i < TRAITS.length - 2; i++) {
+      for (const card of cardsInPack) {
+        card.scores[i] = card.scores[i].toFixed(2);
       }
     }
   }

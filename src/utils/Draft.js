@@ -16,7 +16,7 @@ export function addSeen(seen, cards) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
           // Bad cards (under 1200) should count as 0. Above that, exponential approach to 1.
-          seen[comb.join('')] += 1 - Math.exp(-Math.max((card?.rating ?? 1200) / 400 - 3, 0));
+          seen[comb.join('')] += 10 ** ((card?.rating ?? 1200) / 400 - 4);
         }
       }
     }
