@@ -161,6 +161,7 @@ export const getFixing = (combination, _, card) => {
   const isFetch = !!fetchLands[cardName(card)];
   const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
   const isRainbow = card.oracleText.includes('mana of any color');
+  const fetchesBasics = card.oracleText.includes('basic land') && card.oracleText.includes('basic land');
 
   let score = 1;
   // Guaranteed contains by botRatingAndCombination
@@ -172,6 +173,9 @@ export const getFixing = (combination, _, card) => {
     }
     if (isFetch) {
       score *= 2;
+    }
+    if (fetchesBasics) {
+      score *= 3;
     }
     if (isRainbow) {
       score *= 4;
