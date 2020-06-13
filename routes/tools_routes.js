@@ -55,7 +55,7 @@ async function matchingCards(filter) {
 }
 
 /* This is a Bayesian adjustment to the rating like IMDB does. */
-const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
+const adjust = (picks, rating) => (picks * rating + MIN_PICKS * 0.5) / (picks + MIN_PICKS);
 
 async function topCards(filter) {
   const cards = await matchingCards(filter);
@@ -84,16 +84,16 @@ async function topCards(filter) {
         .filter(({ oracleId }) => selectedVersions.has(oracleId))
         .map(({ oracleId, current }) => {
           const { rating, elo, picks, cubes } = current;
-          const qualifies = picks !== undefined && picks > MIN_PICKS;
+          const qualifies = Number.isFinite(picks) && picks > MIN_PICKS;
           const version = selectedVersions.get(oracleId);
           return [
             version.name,
             version.image_normal,
             version.image_flip || null,
-            qualifies && rating !== undefined ? adjust(rating) : null,
-            picks !== undefined ? picks : 0,
-            qualifies && elo !== undefined ? elo : null,
-            cubes !== undefined ? cubes : 0,
+            qualifies && Number.isFinite(rating) && Number.isFinite(picks) ? adjust(picks, rating) : null,
+            Number.isFinite(picks) ? picks : 0,
+            qualifies && Number.isFinite(elo) ? elo : null,
+            Number.isFinite(cubes) ? cubes : 0,
           ];
         });
     }),
