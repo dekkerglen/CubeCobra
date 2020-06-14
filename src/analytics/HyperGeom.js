@@ -2,7 +2,20 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput, Input, Button } from 'reactstrap';
+import {
+  Col,
+  Row,
+  Table,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
+  Input,
+  Button,
+  Form,
+} from 'reactstrap';
+
+import calculate from 'utils/CalculateHyperGeom';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
@@ -44,7 +57,7 @@ const inputs = [
 
 const HyperGeom = () => {
   const [populationSize, setPopulationSize] = useState('');
-  const [popSuccesses, sePopSuccesses] = useState('');
+  const [popSuccesses, setPopSuccesses] = useState('');
   const [sampleSize, setSampleSize] = useState('');
   const [sampleSuccesses, setSampleSuccesses] = useState('');
   const [data, setData] = useState([]);
@@ -56,57 +69,6 @@ const HyperGeom = () => {
   const [lte, setlte] = useState('');
   const [et, setet] = useState('');
 
-  const combination = (n, r) => {
-    const topArray = [];
-    const botArray = [];
-    const comboArray = [];
-
-    for (let i = 1; i <= n; i++) {
-      topArray.push(i);
-    }
-    for (let i = 1; i <= r; i++) {
-      botArray.push(i);
-    }
-    for (let i = 1; i <= n - r; i++) {
-      comboArray.push(i);
-    }
-
-    let sum = 1;
-
-    for (let i = 0; i < Math.max(topArray.length, botArray.length, comboArray.length); i++) {
-      if (topArray[i]) {
-        sum *= topArray[i];
-      }
-      if (botArray[i]) {
-        sum /= botArray[i];
-      }
-      if (comboArray[i]) {
-        sum /= comboArray[i];
-      }
-    }
-    return sum;
-  };
-
-  const hyp = (N, S, n, s) => {
-    return (combination(S, s) * combination(N - S, n - s)) / combination(N, n);
-  };
-
-  const clamp = (val, min, max) => {
-    return Math.min(Math.max(val, min), max);
-  };
-
-  const calculate = (N, S, n, s) => {
-    const keys = [...Array(parseInt(s, 10) + 1).keys()];
-    const values = keys.map((x) => hyp(parseInt(N, 10), parseInt(S, 10), parseInt(n, 10), x));
-    const equalTo = clamp(values[values.length - 1], 0, 1);
-    const lessThan = clamp(values.reduce((a, b) => a + b, 0) - equalTo, 0, 1);
-    const lessThanEqual = clamp(lessThan + equalTo, 0, 1);
-    const greaterThan = 1 - clamp(lessThanEqual, 0, 1);
-    const greaterThanEqual = clamp(greaterThan + equalTo, 0, 1);
-
-    return { equalTo, lessThan, lessThanEqual, greaterThan, greaterThanEqual };
-  };
-
   const percentify = (num) => {
     return `${(num * 100).toFixed(2)}%`;
   };
@@ -115,12 +77,13 @@ const HyperGeom = () => {
     setData([]);
   };
 
-  const submit = () => {
+  const submit = (event) => {
+    event.preventDefault();
     try {
       const { equalTo, lessThan, lessThanEqual, greaterThan, greaterThanEqual } = calculate(
         populationSize,
-        popSuccesses,
         sampleSize,
+        popSuccesses,
         sampleSuccesses,
       );
 
@@ -200,28 +163,28 @@ const HyperGeom = () => {
   const plotPopSize = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(i, dataset.popSuccesses, dataset.sampleSize, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(i, dataset.sampleSize, dataset.popSuccesses, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotPopSuccess = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, i, dataset.sampleSize, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, dataset.sampleSize, i, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotSampleSize = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, dataset.popSuccesses, i, dataset.sampleSuccesses).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, i, dataset.popSuccesses, dataset.sampleSuccesses).greaterThanEqual);
     }
     return res;
   };
   const plotSampleSuccess = (dataset, size) => {
     const res = [];
     for (let i = 0; i < size; i++) {
-      res.push(calculate(dataset.populationSize, dataset.popSuccesses, dataset.sampleSize, i).greaterThanEqual);
+      res.push(calculate(dataset.populationSize, dataset.sampleSize, dataset.popSuccesses, i).greaterThanEqual);
     }
     return res;
   };
@@ -256,6 +219,10 @@ const HyperGeom = () => {
       <h4 className="d-lg-block d-none">Hypergeometric Calculator</h4>
       <p>
         This Hypergeometric Calculator makes it easy to compute individual and cumulative hypergeometric probabilities.
+        This can be useful to determine the probabilty to have a minimum amount of a certain type of card (e.g.
+        cantrips) in a draft pool given the amount of those cards in the cube overall. Another use case is to calculate
+        the probabilty of having cards of a certain type (e.g. aggro one-drops) in an opening hand of a deck, given the
+        amount of those cards in the deck.
       </p>
       <p>
         View information on how to use this tool{' '}
@@ -265,37 +232,39 @@ const HyperGeom = () => {
         .
       </p>
       <>
-        <TextField
-          name="1"
-          humanName="Population size"
-          placeholder=""
-          value={populationSize}
-          onChange={(event) => setPopulationSize(event.target.value)}
-        />
-        <TextField
-          name="2"
-          humanName="Number of successes in population"
-          placeholder=""
-          value={popSuccesses}
-          onChange={(event) => sePopSuccesses(event.target.value, 10)}
-        />
-        <TextField
-          name="2"
-          humanName="Sample size"
-          placeholder=""
-          value={sampleSize}
-          onChange={(event) => setSampleSize(event.target.value, 10)}
-        />
-        <TextField
-          name="2"
-          humanName="Number of successes in sample (x)"
-          placeholder=""
-          value={sampleSuccesses}
-          onChange={(event) => setSampleSuccesses(event.target.value, 10)}
-        />
-        <Button className="mb-3" color="success" block onClick={submit}>
-          Calculate
-        </Button>
+        <Form onSubmit={submit}>
+          <TextField
+            name="1"
+            humanName="Population size"
+            placeholder="e.g. the size of the cube"
+            value={populationSize}
+            onChange={(event) => setPopulationSize(event.target.value)}
+          />
+          <TextField
+            name="2"
+            humanName="Number of successes in population"
+            placeholder="e.g. the amount of cards of a certain type in the cube"
+            value={popSuccesses}
+            onChange={(event) => setPopSuccesses(event.target.value, 10)}
+          />
+          <TextField
+            name="2"
+            humanName="Sample size"
+            placeholder="e.g. the amount of cards in the draft pod"
+            value={sampleSize}
+            onChange={(event) => setSampleSize(event.target.value, 10)}
+          />
+          <TextField
+            name="2"
+            humanName="Number of successes in sample (x)"
+            placeholder="e.g. the amount of cards in the draft pod that should be of the type"
+            value={sampleSuccesses}
+            onChange={(event) => setSampleSuccesses(event.target.value, 10)}
+          />
+          <Button type="submit" className="mb-3" color="success" block>
+            Calculate
+          </Button>
+        </Form>
         <TextDisplay humanName={`Hypergeometric Probability: P(X = ${sampleSuccesses})`} value={et} />
         <TextDisplay humanName={`Cumulative Probability: P(X < ${sampleSuccesses})`} value={lt} />
         <TextDisplay humanName={`Cumulative Probability: P(X <= ${sampleSuccesses})`} value={lte} />
