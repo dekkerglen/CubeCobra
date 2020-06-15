@@ -5,13 +5,16 @@ import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInp
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { sortIntoGroups, getSorts, getLabels } from 'utils/Sort';
+import { sortIntoGroups, getSorts, getLabels, cardCanBeSorted } from 'utils/Sort';
 
 const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
   const sorts = getSorts();
 
   const [primary, setPrimary] = useState('Color Identity');
   const [secondary, setSecondary] = useState('Type');
+
+  // some criteria cannot be applied to some cards
+  cards = cards.filter((card) => cardCanBeSorted(card, primary) && cardCanBeSorted(card, secondary));
 
   const sortWithTotal = (pool, sort) => {
     const groups = sortIntoGroups(pool, sort);
@@ -31,32 +34,26 @@ const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
     return groups;
   };
 
-  const groups = sortIntoGroups(cards, primary);
-  groups.Total = {};
-  for (const key of Object.keys(groups)) {
+  const primaryGroups = sortIntoGroups(cards, primary);
+  const secondaryGroups = sortIntoGroups(cards, secondary);
+  primaryGroups.Total = {};
+  for (const key of Object.keys(primaryGroups)) {
     if (key !== 'Total') {
-      groups[key] = sortWithTotal(groups[key], secondary);
+      primaryGroups[key] = sortWithTotal(primaryGroups[key], secondary);
 
-      for (const subkey of Object.keys(groups[key])) {
-        if (!groups.Total[subkey]) {
-          groups.Total[subkey] = 0;
+      for (const subkey of Object.keys(primaryGroups[key])) {
+        if (!primaryGroups.Total[subkey]) {
+          primaryGroups.Total[subkey] = 0;
         }
-        groups.Total[subkey] += parseFloat(groups[key][subkey], 10);
+        primaryGroups.Total[subkey] += parseFloat(primaryGroups[key][subkey], 10);
       }
     }
   }
-  for (const subkey of Object.keys(groups.Total)) {
-    if (!Number.isInteger(groups.Total[subkey])) {
-      groups.Total[subkey] = groups.Total[subkey].toFixed(2);
+  for (const subkey of Object.keys(primaryGroups.Total)) {
+    if (!Number.isInteger(primaryGroups.Total[subkey])) {
+      primaryGroups.Total[subkey] = primaryGroups.Total[subkey].toFixed(2);
     }
   }
-  groups.Total.Total = cards.reduce((acc, card) => acc + card.asfan, 0);
-  if (!Number.isInteger(groups.Total.Total)) {
-    groups.Total.Total = groups.Total.Total.toFixed(2);
-  }
-
-  const primaryGroups = sortIntoGroups(cards, primary);
-  const secondaryGroups = sortIntoGroups(cards, secondary);
 
   const primaryLabels = getLabels(cards, primary)
     .filter((label) => primaryGroups[label])
@@ -115,11 +112,11 @@ const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
               <tr key={label}>
                 <th scope="col">{label}</th>
                 {primaryLabels.map((primaryLabel) => (
-                  <td>
-                    {groups[primaryLabel][label] || 0}
+                  <td key={`${primaryLabel}_${label}`}>
+                    {primaryGroups[primaryLabel][label] || 0}
                     {label !== 'Total' && (
                       <span className="percent">
-                        {(((groups[primaryLabel][label] ?? 0) / cards.length) * 100).toFixed(2)}%
+                        {(((primaryGroups[primaryLabel][label] ?? 0) / cards.length) * 100).toFixed(2)}%
                       </span>
                     )}
                   </td>

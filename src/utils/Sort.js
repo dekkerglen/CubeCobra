@@ -466,6 +466,10 @@ function typeLine(card) {
   return card.type_line || card.details.type;
 }
 
+export function cardCanBeSorted(card, sort) {
+  return cardGetLabels(card, sort).length != 0;
+}
+
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
     if (card.colorCategory) return [card.colorCategory];
