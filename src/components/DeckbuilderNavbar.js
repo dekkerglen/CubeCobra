@@ -116,7 +116,17 @@ BasicsModal.propTypes = {
   deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, draft, ...props }) => {
+const DeckbuilderNavbar = ({
+  deck,
+  addBasics,
+  name,
+  description,
+  className,
+  draft,
+  setSideboard,
+  setDeck,
+  ...props
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -179,6 +189,22 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, draf
     return res;
   }, [deck]);
 
+  const autoBuildDeck = useCallback(async () => {
+    const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
+    const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
+    picked.cards = [];
+    addSeen(picked, main);
+    const { sideboard: side, deck: newDeck } = await buildDeck(
+      main,
+      picked,
+      draft.synergies,
+      draft.initial_state,
+      draft.basics,
+    );
+    setSideboard([side]);
+    setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
+  }, [deck, draft, setDeck, setSideboard]);
+
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
       <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -212,6 +238,11 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, draf
               deck={deck.playerdeck}
             />
           </NavItem>
+          <NavItem>
+            <NavLink href="#" onClick={autoBuildDeck}>
+              Build for Me
+            </NavLink>
+          </NavItem>
           <CustomImageToggler />
         </Nav>
       </Collapse>
@@ -233,7 +264,10 @@ DeckbuilderNavbar.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
+    basics: PropTypes.shape({}),
   }).isRequired,
+  setDeck: PropTypes.func.isRequired,
+  setSideboard: PropTypes.func.isRequired,
 };
 
 DeckbuilderNavbar.defaultProps = {
