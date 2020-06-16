@@ -120,7 +120,6 @@ function shuffle(a) {
 }
 
 router.get('/api/topcards', async (req, res) => {
-  console.log(`getting top cards with sort: ${req.params.sort}, page: ${req.params.page}`);
   try {
     const { err, filter } = makeFilter(req.query.f);
     if (err) {
