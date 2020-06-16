@@ -826,7 +826,6 @@ router.get('/playtest/:id', async (req, res) => {
       },
       'date seats _id cube',
     )
-      .lean()
       .sort({
         date: -1,
       })
