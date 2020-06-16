@@ -455,6 +455,12 @@ body.busy-cursor {
 	cursor: progress;
 }
 
+.centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  }
+
 .centered-max400 {
 	margin: auto;
 	max-width: 400px;

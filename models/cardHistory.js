@@ -60,6 +60,11 @@ const cardHistorySchema = mongoose.Schema({
   },
 });
 
+cardHistorySchema.index({ oracleId: 1, 'current.rating': 1 });
+cardHistorySchema.index({ oracleId: 1, 'current.elo': -1 });
+cardHistorySchema.index({ oracleId: 1, 'current.picks': -1 });
+cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1 });
+
 cardHistorySchema.index({ 'current.rating': 1 });
 cardHistorySchema.index({ 'current.elo': -1 });
 cardHistorySchema.index({ 'current.picks': -1 });
