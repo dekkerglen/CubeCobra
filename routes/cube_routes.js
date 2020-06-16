@@ -826,10 +826,12 @@ router.get('/playtest/:id', async (req, res) => {
       },
       'date seats _id cube',
     )
+      .lean()
       .sort({
         date: -1,
       })
-      .limit(10);
+      .limit(10)
+      .lean();
 
     let draftFormats = [];
     // NOTE: older cubes do not have custom drafts

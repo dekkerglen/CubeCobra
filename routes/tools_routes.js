@@ -14,11 +14,11 @@ const router = express.Router();
 
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
-/* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 400;
+/* Page size for results */
+const PAGE_SIZE = 100;
 
 async function matchingCards(filter) {
-  let cards = carddb.allCards().filter((card) => !card.digital);
+  let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
   if (filter) {
     // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
     // In the seoncd pass, we add that information.
@@ -54,10 +54,7 @@ async function matchingCards(filter) {
   return filterCardsDetails(cards, filter);
 }
 
-/* This is a Bayesian adjustment to the rating like IMDB does. */
-const adjust = (picks, rating) => (picks * rating + MIN_PICKS * 0.5) / (picks + MIN_PICKS);
-
-async function topCards(filter) {
+async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending') {
   const cards = await matchingCards(filter);
   const oracleIdMap = new Map();
   for (const card of cards) {
@@ -69,7 +66,9 @@ async function topCards(filter) {
   }
 
   const oracleIds = [...oracleIdMap.keys()];
-  const query = filter ? { oracleId: { $in: oracleIds } } : {};
+  const query = filter
+    ? { $and: [{ oracleId: { $in: oracleIds } }, { 'current.picks': { $gt: MIN_PICKS } }] }
+    : { 'current.picks': { $gt: MIN_PICKS } };
   const selectedVersions = new Map(
     [...oracleIdMap.entries()].map(([oracleId, versions]) => [
       oracleId,
@@ -77,39 +76,38 @@ async function topCards(filter) {
     ]),
   );
 
-  const dataQ = Promise.all(
-    ['rating', 'elo', 'picks', 'cubes'].map(async (field) => {
-      const sorted = await CardHistory.find(query).sort(`-current.${field}`).limit(MAX_RESULTS).lean();
-      return sorted
-        .filter(({ oracleId }) => selectedVersions.has(oracleId))
-        .map(({ oracleId, current }) => {
-          const { rating, elo, picks, cubes } = current;
-          const qualifies = Number.isFinite(picks) && picks > MIN_PICKS;
-          const version = selectedVersions.get(oracleId);
-          return [
-            version.name,
-            version.image_normal,
-            version.image_flip || null,
-            qualifies && Number.isFinite(rating) && Number.isFinite(picks) ? adjust(picks, rating) : null,
-            Number.isFinite(picks) ? picks : 0,
-            qualifies && Number.isFinite(elo) ? elo : null,
-            Number.isFinite(cubes) ? cubes : 0,
-          ];
-        });
-    }),
-  );
-  const numResultsQ = CardHistory.estimatedDocumentCount(query);
-  const [allData, numResults] = await Promise.all([dataQ, numResultsQ]);
-  const [dataByRating, dataByElo, dataByPicks, dataByCubes] = allData;
+  const dataQ = async () => {
+    const sortName = `current.${sortField}`;
+    const sort = {};
+    sort[sortName] = direction === 'ascending' ? 1 : -1;
+    const sorted = await CardHistory.find(query)
+      .sort(sort)
+      .skip(PAGE_SIZE * page)
+      .limit(PAGE_SIZE)
+      .lean();
+
+    return sorted
+      .filter(({ oracleId }) => selectedVersions.has(oracleId))
+      .map(({ oracleId, current }) => {
+        const { elo, picks, cubes } = current;
+        const version = selectedVersions.get(oracleId);
+        return [
+          version.name,
+          version.image_normal,
+          version.image_flip || null,
+          Number.isFinite(picks) ? picks : 0,
+          Number.isFinite(elo) ? elo : null,
+          Number.isFinite(cubes) ? cubes : 0,
+        ];
+      });
+  };
+  const numResultsQ = CardHistory.countDocuments(query);
+
+  const [data, numResults] = await Promise.all([dataQ(), numResultsQ]);
 
   return {
     numResults,
-    data: {
-      rating: dataByRating,
-      elo: dataByElo,
-      picks: dataByPicks,
-      cubes: dataByCubes,
-    },
+    data,
   };
 }
 
@@ -122,16 +120,18 @@ function shuffle(a) {
 }
 
 router.get('/api/topcards', async (req, res) => {
+  console.log(`getting top cards with sort: ${req.params.sort}, page: ${req.params.page}`);
   try {
     const { err, filter } = makeFilter(req.query.f);
     if (err) {
       res.status(400).send({
         success: 'false',
+        numResults: 0,
+        data: [],
       });
       return;
     }
-
-    const results = await topCards(filter, res);
+    const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
     res.status(200).send({
       success: 'true',
       ...results,
@@ -140,27 +140,16 @@ router.get('/api/topcards', async (req, res) => {
     req.logger.error(err);
     res.status(500).send({
       success: 'false',
+      numResults: 0,
+      data: [],
     });
   }
 });
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
-
-    if (err) {
-      req.flash('Invalid filter.');
-    }
-
-    const { data, numResults } = await topCards(filter, res);
-
-    const reactProps = {
-      defaultNumResults: numResults,
-      defaultData: data,
-      defaultFilterText: req.query.f || '',
-    };
     return res.render('tool/topcards', {
-      reactProps: serialize(reactProps),
+      reactProps: serialize({}),
       title: 'Top Cards',
     });
   } catch (err) {
