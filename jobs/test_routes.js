@@ -12,12 +12,17 @@ const handleResponse = (res) => {
 
 const badRoute = '/cube/overview/communitycube';
 
+
 (async () => {
   for (let i = 0; i < 10; i++) {
     console.log(`Iteration ${i + 1}`);
     for (const route of routes) {
       console.log(`   Fetching ${route}`);
+
+      console.time("    time");
       const res = await fetch(`http://localhost:5000${route}`);
+      console.timeEnd("    time");
+
       handleResponse(res);
     }
   }

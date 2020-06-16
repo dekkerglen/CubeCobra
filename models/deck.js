@@ -69,4 +69,14 @@ let deckSchema = mongoose.Schema({
   },
 });
 
+deckSchema.index({
+  cube: 1,
+  date: -1,
+});
+
+deckSchema.index({
+  'seats.userid': 1,
+  date: -1,
+});
+
 let Deck = (module.exports = mongoose.model('Deck', deckSchema));
