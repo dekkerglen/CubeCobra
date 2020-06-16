@@ -11,10 +11,10 @@ import HeaderCell from 'components/HeaderCell';
 
 const AutocardA = withAutocard('a');
 
-const TopCardsTable = ({ filter, setCount, count }) => {
+const TopCardsTable = ({ filter, setCount, count, cards }) => {
   const [page, setPage] = useState(parseInt(Query.get('p'), 10) || 0);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(cards);
+  const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: Query.get('s') || 'elo',
     direction: Query.get('d') || 'descending',
@@ -71,7 +71,8 @@ const TopCardsTable = ({ filter, setCount, count }) => {
     );
   }
 
-  console.log(page);
+  console.log(data);
+  console.log(count);
 
   return (
     <>
@@ -115,6 +116,7 @@ const TopCardsTable = ({ filter, setCount, count }) => {
 */
 
 TopCardsTable.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
   filter: PropTypes.string,
   setCount: PropTypes.func.isRequired,
   count: PropTypes.number.isRequired,

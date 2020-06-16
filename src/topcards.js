@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 
 import DynamicFlash from 'components/DynamicFlash';
@@ -8,9 +9,9 @@ import TopCardsTable from 'components/TopCardsTable';
 
 import Query from 'utils/Query';
 
-const TopCards = () => {
+const TopCards = ({ data, numResults }) => {
   const [filter, setFilter] = useState(Query.get('f') || '');
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(numResults);
 
   const updateFilter = (_, filterInput) => {
     setFilter(filterInput);
@@ -30,9 +31,14 @@ const TopCards = () => {
         />
       </div>
       <DynamicFlash />
-      <TopCardsTable filter={filter} setCount={setCount} count={count} />
+      <TopCardsTable filter={filter} setCount={setCount} count={count} cards={data} />
     </>
   );
+};
+
+TopCards.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  numResults: PropTypes.number.isRequired,
 };
 
 const wrapper = document.getElementById('react-root');

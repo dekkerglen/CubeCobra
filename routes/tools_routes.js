@@ -67,7 +67,7 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
 
   const oracleIds = [...oracleIdMap.keys()];
   const query = filter
-    ? { $and: [{ oracleId: { $in: oracleIds } }, { 'current.picks': { $gt: MIN_PICKS } }] }
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gt: MIN_PICKS } }
     : { 'current.picks': { $gt: MIN_PICKS } };
   const selectedVersions = new Map(
     [...oracleIdMap.entries()].map(([oracleId, versions]) => [
@@ -76,17 +76,22 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
     ]),
   );
 
-  const dataQ = async () => {
-    const sortName = `current.${sortField}`;
-    const sort = {};
-    sort[sortName] = direction === 'ascending' ? 1 : -1;
-    const sorted = await CardHistory.find(query)
-      .sort(sort)
-      .skip(PAGE_SIZE * page)
-      .limit(PAGE_SIZE)
-      .lean();
+  const sortName = `current.${sortField}`;
+  const sort = {};
+  sort[sortName] = direction === 'ascending' ? 1 : -1;
 
-    return sorted
+  const dataQ = await CardHistory.find(query)
+    .sort(sort)
+    .skip(PAGE_SIZE * page)
+    .limit(PAGE_SIZE)
+    .lean();
+  const numResultsQ = CardHistory.countDocuments(query);
+
+  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
+
+  return {
+    numResults,
+    data: data
       .filter(({ oracleId }) => selectedVersions.has(oracleId))
       .map(({ oracleId, current }) => {
         const { elo, picks, cubes } = current;
@@ -99,15 +104,7 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
           Number.isFinite(elo) ? elo : null,
           Number.isFinite(cubes) ? cubes : 0,
         ];
-      });
-  };
-  const numResultsQ = CardHistory.countDocuments(query);
-
-  const [data, numResults] = await Promise.all([dataQ(), numResultsQ]);
-
-  return {
-    numResults,
-    data,
+      }),
   };
 }
 
@@ -147,8 +144,10 @@ router.get('/api/topcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
+    const { filter } = makeFilter(req.query.f);
+    const { data, numResults } = await topCards(filter, req.query.s, req.query.p, req.query.d);
     return res.render('tool/topcards', {
-      reactProps: serialize({}),
+      reactProps: serialize({ data, numResults }),
       title: 'Top Cards',
     });
   } catch (err) {
