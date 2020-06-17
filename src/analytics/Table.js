@@ -7,14 +7,14 @@ import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { sortIntoGroups, getSorts, getLabels, cardCanBeSorted } from 'utils/Sort';
 
-const AnalyticTable = ({ cards, cube, defaultFormatId, setAsfans }) => {
+const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) => {
   const sorts = getSorts();
 
   const [primary, setPrimary] = useState('Color Identity');
   const [secondary, setSecondary] = useState('Type');
 
   // some criteria cannot be applied to some cards
-  cards = cards.filter((card) => cardCanBeSorted(card, primary) && cardCanBeSorted(card, secondary));
+  const cards = allCards.filter((card) => cardCanBeSorted(card, primary) && cardCanBeSorted(card, secondary));
 
   const sortWithTotal = (pool, sort) => {
     const groups = sortIntoGroups(pool, sort);
