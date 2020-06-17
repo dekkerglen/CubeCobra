@@ -15,6 +15,7 @@ const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 const schedule = require('node-schedule');
+const fs = require('fs');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
@@ -58,7 +59,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'info',
+  level: 'error',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
@@ -74,12 +75,20 @@ winston.configure({
 
 console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
+const ca = [fs.readFileSync('cert/rds-combined-ca-bundle.pem')];
+
+console.log(ca);
+
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
+  sslValidate: false,
+  ssl: true,
+  sslCA: ca,
   useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
 const db = mongoose.connection;
 db.once('open', () => {
   winston.info('Connected to Mongo.');
@@ -212,6 +221,10 @@ app.use((req, res, next) => {
 app.post('*', (req, res, next) => {
   res.locals.user = req.user || null;
   next();
+});
+
+app.use((req, res) => {
+  res.status(404).render('info/down', {});
 });
 
 // Route files; they manage their own CSRF protection
