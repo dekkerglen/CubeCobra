@@ -139,6 +139,9 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   lands.sort(sortFn);
   inColor.sort(sortFn);
 
+  const playableLands = lands.filter((land) => isPlayableLand(colors, land));
+  const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
+
   nonlands = inColor;
   let side = outOfColor;
   if (nonlands.length < 23) {
@@ -169,9 +172,6 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     addSeen(played, [current]);
     chosen.push(current);
   }
-
-  const playableLands = lands.filter((land) => isPlayableLand(colors, land));
-  const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
 
   const main = chosen.concat(playableLands.slice(0, 17));
   side.push(...playableLands.slice(17));

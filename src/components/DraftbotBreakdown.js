@@ -111,16 +111,17 @@ const TRAITS = [
     function: (combination, card, picked) => getColor(combination, picked, card),
   },
   {
-    name: 'Color Scaling',
-    description: 'A score of how much it costs to play this many colors.',
-    weight: getColorScalingWeight,
-    function: (combination) => getColorScaling(combination),
-  },
-  {
     name: 'Fixing',
     description: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
     function: (combination, card, picked) => getFixing(combination, picked, card),
+  },
+  {
+    name: 'Color Scaling',
+    description:
+      'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount',
+    weight: () => 1,
+    function: (combination) => getColorScaling(combination),
   },
   {
     name: 'Combination',
