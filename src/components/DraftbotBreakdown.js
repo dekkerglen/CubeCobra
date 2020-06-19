@@ -13,7 +13,6 @@ import {
   botRatingAndCombination,
   getColor,
   getColorScaling,
-  getColorScalingWeight,
   getColorWeight,
   getFixing,
   getFixingWeight,
