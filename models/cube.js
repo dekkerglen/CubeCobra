@@ -45,6 +45,7 @@ const Card = {
     enum: [null, 'White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
     default: null,
   },
+  elo: Number,
 };
 
 // Cube schema

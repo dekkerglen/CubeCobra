@@ -95,6 +95,10 @@ const CardModalForm = ({ children, ...props }) => {
     if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
       updated.colorCategory = null;
     }
+    updated.elo = parseFloat(updated.elo, 10);
+    if (!Number.isFinite(updated.elo)) {
+      updated.elo = null;
+    }
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);

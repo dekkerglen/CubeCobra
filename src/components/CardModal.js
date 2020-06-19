@@ -25,6 +25,7 @@ import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import withLoading from 'components/WithLoading';
+import { cardElo } from 'utils/Card';
 
 const LoadingCustomInput = withLoading(CustomInput, []);
 
@@ -164,6 +165,18 @@ const CardModal = ({
                     <option key={colorCat}>{colorCat}</option>
                   ))}
                 </CustomInput>
+              </InputGroup>
+              <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>ELO Override</InputGroupText>
+                </InputGroupAddon>
+                <Input
+                  type="number"
+                  name="elo"
+                  id="elo"
+                  value={values.elo ?? cardElo(card)}
+                  onChange={onChange}
+                />
               </InputGroup>
 
               <h5>Notes</h5>

@@ -11,10 +11,10 @@ module.exports = {
   },
   cmc: Number,
   cardID: String,
+  elo: Number,
   type_line: String,
   imgUrl: String,
   notes: String,
-  rating: Number,
   picks: {
     type: [[Number]],
     default: [],

@@ -106,7 +106,8 @@ export function cardsAreEquivalent(a, b) {
     a.imgUrl === b.imgUrl &&
     a.notes === b.notes &&
     a.colorCategory === b.colorCategory &&
-    a.rarity === b.rarity
+    a.rarity === b.rarity &&
+    a.elo === b.elo
   );
 }
 
@@ -199,7 +200,7 @@ export const cardImageFlip = (card) => card.details.image_flip;
 
 export const cardTokens = (card) => card.details.tokens;
 
-export const cardElo = (card) => card.details.elo;
+export const cardElo = (card) => card.elo ?? card.details.elo;
 
 export const cardDevotion = (card, color) =>
   cardCost(card)?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;

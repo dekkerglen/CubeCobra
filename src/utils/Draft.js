@@ -1,6 +1,6 @@
 import { csrfFetch } from 'utils/CSRF';
 import { arrayIsSubset, arrayShuffle, fromEntries } from 'utils/Util';
-import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardElo, cardType } from 'utils/Card';
 
 import { getRating, botRatingAndCombination, considerInCombination, fetchLands, getSynergy } from 'utils/draftbots';
 
@@ -14,7 +14,7 @@ export function addSeen(seen, cards) {
     if (colors.length > 0) {
       for (const comb of COLOR_COMBINATIONS) {
         if (arrayIsSubset(colors, comb)) {
-          seen[comb.join('')] += 10 ** ((card?.rating ?? 0) / 400);
+          seen[comb.join('')] += 10 ** ((cardElo(card) ?? 0) / 400);
         }
       }
     }
@@ -75,7 +75,7 @@ function getSortFn(bot) {
     if (bot) {
       return getRating(bot, b) - getRating(bot, a);
     }
-    return b.rating - a.rating;
+    return cardElo(b) - cardElo(a);
   };
 }
 
@@ -231,7 +231,7 @@ function botPicks() {
       const inPack = packFrom.length;
       const [packNum] = packPickNumber();
       for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-        if (packFrom[cardIndex].rating) {
+        if (cardElo(packFrom[cardIndex])) {
           ratedPicks.push(cardIndex);
         } else {
           unratedPicks.push(cardIndex);

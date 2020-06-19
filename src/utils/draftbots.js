@@ -1,6 +1,6 @@
 import { arrayIsSubset } from 'utils/Util';
 import similarity from 'compute-cosine-similarity';
-import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardColorIdentity, cardElo, cardName, cardType } from 'utils/Card';
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
@@ -82,7 +82,7 @@ export const fetchLands = {
 };
 
 export const getRating = (combination, card) => {
-  return Math.log(COLOR_SCALING_FACTOR[combination.length] * 10 ** ((card?.rating ?? 0) / 400));
+  return Math.log(COLOR_SCALING_FACTOR[combination.length] * 10 ** ((cardElo(card) ?? 0) / 400));
 };
 
 export const considerInCombination = (combination, card) =>

@@ -1982,7 +1982,7 @@ router.post(
       }
       const elo = await getElo(cube.cards.map((card) => card.details.name));
       for (const card of cube.cards) {
-        card.rating = elo[card.details.name];
+        card.details.elo = elo[card.details.name];
       }
 
       // setup draft
@@ -2027,6 +2027,7 @@ router.post(
                 card.cardID,
                 'cmc type image_normal parsed_cost image_flip name color_identity',
               );
+              card.details.elo = elo[card.details.name];
             }
           }
         }
@@ -2036,15 +2037,17 @@ router.post(
             for (const pack of collection) {
               for (const card of pack) {
                 card.details = carddb.cardFromId(card.cardID);
+                card.details.elo = elo[card.details.name];
               }
             }
           }
           for (const card of seat.pickorder) {
             card.details = carddb.cardFromId(card.cardID);
+            card.details.elo = elo[card.details.name];
           }
         }
-        for (const key of Object.keys(draft.basics)) {
-          draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+        for (const card of Object.values(draft.basics)) {
+          card.details = carddb.cardFromId(card.cardID);
         }
         return res.status(200).send({
           success: 'true',
@@ -2079,11 +2082,13 @@ router.get('/draft/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const elo = await getElo(draft.initial_state.flat(3).map((card) => card.details.name));
     // insert card details everywhere that needs them
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
           card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+          card.details.elo = elo[card.details.name];
         }
       }
     }
@@ -2093,15 +2098,17 @@ router.get('/draft/:id', async (req, res) => {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            card.details.elo = elo[card.details.name];
           }
         }
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
+        card.details.elo = elo[card.details.name];
       }
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    for (const card of Object.values(draft.basics)) {
+      card.details = carddb.cardFromId(card.cardID);
     }
 
     const reactProps = {
@@ -3129,6 +3136,7 @@ router.post('/api/redraft/:id', async (req, res) => {
     await draft.save();
 
     draft = await Draft.findById(draft._id).lean();
+    const elo = await getElo(cube.cards.map((card) => card.details.name));
     // insert card details everywhere that needs them
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
@@ -3137,6 +3145,7 @@ router.post('/api/redraft/:id', async (req, res) => {
             card.cardID,
             'cmc type image_normal parsed_cost image_flip name color_identity',
           );
+          card.details.elo = elo[card.details.name];
         }
       }
     }
@@ -3146,15 +3155,17 @@ router.post('/api/redraft/:id', async (req, res) => {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            card.details.elo = elo[card.details.name];
           }
         }
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
+        card.details.elo = elo[card.details.name];
       }
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    for (const card of Object.values(draft.basics)) {
+      card.details = carddb.cardFromId(card.cardID);
     }
     return res.status(200).send({
       success: 'true',
@@ -3453,7 +3464,8 @@ router.post(
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||
       (updated.tags && !Array.isArray(updated.tags)) ||
-      (updated.finish && typeof updated.finish !== 'string')
+      (updated.finish && typeof updated.finish !== 'string') ||
+      (updated.elo && !Number.isFinite(updated.elo))
     ) {
       return res.status(400).send({
         success: 'false',
@@ -3519,6 +3531,7 @@ router.post(
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||
       (updated.tags && !Array.isArray(updated.tags)) ||
+      (updated.elo && !Number.isFinite(update.elo)) ||
       !Array.isArray(selected) ||
       selected.some((index) => !Number.isInteger(index) || index < 0)
     ) {
@@ -3557,6 +3570,9 @@ router.post(
       }
       if (updated.finish) {
         allUpdates.$set[`cards.${index}.finish`] = updated.finish;
+      }
+      if (updated.elo || updated.elo === 0) {
+        allUpdates.$set[`cards.${index}.elo`] = updated.elo;
       }
       if (updated.tags) {
         if (updated.addTags) {
