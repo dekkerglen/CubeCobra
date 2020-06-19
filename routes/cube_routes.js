@@ -3136,7 +3136,7 @@ router.post('/api/redraft/:id', async (req, res) => {
     await draft.save();
 
     draft = await Draft.findById(draft._id).lean();
-    const elo = await getElo(cube.cards.map((card) => card.details.name));
+    const elo = await getElo(draft.intitial_state.flat(3).map((card) => card.details.name));
     // insert card details everywhere that needs them
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
@@ -3531,7 +3531,7 @@ router.post(
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||
       (updated.tags && !Array.isArray(updated.tags)) ||
-      (updated.elo && !Number.isFinite(update.elo)) ||
+      (updated.elo && !Number.isFinite(updated.elo)) ||
       !Array.isArray(selected) ||
       selected.some((index) => !Number.isInteger(index) || index < 0)
     ) {

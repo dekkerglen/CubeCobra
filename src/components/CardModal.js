@@ -170,13 +170,7 @@ const CardModal = ({
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>ELO Override</InputGroupText>
                 </InputGroupAddon>
-                <Input
-                  type="number"
-                  name="elo"
-                  id="elo"
-                  value={values.elo ?? cardElo(card)}
-                  onChange={onChange}
-                />
+                <Input type="number" name="elo" id="elo" value={values.elo ?? cardElo(card)} onChange={onChange} />
               </InputGroup>
 
               <h5>Notes</h5>
