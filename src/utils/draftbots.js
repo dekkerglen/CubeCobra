@@ -1,11 +1,10 @@
 import similarity from 'compute-cosine-similarity';
 
-import { arrayIsSubset } from 'utils/Util';
-import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils/Card';
+import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardColorIdentity, cardName, cardType } from 'utils/Card';
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.67, 0.5, 0.24, 0.15];
+const COLOR_SCALING_FACTOR = [1, 1, 0.67, 0.48, 0.24, 0.15];
 const COLORS_WEIGHTS = [
   [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
   [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
@@ -87,7 +86,7 @@ export const fetchLands = {
 };
 
 export const considerInCombination = (combination, card) =>
-  card && arrayIsSubset(cardColorIdentity(card) ?? [], combination);
+  card && COLOR_INCLUSION_MAP[combination.join('')][(cardColorIdentity(card) ?? []).join('')];
 
 export const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
@@ -143,7 +142,7 @@ export const getPickSynergy = (combination, card, picked, synergies) => {
       }
     }
   }
-  return synergy / picked.cards.length;
+  return synergy / picked.cards.WUBRG.length;
 };
 
 // Has this color combination been flowing openly?
@@ -229,7 +228,8 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
           getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState)) *
         getColorScaling(combination);
     } else if (!card) {
-      const count = picked.cards[combination.join('')].length;
+      const count = picked.cards[combination.join('')].filter((c) => !cardType(c).toLowerCase().includes('land'))
+        .length;
       if (count >= 23) {
         rating = Math.log(
           COLOR_SCALING_FACTOR[combination.length] ** 2 *

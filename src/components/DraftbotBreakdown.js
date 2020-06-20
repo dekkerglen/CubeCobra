@@ -7,8 +7,8 @@ import { getCardColorClass } from 'components/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useSortableData from 'hooks/UseSortableData';
-import { encodeName, COLOR_COMBINATIONS } from 'utils/Card';
-import { addSeen } from 'utils/Draft';
+import { encodeName } from 'utils/Card';
+import { addSeen, createSeen } from 'utils/Draft';
 import {
   botRatingAndCombination,
   getColor,
@@ -25,7 +25,6 @@ import {
   getSynergyWeight,
 } from 'utils/draftbots';
 import Query from 'utils/Query';
-import { fromEntries } from 'utils/Util';
 import useToggle from 'hooks/UseToggle';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -119,7 +118,6 @@ const TRAITS = [
     name: 'Color Scaling',
     description:
       'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount as an additional weight',
-    weight: () => 'This is a weight to all the rest.',
     function: (combination) => getColorScaling(combination),
   },
   {
@@ -158,13 +156,11 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  picked.cards = [];
+  const picked = createSeen();
   addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
 
   const seen = useMemo(() => {
-    const res = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    res.cards = [];
+    const res = createSeen();
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
@@ -176,7 +172,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   // load the weights for the selected pack
   const weights = useMemo(() => {
     const res = [];
-    for (let i = 0; i < TRAITS.length - 2; i++) {
+    for (let i = 0; i < TRAITS.length - 3; i++) {
       res.push({
         name: TRAITS[i].name,
         description: TRAITS[i].description,
