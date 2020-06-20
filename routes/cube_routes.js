@@ -3171,7 +3171,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
-    const draft = await Draft.findById(deck.draft);
+    const draft = await Draft.findById(deck.draft).lean();
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 
@@ -3192,6 +3192,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
       }
+    }
+    for (const card of Object.values(draft.basics)) {
+      card.details = carddb.cardFromId(card.cardID);
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();

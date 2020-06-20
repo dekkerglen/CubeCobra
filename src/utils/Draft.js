@@ -25,29 +25,35 @@ let synergyMatrix;
 // This function tracks the total goodness of the cards we've seen or picked in this color.
 export const addSeen = (seen, cards, synergies) => {
   for (const card of cards) {
-    const rating = getRating(card);
-    const colors = cardColorIdentity(card);
-    const colorsStr = colors.join('');
-    // We ignore colorless because they just reduce variance by
-    // being in all color combinations.
-    for (const comb of COLOR_COMBINATIONS) {
-      const combStr = comb.join('');
-      if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
-        for (const { index } of seen.cards[combStr]) {
-          if (synergyMatrix[index][card.index] === null) {
-            const similarityValue = similarity(synergies[card.index], synergies[index]);
-            synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
-            synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
+    if (card.index || card.index === 0) {
+      const rating = getRating(card);
+      const colors = cardColorIdentity(card);
+      const colorsStr = colors.join('');
+      for (const comb of COLOR_COMBINATIONS) {
+        const combStr = comb.join('');
+        if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
+          for (const { index } of seen.cards[combStr]) {
+            if (synergyMatrix[index][card.index] === null) {
+              const similarityValue = similarity(synergies[card.index], synergies[index]);
+              synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+              if (!Number.isFinite(synergyMatrix[card.index][index])) {
+                synergyMatrix[card.index][index] = 0;
+              }
+              synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
+            }
+            seen.synergies[combStr] += synergyMatrix[index][card.index];
           }
-          seen.synergies[combStr] += synergyMatrix[index][card.index];
-        }
-        seen.cards[combStr].push(card);
-        if (colors.length > 0) {
-          seen.values[combStr] += rating;
+          seen.cards[combStr].push(card);
+          // We ignore colorless because they just reduce variance by
+          // being in all color combinations.
+          if (colors.length > 0) {
+            seen.values[combStr] += rating;
+          }
         }
       }
     }
   }
+  console.log(seen.synergies);
 };
 
 export function init(newDraft) {

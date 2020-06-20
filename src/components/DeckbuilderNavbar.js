@@ -21,7 +21,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { addSeen, buildDeck, calculateBasicCounts, createSeen } from 'utils/Draft';
+import { addSeen, buildDeck, calculateBasicCounts, createSeen, init } from 'utils/Draft';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -50,8 +50,9 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
 
   const calculateBasics = useCallback(async () => {
     const main = deck.flat(2);
+    init(draft);
     const picked = createSeen();
-    addSeen(picked, main);
+    addSeen(picked, main, draft.synergies);
     const { colors } = await buildDeck(main, picked, draft.synergies, draft.initial_state, null);
     const basics = calculateBasicCounts(main, colors);
     for (const [basic, count] of Object.entries(basics)) {
@@ -59,7 +60,6 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
       for (let i = 0; i < opts.length; i++) {
         if (parseInt(opts[i].value, 10) === count) {
           opts[i].selected = true;
-          // refs[basic].selectedIndex = i;
         }
       }
     }

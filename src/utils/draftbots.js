@@ -107,7 +107,8 @@ export const getRating = (card) => {
 const SIMILARITY_CLIP = 0.7;
 const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 
-export const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
+export const scaleSimilarity = (value) =>
+  SIMILARITY_MULTIPLIER * Math.min(Math.max(0, value - SIMILARITY_CLIP), 0.997 - SIMILARITY_CLIP);
 
 // Scale to get similarity range to approximately [0, 10]
 export const SYNERGY_SCALE = 0.2;
@@ -217,7 +218,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
   let bestRating = -Infinity;
   let bestCombination = [];
   const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
-  for (const combination of COLOR_COMBINATIONS.filter((comb) => comb.length > 0 && comb.length < 4)) {
+  for (const combination of COLOR_COMBINATIONS) {
     let rating = -Infinity;
     if (card && (considerInCombination(combination, card) || isPlayableLand(combination, card))) {
       rating =
@@ -231,12 +232,10 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
       const count = picked.cards[combination.join('')].filter((c) => !cardType(c).toLowerCase().includes('land'))
         .length;
       if (count >= 23) {
-        rating = Math.log(
+        rating =
           COLOR_SCALING_FACTOR[combination.length] ** 2 *
-            (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
-            count,
-        );
-        // console.log(combination, rating);
+          (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
+          count;
       }
     }
     if (rating > bestRating) {
