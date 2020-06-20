@@ -21,9 +21,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { COLOR_COMBINATIONS } from 'utils/Card';
-import { addSeen, buildDeck, calculateBasicCounts } from 'utils/Draft';
-import { fromEntries } from 'utils/Util';
+import { addSeen, buildDeck, calculateBasicCounts, createSeen } from 'utils/Draft';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -52,8 +50,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
 
   const calculateBasics = useCallback(async () => {
     const main = deck.flat(2);
-    const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    picked.cards = [];
+    const picked = createSeen();
     addSeen(picked, main);
     const { colors } = await buildDeck(main, picked, draft.synergies, draft.initial_state, null);
     const basics = calculateBasicCounts(main, colors);
