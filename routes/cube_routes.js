@@ -2924,9 +2924,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     for (const card of Object.values(srcDraft.basics)) {
       card.details = carddb.cardFromId(card.cardID);
     }
-    const userPicked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    userPicked.cards = [];
-    deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
+    const userPicked = deckutil.default.createSeen();
+    deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder, srcDraft.synergies);
     const { colors: userColors } = await deckutil.default.buildDeck(
       base.seats[req.params.index].pickorder,
       userPicked,
@@ -2958,9 +2957,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         for (const card of base.seats[i].pickorder) {
           card.details = carddb.cardFromId(card.cardID);
         }
-        const picked = Object.fromEntries(cardutil.COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-        picked.cards = [];
-        deckutil.default.addSeen(picked, base.seats[i].pickorder);
+        const picked = deckutil.default.createSeen();
+        deckutil.default.addSeen(picked, base.seats[i].pickorder, srcDraft.synergies);
         // eslint-disable-next-line no-await-in-loop
         const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
           base.seats[i].pickorder,

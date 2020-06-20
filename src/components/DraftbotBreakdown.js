@@ -83,13 +83,13 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (combination, card) => getRating(combination, card),
+    function: (_, card) => getRating(card),
   },
   {
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (combination, _, picked, synergies) => getInternalSynergy(combination, picked, synergies),
+    function: (combination, _, picked) => getInternalSynergy(combination, picked),
   },
   {
     name: 'Synergy',
@@ -101,7 +101,7 @@ const TRAITS = [
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, card, picked, synergies, seen) => getOpenness(combination, seen, card, picked, synergies),
+    function: (combination, _, __, ___, seen) => getOpenness(combination, seen),
   },
   {
     name: 'Color',
@@ -113,13 +113,13 @@ const TRAITS = [
     name: 'Fixing',
     description: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
-    function: (combination, card, picked) => getFixing(combination, picked, card),
+    function: (combination, card) => getFixing(combination, card),
   },
   {
     name: 'Color Scaling',
     description:
-      'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount',
-    weight: () => 1,
+      'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount as an additional weight',
+    weight: () => 'This is a weight to all the rest.',
     function: (combination) => getColorScaling(combination),
   },
   {
@@ -160,7 +160,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
   const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
   picked.cards = [];
-  addSeen(picked, seat.pickorder.slice(0, index));
+  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
 
   const seen = useMemo(() => {
     const res = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
@@ -168,7 +168,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
     }
     return res;
   }, [deck, draft, index, seatIndex]);

@@ -1,14 +1,15 @@
-import { arrayIsSubset } from 'utils/Util';
 import similarity from 'compute-cosine-similarity';
+
+import { arrayIsSubset } from 'utils/Util';
 import { COLOR_COMBINATIONS, cardColorIdentity, cardName, cardType } from 'utils/Card';
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.8, 0.6, 0.3, 0.2];
+const COLOR_SCALING_FACTOR = [1, 1, 0.67, 0.5, 0.24, 0.15];
 const COLORS_WEIGHTS = [
-  [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-  [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-  [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+  [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+  [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+  [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25],
 ];
 const RATING_WEIGHTS = [
   [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
@@ -85,61 +86,55 @@ export const fetchLands = {
   'Evolving Wilds': [...'WUBRG'],
 };
 
+export const considerInCombination = (combination, card) =>
+  card && arrayIsSubset(cardColorIdentity(card) ?? [], combination);
+
+export const isPlayableLand = (colors, card) =>
+  considerInCombination(colors, card) ||
+  colors.filter((c) => cardColorIdentity(card).includes(c)).length > 0 ||
+  (fetchLands[card.details.name] && fetchLands[card.details.name].some((c) => colors.includes(c)));
+
 export const getColorScaling = (combination) => {
   return COLOR_SCALING_FACTOR[combination.length];
 };
 
 // What is the raw power level of this card?
 // Scale is roughly 0-100, linear. Black Lotus should be ~100.
-export const getRating = (_, card) => {
+export const getRating = (card) => {
   return 10 ** ((card?.rating ?? 1200) / 400 - 4);
 };
-
-export const considerInCombination = (combination, card) =>
-  card && arrayIsSubset(cardColorIdentity(card) ?? [], combination);
 
 // Ignore synergy below this value.
 const SIMILARITY_CLIP = 0.8;
 const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 
-const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
+export const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
 
 // Scale to get similarity range to approximately [0, 1]
-const SYNERGY_SCALE = 4.2;
+export const SYNERGY_SCALE = 4.2;
 
 // How much do the cards we've already picked in this combo synergize with each other?
 // Scale is roughly 0-1.
-export const getInternalSynergy = (combination, picked, synergies) => {
-  if (picked.cards.length === 0 || !synergies) {
+export const getInternalSynergy = (combination, picked) => {
+  const combStr = combination.join('');
+  if (picked.cards.WUBRG.length === 0) {
     return 0;
   }
 
-  let internalSynergy = 0;
-  if (synergies) {
-    const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
-    for (let i = 1; i < pickedInCombo.length; i++) {
-      for (let j = 0; j < i; j++) {
-        const similarityValue = similarity(synergies[pickedInCombo[i].index], synergies[pickedInCombo[j].index]);
-        internalSynergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
-      }
-    }
-  }
-
-  const numPairs = (picked.cards.length * (picked.cards.length + 1)) / 2;
-  return internalSynergy / numPairs;
+  const numPairs = (picked.cards.WUBRG.length * (picked.cards.WUBRG.length + 1)) / 2;
+  return picked.synergies[combStr] / numPairs;
 };
 
 // How much does the card we're considering synergize with the cards we've picked?
 // Scale is roughly 0-1.
 export const getPickSynergy = (combination, card, picked, synergies) => {
-  if (picked.cards.length === 0 || !synergies) {
+  if (picked.cards.WUBRG.length === 0 || !synergies) {
     return 0;
   }
 
   let synergy = 0;
   if (synergies && card) {
-    const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
-    for (const { index } of pickedInCombo) {
+    for (const { index } of picked.cards[combination.join('')]) {
       // Don't count synergy for duplicate cards.
       // Maximum synergy is generally around .997 which corresponds to ~1.
       if (index !== card.index) {
@@ -158,24 +153,24 @@ export const getOpenness = (combination, seen) => {
     return 0;
   }
 
-  return seen[combination.join('')] / seen.cards.length;
+  return seen.values[combination.join('')] / seen.cards.WUBRG.length;
 };
 
 // How good are the cards we've already picked in this color combo?
 // Scale from 0-1.
 export const getColor = (combination, picked) => {
-  if (picked.cards.length === 0) {
+  if (picked.cards.WUBRG.length === 0) {
     return 0;
   }
 
-  return picked[combination.join('')] / picked.cards.length;
+  return picked.values[combination.join('')] / picked.cards.WUBRG.length;
 };
 
 const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
 // Does this help us fix for this combination of colors?
 // Scale from 0-1. Perfect is double-on-color fetch.
-export const getFixing = (combination, _, card) => {
+export const getFixing = (combination, card) => {
   const colors = fetchLands[card.details.name] ?? cardColorIdentity(card);
   const typeLine = cardType(card);
   const isLand = typeLine.indexOf('Land') > -1;
@@ -215,44 +210,40 @@ export const getFixingWeight = (pack, pick, initialState) => {
   return interpolateWeight2d(FIXING_WEIGHTS, pack, pick, initialState);
 };
 
-export const getColorScalingWeight = (pack, pick, initialState) => {
-  return (
-    interpolateWeight2d(COLORS_WEIGHTS, pack, pick, initialState) +
-    interpolateWeight2d(OPENNESS_WEIGHTS, pack, pick, initialState)
-  );
-};
-
 // inPack is the number of cards in this pack
 export const botRatingAndCombination = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
-  let bestRating = -10000;
+  let bestRating = -Infinity;
   let bestCombination = [];
-  for (const combination of COLOR_COMBINATIONS) {
-    let rating = -100000;
-    if (card && combination.length > 0 && considerInCombination(combination, card)) {
+  const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
+  for (const combination of COLOR_COMBINATIONS.filter((comb) => comb.length > 0 && comb.length < 4)) {
+    let rating = -Infinity;
+    if (card && (considerInCombination(combination, card) || isPlayableLand(combination, card))) {
       rating =
-        (getRating(combination, card, initialState) * getRatingWeight(packNum, pickNum, initialState) +
-          getPickSynergy(combination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
-          getInternalSynergy(combination, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
+        (getPickSynergy(combination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
+          getInternalSynergy(combination, picked) * getSynergyWeight(packNum, pickNum, initialState) +
           getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
           getColor(combination, picked) * getColorWeight(packNum, pickNum, initialState) +
-          getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState)) *
+          getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState)) *
         getColorScaling(combination);
     } else if (!card) {
-      rating = Math.log(
-        COLOR_SCALING_FACTOR[combination.length] ** 2 *
-          (getColor(combination, picked) + getInternalSynergy(combination, picked, synergies)) *
-          picked.cards.filter((card2) => considerInCombination(combination, card2)).length,
-      );
+      const count = picked.cards[combination.join('')].length;
+      if (count >= 23) {
+        rating = Math.log(
+          COLOR_SCALING_FACTOR[combination.length] ** 2 *
+            (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
+            count,
+        );
+      }
     }
     if (rating > bestRating) {
       bestRating = rating;
       bestCombination = combination;
     }
   }
-  return [bestRating, bestCombination];
+  return [bestRating + weightedRatingScore, bestCombination];
 };
 
 export default {
