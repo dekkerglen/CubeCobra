@@ -169,7 +169,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   const playableLands = lands.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
 
-  console.log(inColor.length / nonlands.length, inColor.length);
+  console.log(colors, inColor.length / nonlands.length, inColor.length);
 
   nonlands = inColor;
   let side = outOfColor;

@@ -4,10 +4,10 @@ import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardColorIdentity, cardName, c
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.67, 0.48, 0.24, 0.15];
+const COLOR_SCALING_FACTOR = [1, 1, 0.62, 0.45, 0.24, 0.15];
 const COLORS_WEIGHTS = [
+  [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
   [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
-  [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
   [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25],
 ];
 const RATING_WEIGHTS = [
@@ -26,9 +26,9 @@ const SYNERGY_WEIGHTS = [
   [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 const OPENNESS_WEIGHTS = [
-  [4, 8, 8.2, 8.4, 8.6, 8.8, 9, 9.2, 9.5, 9.1, 8.7, 8.3, 7.9, 7.5, 7.1],
-  [9, 8.6, 8.2, 7.8, 7.4, 7, 6.6, 6.2, 5.8, 5.4, 5, 4.6, 4.2, 3.8, 3.4],
-  [4, 3.6, 3.2, 2.8, 2.4, 2, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0.2, 0],
+  [4, 12, 12.3, 12.6, 13, 13.4, 13.7, 14, 15, 14.6, 14.2, 13.8, 13.4, 13, 12.6],
+  [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
+  [8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1],
 ];
 
 // These functions get approximate weight values when there are not 15 cards in the pack.
@@ -90,7 +90,7 @@ export const considerInCombination = (combination, card) =>
 
 export const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
-  colors.filter((c) => cardColorIdentity(card).includes(c)).length > 0 ||
+  colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
   (fetchLands[card.details.name] && fetchLands[card.details.name].some((c) => colors.includes(c)));
 
 export const getColorScaling = (combination) => {
@@ -152,7 +152,7 @@ export const getOpenness = (combination, seen) => {
     return 0;
   }
 
-  return seen.values[combination.join('')] / seen.cards.WUBRG.length;
+  return (2 * seen.values[combination.join('')]) / seen.cards.WUBRG.length;
 };
 
 // How good are the cards we've already picked in this color combo?
@@ -236,6 +236,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
             (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
             count,
         );
+        // console.log(combination, rating);
       }
     }
     if (rating > bestRating) {

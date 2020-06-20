@@ -201,7 +201,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       card.scores.push(TRAITS[i].function(combination, card, picked, draft.synergies, seen));
     }
     card.scores.push(combination.join(''));
-    card.scores.push(score);
+    card.scores.push(score.toFixed(2));
   }
   if (normalized) {
     for (let i = 0; i < TRAITS.length - 2; i++) {
