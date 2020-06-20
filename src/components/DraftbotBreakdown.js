@@ -8,7 +8,7 @@ import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useSortableData from 'hooks/UseSortableData';
 import { encodeName } from 'utils/Card';
-import { addSeen, createSeen } from 'utils/Draft';
+import { addSeen, createSeen, init } from 'utils/Draft';
 import {
   botRatingAndCombination,
   getColor,
@@ -134,6 +134,9 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [index, setIndex] = useState(defaultIndex ?? 0);
   const didMountRef1 = useRef(false);
   const [normalized, toggleNormalized] = useToggle(false);
+
+  // Have to do useMemo so it happens immediately
+  useMemo(() => init(draft), [draft]);
 
   useEffect(() => {
     if (didMountRef1.current) {

@@ -100,17 +100,17 @@ export const getColorScaling = (combination) => {
 // What is the raw power level of this card?
 // Scale is roughly 0-100, linear. Black Lotus should be ~100.
 export const getRating = (card) => {
-  return 10 ** ((card?.rating ?? 1200) / 400 - 4);
+  return 10 ** ((card?.rating ?? 1200) / 400 - 3);
 };
 
 // Ignore synergy below this value.
-const SIMILARITY_CLIP = 0.8;
+const SIMILARITY_CLIP = 0.7;
 const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 
 export const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
 
-// Scale to get similarity range to approximately [0, 1]
-export const SYNERGY_SCALE = 4.2;
+// Scale to get similarity range to approximately [0, 10]
+export const SYNERGY_SCALE = 0.2;
 
 // How much do the cards we've already picked in this combo synergize with each other?
 // Scale is roughly 0-1.

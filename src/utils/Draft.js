@@ -21,10 +21,11 @@ export const createSeen = () => ({
   cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
 });
 
+let synergyMatrix;
 // This function tracks the total goodness of the cards we've seen or picked in this color.
 export const addSeen = (seen, cards, synergies) => {
   for (const card of cards) {
-    const rating = 10 ** ((card?.rating ?? 1200) / 400 - 4);
+    const rating = getRating(card);
     const colors = cardColorIdentity(card);
     const colorsStr = colors.join('');
     // We ignore colorless because they just reduce variance by
@@ -33,8 +34,12 @@ export const addSeen = (seen, cards, synergies) => {
       const combStr = comb.join('');
       if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
         for (const { index } of seen.cards[combStr]) {
-          const similarityValue = similarity(synergies[card.index], synergies[index]);
-          seen.synergies[combStr] += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+          if (synergyMatrix[index][card.index] === null) {
+            const similarityValue = similarity(synergies[card.index], synergies[index]);
+            synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+            synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
+          }
+          seen.synergies[combStr] += synergyMatrix[index][card.index];
         }
         seen.cards[combStr].push(card);
         if (colors.length > 0) {
@@ -45,12 +50,19 @@ export const addSeen = (seen, cards, synergies) => {
   }
 };
 
-function init(newDraft) {
+export function init(newDraft) {
   draft = newDraft;
-  for (const seat of draft.seats) {
-    seat.seen = createSeen();
-    addSeen(seat.seen, seat.packbacklog[0].slice(), draft.synergies);
-    seat.picked = createSeen();
+  const maxIndex = Math.max(...draft.initial_state.flat(3).map(({ index }) => index));
+  synergyMatrix = [];
+  for (let i = 0; i <= maxIndex; i++) {
+    synergyMatrix.push(new Array(maxIndex + 1).fill(null));
+  }
+  if (draft.seats[0].packbacklog.length > 0) {
+    for (const seat of draft.seats) {
+      seat.seen = createSeen();
+      addSeen(seat.seen, seat.packbacklog[0].slice(), draft.synergies);
+      seat.picked = createSeen();
+    }
   }
 }
 

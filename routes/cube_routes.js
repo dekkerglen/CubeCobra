@@ -2924,6 +2924,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     for (const card of Object.values(srcDraft.basics)) {
       card.details = carddb.cardFromId(card.cardID);
     }
+    deckutil.default.init(srcDraft);
     const userPicked = deckutil.default.createSeen();
     deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder, srcDraft.synergies);
     const { colors: userColors } = await deckutil.default.buildDeck(
