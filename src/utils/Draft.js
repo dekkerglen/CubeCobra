@@ -364,8 +364,7 @@ async function finish() {
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
       botIndex += 1;
     } else {
-      const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-      picked.cards = [];
+      const picked = createSeen();
       addSeen(picked, draft.seats[i].pickorder, draft.synergies);
       const colors = botColors(
         null,
