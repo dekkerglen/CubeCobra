@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
 
-import Draft from 'utils/Draft';
+import Draft, { init } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 
@@ -35,7 +35,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const canDrop = (source, target) => {
+const canDrop = (_, target) => {
   return target.type === Location.PICKS;
 };
 
@@ -91,7 +91,7 @@ Pack.defaultProps = {
 };
 
 const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
-  useMemo(() => Draft.init(initialDraft), [initialDraft]);
+  useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
