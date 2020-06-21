@@ -75,8 +75,6 @@ winston.configure({
 
 console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
-console.log(process.env.MONGODB_URL);
-
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
   useCreateIndex: true,
@@ -217,10 +215,6 @@ app.post('*', (req, res, next) => {
   next();
 });
 
-app.use((req, res) => {
-  res.status(404).render('info/down', {});
-});
-
 // Route files; they manage their own CSRF protection
 const cubes = require('./routes/cube_routes');
 const users = require('./routes/users_routes');
@@ -249,7 +243,7 @@ app.use((err, req, res, next) => {
 });
 
 // scryfall updates this data at 9, so his will minimize staleness
-schedule.scheduleJob('0 10 * *', () => {
+schedule.scheduleJob('0 10 * * *', () => {
   winston.info('String midnight cardbase update...');
   updatedb.updateCardbase();
 });
