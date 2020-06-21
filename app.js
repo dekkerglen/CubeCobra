@@ -75,6 +75,8 @@ winston.configure({
 
 console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
+console.log(process.env.MONGODB_URL);
+
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
   useCreateIndex: true,
@@ -98,7 +100,6 @@ const app = express();
 const store = new MongoDBStore(
   {
     uri: process.env.MONGODB_URL,
-    databaseName: process.env.DBNAME,
     collection: 'session_data',
   },
   (err) => {
@@ -248,7 +249,7 @@ app.use((err, req, res, next) => {
 });
 
 // scryfall updates this data at 9, so his will minimize staleness
-schedule.scheduleJob('0 10  * *', () => {
+schedule.scheduleJob('0 10 * *', () => {
   winston.info('String midnight cardbase update...');
   updatedb.updateCardbase();
 });
