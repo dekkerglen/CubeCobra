@@ -75,15 +75,8 @@ winston.configure({
 
 console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
 
-const ca = [fs.readFileSync('cert/rds-combined-ca-bundle.pem')];
-
-console.log(ca);
-
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
-  sslValidate: false,
-  ssl: true,
-  sslCA: ca,
   useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
