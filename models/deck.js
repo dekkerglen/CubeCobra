@@ -24,10 +24,7 @@ Comment.add({
 //data for each seat, human or bot
 const SeatDeck = {
   bot: [String], //null bot value means human player
-  userid: {
-    type: String,
-    index: true,
-  },
+  userid: String,
   username: String,
   pickorder: [cardSchema],
   name: String,
@@ -42,14 +39,8 @@ const SeatDeck = {
 
 // Deck schema
 let deckSchema = mongoose.Schema({
-  cube: {
-    type: String,
-    index: true,
-  },
-  date: {
-    type: Date,
-    index: true,
-  },
+  cube: String,
+  date: Date,
   comments: {
     type: [Comment],
     default: [],
@@ -65,9 +56,12 @@ let deckSchema = mongoose.Schema({
   seats: {
     type: [SeatDeck],
     default: [],
-    index: true,
   },
 });
+
+deckSchema.index({
+  date: -1,
+})
 
 deckSchema.index({
   cube: 1,
