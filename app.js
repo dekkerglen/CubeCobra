@@ -15,7 +15,6 @@ const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const tmp = require('tmp');
 const schedule = require('node-schedule');
-const fs = require('fs');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
