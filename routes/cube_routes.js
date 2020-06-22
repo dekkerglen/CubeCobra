@@ -1153,7 +1153,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
   }
 });
 
-const createDraftForSingleDeck = (deck) => {
+const createDraftForSingleDeck = async (deck) => {
   let index = 0;
   const populatedCards = [];
   for (const stack of deck.seats[0].deck) {
@@ -1262,7 +1262,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         sideboard: [],
       },
     ];
-    deck.draft = createDraftForSingleDeck(deck);
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
     await Cube.updateOne(
@@ -1734,7 +1734,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       deck: pool,
       sideboard: [],
     });
-    deck.draft = createDraftForSingleDeck(deck);
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
 
