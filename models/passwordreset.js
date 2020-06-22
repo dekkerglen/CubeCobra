@@ -16,4 +16,9 @@ const PasswordResetSchema = mongoose.Schema({
   },
 });
 
+PasswordResetSchema.index({
+  code: 1,
+  email: 1,
+});
+
 const PasswordReset = (module.exports = mongoose.model('PasswordReset', PasswordResetSchema));
