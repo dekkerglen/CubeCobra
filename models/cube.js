@@ -85,14 +85,17 @@ const cubeSchema = mongoose.Schema({
   overrideCategory: {
     type: Boolean,
     default: false,
+    index: true,
   },
   categoryOverride: {
     type: String,
     default: 'Vintage',
+    index: true,
   },
   categoryPrefixes: {
     type: [String],
     default: [],
+    index: true,
   },
   tags: {
     type: [String],
@@ -158,6 +161,21 @@ const cubeSchema = mongoose.Schema({
     // Values: first, recent
     default: 'recent',
   },
+});
+
+cubeSchema.index({
+  owner: 1,
+  date_updated: -1,
+});
+
+cubeSchema.index({
+  name: 1,
+  date_updated: -1,
+});
+
+cubeSchema.index({
+  name: 1,
+  numDecks: -1,
 });
 
 const Cube = mongoose.model('Cube', cubeSchema);
