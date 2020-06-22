@@ -61,7 +61,7 @@ let deckSchema = mongoose.Schema({
 
 deckSchema.index({
   date: -1,
-})
+});
 
 deckSchema.index({
   cube: 1,
