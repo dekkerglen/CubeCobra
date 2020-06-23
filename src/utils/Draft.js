@@ -53,7 +53,6 @@ export const addSeen = (seen, cards, synergies) => {
       }
     }
   }
-  console.log(seen.synergies);
 };
 
 export function init(newDraft) {
@@ -175,7 +174,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   const playableLands = lands.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
 
-  console.log(colors, inColor.length / nonlands.length, inColor.length);
+  // console.log(colors, inColor.length / nonlands.length, inColor.length);
 
   nonlands = inColor;
   let side = outOfColor;
@@ -419,18 +418,21 @@ async function finish() {
   });
 }
 
-async function allBotsDraft() {
+async function allBotsDraft(noFinish) {
   for (const seat of draft.seats) {
     seat.bot = [];
   }
   while (draft.seats[0].packbacklog.length > 0 && draft.seats[0].packbacklog[0].length > 0) {
     passPack();
   }
-  await finish();
+  if (!noFinish) {
+    await finish();
+  }
 }
 
 export default {
   addSeen,
+  createSeen,
   allBotsDraft,
   arrangePicks,
   botColors,
@@ -443,4 +445,6 @@ export default {
   pack,
   packPickNumber,
   pick,
+  considerInCombination,
+  isPlayableLand,
 };

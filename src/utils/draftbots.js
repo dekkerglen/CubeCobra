@@ -4,7 +4,7 @@ import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardColorIdentity, cardName, c
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.62, 0.45, 0.24, 0.15];
+const COLOR_SCALING_FACTOR = [1, 1, 0.75, 0.55, 0.24, 0.15];
 const COLORS_WEIGHTS = [
   [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
   [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
