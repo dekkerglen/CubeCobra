@@ -363,10 +363,10 @@ export const weightedPercentiles = (arr, num) => {
   const percentiles = [];
   for (const [weight, value] of nums) {
     const newTotal = total + weight;
-    while (newTotal > percentiles.length * count / num) {
+    while (newTotal > (percentiles.length * count) / num) {
       percentiles.push((prevValue + value) / 2);
     }
-    if (newTotal === percentiles.length * count / num) {
+    if (newTotal === (percentiles.length * count) / num) {
       percentiles.push(value);
     }
     prevValue = value;
