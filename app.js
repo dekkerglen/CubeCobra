@@ -58,7 +58,7 @@ const textFormat = winston.format.combine(linearFormat(), winston.format.simple(
 const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
 
 winston.configure({
-  level: 'info',
+  level: 'error',
   format: winston.format.json(),
   exitOnError: false,
   transports: [
@@ -80,6 +80,7 @@ mongoose.connect(process.env.MONGODB_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
 const db = mongoose.connection;
 db.once('open', () => {
   winston.info('Connected to Mongo.');
@@ -96,7 +97,6 @@ const app = express();
 const store = new MongoDBStore(
   {
     uri: process.env.MONGODB_URL,
-    databaseName: process.env.DBNAME,
     collection: 'session_data',
   },
   (err) => {
@@ -242,7 +242,7 @@ app.use((err, req, res, next) => {
 });
 
 // scryfall updates this data at 9, so his will minimize staleness
-schedule.scheduleJob('0 10  * *', () => {
+schedule.scheduleJob('0 10 * * *', () => {
   winston.info('String midnight cardbase update...');
   updatedb.updateCardbase();
 });

@@ -42,7 +42,7 @@ You will need to make sure you have `bash` installed somewhere and run the follo
 
 Then you can start the program like so:
 
-    npm start
+    npm run devstart
 
 You can now open up a browser and connect to the app through: http://localhost:8080. Despite the fact that node says it is running on port 5000, you should use port 8080 to connect.
 

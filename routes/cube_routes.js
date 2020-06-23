@@ -404,7 +404,7 @@ router.get('/overview/:id', async (req, res) => {
     const blogsQ = Blog.find({
       cube: cube._id,
     })
-      .sort('date')
+      .sort({ date: -1 })
       .lean();
 
     const followersQ = User.find(
@@ -471,9 +471,6 @@ router.get('/overview/:id', async (req, res) => {
         if (item.html) {
           item.html = addAutocard(item.html, carddb, cube);
         }
-      }
-      if (blogs.length > 0) {
-        blogs.reverse();
       }
     }
     cube.raw_desc = cube.body;
@@ -550,7 +547,11 @@ router.get('/blog/:id/:page', async (req, res) => {
     const userQ = User.findById(cube.owner);
     const blogsQ = Blog.find({
       cube: cube._id,
-    });
+    })
+      .sort({ date: -1 })
+      .skip(page * 10)
+      .limit(10)
+      .lean();
     const [user, blogs] = await Promise.all([userQ, blogsQ]);
 
     for (const item of blogs) {
@@ -562,14 +563,11 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    blogs.reverse();
-    const blogPage = blogs.slice(page * 10, (page + 1) * 10);
-
     const reactProps = {
       cube,
       cubeID,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      posts: blogs.length > 0 ? blogPage : blogs,
+      posts: blogs,
       pages: Math.ceil(blogs.length / 10),
       activePage: page,
       userid: user._id,
@@ -600,7 +598,7 @@ router.get('/rss/:id', async (req, res) => {
     const blogs = await Blog.find({
       cube: cube._id,
     })
-      .sort('-date')
+      .sort({ date: -1 })
       .exec();
 
     const feed = new RSS({
