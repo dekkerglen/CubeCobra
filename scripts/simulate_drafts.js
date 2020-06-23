@@ -60,7 +60,7 @@ const runTest = async () => {
   const landCounts = [];
   const nonlandCounts = [];
   const totalCounts = [];
-  const SAMPLE_COUNT = 20;
+  const SAMPLE_COUNT = 125;
   for (let i = 0; i < SAMPLE_COUNT; i++) {
     // eslint-disable-next-line no-await-in-loop
     const result = await runDraft();
