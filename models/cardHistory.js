@@ -28,19 +28,10 @@ const Datapoint = {
 
 // card schema for analytics only. Use card objects for most use cases
 const cardHistorySchema = mongoose.Schema({
-  cardName: {
-    // Normal card name, not lowercased.
-    type: String,
-    index: true,
-  },
-  oracleId: {
-    type: String,
-    index: true,
-  },
-  versions: {
-    type: [String], // Card IDs for all versions of this card.
-    index: true,
-  },
+  // Normal card name, not lowercased.
+  cardName: String,
+  oracleId: String,
+  versions: [String], // Card IDs for all versions of this card.
   current: Datapoint,
   cubedWith: [
     {
@@ -64,11 +55,6 @@ cardHistorySchema.index({ oracleId: 1, 'current.rating': 1 });
 cardHistorySchema.index({ oracleId: 1, 'current.elo': -1 });
 cardHistorySchema.index({ oracleId: 1, 'current.picks': -1 });
 cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1 });
-
-cardHistorySchema.index({ 'current.rating': 1 });
-cardHistorySchema.index({ 'current.elo': -1 });
-cardHistorySchema.index({ 'current.picks': -1 });
-cardHistorySchema.index({ 'current.cubes': -1 });
 
 const CardHistory = mongoose.model('CardHistory', cardHistorySchema);
 
