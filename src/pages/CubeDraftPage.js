@@ -242,14 +242,21 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
           )}
           {showBotBreakdown && (
             <ErrorBoundary>
-              <Internal
-                cardsInPack={pack}
-                pack={packNumber}
-                picks={pickNumber}
-                draft={initialDraft}
-                seen={seen}
-                picked={picked}
-              />
+              <Card className="mt-3">
+                <CardHeader className="mb-0">
+                  <h4 className="mb-0">Draftbot Breakdown</h4>
+                </CardHeader>
+                <CardBody>
+                  <Internal
+                    cardsInPack={pack}
+                    pack={packNumber - 1}
+                    picks={pickNumber - 1}
+                    draft={initialDraft}
+                    seen={seen}
+                    picked={picked}
+                  />
+                </CardBody>
+              </Card>
             </ErrorBoundary>
           )}
           <ErrorBoundary className="mt-3">

@@ -199,11 +199,11 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
     return res;
   }, [cardsInPack]);
 
-  const { items, requestSort, sortConfig } = useSortableData(counts);
+  const { items, requestSort, sortConfig } = useSortableData(counts, { key: 'Total', direction: 'descending' });
 
   return (
     <>
-      <Label check>
+      <Label check className="pl-2">
         <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
       </Label>
       <Table bordered responsive className="small-table mt-lg-3">
