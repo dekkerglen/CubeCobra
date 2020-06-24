@@ -15,7 +15,6 @@ const WinstonCloudWatch = require('winston-cloudwatch');
 const AWS = require('aws-sdk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
-const tmp = require('tmp');
 const schedule = require('node-schedule');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');

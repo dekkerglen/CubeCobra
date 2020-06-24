@@ -1494,6 +1494,12 @@ function writeCard(res, card, maybe) {
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
+
     for (const card of cube.cards) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
@@ -1522,6 +1528,11 @@ router.get('/download/csv/:id', async (req, res) => {
 router.get('/download/forge/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1578,6 +1589,10 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
 router.get('/download/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
     return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -1587,6 +1602,10 @@ router.get('/download/mtgo/:id', async (req, res) => {
 router.get('/download/xmage/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1606,6 +1625,10 @@ router.get('/download/xmage/:id', async (req, res) => {
 router.get('/download/plaintext/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -3022,7 +3045,7 @@ router.get('/redraft/:id', async (req, res) => {
   try {
     const base = await Deck.findById(req.params.id).lean();
 
-    if (!base) {
+    if (!(base && base.draft)) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
@@ -3171,7 +3194,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
-    const draft = await Draft.findById(deck.draft);
+    const draft = deck.draft ? await Draft.findById(deck.draft) : null;
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 
