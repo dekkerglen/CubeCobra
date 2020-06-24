@@ -2152,7 +2152,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         // add id
         const details = carddb.cardFromId(edit.substring(1));
         if (!details) {
-          req.logger.error(`Card not found: ${edit}`, req);
+          req.logger.error({ message: `Card not found: ${edit}` });
         } else {
           adds.push(details);
           changelog += addCardHtml(details);
@@ -2177,7 +2177,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         const [outStr, idIn] = edit.substring(1).split('>');
         const detailsIn = carddb.cardFromId(idIn);
         if (!detailsIn) {
-          req.logger.error(`Card not found: ${edit}`, req);
+          req.logger.error({ message: `Card not found: ${edit}` });
         } else {
           adds.push(detailsIn);
         }
@@ -3710,7 +3710,7 @@ router.post(
       )}`,
     );
     if (!response.ok) {
-      req.logger.error('Flask server response not OK.');
+      req.logger.error({ message: 'Flask server response not OK.' });
       return res.status(500).send({
         success: 'false',
         result: {},
