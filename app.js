@@ -20,13 +20,15 @@ const schedule = require('node-schedule');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
-const formatInfo = ({ level, message }) => `[${level}] ${JSON.stringify(message)}`;
-const formatError = ({ message, stack, request }) => {
-  if (request) {
-    return `[error] ${message} \nTarget: ${request.originalUrl}\nUUID: ${request.uuid}\nStackTrace: ${stack}`;
-  }
-  return `[error] ${message} \nStackTrace: ${stack}`;
-};
+const formatInfo = ({ message }) => JSON.stringify(message);
+const formatError = ({ message, stack, request }) =>
+  JSON.stringify({
+    level: 'error',
+    message,
+    target: request ? request.originalUrl : null,
+    uuid: request ? request.uuid : null,
+    stack: stack.split('\n'),
+  });
 
 const linearFormat = winston.format((info) => {
   if (info.message.type === 'request') {
@@ -51,8 +53,8 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID.length > 0) {
       new WinstonCloudWatch({
         level: 'info',
         cloudWatchLogs: new AWS.CloudWatchLogs(),
-        logGroupName: process.env.AWS_LOG_GROUP,
-        logStreamName: `${process.env.AWS_LOG_STREAM}_info`,
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_info`,
+        logStreamName: uuid(),
         awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
         awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
         awsRegion: process.env.AWS_REGION,
@@ -62,8 +64,8 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID.length > 0) {
       new WinstonCloudWatch({
         level: 'error',
         cloudWatchLogs: new AWS.CloudWatchLogs(),
-        logGroupName: process.env.AWS_LOG_GROUP,
-        logStreamName: `${process.env.AWS_LOG_STREAM}_error`,
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_error`,
+        logStreamName: uuid(),
         awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
         awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
         awsRegion: process.env.AWS_REGION,
