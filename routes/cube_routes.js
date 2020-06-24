@@ -595,6 +595,10 @@ router.get('/rss/:id', async (req, res) => {
     const split = req.params.id.split(';');
     const cubeID = split[0];
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
     const blogs = await Blog.find({
       cube: cube._id,
     })
@@ -3267,7 +3271,7 @@ router.get('/deck/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft);
-      if (!draft.synergies) {
+      if (draft && !draft.synergies) {
         // put in synergies for old drafts that don't have em.
         const cards = draft.initial_state.flat(3);
 
