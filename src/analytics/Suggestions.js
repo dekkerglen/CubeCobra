@@ -14,6 +14,7 @@ import {
   ListGroupItem,
   ListGroupItemHeading,
   Row,
+  Spinner,
 } from 'reactstrap';
 import useToggle from 'hooks/UseToggle';
 
@@ -85,7 +86,9 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
             <ListGroup>
               {loading && (
                 <CardBody>
-                  <em>Loading...</em>
+                  <div className="centered py-3">
+                    <Spinner className="position-absolute" />
+                  </div>
                 </CardBody>
               )}
               {!loading &&
@@ -114,7 +117,9 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
             <ListGroup>
               {loading && (
                 <CardBody>
-                  <em>Loading...</em>
+                  <div className="centered py-3">
+                    <Spinner className="position-absolute" />
+                  </div>
                 </CardBody>
               )}
               {!loading &&

@@ -42,4 +42,31 @@ let blogSchema = mongoose.Schema({
   },
 });
 
+blogSchema.index({
+  cube: 1,
+  date: -1,
+});
+
+blogSchema.index({
+  owner: 1,
+  date: -1,
+});
+
+blogSchema.index({
+  cube: 1,
+  date: -1,
+});
+
+blogSchema.index({
+  dev: 1,
+  date: -1,
+});
+
+blogSchema.index({
+  cube: 1,
+  owner: 1,
+  dev: 1,
+  date: -1,
+});
+
 let Blog = (module.exports = mongoose.model('Blog', blogSchema));

@@ -42,7 +42,7 @@ You will need to make sure you have `bash` installed somewhere and run the follo
 
 Then you can start the program like so:
 
-    npm start
+    npm run devstart
 
 You can now open up a browser and connect to the app through: http://localhost:8080. Despite the fact that node says it is running on port 5000, you should use port 8080 to connect.
 
@@ -65,7 +65,7 @@ node --max-old-space-size=4096 force_update.js
 
 To build the analytics database objects, you need to run the script `populate_analytics.js`. You will likely need to add the `max-old-space-size` flag like so:
 ```
-node --max-old-space-size=8192 populate_analytics.js
+node --max-old-space-size=8192 jobs/populate_analytics.js
 ```
 
 This will populate the data used for card pages. You will need to do a couple playtest drafts to seed some data for the analytics for this to work correctly. 
