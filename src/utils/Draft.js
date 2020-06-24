@@ -34,9 +34,13 @@ export const addSeen = (seen, cards, synergies) => {
         if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
           for (const { index } of seen.cards[combStr]) {
             if (synergyMatrix[index][card.index] === null) {
-              const similarityValue = similarity(synergies[card.index], synergies[index]);
-              synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
-              if (!Number.isFinite(synergyMatrix[card.index][index])) {
+              if (synergies[card.index].some((n) => n !== 0) && synergies[index].some((x) => x !== 0)) {
+                const similarityValue = similarity(synergies[card.index], synergies[index]);
+                synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+                if (!Number.isFinite(synergyMatrix[card.index][index])) {
+                  synergyMatrix[card.index][index] = 0;
+                }
+              } else {
                 synergyMatrix[card.index][index] = 0;
               }
               synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
@@ -102,6 +106,14 @@ function arrangePicks(picks) {
 
   draft.seats[0].drafted = [...picks];
 }
+
+export const getSeen = (seat) => {
+  return draft.seats[seat].seen;
+};
+
+export const getPicked = (seat) => {
+  return draft.seats[seat].pickorder;
+};
 
 const botRating = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
   botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[0];
