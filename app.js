@@ -11,68 +11,77 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const winston = require('winston');
+const WinstonCloudWatch = require('winston-cloudwatch');
+const AWS = require('aws-sdk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
-const tmp = require('tmp');
 const schedule = require('node-schedule');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 
-const errorFile = tmp.fileSync({ prefix: `node-error-${process.pid}-`, postfix: '.log', discardDescriptor: true });
-const combinedFile = tmp.fileSync({
-  prefix: `node-combined-${process.pid}-`,
-  postfix: '.log',
-  discardDescriptor: true,
-});
-
-const timestampedFormat = winston.format((info) => {
-  if (info.message) {
-    info.message = `[${new Date(Date.now()).toISOString()}] ${info.message}`;
-  }
-  return info;
-});
+const formatInfo = ({ message }) => JSON.stringify(message);
+const formatError = ({ message, stack, request }) =>
+  JSON.stringify({
+    level: 'error',
+    message,
+    target: request ? request.originalUrl : null,
+    uuid: request ? request.uuid : null,
+    stack: stack.split('\n'),
+  });
 
 const linearFormat = winston.format((info) => {
-  if (info.type === 'request') {
-    // :remote-addr :uuid :method :url :status :res[content-length] - :response-time ms
-    const length = info.length === undefined ? '-' : info.length;
-    info.message = `${info.remoteAddr} ${info.requestId} ${info.method} ${info.path} ${info.status} ${length} ${info.elapsed}ms`;
-    delete info.remoteAddr;
-    delete info.requestId;
-    delete info.method;
-    delete info.path;
-    delete info.status;
-    delete info.length;
-    delete info.elapsed;
-  } else if (info.error) {
-    info.message = info.message
-      ? `${info.message}: ${info.error.message}: ${info.error.stack}`
-      : `${info.error.message}: ${info.error.stack}`;
-    delete info.error;
+  if (info.message.type === 'request') {
+    info.message = `request: ${info.message.path}`;
+  } else if (info.level === 'error') {
+    info.message = `${info.message} ${info.stack}`;
+    delete info.stack;
+    delete info.request;
   }
   delete info.type;
   return info;
 });
 
-const textFormat = winston.format.combine(linearFormat(), winston.format.simple());
-const consoleFormat = winston.format.combine(linearFormat(), timestampedFormat(), winston.format.simple());
+const consoleFormat = winston.format.combine(linearFormat(), winston.format.simple());
 
-winston.configure({
-  level: 'error',
-  format: winston.format.json(),
-  exitOnError: false,
-  transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log`
-    // - Write all logs error (and below) to `error.log`.
-    //
-    new winston.transports.File({ filename: errorFile.name, level: 'error', format: textFormat }),
-    new winston.transports.File({ filename: combinedFile.name, format: textFormat }),
-    new winston.transports.Console({ format: consoleFormat }),
-  ],
-});
-
-console.log(`Logging to ${errorFile.name} and ${combinedFile.name}`);
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID.length > 0) {
+  winston.configure({
+    level: 'info',
+    format: winston.format.json(),
+    exitOnError: false,
+    transports: [
+      new WinstonCloudWatch({
+        level: 'info',
+        cloudWatchLogs: new AWS.CloudWatchLogs(),
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_info`,
+        logStreamName: uuid(),
+        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
+        awsRegion: process.env.AWS_REGION,
+        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
+        messageFormatter: formatInfo,
+      }),
+      new WinstonCloudWatch({
+        level: 'error',
+        cloudWatchLogs: new AWS.CloudWatchLogs(),
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_error`,
+        logStreamName: uuid(),
+        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
+        awsRegion: process.env.AWS_REGION,
+        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
+        messageFormatter: formatError,
+      }),
+      new winston.transports.Console({ format: consoleFormat }),
+    ],
+  });
+} else {
+  winston.configure({
+    level: 'info',
+    format: winston.format.json(),
+    exitOnError: false,
+    transports: [new winston.transports.Console({ format: consoleFormat })],
+  });
+}
 
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
@@ -124,13 +133,23 @@ app.use((req, res, next) => {
 // per-request logging configuration
 app.use((req, res, next) => {
   req.uuid = uuid();
-  req.logger = winston.child({
-    requestId: req.uuid,
-  });
+
+  req.logger = {
+    error: (err) => {
+      // err.requst = req;
+      winston.error({
+        message: err.message,
+        stack: err.stack,
+        request: req,
+      });
+    },
+    info: (message) => winston.info(message),
+  };
+
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
   onFinished(res, (err, finalRes) => {
-    req.logger.log({
+    winston.info({
       level: 'info',
       type: 'request',
       remoteAddr: req.ip,
@@ -232,7 +251,7 @@ app.use((req, res) => {
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  req.logger.error(null, { error: err });
+  req.logger.error(err);
   if (!res.statusCode) {
     res.status(500);
   }

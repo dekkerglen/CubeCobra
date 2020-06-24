@@ -595,6 +595,10 @@ router.get('/rss/:id', async (req, res) => {
     const split = req.params.id.split(';');
     const cubeID = split[0];
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
     const blogs = await Blog.find({
       cube: cube._id,
     })
@@ -1494,6 +1498,12 @@ function writeCard(res, card, maybe) {
 router.get('/download/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
+
     for (const card of cube.cards) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
@@ -1522,6 +1532,11 @@ router.get('/download/csv/:id', async (req, res) => {
 router.get('/download/forge/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1578,6 +1593,10 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
 router.get('/download/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
     return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -1587,6 +1606,10 @@ router.get('/download/mtgo/:id', async (req, res) => {
 router.get('/download/xmage/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -1606,6 +1629,10 @@ router.get('/download/xmage/:id', async (req, res) => {
 router.get('/download/plaintext/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -2152,7 +2179,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         // add id
         const details = carddb.cardFromId(edit.substring(1));
         if (!details) {
-          req.logger.error(`Card not found: ${edit}`, req);
+          req.logger.error({ message: `Card not found: ${edit}` });
         } else {
           adds.push(details);
           changelog += addCardHtml(details);
@@ -2177,7 +2204,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         const [outStr, idIn] = edit.substring(1).split('>');
         const detailsIn = carddb.cardFromId(idIn);
         if (!detailsIn) {
-          req.logger.error(`Card not found: ${edit}`, req);
+          req.logger.error({ message: `Card not found: ${edit}` });
         } else {
           adds.push(detailsIn);
         }
@@ -3022,7 +3049,7 @@ router.get('/redraft/:id', async (req, res) => {
   try {
     const base = await Deck.findById(req.params.id).lean();
 
-    if (!base) {
+    if (!(base && base.draft)) {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
@@ -3171,7 +3198,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
-    const draft = await Draft.findById(deck.draft);
+    const draft = deck.draft ? await Draft.findById(deck.draft) : null;
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 
@@ -3244,7 +3271,7 @@ router.get('/deck/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft);
-      if (!draft.synergies) {
+      if (draft && !draft.synergies) {
         // put in synergies for old drafts that don't have em.
         const cards = draft.initial_state.flat(3);
 
@@ -3710,7 +3737,7 @@ router.post(
       )}`,
     );
     if (!response.ok) {
-      req.logger.error('Flask server response not OK.');
+      req.logger.error({ message: 'Flask server response not OK.' });
       return res.status(500).send({
         success: 'false',
         result: {},

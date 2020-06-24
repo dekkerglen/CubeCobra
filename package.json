@@ -38,6 +38,7 @@
     "@testing-library/jest-dom": "^5.5.0",
     "@testing-library/react": "^10.0.4",
     "JSONStream": "^1.3.5",
+    "aws-sdk": "^2.704.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.0.1",
     "babel-loader": "^8.1.0",
@@ -77,6 +78,7 @@
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
+    "performance-now": "^2.1.0",
     "prop-types": "^15.7.2",
     "pug": "^2.0.3",
     "quickselect": "^2.0.0",
@@ -109,6 +111,7 @@
     "webpack-merge": "^4.2.2",
     "webpack-node-externals": "^1.7.2",
     "winston": "git://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
+    "winston-cloudwatch": "^2.3.2",
     "winston-loggly-bulk": "^3.1.0"
   },
   "devDependencies": {

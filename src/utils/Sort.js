@@ -732,7 +732,7 @@ function sortGroupsOrdered(cards, sort) {
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
   for (const [card, cardLabels] of allCardLabels) {
-    if (cardLabels.length > 0) {
+    if (cardLabels && cardLabels.length > 0) {
       cardLabels.sort(compare);
       for (const label of cardLabels) {
         if (!byLabel[label]) {

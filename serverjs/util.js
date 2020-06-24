@@ -150,7 +150,7 @@ function wrapAsyncApi(route) {
     try {
       return route(req, res, next);
     } catch (err) {
-      req.logger.error(null, { error: err });
+      req.logger.error(err);
       return res.status(500).send({
         success: 'false',
         message: 'Internal server error',
@@ -160,7 +160,7 @@ function wrapAsyncApi(route) {
 }
 
 function handleRouteError(req, res, err, reroute) {
-  req.logger.error(null, { error: err });
+  req.logger.error(err);
   req.flash('danger', err.message);
   res.redirect(reroute);
 }
