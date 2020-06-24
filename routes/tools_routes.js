@@ -157,42 +157,37 @@ router.get('/topcards', async (req, res) => {
 
 router.get('/card/:id', async (req, res) => {
   try {
+    let { id } = req.params;
+
     // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(req.params.id);
+    const possibleName = cardutil.decodeName(id);
     const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      return res.redirect(`/tool/card/${carddb.getMostReasonable(possibleName)._id}`);
+      id = carddb.getMostReasonable(possibleName)._id;
     }
 
     // if id is a foreign cardname, redirect to english version
-    const english = carddb.getEnglishVersion(req.params.id);
+    const english = carddb.getEnglishVersion(id);
     if (english) {
-      return res.redirect(`/tool/card/${english}`);
+      id = english;
     }
 
     // if id is a scryfall ID, redirect to oracle
-    const scryfall = carddb.cardFromId(req.params.id);
+    const scryfall = carddb.cardFromId(id);
     if (!scryfall.error) {
-      return res.redirect(`/tool/card/${scryfall.oracle_id}`);
+      id = scryfall.oracle_id;
     }
 
     // otherwise just go to this ID.
-    const card = carddb.getMostReasonableById(carddb.oracleToId[req.params.id][0]);
-    const data = await CardHistory.findOne({ oracleId: req.params.id });
+    const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
+    const data = await CardHistory.findOne({ oracleId: id });
     if (!data) {
       return res.status(404).render('misc/404', {});
     }
 
-    const cubes = await Promise.all(
-      shuffle(data.cubes)
-        .slice(0, 12)
-        .map((id) => Cube.findOne({ _id: id })),
-    );
-
     const reactProps = {
       card,
       data,
-      cubes,
       related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
     };
     return res.render('tool/cardpage', {
