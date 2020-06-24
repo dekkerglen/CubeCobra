@@ -4026,6 +4026,10 @@ const ELO_SPEED = 1000;
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
+    res.status(200).send({
+      success: 'true',
+    });
+
     const draftQ = Draft.findById({ _id: req.body.draft_id }).lean();
     const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
@@ -4047,7 +4051,9 @@ router.post(
             passed.push(card);
           }
         }
-        const pick = draft.initial_state[0][req.body.packNum - 1].length - req.body.pack.length;
+        const pick =
+          draft.initial_state[0][Math.min(draft.initial_state[0].length - 1, req.body.packNum - 1)].length -
+          req.body.pack.length;
         for (const card of picked) {
           if (!card.picks) {
             card.picks = [];
@@ -4092,9 +4098,6 @@ router.post(
       }
       await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }
-    return res.status(200).send({
-      success: 'true',
-    });
   }),
 );
 
