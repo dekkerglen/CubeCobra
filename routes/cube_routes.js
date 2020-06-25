@@ -2557,7 +2557,7 @@ router.post(
     // give notification to owner
     if (req.body.position.length === 0) {
       // owner is blog deck owner
-      const owner = await User.findById(deck.owner);
+      const owner = await User.findById(deck.seats[0].userid);
       await util.addNotification(
         owner,
         user,
