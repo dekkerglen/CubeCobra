@@ -551,6 +551,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     const userQ = User.findById(userid, '_id username users_following').lean();
 
+    /*
     const decksQ = Deck.find(
       {
         'seats.0.userid': userid,
@@ -563,11 +564,16 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .skip(pagesize * page)
       .limit(pagesize)
       .lean();
-    const numDecksQ = Deck.estimatedDocumentCount({
+    const numDecksQ = Deck.countDocuments({
       'seats.0.userid': userid,
-    });
+    }).count();
+    
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
+    */
+    const user = await userQ.exec();
+    const numDecks = 0;
+    const decks = [];
 
     if (!user) {
       req.flash('danger', 'User not found');

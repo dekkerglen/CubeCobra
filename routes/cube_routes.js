@@ -546,7 +546,7 @@ router.get('/blog/:id/:page', async (req, res) => {
 
     const userQ = User.findById(cube.owner);
 
-    const countQ = Blog.estimatedDocumentCount({ cube: cube._id });
+    const countQ = Blog.countDocuments({ cube: cube._id });
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -570,7 +570,7 @@ router.get('/blog/:id/:page', async (req, res) => {
       cubeID,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       posts: blogs,
-      pages: count / 10,
+      pages: Math.ceil(count / 10),
       activePage: page,
       userid: user._id,
       loggedIn: !!req.user,
@@ -1450,6 +1450,10 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 router.get('/download/cubecobra/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -1503,7 +1507,7 @@ router.get('/download/csv/:id', async (req, res) => {
 
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
 
     for (const card of cube.cards) {
@@ -1537,7 +1541,7 @@ router.get('/download/forge/:id', async (req, res) => {
 
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
@@ -1597,7 +1601,7 @@ router.get('/download/mtgo/:id', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
     return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
@@ -1610,7 +1614,7 @@ router.get('/download/xmage/:id', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
@@ -1633,7 +1637,7 @@ router.get('/download/plaintext/:id', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
@@ -1761,6 +1765,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
+
     const seat = deck.seats[req.params.seat];
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
@@ -1807,6 +1817,10 @@ router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
 router.get('/deck/download/forge/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
     const seat = deck.seats[req.params.seat];
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
@@ -1857,6 +1871,10 @@ router.get('/deck/download/forge/:id/:seat', async (req, res) => {
 router.get('/deck/download/txt/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
     const seat = deck.seats[req.params.seat];
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
@@ -1877,6 +1895,10 @@ router.get('/deck/download/txt/:id/:seat', async (req, res) => {
 router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
     const seat = deck.seats[req.params.seat];
     return exportToMtgo(res, seat.name, seat.deck.flat(), seat.sideboard.flat());
   } catch (err) {
@@ -1887,6 +1909,10 @@ router.get('/deck/download/mtgo/:id/:seat', async (req, res) => {
 router.get('/deck/download/arena/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
     const seat = deck.seats[req.params.seat];
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
@@ -1935,6 +1961,10 @@ router.get('/deck/download/arena/:id/:seat', async (req, res) => {
 router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id).lean();
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
     const seat = deck.seats[req.params.seat];
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
@@ -2018,13 +2048,20 @@ router.post(
       const format = draftutil.getDraftFormat(params, cube);
 
       let draft = new Draft();
-      const populated = draftutil.createDraft(
-        format,
-        cube.cards,
-        bots,
-        params.seats,
-        req.user ? req.user : { username: 'Anonymous' },
-      );
+      let populated = {};
+      try {
+        populated = draftutil.createDraft(
+          format,
+          cube.cards,
+          bots,
+          params.seats,
+          req.user ? req.user : { username: 'Anonymous' },
+        );
+      } catch (err) {
+        // This is a 4XX error, not a 5XX error
+        req.flash('danger', err.message);
+        return res.redirect(`/cube/playtest/${req.params.id}`);
+      }
 
       draft.initial_state = populated.initial_state;
       draft.unopenedPacks = populated.unopenedPacks;
@@ -4028,10 +4065,6 @@ const ELO_SPEED = 1000;
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
-    res.status(200).send({
-      success: 'true',
-    });
-
     const draftQ = Draft.findById({ _id: req.body.draft_id }).lean();
     const ratingQ = CardRating.findOne({ name: req.body.pick }).then((rating) => rating || new CardRating());
     const packQ = CardRating.find({ name: { $in: req.body.pack } });
@@ -4100,6 +4133,9 @@ router.post(
       }
       await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }
+    res.status(200).send({
+      success: 'true',
+    });
   }),
 );
 

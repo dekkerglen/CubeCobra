@@ -88,6 +88,8 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
 
   const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
 
+  console.log(pages);
+
   return (
     <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="blog">
       <Navbar expand light className="usercontrols mb-3">
