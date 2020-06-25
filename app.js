@@ -26,7 +26,7 @@ const formatError = ({ message, stack, request }) =>
     message,
     target: request ? request.originalUrl : null,
     uuid: request ? request.uuid : null,
-    stack: stack.split('\n'),
+    stack: (stack || '').split('\n'),
   });
 
 const linearFormat = winston.format((info) => {
@@ -43,7 +43,7 @@ const linearFormat = winston.format((info) => {
 
 const consoleFormat = winston.format.combine(linearFormat(), winston.format.simple());
 
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID.length > 0) {
+if (process.env.ENV === 'production') {
   winston.configure({
     level: 'info',
     format: winston.format.json(),
@@ -71,7 +71,6 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID.length > 0) {
         retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
         messageFormatter: formatError,
       }),
-      new winston.transports.Console({ format: consoleFormat }),
     ],
   });
 } else {
@@ -199,11 +198,6 @@ const sessionOptions = {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
   },
 };
-
-if (process.env.ENV === 'production') {
-  app.set('trust proxy', 1);
-  sessionOptions.cookie.secure = true;
-}
 
 // Express session middleware
 app.use(session(sessionOptions));

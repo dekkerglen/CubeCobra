@@ -10,6 +10,8 @@ const handleResponse = (res) => {
 
 const badRoute = '/cube/overview/communitycube';
 
+//const prefix = 'http://localhost:5000';
+const prefix = 'https://cubecobra.com';
 
 (async () => {
   for (let i = 0; i < 10; i++) {
@@ -18,14 +20,11 @@ const badRoute = '/cube/overview/communitycube';
       console.log(`   Fetching ${route}`);
 
       console.time("    time");
-      const res = await fetch(`http://localhost:5000${route}`);
+      const res = await fetch(`${prefix}${route}`);
       console.timeEnd("    time");
 
       handleResponse(res);
     }
   }
-  const route = badRoute;
-  console.log(`   Fetching ${route}`);
-  const res = await fetch(`http://localhost:5000${route}`);
   handleResponse(res);
 })();
