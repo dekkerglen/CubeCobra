@@ -37,7 +37,7 @@ export function makeFilter(filterText) {
   }
 
   return {
-    err: true,
+    err: results,
     filter: null,
   };
 }

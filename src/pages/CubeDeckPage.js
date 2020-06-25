@@ -16,14 +16,18 @@ import {
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
+  Spinner,
 } from 'reactstrap';
 
+import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import { DisplayContextProvider } from 'components/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
 import SampleHandModal from 'components/SampleHandModal';
+import Draft, { init } from 'utils/Draft';
+import { csrfFetch } from 'utils/CSRF';
 import Query from 'utils/Query';
 
 const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, defaultView }) => {
@@ -73,9 +77,38 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
     [isOpen],
   );
 
+  const [loading, setLoading] = useState(false);
+
+  const submitDeckForm = useRef();
+  const [draftId, setDraftId] = useState('');
+
+  const haveBotsRedraft = useCallback(async () => {
+    if (!loading) {
+      setLoading(true);
+      const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      init(json.draft);
+      setDraftId(Draft.id());
+      await Draft.allBotsDraft();
+      submitDeckForm.current.submit();
+    }
+  }, [draft._id, loading]);
+
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
       <DisplayContextProvider>
+        <CSRFForm
+          key="submitdeck"
+          className="d-none"
+          innerRef={submitDeckForm}
+          method="POST"
+          action={`/cube/submitdeck/${cube._id}`}
+        >
+          <Input type="hidden" name="body" value={draftId} />
+          <Input type="hidden" name="skipDeckbuilder" value="true" />
+        </CSRFForm>
         <Navbar expand="md" light className="usercontrols mb-3">
           <div className="view-style-select pr-2">
             <Label className="sr-only" for="viewSelect">
@@ -110,13 +143,14 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                   <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                 </NavItem>
               )}
+              {loading && <Spinner className="position-absolute" />}
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
                   Rebuild/Redraft
                 </DropdownToggle>
                 <DropdownMenu right>
                   <DropdownItem href={`/cube/redraft/${deck._id}`}>Redraft</DropdownItem>
-                  <DropdownItem href={`/cube/redraftbots/${deck._id}`}>Have Bots Redraft</DropdownItem>
+                  <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
                   <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
                 </DropdownMenu>
               </UncontrolledDropdown>
@@ -150,7 +184,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
               deckid={deck._id}
               userid={userid}
               deck={deck}
-              seatIndex={seatIndex}
+              seatIndex={`${seatIndex}`}
               draft={draft}
               view={view}
             />
@@ -162,7 +196,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
 };
 
 CubeDeckPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
+  cube: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     seats: PropTypes.arrayOf(
@@ -181,7 +215,7 @@ CubeDeckPage.propTypes = {
   }).isRequired,
   canEdit: PropTypes.bool,
   userid: PropTypes.string,
-  draft: PropTypes.shape({}).isRequired,
+  draft: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
   defaultSeat: PropTypes.number,
   defaultView: PropTypes.string,
 };

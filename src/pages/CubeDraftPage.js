@@ -1,9 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Collapse, Input, Nav, Navbar, Row, Spinner } from 'reactstrap';
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Col,
+  Collapse,
+  Input,
+  Nav,
+  Navbar,
+  NavLink,
+  Row,
+  Spinner,
+} from 'reactstrap';
 
-import Draft from 'utils/Draft';
+import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 
@@ -16,6 +29,8 @@ import DraggableCard from 'components/DraggableCard';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
+import useToggle from 'hooks/UseToggle';
+import { Internal } from 'components/DraftbotBreakdown';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -35,7 +50,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const canDrop = (source, target) => {
+const canDrop = (_, target) => {
   return target.type === Location.PICKS;
 };
 
@@ -91,12 +106,13 @@ Pack.defaultProps = {
 };
 
 const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
-  useMemo(() => Draft.init(initialDraft), [initialDraft]);
+  useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);
   const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
   const [packNumber, setPackNumber] = useState(initialPackNumber);
   const [pickNumber, setPickNumber] = useState(initialPickNumber);
+  const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
 
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
@@ -181,6 +197,11 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
     },
     [pack, picks, update],
   );
+
+  const picked = createSeen();
+  addSeen(picked, getPicked(0));
+  console.log(getPicked(0));
+  const seen = getSeen(0);
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
       <DisplayContextProvider>
@@ -188,6 +209,11 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
           <Collapse navbar>
             <Nav navbar>
               <CustomImageToggler />
+            </Nav>
+            <Nav>
+              <NavLink href="#" onClick={toggleShowBotBreakdown}>
+                Toggle Bot Breakdown
+              </NavLink>
             </Nav>
           </Collapse>
         </Navbar>
@@ -211,6 +237,25 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
                 onMoveCard={handleMoveCard}
                 onClickCard={handleClickCard}
               />
+            </ErrorBoundary>
+          )}
+          {showBotBreakdown && (
+            <ErrorBoundary>
+              <Card className="mt-3">
+                <CardHeader className="mb-0">
+                  <h4 className="mb-0">Draftbot Breakdown</h4>
+                </CardHeader>
+                <CardBody>
+                  <Internal
+                    cardsInPack={pack}
+                    pack={packNumber - 1}
+                    picks={pickNumber - 1}
+                    draft={initialDraft}
+                    seen={seen}
+                    picked={picked}
+                  />
+                </CardBody>
+              </Card>
             </ErrorBoundary>
           )}
           <ErrorBoundary className="mt-3">

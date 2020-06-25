@@ -21,6 +21,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
+import { addSeen, buildDeck, calculateBasicCounts, createSeen, init } from 'utils/Draft';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -31,7 +32,7 @@ const COLORS = [
 ];
 const MAX_BASICS = 20;
 
-const BasicsModal = ({ isOpen, toggle, addBasics }) => {
+const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
   const refs = {};
   for (const [, , basic] of COLORS) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -46,6 +47,23 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
     addBasics(numBasics);
     toggle();
   }, [addBasics, toggle, refs]);
+
+  const calculateBasics = useCallback(async () => {
+    const main = deck.flat(2);
+    init(draft);
+    const picked = createSeen();
+    addSeen(picked, main, draft.synergies);
+    const { colors } = await buildDeck(main, picked, draft.synergies, draft.initial_state, null);
+    const basics = calculateBasicCounts(main, colors);
+    for (const [basic, count] of Object.entries(basics)) {
+      const opts = refs[basic].current.options;
+      for (let i = 0; i < opts.length; i++) {
+        if (parseInt(opts[i].value, 10) === count) {
+          opts[i].selected = true;
+        }
+      }
+    }
+  }, [refs, deck, draft]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="sm">
@@ -73,6 +91,9 @@ const BasicsModal = ({ isOpen, toggle, addBasics }) => {
         <Button type="submit" color="success" onClick={handleAddBasics}>
           Add
         </Button>
+        <Button color="success" onClick={calculateBasics}>
+          Calculate
+        </Button>
         <Button color="secondary" onClick={toggle}>
           Close
         </Button>
@@ -85,9 +106,24 @@ BasicsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   addBasics: PropTypes.func.isRequired,
+  draft: PropTypes.shape({
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
+  }).isRequired,
+  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
 };
 
-const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...props }) => {
+const DeckbuilderNavbar = ({
+  deck,
+  addBasics,
+  name,
+  description,
+  className,
+  draft,
+  setSideboard,
+  setDeck,
+  ...props
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [basicsModalOpen, setBasicsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -150,6 +186,22 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
     return res;
   }, [deck]);
 
+  const autoBuildDeck = useCallback(async () => {
+    const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
+    init(draft);
+    const picked = createSeen();
+    addSeen(picked, main, draft.synergies);
+    const { sideboard: side, deck: newDeck } = await buildDeck(
+      main,
+      picked,
+      draft.synergies,
+      draft.initial_state,
+      draft.basics,
+    );
+    setSideboard([side]);
+    setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
+  }, [deck, draft, setDeck, setSideboard]);
+
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
       <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
@@ -175,7 +227,18 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, ...p
             <NavLink href="#" onClick={toggleBasicsModal}>
               Add Basic Lands
             </NavLink>
-            <BasicsModal isOpen={basicsModalOpen} toggle={toggleBasicsModal} addBasics={addBasics} />
+            <BasicsModal
+              isOpen={basicsModalOpen}
+              toggle={toggleBasicsModal}
+              addBasics={addBasics}
+              draft={draft}
+              deck={deck.playerdeck}
+            />
+          </NavItem>
+          <NavItem>
+            <NavLink href="#" onClick={autoBuildDeck}>
+              Build for Me
+            </NavLink>
           </NavItem>
           <CustomImageToggler />
         </Nav>
@@ -195,6 +258,13 @@ DeckbuilderNavbar.propTypes = {
   name: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   className: PropTypes.string,
+  draft: PropTypes.shape({
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
+    basics: PropTypes.shape({}),
+  }).isRequired,
+  setDeck: PropTypes.func.isRequired,
+  setSideboard: PropTypes.func.isRequired,
 };
 
 DeckbuilderNavbar.defaultProps = {

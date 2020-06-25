@@ -208,7 +208,7 @@ DeckCard.propTypes = {
     cube: PropTypes.string.isRequired,
     comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
-  seatIndex: PropTypes.number.isRequired,
+  seatIndex: PropTypes.string.isRequired,
 };
 
 DeckCard.defaultProps = {

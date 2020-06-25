@@ -4,21 +4,20 @@ const serialize = require('serialize-javascript');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
-const { getElo } = require('../serverjs/cubefn.js');
 const generateMeta = require('../serverjs/meta.js');
+const util = require('../serverjs/util.js');
 
 const CardHistory = require('../models/cardHistory');
-const Cube = require('../models/cube');
 
 const router = express.Router();
 
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
-/* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 400;
+/* Page size for results */
+const PAGE_SIZE = 100;
 
 async function matchingCards(filter) {
-  let cards = carddb.allCards().filter((card) => !card.digital);
+  let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
   if (filter) {
     // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
     // In the seoncd pass, we add that information.
@@ -54,10 +53,7 @@ async function matchingCards(filter) {
   return filterCardsDetails(cards, filter);
 }
 
-/* This is a Bayesian adjustment to the rating like IMDB does. */
-const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-
-async function topCards(filter) {
+async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending') {
   const cards = await matchingCards(filter);
   const oracleIdMap = new Map();
   for (const card of cards) {
@@ -69,7 +65,9 @@ async function topCards(filter) {
   }
 
   const oracleIds = [...oracleIdMap.keys()];
-  const query = filter ? { oracleId: { $in: oracleIds } } : {};
+  const query = filter
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gt: MIN_PICKS } }
+    : { 'current.picks': { $gt: MIN_PICKS } };
   const selectedVersions = new Map(
     [...oracleIdMap.entries()].map(([oracleId, versions]) => [
       oracleId,
@@ -77,46 +75,36 @@ async function topCards(filter) {
     ]),
   );
 
-  const dataQ = Promise.all(
-    ['rating', 'elo', 'picks', 'cubes'].map(async (field) => {
-      const sorted = await CardHistory.find(query).sort(`-current.${field}`).limit(MAX_RESULTS).lean();
-      return sorted.map(({ oracleId, current }) => {
-        const { rating, elo, picks, cubes } = current;
-        const qualifies = picks !== undefined && picks > MIN_PICKS;
+  const sortName = `current.${sortField}`;
+  const sort = {};
+  sort[sortName] = direction === 'ascending' ? 1 : -1;
+
+  const dataQ = await CardHistory.find(query)
+    .sort(sort)
+    .skip(PAGE_SIZE * page)
+    .limit(PAGE_SIZE)
+    .lean();
+  const numResultsQ = CardHistory.countDocuments(query);
+
+  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
+
+  return {
+    numResults,
+    data: data
+      .filter(({ oracleId }) => selectedVersions.has(oracleId))
+      .map(({ oracleId, current }) => {
+        const { elo, picks, cubes } = current;
         const version = selectedVersions.get(oracleId);
         return [
           version.name,
           version.image_normal,
           version.image_flip || null,
-          qualifies && rating !== undefined ? adjust(rating) : null,
-          picks !== undefined ? picks : 0,
-          qualifies && elo !== undefined ? elo : null,
-          cubes !== undefined ? cubes : 0,
+          Number.isFinite(picks) ? picks : 0,
+          Number.isFinite(elo) ? elo : null,
+          Number.isFinite(cubes) ? cubes : 0,
         ];
-      });
-    }),
-  );
-  const numResultsQ = CardHistory.estimatedDocumentCount(query);
-  const [allData, numResults] = await Promise.all([dataQ, numResultsQ]);
-  const [dataByRating, dataByElo, dataByPicks, dataByCubes] = allData;
-
-  return {
-    numResults,
-    data: {
-      rating: dataByRating,
-      elo: dataByElo,
-      picks: dataByPicks,
-      cubes: dataByCubes,
-    },
+      }),
   };
-}
-
-function shuffle(a) {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
 
 router.get('/api/topcards', async (req, res) => {
@@ -125,11 +113,12 @@ router.get('/api/topcards', async (req, res) => {
     if (err) {
       res.status(400).send({
         success: 'false',
+        numResults: 0,
+        data: [],
       });
       return;
     }
-
-    const results = await topCards(filter, res);
+    const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
     res.status(200).send({
       success: 'true',
       ...results,
@@ -138,32 +127,22 @@ router.get('/api/topcards', async (req, res) => {
     req.logger.error(err);
     res.status(500).send({
       success: 'false',
+      numResults: 0,
+      data: [],
     });
   }
 });
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
-
-    if (err) {
-      req.flash('Invalid filter.');
-    }
-
-    const { data, numResults } = await topCards(filter, res);
-
-    const reactProps = {
-      defaultNumResults: numResults,
-      defaultData: data,
-      defaultFilterText: req.query.f || '',
-    };
-    res.render('tool/topcards', {
-      reactProps: serialize(reactProps),
+    const { filter } = makeFilter(req.query.f);
+    const { data, numResults } = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    return res.render('tool/topcards', {
+      reactProps: serialize({ data, numResults }),
       title: 'Top Cards',
     });
   } catch (err) {
-    req.logger.error(err);
-    res.sendStatus(500);
+    return util.handleRouteError(req, res, err, `/404`);
   }
 });
 
@@ -171,40 +150,42 @@ router.get('/card/:id', async (req, res) => {
   const card = carddb.cardFromId(req.params.id);
   console.log(card);
   try {
+    let { id } = req.params;
+
     // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(req.params.id);
+    const possibleName = cardutil.decodeName(id);
     const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      return res.redirect(`/tool/card/${carddb.getMostReasonable(possibleName)._id}`);
+      id = carddb.getMostReasonable(possibleName)._id;
     }
 
-    // if id is a foreign cardname, redirect to english version
-    const english = carddb.getEnglishVersion(req.params.id);
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
     if (english) {
-      return res.redirect(`/tool/card/${english}`);
+      id = english;
+    }
+
+    // if id is a scryfall ID, redirect to oracle
+    const scryfall = carddb.cardFromId(id);
+    if (!scryfall.error) {
+      id = scryfall.oracle_id;
     }
 
     // otherwise just go to this ID.
-    const card = carddb.cardFromId(req.params.id);
-    console.log(card);
-    const data = await CardHistory.findOne({ cardID: req.params.id });
+    const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
+    const data = await CardHistory.findOne({ oracleId: id });
     if (!data) {
+      req.flash(
+        'danger',
+        `Card with identifier ${req.params.id} not found. Acceptable identifiers are card name (english only), scryfall ID, or oracle ID.`,
+      );
       return res.status(404).render('misc/404', {});
     }
 
-    const cubes = await Promise.all(
-      shuffle(data.cubes)
-        .slice(0, 12)
-        .map((id) => Cube.findOne({ _id: id })),
-    );
-
-    const pids = carddb.nameToId[card.name_lower].map((id) => carddb.cardFromId(id).tcgplayer_id);
-    card.elo = (await getElo([card.name], true))[card.name];
     const reactProps = {
       card,
       data,
-      cubes,
-      related: data.cubedWith.map((name) => carddb.getMostReasonable(name[0])),
+      related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),
@@ -217,9 +198,7 @@ router.get('/card/:id', async (req, res) => {
       ),
     });
   } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', err.message);
-    return res.redirect('/404');
+    return util.handleRouteError(req, res, err, '/404/');
   }
 });
 

@@ -88,7 +88,6 @@ export const setOperation = (op, value) => {
 export const rarityOperation = (op, value) => {
   const rarityMap = { c: 0, u: 1, r: 2, m: 3, s: 4 };
   const mappedRarity = rarityMap[value.charAt(0).toLowerCase()];
-  console.log('mapped', mappedRarity);
   switch (op.toString()) {
     case ':':
     case '=':
@@ -236,6 +235,11 @@ export const castableCostOperation = (op, value) => {
 export const devotionOperation = (op, symbol, value) => {
   const operation = defaultOperation(op, value);
   return (card) => operation(cardDevotion(card, symbol));
+};
+
+export const setCountOperation = (op, value) => {
+  const operation = defaultOperation(op, value);
+  return (fieldValue) => operation(fieldValue.length);
 };
 
 export const setElementOperation = (op, value) => {

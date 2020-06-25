@@ -13,6 +13,7 @@ import {
   manaCostOperation,
   castableCostOperation,
   setElementOperation,
+  setCountOperation,
   devotionOperation,
 } from 'filtering/FuncOperations';
 import {
@@ -103,11 +104,11 @@ oracleCondition -> ("o"i | "oracle"i | "text"i) stringOpValue {% ([, valuePred])
 
 setCondition -> ("s"i | "set"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
-powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', cardPower, valuePred) %}
+powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c), 10), valuePred) %}
 
-toughnessCondition -> ("tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', cardToughness, valuePred) %}
+toughnessCondition -> ("tou"i | "tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c), 10), valuePred) %}
 
-tagCondition -> "tag"i stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
+tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 

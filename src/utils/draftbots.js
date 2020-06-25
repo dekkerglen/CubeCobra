@@ -1,71 +1,61 @@
-import { arrayIsSubset } from 'utils/Util';
 import similarity from 'compute-cosine-similarity';
-import { COLOR_COMBINATIONS } from 'utils/Card';
+
+import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardColorIdentity, cardName, cardType } from 'utils/Card';
 
 // We want to discourage playing more colors so they get less
 // value the more colors, this gets offset by having more cards.
-const COLOR_SCALING_FACTOR = [1, 1, 0.9, 0.7, 0.5, 0.2];
+const COLOR_SCALING_FACTOR = [1, 1, 0.75, 0.6, 0.33, 0.2];
 const COLORS_WEIGHTS = [
-  [0, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+  [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+  [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40],
+  [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60],
 ];
 const RATING_WEIGHTS = [
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 ];
 const FIXING_WEIGHTS = [
+  [0.1, 0.3, 0.6, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 const SYNERGY_WEIGHTS = [
+  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  // [0, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3],
-  // [2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3, 3, 3, 3],
-  // [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 const OPENNESS_WEIGHTS = [
-  [2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.7, 2.6, 2.4, 2.3, 2.2, 2.1],
-  [3, 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.7, 3.6, 3.4, 3.2, 3, 2.8, 2.6],
-  [2.5, 2.4, 2.3, 2.2, 2.1, 2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0],
+  [4, 12, 12.3, 12.6, 13, 13.4, 13.7, 14, 15, 14.6, 14.2, 13.8, 13.4, 13, 12.6],
+  [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
+  [8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1],
 ];
 
-const findBestValueArray = (weights, pickNumPercent) => {
-  const index = weights.length * pickNumPercent;
-  const ceilIndex = Math.ceil(index);
-  const floorIndex = Math.floor(index);
-  // Is an integer or is past the end by less than 1
-  if (index === floorIndex || ceilIndex === weights.length) {
-    return weights[floorIndex];
+// This function gets approximate weight values when there are not 15 cards in the pack.
+// It treat pack/pick number out of 3/15 as a lattice and just average the surrounding points if the desired weight is off the lattice.
+const interpolateWeight = (weights, coordMaxPair, ...coordinates) => {
+  if (!weights.length) {
+    if (weights.length === 0) {
+      return 0;
+    }
+    return weights;
   }
-  // The fractional part of index.
-  const indexModOne = index - floorIndex;
-  // If is fractional and not past the end we weight it by the two
-  // closest points by how close it is to that point.
-  return indexModOne * weights[ceilIndex] + (1 - indexModOne) * weights[floorIndex];
-};
-
-const findBestValue2d = (weights, packNum, pickNum, initialState) => {
-  const packNumPercent = (packNum - 1) / initialState[0].length;
-  const pickNumPercent = (pickNum - 1) / initialState[0][packNum - 1].length;
-  const index = weights.length * packNumPercent;
+  const [coordinate, maxCoordinate] = coordMaxPair;
+  const coordPercent = coordinate / maxCoordinate;
+  const index = weights.length * coordPercent;
   const ceilIndex = Math.ceil(index);
   const floorIndex = Math.floor(index);
   // Is either an integer or is past the end by less than 1 so we can use floor as our index
   if (index === floorIndex || ceilIndex === weights.length) {
-    return findBestValueArray(weights[floorIndex], pickNumPercent);
+    return interpolateWeight(weights[floorIndex], ...coordinates);
   }
   // The fractional part of index.
   const indexModOne = index - floorIndex;
   // If is fractional and not past the end we weight it by the two
   // closest points by how close it is to that point.
   return (
-    indexModOne * findBestValueArray(weights[ceilIndex], pickNumPercent) +
-    (1 - indexModOne) * findBestValueArray(weights[floorIndex], pickNumPercent)
+    indexModOne * interpolateWeight(weights[ceilIndex], ...coordinates) +
+    (1 - indexModOne) * interpolateWeight(weights[floorIndex], ...coordinates)
   );
 };
 
@@ -80,198 +70,189 @@ export const fetchLands = {
   'Verdant Catacombs': ['B', 'G'],
   'Windswept Heath': ['W', 'G'],
   'Wooded Foothills': ['R', 'G'],
-  'Prismatic Vista': ['W', 'U', 'B', 'R', 'G'],
-  'Fabled Passage': ['W', 'U', 'B', 'R', 'G'],
+  'Prismatic Vista': [...'WUBRG'],
+  'Fabled Passage': [...'WUBRG'],
+  'Terramorphic Expanse': [...'WUBRG'],
+  'Evolving Wilds': [...'WUBRG'],
 };
 
-export const getAdjustedElo = (botColors, card) => {
-  let { rating } = card;
-  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
-  const colorless = colors.length === 0;
-  const subset = arrayIsSubset(colors, botColors) && !colorless;
-  const contains = arrayIsSubset(botColors, colors);
-  const overlap = botColors.some((c) => colors.includes(c));
-  const typeLine = card.type_line ?? card.details.type;
-  const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = !!fetchLands[card.details.name];
+// Ignore synergy below this value.
+const SIMILARITY_CLIP = 0.7;
+const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 
-  // If you add x to a rating you roughly increase the estimated value
-  // of picking it by a factor of (100 * 10**(x/400)) - 100 percent
-  if (isLand) {
-    if ((subset || contains) && isFetch) {
-      rating += 280; // Increase value of picking by roughly 400%
-    } else if (subset || contains) {
-      switch (colors.length) {
-        case 1:
-          rating += 191; // Increase value of picking by roughly 200%
-          break;
-        case 2:
-          rating += 262; // Increase value of picking by roughly 350%
-          break;
-        default:
-          rating += 311; // Increase value of picking by roughly 500%
-          break;
-      }
-    } else if (overlap && isFetch) {
-      rating += 241; // Increase value of picking by roughly 300%
-    } else if (overlap || colorless) {
-      rating += 159; // Increase value of picking by roughly 150%
-    }
-  } else if (colorless) {
-    rating += 205; // Increase value of picking by roughly 225%
-  } else if (subset) {
-    rating += 191; // Increase value of picking by roughly 200%
-  } else if (contains) {
-    rating += 141; // Increase value of picking by roughly 125%
-  } else if (overlap) {
-    rating += 70; // Increase value of picking by roughly 50%
-  }
+export const scaleSimilarity = (value) =>
+  SIMILARITY_MULTIPLIER * Math.min(Math.max(0, value - SIMILARITY_CLIP), 0.997 - SIMILARITY_CLIP);
 
-  return rating;
-};
+// Scale to get similarity range to approximately [0, 10]
+export const SYNERGY_SCALE = 0.2;
 
-export const getRating = (combination, card) => {
-  return (COLOR_SCALING_FACTOR[combination.length] * (card.rating - 500 || 1000)) / 100;
-};
+const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
 
 export const considerInCombination = (combination, card) =>
-  card && arrayIsSubset(card.colors ?? card.details.color_identity ?? card.details.colors ?? [], combination);
+  card && COLOR_INCLUSION_MAP[combination.join('')][(cardColorIdentity(card) ?? []).join('')];
 
-export const getSynergy = (combination, card, picked, synergies) => {
-  if (picked.cards.length === 0) {
+export const isPlayableLand = (colors, card) =>
+  considerInCombination(colors, card) ||
+  colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
+  (fetchLands[card.details.name] && fetchLands[card.details.name].some((c) => colors.includes(c)));
+
+// The cost factor of playing more colors
+export const getColorScaling = (combination) => {
+  return COLOR_SCALING_FACTOR[combination.length];
+};
+
+// What is the raw power level of this card? Used to choose a card within a combination.
+// Scale is roughly 0-10.
+export const getRating = (card) => {
+  return 10 ** ((card?.rating ?? 1200) / 400 - 3);
+};
+
+// How much does the card we're considering synergize with the cards we've picked?
+// Scale is roughly 0-10. Used to select a card within a combination.
+export const getPickSynergy = (combination, card, picked, synergies) => {
+  if (picked.cards.WUBRG.length === 0 || !synergies) {
     return 0;
   }
 
   let synergy = 0;
-  if (synergies) {
-    const pickedInCombo = picked.cards.filter((card2) => considerInCombination(combination, card2));
-    if (card) {
-      for (const { index } of pickedInCombo) {
-        synergy += similarity(synergies[index], synergies[card.index]);
-      }
-      if (pickedInCombo.length) {
-        synergy /= pickedInCombo.length;
+  if (synergies && card) {
+    for (const { index } of picked.cards[combination.join('')]) {
+      // Don't count synergy for duplicate cards.
+      // Maximum synergy is generally around .997 which corresponds to ~1.
+      if (index !== card.index) {
+        const similarityValue = similarity(synergies[index], synergies[card.index]);
+        synergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
       }
     }
   }
-  return synergy * 10;
+  return synergy / picked.cards.WUBRG.length;
 };
 
-export const getOpenness = (combination, seen) => {
-  if (seen.cards.length <= 15) {
+// Does this help us fix for this combination of colors?
+// Scale from 0-10. Perfect is five-color land in 5 color combination.
+// Used to select a card within a color combination.
+export const getFixing = (combination, card) => {
+  const colors = fetchLands[card.details.name] ?? cardColorIdentity(card);
+  const typeLine = cardType(card);
+  const isLand = typeLine.includes('Land');
+  const isFetch = !!fetchLands[cardName(card)];
+
+  if (isLand) {
+    const overlap = 4 * colors.filter((c) => combination.includes(c)).length;
+    const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
+    if (isFetch) {
+      return overlap;
+    }
+    if (hasBasicTypes) {
+      return 0.75 * overlap;
+    }
+    return 0.5 * overlap;
+  }
+  return 0;
+};
+
+// How much do the cards we've already picked in this combo synergize with each other?
+// Scale is roughly 0-10. Used to select a color combination.
+// Tends to recommend what we've already picked before.
+export const getInternalSynergy = (combination, picked) => {
+  const combStr = combination.join('');
+  if (picked.cards.WUBRG.length === 0) {
     return 0;
   }
 
-  const seenCount = seen[combination.join('')] / seen.cards.length;
-  // This is technically cheating, but looks at the set of
-  // all cards dealt out to players to see what the trends
-  // for colors are. This is in value as well.
-  // const overallCount = (overallPool[combination.join('')];
-  // The ratio of seen to overall gives us an idea what is
-  // being taken.
-  return seenCount * 3;
+  const numPairs = (picked.cards.WUBRG.length * (picked.cards.WUBRG.length + 1)) / 2;
+  // Need to multiply it here as well since it is quadratic in cards in color
+  return (COLOR_SCALING_FACTOR[combination.length] * picked.synergies[combStr]) / numPairs;
 };
 
-export const getColor = (combination, picked, card) => {
-  return (
-    (COLOR_SCALING_FACTOR[combination.length] / 10) * (picked[combination.join('')] + getRating(combination, card))
-  );
-};
-
-const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
-
-export const getFixing = (combination, picked, card) => {
-  let score = card.rating;
-
-  const colors = fetchLands[card.details.name] ?? card.colors ?? card.details.color_identity;
-  const colorless = colors.length === 0;
-  const contains = arrayIsSubset(combination, colors);
-  const typeLine = card.type_line ?? card.details.type;
-  const isLand = typeLine.indexOf('Land') > -1;
-  const isFetch = !!fetchLands[card.details.name];
-  const hasBasicTypes = basics.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
-
-  if (isLand && contains) {
-    if (colorless && !isFetch) {
-      return 0;
-    }
-    if (colors.length === 1 && !isFetch) {
-      return 1;
-    }
-    score /= COLOR_SCALING_FACTOR[combination.length];
-
-    if (hasBasicTypes) {
-      score *= 1.5;
-    }
-    if (isFetch) {
-      score *= 2;
-    }
-
-    switch (colors.length) {
-      case 2:
-        score *= 2;
-        break;
-      default:
-        score *= 3;
-        break;
-    }
-  } else {
-    score *= 0.5 * COLOR_SCALING_FACTOR[combination.length];
+// Has this color combination been flowing openly?
+// Scale from roughly 0-10. Used to select a color combination.
+// Tends to recommend new colors to try.
+export const getOpenness = (combination, seen) => {
+  if (seen.cards.length === 0) {
+    return 0;
   }
 
-  return Math.min(10, score / 1000);
+  return seen.values[combination.join('')] / seen.cards.WUBRG.length;
 };
 
+// How good are the cards we've already picked in this color combo?
+// Scale from 0-1. Used to select a color combination.
+// Tends to recommend what we've already picked before.
+export const getColor = (combination, picked) => {
+  if (picked.cards.WUBRG.length === 0) {
+    return 0;
+  }
+
+  return picked.values[combination.join('')] / picked.cards.WUBRG.length;
+};
+
+const getCoordPairs = (pack, pick, initialState) => [
+  [pack - 1, initialState[0].length],
+  [pick - 1, initialState[0][0].length],
+];
+
 export const getRatingWeight = (pack, pick, initialState) => {
-  return findBestValue2d(RATING_WEIGHTS, pack, pick, initialState);
+  return interpolateWeight(RATING_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
 
 export const getSynergyWeight = (pack, pick, initialState) => {
-  return findBestValue2d(SYNERGY_WEIGHTS, pack, pick, initialState);
+  return interpolateWeight(SYNERGY_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
 
 export const getOpennessWeight = (pack, pick, initialState) => {
-  return findBestValue2d(OPENNESS_WEIGHTS, pack, pick, initialState);
+  return interpolateWeight(OPENNESS_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
 
 export const getColorWeight = (pack, pick, initialState) => {
-  return findBestValue2d(COLORS_WEIGHTS, pack, pick, initialState);
+  return interpolateWeight(COLORS_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
 
 export const getFixingWeight = (pack, pick, initialState) => {
-  return findBestValue2d(FIXING_WEIGHTS, pack, pick, initialState);
+  return interpolateWeight(FIXING_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
+
 // inPack is the number of cards in this pack
 export const botRatingAndCombination = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
-  let bestRating = -1;
+  let bestRating = -Infinity;
   let bestCombination = [];
+  const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
   for (const combination of COLOR_COMBINATIONS) {
-    let rating = 0;
-    if (card && considerInCombination(combination, card)) {
+    let rating = -Infinity;
+    if (card && (considerInCombination(combination, card) || isPlayableLand(combination, card))) {
       rating =
-        getRating(combination, card, initialState) * getRatingWeight(packNum, pickNum, initialState) +
-        getSynergy(combination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
-        getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
-        getColor(combination, picked, card) * getColorWeight(packNum, pickNum, initialState) +
-        getFixing(combination, picked, card) * getFixingWeight(packNum, pickNum, initialState);
+        getColorScaling(combination) *
+          (getPickSynergy(combination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
+            getInternalSynergy(combination, picked) * getSynergyWeight(packNum, pickNum, initialState) +
+            getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
+            getColor(combination, picked) * getColorWeight(packNum, pickNum, initialState)) +
+        getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState);
     } else if (!card) {
-      rating = picked[combination.join('')];
+      const count = picked.cards[combination.join('')].filter((c) => !cardType(c).toLowerCase().includes('land'))
+        .length;
+      if (count >= 23) {
+        rating =
+          COLOR_SCALING_FACTOR[combination.length] ** 2 *
+          (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
+          count;
+      }
     }
     if (rating > bestRating) {
       bestRating = rating;
       bestCombination = combination;
     }
   }
-  return [bestRating, bestCombination];
+  return [bestRating + weightedRatingScore, bestCombination];
 };
 
 export default {
   getRating,
   getColor,
-  getSynergy,
+  getInternalSynergy,
+  getPickSynergy,
   getOpenness,
   getFixing,
   getRatingWeight,
@@ -279,7 +260,6 @@ export default {
   getOpennessWeight,
   getColorWeight,
   getFixingWeight,
-  getAdjustedElo,
   botRatingAndCombination,
   considerInCombination,
 };

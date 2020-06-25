@@ -13,7 +13,6 @@ const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
 const Blog = require('../models/blog');
-const Deck = require('../models/deck');
 
 const router = express.Router();
 
@@ -240,7 +239,7 @@ router.post(
               },
               (err3, user) => {
                 if (err3) {
-                  req.logger.error('Password reset find user error:', err3);
+                  req.logger.error(err3);
                   res.sendStatus(500);
                   return;
                 }
@@ -256,19 +255,19 @@ router.post(
                 }
                 bcrypt.genSalt(10, (err4, salt) => {
                   if (err4) {
-                    req.logger.error('Password reset genSalt error:', err4);
+                    req.logger.error(err4);
                     res.sendStatus(500);
                     return;
                   }
                   bcrypt.hash(req.body.password2, salt, (err5, hash) => {
                     if (err5) {
-                      req.logger.error('Password reset hashing error:', err5);
+                      req.logger.error(err5);
                       res.sendStatus(500);
                     } else {
                       user.password = hash;
                       user.save((err6) => {
                         if (err6) {
-                          req.logger.error('Password reset user save error:', err6);
+                          req.logger.error(err6);
                           return res.sendStatus(500);
                         }
 
@@ -550,9 +549,11 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const page = parseInt(req.params.page, 10);
 
     const userQ = User.findById(userid, '_id username users_following').lean();
+
+    /*
     const decksQ = Deck.find(
       {
-        seats: { $elemMatch: { userid } },
+        'seats.0.userid': userid,
       },
       '_id seats date cube',
     )
@@ -563,10 +564,15 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .limit(pagesize)
       .lean();
     const numDecksQ = Deck.countDocuments({
-      seats: { $elemMatch: { userid } },
+      'seats.0.userid': userid,
     });
+    
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
+    */
+    const user = await userQ.exec();
+    const numDecks = 0;
+    const decks = [];
 
     if (!user) {
       req.flash('danger', 'User not found');

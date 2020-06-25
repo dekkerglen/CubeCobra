@@ -35,7 +35,7 @@ const makeInitialStacks = (playerDeck) => {
   return sortDeck(playerDeck);
 };
 
-const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
+const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
   const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
   const [sideboard, setSideboard] = useState(() => {
     const initial = initialDeck.seats[0].sideboard;
@@ -115,6 +115,9 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics }) => {
           name={name}
           description={description}
           className="mb-3"
+          draft={draft}
+          setDeck={setDeck}
+          setSideboard={setSideboard}
         />
         <DynamicFlash />
         <Row>
@@ -185,6 +188,10 @@ CubeDeckbuilderPage.propTypes = {
         name: PropTypes.string.isRequired,
       }),
     ).isRequired,
+  }).isRequired,
+  draft: PropTypes.shape({
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
+    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
   }).isRequired,
 };
 
