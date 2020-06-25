@@ -13,7 +13,6 @@ const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
 const Blog = require('../models/blog');
-const Deck = require('../models/deck');
 
 const router = express.Router();
 
