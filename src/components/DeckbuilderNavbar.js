@@ -188,8 +188,9 @@ const DeckbuilderNavbar = ({
 
   const autoBuildDeck = useCallback(async () => {
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
+    init(draft);
     const picked = createSeen();
-    addSeen(picked, main);
+    addSeen(picked, main, draft.synergies);
     const { sideboard: side, deck: newDeck } = await buildDeck(
       main,
       picked,

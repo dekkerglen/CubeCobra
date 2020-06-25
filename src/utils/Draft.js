@@ -171,6 +171,132 @@ export const calculateBasicCounts = (main, colors) => {
   return result;
 };
 
+const allPairsShortestPath = (distances) => {
+  const result = [];
+  for (let i = 0; i < distances.length; i++) {
+    result.push([]);
+    for (let j = 0; j < distances.length; j++) {
+      result[i].push(distances[i][j]);
+    }
+  }
+  for (let k = 0; k < distances.length; k++) {
+    for (let i = 0; i < distances.length; i++) {
+      for (let j = 0; j < distances.length; j++) {
+        if (result[i][j] > result[i][k] + result[k][j]) {
+          result[i][j] = result[i][k] + result[k][j];
+        }
+      }
+    }
+  }
+  return result;
+};
+
+const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
+  const closest = [];
+  const distancesPre = [];
+  for (let i = 0; i < nodes.length; i++) {
+    distancesPre.push([]);
+    for (let j = 0; j < nodes.length; j++) {
+      distancesPre[i].push(0);
+    }
+  }
+  for (let i = 1; i < nodes.length; i++) {
+    distancesPre.push([]);
+    for (let j = 0; j < i; j++) {
+      if (i !== j) {
+        // Assume distance is symmetric.
+        const distance = distanceFunc(nodes[i], nodes[j]);
+        distancesPre[i][j] = distance;
+        distancesPre[j][i] = distance;
+      }
+    }
+  }
+  const distances = allPairsShortestPath(distancesPre);
+  for (let i = 0; i < nodes.length; i++) {
+    // We could do this faster with Quick-Select if we need the speedup
+    closest.push(
+      distances[i]
+        .map((distance, ind) => [distance, ind])
+        .filter(([, ind]) => ind !== i)
+        .sort(([a], [b]) => a - b),
+    );
+  }
+
+  // Contains distance, amount from left to take, left index, and right index
+  let bestDistance = Infinity;
+  let bestNodes = [];
+  for (let i = 1; i < nodes.length; i++) {
+    if (bestDistance > closest[i][k - 2] + closest[i][k - 3]) {
+      bestDistance = closest[i][k - 2] + closest[i][k - 3];
+      bestNodes = closest[i].slice(0, k - 1).concat([i]);
+    }
+    for (let j = 0; j < i; j++) {
+      const closestI = closest[i].filter(([, ind]) => ind !== j);
+      const closestJ = closest[j].filter(([, ind]) => ind !== i);
+      const seen = [i, j];
+      const distance = distances[i][j];
+      let iInd = -1;
+      let jInd = -1;
+      let included = 2;
+      while (included < k) {
+        if (
+          (iInd >= 0 ? closestI[iInd][0] : 0) + distance < (jInd >= 0 ? closestJ[jInd][0] : 0) &&
+          iInd < closestI.length - 1
+        ) {
+          iInd += 1;
+          const [, ind] = closestI[iInd];
+          if (!seen.includes(ind)) {
+            included += 1;
+            seen.push(ind);
+          }
+        } else if (
+          (jInd >= 0 ? closestJ[jInd][0] : 0) + distance < (iInd >= 0 ? closestI[iInd][0] : 0) &&
+          jInd < closestJ.length - 1
+        ) {
+          jInd += 1;
+          const [, ind] = closestJ[jInd];
+          if (!seen.includes(ind)) {
+            included += 1;
+            seen.push(ind);
+          }
+        } else if (
+          jInd < closestJ.length - 1 &&
+          (jInd >= 0 ? closestJ[jInd + 1][0] : 0) < (iInd >= 0 ? closestI[iInd][0] : 0)
+        ) {
+          jInd += 1;
+          const [, ind] = closestJ[jInd];
+          if (!seen.includes(ind)) {
+            included += 1;
+            seen.push(ind);
+          }
+        } else if (iInd < closestI.length - 1) {
+          iInd += 1;
+          const [, ind] = closestI[iInd];
+          if (!seen.includes(ind)) {
+            included += 1;
+            seen.push(ind);
+          }
+        } else if (jInd < closestJ.length - 1) {
+          jInd += 1;
+          const [, ind] = closestJ[jInd];
+          if (!seen.includes(ind)) {
+            included += 1;
+            seen.push(ind);
+          }
+        } else {
+          throw new Error('Not enough nodes to make a K-set.');
+        }
+      }
+      const length = distance + closestI[iInd][0] + closestJ[jInd][0];
+      if (length < bestDistance) {
+        bestNodes = seen;
+        bestDistance = length;
+      }
+    }
+  }
+  return bestNodes.map((ind) => nodes[ind]);
+};
+
 export async function buildDeck(cards, picked, synergies, initialState, basics) {
   let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
   const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
@@ -196,26 +322,53 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     side = [...outOfColor];
   }
 
-  // add highest synergy card, then add cards based on a combo of elo and synergy
-  const chosen = [];
-  const played = createSeen();
-
-  const size = Math.min(23, nonlands.length);
-  for (let i = 0; i < size; i++) {
-    // add in new synergy data
-    const scores = [];
-    scores.push(nonlands.map((card) => getPickSynergy(colors, card, played, synergies)));
-
-    let best = 0;
-
-    for (let j = 1; j < nonlands.length; j++) {
-      if (scores[j] > scores[best]) {
-        best = j;
+  let chosen;
+  if (synergies) {
+    const distanceFunc = (c1, c2) => 1 - similarity(synergies[c1.index], synergies[c2.index]); // + (4800 - c1.rating - c2.rating) / 2400;
+    // const distanceFunc = (c1, c2) => {
+    //   const vec1 = synergies[c1.index];
+    //   const vec2 = synergies[c2.index];
+    //   let sum = 0;
+    //   for (let i = 0; i < vec1.length; i++) {
+    //     sum += (vec1[i] - vec2[i]) ** 2;
+    //   }
+    //   return Math.sqrt(sum) + 24000 / (c1.rating + c2.rating);
+    // };
+    const NKernels = (n, total) => {
+      let remaining = Math.min(total, nonlands.length);
+      for (let i = 0; i < n; i++) {
+        const floor = Math.floor(remaining / (n - i));
+        remaining -= floor;
+        const kernel = findShortestKSpanningTree(nonlands, distanceFunc, floor);
+        chosen = chosen.concat(kernel);
+        // eslint-disable-next-line no-loop-func
+        nonlands = nonlands.filter((c) => !chosen.includes(c));
       }
+    };
+    NKernels(2, 18);
+    const played = createSeen();
+    addSeen(played, chosen);
+
+    const size = Math.min(23 - chosen.length, nonlands.length);
+    for (let i = 0; i < size; i++) {
+      // add in new synergy data
+      const scores = [];
+      scores.push(nonlands.map((card) => getPickSynergy(colors, card, played, synergies) + getRating(colors, card)));
+
+      let best = 0;
+
+      for (let j = 1; j < nonlands.length; j++) {
+        if (scores[j] > scores[best]) {
+          best = j;
+        }
+      }
+      const current = nonlands.splice(best, 1)[0];
+      addSeen(played, [current]);
     }
-    const current = nonlands.splice(best, 1)[0];
-    addSeen(played, [current], synergies);
-    chosen.push(current);
+    nonlands = nonlands.filter((c) => !chosen.includes(c));
+  } else {
+    chosen = nonlands.sort(sortFn).slice(0, 23);
+    nonlands = nonlands.slice(23);
   }
 
   const main = chosen.concat(playableLands.slice(0, 17));
@@ -242,7 +395,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
 
   for (const card of main) {
     let index = Math.min(card.cmc ?? 0, 7);
-    if (!card.details.type.toLowerCase().includes('creature') && !card.details.type.toLowerCase().includes('basic')) {
+    if (!cardType(card).toLowerCase().includes('creature') && !card.details.type.toLowerCase().includes('basic')) {
       index += 8;
     }
     deck[index].push(card);
