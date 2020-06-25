@@ -1156,6 +1156,34 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
   }
 });
 
+const createDraftForSingleDeck = async (deck) => {
+  let index = 0;
+  const populatedCards = [];
+  for (const stack of deck.seats[0].deck) {
+    for (const card of stack) {
+      card.index = index;
+      populatedCards.push(card);
+      index += 1;
+    }
+  }
+  const draft = new Draft();
+  draft.initial_state = [[populatedCards]];
+  const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cards: populatedCards.map((card) => carddb.cardFromId(card.cardID).name_lower),
+    }),
+  });
+  if (response.ok) {
+    draft.synergies = await response.json();
+  } else {
+    draft.synergies = null;
+  }
+  await draft.save();
+  return draft._id;
+};
+
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
@@ -1237,6 +1265,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         sideboard: [],
       },
     ];
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
     await Cube.updateOne(
@@ -1731,6 +1760,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       deck: pool,
       sideboard: [],
     });
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
 
@@ -3217,6 +3247,11 @@ router.get('/deckbuilder/:id', async (req, res) => {
         }
       }
       for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
+    if (draft) {
+      for (const card of Object.values(draft.basics)) {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
