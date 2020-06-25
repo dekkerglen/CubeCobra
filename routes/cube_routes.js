@@ -599,7 +599,7 @@ router.get('/rss/:id', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
     if (!cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      res.redirect('/404');
+      return res.redirect('/404');
     }
     const blogs = await Blog.find({
       cube: cube._id,

@@ -114,7 +114,7 @@ router.get('/explore', async (req, res) => {
 });
 
 router.get('/random', async (req, res) => {
-  const count = await Cube.count();
+  const count = await Cube.estimatedDocumentCount();
   const random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random).lean();
   res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
@@ -347,7 +347,7 @@ router.get('/search/:query/:page', async (req, res) => {
       query = { $and: [{ isListed: true }, query] };
     }
 
-    const count = await Cube.count(query);
+    const count = await Cube.countDocuments(query);
 
     const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
       .lean()

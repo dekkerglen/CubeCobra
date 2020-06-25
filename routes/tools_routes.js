@@ -157,7 +157,7 @@ router.get('/card/:id', async (req, res) => {
       id = carddb.getMostReasonable(possibleName)._id;
     }
 
-    // if id is a foreign cardname, redirect to english version
+    // if id is a foreign id, redirect to english version
     const english = carddb.getEnglishVersion(id);
     if (english) {
       id = english;
@@ -173,6 +173,10 @@ router.get('/card/:id', async (req, res) => {
     const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
     const data = await CardHistory.findOne({ oracleId: id });
     if (!data) {
+      req.flash(
+        'danger',
+        `Card with identifier ${req.params.id} not found. Acceptable identifiers are card name (english only), scryfall ID, or oracle ID.`,
+      );
       return res.status(404).render('misc/404', {});
     }
 
@@ -192,9 +196,7 @@ router.get('/card/:id', async (req, res) => {
       ),
     });
   } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', err.message);
-    return res.redirect('/404');
+    return util.handleRouteError(req, res, err, '/404/');
   }
 });
 
