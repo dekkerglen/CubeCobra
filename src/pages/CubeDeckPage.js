@@ -26,7 +26,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
 import SampleHandModal from 'components/SampleHandModal';
-import Draft from 'utils/Draft';
+import Draft, { init } from 'utils/Draft';
 import { csrfFetch } from 'utils/CSRF';
 import Query from 'utils/Query';
 
@@ -89,7 +89,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
         method: 'POST',
       });
       const json = await response.json();
-      Draft.init(json.draft);
+      init(json.draft);
       setDraftId(Draft.id());
       await Draft.allBotsDraft();
       submitDeckForm.current.submit();

@@ -7,23 +7,24 @@ import { getCardColorClass } from 'components/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useSortableData from 'hooks/UseSortableData';
-import { encodeName, COLOR_COMBINATIONS } from 'utils/Card';
-import { addSeen } from 'utils/Draft';
+import { encodeName } from 'utils/Card';
+import { addSeen, createSeen, init } from 'utils/Draft';
 import {
-  getRating,
+  botRatingAndCombination,
   getColor,
-  getSynergy,
-  getOpenness,
+  getColorScaling,
+  getColorWeight,
   getFixing,
+  getFixingWeight,
+  getInternalSynergy,
+  getOpenness,
+  getOpennessWeight,
+  getPickSynergy,
+  getRating,
   getRatingWeight,
   getSynergyWeight,
-  getOpennessWeight,
-  getColorWeight,
-  getFixingWeight,
-  botRatingAndCombination,
 } from 'utils/draftbots';
 import Query from 'utils/Query';
-import { fromEntries } from 'utils/Util';
 import useToggle from 'hooks/UseToggle';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -81,32 +82,43 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (combination, card) => getRating(combination, card).toFixed(2),
+    function: (_, card) => getRating(card),
+  },
+  {
+    name: 'Internal Synergy',
+    description: 'A score of how well current picks in these colors synergize with each other.',
+    weight: getSynergyWeight,
+    function: (combination, _, picked) => getInternalSynergy(combination, picked),
   },
   {
     name: 'Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (combination, card, picked, synergies) => getSynergy(combination, card, picked, synergies).toFixed(2),
+    function: (combination, card, picked, synergies) => getPickSynergy(combination, card, picked, synergies),
   },
   {
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, card, picked, synergies, seen) =>
-      getOpenness(combination, seen, card, picked, synergies).toFixed(2),
+    function: (combination, _, __, ___, seen) => getOpenness(combination, seen),
   },
   {
     name: 'Color',
     description: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (combination, card, picked) => getColor(combination, picked, card).toFixed(2),
+    function: (combination, card, picked) => getColor(combination, picked, card),
   },
   {
     name: 'Fixing',
     description: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
-    function: (combination, card, picked) => getFixing(combination, picked, card).toFixed(2),
+    function: (combination, card) => getFixing(combination, card),
+  },
+  {
+    name: 'Color Scaling',
+    description:
+      'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount as an additional weight',
+    function: (combination) => getColorScaling(combination),
   },
   {
     name: 'Combination',
@@ -122,6 +134,9 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [index, setIndex] = useState(defaultIndex ?? 0);
   const didMountRef1 = useRef(false);
   const [normalized, toggleNormalized] = useToggle(false);
+
+  // Have to do useMemo so it happens immediately
+  useMemo(() => init(draft), [draft]);
 
   useEffect(() => {
     if (didMountRef1.current) {
@@ -144,17 +159,15 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-  picked.cards = [];
-  addSeen(picked, seat.pickorder.slice(0, index));
+  const picked = createSeen();
+  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
 
   const seen = useMemo(() => {
-    const res = fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0]));
-    res.cards = [];
+    const res = createSeen();
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
     }
     return res;
   }, [deck, draft, index, seatIndex]);
@@ -162,7 +175,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   // load the weights for the selected pack
   const weights = useMemo(() => {
     const res = [];
-    for (let i = 0; i < TRAITS.length - 2; i++) {
+    for (let i = 0; i < TRAITS.length - 3; i++) {
       res.push({
         name: TRAITS[i].name,
         description: TRAITS[i].description,
@@ -204,6 +217,12 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
       }
       for (const card of cardsInPack) {
         card.scores[i] = `+${(card.scores[i] - minScore).toFixed(2)}`;
+      }
+    }
+  } else {
+    for (let i = 0; i < TRAITS.length - 2; i++) {
+      for (const card of cardsInPack) {
+        card.scores[i] = card.scores[i].toFixed(2);
       }
     }
   }

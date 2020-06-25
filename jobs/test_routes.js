@@ -4,8 +4,6 @@ const fetch = require('node-fetch');
 const routes = JSON.parse(fs.readFileSync('private/routes.json'));
 console.log(routes);
 
-const done = false;
-
 const handleResponse = (res) => {
   console.log(`   ${res.status}`);
 };
