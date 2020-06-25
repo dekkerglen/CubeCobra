@@ -26,7 +26,7 @@ const formatError = ({ message, stack, request }) =>
     message,
     target: request ? request.originalUrl : null,
     uuid: request ? request.uuid : null,
-    stack: stack.split('\n'),
+    stack: (stack || '').split('\n'),
   });
 
 const linearFormat = winston.format((info) => {

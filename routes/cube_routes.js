@@ -545,6 +545,8 @@ router.get('/blog/:id/:page', async (req, res) => {
     }
 
     const userQ = User.findById(cube.owner);
+
+    const countQ = Blog.estimatedDocumentCount({ cube: cube._id });
     const blogsQ = Blog.find({
       cube: cube._id,
     })
@@ -552,7 +554,7 @@ router.get('/blog/:id/:page', async (req, res) => {
       .skip(page * 10)
       .limit(10)
       .lean();
-    const [user, blogs] = await Promise.all([userQ, blogsQ]);
+    const [user, blogs, count] = await Promise.all([userQ, blogsQ, countQ]);
 
     for (const item of blogs) {
       if (!item.date_formatted) {
@@ -568,7 +570,7 @@ router.get('/blog/:id/:page', async (req, res) => {
       cubeID,
       canEdit: req.user ? req.user._id.equals(cube.owner) : false,
       posts: blogs,
-      pages: Math.ceil(blogs.length / 10),
+      pages: count / 10,
       activePage: page,
       userid: user._id,
       loggedIn: !!req.user,

@@ -552,7 +552,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const userQ = User.findById(userid, '_id username users_following').lean();
     const decksQ = Deck.find(
       {
-        seats: { $elemMatch: { userid } },
+        'seats.0.userid': userid,
       },
       '_id seats date cube',
     )
