@@ -116,6 +116,8 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
           description={description}
           className="mb-3"
           draft={draft}
+          setDeck={setDeck}
+          setSideboard={setSideboard}
         />
         <DynamicFlash />
         <Row>

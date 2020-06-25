@@ -466,6 +466,10 @@ function typeLine(card) {
   return card.type_line || card.details.type;
 }
 
+export function cardCanBeSorted(card, sort) {
+  return cardGetLabels(card, sort).length != 0;
+}
+
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
     if (card.colorCategory) return [card.colorCategory];
@@ -732,7 +736,7 @@ function sortGroupsOrdered(cards, sort) {
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
   for (const [card, cardLabels] of allCardLabels) {
-    if (cardLabels.length > 0) {
+    if (cardLabels && cardLabels.length > 0) {
       cardLabels.sort(compare);
       for (const label of cardLabels) {
         if (!byLabel[label]) {

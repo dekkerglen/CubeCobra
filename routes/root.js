@@ -377,7 +377,7 @@ router.get('/search/:query/:page', async (req, res) => {
       page: 0,
     };
 
-    req.logger.error(null, { error: err });
+    req.logger.error(err);
     req.flash('danger', 'Invalid Search Syntax');
 
     return res.render('search', {

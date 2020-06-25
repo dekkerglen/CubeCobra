@@ -1,128 +1,44 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import URLSearchParams from 'core-js-pure/features/url-search-params';
+import ReactDOM from 'react-dom';
 
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
-import SortableTable from 'components/SortableTable';
-import withAutocard from 'components/WithAutocard';
+import TopCardsTable from 'components/TopCardsTable';
 
-import { encodeName } from 'utils/Card';
 import Query from 'utils/Query';
 
-const AutocardA = withAutocard('a');
+const TopCards = ({ data, numResults }) => {
+  const [filter, setFilter] = useState(Query.get('f') || '');
+  const [count, setCount] = useState(numResults);
 
-class TopCards extends Component {
-  constructor(props) {
-    super(props);
+  const updateFilter = (_, filterInput) => {
+    setFilter(filterInput);
+  };
 
-    const { defaultData, defaultNumResults, defaultFilterText } = props;
-
-    this.state = {
-      filter: defaultFilterText,
-      data: defaultData,
-      numResults: defaultNumResults || 0,
-    };
-
-    this.setFilter = this.setFilter.bind(this);
-  }
-
-  componentDidMount() {
-    const queryFilter = Query.get('f');
-    if (queryFilter) {
-      this.setFilter(null, queryFilter);
-    }
-  }
-
-  async setFilter(_, filterInput) {
-    const params = new URLSearchParams([['f', filterInput]]);
-    const response = await fetch(`/tool/api/topcards?${params.toString()}`);
-    if (!response.ok) {
-      return;
-    }
-    Query.set('f', filterInput);
-
-    const json = await response.json();
-    this.setState({
-      filter: filterInput,
-      data: json.data,
-      numResults: json.numResults,
-    });
-  }
-
-  render() {
-    const { defaultFilterText } = this.props;
-    const { data, filter, numResults } = this.state;
-
-    const mappedData = {
-      Rating: data.rating,
-      Elo: data.elo,
-      'Total Picks': data.picks,
-      Cubes: data.cubes,
-    };
-
-    const rowF = ([name, img, imgFlip, rating, picks, elo, cubes]) => (
-      <tr key={name}>
-        <td>
-          <AutocardA front={img} back={imgFlip || undefined} href={`/tool/card/${encodeName(name)}`}>
-            {name}
-          </AutocardA>
-        </td>
-        <td>{rating === null ? '' : ((1 - rating) * 100).toFixed(0)}</td>
-        <td>{elo === null ? '' : elo.toFixed(0)}</td>
-        <td>{picks === null ? '' : picks}</td>
-        <td>{cubes === null ? '' : cubes}</td>
-      </tr>
-    );
-
-    return (
-      <>
-        <div className="usercontrols pt-3 mb-3">
-          <h4 className="mx-3 mb-3">Top Cards</h4>
-          <FilterCollapse
-            isOpen
-            defaultFilterText={defaultFilterText}
-            filter={filter}
-            setFilter={this.setFilter}
-            numCards={numResults}
-            numShown={data.length}
-          />
-        </div>
-        <DynamicFlash />
-        <SortableTable
-          sorts={{
-            Rating: (row) => row[3],
-            Elo: (row) => -(row[5] || -1),
-            'Total Picks': (row) => -row[4],
-            Cubes: (row) => -row[6],
-          }}
-          defaultSort="Elo"
-          headers={{
-            Name: {},
-            Rating: { style: { width: '8rem' }, tooltip: 'Average draft pick position' },
-            Elo: { style: { width: '8rem' }, tooltip: 'Elo rating of card' },
-            'Total Picks': { style: { width: '8rem' }, tooltip: 'Total picks across all cubes' },
-            Cubes: { style: { width: '8rem' }, tooltip: 'Cubes containing this card' },
-          }}
-          data={mappedData}
-          rowF={rowF}
+  return (
+    <>
+      <div className="usercontrols pt-3 mb-3">
+        <h4 className="mx-3 mb-3">Top Cards</h4>
+        <FilterCollapse
+          isOpen
+          defaultFilterText=""
+          filter={filter}
+          setFilter={updateFilter}
+          numCards={count}
+          numShown={Math.min(count, 100)}
         />
-      </>
-    );
-  }
-}
+      </div>
+      <DynamicFlash />
+      <TopCardsTable filter={filter} setCount={setCount} count={count} cards={data} />
+    </>
+  );
+};
 
 TopCards.propTypes = {
-  defaultData: PropTypes.shape({
-    rating: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
-    elo: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
-    picks: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
-    cubes: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
-  }).isRequired,
-  defaultNumResults: PropTypes.number.isRequired,
-  defaultFilterText: PropTypes.string.isRequired,
+  data: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
+  numResults: PropTypes.number.isRequired,
 };
 
 const wrapper = document.getElementById('react-root');

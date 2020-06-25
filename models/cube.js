@@ -52,26 +52,19 @@ const cubeSchema = mongoose.Schema({
   name: {
     type: String,
     required: true,
-    index: true,
   },
   shortID: {
     type: String,
     required: true,
-    index: true,
   },
-  urlAlias: {
-    type: String,
-    index: true,
-  },
+  urlAlias: String,
   owner: {
     type: String,
     required: true,
-    index: true,
   },
   isListed: {
     type: Boolean,
     default: true,
-    index: true,
   },
   privatePrices: {
     type: Boolean,
@@ -80,7 +73,6 @@ const cubeSchema = mongoose.Schema({
   isFeatured: {
     type: Boolean,
     default: false,
-    index: true,
   },
   overrideCategory: {
     type: Boolean,
@@ -126,10 +118,7 @@ const cubeSchema = mongoose.Schema({
   image_artist: String,
   image_name: String,
   owner_name: String,
-  date_updated: {
-    type: Date,
-    index: true,
-  },
+  date_updated: Date,
   updated_string: String,
   default_sorts: [String],
   card_count: Number,
@@ -158,6 +147,42 @@ const cubeSchema = mongoose.Schema({
     // Values: first, recent
     default: 'recent',
   },
+});
+
+cubeSchema.index({
+  shortID: 1,
+});
+
+cubeSchema.index({
+  urlAlias: 1,
+});
+
+cubeSchema.index({
+  owner: 1,
+  date_updated: -1,
+});
+
+cubeSchema.index({
+  name: 1,
+  date_updated: -1,
+});
+
+// these indexes are for explore queries
+cubeSchema.index({
+  isFeatured: 1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  owner: 1,
+  card_count: 1,
+  date_updated: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  owner: 1,
+  numDecks: -1,
 });
 
 const Cube = mongoose.model('Cube', cubeSchema);
