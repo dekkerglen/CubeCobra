@@ -1156,6 +1156,34 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
   }
 });
 
+const createDraftForSingleDeck = async (deck) => {
+  let index = 0;
+  const populatedCards = [];
+  for (const stack of deck.seats[0].deck) {
+    for (const card of stack) {
+      card.index = index;
+      populatedCards.push(card);
+      index += 1;
+    }
+  }
+  const draft = new Draft();
+  draft.initial_state = [[populatedCards]];
+  const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cards: populatedCards.map((card) => carddb.cardFromId(card.cardID).name_lower),
+    }),
+  });
+  if (response.ok) {
+    draft.synergies = await response.json();
+  } else {
+    draft.synergies = null;
+  }
+  await draft.save();
+  return draft._id;
+};
+
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
@@ -1237,6 +1265,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         sideboard: [],
       },
     ];
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
     await Cube.updateOne(
@@ -1731,6 +1760,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
       deck: pool,
       sideboard: [],
     });
+    deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
 
@@ -2138,7 +2168,7 @@ router.get('/draft/:id', async (req, res) => {
 
     return res.render('cube/cube_draft', {
       reactHTML: CubeDraftPage
-        ? await ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
+        ? ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
         : undefined,
       reactProps: serialize(reactProps),
       title: `${abbreviate(cube.name)} - Draft`,
@@ -2269,7 +2299,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 });
 
 // API routes
-router.get('/api/cardnames', (req, res) => {
+router.get('/api/cardnames', (_, res) => {
   return res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
@@ -2277,7 +2307,7 @@ router.get('/api/cardnames', (req, res) => {
 });
 
 // Get the full card images including image_normal and image_flip
-router.get('/api/cardimages', (req, res) => {
+router.get('/api/cardimages', (_, res) => {
   return res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
@@ -2619,14 +2649,14 @@ router.post(
   }),
 );
 
-router.get('/api/imagedict', (req, res) => {
+router.get('/api/imagedict', (_, res) => {
   res.status(200).send({
     success: 'true',
     dict: carddb.imagedict,
   });
 });
 
-router.get('/api/fullnames', (req, res) => {
+router.get('/api/fullnames', (_, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.full_names,
@@ -3219,8 +3249,10 @@ router.get('/deckbuilder/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    for (const card of Object.values(draft.basics)) {
-      card.details = carddb.cardFromId(card.cardID);
+    if (draft) {
+      for (const card of Object.values(draft.basics)) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
@@ -3829,7 +3861,7 @@ router.post(
     const maybe = [...(cube.maybe || [])];
 
     const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
-    const withRemoved = maybe.filter((card, index) => !removeIndices.includes(index));
+    const withRemoved = maybe.filter((_, index) => !removeIndices.includes(index));
 
     const addCards = Array.isArray(req.body.add) ? req.body.add : [];
     const addCardsNoDetails = addCards.map(({ details, ...card }) => ({ ...util.newCard(details), ...card }));
