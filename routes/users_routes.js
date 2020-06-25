@@ -550,6 +550,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const page = parseInt(req.params.page, 10);
 
     const userQ = User.findById(userid, '_id username users_following').lean();
+
     const decksQ = Deck.find(
       {
         'seats.0.userid': userid,
@@ -562,8 +563,8 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .skip(pagesize * page)
       .limit(pagesize)
       .lean();
-    const numDecksQ = Deck.countDocuments({
-      seats: { $elemMatch: { userid } },
+    const numDecksQ = Deck.estimatedDocumentCount({
+      'seats.0.userid': userid,
     });
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
