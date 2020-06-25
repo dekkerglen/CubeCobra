@@ -3228,7 +3228,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
     const draft = deck.draft ? await Draft.findById(deck.draft).lean() : null;
-    
+
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 
     if (!req.user || !deckOwner._id.equals(req.user._id)) {
