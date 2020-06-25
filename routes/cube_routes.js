@@ -4106,6 +4106,8 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft) {
+      // TODO: fix cube schema, fix out of sync if an edit is also occuring
+      /*
       const cube = await Cube.findOne(buildIdQuery(draft.cube));
 
       if (cube) {
@@ -4137,6 +4139,7 @@ router.post(
         }
         await cube.save();
       }
+      */
 
       if (!rating.elo) {
         rating.name = req.body.pick;
