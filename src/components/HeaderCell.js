@@ -8,7 +8,7 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
   let icon = '/content/nosort.png';
 
   if (sortConfig && sortConfig.key === fieldName) {
-    if (sortConfig.direction === 'descending') {
+    if (sortConfig.direction === 'ascending') {
       icon = '/content/ascending.png';
     } else {
       icon = '/content/descending.png';

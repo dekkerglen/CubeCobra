@@ -130,49 +130,7 @@ const TRAITS = [
   },
 ];
 
-const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useState(defaultIndex ?? 0);
-  const didMountRef1 = useRef(false);
-  const [normalized, toggleNormalized] = useToggle(false);
-
-  // Have to do useMemo so it happens immediately
-  useMemo(() => init(draft), [draft]);
-
-  useEffect(() => {
-    if (didMountRef1.current) {
-      Query.set('pick', index);
-    } else {
-      const queryIndex = Query.get('pick');
-      if (queryIndex || queryIndex === 0) {
-        setIndex(queryIndex);
-      }
-      didMountRef1.current = true;
-    }
-    return () => Query.del('pick');
-  }, [index]);
-
-  const click = (event) => {
-    if (index !== event.target.getAttribute('index')) {
-      setIndex(event.target.getAttribute('index'));
-    }
-  };
-
-  // find the information for the selected pack
-  const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = createSeen();
-  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
-
-  const seen = useMemo(() => {
-    const res = createSeen();
-
-    // this is an O(n^3) operation, but it should be ok
-    for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
-    }
-    return res;
-  }, [deck, draft, index, seatIndex]);
-
-  // load the weights for the selected pack
+export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
   const weights = useMemo(() => {
     const res = [];
     for (let i = 0; i < TRAITS.length - 3; i++) {
@@ -184,6 +142,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     }
     return res;
   }, [draft, pack, picks]);
+  const [normalized, toggleNormalized] = useToggle(false);
 
   for (const card of cardsInPack) {
     card.scores = [];
@@ -240,38 +199,11 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     return res;
   }, [cardsInPack]);
 
-  const { items, requestSort, sortConfig } = useSortableData(counts);
+  const { items, requestSort, sortConfig } = useSortableData(counts, { key: 'Total', direction: 'descending' });
 
   return (
     <>
-      <h4>Pick Order</h4>
-      <Row>
-        {picksList.map((list, listindex) => (
-          <Col xs={6} sm={3} key={/* eslint-disable-line react/no-array-index-key */ listindex}>
-            <ListGroup className="list-outline">
-              <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
-              {list.map((card) => (
-                <AutocardItem
-                  key={card.index}
-                  card={card}
-                  className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
-                  data-in-modal
-                  onClick={click}
-                  index={card.index}
-                >
-                  {parseInt(card.index, 10) === parseInt(index, 10) ? (
-                    <strong>{card.details.name}</strong>
-                  ) : (
-                    <>{card.details.name}</>
-                  )}
-                </AutocardItem>
-              ))}
-            </ListGroup>
-          </Col>
-        ))}
-      </Row>
-      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
-      <Label check>
+      <Label check className="pl-2">
         <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
       </Label>
       <Table bordered responsive className="small-table mt-lg-3">
@@ -323,6 +255,94 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
           </Table>
         </Col>
       </Row>
+    </>
+  );
+};
+
+Internal.propTypes = {
+  cardsInPack: PropTypes.arrayOf(PropTypes.shape({ scores: PropTypes.arrayOf(PropTypes.number).isRequired }))
+    .isRequired,
+  draft: PropTypes.shape({
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
+    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+  }).isRequired,
+  pack: PropTypes.number.isRequired,
+  picks: PropTypes.number.isRequired,
+  picked: PropTypes.shape({}).isRequired,
+  seen: PropTypes.shape({}).isRequired,
+};
+
+const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
+  const [index, setIndex] = useState(defaultIndex ?? 0);
+  const didMountRef1 = useRef(false);
+
+  // Have to do useMemo so it happens immediately
+  useMemo(() => init(draft), [draft]);
+
+  useEffect(() => {
+    if (didMountRef1.current) {
+      Query.set('pick', index);
+    } else {
+      const queryIndex = Query.get('pick');
+      if (queryIndex || queryIndex === 0) {
+        setIndex(queryIndex);
+      }
+      didMountRef1.current = true;
+    }
+    return () => Query.del('pick');
+  }, [index]);
+
+  const click = (event) => {
+    if (index !== event.target.getAttribute('index')) {
+      setIndex(event.target.getAttribute('index'));
+    }
+  };
+
+  // find the information for the selected pack
+  const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
+  const picked = createSeen();
+  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
+
+  const seen = useMemo(() => {
+    const res = createSeen();
+
+    // this is an O(n^3) operation, but it should be ok
+    for (let i = 0; i <= parseInt(index, 10); i++) {
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
+    }
+    return res;
+  }, [deck, draft, index, seatIndex]);
+
+  return (
+    <>
+      <h4>Pick Order</h4>
+      <Row>
+        {picksList.map((list, listindex) => (
+          <Col xs={6} sm={3} key={/* eslint-disable-line react/no-array-index-key */ listindex}>
+            <ListGroup className="list-outline">
+              <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
+              {list.map((card) => (
+                <AutocardItem
+                  key={card.index}
+                  card={card}
+                  className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
+                  data-in-modal
+                  onClick={click}
+                  index={card.index}
+                >
+                  {parseInt(card.index, 10) === parseInt(index, 10) ? (
+                    <strong>{card.details.name}</strong>
+                  ) : (
+                    <>{card.details.name}</>
+                  )}
+                </AutocardItem>
+              ))}
+            </ListGroup>
+          </Col>
+        ))}
+      </Row>
+      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
+      <Internal cardsInPack={cardsInPack} draft={draft} pack={pack} picks={picks} picked={picked} seen={seen} />
     </>
   );
 };
