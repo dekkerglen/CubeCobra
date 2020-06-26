@@ -15,14 +15,6 @@ import { getTCGLink } from 'utils/Affiliate';
 const CardPage = ({ card, data, related }) => {
   const cardList = related.map((item) => ({ details: item }));
 
-  let prices = {};
-
-  for (const price of data.current.prices) {
-    if (price.version === card._id) {
-      prices = price;
-    }
-  }
-
   return (
     <Card className="mt-2">
       <CardHeader>
@@ -56,7 +48,7 @@ const CardPage = ({ card, data, related }) => {
               {card.prices.usd_foil && <div className="card-price">USD Foil: {card.prices.usd_foil.toFixed(2)}</div>}
               {card.prices.eur && <div className="card-price">EUR: {card.prices.eur.toFixed(2)}</div>}
               {card.prices.tix && <div className="card-price">TIX: {card.prices.tix.toFixed(2)}</div>}
-              {card.elo && <div className="card-price">Elo: {card.elo}</div>}
+              {card.elo && <div className="card-price">Elo: {card.elo.toFixed(0)}</div>}
             </div>
           </Col>
           <Col className="breakdown" xs="12" sm="8">
@@ -125,8 +117,10 @@ CardPage.propTypes = {
     current: PropTypes.shape({
       prices: PropTypes.arrayOf(
         PropTypes.shape({
-          price: PropTypes.number,
-          price_foil: PropTypes.number,
+          usd: PropTypes.number,
+          usd_foil: PropTypes.number,
+          eur: PropTypes.number,
+          tix: PropTypes.number,
         }),
       ).isRequired,
       vintage: PropTypes.bool.isRequired,

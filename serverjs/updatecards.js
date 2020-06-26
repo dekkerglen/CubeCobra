@@ -587,7 +587,12 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'mps' || // kaladesh masterpieces
     card.set.toLowerCase() === 'mp2' || // invocations
     card.set.toLowerCase() === 'exp'; // expeditions
-  newcard.prices = card.prices;
+  newcard.prices = {
+    usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
+    usd_foil: card.prices.usd ? parseFloat(card.prices.usd_foil, 10) : null,
+    eur: card.prices.usd ? parseFloat(card.prices.eur, 10) : null,
+    tix: card.prices.usd ? parseFloat(card.prices.tix, 10) : null,
+  };
   newcard.elo = catalog.elodict[name];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';

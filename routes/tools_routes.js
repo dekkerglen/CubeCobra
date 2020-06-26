@@ -147,8 +147,6 @@ router.get('/topcards', async (req, res) => {
 });
 
 router.get('/card/:id', async (req, res) => {
-  const card = carddb.cardFromId(req.params.id);
-  console.log(card);
   try {
     let { id } = req.params;
 

@@ -214,10 +214,14 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     return contextChildren;
   }
 
-  const accumulator = (total, card) => total + (card.details.price || 0);
-  const accumulatorFoil = (total, card) => total + (card.details.price_foil || 0);
-  const totalPrice = cards.length ? cards.reduce(accumulator, 0) : 0;
-  const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0) : 0;
+  const accumulatorUsd = (total, card) => total + (card.details.prices.usd || 0);
+  const accumulatorUsdFoil = (total, card) => total + (card.details.prices.usd_foil || 0);
+  const accumulatorEur = (total, card) => total + (card.details.prices.eur || 0);
+  const accumulatorTix = (total, card) => total + (card.details.prices.tix || 0);
+  const totalPriceUsd = cards.length ? cards.reduce(accumulatorUsd, 0) : 0;
+  const totalPriceUsdFoil = cards.length ? cards.reduce(accumulatorUsdFoil, 0) : 0;
+  const totalPriceEur = cards.length ? cards.reduce(accumulatorEur, 0) : 0;
+  const totalPriceTix = cards.length ? cards.reduce(accumulatorTix, 0) : 0;
 
   return (
     <>
@@ -240,14 +244,24 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 </ListGroup>
               </Row>
               <Row noGutters>
-                {Number.isFinite(totalPrice) && (
-                  <TextBadge name="Price" className="mt-2 mr-2">
-                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPrice).toLocaleString()}</Tooltip>
+                {Number.isFinite(totalPriceUsd) && (
+                  <TextBadge name="Price USD" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
-                {Number.isFinite(totalPriceFoil) && (
-                  <TextBadge name="Foil" className="mt-2 mr-2">
-                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceFoil).toLocaleString()}</Tooltip>
+                {Number.isFinite(totalPriceUsdFoil) && (
+                  <TextBadge name="Foil USD" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">${Math.round(totalPriceUsdFoil).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceEur) && (
+                  <TextBadge name="EUR" className="mt-2 mr-2">
+                    <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceTix) && (
+                  <TextBadge name="TIX" className="mt-2 mr-2">
+                    <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
               </Row>

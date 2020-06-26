@@ -14,7 +14,10 @@ const PivotTable = ({ cards }) => {
     Name: card.details.name,
     Artist: card.details.artist,
     Rarity: card.details.rarity,
-    Price: card.details.price,
+    'Price USD': card.details.prices.usd,
+    'Price USD Foil': card.details.prices.usd_foil,
+    'Price EUR': card.details.prices.eur,
+    'Price TIX': card.details.prices.tix,
     Elo: card.details.elo,
   }));
 
