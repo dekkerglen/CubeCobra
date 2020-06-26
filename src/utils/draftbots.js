@@ -121,7 +121,10 @@ export const getPickSynergy = (combination, card, picked, synergies) => {
       // Maximum synergy is generally around .997 which corresponds to ~1.
       if (index !== card.index) {
         const similarityValue = similarity(synergies[index], synergies[card.index]);
-        synergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+        // Sum cards have all 0's as their coordinates which gives NaN in similarity.
+        if (Number.isFinite(similarityValue)) {
+          synergy += -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+        }
       }
     }
   }

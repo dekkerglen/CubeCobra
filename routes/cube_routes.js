@@ -1092,16 +1092,20 @@ const createDraftForSingleDeck = async (deck) => {
   }
   const draft = new Draft();
   draft.initial_state = [[populatedCards]];
-  const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-    method: 'post',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      cards: populatedCards.map((card) => carddb.cardFromId(card.cardID).name_lower),
-    }),
-  });
-  if (response.ok) {
-    draft.synergies = await response.json();
-  } else {
+  try {
+    const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cards: populatedCards.map((card) => carddb.cardFromId(card.cardID).name_lower),
+      }),
+    });
+    if (response.ok) {
+      draft.synergies = await response.json();
+    } else {
+      draft.synergies = null;
+    }
+  } catch (err) {
     draft.synergies = null;
   }
   await draft.save();
@@ -1997,14 +2001,18 @@ router.post(
 
       const cards = draft.initial_state.flat(3);
 
-      const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-        method: 'post',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
-      });
-      if (response.ok) {
-        draft.synergies = await response.json();
-      } else {
+      try {
+        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+          method: 'post',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
+        });
+        if (response.ok) {
+          draft.synergies = await response.json();
+        } else {
+          draft.synergies = null;
+        }
+      } catch (err) {
         draft.synergies = null;
       }
       await draft.save();
