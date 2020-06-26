@@ -287,7 +287,7 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
           throw new Error('Not enough nodes to make a K-set.');
         }
       }
-      const length = distance + closestI[iInd][0] + closestJ[jInd][0];
+      const length = distance + (iInd >= 0 ? closestI[iInd][0] : 0) + (jInd >= 0 ? closestJ[jInd][0] : 0);
       if (length < bestDistance) {
         bestNodes = seen;
         bestDistance = length;
@@ -322,7 +322,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     side = [...outOfColor];
   }
 
-  let chosen;
+  let chosen = [];
   if (synergies) {
     const distanceFunc = (c1, c2) => 1 - similarity(synergies[c1.index], synergies[c2.index]); // + (4800 - c1.rating - c2.rating) / 2400;
     // const distanceFunc = (c1, c2) => {
