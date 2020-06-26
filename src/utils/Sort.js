@@ -780,9 +780,6 @@ export function getLabels(cube, sort) {
 
 function sortGroupsOrdered(cards, sort) {
   const labels = getLabelsRaw(cards, sort);
-  console.log(labels);
-  console.log(cards);
-  console.log(sort);
   const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
