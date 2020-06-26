@@ -122,7 +122,7 @@ normalPriceCondition -> ("np"i | "pn"i | "normal"i | "normalprice"i | "pricenorm
 
 foilPriceCondition -> ("fp"i | "usdfoil"i | "pf"i | "foil"i | "foilprice"i | "pricefoil"i) dollarOpValue {% ([, valuePred]) => genericCondition('price_foil', cardFoilPrice, valuePred) %}
 
-eurPriceCondition -> ("pe"i | "priceeur"i | "eurprice"i) dollarOpValue {% ([, valuePred]) => genericCondition('price_eur', cardPriceEur, valuePred) %}
+eurPriceCondition -> ("pe"i | "priceeur"i | "eur"i | "eurprice"i) dollarOpValue {% ([, valuePred]) => genericCondition('price_eur', cardPriceEur, valuePred) %}
 
 tixPriceCondition -> ("tix"i | "pricetix"i | "tixprice"i) dollarOpValue {% ([, valuePred]) => genericCondition('price_tix', cardTix, valuePred) %}
 

@@ -17,6 +17,7 @@ import {
 
 import Affiliate from 'utils/Affiliate';
 import { getLabels, cardGetLabels } from 'utils/Sort';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
@@ -25,6 +26,7 @@ import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import withLoading from 'components/WithLoading';
+
 
 const LoadingCustomInput = withLoading(CustomInput, []);
 
@@ -55,29 +57,29 @@ const CardModal = ({
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
             <Row noGutters className="mb-2">
-              {Number.isFinite(card.details.prices && card.details.prices.usd) && (
+              {Number.isFinite(CardPrice(card)) && (
                 <TextBadge name="Price" className="mt-2 mr-2">
-                  <Tooltip text="TCGPlayer Market Price">${card.details.prices.usd.toFixed(2)}</Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${CardPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {Number.isFinite(card.details.prices && card.details.prices.usd_foil) && (
+              {Number.isFinite(CardFoilPrice(card)) && (
                 <TextBadge name="Foil" className="mt-2 mr-2">
-                  <Tooltip text="TCGPlayer Market Price">${card.details.prices.usd_foil.toFixed(2)}</Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${CardFoilPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {Number.isFinite(card.details.prices && card.details.prices.eur) && (
+              {Number.isFinite(CardPriceEur(card)) && (
                 <TextBadge name="EUR" className="mt-2 mr-2">
-                  <Tooltip text="Cardmarket Price">€{card.details.prices.eur.toFixed(2)}</Tooltip>
+                  <Tooltip text="Cardmarket Price">€{CardPriceEur(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {Number.isFinite(card.details.prices && card.details.prices.tix) && (
+              {Number.isFinite(cardTix(card)) && (
                 <TextBadge name="TIX" className="mt-2 mr-2">
-                  <Tooltip text="MTGO TIX">{card.details.prices.tix.toFixed(2)}</Tooltip>
+                  <Tooltip text="MTGO TIX">{cardTix(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
-              {Number.isFinite(card.details.elo) && (
+              {Number.isFinite(cardElo(card)) && (
                 <TextBadge name="Elo" className="mt-2">
-                  {card.details.elo.toFixed(0)}
+                  {cardElo(card).toFixed(0)}
                 </TextBadge>
               )}
             </Row>
