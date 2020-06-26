@@ -23,6 +23,7 @@ import {
 
 import { csrfFetch } from 'utils/CSRF';
 import { fromEntries } from 'utils/Util';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
 import ChangelistContext from 'components/ChangelistContext';
@@ -214,14 +215,10 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     return contextChildren;
   }
 
-  const accumulatorUsd = (total, card) => total + (card.details.prices.usd || 0);
-  const accumulatorUsdFoil = (total, card) => total + (card.details.prices.usd_foil || 0);
-  const accumulatorEur = (total, card) => total + (card.details.prices.eur || 0);
-  const accumulatorTix = (total, card) => total + (card.details.prices.tix || 0);
-  const totalPriceUsd = cards.length ? cards.reduce(accumulatorUsd, 0) : 0;
-  const totalPriceUsdFoil = cards.length ? cards.reduce(accumulatorUsdFoil, 0) : 0;
-  const totalPriceEur = cards.length ? cards.reduce(accumulatorEur, 0) : 0;
-  const totalPriceTix = cards.length ? cards.reduce(accumulatorTix, 0) : 0;
+  const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + cardPrice(card), 0) : 0;
+  const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + cardFoilPrice(card), 0) : 0;
+  const totalPriceEur = cards.length ? cards.reduce((total, card) => total + cardPriceEur(card), 0) : 0;
+  const totalPriceTix = cards.length ? cards.reduce((total, card) => total + cardTix(card), 0) : 0;
 
   return (
     <>

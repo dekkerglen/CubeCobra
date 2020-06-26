@@ -664,7 +664,7 @@ export function cardGetLabels(card, sort) {
   } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   } else if (sort == 'Price USD') {
-    var price = card.details.prices.usd || card.details.prices.usd_foil;
+    var price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
       //fence post first and last term
       if (price < price_buckets[0]) {
