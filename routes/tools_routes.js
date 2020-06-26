@@ -1,3 +1,6 @@
+// Load Environment Variables
+require('dotenv').config();
+
 const express = require('express');
 const serialize = require('serialize-javascript');
 
@@ -8,6 +11,8 @@ const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 
 const CardHistory = require('../models/cardHistory');
+const Cube = require('../models/cube');
+const Deck = require('../models/deck');
 
 const router = express.Router();
 
@@ -197,6 +202,101 @@ router.get('/card/:id', async (req, res) => {
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404/');
+  }
+});
+
+const cubePageSize = 100;
+
+router.get('/api/downloadcubes/:page/:key', async (req, res) => {
+  try {
+    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
+      return res.status(401).send({
+        success: 'false',
+      });
+    }
+
+    const count = await Cube.estimatedDocumentCount();
+    if (req.params.page * cubePageSize > count) {
+      return res.status(400).send({
+        message: 'Page exceeds collection size',
+        success: 'false',
+      });
+    }
+
+    const cubes = await Cube.find()
+      .sort({ shortID: 1 })
+      .skip(req.params.page * cubePageSize)
+      .limit(cubePageSize)
+      .lean();
+
+    return res.status(200).send({
+      success: 'true',
+      cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
+    });
+  } catch (err) {
+    return res.status(500).send({
+      message: err.message,
+      success: 'false',
+    });
+  }
+});
+
+const deckPageSize = 1000;
+
+router.get('/api/downloaddecks/:page/:key', async (req, res) => {
+  try {
+    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
+      return res.status(401).send({
+        success: 'false',
+      });
+    }
+
+    const count = await Deck.estimatedDocumentCount();
+    if (req.params.page * deckPageSize > count) {
+      return res.status(400).send({
+        message: 'Page exceeds collection size',
+        success: 'false',
+      });
+    }
+
+    const decks = await Deck.find()
+      .sort({ date: 1 })
+      .skip(req.params.page * deckPageSize)
+      .limit(deckPageSize)
+      .lean();
+
+    return res.status(200).send({
+      success: 'true',
+      decks: decks.map((deck) => {
+        const main = [];
+        const side = [];
+
+        if (deck.seats[0] && deck.seats[0].deck) {
+          for (const col of deck.seats[0].deck) {
+            for (const card of col) {
+              if (card && card.cardID) {
+                main.push(carddb.cardFromId(card.cardID).name_lower);
+              }
+            }
+          }
+        }
+
+        if (deck.seats[0] && deck.seats[0].sideboard) {
+          for (const col of deck.seats[0].sideboard) {
+            for (const card of col) {
+              side.push(carddb.cardFromId(card.cardID).name_lower);
+            }
+          }
+        }
+
+        return { main, side };
+      }),
+    });
+  } catch (err) {
+    return res.status(500).send({
+      message: err.message,
+      success: 'false',
+    });
   }
 });
 

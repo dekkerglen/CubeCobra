@@ -1959,7 +1959,9 @@ router.post(
       }
 
       if (cube.cards.length === 0) {
-        throw new Error('Could not create draft: no cards');
+        // This is a 4XX error, not a 5XX error
+        req.flash('danger', 'This cube has no cards!');
+        return res.redirect(`/cube/playtest/${req.params.id}`);
       }
 
       const params = req.body;
