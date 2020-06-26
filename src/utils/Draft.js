@@ -348,22 +348,23 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     NKernels(2, 18);
     const played = createSeen();
     addSeen(played, chosen);
-
     const size = Math.min(23 - chosen.length, nonlands.length);
     for (let i = 0; i < size; i++) {
       // add in new synergy data
-      const scores = [];
-      scores.push(nonlands.map((card) => getPickSynergy(colors, card, played, synergies) + getRating(colors, card)));
-
       let best = 0;
+      let bestScore = -Infinity;
 
       for (let j = 1; j < nonlands.length; j++) {
-        if (scores[j] > scores[best]) {
+        const card = nonlands[j];
+        const score = getPickSynergy(colors, card, played, synergies) + getRating(colors, card);
+        if (score > bestScore) {
           best = j;
+          bestScore = score;
         }
       }
       const current = nonlands.splice(best, 1)[0];
       addSeen(played, [current]);
+      chosen.push(current);
     }
     nonlands = nonlands.filter((c) => !chosen.includes(c));
   } else {
