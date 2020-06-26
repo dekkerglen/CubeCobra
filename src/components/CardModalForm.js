@@ -204,7 +204,6 @@ const CardModalForm = ({ children, ...props }) => {
       image_flip: details.image_flip,
     },
   };
-  console.log(renderCard);
   return (
     <CardModalContext.Provider value={openCardModal}>
       {children}

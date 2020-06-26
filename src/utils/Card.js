@@ -143,6 +143,10 @@ export const cardNormalPrice = (card) => card.details.prices.usd;
 
 export const cardFoilPrice = (card) => card.details.prices.usd_foil;
 
+export const cardPriceEur = (card) => card.details.prices.eur;
+
+export const cardTix = (card) => card.details.prices.tix;
+
 export const cardIsFullArt = (card) => card.details.full_art;
 
 export const cardCost = (card) => card.details.parsed_cost;

@@ -16,7 +16,17 @@ import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
-import { cardCmc, cardDevotion, cardFoilPrice, cardNormalPrice, cardPower, cardPrice, cardToughness } from 'utils/Card';
+import {
+  cardCmc,
+  cardDevotion,
+  cardFoilPrice,
+  cardNormalPrice,
+  cardPower,
+  cardPrice,
+  cardToughness,
+  cardPriceEur,
+  cardTix,
+} from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
@@ -54,8 +64,10 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
     Toughness: (card) => parseInt(cardToughness(card), 10),
     Elo: (card) => parseFloat(card.details.elo, 10),
     Price: (card) => parseFloat(cardPrice(card), 10),
-    'Price Foil': (card) => parseFloat(cardFoilPrice(card)),
-    'Non-Foil Price': (card) => parseFloat(cardNormalPrice(card)),
+    'Price USD': (card) => parseFloat(cardNormalPrice(card)),
+    'Price USD Foil': (card) => parseFloat(cardFoilPrice(card)),
+    'Price EUR': (card) => parseFloat(cardPriceEur(card)),
+    'MTGO TIX': (card) => parseFloat(cardTix(card)),
     'Devotion to White': (card) => cardDevotion(card, 'w'),
     'Devotion to Blue': (card) => cardDevotion(card, 'u'),
     'Devotion to Black': (card) => cardDevotion(card, 'b'),

@@ -39,6 +39,8 @@ const allFields = [
   'finish',
   'price',
   'priceFoil',
+  'priceEur',
+  'priceTix',
   'elo',
   'power',
   'toughness',
@@ -47,7 +49,7 @@ const allFields = [
   'artist',
   'is',
 ];
-const numFields = ['cmc', 'price', 'priceFoil', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = ['cmc', 'price', 'priceFoil', 'priceEur', 'priceTix', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
 const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
@@ -171,7 +173,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <Col md={6}>
             <NumericField
               name="price"
-              humanName="Price"
+              humanName="Price USD"
               placeholder={'Any decimal number, e.g. "3.50"'}
               value={values.price}
               onChange={onChange}
@@ -180,7 +182,25 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <Col md={6}>
             <NumericField
               name="priceFoil"
-              humanName="Foil Price"
+              humanName="Price USD Foil"
+              placeholder={'Any decimal number, e.g. "14.00"'}
+              value={values.priceFoil}
+              onChange={onChange}
+            />
+          </Col>
+          <Col md={6}>
+            <NumericField
+              name="priceEur"
+              humanName="Price EUR"
+              placeholder={'Any decimal number, e.g. "14.00"'}
+              value={values.priceFoil}
+              onChange={onChange}
+            />
+          </Col>
+          <Col md={6}>
+            <NumericField
+              name="priceTix"
+              humanName="MTGO TIX"
               placeholder={'Any decimal number, e.g. "14.00"'}
               value={values.priceFoil}
               onChange={onChange}
