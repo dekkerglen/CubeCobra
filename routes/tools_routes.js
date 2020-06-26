@@ -231,6 +231,7 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
 
     return res.status(200).send({
       success: 'true',
+      pages: Math.ceil(count / cubePageSize),
       cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
     });
   } catch (err) {
@@ -267,6 +268,7 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
 
     return res.status(200).send({
       success: 'true',
+      pages: Math.ceil(count / deckPageSize),
       decks: decks.map((deck) => {
         const main = [];
         const side = [];
