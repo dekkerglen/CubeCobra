@@ -718,7 +718,7 @@ export function cardGetLabels(card, sort) {
       return ['No Price Available'];
     }
   } else if (sort == 'MTGO TIX') {
-    var price = card.details.prices.tix;
+    const price = cardTix(card);
     if (price) {
       //fence post first and last term
       if (price < price_buckets[0]) {
