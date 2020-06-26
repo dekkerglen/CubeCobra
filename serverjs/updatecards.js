@@ -9,7 +9,6 @@ const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
 const carddb = require('./cards.js');
-const CardRating = require('../models/cardrating');
 
 const catalog = {};
 
@@ -589,9 +588,9 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'exp'; // expeditions
   newcard.prices = {
     usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
-    usd_foil: card.prices.usd ? parseFloat(card.prices.usd_foil, 10) : null,
-    eur: card.prices.usd ? parseFloat(card.prices.eur, 10) : null,
-    tix: card.prices.usd ? parseFloat(card.prices.tix, 10) : null,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
+    eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
+    tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
   };
   newcard.elo = catalog.elodict[name];
   newcard.digital = card.digital;
@@ -716,10 +715,9 @@ function saveEnglishCard(card) {
   addCardToCatalog(convertCard(card));
 }
 
-async function saveAllCards(basePath = 'private', defaultPath = null, allPath = null) {
+async function saveAllCards(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
   winston.info('Fetching Elo...');
   // create Elo dict
-  const ratings = await CardRating.find({}, 'name elo').lean();
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
   }
@@ -745,7 +743,7 @@ async function saveAllCards(basePath = 'private', defaultPath = null, allPath = 
   await writeCatalog(basePath);
 }
 
-async function updateCardbase(basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
@@ -756,7 +754,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
   await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
   winston.info('Creating objects...');
-  await saveAllCards(basePath, defaultPath, allPath);
+  await saveAllCards(ratings, basePath, defaultPath, allPath);
 
   winston.info('Finished cardbase update...');
 }

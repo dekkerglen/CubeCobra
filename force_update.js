@@ -4,6 +4,7 @@ require('dotenv').config();
 const winston = require('winston');
 const mongoose = require('mongoose');
 const updatedb = require('./serverjs/updatecards.js');
+const CardRating = require('./models/cardrating');
 
 winston.configure({
   level: 'info',
@@ -14,7 +15,8 @@ winston.configure({
 
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    await updatedb.updateCardbase();
+    const ratings = await CardRating.find({}, 'name elo').lean();
+    await updatedb.updateCardbase(ratings);
     process.exit();
   });
 })();

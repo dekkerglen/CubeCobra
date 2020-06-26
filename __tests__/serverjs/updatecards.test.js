@@ -35,6 +35,13 @@ const convertedExampleCard = {
     Pioneer: true,
     Pauper: false,
   },
+  elo: 1200,
+  prices: {
+    usd: 0.19,
+    usd_foil: 0.62,
+    eur: null,
+    tix: 0.03,
+  },
   parsed_cost: ['w', 'r'],
   colors: ['R', 'W'],
   type: 'Creature — Human Knight',
@@ -73,6 +80,13 @@ const convertedExampleDoubleFacedCard = {
     Pauper: true,
     Pioneer: false,
     Standard: false,
+  },
+  elo: 1300,
+  prices: {
+    usd: 0.19,
+    usd_foil: 0.62,
+    eur: null,
+    tix: 0.03,
   },
   mtgo_id: 43357,
   name: 'Scorned Villager',
@@ -119,6 +133,13 @@ const convertedExampleDoubleFacedCardFlipFace = {
     Pioneer: false,
     Pauper: false,
   },
+  elo: 1400,
+  prices: {
+    usd: 0.19,
+    usd_foil: 0.62,
+    eur: null,
+    tix: 0.03,
+  },
   mtgo_id: 43357,
   parsed_cost: [],
   colors: [],
@@ -163,6 +184,13 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
     Pioneer: true,
     Pauper: false,
   },
+  elo: 1500,
+  prices: {
+    usd: 12.98,
+    usd_foil: 22.46,
+    eur: 9.8,
+    tix: 1.78,
+  },
   mtgo_id: 57940,
   parsed_cost: [''],
   colors: ['B'],
@@ -204,6 +232,13 @@ const convertedExampleAdventureCard = {
     Pioneer: true,
     Standard: true,
   },
+  elo: 1600,
+  prices: {
+    usd: 0.19,
+    usd_foil: 0.62,
+    eur: null,
+    tix: 0.03,
+  },
   mtgo_id: 78444,
   name: 'Flaxen Intruder',
   name_lower: 'flaxen intruder',
@@ -241,6 +276,13 @@ const convertedExampleAdventureCardAdventure = {
   language: 'en',
   // ADventure's don't have legalities
   legalities: { Legacy: false, Modern: false, Standard: false, Pauper: false, Pioneer: false },
+  elo: 1200,
+  prices: {
+    usd: 1,
+    usd_foil: 2,
+    eur: 3,
+    tix: 4,
+  },
   name: 'Welcome Home',
   name_lower: 'welcome home',
   oracle_text:
@@ -253,6 +295,29 @@ const convertedExampleAdventureCardAdventure = {
   tcgplayer_id: 198574,
   type: 'Sorcery — Adventure',
 };
+
+const mockRatings = [
+  {
+    name: 'Inspiring Veteran',
+    elo: 1200,
+  },
+  {
+    name: 'Scorned Villager',
+    elo: 1300,
+  },
+  {
+    name: 'Moonscarred Werewolf',
+    elo: 1400,
+  },
+  {
+    name: 'Liliana, Heretical Healer',
+    elo: 1500,
+  },
+  {
+    name: 'Flaxen Intruder',
+    elo: 1600,
+  },
+];
 
 const fnToAttributeTable = [
   ['convertName', 'name'],
@@ -267,6 +332,9 @@ const fnToAttributeTable = [
 beforeEach(() => {
   rimraf.sync('private-test');
   updatecards.initializeCatalog();
+  for (const rating of mockRatings) {
+    updatecards.catalog.elodict[rating.name] = rating.elo;
+  }
 });
 
 afterEach(() => {
@@ -284,7 +352,7 @@ test('updateCardbase creates the expected files', () => {
   downloadMock.mockReturnValue(noopPromise);
   const initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase('private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.updateCardbase(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -360,7 +428,7 @@ test('addLanguageMapping successfully adds a language mapping to the internal st
 
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(7);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.saveAllCards(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
@@ -374,7 +442,7 @@ test('initializeCatalog clears the updatecards structures', () => {
 
 test('saveAllCards creates the expected files', () => {
   expect.assertions(8);
-  return updatecards.saveAllCards('private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.saveAllCards(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);

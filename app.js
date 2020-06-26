@@ -18,6 +18,7 @@ const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
+const CardRating = require('./models/cardrating');
 
 const formatInfo = ({ message }) => JSON.stringify(message);
 const formatError = ({ message, stack, request }) =>
@@ -255,9 +256,10 @@ app.use((err, req, res, next) => {
 });
 
 // scryfall updates this data at 9, so his will minimize staleness
-schedule.scheduleJob('0 10 * * *', () => {
+schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
-  updatedb.updateCardbase();
+  const ratings = await CardRating.find({}, 'name elo').lean();
+  updatedb.updateCardbase(ratings);
 });
 
 // Start server after carddb is initialized.
