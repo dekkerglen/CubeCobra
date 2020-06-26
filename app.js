@@ -20,7 +20,13 @@ const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 const CardRating = require('./models/cardrating');
 
-const formatInfo = ({ message }) => JSON.stringify(message);
+const formatInfo = ({ message }) => {
+  try {
+    return JSON.stringify(message);
+  } catch (err) {
+    return 'Error formatting info';
+  }
+};
 const formatError = ({ message, stack, request }) =>
   JSON.stringify({
     level: 'error',
