@@ -415,7 +415,7 @@ router.get('/overview/:id', async (req, res) => {
 
     // calc cube prices
     for (const card of cube.cards) {
-      card.details = { ...carddb.cardFromId(card.cardID), 'name prices' };
+      card.details = { ...carddb.cardFromId(card.cardID, 'name prices') };
     }
     const nameToCards = {};
     for (const card of cube.cards) {
